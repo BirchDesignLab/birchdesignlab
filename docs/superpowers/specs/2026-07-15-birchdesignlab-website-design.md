@@ -65,7 +65,7 @@ birchdesignlab.com
 
 ## 3. Visual system
 
-**Authority:** founding record §3 (visual direction). Register: Grand Seiko — founder's preferred references are the **Spring Drive "Birch" (SLGA009)** and the **Snowflake (SBGA211)** over the Hi-Beat White Birch: texture rendered as material, luxury that whispers. (The Snowflake's soft white dial is a fine reference for the light-mode field.)
+**Authority:** founding record §3 (visual direction). Register: Grand Seiko — the **Spring Drive "Birch" (SLGA009)**, the **Snowflake (SBGA211)**, and the **Hi-Beat White Birch (SLGH005)**: texture rendered as material, luxury that whispers. (The Snowflake's soft white dial is a fine reference for the light-mode field.)
 
 ### Chiaroscuro, light/dark native
 - **Dark mode is the default face:** charcoal grain field, bark-white lettering.
