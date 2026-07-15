@@ -41,14 +41,14 @@ birchdesignlab.com
 **Nav:** Home, Services, Lab, About, Contact. **Footer:** contact info, social handles (once registered), room reserved for future Work + Field Notes links.
 
 ### Home
-- Full-viewport hero: generative bark field (WebGL) breathing slowly behind the wordmark and credo — *"First green after the fire — and the bark you write on."*
+- Full-viewport hero: generative bark field (WebGL) breathing slowly behind the wordmark and a tagline line. Current candidate: *"First green after the fire — and the bark you write on."* — **provisional copy;** founder is not married to it. Layout must not depend on any specific line.
 - Services teaser (two offerings, one line each, link to /services).
 - Three featured experiments pulled from the Lab collection (keeps Home fresh as the Lab grows).
 - Contact CTA.
 
 ### Services
 - Custom websites + custom software, described in plain language for non-technical business owners. No jargon walls.
-- Process section (discovery → build → launch → care). The retired Fathom line — "to measure the unknown using yourself as the ruler" — may be used as process copy per the founding record §2.
+- Process section (discovery → build → launch → care). The retired Fathom line — "to measure the unknown using yourself as the ruler" — is *available* as process copy per founding record §2, not required; founder is not married to it.
 - Single clear CTA to /contact.
 
 ### About
@@ -65,7 +65,7 @@ birchdesignlab.com
 
 ## 3. Visual system
 
-**Authority:** founding record §3 (visual direction). Register: Grand Seiko White Birch — bark rendered as material, luxury that whispers.
+**Authority:** founding record §3 (visual direction). Register: Grand Seiko — founder's preferred references are the **Spring Drive "Birch" (SLGA009)** and the **Snowflake (SBGA211)** over the Hi-Beat White Birch: texture rendered as material, luxury that whispers. (The Snowflake's soft white dial is a fine reference for the light-mode field.)
 
 ### Chiaroscuro, light/dark native
 - **Dark mode is the default face:** charcoal grain field, bark-white lettering.
@@ -75,8 +75,10 @@ birchdesignlab.com
 ### Design tokens (the real foundation)
 All colors, spacing, and type sizes live as CSS custom properties in one token file. **Palette and type are explicitly provisional** — the founder will iterate until something screams. Swapping values must never require touching components.
 
-Provisional anchors (from founding record):
-- Bark white ~`#F4F1EA` · Charcoal ~`#1C1B19` · Spring green (single accent — links/CTAs, used sparingly) · Birchwood tan (warm surfaces).
+Provisional anchors (founding record + founder's session notes):
+- Bark white ~`#F4F1EA` · Charcoal ~`#1C1B19` · Birchwood tan (warm surfaces).
+- **Green, used with confidence:** founder likes the whole family — british racing, forest, moss, hunter, pine, sea, kelly. Not confined to a single sparse accent; tasteful broader use is welcome. Token structure should allow 2–3 green roles (accent, surface tint, deep field) rather than one slot.
+- **Leathery dark browns** and **castle/early-industrialist-mansion stone shades** (granite, limestone, weathered sandstone grays) as additional surface/neutral candidates — fits the leather-and-wood, stone-mansion-among-birches world.
 - **Avoid:** navy + brass (reads fintech), anything competing with the wordmark.
 
 ### Typography
@@ -158,7 +160,7 @@ Launch with 2–3 total; one may ship as `forthcoming`.
 ## 7. Performance, accessibility, error handling
 
 - **Budgets:** near-zero JS on core pages (bark module + theme toggle only); Lighthouse 100s across the board; fonts subset + self-hosted; images via Astro's asset pipeline (AVIF/WebP, sized).
-- **Accessibility:** WCAG AA contrast in both themes (spring-green accent must pass on both fields — token tuning constraint); full keyboard navigation; visible focus states; semantic HTML; reduced-motion support.
+- **Accessibility:** WCAG AA contrast in both themes (every green/brown/stone token role must pass on the fields it's used against — token tuning constraint); full keyboard navigation; visible focus states; semantic HTML; reduced-motion support.
 - **Failure modes:**
   - No WebGL → static bark fallback; page fully functional.
   - No JS at all → core pages render and read completely (static-first guarantees this); experiments show their specimen plate + a "requires JS" notice.
@@ -194,5 +196,5 @@ Launch with 2–3 total; one may ship as `forthcoming`.
 - No scroll-jacking, ever.
 - No stock photography, no literal birch-tree photos — the bark is generated or it isn't there.
 - No jargon on client-facing pages.
-- No second suffix, anywhere ("workshop workshop" rule from the founding record).
+- No *stacked* suffixes when naming anything new — never "Birch Labs Studio," never "Field Notes Journal" ("workshop workshop" rule). To be clear: **the name itself is Birch Design Lab and is used in full** — Design (what) + Lab (where) answer different questions and are not a stack.
 - Don't relitigate the graveyard (naming or design decisions recorded here and in the founding record).
