@@ -1,0 +1,390 @@
+---
+// Dev fiddling tool: live palette/type variants. Unlinked, noindexed,
+// excluded from the sitemap (astro.config.mjs). Lock winners into
+// src/styles/tokens.css via the "Copy tokens" button.
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/eb-garamond';
+import '@fontsource/marcellus';
+import '@fontsource-variable/newsreader';
+import '@fontsource-variable/source-serif-4';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const semanticSwatches = [
+  ['--field', 'field'],
+  ['--field-raised', 'field-raised'],
+  ['--mark', 'mark'],
+  ['--mark-muted', 'mark-muted'],
+  ['--accent', 'accent'],
+  ['--accent-strong', 'accent-strong'],
+  ['--green-field', 'green-field'],
+  ['--green-surface', 'green-surface'],
+  ['--line', 'line'],
+];
+---
+<BaseLayout
+  title="Styleguide — Birch Design Lab"
+  description="Internal design-token playground."
+  noindex
+>
+  <section class="wrap">
+    <header class="intro">
+      <h1>Styleguide</h1>
+      <p>
+        Internal fiddling instrument. Swap palettes and faces below — the theme
+        toggle up top keeps working. When something screams, hit
+        <em>Copy tokens</em> and paste the block into <code>tokens.css</code>.
+      </p>
+    </header>
+
+    <div class="bar" id="variant-bar">
+      <fieldset>
+        <legend class="smallcaps">Palette</legend>
+        <div class="opts" data-group="palette"></div>
+      </fieldset>
+      <fieldset>
+        <legend class="smallcaps">Display face</legend>
+        <div class="opts" data-group="display"></div>
+      </fieldset>
+      <fieldset>
+        <legend class="smallcaps">Body face</legend>
+        <div class="opts" data-group="body"></div>
+      </fieldset>
+      <button type="button" id="copy-tokens">Copy tokens</button>
+    </div>
+
+    <h2>Palette</h2>
+    <div class="swatches" id="swatches">
+      {semanticSwatches.map(([token, label]) => (
+        <div class="swatch" data-token={token}>
+          <div class="chip" style={`background: var(${token})`}></div>
+          <p class="name">{label}</p>
+          <p class="value" data-value></p>
+          <p class="ratio" data-ratio></p>
+        </div>
+      ))}
+    </div>
+
+    <h2>Type</h2>
+    <div class="specimens">
+      <p class="spec-label smallcaps">wordmark · smallcaps · text-lg</p>
+      <p class="smallcaps wordmark-spec">Birch Design Lab</p>
+
+      <p class="spec-label smallcaps">display · text-hero</p>
+      <p class="hero-spec">First green after the fire</p>
+
+      <p class="spec-label smallcaps">h1 / h2 / h3</p>
+      <h1>The shining tree</h1>
+      <h2>Two facts about the tree</h2>
+      <h3>The bark you write on</h3>
+
+      <p class="spec-label smallcaps">body · text-base</p>
+      <p class="body-spec">
+        <em>Birch</em> — Old English <em>beorc</em>, from a root that meant
+        <strong>to shine</strong>: the same ancient syllable that gave us
+        <em>bright</em>. The birch is the shining tree — white against the dark
+        wood, first to return after fire, the threshold tree of the north. The
+        quick brown fox jumps over the lazy dog; 0123456789.
+      </p>
+
+      <p class="spec-label smallcaps">muted body</p>
+      <p class="body-spec muted-spec">
+        Secondary voice: summaries, captions, the quiet parts. It must stay
+        readable in both themes without shouting.
+      </p>
+    </div>
+
+    <h2>Bark contrast lab</h2>
+    <p class="lab-note">
+      Judge lenticel dashes against the current field — this is where light
+      mode was too faint. Sliders draw with the pattern core directly; locked
+      values then get applied to the real renderer.
+    </p>
+    <div class="bark-lab">
+      <canvas id="bark-lab-canvas" aria-label="Bark dash contrast preview"></canvas>
+      <div class="lab-controls">
+        <label>
+          <span class="smallcaps">Alpha floor <output id="alpha-min-out">0.05</output></span>
+          <input type="range" id="alpha-min" min="0.02" max="0.4" step="0.01" value="0.05" />
+        </label>
+        <label>
+          <span class="smallcaps">Alpha ceiling <output id="alpha-max-out">0.22</output></span>
+          <input type="range" id="alpha-max" min="0.1" max="0.9" step="0.01" value="0.22" />
+        </label>
+        <label>
+          <span class="smallcaps">Density <output id="lab-density-out">170</output></span>
+          <input type="range" id="lab-density" min="40" max="400" step="10" value="170" />
+        </label>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-4); max-width: 60ch; }
+  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  h2 { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+
+  .bar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: end;
+    background: color-mix(in srgb, var(--field) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line); border-radius: 0.5rem;
+    padding: var(--space-3); margin-top: var(--space-4);
+  }
+  fieldset { border: none; padding: 0; margin: 0; }
+  legend { font-size: var(--text-sm); color: var(--mark-muted); margin-bottom: var(--space-1); }
+  .opts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .opts :global(button) {
+    background: none; color: var(--mark-muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: var(--space-1) var(--space-3); cursor: pointer;
+    font-family: var(--font-body); font-size: var(--text-sm);
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  .opts :global(button:hover) { color: var(--mark); }
+  .opts :global(button[aria-pressed='true']) { color: var(--field); background: var(--accent); border-color: var(--accent); }
+  #copy-tokens {
+    margin-left: auto; background: none; color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 999px;
+    padding: var(--space-1) var(--space-4); cursor: pointer;
+    font-family: var(--font-body); font-size: var(--text-sm);
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  #copy-tokens:hover { background: var(--accent); color: var(--field); }
+
+  .swatches {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: var(--space-3); margin-top: var(--space-4);
+  }
+  .swatch { border: 1px solid var(--line); border-radius: 0.5rem; overflow: hidden; }
+  .chip { height: 4.5rem; border-bottom: 1px solid var(--line); }
+  .swatch p { padding-inline: var(--space-2); font-size: var(--text-sm); }
+  .name { margin-top: var(--space-2); }
+  .value, .ratio { color: var(--mark-muted); }
+  .ratio { padding-bottom: var(--space-2); }
+  .ratio[data-fail] { color: #c05b4d; }
+
+  .specimens { margin-top: var(--space-4); }
+  .spec-label { color: var(--mark-muted); font-size: var(--text-sm); margin-top: var(--space-5); }
+  .wordmark-spec { font-size: var(--text-lg); }
+  .hero-spec { font-family: var(--font-display); font-size: var(--text-hero); line-height: 1.1; }
+  .specimens h2 { margin-top: var(--space-2); padding-top: 0; border-top: none; }
+  .specimens h1, .specimens h3 { margin-top: var(--space-2); }
+  .body-spec { max-width: 60ch; margin-top: var(--space-2); }
+  .muted-spec { color: var(--mark-muted); }
+
+  .lab-note { color: var(--mark-muted); max-width: 60ch; margin-top: var(--space-3); }
+  .bark-lab { margin-block: var(--space-4) var(--space-7); }
+  #bark-lab-canvas {
+    width: 100%; height: 280px;
+    border: 1px solid var(--line); border-radius: 0.5rem;
+    background: var(--field);
+  }
+  .lab-controls { display: flex; flex-wrap: wrap; gap: var(--space-5); margin-top: var(--space-3); }
+  .lab-controls label { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--mark-muted); }
+  .lab-controls input[type='range'] { accent-color: var(--accent); width: 14rem; max-width: 70vw; }
+</style>
+
+<script>
+  import { generateBark } from '../lib/bark';
+
+  // ---------- variant data ----------
+  type ThemeSet = Record<string, string>;
+  interface Palette { name: string; dark: ThemeSet; light: ThemeSet }
+
+  const T = (
+    field: string, raised: string, mark: string, muted: string,
+    accent: string, strong: string,
+  ): ThemeSet => ({
+    '--field': field, '--field-raised': raised, '--mark': mark,
+    '--mark-muted': muted, '--accent': accent, '--accent-strong': strong,
+    '--line': `color-mix(in srgb, ${mark} 18%, transparent)`,
+  });
+
+  const palettes: Palette[] = [
+    {
+      name: 'Current',
+      dark: T('#1c1b19', '#262420', '#f4f1ea', '#a2a09b', '#8fb59a', '#cbb593'),
+      light: T('#f4f1ea', '#e6e1d5', '#1c1b19', '#55524b', '#33523f', '#4a3a2c'),
+    },
+    {
+      name: 'Hunter & Stone',
+      dark: T('#191c1a', '#232824', '#f2f0e9', '#a8aaa0', '#9dbfa4', '#b8a888'),
+      light: T('#f2f1ec', '#e5e3da', '#23281f', '#5c6157', '#2c4736', '#6b5b45'),
+    },
+    {
+      name: 'Pine & Leather',
+      dark: T('#16201b', '#1f2b24', '#f4f1ea', '#9fa89f', '#cbb593', '#8a6f4d'),
+      light: T('#f4f1ea', '#e9e2d3', '#1e2620', '#57534a', '#4a3a2c', '#33523f'),
+    },
+    {
+      name: 'Racing & Limestone',
+      dark: T('#1a1b18', '#24261f', '#f3f1e8', '#a5a294', '#8fbf9c', '#d3c5a3'),
+      light: T('#f5f3ec', '#e8e4d8', '#191d18', '#59564c', '#1f4030', '#7a6248'),
+    },
+  ];
+
+  interface Face { name: string; display: string; smallcaps: string; upper: boolean }
+  const displays: Face[] = [
+    { name: 'Cormorant', display: "'Cormorant Variable', Georgia, serif", smallcaps: "'Cormorant SC', Georgia, serif", upper: false },
+    { name: 'Fraunces', display: "'Fraunces Variable', Georgia, serif", smallcaps: "'Fraunces Variable', Georgia, serif", upper: true },
+    { name: 'EB Garamond', display: "'EB Garamond Variable', Georgia, serif", smallcaps: "'EB Garamond Variable', Georgia, serif", upper: true },
+    { name: 'Marcellus', display: "'Marcellus', Georgia, serif", smallcaps: "'Marcellus', Georgia, serif", upper: true },
+  ];
+  const bodies = [
+    { name: 'Spectral', stack: "'Spectral', Georgia, serif" },
+    { name: 'Newsreader', stack: "'Newsreader Variable', Georgia, serif" },
+    { name: 'Source Serif', stack: "'Source Serif 4 Variable', Georgia, serif" },
+  ];
+
+  const state = { palette: 0, display: 0, body: 0 };
+
+  // ---------- override injection (keeps theme toggle working) ----------
+  const styleEl = document.createElement('style');
+  styleEl.id = 'variant-overrides';
+  document.head.appendChild(styleEl);
+
+  const buildCss = () => {
+    const p = palettes[state.palette];
+    const d = displays[state.display];
+    const b = bodies[state.body];
+    const fonts =
+      `  --font-display: ${d.display};\n` +
+      `  --font-smallcaps: ${d.smallcaps};\n` +
+      `  --font-body: ${b.stack};\n`;
+    const block = (t: ThemeSet) =>
+      Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+    return (
+      `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
+      `:root[data-theme='light'] {\n${block(p.light)}\n}\n` +
+      (d.upper ? `.smallcaps { text-transform: uppercase; font-size: 0.82em; }\n` : '')
+    );
+  };
+
+  // ---------- swatch values + contrast ----------
+  const luminance = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16);
+    const chan = (v: number) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * chan((n >> 16) & 255) + 0.0722 * chan(n & 255) + 0.7152 * chan((n >> 8) & 255);
+  };
+  const contrast = (a: string, b: string) => {
+    const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (l1 + 0.05) / (l2 + 0.05);
+  };
+  const rgbToHex = (css: string) => {
+    const m = css.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+    if (!m) return css.trim();
+    return '#' + [m[1], m[2], m[3]].map((v) => (+v).toString(16).padStart(2, '0')).join('');
+  };
+
+  const refreshSwatches = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const probe = document.createElement('div');
+    document.body.appendChild(probe);
+    const resolve = (token: string) => {
+      probe.style.color = `var(${token})`;
+      return rgbToHex(getComputedStyle(probe).color);
+    };
+    const field = resolve('--field');
+    document.querySelectorAll<HTMLElement>('.swatch').forEach((sw) => {
+      const token = sw.dataset.token!;
+      const raw = cs.getPropertyValue(token).trim();
+      const hex = resolve(token);
+      sw.querySelector('[data-value]')!.textContent = raw.startsWith('color-mix') ? hex : raw;
+      const ratioEl = sw.querySelector<HTMLElement>('[data-ratio]')!;
+      if (['--mark', '--mark-muted', '--accent', '--accent-strong'].includes(token) && hex.startsWith('#') && field.startsWith('#')) {
+        const r = contrast(hex, field);
+        ratioEl.textContent = `${r.toFixed(2)}:1 on field`;
+        if (r < 4.5) ratioEl.setAttribute('data-fail', ''); else ratioEl.removeAttribute('data-fail');
+      } else {
+        ratioEl.textContent = '';
+      }
+    });
+    probe.remove();
+  };
+
+  // ---------- bark contrast lab ----------
+  const labCanvas = document.getElementById('bark-lab-canvas') as HTMLCanvasElement;
+  const alphaMin = document.getElementById('alpha-min') as HTMLInputElement;
+  const alphaMax = document.getElementById('alpha-max') as HTMLInputElement;
+  const labDensity = document.getElementById('lab-density') as HTMLInputElement;
+
+  const drawLab = () => {
+    const ctx = labCanvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    labCanvas.width = Math.round(labCanvas.clientWidth * dpr);
+    labCanvas.height = Math.round(labCanvas.clientHeight * dpr);
+    const W = labCanvas.width, H = labCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const mark = getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
+    const lo = parseFloat(alphaMin.value), hi = parseFloat(alphaMax.value);
+    (document.getElementById('alpha-min-out')!).textContent = lo.toFixed(2);
+    (document.getElementById('alpha-max-out')!).textContent = hi.toFixed(2);
+    (document.getElementById('lab-density-out')!).textContent = labDensity.value;
+    for (const d of generateBark(20260715, { density: +labDensity.value })) {
+      ctx.save();
+      ctx.translate(d.x * W, d.y * H);
+      ctx.rotate(d.rot);
+      ctx.globalAlpha = lo + d.shade * (hi - lo);
+      ctx.fillStyle = mark;
+      const w = d.w * W, h = Math.max(1.5, d.h * H * 3);
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, h / 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  };
+
+  // ---------- wiring ----------
+  const apply = () => {
+    styleEl.textContent = buildCss();
+    // Style recalc is synchronous under getComputedStyle — no rAF needed.
+    refreshSwatches();
+    drawLab();
+  };
+
+  const makeButtons = (group: string, names: string[], key: keyof typeof state) => {
+    const holder = document.querySelector(`[data-group="${group}"]`)!;
+    names.forEach((name, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = name;
+      btn.setAttribute('aria-pressed', String(i === state[key]));
+      btn.addEventListener('click', () => {
+        state[key] = i;
+        holder.querySelectorAll('button').forEach((b, j) =>
+          b.setAttribute('aria-pressed', String(j === i)));
+        apply();
+      });
+      holder.appendChild(btn);
+    });
+  };
+  makeButtons('palette', palettes.map((p) => p.name), 'palette');
+  makeButtons('display', displays.map((d) => d.name), 'display');
+  makeButtons('body', bodies.map((b) => b.name), 'body');
+
+  [alphaMin, alphaMax, labDensity].forEach((el) => el.addEventListener('input', drawLab));
+  new MutationObserver(apply).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['data-theme'],
+  });
+  window.addEventListener('resize', drawLab);
+
+  document.getElementById('copy-tokens')!.addEventListener('click', async () => {
+    const header =
+      `/* Styleguide export — palette "${palettes[state.palette].name}", ` +
+      `display ${displays[state.display].name}, body ${bodies[state.body].name}, ` +
+      `bark alpha ${alphaMin.value}–${alphaMax.value} */\n`;
+    await navigator.clipboard.writeText(header + buildCss());
+    const btn = document.getElementById('copy-tokens')!;
+    const old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  });
+
+  apply();
+</script>

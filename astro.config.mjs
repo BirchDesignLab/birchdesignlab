@@ -4,5 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://birchdesignlab.com',
-  integrations: [svelte(), sitemap()],
+  integrations: [
+    svelte(),
+    sitemap({ filter: (page) => !page.includes('/styleguide') }),
+  ],
 });

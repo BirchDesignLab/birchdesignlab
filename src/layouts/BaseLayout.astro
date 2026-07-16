@@ -9,8 +9,8 @@ import Seo from '../components/Seo.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
-interface Props { title: string; description: string }
-const { title, description } = Astro.props;
+interface Props { title: string; description: string; noindex?: boolean }
+const { title, description, noindex = false } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
@@ -20,6 +20,7 @@ const { title, description } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo title={title} description={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <script is:inline>
       // Before first paint: apply stored/system theme; mark JS availability.
       document.documentElement.classList.add('js');
