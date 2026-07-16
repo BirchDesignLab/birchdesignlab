@@ -293,8 +293,9 @@ const semanticSwatches = [
     { name: 'Racing / Pine Haze', light: '#1f4030', dark: '#6b9179' },
   ];
 
-  // Locked-in choices are the defaults (Marcellus won round 1).
-  const state = { palette: 0, display: 3, body: 0, bbface: 0, bbcolor: 0 };
+  // Locked-in choices are the defaults (Marcellus round 1; Forest / Fern
+  // billboard round 3).
+  const state = { palette: 0, display: 3, body: 0, bbface: 0, bbcolor: 3 };
 
   // ---------- override injection (keeps theme toggle working) ----------
   const styleEl = document.createElement('style');
