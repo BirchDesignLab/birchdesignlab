@@ -204,23 +204,15 @@ const semanticSwatches = [
     '--line': `color-mix(in srgb, ${mark} 18%, transparent)`,
   });
 
-  // Round 4: converged. Hybrid = round-2 Moss & Leather DARK face +
-  // round-3 Forest & Leather LIGHT face (founder verdict, revised from
-  // kelly mid-round). Three dark accent-strong leather strengths to
-  // choose between; earlier rounds live in git history.
-  const hybridLight = T('#f5f1e8', '#e9e1d2', '#1f1b15', '#5a5244', '#2b4a37', '#6b4e33');
-  const hybridDark = (strong: string) =>
-    T('#1c1a17', '#272319', '#f4f0e6', '#a89f8f', '#a3bd8f', strong);
-
+  // Palette LOCKED 2026-07-16 (rounds 1-4): moss/caramel dark face +
+  // forest/leather light face — now the live values in tokens.css.
+  // 'Current' mirrors them; add challenger sets here for future rounds.
   const palettes: Palette[] = [
     {
       name: 'Current',
-      dark: T('#1c1b19', '#262420', '#f4f1ea', '#a2a09b', '#8fb59a', '#cbb593'),
-      light: T('#f4f1ea', '#e6e1d5', '#1c1b19', '#55524b', '#33523f', '#4a3a2c'),
+      dark: T('#1c1a17', '#272319', '#f4f0e6', '#a89f8f', '#a3bd8f', '#bf9468'),
+      light: T('#f5f1e8', '#e9e1d2', '#1f1b15', '#5a5244', '#2b4a37', '#4a3a2c'),
     },
-    { name: 'Hybrid · Saddle', dark: hybridDark('#ac8158'), light: hybridLight },
-    { name: 'Hybrid · Caramel', dark: hybridDark('#bf9468'), light: hybridLight },
-    { name: 'Hybrid · Honey', dark: hybridDark('#cfa87e'), light: hybridLight },
   ];
 
   interface Face { name: string; display: string; smallcaps: string; upper: boolean }
