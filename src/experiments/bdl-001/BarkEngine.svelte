@@ -14,11 +14,14 @@
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
 
+  let reduced: MediaQueryList;
+
   function rebuild() {
     const dashes = generateBark(hashString(seedText), { density });
     if (renderer) {
       renderer.setDashes(dashes);
       renderer.setColors(markColor());
+      if (reduced?.matches) renderer.renderOnce();
     } else {
       renderBark2D(canvas, dashes, markColor());
     }
@@ -30,14 +33,21 @@
   }
 
   onMount(() => {
+    reduced = matchMedia('(prefers-reduced-motion: reduce)');
     renderer = createBarkRenderer(canvas, generateBark(hashString(seedText), { density }));
     if (renderer) {
       renderer.setColors(markColor());
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) renderer.renderOnce();
+      if (reduced.matches) renderer.renderOnce();
       else renderer.start();
-      const ro = new ResizeObserver(() => renderer?.resize());
+      const ro = new ResizeObserver(() => {
+        renderer?.resize();
+        if (reduced.matches) renderer?.renderOnce();
+      });
       ro.observe(canvas);
-      const mo = new MutationObserver(() => renderer?.setColors(markColor()));
+      const mo = new MutationObserver(() => {
+        renderer?.setColors(markColor());
+        if (reduced.matches) renderer?.renderOnce();
+      });
       mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
       return () => { ro.disconnect(); mo.disconnect(); renderer?.destroy(); };
     }
