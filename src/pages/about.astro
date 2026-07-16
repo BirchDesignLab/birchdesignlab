@@ -3,61 +3,60 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import BarkField from '../components/BarkField.astro';
 ---
 <BaseLayout
-  title="About — Birch Design Lab"
-  description="Why a birch: the etymology, the founding myth, and the person behind Birch Design Lab."
+  title="About · Birch Design Lab"
+  description="The name, the oldest paper of the north, and the person behind Birch Design Lab."
 >
   <section class="wrap">
     <header class="intro">
       <h1>About</h1>
     </header>
 
-    <!-- provisional copy throughout; source of truth: founding record §2 -->
+    <!-- provisional copy throughout -->
     <article class="epic" data-reveal>
       <p class="etym">
-        <em>Birch</em> &mdash; Old English <em>beorc</em>, from a root that
-        meant <strong>to shine</strong>: the same ancient syllable that gave
-        us <em>bright</em>. The birch is the shining tree &mdash; white
-        against the dark wood, first to return after fire, the threshold
-        tree of the north.
+        <em>Birch</em>: Old English <em>beorc</em>, from an ancient root that
+        meant <strong>to shine</strong>. The same syllable survives in
+        <em>bright</em>. The birch is, quite literally, the shining tree,
+        named for the way its white bark stands out in a dark wood.
+      </p>
+      <p>
+        The word is old enough to have kept its own letter. When English was
+        still written in runes, the rune for B was called <em>beorc</em>: the
+        birch rune. A tree so familiar it stood for a sound. Most business
+        names get invented in an afternoon. This one has been earning its
+        keep for a few thousand years.
       </p>
     </article>
 
     <article class="myth" data-reveal>
-      <h2>Two facts about the tree</h2>
+      <h2>The oldest paper of the north</h2>
       <p>
-        First: birch is a pioneer species. After a burn it arrives before
-        anything else, stabilizes the ruined ground, and makes the forest
-        possible again.
+        Birch bark is the oldest paper of the north. The medieval letters dug
+        out of Novgorod's mud (shopping lists, love notes, a child's
+        homework) were scratched into bark and survived eight hundred years.
+        The shining tree is also the tree you could write on: the original
+        carrier of everyday people's messages.
       </p>
       <p>
-        Second: birch bark is the oldest paper of the north. The medieval
-        letters dug out of Novgorod's mud — shopping lists, love notes, a
-        child's homework — were scratched into birch bark and survived eight
-        hundred years. The shining tree is also the tree you could write on:
-        the original carrier of everyday human messages.
-      </p>
-      <p>
-        For a business that builds the surfaces where small companies speak
-        to the world, that is not decoration. That is the job description,
-        growing in the yard.
+        For a business that builds the surfaces where companies speak to the
+        world, that is not just decoration. That is the entire job
+        description.
       </p>
     </article>
 
     <article class="founder" data-reveal>
       <h2>The founder</h2>
       <p>
-        Birch Design Lab is one person — a builder of websites and software
+        Birch Design Lab is one person, a builder of websites and software
         who happens to resemble the namesake: tall, pale, and better suited
         to the north than to the Gulf Coast he currently calls home. Every
-        project here is designed, built, and cared for by the same pair of
-        hands you shake.
+        project here is designed, constructed, and cared for by the same
+        pair of hands you shake.
       </p>
     </article>
 
     <div class="field-strip" data-reveal>
       <BarkField density={90} />
-      <!-- provisional copy: credo candidate -->
-      <p class="credo smallcaps">First green after the fire &mdash; and the bark you write on.</p>
     </div>
   </section>
 </BaseLayout>
@@ -66,11 +65,10 @@ import BarkField from '../components/BarkField.astro';
   .intro { padding-block: var(--space-6) var(--space-4); }
   .epic, .myth, .founder { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: 60ch; }
   .etym { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.4; }
-  .myth p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .epic p + p, .myth p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
   .field-strip {
     position: relative; margin-block: var(--space-6);
-    min-height: 14rem; display: grid; place-items: center;
+    min-height: 14rem;
     border-block: 1px solid var(--line); overflow: hidden;
   }
-  .credo { position: relative; font-size: var(--text-lg); text-align: center; padding-inline: var(--space-4); }
 </style>

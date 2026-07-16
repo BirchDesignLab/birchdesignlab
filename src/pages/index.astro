@@ -9,16 +9,20 @@ const featured = (await getCollection('lab', ({ data }) => data.featured && data
   .slice(0, 3);
 ---
 <BaseLayout
-  title="Birch Design Lab — Custom websites and software"
+  title="Birch Design Lab · Custom websites and software"
   description="A design lab building custom websites and custom software for businesses that want to grow. Quiet, fast, built to last."
 >
   <section class="hero">
     <BarkField density={170} />
     <div class="wrap hero-copy">
       <h1 class="smallcaps">Birch Design Lab</h1>
-      <!-- provisional copy: tagline candidate, founder may replace -->
-      <p class="tagline">First green after the fire &mdash; and the bark you write on.</p>
-      <p class="lede">Custom websites and custom software, built with care that shows.</p>
+      <!-- provisional copy: founder may replace -->
+      <p class="tagline">Designed, constructed, and cared for.</p>
+      <p class="lede">
+        Custom websites and software for businesses that want to grow, from a
+        lab small enough that the person who builds your site also answers
+        your email.
+      </p>
       <a class="cta" href="/contact">Start a conversation</a>
     </div>
   </section>
@@ -30,17 +34,17 @@ const featured = (await getCollection('lab', ({ data }) => data.featured && data
       <article data-reveal>
         <h3>Websites</h3>
         <p>
-          A site that loads instantly, reads beautifully, and makes your
-          business look like the one to call. Designed and built by hand —
-          no templates, no page builders.
+          A site that loads instantly, reads clearly, and makes your business
+          look like the one to call. No templates, no page builders. Every
+          site is drawn and built by hand for the business it belongs to.
         </p>
       </article>
       <article data-reveal>
         <h3>Software</h3>
         <p>
-          The tool your business actually needs — the spreadsheet that became
-          a monster, the process that eats your Fridays — designed, built,
-          and maintained for you.
+          The tool your business actually needs. The spreadsheet that became
+          a monster, the process that eats your Fridays: we design, build,
+          and maintain the thing that fixes it.
         </p>
       </article>
     </div>

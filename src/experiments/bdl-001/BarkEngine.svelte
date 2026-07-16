@@ -91,7 +91,7 @@
       <input type="range" min="30" max="600" step="10" bind:value={density} oninput={rebuild} />
     </label>
     <button type="button" onclick={randomSeed}>New tree</button>
-    {#if !webgl}<p class="note">WebGL unavailable — static render.</p>{/if}
+    {#if !webgl}<p class="note">WebGL unavailable. Static render.</p>{/if}
   </form>
 </div>
 
