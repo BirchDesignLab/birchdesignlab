@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "test": "vitest run"
+    "test": "vitest run",
+    "trace": "node scripts/trace-to-strokes.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.2.0",
