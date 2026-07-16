@@ -24,6 +24,12 @@ const { seed, density = 140, class: className } = Astro.props;
 
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
+  const barkAlphas = (): [number, number] => {
+    const cs = getComputedStyle(document.documentElement);
+    const lo = parseFloat(cs.getPropertyValue('--bark-alpha-lo')) || 0.05;
+    const hi = parseFloat(cs.getPropertyValue('--bark-alpha-hi')) || 0.22;
+    return [lo, hi];
+  };
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   const cleanups: Array<() => void> = [];
@@ -35,10 +41,11 @@ const { seed, density = 140, class: className } = Astro.props;
     const dashes = generateBark(seed, { density: Number(canvas.dataset.density) || 140 });
 
     const gl = createBarkRenderer(canvas, dashes);
-    const paint2D = () => renderBark2D(canvas, dashes, markColor());
+    const paint2D = () => renderBark2D(canvas, dashes, markColor(), ...barkAlphas());
 
     if (gl) {
       gl.setColors(markColor());
+      gl.setAlpha(...barkAlphas());
       if (reducedMotion.matches) gl.renderOnce();
       else gl.start();
 
@@ -50,6 +57,7 @@ const { seed, density = 140, class: className } = Astro.props;
 
       const mutationObserver = new MutationObserver(() => {
         gl.setColors(markColor());
+        gl.setAlpha(...barkAlphas());
         if (reducedMotion.matches) gl.renderOnce();
       });
       mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

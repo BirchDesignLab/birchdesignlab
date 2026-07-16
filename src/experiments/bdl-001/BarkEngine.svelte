@@ -13,6 +13,13 @@
 
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
+  const barkAlphas = (): [number, number] => {
+    const cs = getComputedStyle(document.documentElement);
+    return [
+      parseFloat(cs.getPropertyValue('--bark-alpha-lo')) || 0.05,
+      parseFloat(cs.getPropertyValue('--bark-alpha-hi')) || 0.22,
+    ];
+  };
 
   let reduced: MediaQueryList;
 
@@ -21,9 +28,10 @@
     if (renderer) {
       renderer.setDashes(dashes);
       renderer.setColors(markColor());
+      renderer.setAlpha(...barkAlphas());
       if (reduced?.matches) renderer.renderOnce();
     } else {
-      renderBark2D(canvas, dashes, markColor());
+      renderBark2D(canvas, dashes, markColor(), ...barkAlphas());
     }
   }
 
@@ -37,6 +45,7 @@
     renderer = createBarkRenderer(canvas, generateBark(hashString(seedText), { density }));
     if (renderer) {
       renderer.setColors(markColor());
+      renderer.setAlpha(...barkAlphas());
       if (reduced.matches) renderer.renderOnce();
       else renderer.start();
       const ro = new ResizeObserver(() => {
@@ -46,6 +55,7 @@
       ro.observe(canvas);
       const mo = new MutationObserver(() => {
         renderer?.setColors(markColor());
+        renderer?.setAlpha(...barkAlphas());
         if (reduced.matches) renderer?.renderOnce();
       });
       mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

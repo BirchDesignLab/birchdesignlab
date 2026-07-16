@@ -2,6 +2,8 @@
 // Dev fiddling tool: live palette/type variants. Unlinked, noindexed,
 // excluded from the sitemap (astro.config.mjs). Lock winners into
 // src/styles/tokens.css via the "Copy tokens" button.
+import '@fontsource-variable/cormorant';
+import '@fontsource/cormorant-sc/500.css';
 import '@fontsource-variable/fraunces';
 import '@fontsource-variable/eb-garamond';
 import '@fontsource/marcellus';
@@ -238,7 +240,8 @@ const semanticSwatches = [
     { name: 'Source Serif', stack: "'Source Serif 4 Variable', Georgia, serif" },
   ];
 
-  const state = { palette: 0, display: 0, body: 0 };
+  // Locked-in choices are the defaults (Marcellus won round 1).
+  const state = { palette: 0, display: 3, body: 0 };
 
   // ---------- override injection (keeps theme toggle working) ----------
   const styleEl = document.createElement('style');
@@ -258,7 +261,8 @@ const semanticSwatches = [
     return (
       `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
       `:root[data-theme='light'] {\n${block(p.light)}\n}\n` +
-      (d.upper ? `.smallcaps { text-transform: uppercase; font-size: 0.82em; }\n` : '')
+      // Base .smallcaps is now uppercase (Marcellus); Cormorant SC wants lowercase.
+      (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`)
     );
   };
 
@@ -312,6 +316,15 @@ const semanticSwatches = [
   const alphaMin = document.getElementById('alpha-min') as HTMLInputElement;
   const alphaMax = document.getElementById('alpha-max') as HTMLInputElement;
   const labDensity = document.getElementById('lab-density') as HTMLInputElement;
+
+  // Start sliders at the live token values for the active theme.
+  {
+    const cs = getComputedStyle(document.documentElement);
+    const lo = parseFloat(cs.getPropertyValue('--bark-alpha-lo'));
+    const hi = parseFloat(cs.getPropertyValue('--bark-alpha-hi'));
+    if (!Number.isNaN(lo)) alphaMin.value = String(lo);
+    if (!Number.isNaN(hi)) alphaMax.value = String(hi);
+  }
 
   const drawLab = () => {
     const ctx = labCanvas.getContext('2d');
