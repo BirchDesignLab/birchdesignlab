@@ -21,7 +21,7 @@ const entries = (await getCollection('lab')).sort((a, b) =>
       </p>
     </header>
     <div class="catalog">
-      {entries.map((entry) => <SpecimenCard entry={entry} />)}
+      {entries.map((entry) => <SpecimenCard entry={entry} level="h2" />)}
     </div>
   </section>
 </BaseLayout>
