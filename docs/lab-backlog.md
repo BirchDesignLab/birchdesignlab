@@ -4,11 +4,13 @@
 
 ## Numbering vs build order
 
-BDL-004 stays reserved for the Painting (locked in the handoff). But numbering does not dictate build order: the goal right now is quick wins in the experiments department before the link spreads, and the Painting is the most expensive item on this page. Nothing stops BDL-005 or 006 shipping before 004.
+BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026-07-16 evening: the goal right now is quick wins before the link spreads, the Painting is the most expensive item on this page, and 003 is already a heavy build. The Loom takes 004; the Painting returns to the backlog unnumbered and gets a number at its own build time.
 
 ## Concepts, ranked by projected effort (lowest first)
 
-### 1. The Loom · artistic · mobile-native
+### 1. BDL-004 · The Loom · artistic · mobile-native
+
+**Specced 2026-07-16:** `docs/superpowers/specs/2026-07-16-bdl-004-the-loom-design.md`. The paragraphs below are the pre-spec sketch, kept for the record.
 
 Generative woven textile. Pick warp and weft colors, pick a draft pattern, watch the cloth weave itself thread by thread on canvas. Download the finished cloth as a wallpaper. Craft rather than nature: tactile like 003's dig, but a different sense entirely, and not a tree in sight.
 
@@ -32,9 +34,9 @@ A 3D scene rasterized from scratch on canvas2D. No WebGL, no library: projection
 
 Bounded, well-trodden math, but a lot of it, and the scene itself needs art direction to be worth staring at.
 
-### 5. BDL-004 · The Painting · technical · mobile-usable
+### 5. The Painting · technical · mobile-usable
 
-The reserved view-source CSS feat, now a concept. One museum-grade illustration built from pure CSS: no images, no SVG, no JS. Hundreds of hand-placed gradients and shadows. The page shows the plate and an invitation to view source; the gasp is in devtools, where the whole painting reads as a clean, commented, human stylesheet.
+The view-source CSS feat, now a concept. Unnumbered since 2026-07-16; takes a number at its own build time. One museum-grade illustration built from pure CSS: no images, no SVG, no JS. Hundreds of hand-placed gradients and shadows. The page shows the plate and an invitation to view source; the gasp is in devtools, where the whole painting reads as a clean, commented, human stylesheet.
 
 Subject parked until spec time, with one constraint agreed: lean into gradient and shadow, because that is what CSS painting does best. Maximize the flex.
 
