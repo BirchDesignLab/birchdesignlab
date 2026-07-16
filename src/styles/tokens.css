@@ -62,7 +62,7 @@
   --accent-strong: var(--leather-caramel);
   --line: color-mix(in srgb, var(--bark-warm) 18%, transparent);
   /* bark dash opacity range (read by the bark renderers) */
-  --bark-alpha-lo: 0.09;
+  --bark-alpha-lo: 0.03;
   --bark-alpha-hi: 0.69;
 }
 
@@ -79,7 +79,7 @@
   --accent-strong: var(--leather-brown);
   --line: color-mix(in srgb, var(--ink) 20%, transparent);
   /* charcoal dashes wash out on the light field at dark-tuned alphas */
-  --bark-alpha-lo: 0.09;
+  --bark-alpha-lo: 0.03;
   --bark-alpha-hi: 0.69;
 }
 
@@ -100,7 +100,7 @@
     --accent: var(--green-forest);
     --accent-strong: var(--leather-brown);
     --line: color-mix(in srgb, var(--ink) 20%, transparent);
-    --bark-alpha-lo: 0.09;
+    --bark-alpha-lo: 0.03;
     --bark-alpha-hi: 0.69;
   }
 }
