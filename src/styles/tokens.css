@@ -4,17 +4,20 @@
    ============================================================ */
 
 :root {
-  /* --- primitives (provisional palette) --- */
-  --bark-white: #f4f1ea;
-  --bark-white-dim: #e6e1d5;
-  --charcoal: #1c1b19;
-  --charcoal-raised: #262420;
-  --birchwood-tan: #cbb593;
-  --leather-brown: #4a3a2c;
-  --stone-gray: #8b867c;
-  --stone-dark: #55524b;
-  --green-kelly-soft: #8fb59a;   /* bright green for dark fields */
-  --green-hunter: #33523f;      /* deep green for light fields */
+  /* --- primitives (locked 2026-07-16, styleguide fiddle rounds 1-4:
+         moss/caramel dark face + forest/leather light face) --- */
+  --bark-white: #f5f1e8;        /* light field */
+  --bark-white-dim: #e9e1d2;    /* light raised */
+  --bark-warm: #f4f0e6;         /* dark-theme mark */
+  --charcoal: #1c1a17;          /* dark field (warm) */
+  --charcoal-raised: #272319;
+  --ink: #1f1b15;               /* light-theme mark */
+  --stone-warm: #a89f8f;        /* dark-theme muted */
+  --stone-dark: #5a5244;        /* light-theme muted */
+  --green-moss: #a3bd8f;        /* dark accent · 8.46:1 on field */
+  --green-forest: #2b4a37;      /* light accent · 8.72:1 on field */
+  --leather-caramel: #bf9468;   /* dark accent-strong · 6.33:1 */
+  --leather-brown: #4a3a2c;     /* light accent-strong · ~9.6:1 */
   --green-pine-deep: #22322a;   /* deep green field/surface */
   --green-moss-tint: #2b3a31;   /* surface tint on dark */
   --green-sage-tint: #e3e9e0;   /* surface tint on light */
@@ -49,11 +52,11 @@
   --field-raised: var(--charcoal-raised);
   --green-field: var(--green-pine-deep);
   --green-surface: var(--green-moss-tint);
-  --mark: var(--bark-white);
-  --mark-muted: color-mix(in srgb, var(--bark-white) 62%, var(--charcoal));
-  --accent: var(--green-kelly-soft);
-  --accent-strong: var(--birchwood-tan);
-  --line: color-mix(in srgb, var(--bark-white) 18%, transparent);
+  --mark: var(--bark-warm);
+  --mark-muted: var(--stone-warm);
+  --accent: var(--green-moss);
+  --accent-strong: var(--leather-caramel);
+  --line: color-mix(in srgb, var(--bark-warm) 18%, transparent);
   /* bark dash opacity range (read by the bark renderers) */
   --bark-alpha-lo: 0.09;
   --bark-alpha-hi: 0.69;
@@ -66,11 +69,11 @@
   --field-raised: var(--bark-white-dim);
   --green-field: var(--green-sage-tint);
   --green-surface: var(--green-sage-tint);
-  --mark: var(--charcoal);
+  --mark: var(--ink);
   --mark-muted: var(--stone-dark);
-  --accent: var(--green-hunter);
+  --accent: var(--green-forest);
   --accent-strong: var(--leather-brown);
-  --line: color-mix(in srgb, var(--charcoal) 20%, transparent);
+  --line: color-mix(in srgb, var(--ink) 20%, transparent);
   /* charcoal dashes wash out on the light field at dark-tuned alphas */
   --bark-alpha-lo: 0.09;
   --bark-alpha-hi: 0.69;
@@ -88,11 +91,11 @@
     --field-raised: var(--bark-white-dim);
     --green-field: var(--green-sage-tint);
     --green-surface: var(--green-sage-tint);
-    --mark: var(--charcoal);
+    --mark: var(--ink);
     --mark-muted: var(--stone-dark);
-    --accent: var(--green-hunter);
+    --accent: var(--green-forest);
     --accent-strong: var(--leather-brown);
-    --line: color-mix(in srgb, var(--charcoal) 20%, transparent);
+    --line: color-mix(in srgb, var(--ink) 20%, transparent);
     --bark-alpha-lo: 0.09;
     --bark-alpha-hi: 0.69;
   }
