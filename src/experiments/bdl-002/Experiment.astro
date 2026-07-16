@@ -1,0 +1,275 @@
+---
+// BDL-002: the public face of the styleguide. A curated toy version of
+// the internal /styleguide instrument; controls graduate here from the
+// full version as it grows.
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/cormorant';
+import '@fontsource/cormorant-sc/500.css';
+---
+<div class="room">
+  <header class="room-intro">
+    <h1>The Styleguide</h1>
+    <p>
+      This site was tuned in a room like this one. Swap the palette, try a
+      face, check a color against both themes, and grow some bark. Nothing
+      you do here follows you to the rest of the site.
+    </p>
+    <button type="button" id="room-theme" class="ghost">Flip the theme</button>
+  </header>
+
+  <section class="panel">
+    <h2 class="smallcaps">Palette</h2>
+    <div class="opts" data-group="palette"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="smallcaps">Typeface</h2>
+    <div class="opts" data-group="face"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="smallcaps">Billboard</h2>
+    <div class="bb-preview"><span class="bb-word">Birch Design Lab</span></div>
+    <div class="opts" data-group="color"></div>
+    <p class="ratios" id="room-ratios"></p>
+    <p class="hint">Type this large wants 3:1 or better against its field.</p>
+  </section>
+
+  <section class="panel">
+    <h2 class="smallcaps">Bark</h2>
+    <canvas id="room-bark" aria-label="Generated bark pattern"></canvas>
+    <div class="bark-controls">
+      <label><span class="smallcaps">Seed</span>
+        <input type="text" id="room-seed" value="beorc" maxlength="24" /></label>
+      <label><span class="smallcaps">Density <output id="room-density-out">140</output></span>
+        <input type="range" id="room-density" min="30" max="400" step="10" value="140" /></label>
+      <label><span class="smallcaps">Faint <output id="room-lo-out">0.03</output></span>
+        <input type="range" id="room-lo" min="0.01" max="0.4" step="0.01" value="0.03" /></label>
+      <label><span class="smallcaps">Bold <output id="room-hi-out">0.69</output></span>
+        <input type="range" id="room-hi" min="0.1" max="1" step="0.01" value="0.69" /></label>
+    </div>
+  </section>
+</div>
+
+<style>
+  .room {
+    max-width: 60rem; margin-inline: auto;
+    padding: var(--space-7) var(--space-4) 9rem; /* bottom clear of the plate bar */
+  }
+  .room-intro { max-width: 52ch; }
+  .room-intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .ghost {
+    margin-top: var(--space-4);
+    background: none; color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 999px; padding: var(--space-1) var(--space-4);
+    cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm);
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  .ghost:hover { background: var(--accent); color: var(--field); }
+  .panel { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+  .panel h2 { font-size: var(--text-sm); color: var(--mark-muted); }
+  .opts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+  .opts :global(button) {
+    background: none; color: var(--mark-muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: var(--space-1) var(--space-3); cursor: pointer;
+    font-family: var(--font-body); font-size: var(--text-sm);
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  .opts :global(button:hover) { color: var(--mark); }
+  .opts :global(button[aria-pressed='true']) { color: var(--field); background: var(--accent); border-color: var(--accent); }
+  .bb-preview {
+    margin-top: var(--space-3);
+    border: 1px solid var(--line); border-radius: 0.5rem;
+    padding: var(--space-6) var(--space-4);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .bb-word {
+    font-family: var(--font-billboard);
+    font-weight: var(--billboard-weight);
+    color: var(--billboard-color);
+    font-size: clamp(1.8rem, 6vw, 4rem);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase; text-align: center; line-height: 1.1;
+  }
+  .ratios { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--mark-muted); }
+  .ratios :global([data-fail]) { color: #c05b4d; }
+  .hint { font-size: var(--text-sm); color: var(--mark-muted); }
+  #room-bark {
+    margin-top: var(--space-3);
+    width: 100%; height: 260px;
+    border: 1px solid var(--line); border-radius: 0.5rem;
+  }
+  .bark-controls { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-3); }
+  .bark-controls label { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--mark-muted); }
+  .bark-controls input[type='text'] {
+    background: var(--field-raised); color: var(--mark);
+    border: 1px solid var(--line); border-radius: 0.25rem;
+    padding: var(--space-1) var(--space-2); font-family: var(--font-body);
+    width: 10rem;
+  }
+  .bark-controls input[type='range'] { accent-color: var(--accent); width: 11rem; max-width: 70vw; }
+</style>
+
+<script>
+  import { generateBark, hashString, createBarkRenderer, renderBark2D } from '../../lib/bark';
+  import { contrast } from '../../lib/color';
+
+  type ThemeSet = Record<string, string>;
+  const T = (
+    field: string, raised: string, mark: string, muted: string,
+    accent: string, strong: string,
+  ): ThemeSet => ({
+    '--field': field, '--field-raised': raised, '--mark': mark,
+    '--mark-muted': muted, '--accent': accent, '--accent-strong': strong,
+    '--line': `color-mix(in srgb, ${mark} 18%, transparent)`,
+  });
+
+  const palettes = [
+    {
+      name: 'House',
+      dark: T('#1c1a17', '#272319', '#f4f0e6', '#a89f8f', '#a3bd8f', '#bf9468'),
+      light: T('#f5f1e8', '#e9e1d2', '#1f1b15', '#5a5244', '#2b4a37', '#4a3a2c'),
+    },
+    {
+      name: 'Limestone',
+      dark: T('#1a1b18', '#24261f', '#f3f1e8', '#a5a294', '#8fbf9c', '#d3c5a3'),
+      light: T('#f5f3ec', '#e8e4d8', '#191d18', '#59564c', '#1f4030', '#7a6248'),
+    },
+    {
+      name: 'Granite',
+      dark: T('#1e1d1b', '#2a2825', '#f2efe7', '#a9a49a', '#93b8a0', '#b5ac9b'),
+      light: T('#efede6', '#e0dcd2', '#201e1a', '#5b574e', '#2e5240', '#756a58'),
+    },
+  ];
+  const faces = [
+    { name: 'Marcellus', stack: "'Marcellus', Georgia, serif", weight: 500, upper: true },
+    { name: 'Fraunces', stack: "'Fraunces Variable', Georgia, serif", weight: 650, upper: true },
+    { name: 'Cormorant', stack: "'Cormorant SC', Georgia, serif", weight: 500, upper: false },
+  ];
+  const colors = [
+    { name: 'Ink & bark', value: 'var(--mark)' },
+    { name: 'Forest', value: '#2b4a37' },
+    { name: 'Hunter', value: '#33523f' },
+    { name: 'Fern', value: '#6f9678' },
+    { name: 'Moss', value: '#a3bd8f' },
+  ];
+  const state = { palette: 0, face: 0, color: 0 };
+
+  const styleEl = document.createElement('style');
+  document.head.appendChild(styleEl);
+
+  const block = (t: ThemeSet) =>
+    Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+
+  const buildCss = () => {
+    const p = palettes[state.palette];
+    const f = faces[state.face];
+    const c = colors[state.color];
+    return (
+      `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n` +
+      `  --font-display: ${f.stack};\n  --font-billboard: ${f.stack};\n` +
+      `  --billboard-weight: ${f.weight};\n  --billboard-color: ${c.value};\n}\n` +
+      `:root[data-theme='light'] {\n${block(p.light)}\n}\n` +
+      (f.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`)
+    );
+  };
+
+  const refreshRatios = () => {
+    const p = palettes[state.palette];
+    const c = colors[state.color];
+    const onDark = c.value.startsWith('var') ? p.dark['--mark'] : c.value;
+    const onLight = c.value.startsWith('var') ? p.light['--mark'] : c.value;
+    const cell = (label: string, r: number) =>
+      `${label} ${r.toFixed(2)}:1${r < 3 ? ' <span data-fail>(faint)</span>' : ''}`;
+    document.getElementById('room-ratios')!.innerHTML =
+      `${cell('at night', contrast(onDark, p.dark['--field']))} &middot; ` +
+      `${cell('in daylight', contrast(onLight, p.light['--field']))}`;
+  };
+
+  // ---------- bark ----------
+  const canvas = document.getElementById('room-bark') as HTMLCanvasElement;
+  const seedEl = document.getElementById('room-seed') as HTMLInputElement;
+  const densityEl = document.getElementById('room-density') as HTMLInputElement;
+  const loEl = document.getElementById('room-lo') as HTMLInputElement;
+  const hiEl = document.getElementById('room-hi') as HTMLInputElement;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const markColor = () =>
+    getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
+
+  const gl = createBarkRenderer(canvas, generateBark(hashString(seedEl.value), { density: 140 }));
+
+  const redraw = () => {
+    const dashes = generateBark(hashString(seedEl.value), { density: +densityEl.value });
+    const lo = parseFloat(loEl.value), hi = parseFloat(hiEl.value);
+    (document.getElementById('room-density-out')!).textContent = densityEl.value;
+    (document.getElementById('room-lo-out')!).textContent = lo.toFixed(2);
+    (document.getElementById('room-hi-out')!).textContent = hi.toFixed(2);
+    if (gl) {
+      gl.resize(); // no-op when dimensions are unchanged
+      gl.setDashes(dashes);
+      gl.setColors(markColor());
+      gl.setAlpha(lo, hi);
+      if (reduced.matches) gl.renderOnce();
+    } else {
+      renderBark2D(canvas, dashes, markColor(), lo, hi);
+    }
+  };
+
+  if (gl) {
+    if (reduced.matches) gl.renderOnce(); else gl.start();
+  }
+  redraw();
+
+  const ro = new ResizeObserver(() => {
+    if (gl) { gl.resize(); if (reduced.matches) gl.renderOnce(); } else redraw();
+  });
+  ro.observe(canvas);
+
+  // ---------- wiring ----------
+  const apply = () => {
+    styleEl.textContent = buildCss();
+    refreshRatios();
+    redraw(); // bark mark color may have changed with the palette/theme
+  };
+
+  const makeButtons = (group: string, names: string[], key: keyof typeof state) => {
+    const holder = document.querySelector(`[data-group="${group}"]`)!;
+    names.forEach((name, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = name;
+      btn.setAttribute('aria-pressed', String(i === state[key]));
+      btn.addEventListener('click', () => {
+        state[key] = i;
+        holder.querySelectorAll('button').forEach((b, j) =>
+          b.setAttribute('aria-pressed', String(j === i)));
+        apply();
+      });
+      holder.appendChild(btn);
+    });
+  };
+  makeButtons('palette', palettes.map((p) => p.name), 'palette');
+  makeButtons('face', faces.map((f) => f.name), 'face');
+  makeButtons('color', colors.map((c) => c.name), 'color');
+
+  [seedEl, densityEl, loEl, hiEl].forEach((el) => el.addEventListener('input', redraw));
+
+  document.getElementById('room-theme')!.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('theme', next); } catch { /* fine */ }
+  });
+  new MutationObserver(apply).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['data-theme'],
+  });
+
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) return;
+    ro.disconnect();
+    gl?.destroy();
+  });
+
+  apply();
+</script>

@@ -4,10 +4,12 @@
  * (used for `forthcoming` status or copy-only specimens).
  */
 import BDL001 from './bdl-001/Experiment.astro';
+import BDL002 from './bdl-002/Experiment.astro';
 
 // Values are Astro component imports; typed loosely because Astro's
 // component factory type lives at an internal path that shifts between minors.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const experimentComponents: Record<string, any> = {
   'BDL-001': BDL001,
+  'BDL-002': BDL002,
 };

@@ -232,6 +232,7 @@ const semanticSwatches = [
 
 <script>
   import { generateBark } from '../lib/bark';
+  import { contrast, rgbToHex } from '../lib/color';
 
   // ---------- variant data ----------
   type ThemeSet = Record<string, string>;
@@ -318,25 +319,6 @@ const semanticSwatches = [
       // Base .smallcaps is now uppercase (Marcellus); Cormorant SC wants lowercase.
       (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`)
     );
-  };
-
-  // ---------- swatch values + contrast ----------
-  const luminance = (hex: string) => {
-    const n = parseInt(hex.slice(1), 16);
-    const chan = (v: number) => {
-      const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    };
-    return 0.2126 * chan((n >> 16) & 255) + 0.0722 * chan(n & 255) + 0.7152 * chan((n >> 8) & 255);
-  };
-  const contrast = (a: string, b: string) => {
-    const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-    return (l1 + 0.05) / (l2 + 0.05);
-  };
-  const rgbToHex = (css: string) => {
-    const m = css.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-    if (!m) return css.trim();
-    return '#' + [m[1], m[2], m[3]].map((v) => (+v).toString(16).padStart(2, '0')).join('');
   };
 
   const refreshSwatches = () => {
