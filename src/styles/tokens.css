@@ -17,6 +17,7 @@
   --green-moss: #a3bd8f;        /* dark accent · 8.46:1 on field */
   --green-forest: #2b4a37;      /* light accent · 8.72:1 on field */
   --green-fern: #6f9678;        /* dark billboard · 5.22:1 on field */
+  --green-canopy: #2f6644;      /* light links · 6.00:1 on field */
   --leather-caramel: #bf9468;   /* dark accent-strong · 6.33:1 */
   --leather-brown: #4a3a2c;     /* light accent-strong · ~9.6:1 */
   --green-pine-deep: #22322a;   /* deep green field/surface */
@@ -63,6 +64,7 @@
   --accent: var(--green-moss);
   --accent-strong: var(--leather-caramel);
   --billboard-color: var(--green-fern);
+  --link: var(--green-moss);
   --line: color-mix(in srgb, var(--bark-warm) 18%, transparent);
   /* bark dash opacity range (read by the bark renderers) */
   --bark-alpha-lo: 0.03;
@@ -81,6 +83,8 @@
   --accent: var(--green-forest);
   --accent-strong: var(--leather-brown);
   --billboard-color: var(--green-forest);
+  /* the forest accent reads near-black in running text; links run brighter */
+  --link: var(--green-canopy);
   --line: color-mix(in srgb, var(--ink) 20%, transparent);
   /* charcoal dashes wash out on the light field at dark-tuned alphas */
   --bark-alpha-lo: 0.03;
@@ -104,6 +108,7 @@
     --accent: var(--green-forest);
     --accent-strong: var(--leather-brown);
     --billboard-color: var(--green-forest);
+    --link: var(--green-canopy);
     --line: color-mix(in srgb, var(--ink) 20%, transparent);
     --bark-alpha-lo: 0.03;
     --bark-alpha-hi: 0.69;
