@@ -1,0 +1,44 @@
+---
+import '@fontsource-variable/cormorant';
+import '@fontsource/cormorant-sc/500.css';
+import '@fontsource/spectral/400.css';
+import '@fontsource/spectral/600.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import Seo from '../components/Seo.astro';
+
+interface Props { title: string; description: string; designation: string }
+const { title, description, designation } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <Seo title={title} description={description} />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      const stored = localStorage.getItem('theme');
+      const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = stored || system;
+    </script>
+  </head>
+  <body>
+    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .hatch {
+    position: fixed; top: var(--space-3); left: var(--space-3); z-index: 20;
+    color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm);
+    background: color-mix(in srgb, var(--field) 70%, transparent);
+    padding: var(--space-1) var(--space-3); border-radius: 999px;
+    backdrop-filter: blur(6px);
+  }
+  .hatch:hover { color: var(--mark); }
+</style>

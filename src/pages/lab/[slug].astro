@@ -1,0 +1,37 @@
+---
+import { getCollection, render } from 'astro:content';
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import SpecimenPlate from '../../components/SpecimenPlate.astro';
+import { experimentComponents } from '../../experiments/registry';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('lab', ({ data }) => data.status === 'live');
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { designation, title, summary, tech } = entry.data;
+const { Content } = await render(entry);
+const Experiment = experimentComponents[designation];
+---
+<ExperimentLayout
+  title={`${designation} ${title} — Birch Design Lab`}
+  description={summary}
+  designation={designation}
+>
+  {Experiment ? (
+    <Experiment />
+  ) : (
+    <div class="wrap missing"><p>This specimen has no interactive stage yet.</p></div>
+  )}
+  <SpecimenPlate designation={designation} title={title} tech={tech}>
+    <Content />
+  </SpecimenPlate>
+  <noscript>
+    <p class="wrap">This experiment requires JavaScript; the specimen plate below describes it.</p>
+  </noscript>
+</ExperimentLayout>
+
+<style>
+  .missing { min-height: 60vh; display: grid; place-items: center; color: var(--mark-muted); }
+</style>
