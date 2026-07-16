@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BarkField from '../components/BarkField.astro';
+---
+<BaseLayout
+  title="About — Birch Design Lab"
+  description="Why a birch: the etymology, the founding myth, and the person behind Birch Design Lab."
+>
+  <section class="wrap">
+    <header class="intro">
+      <h1>About</h1>
+    </header>
+
+    <!-- provisional copy throughout; source of truth: founding record §2 -->
+    <article class="epic" data-reveal>
+      <p class="etym">
+        <em>Birch</em> &mdash; Old English <em>beorc</em>, from a root that
+        meant <strong>to shine</strong>: the same ancient syllable that gave
+        us <em>bright</em>. The birch is the shining tree &mdash; white
+        against the dark wood, first to return after fire, the threshold
+        tree of the north.
+      </p>
+    </article>
+
+    <article class="myth" data-reveal>
+      <h2>Two facts about the tree</h2>
+      <p>
+        First: birch is a pioneer species. After a burn it arrives before
+        anything else, stabilizes the ruined ground, and makes the forest
+        possible again.
+      </p>
+      <p>
+        Second: birch bark is the oldest paper of the north. The medieval
+        letters dug out of Novgorod's mud — shopping lists, love notes, a
+        child's homework — were scratched into birch bark and survived eight
+        hundred years. The shining tree is also the tree you could write on:
+        the original carrier of everyday human messages.
+      </p>
+      <p>
+        For a business that builds the surfaces where small companies speak
+        to the world, that is not decoration. That is the job description,
+        growing in the yard.
+      </p>
+    </article>
+
+    <article class="founder" data-reveal>
+      <h2>The founder</h2>
+      <p>
+        Birch Design Lab is one person — a builder of websites and software
+        who happens to resemble the namesake: tall, pale, and better suited
+        to the north than to the Gulf Coast he currently calls home. Every
+        project here is designed, built, and cared for by the same pair of
+        hands you shake.
+      </p>
+    </article>
+
+    <div class="field-strip" data-reveal>
+      <BarkField density={90} />
+      <!-- provisional copy: credo candidate -->
+      <p class="credo smallcaps">First green after the fire &mdash; and the bark you write on.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-4); }
+  .epic, .myth, .founder { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: 60ch; }
+  .etym { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.4; }
+  .myth p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .field-strip {
+    position: relative; margin-block: var(--space-6);
+    min-height: 14rem; display: grid; place-items: center;
+    border-block: 1px solid var(--line); overflow: hidden;
+  }
+  .credo { position: relative; font-size: var(--text-lg); text-align: center; padding-inline: var(--space-4); }
+</style>
