@@ -25,6 +25,8 @@
   /* --- type --- */
   --font-display: 'Marcellus', 'Iowan Old Style', Georgia, serif;
   --font-smallcaps: 'Marcellus', 'Iowan Old Style', Georgia, serif;
+  /* the home-hero wordmark only; swap here to give the billboard its own face */
+  --font-billboard: 'Marcellus', 'Iowan Old Style', Georgia, serif;
   --font-body: 'Spectral', Georgia, 'Times New Roman', serif;
   --text-sm: 0.875rem;
   --text-base: 1.125rem;
