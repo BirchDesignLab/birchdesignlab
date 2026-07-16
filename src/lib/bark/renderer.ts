@@ -1,5 +1,7 @@
 /** Draw layer. WebGL2 instanced quads; canvas2D static fallback. */
 import type { Dash } from './pattern';
+import { drawBarkDashes, parseColor } from './draw2d';
+export { parseColor } from './draw2d';
 
 const VERT = `#version 300 es
 layout(location=0) in vec2 aCorner;             // unit quad corners
@@ -83,22 +85,6 @@ export interface BarkRenderer {
   /** Pointer in canvas-normalized [0,1] coords; strength 0 releases the wake. */
   setPointer(x: number, y: number, strength: number): void;
   destroy(): void;
-}
-
-/** Parse '#rgb', '#rrggbb', or 'rgb(a,b,c)' → [0..1] floats. */
-export function parseColor(css: string): [number, number, number] {
-  const s = css.trim();
-  if (s.startsWith('#')) {
-    const hex = s.length === 4 ? s.slice(1).split('').map((c) => c + c).join('') : s.slice(1);
-    const n = parseInt(hex, 16);
-    return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
-  }
-  const m = s.match(/rgba?\(([^)]+)\)/);
-  if (m) {
-    const [r, g, b] = m[1].split(',').map((v) => parseFloat(v));
-    return [r / 255, g / 255, b / 255];
-  }
-  return [1, 1, 1];
 }
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
@@ -242,7 +228,7 @@ export function createBarkRenderer(
   };
 }
 
-/** Static canvas2D fallback — same pattern, one frame, no motion. */
+/** Static canvas2D fallback: same pattern, one frame, no motion. */
 export function renderBark2D(
   canvas: HTMLCanvasElement,
   dashes: Dash[],
@@ -255,21 +241,6 @@ export function renderBark2D(
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(canvas.clientWidth * dpr);
   canvas.height = Math.round(canvas.clientHeight * dpr);
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-  // Normalize through parseColor so both render paths share one fallback.
-  const [mr, mg, mb] = parseColor(mark);
-  const fill = `rgb(${Math.round(mr * 255)} ${Math.round(mg * 255)} ${Math.round(mb * 255)})`;
-  for (const d of dashes) {
-    ctx.save();
-    ctx.translate(d.x * W, d.y * H);
-    ctx.rotate(d.rot);
-    ctx.globalAlpha = alphaLo + d.shade * (alphaHi - alphaLo);
-    ctx.fillStyle = fill;
-    const w = d.w * W, h = Math.max(1.5, d.h * H);
-    ctx.beginPath();
-    ctx.roundRect(-w / 2, -h / 2, w, h, h / 2);
-    ctx.fill();
-    ctx.restore();
-  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBarkDashes(ctx, dashes, mark, canvas.width, canvas.height, alphaLo, alphaHi);
 }
