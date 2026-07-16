@@ -57,3 +57,10 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Client-study section.** Director's commentary on a client site once one exists to narrate.
 - **From-the-Lab recency switch.** Home section flips to recency ordering at 4+ live entries.
 - **Lab visual identity.** The Lab will eventually branch away from the professional site theme and grow its own style. Nothing decided; also tracked as handoff open thread 4. Worth deciding before the Lab has many live pieces, since each experiment currently inherits site tokens.
+- **Bark-generated OG images.** Seeded bark rendered into per-page OpenGraph images at build time. Flagged as "a nice later touch" in the website spec's SEO section; would make every shared link carry the daily tree.
+- **GSAP as a Lab-piece technology.** Banned from the core site by the spec, deliberately reserved for a future Lab experiment that wants heavyweight motion. No concept attached yet.
+- **Heavier location-aware work.** Founder intends eventually to build pieces that justify a location permission prompt. When that day comes, Tonight's Sky (shelved above) comes off the shelf with it.
+
+## Documented renovation paths (recorded elsewhere, listed for completeness)
+
+These are not ideas to develop here; the website spec and core plan already carry them: contact form via Cloudflare Pages Functions, Sanity CMS swap via Content Layer loader, Tailwind as a per-island addition, Google Workspace for send-as on hello@.
