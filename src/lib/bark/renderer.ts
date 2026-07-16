@@ -31,11 +31,11 @@ void main() {
   float sway = sin(uTime * 0.5 - aRect.x * 5.0 + vShade * 1.5);
   center.x += sway * 0.006 * gustE * depth;
   rot += sway * 0.06 * gustE;
-  // pointer wake: nearby dashes stir away from the cursor and brighten
+  // pointer wake: nearby dashes brighten, no displacement (founder verdict:
+  // the scatter read as distortion; light responding to a hand reads better)
   vec2 dvec = center - uPointer.xy;
   dvec.x *= uResolution.x / max(uResolution.y, 1.0);
   float infl = smoothstep(0.22, 0.0, length(dvec)) * uPointer.z;
-  center += normalize(dvec + 1e-4) * infl * 0.015;
   // growth: dashes appear staggered by band and shade, scaling in
   float order = fract(aRect.y * 7.13 + vShade * 3.71) * 0.7;
   float appear = smoothstep(order, order + 0.3, uGrowth);
