@@ -26,6 +26,8 @@ const { seed, density = 140, class: className } = Astro.props;
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
+  const cleanups: Array<() => void> = [];
+
   for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-bark]')) {
     const seed = canvas.dataset.seed
       ? Number(canvas.dataset.seed)
@@ -39,23 +41,51 @@ const { seed, density = 140, class: className } = Astro.props;
       gl.setColors(markColor());
       if (reducedMotion.matches) gl.renderOnce();
       else gl.start();
-      new ResizeObserver(() => {
+
+      const resizeObserver = new ResizeObserver(() => {
         gl.resize();
         if (reducedMotion.matches) gl.renderOnce();
-      }).observe(canvas);
-      new MutationObserver(() => {
+      });
+      resizeObserver.observe(canvas);
+
+      const mutationObserver = new MutationObserver(() => {
         gl.setColors(markColor());
         if (reducedMotion.matches) gl.renderOnce();
-      }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-      reducedMotion.addEventListener('change', () => {
+      });
+      mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      const handleReducedMotionChange = () => {
         if (reducedMotion.matches) { gl.stop(); gl.renderOnce(); } else gl.start();
+      };
+      reducedMotion.addEventListener('change', handleReducedMotionChange);
+
+      cleanups.push(() => {
+        gl.destroy();
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
+        reducedMotion.removeEventListener('change', handleReducedMotionChange);
       });
     } else {
       paint2D();
-      new ResizeObserver(paint2D).observe(canvas);
-      new MutationObserver(paint2D).observe(document.documentElement, {
+
+      const resizeObserver = new ResizeObserver(paint2D);
+      resizeObserver.observe(canvas);
+
+      const mutationObserver = new MutationObserver(paint2D);
+      mutationObserver.observe(document.documentElement, {
         attributes: true, attributeFilter: ['data-theme'],
+      });
+
+      cleanups.push(() => {
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
       });
     }
   }
+
+  window.addEventListener('pagehide', () => {
+    for (const cleanup of cleanups) {
+      cleanup();
+    }
+  });
 </script>
