@@ -56,3 +56,4 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Bark peel.** Tap becomes the shed trigger on the living bark. Its own future round on the bark engine.
 - **Client-study section.** Director's commentary on a client site once one exists to narrate.
 - **From-the-Lab recency switch.** Home section flips to recency ordering at 4+ live entries.
+- **Lab visual identity.** The Lab will eventually branch away from the professional site theme and grow its own style. Nothing decided; also tracked as handoff open thread 4. Worth deciding before the Lab has many live pieces, since each experiment currently inherits site tokens.
