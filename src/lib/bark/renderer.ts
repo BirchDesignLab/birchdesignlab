@@ -30,14 +30,16 @@ in vec2 vLocal;
 in float vShade;
 uniform vec3 uMark;
 uniform highp float uTime;
+uniform float uAlphaLo;
+uniform float uAlphaHi;
 out vec4 outColor;
 void main() {
   // soft-edged rounded dash
   vec2 d = abs(vLocal);
   float edge = 1.0 - smoothstep(0.72, 1.0, max(d.x, d.y));
-  float alpha = edge * mix(0.05, 0.22, vShade);
+  float alpha = edge * mix(uAlphaLo, uAlphaHi, vShade);
   alpha *= 1.0 + 0.25 * sin(uTime * 0.3 + vShade * 6.2831); // slow shimmer
-  outColor = vec4(uMark, alpha);
+  outColor = vec4(uMark, clamp(alpha, 0.0, 1.0));
 }`;
 
 export interface BarkRenderer {
@@ -46,6 +48,7 @@ export interface BarkRenderer {
   stop(): void;
   resize(): void;
   setColors(mark: string): void;
+  setAlpha(lo: number, hi: number): void;
   setDashes(dashes: Dash[]): void;
   destroy(): void;
 }
@@ -123,6 +126,10 @@ export function createBarkRenderer(
   const uTime = gl.getUniformLocation(prog, 'uTime');
   const uMark = gl.getUniformLocation(prog, 'uMark');
   const uResolution = gl.getUniformLocation(prog, 'uResolution');
+  const uAlphaLo = gl.getUniformLocation(prog, 'uAlphaLo');
+  const uAlphaHi = gl.getUniformLocation(prog, 'uAlphaHi');
+  gl.uniform1f(uAlphaLo, 0.05);
+  gl.uniform1f(uAlphaHi, 0.22);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -161,6 +168,10 @@ export function createBarkRenderer(
       const [r, g, b] = parseColor(mark);
       gl.uniform3f(uMark, r, g, b);
     },
+    setAlpha(lo: number, hi: number) {
+      gl.uniform1f(uAlphaLo, lo);
+      gl.uniform1f(uAlphaHi, hi);
+    },
     setDashes(ds: Dash[]) { uploadDashes(ds); },
     destroy() {
       this.stop();
@@ -170,7 +181,13 @@ export function createBarkRenderer(
 }
 
 /** Static canvas2D fallback — same pattern, one frame, no motion. */
-export function renderBark2D(canvas: HTMLCanvasElement, dashes: Dash[], mark: string): void {
+export function renderBark2D(
+  canvas: HTMLCanvasElement,
+  dashes: Dash[],
+  mark: string,
+  alphaLo = 0.05,
+  alphaHi = 0.22,
+): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -182,7 +199,7 @@ export function renderBark2D(canvas: HTMLCanvasElement, dashes: Dash[], mark: st
     ctx.save();
     ctx.translate(d.x * W, d.y * H);
     ctx.rotate(d.rot);
-    ctx.globalAlpha = 0.05 + d.shade * 0.17;
+    ctx.globalAlpha = alphaLo + d.shade * (alphaHi - alphaLo);
     ctx.fillStyle = mark;
     const w = d.w * W, h = Math.max(1.5, d.h * H);
     ctx.beginPath();

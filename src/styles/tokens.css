@@ -20,11 +20,11 @@
   --green-sage-tint: #e3e9e0;   /* surface tint on light */
 
   /* --- type --- */
-  --font-display: 'Cormorant Variable', 'Iowan Old Style', Georgia, serif;
-  --font-smallcaps: 'Cormorant SC', 'Iowan Old Style', Georgia, serif;
+  --font-display: 'Marcellus', 'Iowan Old Style', Georgia, serif;
+  --font-smallcaps: 'Marcellus', 'Iowan Old Style', Georgia, serif;
   --font-body: 'Spectral', Georgia, 'Times New Roman', serif;
   --text-sm: 0.875rem;
-  --text-base: 1.0625rem;
+  --text-base: 1.125rem;
   --text-lg: 1.25rem;
   --text-xl: 1.625rem;
   --text-2xl: 2.25rem;
@@ -54,6 +54,9 @@
   --accent: var(--green-kelly-soft);
   --accent-strong: var(--birchwood-tan);
   --line: color-mix(in srgb, var(--bark-white) 18%, transparent);
+  /* bark dash opacity range (read by the bark renderers) */
+  --bark-alpha-lo: 0.05;
+  --bark-alpha-hi: 0.22;
 }
 
 /* --- semantic: light (the true inverse) --- */
@@ -68,4 +71,7 @@
   --accent: var(--green-hunter);
   --accent-strong: var(--leather-brown);
   --line: color-mix(in srgb, var(--charcoal) 20%, transparent);
+  /* charcoal dashes wash out on the light field at dark-tuned alphas */
+  --bark-alpha-lo: 0.09;
+  --bark-alpha-hi: 0.69;
 }
