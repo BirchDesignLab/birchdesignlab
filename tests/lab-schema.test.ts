@@ -35,4 +35,9 @@ describe('labSchema', () => {
     const { tech, ...withoutTech } = valid;
     expect(labSchema.parse(withoutTech).tech).toEqual([]);
   });
+  it('href is optional and must be a site-relative path', () => {
+    expect(labSchema.parse(valid).href).toBeUndefined();
+    expect(labSchema.parse({ ...valid, href: '/styleguide' }).href).toBe('/styleguide');
+    expect(() => labSchema.parse({ ...valid, href: 'https://example.com' })).toThrow();
+  });
 });

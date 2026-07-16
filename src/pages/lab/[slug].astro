@@ -5,7 +5,11 @@ import SpecimenPlate from '../../components/SpecimenPlate.astro';
 import { experimentComponents } from '../../experiments/registry';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('lab', ({ data }) => data.status === 'live');
+  // Entries with their own route (href) get no generated /lab page.
+  const entries = await getCollection(
+    'lab',
+    ({ data }) => data.status === 'live' && !data.href,
+  );
   return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 

@@ -9,6 +9,9 @@ export const labSchema = z.object({
   device: z.enum(['mobile-first', 'desktop-forward', 'universal']),
   status: z.enum(['live', 'forthcoming']).default('live'),
   featured: z.boolean().default(false),
+  /** Experiments that live at their own route (e.g. /styleguide) link
+      there from the catalog instead of getting a /lab/<id> page. */
+  href: z.string().startsWith('/').optional(),
 });
 
 export type LabEntryData = z.infer<typeof labSchema>;
