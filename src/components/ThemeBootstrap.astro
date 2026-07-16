@@ -1,0 +1,11 @@
+---
+// Shared pre-paint theme bootstrap (single source of truth for the theme
+// contract: `data-theme` on <html>, localStorage key 'theme', `.js` marker).
+---
+<script is:inline>
+  document.documentElement.classList.add('js');
+  let stored = null;
+  try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
+  const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.dataset.theme = stored || system;
+</script>

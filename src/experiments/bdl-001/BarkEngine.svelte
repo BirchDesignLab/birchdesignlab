@@ -59,7 +59,15 @@
         if (reduced.matches) renderer?.renderOnce();
       });
       mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-      return () => { ro.disconnect(); mo.disconnect(); renderer?.destroy(); };
+      const onReducedChange = () => {
+        if (reduced.matches) { renderer?.stop(); renderer?.renderOnce(); } else renderer?.start();
+      };
+      reduced.addEventListener('change', onReducedChange);
+      return () => {
+        ro.disconnect(); mo.disconnect();
+        reduced.removeEventListener('change', onReducedChange);
+        renderer?.destroy();
+      };
     }
     webgl = false;
     rebuild();
