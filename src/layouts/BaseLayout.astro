@@ -5,6 +5,7 @@ import '@fontsource/spectral/600.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import Seo from '../components/Seo.astro';
+import ThemeBootstrap from '../components/ThemeBootstrap.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
@@ -12,7 +13,7 @@ interface Props { title: string; description: string; noindex?: boolean }
 const { title, description, noindex = false } = Astro.props;
 ---
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,13 +21,7 @@ const { title, description, noindex = false } = Astro.props;
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo title={title} description={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <script is:inline>
-      // Before first paint: apply stored/system theme; mark JS availability.
-      document.documentElement.classList.add('js');
-      const stored = localStorage.getItem('theme');
-      const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      document.documentElement.dataset.theme = stored || system;
-    </script>
+    <ThemeBootstrap />
   </head>
   <body>
     <SiteHeader />

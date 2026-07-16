@@ -75,3 +75,25 @@
   --bark-alpha-lo: 0.09;
   --bark-alpha-hi: 0.69;
 }
+
+/* --- no-JS fallback: honor a light system preference ---
+   Without JS the bootstrap never sets data-theme, so the :root dark
+   default would win. html:not(.js) (0,1,1) outranks :root (0,1,0);
+   with JS the .js class makes this rule inert.
+   KEEP IN SYNC with :root[data-theme='light'] above. */
+@media (prefers-color-scheme: light) {
+  html:not(.js) {
+    color-scheme: light;
+    --field: var(--bark-white);
+    --field-raised: var(--bark-white-dim);
+    --green-field: var(--green-sage-tint);
+    --green-surface: var(--green-sage-tint);
+    --mark: var(--charcoal);
+    --mark-muted: var(--stone-dark);
+    --accent: var(--green-hunter);
+    --accent-strong: var(--leather-brown);
+    --line: color-mix(in srgb, var(--charcoal) 20%, transparent);
+    --bark-alpha-lo: 0.09;
+    --bark-alpha-hi: 0.69;
+  }
+}

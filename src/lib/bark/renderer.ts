@@ -205,12 +205,15 @@ export function renderBark2D(
   canvas.height = Math.round(canvas.clientHeight * dpr);
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
+  // Normalize through parseColor so both render paths share one fallback.
+  const [mr, mg, mb] = parseColor(mark);
+  const fill = `rgb(${Math.round(mr * 255)} ${Math.round(mg * 255)} ${Math.round(mb * 255)})`;
   for (const d of dashes) {
     ctx.save();
     ctx.translate(d.x * W, d.y * H);
     ctx.rotate(d.rot);
     ctx.globalAlpha = alphaLo + d.shade * (alphaHi - alphaLo);
-    ctx.fillStyle = mark;
+    ctx.fillStyle = fill;
     const w = d.w * W, h = Math.max(1.5, d.h * H);
     ctx.beginPath();
     ctx.roundRect(-w / 2, -h / 2, w, h, h / 2);

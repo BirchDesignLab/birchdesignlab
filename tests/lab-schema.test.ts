@@ -24,4 +24,15 @@ describe('labSchema', () => {
   it('rejects unknown device values', () => {
     expect(() => labSchema.parse({ ...valid, device: 'tablet' })).toThrow();
   });
+  it('rejects empty title and summary', () => {
+    expect(() => labSchema.parse({ ...valid, title: '' })).toThrow();
+    expect(() => labSchema.parse({ ...valid, summary: '' })).toThrow();
+  });
+  it('rejects unknown status values', () => {
+    expect(() => labSchema.parse({ ...valid, status: 'draft' })).toThrow();
+  });
+  it('defaults tech to an empty array when omitted', () => {
+    const { tech, ...withoutTech } = valid;
+    expect(labSchema.parse(withoutTech).tech).toEqual([]);
+  });
 });

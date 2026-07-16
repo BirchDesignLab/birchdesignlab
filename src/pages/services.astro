@@ -79,7 +79,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
   .process li { counter-increment: step; }
   .process h3::before {
-    content: counter(step, decimal-leading-zero);
+    content: counter(step, decimal-leading-zero) ' '; /* trailing space keeps the a11y name from concatenating ("01 Discovery") */
     display: block; color: var(--accent); font-size: var(--text-sm);
     letter-spacing: var(--tracking-wide); margin-bottom: var(--space-1);
   }
