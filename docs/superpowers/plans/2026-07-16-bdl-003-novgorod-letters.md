@@ -35,13 +35,15 @@
 import { describe, expect, it } from 'vitest';
 import { letterSchema } from '../src/lib/scratch/letter-schema';
 
+// Neutral fixture: exercises the schema only. The real letters live in Task 3
+// so this test never pretends to be a specific gramota.
 const valid = {
-  id: 'onfim',
-  gramota: 202,
-  caption: "a child's homework",
-  circa: 'c. 1260',
-  transcription: 'невѣжѧ писа недума каза',
-  translation: 'Ignoramus wrote it, dimwit showed it.',
+  id: 'sample',
+  gramota: 1,
+  caption: 'a sample plate',
+  circa: 'c. 1200',
+  transcription: 'а б в г д',
+  translation: 'A short sample translation.',
   viewBox: '0 0 100 60',
   strokes: ['M10 10 L20 12', 'M22 10 L30 14'],
 };
@@ -118,7 +120,7 @@ git push
   - `paintCircle(grid: CoverageGrid, cx: number, cy: number, r: number): number` (coords and radius normalized 0..1 of grid space; returns count of newly painted cells)
   - `fractionPainted(grid: CoverageGrid, over?: Uint8Array): number` (0..1; when `over` given, fraction of that cell mask painted)
   - `type DigPhase = 'dig' | 'complete' | 'bloom'`
-  - `advancePhase(phase: DigPhase, strokeProgress: number, rubSinceComplete: number): DigPhase` with thresholds `STROKE_DONE = 0.85`, `BLOOM_RUB = 0.12` (both exported)
+  - `advancePhase(phase: DigPhase, strokeProgress: number, rubSinceComplete: number, bloomRub?: number): DigPhase` with thresholds `STROKE_DONE = 0.85`, `BLOOM_RUB = 0.12` (both exported); `bloomRub` defaults to `BLOOM_RUB` so the component can override it from a tuning knob
 
 - [ ] **Step 1: Write the failing test**
 
@@ -231,7 +233,11 @@ export function fractionPainted(g: CoverageGrid, over?: Uint8Array): number {
 
 export type DigPhase = 'dig' | 'complete' | 'bloom';
 
-/** Dig completes at 85% of stroke cells; bloom needs 12% more rubbing after. */
+/** Dig completes at 85% of stroke cells. BLOOM_RUB is the extra rubbing needed
+ *  after completion before the translation blooms, measured as a fraction of the
+ *  whole grid painted since completion (see DigCanvas). It is the feel-critical
+ *  knob: too low and the bloom fires the instant the strokes finish, collapsing
+ *  the two-stage reveal. The component overrides it via the `bloomRub` arg. */
 export const STROKE_DONE = 0.85;
 export const BLOOM_RUB = 0.12;
 
@@ -239,9 +245,10 @@ export function advancePhase(
   phase: DigPhase,
   strokeProgress: number,
   rubSinceComplete: number,
+  bloomRub: number = BLOOM_RUB,
 ): DigPhase {
   if (phase === 'dig') return strokeProgress >= STROKE_DONE ? 'complete' : 'dig';
-  if (phase === 'complete') return rubSinceComplete >= BLOOM_RUB ? 'bloom' : 'complete';
+  if (phase === 'complete') return rubSinceComplete >= bloomRub ? 'bloom' : 'complete';
   return 'bloom';
 }
 ```
@@ -423,10 +430,23 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
 
 **Files:**
 - Create: `src/experiments/bdl-003/DigCanvas.svelte`
+- Modify: `src/layouts/ExperimentLayout.astro` (load Spectral italic, see Step 0)
 
 **Interfaces:**
 - Consumes: `LetterData` (Task 1); `createGrid`, `paintCircle`, `fractionPainted`, `advancePhase`, `DigPhase` (Task 2); `generateBark`, `hashString`, `createBarkRenderer`, `renderBark2D` from `src/lib/bark`.
 - Produces: Svelte component with props `{ letter: LetterData, onphase?: (phase: DigPhase) => void }`. Exposes its dig state only through `onphase`. Task 5 consumes it.
+
+- [ ] **Step 0: Load Spectral italic**
+
+The bloomed translation is set in Spectral italic, but `ExperimentLayout.astro` only imports the 400 and 600 upright subsets, so canvas text would render faux-oblique or fall back to Georgia. Add the italic subset alongside them:
+
+```astro
+import '@fontsource/spectral/400.css';
+import '@fontsource/spectral/400-italic.css';
+import '@fontsource/spectral/600.css';
+```
+
+(If `@fontsource/spectral` does not ship a `400-italic.css` file in this version, use the nearest italic subset it does ship; confirm with `ls node_modules/@fontsource/spectral`.)
 
 - [ ] **Step 1: Write the component**
 
@@ -437,7 +457,7 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
   import type { LetterData } from '../../lib/scratch/letter-schema';
   import {
     createGrid, paintCircle, fractionPainted, advancePhase,
-    STROKE_DONE, type CoverageGrid, type DigPhase,
+    STROKE_DONE, BLOOM_RUB, type CoverageGrid, type DigPhase,
   } from '../../lib/scratch/coverage';
   import { generateBark, hashString, createBarkRenderer, renderBark2D } from '../../lib/bark';
 
@@ -448,11 +468,14 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
 
   const GRID = 96;             // coverage grid resolution per axis
   const BRUSH = 0.045;         // scratch radius, normalized
+  const BLOOM_MS = 900;        // bloom crossfade duration (Task 7 makes this a knob)
+  const rubThreshold = BLOOM_RUB; // extra rub needed to bloom (Task 7 makes this a knob)
   let grid: CoverageGrid;
-  let strokeCells: Uint8Array; // which grid cells contain stroke ink
+  let strokeCells: Uint8Array; // grid cells holding stroke ink, dilated 1 cell
   let phase: DigPhase = 'dig';
   let rubSinceComplete = 0;
   let bloomAt = 0;             // timestamp of bloom start, for the crossfade
+  let bloomRAF = 0;            // guards against stacking crossfade loops
 
   let strokeLayer: HTMLCanvasElement;      // rasterized incisions
   let translationLayer: HTMLCanvasElement; // rasterized caption text
@@ -461,8 +484,13 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
 
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
-  const accentColor = () =>
-    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const barkAlphas = (): [number, number] => {
+    const cs = getComputedStyle(document.documentElement);
+    return [
+      parseFloat(cs.getPropertyValue('--bark-alpha-lo')) || 0.05,
+      parseFloat(cs.getPropertyValue('--bark-alpha-hi')) || 0.22,
+    ];
+  };
 
   function rasterizeStrokes(w: number, h: number): HTMLCanvasElement {
     const c = document.createElement('canvas');
@@ -477,38 +505,64 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
     return c;
   }
 
+  /** Wrap text to a max width for a given ctx font. */
+  function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxW: number): string[] {
+    const out: string[] = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+      const probe = line ? line + ' ' + word : word;
+      if (ctx.measureText(probe).width > maxW && line) { out.push(line); line = word; }
+      else line = probe;
+    }
+    if (line) out.push(line);
+    return out;
+  }
+
+  /** Museum caption in Spectral italic, shrunk until the wrapped lines clear the
+      vertical bound so a long translation never spills past the stage. */
   function rasterizeTranslation(w: number, h: number): HTMLCanvasElement {
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     const ctx = c.getContext('2d')!;
     ctx.fillStyle = markColor();
-    const size = Math.max(14, Math.round(w / 34));
-    ctx.font = `italic ${size}px Spectral, Georgia, serif`;
     ctx.textBaseline = 'top';
-    const pad = size * 1.5;
-    const words = letter.translation.split(' ');
-    let line = '', y = pad;
-    for (const word of words) {
-      const probe = line ? line + ' ' + word : word;
-      if (ctx.measureText(probe).width > w - pad * 2 && line) {
-        ctx.fillText(line, pad, y);
-        y += size * 1.5;
-        line = word;
-      } else line = probe;
+    let size = Math.max(14, Math.round(w / 34));
+    let lines: string[] = [];
+    for (; size >= 11; size--) {
+      ctx.font = `italic ${size}px Spectral, Georgia, serif`;
+      const pad = size * 1.5;
+      lines = wrapLines(ctx, letter.translation, w - pad * 2);
+      if (pad * 2 + lines.length * size * 1.5 <= h) break;
     }
-    ctx.fillText(line, pad, y);
+    const pad = size * 1.5;
+    let y = pad;
+    for (const line of lines) { ctx.fillText(line, pad, y); y += size * 1.5; }
     return c;
   }
 
-  /** Sample the stroke layer down to the coverage grid: cell = 1 if any ink. */
+  /** Sample the stroke layer to the coverage grid (cell = 1 if any ink), then
+      dilate by one cell. Dilation keeps thin or isolated strokes reachable so
+      the 85% completion threshold cannot strand the dig short of finishing. */
   function sampleStrokeCells(layer: HTMLCanvasElement): Uint8Array {
     const c = document.createElement('canvas');
     c.width = GRID; c.height = GRID;
     const ctx = c.getContext('2d')!;
     ctx.drawImage(layer, 0, 0, GRID, GRID);
     const data = ctx.getImageData(0, 0, GRID, GRID).data;
+    const raw = new Uint8Array(GRID * GRID);
+    for (let i = 0; i < raw.length; i++) if (data[i * 4 + 3] > 8) raw[i] = 1;
     const cells = new Uint8Array(GRID * GRID);
-    for (let i = 0; i < cells.length; i++) if (data[i * 4 + 3] > 8) cells[i] = 1;
+    for (let y = 0; y < GRID; y++) {
+      for (let x = 0; x < GRID; x++) {
+        if (!raw[y * GRID + x]) continue;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < GRID && ny >= 0 && ny < GRID) cells[ny * GRID + nx] = 1;
+          }
+        }
+      }
+    }
     return cells;
   }
 
@@ -526,17 +580,20 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
     sctx.drawImage(maskLayer, 0, 0);
 
     if (phase === 'bloom') {
-      const t = reduced.matches ? 1 : Math.min(1, (performance.now() - bloomAt) / 900);
+      const t = reduced.matches ? 1 : Math.min(1, (performance.now() - bloomAt) / BLOOM_MS);
       ctx.globalAlpha = 1 - t;
       ctx.drawImage(scratched, 0, 0);
       ctx.globalAlpha = t;
       ctx.drawImage(translationLayer, 0, 0);
       ctx.globalAlpha = 1;
-      if (t < 1) requestAnimationFrame(composite);
+      // one self-driving crossfade loop; a scratch mid-bloom must not spawn a second
+      if (t < 1 && !bloomRAF) {
+        bloomRAF = requestAnimationFrame(() => { bloomRAF = 0; composite(); });
+      }
     } else {
       ctx.drawImage(scratched, 0, 0);
       if (phase === 'complete' && !reduced.matches) {
-        // brief glow: strokes redrawn in accent at low alpha
+        // brief glow: the fresh incisions flare, redrawn additively over themselves
         ctx.globalAlpha = 0.35;
         ctx.globalCompositeOperation = 'lighter';
         ctx.drawImage(scratched, 0, 0);
@@ -559,7 +616,9 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
     mctx.fill();
     const added = paintCircle(grid, nx, ny, BRUSH);
     if (phase === 'complete') rubSinceComplete += added / (GRID * GRID) / (1 - STROKE_DONE);
-    const next = advancePhase(phase, fractionPainted(grid, strokeCells), rubSinceComplete);
+    const next = advancePhase(
+      phase, fractionPainted(grid, strokeCells), rubSinceComplete, rubThreshold,
+    );
     if (next !== phase) {
       phase = next;
       if (phase === 'bloom') bloomAt = performance.now();
@@ -580,9 +639,10 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
     const gl = createBarkRenderer(barkCanvas, dashes);
     if (gl) {
       gl.setColors(markColor());
+      gl.setAlpha(...barkAlphas());
       if (reduced.matches) gl.renderOnce(); else gl.start();
     } else {
-      renderBark2D(barkCanvas, dashes, markColor());
+      renderBark2D(barkCanvas, dashes, markColor(), ...barkAlphas());
     }
 
     strokeLayer = rasterizeStrokes(w, h);
@@ -593,14 +653,32 @@ One letter's dig: bark surface underneath (existing renderer), stroke layer and 
     strokeCells = sampleStrokeCells(strokeLayer);
     composite();
 
+    // Web fonts load async and canvas text does not wait for them: re-rasterize
+    // the caption once Spectral italic is ready so a fast dig never blooms in the
+    // Georgia fallback. Re-composite in case the bloom already happened.
+    document.fonts.ready.then(() => {
+      translationLayer = rasterizeTranslation(w, h);
+      composite();
+    });
+
+    // Refit only the bark on container resize (BarkEngine precedent). The dig
+    // canvas keeps its mount-time bitmap; the stage size is effectively fixed.
+    const ro = new ResizeObserver(() => {
+      gl?.resize();
+      if (reduced.matches) gl?.renderOnce();
+    });
+    ro.observe(barkCanvas);
+
     const mo = new MutationObserver(() => {
       strokeLayer = rasterizeStrokes(w, h);
       translationLayer = rasterizeTranslation(w, h);
       gl?.setColors(markColor());
+      gl?.setAlpha(...barkAlphas());
+      if (reduced.matches) gl?.renderOnce();
       composite();
     });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => { mo.disconnect(); gl?.destroy(); };
+    return () => { ro.disconnect(); mo.disconnect(); gl?.destroy(); };
   });
 </script>
 
@@ -841,39 +919,43 @@ git push
 
 ### Task 7: Dev tuning knobs (founder fiddle round prep)
 
-Feel is locked by hand (spec §6). Expose brush radius, completion threshold and bloom timing as URL params read once at mount, dev-only affordance, no UI.
+Feel is locked by hand (spec §6). Expose brush radius, bloom timing, and the bloom-rub threshold (the feel-critical "how much extra rubbing before the meaning arrives" number) as URL params read once at mount. Dev-only affordance, no UI. `BLOOM_MS` and `rubThreshold` are already referenced by the Task 4 code; this task only turns their hardcoded defaults into URL-param reads.
 
 **Files:**
 - Modify: `src/experiments/bdl-003/DigCanvas.svelte`
 
 **Interfaces:**
-- Consumes/produces: nothing new outside the component. URL contract: `?brush=0.045&glow=900` on `/lab/bdl-003` overrides defaults for a tuning session.
+- Consumes/produces: nothing new outside the component. URL contract: `?brush=0.045&glow=900&rub=0.12` on `/lab/bdl-003` overrides defaults for a tuning session.
 
 - [ ] **Step 1: Read overrides at mount**
 
-In `DigCanvas.svelte`, replace the constant declarations:
+In `DigCanvas.svelte`, replace the four constant/knob declarations:
 
 ```ts
   const GRID = 96;             // coverage grid resolution per axis
   const BRUSH = 0.045;         // scratch radius, normalized
+  const BLOOM_MS = 900;        // bloom crossfade duration (Task 7 makes this a knob)
+  const rubThreshold = BLOOM_RUB; // extra rub needed to bloom (Task 7 makes this a knob)
 ```
 
 with:
 
 ```ts
   const GRID = 96; // coverage grid resolution per axis
-  // Tuning knobs for the founder fiddle round: /lab/bdl-003?brush=0.06&glow=600
+  // Tuning knobs for the founder fiddle round:
+  //   /lab/bdl-003?brush=0.06&glow=600&rub=0.2
   const params = new URLSearchParams(location.search);
-  const BRUSH = Number(params.get('brush')) || 0.045; // scratch radius, normalized
-  const BLOOM_MS = Number(params.get('glow')) || 900; // bloom crossfade duration
+  const BRUSH = Number(params.get('brush')) || 0.045;         // scratch radius, normalized
+  const BLOOM_MS = Number(params.get('glow')) || 900;         // bloom crossfade duration
+  const rubThreshold = Number(params.get('rub')) || BLOOM_RUB; // extra rub to bloom
 ```
 
-and in `composite()` replace the literal `900` with `BLOOM_MS`.
+(`BLOOM_MS` and `rubThreshold` are already wired into `composite()` and the `advancePhase` call from Task 4, so no further edits are needed.)
 
 - [ ] **Step 2: Verify**
 
 Run: `npm run check && npm test`
-Expected: 0 errors, all pass. By hand: `/lab/bdl-003?brush=0.1` digs with a visibly larger brush.
+Expected: 0 errors, all pass. By hand: `/lab/bdl-003?brush=0.1` digs with a visibly larger brush; `?rub=0.4` makes the translation need noticeably more rubbing to bloom.
 
 - [ ] **Step 3: Commit**
 

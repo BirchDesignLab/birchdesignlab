@@ -60,7 +60,7 @@ Layer stack, bottom to top: bark field (existing renderer) · stroke layer maske
 ## 6. Testing and tuning
 
 - **Unit** (vitest, alongside the existing 26): scratch-mask coverage math, stroke-progress thresholds, letter data schema validation.
-- **Founder fiddle round** on scratch feel: brush radius, reveal softness, glow and bloom timing exposed as dev-side knobs, styleguide pattern. Autonomous build delivers foundations; feel is locked by hand.
+- **Founder fiddle round** on scratch feel: brush radius, reveal softness, glow timing, and how much extra rubbing the bloom needs (the two-stage "meet the artifact before the meaning" beat lives or dies on this one), all exposed as dev-side knobs, styleguide pattern. Autonomous build delivers foundations; feel is locked by hand.
 
 ## 7. Out of scope
 
