@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const email = 'hello@birchdesignlab.com'; // provisional until mailbox exists
+---
+<BaseLayout
+  title="Contact — Birch Design Lab"
+  description="Start a conversation with Birch Design Lab about your website or software project."
+>
+  <section class="wrap">
+    <header class="intro">
+      <h1>Contact</h1>
+      <!-- provisional copy -->
+      <p>
+        Tell us what you're trying to build, fix, or grow. Plain English is
+        the house language — no preparation required.
+      </p>
+    </header>
+    <p class="line" data-reveal>
+      <a class="mail" href={`mailto:${email}`}>{email}</a>
+    </p>
+    <!-- Renovation slot: contact form via Cloudflare Pages Functions when volume justifies it. -->
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-4); max-width: 52ch; }
+  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .line { padding-block: var(--space-5) var(--space-7); }
+  .mail { font-family: var(--font-display); font-size: var(--text-2xl); }
+</style>
