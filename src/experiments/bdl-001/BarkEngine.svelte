@@ -10,6 +10,9 @@
   let seedText = $state('birch');
   let density = $state(180);
   let webgl = $state(true);
+  let wake = $state(true);
+  let gust = $state(true);
+  let grow = $state(true);
 
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
@@ -38,6 +41,24 @@
   function randomSeed() {
     seedText = Math.random().toString(36).slice(2, 8);
     rebuild();
+    if (grow && !reduced?.matches) renderer?.growTree();
+  }
+
+  function setGust(on: boolean) {
+    gust = on;
+    renderer?.setGust(on);
+  }
+
+  let lastPointer = { x: 0.5, y: 0.5 };
+  function onPointerMove(e: PointerEvent) {
+    if (!wake || !renderer || reduced?.matches) return;
+    const r = canvas.getBoundingClientRect();
+    lastPointer = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    renderer.setPointer(lastPointer.x, lastPointer.y, 1);
+  }
+  function onPointerLeave() {
+    // keep the last position so the wake fades in place instead of sliding off
+    renderer?.setPointer(lastPointer.x, lastPointer.y, 0);
   }
 
   onMount(() => {
@@ -46,8 +67,12 @@
     if (renderer) {
       renderer.setColors(markColor());
       renderer.setAlpha(...barkAlphas());
+      renderer.setGust(gust);
       if (reduced.matches) renderer.renderOnce();
-      else renderer.start();
+      else {
+        renderer.start();
+        if (grow) renderer.growTree();
+      }
       const ro = new ResizeObserver(() => {
         renderer?.resize();
         if (reduced.matches) renderer?.renderOnce();
@@ -79,7 +104,7 @@
   });
 </script>
 
-<div class="stage">
+<div class="stage" onpointermove={onPointerMove} onpointerleave={onPointerLeave}>
   <canvas bind:this={canvas} aria-label="Generated birch bark pattern"></canvas>
   <form class="controls" onsubmit={(e) => { e.preventDefault(); rebuild(); }}>
     <label>
@@ -90,6 +115,16 @@
       <span class="smallcaps">Density {density}</span>
       <input type="range" min="30" max="600" step="10" bind:value={density} oninput={rebuild} />
     </label>
+    {#if webgl}
+      <fieldset class="life">
+        <legend class="smallcaps">Life</legend>
+        <label class="check"><input type="checkbox" bind:checked={wake}
+          onchange={() => { if (!wake) onPointerLeave(); }} /> Wake</label>
+        <label class="check"><input type="checkbox" checked={gust}
+          onchange={(e) => setGust(e.currentTarget.checked)} /> Gust</label>
+        <label class="check"><input type="checkbox" bind:checked={grow} /> Grow</label>
+      </fieldset>
+    {/if}
     <button type="button" onclick={randomSeed}>New tree</button>
     {#if !webgl}<p class="note">WebGL unavailable. Static render.</p>{/if}
   </form>
@@ -113,6 +148,10 @@
     padding: var(--space-1) var(--space-2); font-family: var(--font-body);
   }
   input[type='range'] { accent-color: var(--accent); }
+  .life { border: none; padding: 0; margin: 0; display: flex; gap: var(--space-3); }
+  .life legend { font-size: var(--text-sm); color: var(--mark-muted); margin-bottom: var(--space-1); }
+  .check { display: flex; flex-direction: row; align-items: center; gap: var(--space-1); }
+  .check input { accent-color: var(--accent); }
   button {
     background: none; color: var(--accent); border: 1px solid var(--accent);
     border-radius: 999px; padding: var(--space-1) var(--space-3);
