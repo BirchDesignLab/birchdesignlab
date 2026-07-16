@@ -13,10 +13,13 @@
   let barkCanvas: HTMLCanvasElement;
   let digCanvas: HTMLCanvasElement;
 
-  const GRID = 96;             // coverage grid resolution per axis
-  const BRUSH = 0.045;         // scratch radius, normalized
-  const BLOOM_MS = 900;        // bloom crossfade duration (Task 7 makes this a knob)
-  const rubThreshold = BLOOM_RUB; // extra rub needed to bloom (Task 7 makes this a knob)
+  const GRID = 96; // coverage grid resolution per axis
+  // Tuning knobs for the founder fiddle round:
+  //   /lab/bdl-003?brush=0.06&glow=600&rub=0.2
+  const params = new URLSearchParams(location.search);
+  const BRUSH = Number(params.get('brush')) || 0.045;         // scratch radius, normalized
+  const BLOOM_MS = Number(params.get('glow')) || 900;         // bloom crossfade duration
+  const rubThreshold = Number(params.get('rub')) || BLOOM_RUB; // extra rub to bloom
   let grid: CoverageGrid;
   let strokeCells: Uint8Array; // grid cells holding stroke ink, dilated 1 cell
   let phase: DigPhase = 'dig';
