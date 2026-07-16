@@ -9,7 +9,9 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
-    "trace": "node scripts/trace-to-strokes.mjs"
+    "trace": "node scripts/trace-to-strokes.mjs",
+    "og": "tsx scripts/og/generate.ts",
+    "prebuild": "npm run og"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.2.0",
