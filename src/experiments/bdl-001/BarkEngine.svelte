@@ -43,6 +43,11 @@
     }
     webgl = false;
     rebuild();
+    const ro = new ResizeObserver(() => rebuild());
+    ro.observe(canvas);
+    const mo = new MutationObserver(() => rebuild());
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { ro.disconnect(); mo.disconnect(); };
   });
 </script>
 
