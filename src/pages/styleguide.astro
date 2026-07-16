@@ -95,6 +95,26 @@ const semanticSwatches = [
       </p>
     </div>
 
+    <h2>Billboard</h2>
+    <p class="lab-note">
+      The home-hero wordmark only. Single-shade colors apply to both themes;
+      ratios show against both fields. Display text this large needs 3:1.
+    </p>
+    <div class="bb-preview">
+      <span class="bb-word">Birch Design Lab</span>
+    </div>
+    <div class="bb-controls">
+      <fieldset>
+        <legend class="smallcaps">Face</legend>
+        <div class="opts" data-group="bbface"></div>
+      </fieldset>
+      <fieldset>
+        <legend class="smallcaps">Color</legend>
+        <div class="opts" data-group="bbcolor"></div>
+      </fieldset>
+      <p class="bb-ratios" id="bb-ratios"></p>
+    </div>
+
     <h2>Bark contrast lab</h2>
     <p class="lab-note">
       Judge lenticel dashes against the current field; this is where light
@@ -177,6 +197,28 @@ const semanticSwatches = [
   .muted-spec { color: var(--mark-muted); }
 
   .lab-note { color: var(--mark-muted); max-width: 60ch; margin-top: var(--space-3); }
+  .bb-preview {
+    margin-top: var(--space-4);
+    border: 1px solid var(--line); border-radius: 0.5rem;
+    padding: var(--space-6) var(--space-4);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .bb-word {
+    font-family: var(--font-billboard);
+    font-weight: var(--billboard-weight);
+    color: var(--billboard-color);
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .bb-controls {
+    display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: end;
+    margin-top: var(--space-3);
+  }
+  .bb-ratios { font-size: var(--text-sm); color: var(--mark-muted); }
+  .bb-ratios [data-fail] { color: #c05b4d; }
   .bark-lab { margin-block: var(--space-4) var(--space-7); }
   #bark-lab-canvas {
     width: 100%; height: 280px;
@@ -228,8 +270,25 @@ const semanticSwatches = [
     { name: 'Source Serif', stack: "'Source Serif 4 Variable', Georgia, serif" },
   ];
 
+  interface BBFace { name: string; stack: string; weight: number }
+  const bbFaces: BBFace[] = [
+    { name: 'Marcellus', stack: "'Marcellus', Georgia, serif", weight: 500 },
+    { name: 'Fraunces', stack: "'Fraunces Variable', Georgia, serif", weight: 650 },
+    { name: 'Fraunces Black', stack: "'Fraunces Variable', Georgia, serif", weight: 900 },
+    { name: 'Cormorant SC', stack: "'Cormorant SC', Georgia, serif", weight: 500 },
+    { name: 'EB Garamond', stack: "'EB Garamond Variable', Georgia, serif", weight: 600 },
+  ];
+  const bbColors = [
+    { name: 'Mark (default)', value: 'var(--mark)' },
+    { name: 'Moss', value: '#a3bd8f' },
+    { name: 'Kelly', value: '#85c98f' },
+    { name: 'Sea', value: '#8ec4b2' },
+    { name: 'Fern', value: '#6f9678' },
+    { name: 'Laurel', value: '#7fae8c' },
+  ];
+
   // Locked-in choices are the defaults (Marcellus won round 1).
-  const state = { palette: 0, display: 3, body: 0 };
+  const state = { palette: 0, display: 3, body: 0, bbface: 0, bbcolor: 0 };
 
   // ---------- override injection (keeps theme toggle working) ----------
   const styleEl = document.createElement('style');
@@ -240,10 +299,15 @@ const semanticSwatches = [
     const p = palettes[state.palette];
     const d = displays[state.display];
     const b = bodies[state.body];
+    const bf = bbFaces[state.bbface];
+    const bc = bbColors[state.bbcolor];
     const fonts =
       `  --font-display: ${d.display};\n` +
       `  --font-smallcaps: ${d.smallcaps};\n` +
-      `  --font-body: ${b.stack};\n`;
+      `  --font-body: ${b.stack};\n` +
+      `  --font-billboard: ${bf.stack};\n` +
+      `  --billboard-weight: ${bf.weight};\n` +
+      `  --billboard-color: ${bc.value};\n`;
     const block = (t: ThemeSet) =>
       Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n');
     return (
@@ -342,10 +406,24 @@ const semanticSwatches = [
   };
 
   // ---------- wiring ----------
+  const refreshBillboardRatios = () => {
+    const p = palettes[state.palette];
+    const c = bbColors[state.bbcolor];
+    const onDark = c.value.startsWith('var') ? p.dark['--mark'] : c.value;
+    const onLight = c.value.startsWith('var') ? p.light['--mark'] : c.value;
+    const rd = contrast(onDark, p.dark['--field']);
+    const rl = contrast(onLight, p.light['--field']);
+    const cell = (label: string, r: number) =>
+      `${label} ${r.toFixed(2)}:1${r < 3 ? ' <span data-fail>(under 3:1)</span>' : ''}`;
+    document.getElementById('bb-ratios')!.innerHTML =
+      `${cell('dark', rd)} &middot; ${cell('light', rl)}`;
+  };
+
   const apply = () => {
     styleEl.textContent = buildCss();
-    // Style recalc is synchronous under getComputedStyle — no rAF needed.
+    // Style recalc is synchronous under getComputedStyle, no rAF needed.
     refreshSwatches();
+    refreshBillboardRatios();
     drawLab();
   };
 
@@ -368,6 +446,8 @@ const semanticSwatches = [
   makeButtons('palette', palettes.map((p) => p.name), 'palette');
   makeButtons('display', displays.map((d) => d.name), 'display');
   makeButtons('body', bodies.map((b) => b.name), 'body');
+  makeButtons('bbface', bbFaces.map((f) => f.name), 'bbface');
+  makeButtons('bbcolor', bbColors.map((c) => c.name), 'bbcolor');
 
   [alphaMin, alphaMax, labDensity].forEach((el) => el.addEventListener('input', drawLab));
   new MutationObserver(apply).observe(document.documentElement, {
@@ -379,7 +459,8 @@ const semanticSwatches = [
     const header =
       `/* Styleguide export: palette "${palettes[state.palette].name}", ` +
       `display ${displays[state.display].name}, body ${bodies[state.body].name}, ` +
-      `bark alpha ${alphaMin.value}–${alphaMax.value} */\n`;
+      `billboard ${bbFaces[state.bbface].name} in ${bbColors[state.bbcolor].name}, ` +
+      `bark alpha ${alphaMin.value} to ${alphaMax.value} */\n`;
     await navigator.clipboard.writeText(header + buildCss());
     const btn = document.getElementById('copy-tokens')!;
     const old = btn.textContent;
