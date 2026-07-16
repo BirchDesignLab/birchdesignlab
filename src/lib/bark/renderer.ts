@@ -7,6 +7,7 @@ layout(location=1) in vec4 aRect;               // x,y,w,h normalized
 layout(location=2) in vec2 aRotShade;           // rot, shade
 uniform vec2 uResolution;
 uniform float uTime;
+uniform float uScroll;
 out vec2 vLocal;
 out float vShade;
 void main() {
@@ -18,8 +19,11 @@ void main() {
   float c = cos(rot), s = sin(rot);
   p = vec2(p.x * c - p.y * s, p.x * s + p.y * c);
   // breathing: each dash drifts a hair, phased by its shade
-  float breathe = sin(uTime * 0.35 + vShade * 6.2831) * 0.0012;
-  vec2 center = aRect.xy + vec2(0.0, breathe);
+  float breathe = sin(uTime * 0.35 + vShade * 6.2831) * 0.003;
+  // depth parallax: paler (higher-shade) dashes ride closer to the viewer
+  // and move more with scroll; positions wrap so the field never empties
+  float depth = mix(0.35, 1.0, vShade);
+  vec2 center = vec2(aRect.x, fract(aRect.y + breathe + uScroll * depth));
   vec2 pos = (center + p) * 2.0 - 1.0;
   gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
 }`;
@@ -49,6 +53,7 @@ export interface BarkRenderer {
   resize(): void;
   setColors(mark: string): void;
   setAlpha(lo: number, hi: number): void;
+  setScroll(offset: number): void;
   setDashes(dashes: Dash[]): void;
   destroy(): void;
 }
@@ -128,8 +133,10 @@ export function createBarkRenderer(
   const uResolution = gl.getUniformLocation(prog, 'uResolution');
   const uAlphaLo = gl.getUniformLocation(prog, 'uAlphaLo');
   const uAlphaHi = gl.getUniformLocation(prog, 'uAlphaHi');
+  const uScroll = gl.getUniformLocation(prog, 'uScroll');
   gl.uniform1f(uAlphaLo, 0.05);
   gl.uniform1f(uAlphaHi, 0.22);
+  gl.uniform1f(uScroll, 0);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -171,6 +178,9 @@ export function createBarkRenderer(
     setAlpha(lo: number, hi: number) {
       gl.uniform1f(uAlphaLo, lo);
       gl.uniform1f(uAlphaHi, hi);
+    },
+    setScroll(offset: number) {
+      gl.uniform1f(uScroll, offset);
     },
     setDashes(ds: Dash[]) { uploadDashes(ds); },
     destroy() {

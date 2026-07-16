@@ -67,11 +67,22 @@ const { seed, density = 140, class: className } = Astro.props;
       };
       reducedMotion.addEventListener('change', handleReducedMotionChange);
 
+      // Depth parallax: deeper dashes lag the scroll (uniform read per frame).
+      const handleScroll = () => {
+        if (reducedMotion.matches) return;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > innerHeight) return;
+        gl.setScroll((-rect.top / innerHeight) * 0.06);
+      };
+      addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+
       cleanups.push(() => {
         gl.destroy();
         resizeObserver.disconnect();
         mutationObserver.disconnect();
         reducedMotion.removeEventListener('change', handleReducedMotionChange);
+        removeEventListener('scroll', handleScroll);
       });
     } else {
       paint2D();

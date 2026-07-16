@@ -204,6 +204,8 @@ const semanticSwatches = [
     '--line': `color-mix(in srgb, ${mark} 18%, transparent)`,
   });
 
+  // Round 2: Pine & Leather + Hunter & Stone culled (round-1 verdicts).
+  // Racing & Limestone was the only "maybe" — pushed further in two directions.
   const palettes: Palette[] = [
     {
       name: 'Current',
@@ -211,19 +213,24 @@ const semanticSwatches = [
       light: T('#f4f1ea', '#e6e1d5', '#1c1b19', '#55524b', '#33523f', '#4a3a2c'),
     },
     {
-      name: 'Hunter & Stone',
-      dark: T('#191c1a', '#232824', '#f2f0e9', '#a8aaa0', '#9dbfa4', '#b8a888'),
-      light: T('#f2f1ec', '#e5e3da', '#23281f', '#5c6157', '#2c4736', '#6b5b45'),
-    },
-    {
-      name: 'Pine & Leather',
-      dark: T('#16201b', '#1f2b24', '#f4f1ea', '#9fa89f', '#cbb593', '#8a6f4d'),
-      light: T('#f4f1ea', '#e9e2d3', '#1e2620', '#57534a', '#4a3a2c', '#33523f'),
-    },
-    {
       name: 'Racing & Limestone',
       dark: T('#1a1b18', '#24261f', '#f3f1e8', '#a5a294', '#8fbf9c', '#d3c5a3'),
       light: T('#f5f3ec', '#e8e4d8', '#191d18', '#59564c', '#1f4030', '#7a6248'),
+    },
+    {
+      name: 'Deep Racing',
+      dark: T('#14201a', '#1d2b23', '#f1efe6', '#9aa79e', '#86c29b', '#cfc2a0'),
+      light: T('#f4f2ea', '#e7e3d5', '#131c16', '#4f5a52', '#17402c', '#6e5a41'),
+    },
+    {
+      name: 'Castle Granite',
+      dark: T('#1e1d1b', '#2a2825', '#f2efe7', '#a9a49a', '#93b8a0', '#b5ac9b'),
+      light: T('#efede6', '#e0dcd2', '#201e1a', '#5b574e', '#2e5240', '#756a58'),
+    },
+    {
+      name: 'Moss & Leather',
+      dark: T('#1c1a17', '#272319', '#f4f0e6', '#a89f8f', '#a3bd8f', '#a0784f'),
+      light: T('#f5f1e8', '#e9e1d2', '#1f1b15', '#5a5244', '#4c5f3a', '#6b4e33'),
     },
   ];
 
