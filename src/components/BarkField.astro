@@ -1,0 +1,92 @@
+---
+interface Props { seed?: number; density?: number; class?: string }
+const { seed, density = 140, class: className } = Astro.props;
+---
+<canvas
+  class:list={['bark-field', className]}
+  data-bark
+  data-seed={seed}
+  data-density={density}
+  aria-hidden="true"></canvas>
+
+<style>
+  .bark-field {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { generateBark, resolveSeed, createBarkRenderer, renderBark2D } from '../lib/bark';
+
+  const markColor = () =>
+    getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const cleanups: Array<() => void> = [];
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-bark]')) {
+    const seed = canvas.dataset.seed
+      ? Number(canvas.dataset.seed)
+      : resolveSeed(undefined, location.pathname);
+    const dashes = generateBark(seed, { density: Number(canvas.dataset.density) || 140 });
+
+    const gl = createBarkRenderer(canvas, dashes);
+    const paint2D = () => renderBark2D(canvas, dashes, markColor());
+
+    if (gl) {
+      gl.setColors(markColor());
+      if (reducedMotion.matches) gl.renderOnce();
+      else gl.start();
+
+      const resizeObserver = new ResizeObserver(() => {
+        gl.resize();
+        if (reducedMotion.matches) gl.renderOnce();
+      });
+      resizeObserver.observe(canvas);
+
+      const mutationObserver = new MutationObserver(() => {
+        gl.setColors(markColor());
+        if (reducedMotion.matches) gl.renderOnce();
+      });
+      mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      const handleReducedMotionChange = () => {
+        if (reducedMotion.matches) { gl.stop(); gl.renderOnce(); } else gl.start();
+      };
+      reducedMotion.addEventListener('change', handleReducedMotionChange);
+
+      cleanups.push(() => {
+        gl.destroy();
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
+        reducedMotion.removeEventListener('change', handleReducedMotionChange);
+      });
+    } else {
+      paint2D();
+
+      const resizeObserver = new ResizeObserver(paint2D);
+      resizeObserver.observe(canvas);
+
+      const mutationObserver = new MutationObserver(paint2D);
+      mutationObserver.observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-theme'],
+      });
+
+      cleanups.push(() => {
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
+      });
+    }
+  }
+
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) return;
+    for (const cleanup of cleanups) {
+      cleanup();
+    }
+  });
+</script>

@@ -1,0 +1,91 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BarkField from '../components/BarkField.astro';
+import SpecimenCard from '../components/SpecimenCard.astro';
+
+const featured = (await getCollection('lab', ({ data }) => data.featured && data.status === 'live'))
+  .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
+  .slice(0, 3);
+---
+<BaseLayout
+  title="Birch Design Lab — Custom websites and software"
+  description="A design lab building custom websites and custom software for businesses that want to grow. Quiet, fast, built to last."
+>
+  <section class="hero">
+    <BarkField density={170} />
+    <div class="wrap hero-copy">
+      <h1 class="smallcaps">Birch Design Lab</h1>
+      <!-- provisional copy: tagline candidate, founder may replace -->
+      <p class="tagline">First green after the fire &mdash; and the bark you write on.</p>
+      <p class="lede">Custom websites and custom software, built with care that shows.</p>
+      <a class="cta" href="/contact">Start a conversation</a>
+    </div>
+  </section>
+
+  <section class="wrap teaser">
+    <h2 data-reveal>What we build</h2>
+    <div class="cols">
+      <!-- provisional copy -->
+      <article data-reveal>
+        <h3>Websites</h3>
+        <p>
+          A site that loads instantly, reads beautifully, and makes your
+          business look like the one to call. Designed and built by hand —
+          no templates, no page builders.
+        </p>
+      </article>
+      <article data-reveal>
+        <h3>Software</h3>
+        <p>
+          The tool your business actually needs — the spreadsheet that became
+          a monster, the process that eats your Fridays — designed, built,
+          and maintained for you.
+        </p>
+      </article>
+    </div>
+    <a class="more" href="/services" data-reveal>How we work &rarr;</a>
+  </section>
+
+  {featured.length > 0 && (
+    <section class="wrap featured">
+      <h2 data-reveal>From the Lab</h2>
+      <div>
+        {featured.map((entry) => <SpecimenCard entry={entry} />)}
+      </div>
+      <a class="more" href="/lab" data-reveal>The full catalog &rarr;</a>
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .hero {
+    position: relative; min-height: 88vh;
+    display: grid; align-items: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .hero-copy { position: relative; }
+  h1 { font-size: var(--text-hero); font-weight: 500; }
+  .tagline {
+    font-family: var(--font-display); font-size: var(--text-xl);
+    color: var(--mark-muted); margin-top: var(--space-3); max-width: 30ch;
+  }
+  .lede { margin-top: var(--space-4); max-width: 44ch; }
+  .cta {
+    display: inline-block; margin-top: var(--space-5);
+    color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 999px; padding: var(--space-2) var(--space-5);
+    text-decoration: none;
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  .cta:hover { background: var(--accent); color: var(--field); }
+  .teaser, .featured { padding-block: var(--space-7) 0; }
+  .cols {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-5); margin-top: var(--space-4);
+  }
+  .cols p { color: var(--mark-muted); margin-top: var(--space-2); max-width: 44ch; }
+  .more { display: inline-block; margin-top: var(--space-4); }
+  .featured > div { margin-top: var(--space-4); border-bottom: 1px solid var(--line); }
+</style>

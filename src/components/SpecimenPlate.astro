@@ -1,0 +1,41 @@
+---
+interface Props { designation: string; title: string; tech: string[] }
+const { designation, title, tech } = Astro.props;
+---
+<details class="plate">
+  <summary>
+    <span class="smallcaps">Specimen plate</span>
+    <span class="id">{designation} — {title}</span>
+  </summary>
+  <div class="body">
+    <slot />
+    <p class="tech">
+      {tech.map((t) => <span>{t}</span>)}
+    </p>
+  </div>
+</details>
+
+<style>
+  .plate {
+    position: fixed; inset: auto 0 0 0; z-index: 20;
+    background: color-mix(in srgb, var(--field) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+  }
+  summary {
+    cursor: pointer; list-style: none;
+    display: flex; gap: var(--space-3); align-items: baseline;
+    padding: var(--space-3) var(--space-4);
+    color: var(--mark-muted); font-size: var(--text-sm);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { color: var(--mark); }
+  .id { color: var(--accent); }
+  .body {
+    max-height: 45vh; overflow-y: auto;
+    padding: 0 var(--space-4) var(--space-4);
+    max-width: 62ch;
+  }
+  .tech { margin-top: var(--space-3); color: var(--mark-muted); font-size: var(--text-sm); }
+  .tech span { border: 1px solid var(--line); border-radius: 999px; padding: 0.1em 0.7em; margin-right: var(--space-2); }
+</style>
