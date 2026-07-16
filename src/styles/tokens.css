@@ -55,8 +55,8 @@
   --accent-strong: var(--birchwood-tan);
   --line: color-mix(in srgb, var(--bark-white) 18%, transparent);
   /* bark dash opacity range (read by the bark renderers) */
-  --bark-alpha-lo: 0.05;
-  --bark-alpha-hi: 0.22;
+  --bark-alpha-lo: 0.09;
+  --bark-alpha-hi: 0.69;
 }
 
 /* --- semantic: light (the true inverse) --- */
