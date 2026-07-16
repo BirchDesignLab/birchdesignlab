@@ -24,7 +24,7 @@ const semanticSwatches = [
 ];
 ---
 <BaseLayout
-  title="Styleguide — Birch Design Lab"
+  title="Styleguide · Birch Design Lab"
   description="Internal design-token playground."
   noindex
 >
@@ -32,7 +32,7 @@ const semanticSwatches = [
     <header class="intro">
       <h1>Styleguide</h1>
       <p>
-        Internal fiddling instrument. Swap palettes and faces below — the theme
+        Internal fiddling instrument. Swap palettes and faces below; the theme
         toggle up top keeps working. When something screams, hit
         <em>Copy tokens</em> and paste the block into <code>tokens.css</code>.
       </p>
@@ -72,7 +72,7 @@ const semanticSwatches = [
       <p class="smallcaps wordmark-spec">Birch Design Lab</p>
 
       <p class="spec-label smallcaps">display · text-hero</p>
-      <p class="hero-spec">First green after the fire</p>
+      <p class="hero-spec">The shining tree</p>
 
       <p class="spec-label smallcaps">h1 / h2 / h3</p>
       <h1>The shining tree</h1>
@@ -81,10 +81,10 @@ const semanticSwatches = [
 
       <p class="spec-label smallcaps">body · text-base</p>
       <p class="body-spec">
-        <em>Birch</em> — Old English <em>beorc</em>, from a root that meant
-        <strong>to shine</strong>: the same ancient syllable that gave us
-        <em>bright</em>. The birch is the shining tree — white against the dark
-        wood, first to return after fire, the threshold tree of the north. The
+        <em>Birch</em>: Old English <em>beorc</em>, from an ancient root that
+        meant <strong>to shine</strong>. The same syllable survives in
+        <em>bright</em>. The birch is, quite literally, the shining tree,
+        named for the way its white bark stands out in a dark wood. The
         quick brown fox jumps over the lazy dog; 0123456789.
       </p>
 
@@ -97,7 +97,7 @@ const semanticSwatches = [
 
     <h2>Bark contrast lab</h2>
     <p class="lab-note">
-      Judge lenticel dashes against the current field — this is where light
+      Judge lenticel dashes against the current field; this is where light
       mode was too faint. Sliders draw with the pattern core directly; locked
       values then get applied to the real renderer.
     </p>
@@ -377,7 +377,7 @@ const semanticSwatches = [
 
   document.getElementById('copy-tokens')!.addEventListener('click', async () => {
     const header =
-      `/* Styleguide export — palette "${palettes[state.palette].name}", ` +
+      `/* Styleguide export: palette "${palettes[state.palette].name}", ` +
       `display ${displays[state.display].name}, body ${bodies[state.body].name}, ` +
       `bark alpha ${alphaMin.value}–${alphaMax.value} */\n`;
     await navigator.clipboard.writeText(header + buildCss());

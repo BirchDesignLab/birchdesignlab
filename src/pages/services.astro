@@ -2,8 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout
-  title="Services — Birch Design Lab"
-  description="Custom websites and custom software for businesses that want to grow — designed, built, and cared for by one accountable craftsman."
+  title="Services · Birch Design Lab"
+  description="Custom websites and custom software for businesses that want to grow, designed, constructed, and cared for by one accountable craftsman."
 >
   <section class="wrap">
     <header class="intro">
@@ -21,7 +21,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         Your website is the first impression most customers will ever get.
         Ours load fast, read clearly on any phone, and are designed around
         one question: what should a visitor do next? No templates, no
-        page-builder bloat — every site is drawn and built for the business
+        page-builder bloat. Every site is drawn and built for the business
         it belongs to.
       </p>
     </article>
@@ -31,7 +31,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <p>
         Every business has one: the spreadsheet held together with tape, the
         process that eats an afternoon a week, the "system" that lives in one
-        employee's head. We build the small, sturdy tool that replaces it —
+        employee's head. We build the small, sturdy tool that replaces it,
         and we stay around to keep it running.
       </p>
     </article>
@@ -42,7 +42,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <li>
           <h3>Discovery</h3>
           <!-- provisional copy: the retired fathom line, available not required -->
-          <p>We take the measure of the problem before proposing anything — your business, your customers, what "working" would actually mean.</p>
+          <p>We take the measure of the problem before proposing anything: your business, your customers, and what working should actually look like.</p>
         </li>
         <li>
           <h3>Build</h3>
@@ -50,7 +50,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </li>
         <li>
           <h3>Launch</h3>
-          <p>Tested, fast, and yours. We handle the technical moving parts — domains, hosting, the lot.</p>
+          <p>Tested, fast, and yours. We handle the technical moving parts: domains, hosting, all of it.</p>
         </li>
         <li>
           <h3>Care</h3>
@@ -73,9 +73,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .process { padding-block: var(--space-5); border-top: 1px solid var(--line); }
   .process ol {
     list-style: none; padding: 0; margin-top: var(--space-4);
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: var(--space-5);
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-6);
+    max-width: 52rem;
     counter-reset: step;
+  }
+  @media (max-width: 640px) {
+    .process ol { grid-template-columns: 1fr; }
   }
   .process li { counter-increment: step; }
   .process h3::before {
