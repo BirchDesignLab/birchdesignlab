@@ -57,7 +57,9 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Client-study section.** Director's commentary on a client site once one exists to narrate.
 - **From-the-Lab recency switch.** Home section flips to recency ordering at 4+ live entries.
 - **Lab visual identity.** The Lab will eventually branch away from the professional site theme and grow its own style. Nothing decided; also tracked as handoff open thread 4. Worth deciding before the Lab has many live pieces, since each experiment currently inherits site tokens.
-- **Bark-generated OG images.** Seeded bark rendered into per-page OpenGraph images at build time. Flagged as "a nice later touch" in the website spec's SEO section; would make every shared link carry the daily tree.
+- **Bark-generated OG images.** Seeded bark rendered into per-page OpenGraph images at build time. Flagged as "a nice later touch" in the website spec's SEO section. Specced 2026-07-16: `docs/superpowers/specs/2026-07-16-bark-og-images-design.md`.
+- **Per-experiment OG art.** Each Lab piece gets its own OG card instead of sharing the catalog's. Worthwhile once the catalog holds about a dozen live experiments.
+- **Daily OG rebuild.** Cloudflare deploy hook on a cron so the OG card's tree is truly daily rather than tree-of-last-deploy. Only matters if platform OG caching ever stops making it moot.
 - **GSAP as a Lab-piece technology.** Banned from the core site by the spec, deliberately reserved for a future Lab experiment that wants heavyweight motion. No concept attached yet.
 - **Heavier location-aware work.** Founder intends eventually to build pieces that justify a location permission prompt. When that day comes, Tonight's Sky (shelved above) comes off the shelf with it.
 
