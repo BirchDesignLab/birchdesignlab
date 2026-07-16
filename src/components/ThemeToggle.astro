@@ -1,0 +1,29 @@
+---
+---
+<button id="theme-toggle" type="button" aria-label="Switch color theme">
+  <span aria-hidden="true" class="dot"></span>
+</button>
+
+<style>
+  button {
+    background: none; border: 1px solid var(--line); border-radius: 999px;
+    width: 2.5rem; height: 1.5rem; cursor: pointer; position: relative;
+    transition: border-color var(--dur-1) var(--ease-weighted);
+  }
+  button:hover { border-color: var(--mark-muted); }
+  .dot {
+    position: absolute; top: 50%; translate: 0 -50%;
+    left: 0.2rem; width: 1rem; height: 1rem; border-radius: 50%;
+    background: var(--mark);
+    transition: left var(--dur-1) var(--ease-weighted);
+  }
+  :global([data-theme='light']) .dot { left: calc(100% - 1.2rem); }
+</style>
+
+<script>
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+  });
+</script>
