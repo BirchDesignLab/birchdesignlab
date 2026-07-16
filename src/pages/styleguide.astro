@@ -97,8 +97,9 @@ const semanticSwatches = [
 
     <h2>Billboard</h2>
     <p class="lab-note">
-      The home-hero wordmark only. Single-shade colors apply to both themes;
-      ratios show against both fields. Display text this large needs 3:1.
+      The home-hero wordmark only. Colors are day/night pairs (light theme
+      first); ghosts run the same deep green in both. Ratios show against
+      both fields. Display text this large needs 3:1.
     </p>
     <div class="bb-preview">
       <span class="bb-word">Birch Design Lab</span>
@@ -279,15 +280,17 @@ const semanticSwatches = [
     { name: 'Cormorant SC', stack: "'Cormorant SC', Georgia, serif", weight: 500 },
     { name: 'EB Garamond', stack: "'EB Garamond Variable', Georgia, serif", weight: 600 },
   ];
-  // Round 2: light greens culled (founder). Darker candidates; the dark-mode
-  // ratio is shown honestly, and it will be rough for deep greens.
+  // Round 3: colors are now day/night pairs (light theme / dark theme),
+  // since no single green clears 3:1 on both fields. Ghost candidates keep
+  // the deep green at night on purpose; their dark ratio fails honestly.
   const bbColors = [
-    { name: 'Mark (default)', value: 'var(--mark)' },
-    { name: 'Forest (accent)', value: '#2b4a37' },
-    { name: 'Hunter', value: '#33523f' },
-    { name: 'Racing', value: '#1f4030' },
-    { name: 'Sea Deep', value: '#2f5c4e' },
-    { name: 'Fern', value: '#6f9678' },
+    { name: 'Mark (default)', light: 'var(--mark)', dark: 'var(--mark)' },
+    { name: 'Forest ghost', light: '#2b4a37', dark: '#2b4a37' },
+    { name: 'Racing ghost', light: '#1f4030', dark: '#1f4030' },
+    { name: 'Forest / Fern', light: '#2b4a37', dark: '#6f9678' },
+    { name: 'Forest / Night Forest', light: '#2b4a37', dark: '#5e8a6c' },
+    { name: 'Forest / Sage', light: '#2b4a37', dark: '#7fa287' },
+    { name: 'Racing / Pine Haze', light: '#1f4030', dark: '#6b9179' },
   ];
 
   // Locked-in choices are the defaults (Marcellus won round 1).
@@ -310,12 +313,12 @@ const semanticSwatches = [
       `  --font-body: ${b.stack};\n` +
       `  --font-billboard: ${bf.stack};\n` +
       `  --billboard-weight: ${bf.weight};\n` +
-      `  --billboard-color: ${bc.value};\n`;
+      `  --billboard-color: ${bc.dark};\n`;
     const block = (t: ThemeSet) =>
       Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n');
     return (
       `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
-      `:root[data-theme='light'] {\n${block(p.light)}\n}\n` +
+      `:root[data-theme='light'] {\n${block(p.light)}\n  --billboard-color: ${bc.light};\n}\n` +
       // Base .smallcaps is now uppercase (Marcellus); Cormorant SC wants lowercase.
       (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`)
     );
@@ -393,8 +396,8 @@ const semanticSwatches = [
   const refreshBillboardRatios = () => {
     const p = palettes[state.palette];
     const c = bbColors[state.bbcolor];
-    const onDark = c.value.startsWith('var') ? p.dark['--mark'] : c.value;
-    const onLight = c.value.startsWith('var') ? p.light['--mark'] : c.value;
+    const onDark = c.dark.startsWith('var') ? p.dark['--mark'] : c.dark;
+    const onLight = c.light.startsWith('var') ? p.light['--mark'] : c.light;
     const rd = contrast(onDark, p.dark['--field']);
     const rl = contrast(onLight, p.light['--field']);
     const cell = (label: string, r: number) =>
