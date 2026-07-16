@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import DeviceBadge from './DeviceBadge.astro';
+
+interface Props { entry: CollectionEntry<'lab'> }
+const { entry } = Astro.props;
+const { designation, title, summary, date, tech, device, status } = entry.data;
+const live = status === 'live';
+const href = `/lab/${entry.id}`;
+const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+---
+<article class="card" data-reveal>
+  <p class="designation smallcaps">{designation}</p>
+  <h3>
+    {live ? <a href={href}>{title}</a> : <span>{title} <em class="soon">forthcoming</em></span>}
+  </h3>
+  <p class="summary">{summary}</p>
+  <p class="meta">
+    <DeviceBadge device={device} />
+    {tech.map((t) => <span class="tag">{t}</span>)}
+    <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time>
+  </p>
+</article>
+
+<style>
+  .card { padding-block: var(--space-4); border-top: 1px solid var(--line); }
+  .designation { color: var(--accent); font-size: var(--text-sm); }
+  h3 a { color: var(--mark); text-decoration: none; }
+  h3 a:hover { color: var(--accent); }
+  .soon { color: var(--mark-muted); font-size: var(--text-sm); font-style: italic; }
+  .summary { color: var(--mark-muted); max-width: 52ch; }
+  .meta {
+    display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
+    margin-top: var(--space-2); font-size: var(--text-sm); color: var(--mark-muted);
+  }
+  .tag::before { content: '·'; margin-right: var(--space-2); }
+</style>

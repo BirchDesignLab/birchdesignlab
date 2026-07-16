@@ -1,0 +1,16 @@
+---
+// Visual treatment is spec'd as TBD — this text chip is the v1; only this
+// file changes when the founder picks a final treatment.
+interface Props { device: 'mobile-first' | 'desktop-forward' | 'universal' }
+const { device } = Astro.props;
+const label = { 'mobile-first': 'mobile-first', 'desktop-forward': 'desktop-forward', universal: 'universal' }[device];
+---
+<span class="badge">{label}</span>
+
+<style>
+  .badge {
+    font-size: var(--text-sm); color: var(--mark-muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 0.1em 0.7em; white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,33 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SpecimenCard from '../../components/SpecimenCard.astro';
+
+const entries = (await getCollection('lab')).sort((a, b) =>
+  b.data.designation.localeCompare(a.data.designation),
+);
+---
+<BaseLayout
+  title="The Lab — Birch Design Lab"
+  description="Numbered experiments in design and web engineering. A specimen catalog."
+>
+  <section class="wrap">
+    <header class="intro">
+      <h1>The Lab</h1>
+      <!-- provisional copy -->
+      <p>
+        Numbered experiments — some artistic, some technical, each one a
+        working specimen. This is where the bark gets written on.
+      </p>
+    </header>
+    <div class="catalog">
+      {entries.map((entry) => <SpecimenCard entry={entry} />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .catalog { border-bottom: 1px solid var(--line); }
+</style>
