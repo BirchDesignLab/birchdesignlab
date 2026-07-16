@@ -16,7 +16,7 @@ Museum-grade bar applies, same as 003. The authenticity flex here is the draft s
 
 **Letting it run.** Release a lever and the loom weaves itself at a steady pace. Hands-on for the curious, hypnotic for the passive. The lever stops it again.
 
-**The draft.** Threading, tie-up, and treadling grids in real weaver's notation, all editable cell by cell. Presets carry visitors who just want cloth: plain weave, 2/2 twill, herringbone, houndstooth, and one overshot.
+**The draft.** Threading, tie-up, and treadling grids in real weaver's notation, all editable cell by cell. Presets carry visitors who just want cloth: plain weave, 2/2 twill, herringbone, houndstooth, and goose eye (a point-twill diamond). Overshot was considered and deferred: authentic overshot needs a second tabby shuttle, which complicates the engine for one preset; it returns with the eight-shaft instrument idea.
 
 **The yarn shelf.** A curated shelf of roughly 12 to 16 natural-dye colors (madder, indigo, weld, walnut, undyed wools). No free color pickers; every combination should look intentional, like a weaver's stash. Warp and weft each take a repeating stripe sequence (for example 4 dark, 4 light), which is what makes plaid and houndstooth possible.
 
@@ -67,6 +67,7 @@ src/lib/weave/               pure math, unit-testable, renderer-agnostic:
 
 - Sound.
 - More than four shafts or six treadles (an eight-shaft mode could live in an internal instrument later).
+- Overshot and any other two-shuttle structure (needs a tabby shuttle; deferred with the eight-shaft idea).
 - Free color pickers (a hidden free mode was considered and dropped from launch scope).
 - Persisting cloth or draft state across visits beyond the daily seed.
 - The Painting (view-source CSS feat), which returns to the backlog unnumbered.
