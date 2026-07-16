@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Services — Birch Design Lab"
+  description="Custom websites and custom software for businesses that want to grow — designed, built, and cared for by one accountable craftsman."
+>
+  <section class="wrap">
+    <header class="intro">
+      <h1>Services</h1>
+      <!-- provisional copy throughout this page -->
+      <p>
+        Two things, done properly: websites and software. Both custom,
+        both built to last, both explained in plain English.
+      </p>
+    </header>
+
+    <article class="service" data-reveal>
+      <h2>Custom websites</h2>
+      <p>
+        Your website is the first impression most customers will ever get.
+        Ours load fast, read clearly on any phone, and are designed around
+        one question: what should a visitor do next? No templates, no
+        page-builder bloat — every site is drawn and built for the business
+        it belongs to.
+      </p>
+    </article>
+
+    <article class="service" data-reveal>
+      <h2>Custom software</h2>
+      <p>
+        Every business has one: the spreadsheet held together with tape, the
+        process that eats an afternoon a week, the "system" that lives in one
+        employee's head. We build the small, sturdy tool that replaces it —
+        and we stay around to keep it running.
+      </p>
+    </article>
+
+    <section class="process" data-reveal>
+      <h2>How a project runs</h2>
+      <ol>
+        <li>
+          <h3>Discovery</h3>
+          <!-- provisional copy: the retired fathom line, available not required -->
+          <p>We take the measure of the problem before proposing anything — your business, your customers, what "working" would actually mean.</p>
+        </li>
+        <li>
+          <h3>Build</h3>
+          <p>Design and construction in the open. You see real progress at real intervals, not a big reveal at the end.</p>
+        </li>
+        <li>
+          <h3>Launch</h3>
+          <p>Tested, fast, and yours. We handle the technical moving parts — domains, hosting, the lot.</p>
+        </li>
+        <li>
+          <h3>Care</h3>
+          <p>Software is a living thing. We offer ongoing care so it stays fast, secure, and current as your business grows.</p>
+        </li>
+      </ol>
+    </section>
+
+    <p class="cta-row" data-reveal>
+      <a class="cta" href="/contact">Tell us about your project</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .service { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: 60ch; }
+  .service p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .process { padding-block: var(--space-5); border-top: 1px solid var(--line); }
+  .process ol {
+    list-style: none; padding: 0; margin-top: var(--space-4);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-5);
+    counter-reset: step;
+  }
+  .process li { counter-increment: step; }
+  .process h3::before {
+    content: counter(step, decimal-leading-zero);
+    display: block; color: var(--accent); font-size: var(--text-sm);
+    letter-spacing: var(--tracking-wide); margin-bottom: var(--space-1);
+  }
+  .process p { color: var(--mark-muted); margin-top: var(--space-2); font-size: var(--text-sm); }
+  .cta-row { padding-block: var(--space-6); }
+  .cta {
+    color: var(--accent); border: 1px solid var(--accent); border-radius: 999px;
+    padding: var(--space-2) var(--space-5); text-decoration: none;
+    transition: all var(--dur-1) var(--ease-weighted);
+  }
+  .cta:hover { background: var(--accent); color: var(--field); }
+</style>
