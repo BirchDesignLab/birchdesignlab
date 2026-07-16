@@ -83,7 +83,8 @@ const { seed, density = 140, class: className } = Astro.props;
     }
   }
 
-  window.addEventListener('pagehide', () => {
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) return;
     for (const cleanup of cleanups) {
       cleanup();
     }
