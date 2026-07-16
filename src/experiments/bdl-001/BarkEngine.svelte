@@ -50,6 +50,18 @@
   }
 
   let lastPointer = { x: 0.5, y: 0.5 };
+  let pulseTimer: ReturnType<typeof setTimeout>;
+  // Tap pulse: a bloom of light at the tap that holds a beat and fades.
+  // When the bark-peel round lands, this tap becomes the shed trigger.
+  function onPointerDown(e: PointerEvent) {
+    if (!wake || !renderer || reduced?.matches) return;
+    if ((e.target as Element).closest('.controls')) return; // panel clicks don't pulse
+    const r = canvas.getBoundingClientRect();
+    lastPointer = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    renderer.setPointer(lastPointer.x, lastPointer.y, 1.8);
+    clearTimeout(pulseTimer);
+    pulseTimer = setTimeout(() => renderer?.setPointer(lastPointer.x, lastPointer.y, 0), 280);
+  }
   function onPointerMove(e: PointerEvent) {
     if (!wake || !renderer || reduced?.matches) return;
     const r = canvas.getBoundingClientRect();
@@ -104,7 +116,7 @@
   });
 </script>
 
-<div class="stage" onpointermove={onPointerMove} onpointerleave={onPointerLeave}>
+<div class="stage" onpointerdown={onPointerDown} onpointermove={onPointerMove} onpointerleave={onPointerLeave}>
   <canvas bind:this={canvas} aria-label="Generated birch bark pattern"></canvas>
   <form class="controls" onsubmit={(e) => { e.preventDefault(); rebuild(); }}>
     <label>
