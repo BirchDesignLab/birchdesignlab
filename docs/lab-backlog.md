@@ -1,0 +1,56 @@
+# Lab Backlog
+
+*Experiment concepts agreed 2026-07-16, evening session. Parent documents: founding record, website spec, handoff. BDL-003 Novgorod Letters is specced and in build; everything here comes after. Each concept gets its own spec at its own build time, per house practice.*
+
+## Numbering vs build order
+
+BDL-004 stays reserved for the Painting (locked in the handoff). But numbering does not dictate build order: the goal right now is quick wins in the experiments department before the link spreads, and the Painting is the most expensive item on this page. Nothing stops BDL-005 or 006 shipping before 004.
+
+## Concepts, ranked by projected effort (lowest first)
+
+### 1. The Loom · artistic · mobile-native
+
+Generative woven textile. Pick warp and weft colors, pick a draft pattern, watch the cloth weave itself thread by thread on canvas. Download the finished cloth as a wallpaper. Craft rather than nature: tactile like 003's dig, but a different sense entirely, and not a tree in sight.
+
+Why cheapest: the weave math is a grid of over/under decisions driven by the draft, plain canvas2D rendering, and controls the styleguide pattern already knows how to build. The polish budget goes to making the thread render feel like fiber instead of pixels.
+
+### 2. The Orrery · artistic · mobile-native
+
+A working solar system, planets where they actually are right now, at real ephemeris accuracy. Drag time to scrub across centuries. Brass-and-ink instrument aesthetic. Artistic face, serious math underneath: the living, time-based ethos of the site without a single birch.
+
+Effort sits in the ephemeris math (simplified Kepler elements are well published and unit-testable) and in making the time scrub feel like handling an instrument rather than a slider.
+
+### 3. The Type Instrument · technical · desktop-forward
+
+Sibling of the styleguide, for typography. Paste your own text, play with scale ratios, pairings, measure, and leading; watch live rag and x-height comparisons; copy tokens out. Follows the proven instrument-to-curated-room model: full internal tool first, curated public room when controls prove interesting.
+
+The one deliberate reusable tool in this batch. Every client site needs type decisions, so this pays rent forever. Effort is UI breadth rather than hard problems, and the styleguide provides the pattern to copy. Mobile gets a reduced view with the DeviceBadge treatment.
+
+### 4. The Software Renderer · technical · mobile-usable
+
+A 3D scene rasterized from scratch on canvas2D. No WebGL, no library: projection, z-buffer, lighting, all handwritten and readable. Touch-orbit on mobile with resolution scaled to the device, since a CPU rasterizer on phone silicon wants a low-poly scene. The specimen plate explains the pipeline stage by stage. The credential: we understand rendering down to the pixel.
+
+Bounded, well-trodden math, but a lot of it, and the scene itself needs art direction to be worth staring at.
+
+### 5. BDL-004 · The Painting · technical · mobile-usable
+
+The reserved view-source CSS feat, now a concept. One museum-grade illustration built from pure CSS: no images, no SVG, no JS. Hundreds of hand-placed gradients and shadows. The page shows the plate and an invitation to view source; the gasp is in devtools, where the whole painting reads as a clean, commented, human stylesheet.
+
+Subject parked until spec time, with one constraint agreed: lean into gradient and shadow, because that is what CSS painting does best. Maximize the flex.
+
+Most expensive item here: the cost is artisan hours placing gradients until the subject breathes, and the museum-grade bar (set by 003) applies in full.
+
+## Shelved experiment concepts
+
+Liked, not dead. Revisit when the moment fits.
+
+- **Tonight's Sky.** Star chart of the visitor's actual sky, computed client-side from clock and location. Shelved because the location permission prompt ruins immersion; Lab pieces stay permission-free for now. Revisit when heavier location-needing work makes the prompt worth it. Overlaps the Orrery conceptually anyway; the Orrery scratches the itch without asking anything.
+- **One Kilobyte.** Entire experiment, markup plus style plus script, under 1024 bytes, live byte counter on the page. Demoscene discipline, pure optimization flex. Shelved as a someday treat, not a priority.
+
+## Parked site notes (not experiments)
+
+Side ideas from earlier sessions, gathered here so the handoff stops carrying them:
+
+- **Bark peel.** Tap becomes the shed trigger on the living bark. Its own future round on the bark engine.
+- **Client-study section.** Director's commentary on a client site once one exists to narrate.
+- **From-the-Lab recency switch.** Home section flips to recency ordering at 4+ live entries.
