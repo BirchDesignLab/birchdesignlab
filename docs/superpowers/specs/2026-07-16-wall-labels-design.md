@@ -29,7 +29,7 @@ Copy above is provisional in the usual way: the founder retunes wording in revie
 
 ## 3. Component
 
-`src/components/WallLabel.astro`, props `{ lines: string[] }`. Rendered by `src/pages/lab/[slug].astro` between the experiment stage and the SpecimenPlate, so every generated experiment page gets it with zero per-experiment code.
+`src/components/WallLabel.astro`, props `{ lines: string[] }`. Rendered by `src/pages/lab/[slug].astro` immediately before the experiment stage (screen readers reach the instructions first; visually it floats regardless), so every generated experiment page gets it with zero per-experiment code.
 
 - `<details open>` with a smallcaps `How to operate` summary. Open on load: the founder's complaint is discoverability, so the default is visible. One click folds it to the summary line for visitors who have it.
 - Visual family of the SpecimenPlate: field background at ~88% with blur, 1px `var(--line)` border, `var(--mark-muted)` text, smallcaps summary.
