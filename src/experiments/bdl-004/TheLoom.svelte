@@ -3,6 +3,8 @@
   import { onMount } from 'svelte';
   import ClothCanvas from './ClothCanvas.svelte';
   import TreadleBar from './TreadleBar.svelte';
+  import DraftPanel from './DraftPanel.svelte';
+  import YarnShelf from './YarnShelf.svelte';
   import { PRESETS } from './data/presets';
   import { DAILY_WARPS, yarnHex } from './data/yarns';
   import { pickDaily } from '../../lib/weave/daily';
@@ -120,7 +122,14 @@
 <div class="bench">
   <div class="cloth"><ClothCanvas {view} /></div>
   <aside class="panel">
-    <!-- Task 6: DraftPanel and YarnShelf mount here -->
+    <DraftPanel
+      {draft}
+      {presetIndex}
+      onPreset={applyPreset}
+      onDraftChange={(d) => (draft = d)}
+    />
+    <YarnShelf label="Warp" seq={warpSeq} onChange={(s) => (warpSeq = s)} />
+    <YarnShelf label="Weft" seq={weftSeq} onChange={(s) => (weftSeq = s)} />
   </aside>
   <TreadleBar
     treadles={draft.treadles}
