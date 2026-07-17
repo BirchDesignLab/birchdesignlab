@@ -146,7 +146,9 @@
   .stage { position: relative; min-height: 100vh; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .controls {
-    position: fixed; top: var(--space-3); right: var(--space-3); z-index: 20;
+    /* Bottom-right, clear of the wall label (bottom-left) and above the
+       specimen plate's summary strip. */
+    position: fixed; bottom: 4.5rem; right: var(--space-3); z-index: 20;
     display: grid; gap: var(--space-3); width: min(18rem, 80vw);
     background: color-mix(in srgb, var(--field) 82%, transparent);
     backdrop-filter: blur(8px);
