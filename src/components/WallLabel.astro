@@ -11,7 +11,8 @@ const { lines } = Astro.props;
 
 <style>
   .label {
-    position: fixed; top: var(--space-4); right: var(--space-4); z-index: 20;
+    /* Bottom-left, resting just above the specimen plate's summary strip. */
+    position: fixed; bottom: 4.5rem; left: var(--space-4); z-index: 20;
     max-width: 30ch;
     background: color-mix(in srgb, var(--field) 88%, transparent);
     backdrop-filter: blur(8px);
