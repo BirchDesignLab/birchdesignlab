@@ -33,7 +33,7 @@ Copy above is provisional in the usual way: the founder retunes wording in revie
 
 - `<details open>` with a smallcaps `How to operate` summary. Open on load: the founder's complaint is discoverability, so the default is visible. One click folds it to the summary line for visitors who have it.
 - Visual family of the SpecimenPlate: field background at ~88% with blur, 1px `var(--line)` border, `var(--mark-muted)` text, smallcaps summary.
-- Position: fixed top-right of the viewport on desktop (clear of BDL-004's side panel is impossible in general; it overlays the stage, which is acceptable for a label), `z-index` above the stage, below any modal. On narrow screens (≤720px) it docks full-width at the top, under the site header.
+- Position: fixed bottom-left on desktop, resting just above the specimen plate's summary strip (founder's call after seeing top-right: bottom-left stays clear of every current piece's controls, and the label reads as part of the plate family). It still floats over scrolling content on long pages like BDL-002; folding it is the remedy, same as the plate. `z-index` above the stage, below any modal. On narrow screens (≤720px) it docks full-width at the top, in flow.
 - Lines render as an ordered list with no visible numbers, one line each.
 - No JS, no state, no persistence. It renders open every visit; folding it is per-pageview. This is deliberate: no localStorage per the founder's no-fiddly-state instinct, and a returning visitor who already knows the piece pays one glance.
 
