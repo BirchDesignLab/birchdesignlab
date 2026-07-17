@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import BarkField from '../components/BarkField.astro';
 import SpecimenCard from '../components/SpecimenCard.astro';
 
-const featured = (await getCollection('lab', ({ data }) => data.featured && data.status === 'live'))
+const featured = (await getCollection('lab', ({ data }) => data.status === 'live'))
   .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
   .slice(0, 3);
 ---
