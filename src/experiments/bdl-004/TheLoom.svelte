@@ -12,6 +12,8 @@
   import { treadleAt, type Draft } from '../../lib/weave/draft';
   import { yarnAt, type Stripe } from '../../lib/weave/stripes';
   import type { ClothPick, ClothView } from '../../lib/weave/render2d';
+  import { THREAD_PX } from '../../lib/weave/render2d';
+  import { renderTile, tileSizePx } from '../../lib/weave/export';
 
   /* Feel knobs: founder fiddle round adjusts these. */
   const BEAT_MS = 140;        // throw button dips this long after a pick
@@ -76,7 +78,23 @@
   }
 
   function cutCloth() {
-    // Task 7 wires the PNG download here.
+    const scale = Math.min(devicePixelRatio || 1, 2) * 2; // crisp at wallpaper sizes
+    const px = THREAD_PX * scale;
+    const size = tileSizePx(draft, warpSeq, weftSeq, px);
+    const off = document.createElement('canvas');
+    off.width = size.w;
+    off.height = size.h;
+    const ctx = off.getContext('2d');
+    if (!ctx) return;
+    renderTile(ctx, draft, warpSeq, weftSeq, yarnHex, px);
+    off.toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `bdl-004-cloth-${today}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }, 'image/png');
   }
 
   /** Reduced motion opens on woven cloth instead of an empty warp. */
