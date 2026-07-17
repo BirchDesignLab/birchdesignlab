@@ -8,6 +8,7 @@ const valid = {
   date: '2026-07-15',
   tech: ['webgl', 'svelte'],
   device: 'universal',
+  howto: ['Type a seed and watch the bark regrow.'],
 };
 
 describe('labSchema', () => {
@@ -39,5 +40,21 @@ describe('labSchema', () => {
     expect(labSchema.parse(valid).href).toBeUndefined();
     expect(labSchema.parse({ ...valid, href: '/styleguide' }).href).toBe('/styleguide');
     expect(() => labSchema.parse({ ...valid, href: 'https://example.com' })).toThrow();
+  });
+});
+
+describe('howto wall label', () => {
+  it('requires howto when there is no href', () => {
+    const { howto, ...withoutHowto } = valid;
+    expect(() => labSchema.parse(withoutHowto)).toThrow();
+  });
+  it('href entries are exempt', () => {
+    const { howto, ...withoutHowto } = valid;
+    expect(labSchema.parse({ ...withoutHowto, href: '/styleguide' }).howto).toBeUndefined();
+  });
+  it('caps lines at four and rejects empty lines', () => {
+    expect(() => labSchema.parse({ ...valid, howto: ['a', 'b', 'c', 'd', 'e'] })).toThrow();
+    expect(() => labSchema.parse({ ...valid, howto: [''] })).toThrow();
+    expect(labSchema.parse({ ...valid, howto: ['a', 'b', 'c', 'd'] }).howto).toHaveLength(4);
   });
 });
