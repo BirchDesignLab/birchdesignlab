@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import SpecimenPlate from '../../components/SpecimenPlate.astro';
+import WallLabel from '../../components/WallLabel.astro';
 import { experimentComponents } from '../../experiments/registry';
 
 export async function getStaticPaths() {
@@ -23,6 +24,7 @@ const Experiment = experimentComponents[designation];
   description={summary}
   designation={designation}
 >
+  {entry.data.howto && <WallLabel lines={entry.data.howto} />}
   {Experiment ? (
     <Experiment />
   ) : (

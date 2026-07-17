@@ -1,0 +1,40 @@
+---
+interface Props { lines: string[] }
+const { lines } = Astro.props;
+---
+<details class="label" open>
+  <summary><span class="smallcaps">How to operate</span></summary>
+  <ol>
+    {lines.map((line) => <li>{line}</li>)}
+  </ol>
+</details>
+
+<style>
+  .label {
+    position: fixed; top: var(--space-4); right: var(--space-4); z-index: 20;
+    max-width: 30ch;
+    background: color-mix(in srgb, var(--field) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line);
+  }
+  summary {
+    cursor: pointer; list-style: none;
+    padding: var(--space-3) var(--space-4);
+    color: var(--mark-muted); font-size: var(--text-sm);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { color: var(--mark); }
+  ol {
+    margin: 0; padding: 0 var(--space-4) var(--space-3);
+    list-style: none;
+    display: grid; gap: var(--space-3);
+    color: var(--mark-muted); font-size: var(--text-sm);
+  }
+  @media (max-width: 720px) {
+    .label {
+      position: static;
+      max-width: none;
+      border-inline: none;
+    }
+  }
+</style>
