@@ -102,7 +102,10 @@
   section { display: grid; gap: 0.5rem; }
   h3 { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0.5rem 0 0; }
   .preset { display: grid; gap: 0.25rem; }
-  .grid { display: grid; grid-template-columns: repeat(var(--cols), 1.4rem); gap: 2px; }
+  .grid {
+    display: grid; grid-template-columns: repeat(var(--cols), 1.4rem); gap: 2px;
+    max-inline-size: 100%; overflow-x: auto; padding-block-end: 2px;
+  }
   .grid button {
     inline-size: 1.4rem;
     block-size: 1.4rem;

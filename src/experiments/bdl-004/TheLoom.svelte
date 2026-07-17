@@ -170,7 +170,7 @@
     min-block-size: 70vh;
   }
   .cloth { grid-area: cloth; min-block-size: 0; }
-  .panel { grid-area: panel; overflow-y: auto; padding: 1rem; }
+  .panel { grid-area: panel; overflow-y: auto; padding: 1rem; min-inline-size: 0; }
   .bench > :global(.bar) { grid-area: bar; }
   @media (max-width: 720px) {
     .bench { grid-template: 'cloth' 1fr 'panel' auto 'bar' auto / 1fr; }
