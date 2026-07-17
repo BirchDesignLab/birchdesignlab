@@ -50,7 +50,18 @@ Copy above is provisional in the usual way: the founder retunes wording in revie
 - Video or animated demonstrations.
 - Rewriting SpecimenPlate; it stays as is.
 
-## 6. Testing
+## 6. House rule: experiment page chrome
+
+Settled 2026-07-16 after BDL-001's controls collided with the label on a phone. Every experiment page divides its floating chrome the same way:
+
+- **Bottom-left:** the wall label (this spec's component).
+- **Bottom-right:** the experiment's own tweak controls, when they float (BDL-001's seed/density panel). Fixed, `bottom: 4.5rem`, clear of the plate strip.
+- **Bottom edge:** the specimen plate's summary strip, full width, under both.
+- **The stage owns everything else.** Nothing floats top-left or top-right; in-flow control bars (the Loom's treadle bar) are fine anywhere in the stage.
+
+New experiments follow this at build time, not as a retrofit. If a piece genuinely cannot fit its controls bottom-right, that is a design conversation, not a silent exception.
+
+## 7. Testing
 
 - Schema test: entry without `howto` and without `href` fails validation; entry with `href` and no `howto` passes; five lines fail, one line passes.
 - All four existing entries updated in the same change; `npm test`, `npm run check`, `npm run build` stay green.
