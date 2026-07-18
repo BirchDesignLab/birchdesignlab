@@ -38,12 +38,16 @@
   --text-lg: 1.25rem;
   --text-xl: 1.625rem;
   --text-2xl: 2.25rem;
+  --text-3xl: clamp(2.75rem, 4.5vw, 4rem);  /* interior display moment; floor clears --text-2xl (2.25rem) so it never collapses back to that scale on narrow widths */
   --text-hero: clamp(2.5rem, 7vw, 4.5rem);
   --tracking-wide: 0.12em;
 
   /* --- rhythm --- */
   --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 1rem;
-  --space-4: 1.5rem;  --space-5: 2.5rem; --space-6: 4rem; --space-7: 7rem;
+  --space-4: 1.5rem;  --space-5: 2.5rem;
+  /* big rhythm steps go fluid; small steps stay fixed */
+  --space-6: clamp(2.5rem, 2vw + 1.75rem, 4rem);
+  --space-7: clamp(4rem, 8vw + 1rem, 7rem);
   --max-content: 68rem;
 
   /* --- motion: luxury moves slowly --- */
@@ -65,6 +69,13 @@
   --accent-strong: var(--leather-caramel);
   --billboard-color: var(--green-fern);
   --link: var(--green-moss);
+  --on-accent: var(--charcoal);              /* text on an accent fill */
+  /* loud-moment (green field) — dark face */
+  --gf-mark: var(--bark-warm);
+  --gf-accent: var(--green-moss);
+  --gf-link: var(--green-moss);
+  --gf-link-hover: var(--bark-warm);         /* dark link rests at moss; hover brightens to the mark tone */
+  --gf-on-accent: var(--charcoal);
   --line: color-mix(in srgb, var(--bark-warm) 18%, transparent);
   /* bark dash opacity range (read by the bark renderers) */
   --bark-alpha-lo: 0.03;
@@ -76,7 +87,7 @@
   color-scheme: light;
   --field: var(--bark-white);
   --field-raised: var(--bark-white-dim);
-  --green-field: var(--green-sage-tint);
+  --green-field: var(--green-forest);         /* loud field = forest by day (surface stays sage-tint below) */
   --green-surface: var(--green-sage-tint);
   --mark: var(--ink);
   --mark-muted: var(--stone-dark);
@@ -85,6 +96,13 @@
   --billboard-color: var(--green-forest);
   /* the forest accent reads near-black in running text; links run brighter */
   --link: var(--green-canopy);
+  --on-accent: var(--bark-white);             /* text on an accent fill */
+  /* loud-moment (green field) — light face: forest / bark-white / moss */
+  --gf-mark: var(--bark-white);
+  --gf-accent: var(--green-moss);
+  --gf-link: var(--bark-white);
+  --gf-link-hover: var(--green-moss);         /* light link rests at bark-white; hover shifts to moss */
+  --gf-on-accent: var(--charcoal);
   --line: color-mix(in srgb, var(--ink) 20%, transparent);
   /* charcoal dashes wash out on the light field at dark-tuned alphas */
   --bark-alpha-lo: 0.03;
@@ -101,7 +119,7 @@
     color-scheme: light;
     --field: var(--bark-white);
     --field-raised: var(--bark-white-dim);
-    --green-field: var(--green-sage-tint);
+    --green-field: var(--green-forest);
     --green-surface: var(--green-sage-tint);
     --mark: var(--ink);
     --mark-muted: var(--stone-dark);
@@ -109,6 +127,12 @@
     --accent-strong: var(--leather-brown);
     --billboard-color: var(--green-forest);
     --link: var(--green-canopy);
+    --on-accent: var(--bark-white);
+    --gf-mark: var(--bark-white);
+    --gf-accent: var(--green-moss);
+    --gf-link: var(--bark-white);
+    --gf-link-hover: var(--green-moss);
+    --gf-on-accent: var(--charcoal);
     --line: color-mix(in srgb, var(--ink) 20%, transparent);
     --bark-alpha-lo: 0.03;
     --bark-alpha-hi: 0.69;

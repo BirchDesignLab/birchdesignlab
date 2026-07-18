@@ -17,13 +17,15 @@ body {
               color var(--dur-1) var(--ease-weighted);
 }
 
-h1, h2, h3 { font-family: var(--font-display); font-weight: 500; line-height: 1.15; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; line-height: 1.15; }
 h1 { font-size: var(--text-2xl); }
 h2 { font-size: var(--text-xl); }
 h3 { font-size: var(--text-lg); }
 
-a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+    transition: opacity var(--dur-1) var(--ease-weighted); }
 a:hover { color: var(--mark); }
+a:active { opacity: 0.55; transition-duration: 100ms; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
@@ -41,16 +43,66 @@ img, canvas, svg, video { max-width: 100%; display: block; }
   clip-path: inset(50%); white-space: nowrap;
 }
 
-/* Quiet weighted reveals: elements tagged data-reveal fade/rise on entry. */
-[data-reveal] {
-  opacity: 0;
-  translate: 0 14px;
-  transition: opacity var(--dur-2) var(--ease-weighted),
-              translate var(--dur-2) var(--ease-weighted);
+/* Engraved CTA — accent fill wipes in from the left under a fixed label.
+   Markup: <a class="cta-engraved"><span class="fill" aria-hidden="true"></span><span class="lbl">Label</span></a> */
+.cta-engraved {
+  position: relative; display: inline-block; overflow: hidden;
+  border: 1px solid var(--accent);
+  padding: calc(var(--space-3) - 2px) var(--space-5) var(--space-3);
+  text-decoration: none; font-family: var(--font-smallcaps);
+  text-transform: uppercase; letter-spacing: var(--tracking-wide);
+  font-size: var(--text-sm); line-height: 1;
 }
-[data-reveal].is-revealed { opacity: 1; translate: 0 0; }
+.cta-engraved .fill {
+  position: absolute; inset: 0; background: var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform var(--dur-1) var(--ease-weighted);
+}
+.cta-engraved .lbl {
+  position: relative; color: var(--accent);
+  transition: color var(--dur-1) var(--ease-weighted);
+}
+@media (hover: hover) {
+  .cta-engraved:hover .fill { transform: scaleX(1); }
+  .cta-engraved:hover .lbl { color: var(--on-accent); }
+}
+.cta-engraved:active .fill { transform: scaleX(1); transition-duration: 100ms; }
+.cta-engraved:active .lbl { color: var(--on-accent); transition-duration: 100ms; }
+
+/* Arrow link — arrow nudges right on hover/press.
+   Markup: <a class="more-link">Label <span class="arw" aria-hidden="true">&rarr;</span></a> */
+.more-link {
+  color: var(--link); text-decoration: underline;
+  text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+}
+.more-link .arw {
+  display: inline-block;
+  transition: transform var(--dur-1) var(--ease-weighted);
+}
+@media (hover: hover) {
+  .more-link:hover { color: var(--mark); }
+  .more-link:hover .arw { transform: translateX(0.3em); }
+}
+.more-link:active .arw { transform: translateX(0.3em); transition-duration: 100ms; }
+
+/* Loud-field links hover to a tone distinct from their resting color on BOTH
+   faces (dark rests at moss, light at bark-white) — plain --mark collides on
+   light, plain --gf-accent collides on dark. */
+.loud a:hover, .loud .more-link:hover { color: var(--gf-link-hover); }
+
+/* Quiet weighted reveals — the loud moment arrives; everything else is already there.
+   Gated by .reveal-on (added to <html> by JS); without it content is never hidden,
+   so no-JS and pre-hydration paint everything visible. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-on [data-reveal] {
+    opacity: 0; transform: translateY(8px);
+    transition: opacity var(--dur-2) var(--ease-weighted),
+                transform var(--dur-2) var(--ease-weighted);
+  }
+  .reveal-on [data-reveal].is-settled { opacity: 1; transform: none; }
+}
+
+/* Reduced motion: kill press/hover transitions too. */
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; translate: none; transition: none; }
+  a, .cta-engraved .fill, .cta-engraved .lbl, .more-link .arw { transition: none; }
 }
-/* No-JS: reveals must not hide content. Script adds .js to <html>. */
-html:not(.js) [data-reveal] { opacity: 1; translate: none; }

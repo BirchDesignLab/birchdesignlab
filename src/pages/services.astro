@@ -7,92 +7,125 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 >
   <section class="wrap">
     <header class="intro">
-      <h1>Services</h1>
       <!-- provisional copy throughout this page -->
-      <p>
-        Two things, done properly. Software and Websites. Both custom,
-        both built to last, both explained in plain English.
+      <p class="smallcaps kicker">Services</p>
+      <h1>Two things, done properly.</h1>
+      <p class="subline">
+        Software and Websites. Both custom, both built to last, both
+        explained in plain English.
       </p>
     </header>
 
-    <article class="service" data-reveal>
+    <article class="service">
       <h2>Custom software</h2>
       <p>
         Every business has them. The spreadsheet held together with tape, the
         process that eats a day every week, the "system" that lives in one
-        employee's head. We build the small, sturdy tool that replaces it. 
+        employee's head. We build the small, sturdy tool that replaces it.
         And we can stay around to keep it running.
       </p>
     </article>
 
-    <article class="service" data-reveal>
+    <article class="service">
       <h2>Custom websites</h2>
       <p>
         Your website is the first impression most customers will ever get.
         Ours load fast, read clearly on any device, and are designed around
         one question. What should a visitor do next? No templates, no
         page-builder bloat. Every site is designed and constructed for the business
-        it belongs to. 
+        it belongs to.
       </p>
     </article>
 
-    <section class="process" data-reveal>
+    <section class="process">
       <h2>How a project runs</h2>
-      <ol role="list">
-        <li>
-          <h3>Discovery</h3>
-          <!-- provisional copy: the retired fathom line, available not required -->
-          <p>We take the measure of the problem before proposing anything. Your business, your customers, and what working could actually look like.</p>
+      <ol class="steps" role="list">
+        <li class="row">
+          <p class="num" aria-hidden="true"></p>
+          <div class="step">
+            <h3>Discovery</h3>
+            <!-- provisional copy: the retired fathom line, available not required -->
+            <p>We take the measure of the problem before proposing anything. Your business, your customers, and what working could actually look like.</p>
+          </div>
         </li>
-        <li>
-          <h3>Build</h3>
-          <p>Design and construction in the open. You see real progress at real intervals, not a big reveal at the end.</p>
+        <li class="row">
+          <p class="num" aria-hidden="true"></p>
+          <div class="step">
+            <h3>Build</h3>
+            <p>Design and construction in the open. You see real progress at real intervals, not a big reveal at the end.</p>
+          </div>
         </li>
-        <li>
-          <h3>Launch</h3>
-          <p>Tested, fast, and yours. Delievered with an owner's manual and a bow. Take it to anyone you choose afterwards or stick around.</p>
+        <li class="row">
+          <p class="num" aria-hidden="true"></p>
+          <div class="step">
+            <h3>Launch</h3>
+            <p>Tested, fast, and yours. Delivered with an owner's manual and a bow. Take it to anyone you choose afterwards or stick around.</p>
+          </div>
         </li>
-        <li>
-          <h3>Care</h3>
-          <p>Software is a living thing. We offer ongoing care so it stays fast, secure, and current as your business grows.</p>
+        <li class="row">
+          <p class="num" aria-hidden="true"></p>
+          <div class="step">
+            <h3>Care</h3>
+            <p>Software is a living thing. We offer ongoing care so it stays fast, secure, and current as your business grows.</p>
+          </div>
         </li>
       </ol>
     </section>
+  </section>
 
-    <p class="cta-row" data-reveal>
-      <a class="cta" href="/contact">Tell us about your project</a>
-    </p>
+  <section class="loud" data-reveal>
+    <div class="wrap loud-inner">
+      <!-- provisional copy -->
+      <p class="pull">Every project starts with a plain conversation.</p>
+      <a class="cta-engraved" href="/contact">
+        <span class="fill" aria-hidden="true"></span>
+        <span class="lbl">Tell us about your project</span>
+      </a>
+    </div>
   </section>
 </BaseLayout>
 
 <style>
   .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
-  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); max-width: 18ch; margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+
   .service { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: 60ch; }
   .service p { color: var(--mark-muted); margin-top: var(--space-3); }
-  .process { padding-block: var(--space-5); border-top: 1px solid var(--line); }
-  .process ol {
-    list-style: none; padding: 0; margin-top: var(--space-4);
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-5) var(--space-6);
-    max-width: 52rem;
-    counter-reset: step;
+
+  /* Process — display-serif numerals in a 7rem column. */
+  .process { padding-block: var(--space-5) 0; border-top: 1px solid var(--line); }
+  .steps { list-style: none; padding: 0; margin-top: var(--space-4); counter-reset: step; }
+  .row {
+    counter-increment: step;
+    display: grid; grid-template-columns: 7rem 1fr;
+    padding-block: var(--space-5);
   }
+  .row + .row { border-top: 1px solid var(--line); }
+  .num {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    color: var(--accent); line-height: 1;
+  }
+  .num::before { content: counter(step, decimal-leading-zero); }
+  .step p { color: var(--mark-muted); margin-top: var(--space-2); }
+  /* Phone: collapse the 7rem numeral column to single column (authored fresh —
+     the kit's .process-row collapse rule was scaffolding, never ported). */
   @media (max-width: 640px) {
-    .process ol { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 1fr; gap: var(--space-2); }
   }
-  .process li { counter-increment: step; }
-  .process h3::before {
-    content: counter(step, decimal-leading-zero) ' '; /* trailing space keeps the a11y name from concatenating ("01 Discovery") */
-    display: block; color: var(--accent); font-size: var(--text-sm);
-    letter-spacing: var(--tracking-wide); margin-bottom: var(--space-1);
+
+  /* Loud moment — closing CTA (shared .loud pattern). */
+  .loud {
+    background: var(--green-field); color: var(--gf-mark);
+    border-top: 1px solid var(--line);
+    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
+    --link: var(--gf-link); --mark: var(--gf-mark);
   }
-  .process p { color: var(--mark-muted); margin-top: var(--space-2); font-size: var(--text-sm); }
-  .cta-row { padding-block: var(--space-6); }
-  .cta {
-    color: var(--accent); border: 1px solid var(--accent); border-radius: 999px;
-    padding: var(--space-2) var(--space-5); text-decoration: none;
-    transition: all var(--dur-1) var(--ease-weighted);
+  .loud-inner { padding-block: var(--space-7); }
+  .pull {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    line-height: 1.2; max-width: 26ch;
   }
-  .cta:hover { background: var(--accent); color: var(--field); }
+  .loud .cta-engraved { margin-top: var(--space-5); }
 </style>

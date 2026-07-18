@@ -11,7 +11,7 @@ const path = Astro.url.pathname;
 <header>
   <a class="skip" href="#main">Skip to content</a>
   <div class="wrap bar">
-    <a class="wordmark smallcaps" href="/">Birch Design Lab</a>
+    <a class="wordmark smallcaps" href="/"><span class="wm-line">Birch</span> <span class="wm-line">Design Lab</span></a>
     <nav aria-label="Main">
       {links.map(([href, label]) => (
         <a href={href} aria-current={path.startsWith(href) ? 'page' : undefined}>{label}</a>
@@ -31,6 +31,9 @@ const path = Astro.url.pathname;
     font-size: var(--text-lg); color: var(--mark); text-decoration: none;
     margin-right: auto;
   }
+  /* Name-boundary pieces: one line on desktop; on mobile the first drops to its
+     own line and "Design Lab" is kept whole (see the breakpoint block). */
+  .wm-line { white-space: nowrap; }
   nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
   nav a {
     color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm);
@@ -43,7 +46,17 @@ const path = Astro.url.pathname;
   }
   .skip:focus { left: 0; z-index: 10; }
   @media (max-width: 640px) {
-    .bar { flex-wrap: wrap; }
-    nav { order: 3; width: 100%; }
+    /* Kit treatment: wordmark alone on the left, nav as two columns of two on
+       the right, toggle top right. Bar stays one row, top-aligned. */
+    .bar { align-items: flex-start; }
+    nav {
+      display: grid; grid-template-columns: repeat(2, max-content);
+      /* column gap tightened from --space-4 to --space-2: frees ~16px so the
+         wordmark has room to keep "Design Lab" whole on its second line */
+      gap: var(--space-2);
+    }
+    /* Deterministic 2-line wordmark, split at the name boundary:
+       "Birch" / "Design Lab" (never mid-phrase, never 3 lines). */
+    .wordmark .wm-line:first-child { display: block; }
   }
 </style>

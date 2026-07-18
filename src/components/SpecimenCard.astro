@@ -13,7 +13,7 @@ const href = entry.data.href ?? `/lab/${entry.id}`;
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
 ---
-<article class="card" data-reveal>
+<article class="card">
   <p class="designation smallcaps">{designation}</p>
   <Heading>
     {live ? <a href={href}>{title}</a> : <span>{title} <em class="soon">forthcoming</em></span>}

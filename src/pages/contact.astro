@@ -8,28 +8,48 @@ const email = 'hello@birchdesignlab.com'; // provisional until mailbox exists
 >
   <section class="wrap">
     <header class="intro">
-      <h1>Contact</h1>
       <!-- provisional copy -->
-      <p>
-        Tell us what you're trying to build, fix, or grow. Plain English is
-        the house language. No preparation required.
-      </p>
+      <p class="smallcaps kicker">Contact</p>
+      <h1>Start a conversation</h1>
+      <p class="subline">No forms, no intake funnel. An email arrives, a person reads it.</p>
     </header>
-    <p class="line" data-reveal>
+  </section>
+
+  <section class="loud" data-reveal>
+    <div class="wrap loud-inner">
+      <!-- provisional copy -->
+      <p class="invite">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
       <a class="mail" href={`mailto:${email}`}>{email}</a>
-    </p>
+      <p class="fine">No preparation required. One person reads every message.</p>
+    </div>
     <!-- Renovation slot: contact form via Cloudflare Pages Functions when volume justifies it. -->
   </section>
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-4); max-width: 52ch; }
-  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
-  .line { padding-block: var(--space-5) var(--space-7); }
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+
+  /* Loud moment — the CTA (shared .loud pattern). */
+  .loud {
+    background: var(--green-field); color: var(--gf-mark);
+    border-top: 1px solid var(--line);
+    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
+    --link: var(--gf-link); --mark: var(--gf-mark);
+  }
+  .loud-inner { padding-block: var(--space-7); }
+  .invite {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    line-height: 1.2; max-width: 24ch;
+  }
   .mail {
+    display: inline-block; margin-top: var(--space-4);
     font-family: var(--font-display);
     /* long address must survive narrow phones */
     font-size: clamp(1.3rem, 5.5vw, var(--text-2xl));
     overflow-wrap: anywhere;
   }
+  .fine { color: var(--accent); font-size: var(--text-sm); margin-top: var(--space-4); }
 </style>

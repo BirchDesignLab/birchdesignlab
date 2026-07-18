@@ -37,5 +37,11 @@ const { designation, title, tech } = Astro.props;
     max-width: 62ch;
   }
   .tech { margin-top: var(--space-3); color: var(--mark-muted); font-size: var(--text-sm); }
-  .tech span { border: 1px solid var(--line); border-radius: 999px; padding: 0.1em 0.7em; margin-right: var(--space-2); }
+  .tech span {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1;
+    border: 1px solid var(--line);
+    padding: 0.35em 0.8em 0.25em; margin-right: var(--space-2);
+  }
 </style>

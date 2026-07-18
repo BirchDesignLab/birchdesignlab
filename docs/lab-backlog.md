@@ -63,6 +63,8 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Daily OG rebuild.** Cloudflare deploy hook on a cron so the OG card's tree is truly daily rather than tree-of-last-deploy. Only matters if platform OG caching ever stops making it moot.
 - **GSAP as a Lab-piece technology.** Banned from the core site by the spec, deliberately reserved for a future Lab experiment that wants heavyweight motion. No concept attached yet.
 - **Heavier location-aware work.** Founder intends eventually to build pieces that justify a location permission prompt. When that day comes, Tonight's Sky (shelved above) comes off the shelf with it.
+- **Copy pass on the business pages.** After the Lab pass, a dedicated editing pass over home/services/about/contact copy. All page copy through the 2026-07 design-system port is provisional placeholder (founder territory per the writing rules); sequence it after the Lab work, not before.
+- **Shorter About bark hero (~1/2 homepage height).** About's bark hero currently matches Home at full 88vh. Founder wants to explore a shorter field (~half Home's height) here. Can't just cut `min-height`: the engine has no aspect correction, so a short-wide field squishes the lenticels into horizontal streaks. Needs the aspect-safe path — the `lockAspect` opt-in analyzed 2026-07 (compensate normalized w/h by canvas aspect at draw time in `renderer.ts`/`draw2d.ts`, `BarkField` prop, `pattern.ts` untouched, daily-seed determinism preserved) — or an equivalent. Revisit alongside that engine work.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 

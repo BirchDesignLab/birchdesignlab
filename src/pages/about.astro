@@ -6,13 +6,16 @@ import BarkField from '../components/BarkField.astro';
   title="About · Birch Design Lab"
   description="The name, the oldest paper of the north, and the man behind Birch Design Lab."
 >
-  <section class="wrap">
-    <header class="intro">
-      <h1>About</h1>
-    </header>
-
+  <header class="hero">
+    <BarkField density={170} />
+    <h1>The shining tree</h1>
+  </header>
+  <!-- <section class="wrap preprose">
+    <h2>The shining tree</h2>
+  </section> -->
+  <section class="wrap prose">
     <!-- provisional copy throughout -->
-    <article class="epic" data-reveal>
+    <article class="epic">
       <p class="etym">
         <em>Birch</em>: Old English <em>beorc</em>, from an ancient root that
         meant <strong>to shine</strong>. The same syllable survives in
@@ -22,31 +25,31 @@ import BarkField from '../components/BarkField.astro';
       <p>
         The word is old enough to have kept its own letter. Back when English was still Old and
         being written in runes, the rune for B was <em>beorc</em>: the
-        birch rune. A tree so familiar it stood for a sound. Most business names 
+        birch rune. A tree so familiar it stood for a sound. Most business names
         get invented in an afternoon. This one has been earning its
         keep for a few thousand years.
       </p>
     </article>
 
-    <article class="myth" data-reveal>
+    <article class="myth">
       <h2>The strongest, oldest paper of the North</h2>
       <p>
-        The city of Novgorod, Russia was founded in 859 CE and was a major trade hub for centuries. 
+        The city of Novgorod, Russia was founded in 859 CE and was a major trade hub for centuries.
         Many Medieval writings have been excavated in the surrounding area.
         These shopping lists, love notes, and children's
         homework were resurrected whole after eight hundred years in the mud.
         They were scrawled into bark of the birch tree.
       </p>
       <p>
-        The shining tree was a carrier of everyday people's communications. 
+        The shining tree was a carrier of everyday people's communications.
         And they survive nearly a millenium in the mud.
       </p>
     </article>
 
-    <article class="founder" data-reveal>
+    <article class="founder">
       <h2>The founder</h2>
       <p>
-        Birch Design Lab is one man much like the birch tree. 
+        Birch Design Lab is one man much like the birch tree.
       </p>
       <p>
         Tall, pale, and shining amongst the darkness. Also possibly better suited to the North than to the Gulf Coast he currently calls home.
@@ -58,21 +61,59 @@ import BarkField from '../components/BarkField.astro';
         Every project is designed, constructed, and can be cared for by the same pair of hands you shake.
       </p>
     </article>
+  </section>
 
-    <div class="field-strip" data-reveal>
-      <BarkField density={90} />
+  <section class="loud" data-reveal>
+    <div class="wrap loud-inner">
+      <p class="manifesto">
+        Everything here is one person's work. That is not a limitation; it is the guarantee.
+      </p>
+      <p class="signature smallcaps">Birch Design Lab</p>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-4); }
-  .epic, .myth, .founder { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: 60ch; }
+  /* Bark hero — same construction as Home's: a tall full-bleed field with the
+     H1 overlaid, so marks render as lenticels (a tall region, not a wide band).
+     This is About's material difference from Services. */
+  .hero {
+    position: relative; min-height: 88vh;
+    display: grid; place-items: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding-inline: var(--space-4);
+  }
+  .hero h1 {
+    position: relative;
+    font-size: var(--text-3xl);
+    text-align: center;
+    /* billboard color (distinct from the bark's --mark hue) so the H1 keeps
+       contrast over the brightest lenticels, not just over the field */
+    color: var(--billboard-color);
+  }
+
+  /* "The shining tree" aligns with the etym paragraph below; the epic's
+     top border is the seam between this heading and the prose. */
+  /*.preprose { padding-block: var(--space-4); }*/
+
+  /*.prose { display: grid; gap: var(--space-4); padding-block: var(--space-5) var(--space-4); }*/
+  .prose { display: grid; gap: var(--space-4); padding-block: 0 var(--space-4); }
+  .epic, .myth, .founder { border-top: 1px solid var(--line); padding-top: var(--space-5); max-width: 60ch; }
   .etym { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.4; }
   .epic p + p, .myth p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
-  .field-strip {
-    position: relative; margin-block: var(--space-6);
-    min-height: 14rem;
-    border-block: 1px solid var(--line); overflow: hidden;
+
+  /* Loud moment — manifesto pull-quote, NO CTA (shared .loud pattern). */
+  .loud {
+    background: var(--green-field); color: var(--gf-mark);
+    border-top: 1px solid var(--line);
+    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
+    --link: var(--gf-link); --mark: var(--gf-mark);
   }
+  .loud-inner { padding-block: var(--space-7); }
+  .manifesto {
+    font-family: var(--font-display); font-size: var(--text-3xl);
+    line-height: 1.15; max-width: 20ch;
+  }
+  .signature { display: block; color: var(--accent); margin-top: var(--space-5); }
 </style>
