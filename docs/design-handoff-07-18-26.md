@@ -39,7 +39,7 @@ Kit treatment: wordmark left, nav as a **2×2 grid** on the right, toggle top-ri
 
 ## Parked (both in `docs/lab-backlog.md`, sequenced AFTER the Lab pass)
 
-- **Copy pass on the business pages.** All home/services/about/contact copy through this port is **provisional placeholder** (founder territory per the writing rules). Do not treat page copy as final.
+- **Copy pass on the business pages (redo).** A founder copy pass was done 2026-07-16 and carried through this port, but founder judges it **weak and wants a quality rewrite**. The copy exists — treat it as **first-draft, not final** (founder territory per the writing rules), not as placeholder.
 - **Shorter About bark hero (~½ homepage height).** Founder wants a shorter field here, but the bark engine has **no aspect correction** — cutting `min-height` squishes lenticels into horizontal streaks. Needs the aspect-safe path, not a height cut.
 
 ### `lockAspect` — analyzed, not built (the real latent engine gap)
