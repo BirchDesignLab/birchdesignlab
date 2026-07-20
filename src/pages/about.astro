@@ -7,7 +7,7 @@ import BarkField from '../components/BarkField.astro';
   description="The name, the oldest paper of the north, and the man behind Birch Design Lab."
 >
   <header class="hero">
-    <BarkField density={170} />
+    <BarkField density={170} lockAspect />
     <h1>The shining tree</h1>
   </header>
   <!-- <section class="wrap preprose">
@@ -74,11 +74,13 @@ import BarkField from '../components/BarkField.astro';
 </BaseLayout>
 
 <style>
-  /* Bark hero — same construction as Home's: a tall full-bleed field with the
-     H1 overlaid, so marks render as lenticels (a tall region, not a wide band).
-     This is About's material difference from Services. */
+  /* Bark hero — Home's construction at half height: a full-bleed field with the
+     H1 overlaid. This is About's material difference from Services. The short
+     band only works because the field opts into `lockAspect`; without it the
+     engine maps normalized dash width to canvas width and the lenticels smear
+     into horizontal streaks. */
   .hero {
-    position: relative; min-height: 88vh;
+    position: relative; min-height: 44vh;
     display: grid; place-items: center;
     border-bottom: 1px solid var(--line);
     overflow: hidden;
