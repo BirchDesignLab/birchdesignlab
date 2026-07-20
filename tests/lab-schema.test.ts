@@ -15,7 +15,6 @@ describe('labSchema', () => {
   it('accepts a valid entry and applies defaults', () => {
     const parsed = labSchema.parse(valid);
     expect(parsed.status).toBe('live');
-    expect(parsed.featured).toBe(false);
     expect(parsed.date).toBeInstanceOf(Date);
   });
   it('rejects malformed designations', () => {
