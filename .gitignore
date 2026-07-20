@@ -2,3 +2,7 @@ node_modules/
 dist/
 .astro/
 public/og/
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cache/
