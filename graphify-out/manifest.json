@@ -523,5 +523,25 @@
     "mtime": 1784167836.0671802,
     "ast_hash": "f23df58d13d056781207664fd4ff2412",
     "semantic_hash": "f23df58d13d056781207664fd4ff2412"
+  },
+  ".claude/settings.json": {
+    "mtime": 1784584488.25498,
+    "ast_hash": "74eeb6a91999f6f59381c9660d15c73c",
+    "semantic_hash": "74eeb6a91999f6f59381c9660d15c73c"
+  },
+  "CLAUDE.md": {
+    "mtime": 1784584498.8377836,
+    "ast_hash": "2cabaf621ad1e10e81efaaded9295dfd",
+    "semantic_hash": "2cabaf621ad1e10e81efaaded9295dfd"
+  },
+  "docs/birch-design-lab-founding-record.md": {
+    "mtime": 1784150003.1456034,
+    "ast_hash": "237b4f8f9d119f30fe2a1a256e294c3d",
+    "semantic_hash": "237b4f8f9d119f30fe2a1a256e294c3d"
+  },
+  "docs/naming-handoff.md": {
+    "mtime": 1784143876.8609257,
+    "ast_hash": "5cc253d4cbe2871c16fd359b2372630b",
+    "semantic_hash": "5cc253d4cbe2871c16fd359b2372630b"
   }
 }
