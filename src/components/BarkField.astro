@@ -1,6 +1,6 @@
 ---
-interface Props { seed?: number; density?: number; class?: string; live?: boolean }
-const { seed, density = 140, class: className, live = false } = Astro.props;
+interface Props { seed?: number; density?: number; class?: string; live?: boolean; lockAspect?: boolean }
+const { seed, density = 140, class: className, live = false, lockAspect = false } = Astro.props;
 ---
 <canvas
   class:list={['bark-field', className]}
@@ -8,6 +8,7 @@ const { seed, density = 140, class: className, live = false } = Astro.props;
   data-seed={seed}
   data-density={density}
   data-live={live ? '' : undefined}
+  data-lock-aspect={lockAspect ? '' : undefined}
   aria-hidden="true"></canvas>
 
 <style>
@@ -41,8 +42,10 @@ const { seed, density = 140, class: className, live = false } = Astro.props;
       : resolveSeed(undefined, location.pathname);
     const dashes = generateBark(seed, { density: Number(canvas.dataset.density) || 140 });
 
-    const gl = createBarkRenderer(canvas, dashes);
-    const paint2D = () => renderBark2D(canvas, dashes, markColor(), ...barkAlphas());
+    // short-wide fields opt in so lenticels keep their shape instead of streaking
+    const lockAspect = 'lockAspect' in canvas.dataset;
+    const gl = createBarkRenderer(canvas, dashes, lockAspect);
+    const paint2D = () => renderBark2D(canvas, dashes, markColor(), ...barkAlphas(), lockAspect);
 
     if (gl) {
       gl.setColors(markColor());

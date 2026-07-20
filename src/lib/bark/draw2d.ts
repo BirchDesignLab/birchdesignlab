@@ -37,8 +37,11 @@ export function drawBarkDashes(
   H: number,
   alphaLo = 0.05,
   alphaHi = 0.22,
+  /** Measure dash width against H instead of W, so shape survives a non-square canvas. */
+  lockAspect = false,
 ): void {
   const [mr, mg, mb] = parseColor(mark);
+  const widthRef = lockAspect ? H : W;
   const fill = `rgb(${Math.round(mr * 255)} ${Math.round(mg * 255)} ${Math.round(mb * 255)})`;
   for (const d of dashes) {
     ctx.save();
@@ -46,7 +49,7 @@ export function drawBarkDashes(
     ctx.rotate(d.rot);
     ctx.globalAlpha = alphaLo + d.shade * (alphaHi - alphaLo);
     ctx.fillStyle = fill;
-    const w = d.w * W, h = Math.max(1.5, d.h * H);
+    const w = d.w * widthRef, h = Math.max(1.5, d.h * H);
     ctx.beginPath();
     ctx.roundRect(-w / 2, -h / 2, w, h, h / 2);
     ctx.fill();

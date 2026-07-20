@@ -3,7 +3,7 @@ import type { Dash } from './pattern';
 import { drawBarkDashes, parseColor } from './draw2d';
 export { parseColor } from './draw2d';
 
-const VERT = `#version 300 es
+export const BARK_VERT_SOURCE = `#version 300 es
 layout(location=0) in vec2 aCorner;             // unit quad corners
 layout(location=1) in vec4 aRect;               // x,y,w,h normalized
 layout(location=2) in vec2 aRotShade;           // rot, shade
@@ -13,6 +13,7 @@ uniform float uScroll;
 uniform float uGrowth;                          // grow-in progress; 1 = fully grown
 uniform float uGust;                            // wind gusts on/off
 uniform vec3 uPointer;                          // x,y normalized; z = wake strength
+uniform float uAspectLock;                      // 1 = keep dash shape square-referenced
 out vec2 vLocal;
 out float vShade;
 out float vBoost;
@@ -46,6 +47,11 @@ void main() {
   vec2 p = aCorner * halfSize;
   float c = cos(rot), s = sin(rot);
   p = vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+  // aspect lock: treat the rotated offset as measured in canvas-height units and
+  // divide x back into normalized space, so the dash keeps its shape (and its
+  // rotation stays rigid) on a short-wide field instead of streaking sideways
+  float aspect = uResolution.x / max(uResolution.y, 1.0);
+  p.x /= mix(1.0, aspect, uAspectLock);
   vec2 pos = (center + p) * 2.0 - 1.0;
   gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
 }`;
@@ -108,12 +114,14 @@ function dashBuffer(dashes: Dash[]): Float32Array {
 export function createBarkRenderer(
   canvas: HTMLCanvasElement,
   dashes: Dash[],
+  /** Opt in to keep dash shape on a non-square field. Off leaves every existing field untouched. */
+  lockAspect = false,
 ): BarkRenderer | null {
   const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
   if (!gl) return null;
 
   const prog = gl.createProgram()!;
-  gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, BARK_VERT_SOURCE));
   gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG));
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
@@ -150,6 +158,8 @@ export function createBarkRenderer(
   const uGrowth = gl.getUniformLocation(prog, 'uGrowth');
   const uGust = gl.getUniformLocation(prog, 'uGust');
   const uPointer = gl.getUniformLocation(prog, 'uPointer');
+  const uAspectLock = gl.getUniformLocation(prog, 'uAspectLock');
+  gl.uniform1f(uAspectLock, lockAspect ? 1 : 0);
   gl.uniform1f(uAlphaLo, 0.05);
   gl.uniform1f(uAlphaHi, 0.22);
   gl.uniform1f(uScroll, 0);
@@ -235,6 +245,7 @@ export function renderBark2D(
   mark: string,
   alphaLo = 0.05,
   alphaHi = 0.22,
+  lockAspect = false,
 ): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -242,5 +253,5 @@ export function renderBark2D(
   canvas.width = Math.round(canvas.clientWidth * dpr);
   canvas.height = Math.round(canvas.clientHeight * dpr);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBarkDashes(ctx, dashes, mark, canvas.width, canvas.height, alphaLo, alphaHi);
+  drawBarkDashes(ctx, dashes, mark, canvas.width, canvas.height, alphaLo, alphaHi, lockAspect);
 }

@@ -42,7 +42,18 @@ Kit treatment: wordmark left, nav as a **2×2 grid** on the right, toggle top-ri
 - **Copy pass on the business pages (redo).** A founder copy pass was done 2026-07-16 and carried through this port, but founder judges it **weak and wants a quality rewrite**. The copy exists — treat it as **first-draft, not final** (founder territory per the writing rules), not as placeholder.
 - **Shorter About bark hero (~½ homepage height).** Founder wants a shorter field here, but the bark engine has **no aspect correction** — cutting `min-height` squishes lenticels into horizontal streaks. Needs the aspect-safe path, not a height cut.
 
-### `lockAspect` — analyzed, not built (the real latent engine gap)
+### `lockAspect` — BUILT 2026-07-19
+
+Shipped as an opt-in `BarkField` prop (`lockAspect`), default off, so every existing field is untouched. Implementation differs from the analysis below in one way that matters: the fix is applied to the **rotated offset**, not to `halfSize.x`. Scaling `halfSize.x` before the rotation only corrects the dash at `rot: 0` and leaves the rotation itself skewed on a non-square canvas. Dividing the rotated offset x by the aspect corrects scale and keeps rotation rigid at every angle.
+
+- `renderer.ts`: new `uAspectLock` uniform (0/1, set once at create); `p.x /= mix(1.0, aspect, uAspectLock)` after the rotation, with `aspect = uResolution.x / max(uResolution.y, 1.0)`. `VERT` is now exported as `BARK_VERT_SOURCE` so the shader source is assertable from tests.
+- `draw2d.ts`: 7th positional param `lockAspect = false`; dash width measures against `H` instead of `W`. Canvas2D already rotates in screen space, so no rotation fix is needed there.
+- `pattern.ts` untouched. Generation stays pure, daily-seed determinism preserved.
+- All three consumers stay default-off: `BarkField`, bdl-002's styleguide field, and the OG build script.
+
+Verified by GL pixel readback in a real browser (covered-pixel counts, white dashes at alpha 1). Lock off: 912 / 2285 / 4541 at 160x160, 400x160, 800x160, scaling linearly with width, which is the streak bug. Lock on: 912 / 919 / 918, flat. At square both paths return an identical 912, confirming the default-off path is unchanged. Unit tests cover the canvas2D path and the shader source in `tests/bark-lock-aspect.test.ts`.
+
+The original analysis, kept for the record:
 Mark on-screen aspect == canvas aspect, because `renderer.ts` (VERT shader) and `draw2d.ts` map normalized `w/h` straight to the canvas with no aspect compensation. A lenticel on a 5:1 strip stretches into a streak. Fix belongs **at draw** (`renderer.ts` shader scale `halfSize.x` by `uResolution.y/uResolution.x`; `draw2d.ts` reference height), **opt-in per instance** via a `BarkField` prop (default off so Home is untouched — Home's hero is ~2:1, not square, so a global fix would shift it), `pattern.ts` **untouched** (that's what preserves daily-seed determinism: generation stays pure). Three consumers to keep in parity: WebGL shader, 2D fallback, and the OG build script (both use `drawBarkDashes`). Worth building when the shorter-About-hero want comes up.
 
 ## Repo-authoritative — do NOT overwrite (unchanged reminder)
