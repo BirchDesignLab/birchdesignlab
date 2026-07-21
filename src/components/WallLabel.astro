@@ -9,6 +9,15 @@ const { lines } = Astro.props;
   </ol>
 </details>
 
+<script>
+  // Mobile drops the label into normal flow (see the max-width: 720px rule
+  // below), right where the fixed "back to Lab" hatch pill sits. Starting
+  // collapsed there avoids the overlap instead of just hiding it visually.
+  if (matchMedia('(max-width: 720px)').matches) {
+    document.querySelector('.label')?.removeAttribute('open');
+  }
+</script>
+
 <style>
   .label {
     /* Bottom-left, resting just above the specimen plate's summary strip. */
@@ -36,6 +45,9 @@ const { lines } = Astro.props;
       position: static;
       max-width: none;
       border-inline: none;
+      /* Clears the fixed "back to Lab" hatch pill (top: var(--space-3),
+         ~2.7rem tall) so the label no longer starts underneath it. */
+      margin-top: 3.5rem;
     }
   }
 </style>
