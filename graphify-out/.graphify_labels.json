@@ -1,1 +1,23 @@
-{"0": "OG Image Generation Pipeline", "1": "Bark Rendering Primitives", "2": "Page Fonts & Style Imports", "3": "Site Design Rationale & Deploy", "4": "Brand Naming & Founding Record", "5": "BDL-003 Novgorod Letters", "6": "Astro & Font Dependencies", "7": "Dev Tooling & Package Config", "8": "Loom Presets & Yarn Data", "9": "SVG Stroke Tracing Script", "10": "BDL-004 Loom Experiment UI", "11": "Novgorod Letter Content & Schema", "12": "Lab Content Schema & Architecture", "13": "Bark Renderer Engine API", "14": "TypeScript Config", "15": "BDL-001 Bark Engine Interaction", "16": "Color Utilities", "17": "Graphify Tool Setup", "18": "Astro Config", "19": "Favicon Mark", "20": "Svelte Dependency", "21": "Vitest Config"}
+{
+  "0": "OG Image Generation Pipeline",
+  "1": "Bark Rendering Primitives",
+  "2": "Page Fonts & Style Imports",
+  "3": "Site Design Rationale & Deploy",
+  "4": "Brand Naming & Founding Record",
+  "5": "BDL-003 Novgorod Letters",
+  "6": "Astro & Font Dependencies",
+  "7": "Dev Tooling & Package Config",
+  "8": "Loom Presets & Yarn Data",
+  "9": "SVG Stroke Tracing Script",
+  "10": "BDL-004 Loom Experiment UI",
+  "11": "Novgorod Letter Content & Schema",
+  "12": "Lab Content Schema & Architecture",
+  "13": "Bark Renderer Engine API",
+  "14": "TypeScript Config",
+  "15": "BDL-001 Bark Engine Interaction",
+  "16": "Color Utilities",
+  "17": "Graphify Tool Setup",
+  "18": "Astro Config",
+  "19": "Favicon Mark",
+  "21": "Vitest Config"
+}

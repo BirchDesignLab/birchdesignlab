@@ -1,13 +1,18 @@
-# Graph Report - .  (2026-07-20)
+# Graph Report - birchdesignlab  (2026-07-20)
 
 ## Corpus Check
-- 109 files · ~65,737 words
+- 107 files · ~65,807 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 406 nodes · 674 edges · 22 communities (19 shown, 3 thin omitted)
-- Extraction: 97% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 16 edges (avg confidence: 0.78)
-- Token cost: 0 input · 80,203 output
+- 381 nodes · 633 edges · 21 communities (18 shown, 3 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 16 edges (avg confidence: 0.78)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `af337ec0`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - OG Image Generation Pipeline
@@ -31,16 +36,16 @@
 - Favicon Mark
 
 ## God Nodes (most connected - your core abstractions)
-1. `./DigCanvas.svelte` - 19 edges
-2. `../layouts/BaseLayout.astro` - 17 edges
-3. `drawBarkDashes()` - 16 edges
+1. `./DigCanvas.svelte` - 17 edges
+2. `drawBarkDashes()` - 16 edges
+3. `../layouts/BaseLayout.astro` - 14 edges
 4. `BarkRenderer` - 13 edges
 5. `../components/BarkField.astro` - 12 edges
 6. `./BarkEngine.svelte` - 10 edges
 7. `Ctx2DLike` - 10 edges
 8. `generateBark()` - 10 edges
 9. `scripts` - 9 edges
-10. `../../layouts/ExperimentLayout.astro` - 9 edges
+10. `mulberry32()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Bark-Generated OG Images Implementation Plan` --references--> `renderOgCard()`  [EXTRACTED]
@@ -49,10 +54,10 @@
   docs/superpowers/specs/2026-07-16-bark-og-images-design.md → scripts/og/render.ts
 - `BarkField lockAspect prop fixes lenticel streaking on non-square canvases` --rationale_for--> `../components/BarkField.astro`  [EXTRACTED]
   docs/design-handoff-07-18-26.md → src/components/BarkField.astro
+- `Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan` --references--> `../components/BarkField.astro`  [EXTRACTED]
+  docs/superpowers/plans/2026-07-15-website-core.md → src/components/BarkField.astro
 - `Two-layer scratch reveal: strokes uncovered first, then translation blooms in place (meet the artifact before the meaning)` --rationale_for--> `./DigCanvas.svelte`  [EXTRACTED]
   docs/superpowers/specs/2026-07-16-bdl-003-novgorod-letters-design.md → src/experiments/bdl-003/DigCanvas.svelte
-- `BDL-004 The Loom Implementation Plan` --references--> `./ClothCanvas.svelte`  [EXTRACTED]
-  docs/superpowers/plans/2026-07-16-bdl-004-the-loom.md → src/experiments/bdl-004/ClothCanvas.svelte
 
 ## Import Cycles
 - None detected.
@@ -65,31 +70,31 @@
 - **Site-wide daily-seed determinism: bark tree, OG card, and the loom's daily warp all derive from hashString(date)** — docs_handoff_2026_07_16_seed_by_date, docs_superpowers_specs_2026_07_16_bark_og_images_design_daily_seed, docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design_draft_engine [INFERRED 0.85]
 - **Wall-label house rule for experiment-page floating chrome, established across handoff, spec, and plan** — docs_handoff_2026_07_16, docs_superpowers_specs_2026_07_16_wall_labels_design_house_rule_chrome, docs_superpowers_plans_2026_07_16_wall_labels [EXTRACTED 1.00]
 
-## Communities (22 total, 3 thin omitted)
+## Communities (21 total, 3 thin omitted)
 
 ### Community 0 - "OG Image Generation Pipeline"
-Cohesion: 0.09
-Nodes (27): Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan, outDir, seed, drawTracked(), renderOgCard(), ../components/BarkField.astro, barkAlphas, reducedMotion (+19 more)
+Cohesion: 0.14
+Nodes (19): Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan, outDir, seed, drawTracked(), renderOgCard(), BarkOptions, clamp01(), DEFAULTS (+11 more)
 
 ### Community 1 - "Bark Rendering Primitives"
-Cohesion: 0.11
-Nodes (26): Ctx2DLike, drawBarkDashes(), Draft, gcd(), isWarpOver(), lcm(), shaftAt(), treadleAt() (+18 more)
+Cohesion: 0.13
+Nodes (21): Draft, gcd(), isWarpOver(), lcm(), shaftAt(), treadleAt(), tileSizePx(), ClothPick (+13 more)
 
 ### Community 2 - "Page Fonts & Style Imports"
-Cohesion: 0.06
-Nodes (20): ../../experiments/registry, ../lib/bark, ../lib/color, ../lib/og/manifest, ../styles/base.css, ../styles/tokens.css, ./DeviceBadge.astro, ../components/Seo.astro (+12 more)
+Cohesion: 0.10
+Nodes (16): ../styles/base.css, ../styles/tokens.css, ../components/BarkField.astro, barkAlphas, reducedMotion, ./DeviceBadge.astro, ../components/Seo.astro, ../components/SiteFooter.astro (+8 more)
 
 ### Community 3 - "Site Design Rationale & Deploy"
 Cohesion: 0.07
-Nodes (38): Deploying birchdesignlab.com (Deploy Guide), Node 22.16.0 pin via .nvmrc for deterministic Cloudflare builds, Handoff 2026-07-18: Design-System Port Complete & Deployed, --gf-link-hover token resolves loud-link hover collision across dark/light faces, BarkField lockAspect prop fixes lenticel streaking on non-square canvases, Marcellus ships weight 400 only; headings dropped to 400 to avoid faux-bold, Rewritten reveal plumbing: .reveal-on/.is-settled gated IntersectionObserver, Handoff 2026-07-16 (+30 more)
+Nodes (35): Deploying birchdesignlab.com (Deploy Guide), Node 22.16.0 pin via .nvmrc for deterministic Cloudflare builds, Handoff 2026-07-18: Design-System Port Complete & Deployed, --gf-link-hover token resolves loud-link hover collision across dark/light faces, BarkField lockAspect prop fixes lenticel streaking on non-square canvases, Marcellus ships weight 400 only; headings dropped to 400 to avoid faux-bold, Rewritten reveal plumbing: .reveal-on/.is-settled gated IntersectionObserver, Handoff 2026-07-16 (+27 more)
 
 ### Community 4 - "Brand Naming & Founding Record"
 Cohesion: 0.09
 Nodes (33): BDL (Initialism), Birch (Eventual Spoken Name), Birch Design Lab (Year-One Legal Name), Birch Labs (Established-Era Name), The Chiaroscuro Principle, The Credo, Birch Design Lab — Founding Record (document), The Epic Framework (Lesson of Record) (+25 more)
 
 ### Community 5 - "BDL-003 Novgorod Letters"
-Cohesion: 0.11
-Nodes (23): ./letters, ../../lib/scratch/coverage, ../../lib/scratch/letter-schema, BDL-003 Novgorod Letters Implementation Plan, BDL-003 · Novgorod Letters · Design, Hand-traced letterforms from published gramota drawings, because a font cannot fake a seven-year-old's hand, Two-layer scratch reveal: strokes uncovered first, then translation blooms in place (meet the artifact before the meaning), BDL-003 Novgorod Letters (Lab Content Entry) (+15 more)
+Cohesion: 0.14
+Nodes (20): BDL-003 Novgorod Letters Implementation Plan, BDL-003 · Novgorod Letters · Design, Hand-traced letterforms from published gramota drawings, because a font cannot fake a seven-year-old's hand, Two-layer scratch reveal: strokes uncovered first, then translation blooms in place (meet the artifact before the meaning), BDL-003 Novgorod Letters (Lab Content Entry), ./DigCanvas.svelte, barkAlphas, composite() (+12 more)
 
 ### Community 6 - "Astro & Font Dependencies"
 Cohesion: 0.07
@@ -108,8 +113,8 @@ Cohesion: 0.25
 Nodes (13): absolutizeAndTransform(), apply(), attrValue(), extractStrokes(), fmt(), formatLetterBlock(), IDENT, isTranslateOnly() (+5 more)
 
 ### Community 10 - "BDL-004 Loom Experiment UI"
-Cohesion: 0.20
-Nodes (11): ./data/presets, ./data/yarns, ../../lib/bark/pattern, ../../lib/weave/daily, ../../lib/weave/draft, ../../lib/weave/export, ../../lib/weave/render2d, ../../lib/weave/stripes (+3 more)
+Cohesion: 0.14
+Nodes (15): Bark-Generated OG Images Implementation Plan, Marcellus Font SIL Open Font License, Ctx2DLike, drawBarkDashes(), parseColor(), Dash, compile(), createBarkRenderer() (+7 more)
 
 ### Community 11 - "Novgorod Letter Content & Schema"
 Cohesion: 0.30
@@ -124,8 +129,8 @@ Cohesion: 0.22
 Nodes (8): astro/tsconfigs/strict, .astro/types.d.ts, dist, src/**/*, tests/**/*, exclude, extends, include
 
 ### Community 15 - "BDL-001 Bark Engine Interaction"
-Cohesion: 0.28
-Nodes (5): ./BarkEngine.svelte, barkAlphas, lastPointer, randomSeed(), rebuild()
+Cohesion: 0.10
+Nodes (10): ./letters, ../lib/bark, ../../components/SpecimenPlate.astro, ./BarkEngine.svelte, barkAlphas, lastPointer, randomSeed(), rebuild() (+2 more)
 
 ### Community 16 - "Color Utilities"
 Cohesion: 0.80
@@ -136,7 +141,7 @@ Nodes (3): contrast(), luminance(), rgbToHex()
   docs/superpowers/specs/2026-07-16-bdl-003-novgorod-letters-design.md · relation: references
 
 ## Knowledge Gaps
-- **91 isolated node(s):** `name`, `type`, `version`, `private`, `node` (+86 more)
+- **92 isolated node(s):** `name`, `type`, `version`, `private`, `node` (+87 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -145,15 +150,15 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `Lab Backlog` and `BDL-003 · Novgorod Letters · Design`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `./DigCanvas.svelte` connect `BDL-003 Novgorod Letters` to `OG Image Generation Pipeline`, `Page Fonts & Style Imports`?**
-  _High betweenness centrality (0.111) - this node is a cross-community bridge._
-- **Why does `generateBark()` connect `OG Image Generation Pipeline` to `BDL-003 Novgorod Letters`?**
-  _High betweenness centrality (0.088) - this node is a cross-community bridge._
-- **Why does `../components/BarkField.astro` connect `OG Image Generation Pipeline` to `Page Fonts & Style Imports`, `Site Design Rationale & Deploy`?**
-  _High betweenness centrality (0.084) - this node is a cross-community bridge._
+- **Why does `./DigCanvas.svelte` connect `BDL-003 Novgorod Letters` to `OG Image Generation Pipeline`, `BDL-004 Loom Experiment UI`, `BDL-001 Bark Engine Interaction`?**
+  _High betweenness centrality (0.108) - this node is a cross-community bridge._
+- **Why does `generateBark()` connect `OG Image Generation Pipeline` to `Page Fonts & Style Imports`, `BDL-003 Novgorod Letters`?**
+  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+- **Why does `../components/BarkField.astro` connect `Page Fonts & Style Imports` to `OG Image Generation Pipeline`, `BDL-004 Loom Experiment UI`, `Site Design Rationale & Deploy`, `BDL-001 Bark Engine Interaction`?**
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **What connects `name`, `type`, `version` to the rest of the system?**
-  _91 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _92 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `OG Image Generation Pipeline` be split into smaller, more focused modules?**
-  _Cohesion score 0.08973172987974098 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14022988505747128 - nodes in this community are weakly interconnected._
 - **Should `Bark Rendering Primitives` be split into smaller, more focused modules?**
-  _Cohesion score 0.1101010101010101 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13257575757575757 - nodes in this community are weakly interconnected._

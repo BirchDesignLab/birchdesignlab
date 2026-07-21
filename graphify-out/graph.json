@@ -87,6 +87,17 @@
   },
   "nodes": [
     {
+      "label": "WallLabel.astro",
+      "file_type": "code",
+      "source_file": "src/components/WallLabel.astro",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_components_walllabel",
+      "community": 3,
+      "community_name": "Site Design Rationale & Deploy",
+      "norm_label": "walllabel.astro"
+    },
+    {
       "label": "astro.config.mjs",
       "file_type": "code",
       "source_file": "astro.config.mjs",
@@ -94,7 +105,8 @@
       "_origin": "ast",
       "community": 18,
       "norm_label": "astro.config.mjs",
-      "id": "astro_config"
+      "id": "astro_config",
+      "community_name": "Astro Config"
     },
     {
       "label": "package.json",
@@ -104,7 +116,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "package.json",
-      "id": "package"
+      "id": "package",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "name",
@@ -114,7 +127,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "name",
-      "id": "package_name"
+      "id": "package_name",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "type",
@@ -124,7 +138,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "type",
-      "id": "package_type"
+      "id": "package_type",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "version",
@@ -134,7 +149,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "version",
-      "id": "package_version"
+      "id": "package_version",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "private",
@@ -144,7 +160,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "private",
-      "id": "package_private"
+      "id": "package_private",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "engines",
@@ -154,7 +171,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "engines",
-      "id": "package_engines"
+      "id": "package_engines",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "node",
@@ -164,7 +182,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "node",
-      "id": "package_engines_node"
+      "id": "package_engines_node",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "scripts",
@@ -174,7 +193,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "scripts",
-      "id": "package_scripts"
+      "id": "package_scripts",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "dev",
@@ -184,7 +204,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "dev",
-      "id": "package_scripts_dev"
+      "id": "package_scripts_dev",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "build",
@@ -194,7 +215,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "build",
-      "id": "package_scripts_build"
+      "id": "package_scripts_build",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "preview",
@@ -204,7 +226,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "preview",
-      "id": "package_scripts_preview"
+      "id": "package_scripts_preview",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "check",
@@ -214,7 +237,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "check",
-      "id": "package_scripts_check"
+      "id": "package_scripts_check",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "test",
@@ -224,7 +248,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "test",
-      "id": "package_scripts_test"
+      "id": "package_scripts_test",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "trace",
@@ -234,7 +259,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "trace",
-      "id": "package_scripts_trace"
+      "id": "package_scripts_trace",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "og",
@@ -244,7 +270,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "og",
-      "id": "package_scripts_og"
+      "id": "package_scripts_og",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "prebuild",
@@ -254,7 +281,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "prebuild",
-      "id": "package_scripts_prebuild"
+      "id": "package_scripts_prebuild",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "dependencies",
@@ -264,7 +292,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "dependencies",
-      "id": "package_dependencies"
+      "id": "package_dependencies",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@astrojs/sitemap",
@@ -274,7 +303,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@astrojs/sitemap",
-      "id": "package_dependencies_astrojs_sitemap"
+      "id": "package_dependencies_astrojs_sitemap",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@astrojs/sitemap",
@@ -284,7 +314,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@astrojs/sitemap",
-      "id": "astrojs_sitemap"
+      "id": "astrojs_sitemap",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@astrojs/svelte",
@@ -294,7 +325,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@astrojs/svelte",
-      "id": "package_dependencies_astrojs_svelte"
+      "id": "package_dependencies_astrojs_svelte",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@astrojs/svelte",
@@ -304,7 +336,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@astrojs/svelte",
-      "id": "astrojs_svelte"
+      "id": "astrojs_svelte",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/cormorant",
@@ -314,7 +347,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/cormorant",
-      "id": "package_dependencies_fontsource_variable_cormorant"
+      "id": "package_dependencies_fontsource_variable_cormorant",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/cormorant",
@@ -324,7 +358,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/cormorant",
-      "id": "fontsource_variable_cormorant"
+      "id": "fontsource_variable_cormorant",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/eb-garamond",
@@ -334,7 +369,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/eb-garamond",
-      "id": "package_dependencies_fontsource_variable_eb_garamond"
+      "id": "package_dependencies_fontsource_variable_eb_garamond",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/eb-garamond",
@@ -344,7 +380,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/eb-garamond",
-      "id": "fontsource_variable_eb_garamond"
+      "id": "fontsource_variable_eb_garamond",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/fraunces",
@@ -354,7 +391,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/fraunces",
-      "id": "package_dependencies_fontsource_variable_fraunces"
+      "id": "package_dependencies_fontsource_variable_fraunces",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/fraunces",
@@ -364,7 +402,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/fraunces",
-      "id": "fontsource_variable_fraunces"
+      "id": "fontsource_variable_fraunces",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/newsreader",
@@ -374,7 +413,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/newsreader",
-      "id": "package_dependencies_fontsource_variable_newsreader"
+      "id": "package_dependencies_fontsource_variable_newsreader",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/newsreader",
@@ -384,7 +424,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/newsreader",
-      "id": "fontsource_variable_newsreader"
+      "id": "fontsource_variable_newsreader",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/source-serif-4",
@@ -394,7 +435,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/source-serif-4",
-      "id": "package_dependencies_fontsource_variable_source_serif_4"
+      "id": "package_dependencies_fontsource_variable_source_serif_4",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource-variable/source-serif-4",
@@ -404,7 +446,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource-variable/source-serif-4",
-      "id": "fontsource_variable_source_serif_4"
+      "id": "fontsource_variable_source_serif_4",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/cormorant-sc",
@@ -414,7 +457,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/cormorant-sc",
-      "id": "package_dependencies_fontsource_cormorant_sc"
+      "id": "package_dependencies_fontsource_cormorant_sc",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/cormorant-sc",
@@ -424,7 +468,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/cormorant-sc",
-      "id": "fontsource_cormorant_sc"
+      "id": "fontsource_cormorant_sc",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/marcellus",
@@ -434,7 +479,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/marcellus",
-      "id": "package_dependencies_fontsource_marcellus"
+      "id": "package_dependencies_fontsource_marcellus",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/marcellus",
@@ -444,7 +490,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/marcellus",
-      "id": "fontsource_marcellus"
+      "id": "fontsource_marcellus",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/spectral",
@@ -454,7 +501,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/spectral",
-      "id": "package_dependencies_fontsource_spectral"
+      "id": "package_dependencies_fontsource_spectral",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "@fontsource/spectral",
@@ -464,7 +512,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "@fontsource/spectral",
-      "id": "fontsource_spectral"
+      "id": "fontsource_spectral",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "astro",
@@ -474,7 +523,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "astro",
-      "id": "package_dependencies_astro"
+      "id": "package_dependencies_astro",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "astro",
@@ -484,7 +534,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "astro",
-      "id": "astro"
+      "id": "astro",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "svelte",
@@ -494,7 +545,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "svelte",
-      "id": "package_dependencies_svelte"
+      "id": "package_dependencies_svelte",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "svelte",
@@ -504,7 +556,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "svelte",
-      "id": "package_json_svelte"
+      "id": "package_json_svelte",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "zod",
@@ -514,7 +567,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "zod",
-      "id": "package_dependencies_zod"
+      "id": "package_dependencies_zod",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "zod",
@@ -524,7 +578,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "zod",
-      "id": "zod"
+      "id": "zod",
+      "community_name": "Astro & Font Dependencies"
     },
     {
       "label": "devDependencies",
@@ -534,7 +589,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "devdependencies",
-      "id": "package_devdependencies"
+      "id": "package_devdependencies",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "@astrojs/check",
@@ -544,7 +600,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "@astrojs/check",
-      "id": "package_devdependencies_astrojs_check"
+      "id": "package_devdependencies_astrojs_check",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "@astrojs/check",
@@ -554,7 +611,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "@astrojs/check",
-      "id": "astrojs_check"
+      "id": "astrojs_check",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "@napi-rs/canvas",
@@ -564,7 +622,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "@napi-rs/canvas",
-      "id": "package_devdependencies_napi_rs_canvas"
+      "id": "package_devdependencies_napi_rs_canvas",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "@napi-rs/canvas",
@@ -574,7 +633,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "@napi-rs/canvas",
-      "id": "napi_rs_canvas"
+      "id": "napi_rs_canvas",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "tsx",
@@ -584,7 +644,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "tsx",
-      "id": "package_devdependencies_tsx"
+      "id": "package_devdependencies_tsx",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "tsx",
@@ -594,7 +655,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "tsx",
-      "id": "tsx"
+      "id": "tsx",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "typescript",
@@ -604,7 +666,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "typescript",
-      "id": "package_devdependencies_typescript"
+      "id": "package_devdependencies_typescript",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "typescript",
@@ -614,7 +677,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "typescript",
-      "id": "typescript"
+      "id": "typescript",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "vitest",
@@ -624,7 +688,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "vitest",
-      "id": "package_devdependencies_vitest"
+      "id": "package_devdependencies_vitest",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "vitest",
@@ -634,7 +699,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "vitest",
-      "id": "vitest"
+      "id": "vitest",
+      "community_name": "Dev Tooling & Package Config"
     },
     {
       "label": "generate.ts",
@@ -644,7 +710,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "generate.ts",
-      "id": "scripts_og_generate"
+      "id": "scripts_og_generate",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "seed",
@@ -654,7 +721,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seed",
-      "id": "scripts_og_generate_seed"
+      "id": "scripts_og_generate_seed",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "outDir",
@@ -664,7 +732,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "outdir",
-      "id": "scripts_og_generate_outdir"
+      "id": "scripts_og_generate_outdir",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "render.ts",
@@ -674,7 +743,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "render.ts",
-      "id": "scripts_og_render"
+      "id": "scripts_og_render",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "drawTracked()",
@@ -684,7 +754,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "drawtracked()",
-      "id": "scripts_og_render_drawtracked"
+      "id": "scripts_og_render_drawtracked",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "renderOgCard()",
@@ -694,7 +765,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "renderogcard()",
-      "id": "scripts_og_render_renderogcard"
+      "id": "scripts_og_render_renderogcard",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "trace-to-strokes.mjs",
@@ -704,7 +776,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "trace-to-strokes.mjs",
-      "id": "scripts_trace_to_strokes"
+      "id": "scripts_trace_to_strokes",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "IDENT",
@@ -714,7 +787,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "ident",
-      "id": "scripts_trace_to_strokes_ident"
+      "id": "scripts_trace_to_strokes_ident",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "matMul()",
@@ -724,7 +798,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "matmul()",
-      "id": "scripts_trace_to_strokes_matmul"
+      "id": "scripts_trace_to_strokes_matmul",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "apply()",
@@ -734,7 +809,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "apply()",
-      "id": "scripts_trace_to_strokes_apply"
+      "id": "scripts_trace_to_strokes_apply",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "isTranslateOnly()",
@@ -744,7 +820,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "istranslateonly()",
-      "id": "scripts_trace_to_strokes_istranslateonly"
+      "id": "scripts_trace_to_strokes_istranslateonly",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "parseTransform()",
@@ -754,7 +831,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "parsetransform()",
-      "id": "scripts_trace_to_strokes_parsetransform"
+      "id": "scripts_trace_to_strokes_parsetransform",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "pathsWithMatrix()",
@@ -764,7 +842,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "pathswithmatrix()",
-      "id": "scripts_trace_to_strokes_pathswithmatrix"
+      "id": "scripts_trace_to_strokes_pathswithmatrix",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "attrValue()",
@@ -774,7 +853,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "attrvalue()",
-      "id": "scripts_trace_to_strokes_attrvalue"
+      "id": "scripts_trace_to_strokes_attrvalue",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "tokenizePath()",
@@ -784,7 +864,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "tokenizepath()",
-      "id": "scripts_trace_to_strokes_tokenizepath"
+      "id": "scripts_trace_to_strokes_tokenizepath",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "absolutizeAndTransform()",
@@ -794,7 +875,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "absolutizeandtransform()",
-      "id": "scripts_trace_to_strokes_absolutizeandtransform"
+      "id": "scripts_trace_to_strokes_absolutizeandtransform",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "fmt()",
@@ -804,7 +886,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "fmt()",
-      "id": "scripts_trace_to_strokes_fmt"
+      "id": "scripts_trace_to_strokes_fmt",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "readDocBox()",
@@ -814,7 +897,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "readdocbox()",
-      "id": "scripts_trace_to_strokes_readdocbox"
+      "id": "scripts_trace_to_strokes_readdocbox",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "extractStrokes()",
@@ -824,7 +908,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "extractstrokes()",
-      "id": "scripts_trace_to_strokes_extractstrokes"
+      "id": "scripts_trace_to_strokes_extractstrokes",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "formatLetterBlock()",
@@ -834,7 +919,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "formatletterblock()",
-      "id": "scripts_trace_to_strokes_formatletterblock"
+      "id": "scripts_trace_to_strokes_formatletterblock",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "../components/BarkField.astro",
@@ -843,9 +929,10 @@
       "source_location": "L1",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "community": 0,
+      "community": 2,
       "norm_label": "../components/barkfield.astro",
-      "id": "src_components_barkfield"
+      "id": "src_components_barkfield",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "barkAlphas",
@@ -853,9 +940,10 @@
       "source_file": "src/components/BarkField.astro",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "barkalphas",
-      "id": "src_components_barkfield_barkalphas"
+      "id": "src_components_barkfield_barkalphas",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "reducedMotion",
@@ -863,9 +951,10 @@
       "source_file": "src/components/BarkField.astro",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "reducedmotion",
-      "id": "src_components_barkfield_reducedmotion"
+      "id": "src_components_barkfield_reducedmotion",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../lib/bark",
@@ -873,9 +962,10 @@
       "source_file": "src/lib/bark",
       "confidence": "EXTRACTED",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "../lib/bark",
-      "id": "c_git_birchdesignlab_src_lib_bark"
+      "id": "c_git_birchdesignlab_src_lib_bark",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "./DeviceBadge.astro",
@@ -886,7 +976,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "./devicebadge.astro",
-      "id": "src_components_devicebadge"
+      "id": "src_components_devicebadge",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../components/Seo.astro",
@@ -897,17 +988,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../components/seo.astro",
-      "id": "src_components_seo"
-    },
-    {
-      "label": "../lib/og/manifest",
-      "file_type": "code",
-      "source_file": "src/lib/og/manifest",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "../lib/og/manifest",
-      "id": "c_git_birchdesignlab_src_lib_og_manifest"
+      "id": "src_components_seo",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../components/SiteFooter.astro",
@@ -918,7 +1000,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../components/sitefooter.astro",
-      "id": "src_components_sitefooter"
+      "id": "src_components_sitefooter",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../components/SiteHeader.astro",
@@ -929,7 +1012,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../components/siteheader.astro",
-      "id": "src_components_siteheader"
+      "id": "src_components_siteheader",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "links",
@@ -939,7 +1023,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "links",
-      "id": "src_components_siteheader_links"
+      "id": "src_components_siteheader_links",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "ThemeToggle.astro",
@@ -950,7 +1035,8 @@
       "source_location": "L1",
       "community": 2,
       "norm_label": "themetoggle.astro",
-      "id": "src_components_themetoggle"
+      "id": "src_components_themetoggle",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../../components/SpecimenCard.astro",
@@ -961,7 +1047,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../../components/specimencard.astro",
-      "id": "src_components_specimencard"
+      "id": "src_components_specimencard",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "dateLabel",
@@ -971,17 +1058,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "datelabel",
-      "id": "src_components_specimencard_datelabel"
-    },
-    {
-      "label": "astro:content",
-      "file_type": "code",
-      "source_file": "astro:content",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "astro:content",
-      "id": "astro_content"
+      "id": "src_components_specimencard_datelabel",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../../components/SpecimenPlate.astro",
@@ -990,9 +1068,10 @@
       "source_location": "L1",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "community": 2,
+      "community": 15,
       "norm_label": "../../components/specimenplate.astro",
-      "id": "src_components_specimenplate"
+      "id": "src_components_specimenplate",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "../components/ThemeBootstrap.astro",
@@ -1003,18 +1082,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../components/themebootstrap.astro",
-      "id": "src_components_themebootstrap"
-    },
-    {
-      "label": "../../components/WallLabel.astro",
-      "file_type": "code",
-      "source_file": "src/components/WallLabel.astro",
-      "source_location": "L1",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "community": 3,
-      "norm_label": "../../components/walllabel.astro",
-      "id": "src_components_walllabel"
+      "id": "src_components_themebootstrap",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "content.config.ts",
@@ -1024,7 +1093,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "content.config.ts",
-      "id": "src_content_config"
+      "id": "src_content_config",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "lab",
@@ -1034,7 +1104,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "lab",
-      "id": "src_content_config_lab"
+      "id": "src_content_config_lab",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "collections",
@@ -1044,7 +1115,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "collections",
-      "id": "src_content_config_collections"
+      "id": "src_content_config_collections",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "./BarkEngine.svelte",
@@ -1055,7 +1127,8 @@
       "confidence": "EXTRACTED",
       "community": 15,
       "norm_label": "./barkengine.svelte",
-      "id": "src_experiments_bdl_001_barkengine"
+      "id": "src_experiments_bdl_001_barkengine",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "barkAlphas",
@@ -1065,7 +1138,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "barkalphas",
-      "id": "src_experiments_bdl_001_barkengine_barkalphas"
+      "id": "src_experiments_bdl_001_barkengine_barkalphas",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "rebuild()",
@@ -1075,7 +1149,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "rebuild()",
-      "id": "src_experiments_bdl_001_barkengine_rebuild"
+      "id": "src_experiments_bdl_001_barkengine_rebuild",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "randomSeed()",
@@ -1085,7 +1160,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "randomseed()",
-      "id": "src_experiments_bdl_001_barkengine_randomseed"
+      "id": "src_experiments_bdl_001_barkengine_randomseed",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "setGust()",
@@ -1095,7 +1171,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "setgust()",
-      "id": "src_experiments_bdl_001_barkengine_setgust"
+      "id": "src_experiments_bdl_001_barkengine_setgust",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "lastPointer",
@@ -1105,7 +1182,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "lastpointer",
-      "id": "src_experiments_bdl_001_barkengine_lastpointer"
+      "id": "src_experiments_bdl_001_barkengine_lastpointer",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "onPointerDown()",
@@ -1115,7 +1193,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "onpointerdown()",
-      "id": "src_experiments_bdl_001_barkengine_onpointerdown"
+      "id": "src_experiments_bdl_001_barkengine_onpointerdown",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "onPointerMove()",
@@ -1125,7 +1204,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "onpointermove()",
-      "id": "src_experiments_bdl_001_barkengine_onpointermove"
+      "id": "src_experiments_bdl_001_barkengine_onpointermove",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "onPointerLeave()",
@@ -1135,17 +1215,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "onpointerleave()",
-      "id": "src_experiments_bdl_001_barkengine_onpointerleave"
-    },
-    {
-      "label": "svelte",
-      "file_type": "code",
-      "source_file": "svelte",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 20,
-      "norm_label": "svelte",
-      "id": "svelte_svelte"
+      "id": "src_experiments_bdl_001_barkengine_onpointerleave",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "bdl-001/Experiment.astro",
@@ -1153,9 +1224,10 @@
       "source_file": "src/experiments/bdl-001/Experiment.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "bdl-001/experiment.astro",
-      "id": "src_experiments_bdl_001_experiment"
+      "id": "src_experiments_bdl_001_experiment",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "bdl-002/Experiment.astro",
@@ -1163,49 +1235,10 @@
       "source_file": "src/experiments/bdl-002/Experiment.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "bdl-002/experiment.astro",
-      "id": "src_experiments_bdl_002_experiment"
-    },
-    {
-      "label": "@fontsource-variable/fraunces",
-      "file_type": "code",
-      "source_file": "@fontsource-variable/fraunces",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource-variable/fraunces",
-      "id": "fraunces"
-    },
-    {
-      "label": "@fontsource-variable/cormorant",
-      "file_type": "code",
-      "source_file": "@fontsource-variable/cormorant",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource-variable/cormorant",
-      "id": "cormorant"
-    },
-    {
-      "label": "@fontsource/cormorant-sc/500.css",
-      "file_type": "code",
-      "source_file": "@fontsource/cormorant-sc/500.css",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource/cormorant-sc/500.css",
-      "id": "500_css"
-    },
-    {
-      "label": "../lib/color",
-      "file_type": "code",
-      "source_file": "src/lib/color",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "../lib/color",
-      "id": "c_git_birchdesignlab_src_lib_color"
+      "id": "src_experiments_bdl_002_experiment",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "./DigCanvas.svelte",
@@ -1216,7 +1249,8 @@
       "confidence": "EXTRACTED",
       "community": 5,
       "norm_label": "./digcanvas.svelte",
-      "id": "src_experiments_bdl_003_digcanvas"
+      "id": "src_experiments_bdl_003_digcanvas",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "params",
@@ -1226,7 +1260,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "params",
-      "id": "src_experiments_bdl_003_digcanvas_params"
+      "id": "src_experiments_bdl_003_digcanvas_params",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "markColor()",
@@ -1236,7 +1271,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "markcolor()",
-      "id": "src_experiments_bdl_003_digcanvas_markcolor"
+      "id": "src_experiments_bdl_003_digcanvas_markcolor",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "barkAlphas",
@@ -1246,7 +1282,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "barkalphas",
-      "id": "src_experiments_bdl_003_digcanvas_barkalphas"
+      "id": "src_experiments_bdl_003_digcanvas_barkalphas",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "rasterizeStrokes()",
@@ -1256,7 +1293,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rasterizestrokes()",
-      "id": "src_experiments_bdl_003_digcanvas_rasterizestrokes"
+      "id": "src_experiments_bdl_003_digcanvas_rasterizestrokes",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "wrapLines()",
@@ -1266,7 +1304,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "wraplines()",
-      "id": "src_experiments_bdl_003_digcanvas_wraplines"
+      "id": "src_experiments_bdl_003_digcanvas_wraplines",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "rasterizeTranslation()",
@@ -1276,7 +1315,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rasterizetranslation()",
-      "id": "src_experiments_bdl_003_digcanvas_rasterizetranslation"
+      "id": "src_experiments_bdl_003_digcanvas_rasterizetranslation",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "sampleStrokeCells()",
@@ -1286,7 +1326,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "samplestrokecells()",
-      "id": "src_experiments_bdl_003_digcanvas_samplestrokecells"
+      "id": "src_experiments_bdl_003_digcanvas_samplestrokecells",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "composite()",
@@ -1296,7 +1337,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "composite()",
-      "id": "src_experiments_bdl_003_digcanvas_composite"
+      "id": "src_experiments_bdl_003_digcanvas_composite",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "scratch()",
@@ -1306,27 +1348,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "scratch()",
-      "id": "src_experiments_bdl_003_digcanvas_scratch"
-    },
-    {
-      "label": "../../lib/scratch/letter-schema",
-      "file_type": "code",
-      "source_file": "src/lib/scratch/letter-schema",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "../../lib/scratch/letter-schema",
-      "id": "c_git_birchdesignlab_src_lib_scratch_letter_schema"
-    },
-    {
-      "label": "../../lib/scratch/coverage",
-      "file_type": "code",
-      "source_file": "src/lib/scratch/coverage",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 5,
-      "norm_label": "../../lib/scratch/coverage",
-      "id": "c_git_birchdesignlab_src_lib_scratch_coverage"
+      "id": "src_experiments_bdl_003_digcanvas_scratch",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "bdl-003/Experiment.astro",
@@ -1334,9 +1357,10 @@
       "source_file": "src/experiments/bdl-003/Experiment.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 5,
+      "community": 15,
       "norm_label": "bdl-003/experiment.astro",
-      "id": "src_experiments_bdl_003_experiment"
+      "id": "src_experiments_bdl_003_experiment",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "NovgorodLetters.svelte",
@@ -1345,9 +1369,10 @@
       "confidence": "EXTRACTED",
       "_origin": "ast",
       "source_location": "L1",
-      "community": 5,
+      "community": 15,
       "norm_label": "novgorodletters.svelte",
-      "id": "src_experiments_bdl_003_novgorodletters"
+      "id": "src_experiments_bdl_003_novgorodletters",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "./letters",
@@ -1355,9 +1380,10 @@
       "source_file": "src/experiments/bdl-003/letters",
       "confidence": "EXTRACTED",
       "_origin": "ast",
-      "community": 5,
+      "community": 15,
       "norm_label": "./letters",
-      "id": "c_git_birchdesignlab_src_experiments_bdl_003_letters"
+      "id": "c_git_birchdesignlab_src_experiments_bdl_003_letters",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "household-list.ts",
@@ -1367,7 +1393,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "household-list.ts",
-      "id": "src_experiments_bdl_003_letters_household_list"
+      "id": "src_experiments_bdl_003_letters_household_list",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "householdList",
@@ -1377,7 +1404,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "householdlist",
-      "id": "src_experiments_bdl_003_letters_household_list_householdlist"
+      "id": "src_experiments_bdl_003_letters_household_list_householdlist",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "letters/index.ts",
@@ -1387,7 +1415,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letters/index.ts",
-      "id": "src_experiments_bdl_003_letters_index"
+      "id": "src_experiments_bdl_003_letters_index",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "letters",
@@ -1397,7 +1426,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letters",
-      "id": "src_experiments_bdl_003_letters_index_letters"
+      "id": "src_experiments_bdl_003_letters_index_letters",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "love-letter.ts",
@@ -1407,7 +1437,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "love-letter.ts",
-      "id": "src_experiments_bdl_003_letters_love_letter"
+      "id": "src_experiments_bdl_003_letters_love_letter",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "loveLetter",
@@ -1417,7 +1448,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "loveletter",
-      "id": "src_experiments_bdl_003_letters_love_letter_loveletter"
+      "id": "src_experiments_bdl_003_letters_love_letter_loveletter",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "onfim.ts",
@@ -1427,7 +1459,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "onfim.ts",
-      "id": "src_experiments_bdl_003_letters_onfim"
+      "id": "src_experiments_bdl_003_letters_onfim",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "onfim",
@@ -1437,7 +1470,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "onfim",
-      "id": "src_experiments_bdl_003_letters_onfim_onfim"
+      "id": "src_experiments_bdl_003_letters_onfim_onfim",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "./ClothCanvas.svelte",
@@ -1446,19 +1480,10 @@
       "source_location": "L1",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "community": 10,
+      "community": 3,
       "norm_label": "./clothcanvas.svelte",
-      "id": "src_experiments_bdl_004_clothcanvas"
-    },
-    {
-      "label": "../../lib/weave/render2d",
-      "file_type": "code",
-      "source_file": "src/lib/weave/render2d",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/weave/render2d",
-      "id": "c_git_birchdesignlab_src_lib_weave_render2d"
+      "id": "src_experiments_bdl_004_clothcanvas",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "./DraftPanel.svelte",
@@ -1467,29 +1492,10 @@
       "source_location": "L1",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "community": 10,
+      "community": 3,
       "norm_label": "./draftpanel.svelte",
-      "id": "src_experiments_bdl_004_draftpanel"
-    },
-    {
-      "label": "./data/presets",
-      "file_type": "code",
-      "source_file": "src/experiments/bdl-004/data/presets",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "./data/presets",
-      "id": "c_git_birchdesignlab_src_experiments_bdl_004_data_presets"
-    },
-    {
-      "label": "../../lib/weave/draft",
-      "file_type": "code",
-      "source_file": "src/lib/weave/draft",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/weave/draft",
-      "id": "c_git_birchdesignlab_src_lib_weave_draft"
+      "id": "src_experiments_bdl_004_draftpanel",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "bdl-004/Experiment.astro",
@@ -1497,9 +1503,10 @@
       "source_file": "src/experiments/bdl-004/Experiment.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "bdl-004/experiment.astro",
-      "id": "src_experiments_bdl_004_experiment"
+      "id": "src_experiments_bdl_004_experiment",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "TheLoom.svelte",
@@ -1508,9 +1515,10 @@
       "confidence": "EXTRACTED",
       "_origin": "ast",
       "source_location": "L1",
-      "community": 10,
+      "community": 3,
       "norm_label": "theloom.svelte",
-      "id": "src_experiments_bdl_004_theloom"
+      "id": "src_experiments_bdl_004_theloom",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "TreadleBar.svelte",
@@ -1519,9 +1527,10 @@
       "confidence": "EXTRACTED",
       "_origin": "ast",
       "source_location": "L1",
-      "community": 10,
+      "community": 3,
       "norm_label": "treadlebar.svelte",
-      "id": "src_experiments_bdl_004_treadlebar"
+      "id": "src_experiments_bdl_004_treadlebar",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "YarnShelf.svelte",
@@ -1530,59 +1539,10 @@
       "confidence": "EXTRACTED",
       "_origin": "ast",
       "source_location": "L1",
-      "community": 10,
+      "community": 3,
       "norm_label": "yarnshelf.svelte",
-      "id": "src_experiments_bdl_004_yarnshelf"
-    },
-    {
-      "label": "./data/yarns",
-      "file_type": "code",
-      "source_file": "src/experiments/bdl-004/data/yarns",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "./data/yarns",
-      "id": "c_git_birchdesignlab_src_experiments_bdl_004_data_yarns"
-    },
-    {
-      "label": "../../lib/weave/daily",
-      "file_type": "code",
-      "source_file": "src/lib/weave/daily",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/weave/daily",
-      "id": "c_git_birchdesignlab_src_lib_weave_daily"
-    },
-    {
-      "label": "../../lib/bark/pattern",
-      "file_type": "code",
-      "source_file": "src/lib/bark/pattern",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/bark/pattern",
-      "id": "c_git_birchdesignlab_src_lib_bark_pattern"
-    },
-    {
-      "label": "../../lib/weave/stripes",
-      "file_type": "code",
-      "source_file": "src/lib/weave/stripes",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/weave/stripes",
-      "id": "c_git_birchdesignlab_src_lib_weave_stripes"
-    },
-    {
-      "label": "../../lib/weave/export",
-      "file_type": "code",
-      "source_file": "src/lib/weave/export",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 10,
-      "norm_label": "../../lib/weave/export",
-      "id": "c_git_birchdesignlab_src_lib_weave_export"
+      "id": "src_experiments_bdl_004_yarnshelf",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "selected",
@@ -1590,9 +1550,10 @@
       "source_file": "src/experiments/bdl-004/YarnShelf.svelte",
       "source_location": "L50",
       "_origin": "ast",
-      "community": 10,
+      "community": 3,
       "norm_label": "selected",
-      "id": "src_experiments_bdl_004_yarnshelf_selected"
+      "id": "src_experiments_bdl_004_yarnshelf_selected",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "presets.ts",
@@ -1602,7 +1563,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "presets.ts",
-      "id": "src_experiments_bdl_004_data_presets"
+      "id": "src_experiments_bdl_004_data_presets",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "noLift",
@@ -1612,7 +1574,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "nolift",
-      "id": "src_experiments_bdl_004_data_presets_nolift"
+      "id": "src_experiments_bdl_004_data_presets_nolift",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "PRESETS",
@@ -1622,7 +1585,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "presets",
-      "id": "src_experiments_bdl_004_data_presets_presets"
+      "id": "src_experiments_bdl_004_data_presets_presets",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "yarns.ts",
@@ -1632,7 +1596,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "yarns.ts",
-      "id": "src_experiments_bdl_004_data_yarns"
+      "id": "src_experiments_bdl_004_data_yarns",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "YARNS",
@@ -1642,7 +1607,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "yarns",
-      "id": "src_experiments_bdl_004_data_yarns_yarns"
+      "id": "src_experiments_bdl_004_data_yarns_yarns",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "byId",
@@ -1652,7 +1618,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "byid",
-      "id": "src_experiments_bdl_004_data_yarns_byid"
+      "id": "src_experiments_bdl_004_data_yarns_byid",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "yarnHex()",
@@ -1662,7 +1629,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "yarnhex()",
-      "id": "src_experiments_bdl_004_data_yarns_yarnhex"
+      "id": "src_experiments_bdl_004_data_yarns_yarnhex",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "DAILY_WARPS",
@@ -1672,7 +1640,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "daily_warps",
-      "id": "src_experiments_bdl_004_data_yarns_daily_warps"
+      "id": "src_experiments_bdl_004_data_yarns_daily_warps",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "registry.ts",
@@ -1680,9 +1649,10 @@
       "source_file": "src/experiments/registry.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "registry.ts",
-      "id": "src_experiments_registry"
+      "id": "src_experiments_registry",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "experimentComponents",
@@ -1690,9 +1660,10 @@
       "source_file": "src/experiments/registry.ts",
       "source_location": "L14",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "experimentcomponents",
-      "id": "src_experiments_registry_experimentcomponents"
+      "id": "src_experiments_registry_experimentcomponents",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "../layouts/BaseLayout.astro",
@@ -1703,7 +1674,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../layouts/baselayout.astro",
-      "id": "src_layouts_baselayout"
+      "id": "src_layouts_baselayout",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "if()",
@@ -1713,37 +1685,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "if()",
-      "id": "src_layouts_baselayout_if"
-    },
-    {
-      "label": "@fontsource/marcellus",
-      "file_type": "code",
-      "source_file": "@fontsource/marcellus",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource/marcellus",
-      "id": "marcellus"
-    },
-    {
-      "label": "@fontsource/spectral/400.css",
-      "file_type": "code",
-      "source_file": "@fontsource/spectral/400.css",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource/spectral/400.css",
-      "id": "400_css"
-    },
-    {
-      "label": "@fontsource/spectral/600.css",
-      "file_type": "code",
-      "source_file": "@fontsource/spectral/600.css",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource/spectral/600.css",
-      "id": "600_css"
+      "id": "src_layouts_baselayout_if",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../styles/tokens.css",
@@ -1753,7 +1696,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "../styles/tokens.css",
-      "id": "c_git_birchdesignlab_src_styles_tokens_css"
+      "id": "c_git_birchdesignlab_src_styles_tokens_css",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../styles/base.css",
@@ -1763,7 +1707,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "../styles/base.css",
-      "id": "c_git_birchdesignlab_src_styles_base_css"
+      "id": "c_git_birchdesignlab_src_styles_base_css",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "../../layouts/ExperimentLayout.astro",
@@ -1774,17 +1719,8 @@
       "confidence": "EXTRACTED",
       "community": 2,
       "norm_label": "../../layouts/experimentlayout.astro",
-      "id": "src_layouts_experimentlayout"
-    },
-    {
-      "label": "@fontsource/spectral/400-italic.css",
-      "file_type": "code",
-      "source_file": "@fontsource/spectral/400-italic.css",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource/spectral/400-italic.css",
-      "id": "400_italic_css"
+      "id": "src_layouts_experimentlayout",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "draw2d.ts",
@@ -1792,9 +1728,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "draw2d.ts",
-      "id": "src_lib_bark_draw2d"
+      "id": "src_lib_bark_draw2d",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "Ctx2DLike",
@@ -1802,9 +1739,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": "ctx2dlike",
-      "id": "src_lib_bark_draw2d_ctx2dlike"
+      "id": "src_lib_bark_draw2d_ctx2dlike",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".save()",
@@ -1812,9 +1750,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".save()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_save"
+      "id": "src_lib_bark_draw2d_ctx2dlike_save",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".restore()",
@@ -1822,9 +1761,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".restore()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_restore"
+      "id": "src_lib_bark_draw2d_ctx2dlike_restore",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".translate()",
@@ -1832,9 +1772,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".translate()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_translate"
+      "id": "src_lib_bark_draw2d_ctx2dlike_translate",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".rotate()",
@@ -1842,9 +1783,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".rotate()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_rotate"
+      "id": "src_lib_bark_draw2d_ctx2dlike_rotate",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".beginPath()",
@@ -1852,9 +1794,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L11",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".beginpath()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_beginpath"
+      "id": "src_lib_bark_draw2d_ctx2dlike_beginpath",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".roundRect()",
@@ -1862,9 +1805,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".roundrect()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_roundrect"
+      "id": "src_lib_bark_draw2d_ctx2dlike_roundrect",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".fill()",
@@ -1872,9 +1816,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": ".fill()",
-      "id": "src_lib_bark_draw2d_ctx2dlike_fill"
+      "id": "src_lib_bark_draw2d_ctx2dlike_fill",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "parseColor()",
@@ -1882,9 +1827,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L17",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "parsecolor()",
-      "id": "src_lib_bark_draw2d_parsecolor"
+      "id": "src_lib_bark_draw2d_parsecolor",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "drawBarkDashes()",
@@ -1892,9 +1838,10 @@
       "source_file": "src/lib/bark/draw2d.ts",
       "source_location": "L32",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": "drawbarkdashes()",
-      "id": "src_lib_bark_draw2d_drawbarkdashes"
+      "id": "src_lib_bark_draw2d_drawbarkdashes",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "bark/index.ts",
@@ -1904,7 +1851,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "bark/index.ts",
-      "id": "src_lib_bark_index"
+      "id": "src_lib_bark_index",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "pattern.ts",
@@ -1914,7 +1862,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "pattern.ts",
-      "id": "src_lib_bark_pattern"
+      "id": "src_lib_bark_pattern",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "Dash",
@@ -1922,9 +1871,10 @@
       "source_file": "src/lib/bark/pattern.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "dash",
-      "id": "src_lib_bark_pattern_dash"
+      "id": "src_lib_bark_pattern_dash",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "BarkOptions",
@@ -1934,7 +1884,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "barkoptions",
-      "id": "src_lib_bark_pattern_barkoptions"
+      "id": "src_lib_bark_pattern_barkoptions",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "DEFAULTS",
@@ -1944,7 +1895,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "defaults",
-      "id": "src_lib_bark_pattern_defaults"
+      "id": "src_lib_bark_pattern_defaults",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "mulberry32()",
@@ -1954,7 +1906,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "mulberry32()",
-      "id": "src_lib_bark_pattern_mulberry32"
+      "id": "src_lib_bark_pattern_mulberry32",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "hashString()",
@@ -1964,7 +1917,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "hashstring()",
-      "id": "src_lib_bark_pattern_hashstring"
+      "id": "src_lib_bark_pattern_hashstring",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "lerp()",
@@ -1974,7 +1928,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "lerp()",
-      "id": "src_lib_bark_pattern_lerp"
+      "id": "src_lib_bark_pattern_lerp",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "clamp01()",
@@ -1984,7 +1939,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "clamp01()",
-      "id": "src_lib_bark_pattern_clamp01"
+      "id": "src_lib_bark_pattern_clamp01",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "generateBark()",
@@ -1994,7 +1950,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "generatebark()",
-      "id": "src_lib_bark_pattern_generatebark"
+      "id": "src_lib_bark_pattern_generatebark",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "renderer.ts",
@@ -2002,9 +1959,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "renderer.ts",
-      "id": "src_lib_bark_renderer"
+      "id": "src_lib_bark_renderer",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "BarkRenderer",
@@ -2014,7 +1972,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "barkrenderer",
-      "id": "src_lib_bark_renderer_barkrenderer"
+      "id": "src_lib_bark_renderer_barkrenderer",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".start()",
@@ -2024,7 +1983,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".start()",
-      "id": "src_lib_bark_renderer_barkrenderer_start"
+      "id": "src_lib_bark_renderer_barkrenderer_start",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".renderOnce()",
@@ -2034,7 +1994,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".renderonce()",
-      "id": "src_lib_bark_renderer_barkrenderer_renderonce"
+      "id": "src_lib_bark_renderer_barkrenderer_renderonce",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".stop()",
@@ -2044,7 +2005,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".stop()",
-      "id": "src_lib_bark_renderer_barkrenderer_stop"
+      "id": "src_lib_bark_renderer_barkrenderer_stop",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".resize()",
@@ -2052,9 +2014,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L83",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": ".resize()",
-      "id": "src_lib_bark_renderer_barkrenderer_resize"
+      "id": "src_lib_bark_renderer_barkrenderer_resize",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": ".setColors()",
@@ -2064,7 +2027,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setcolors()",
-      "id": "src_lib_bark_renderer_barkrenderer_setcolors"
+      "id": "src_lib_bark_renderer_barkrenderer_setcolors",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".setAlpha()",
@@ -2074,7 +2038,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setalpha()",
-      "id": "src_lib_bark_renderer_barkrenderer_setalpha"
+      "id": "src_lib_bark_renderer_barkrenderer_setalpha",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".setScroll()",
@@ -2084,7 +2049,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setscroll()",
-      "id": "src_lib_bark_renderer_barkrenderer_setscroll"
+      "id": "src_lib_bark_renderer_barkrenderer_setscroll",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".setDashes()",
@@ -2094,7 +2060,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setdashes()",
-      "id": "src_lib_bark_renderer_barkrenderer_setdashes"
+      "id": "src_lib_bark_renderer_barkrenderer_setdashes",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".growTree()",
@@ -2104,7 +2071,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".growtree()",
-      "id": "src_lib_bark_renderer_barkrenderer_growtree"
+      "id": "src_lib_bark_renderer_barkrenderer_growtree",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".setGust()",
@@ -2114,7 +2082,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setgust()",
-      "id": "src_lib_bark_renderer_barkrenderer_setgust"
+      "id": "src_lib_bark_renderer_barkrenderer_setgust",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".setPointer()",
@@ -2124,7 +2093,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".setpointer()",
-      "id": "src_lib_bark_renderer_barkrenderer_setpointer"
+      "id": "src_lib_bark_renderer_barkrenderer_setpointer",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": ".destroy()",
@@ -2134,7 +2104,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": ".destroy()",
-      "id": "src_lib_bark_renderer_barkrenderer_destroy"
+      "id": "src_lib_bark_renderer_barkrenderer_destroy",
+      "community_name": "Bark Renderer Engine API"
     },
     {
       "label": "compile()",
@@ -2142,9 +2113,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L96",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "compile()",
-      "id": "src_lib_bark_renderer_compile"
+      "id": "src_lib_bark_renderer_compile",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "dashBuffer()",
@@ -2152,9 +2124,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L106",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "dashbuffer()",
-      "id": "src_lib_bark_renderer_dashbuffer"
+      "id": "src_lib_bark_renderer_dashbuffer",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "createBarkRenderer()",
@@ -2162,9 +2135,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L114",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "createbarkrenderer()",
-      "id": "src_lib_bark_renderer_createbarkrenderer"
+      "id": "src_lib_bark_renderer_createbarkrenderer",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "renderBark2D()",
@@ -2172,9 +2146,10 @@
       "source_file": "src/lib/bark/renderer.ts",
       "source_location": "L242",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "renderbark2d()",
-      "id": "src_lib_bark_renderer_renderbark2d"
+      "id": "src_lib_bark_renderer_renderbark2d",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "seed.ts",
@@ -2184,7 +2159,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seed.ts",
-      "id": "src_lib_bark_seed"
+      "id": "src_lib_bark_seed",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "SeedStrategy",
@@ -2194,7 +2170,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seedstrategy",
-      "id": "src_lib_bark_seed_seedstrategy"
+      "id": "src_lib_bark_seed_seedstrategy",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "resolveSeed()",
@@ -2204,7 +2181,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "resolveseed()",
-      "id": "src_lib_bark_seed_resolveseed"
+      "id": "src_lib_bark_seed_resolveseed",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "color.ts",
@@ -2214,7 +2192,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "color.ts",
-      "id": "src_lib_color"
+      "id": "src_lib_color",
+      "community_name": "Color Utilities"
     },
     {
       "label": "luminance()",
@@ -2224,7 +2203,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "luminance()",
-      "id": "src_lib_color_luminance"
+      "id": "src_lib_color_luminance",
+      "community_name": "Color Utilities"
     },
     {
       "label": "contrast()",
@@ -2234,7 +2214,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "contrast()",
-      "id": "src_lib_color_contrast"
+      "id": "src_lib_color_contrast",
+      "community_name": "Color Utilities"
     },
     {
       "label": "rgbToHex()",
@@ -2244,7 +2225,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "rgbtohex()",
-      "id": "src_lib_color_rgbtohex"
+      "id": "src_lib_color_rgbtohex",
+      "community_name": "Color Utilities"
     },
     {
       "label": "lab-schema.ts",
@@ -2254,7 +2236,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "lab-schema.ts",
-      "id": "src_lib_lab_schema"
+      "id": "src_lib_lab_schema",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "labSchema",
@@ -2264,7 +2247,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "labschema",
-      "id": "src_lib_lab_schema_labschema"
+      "id": "src_lib_lab_schema_labschema",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "LabEntryData",
@@ -2274,7 +2258,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "labentrydata",
-      "id": "src_lib_lab_schema_labentrydata"
+      "id": "src_lib_lab_schema_labentrydata",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "manifest.ts",
@@ -2282,9 +2267,10 @@
       "source_file": "src/lib/og/manifest.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 3,
+      "community": 0,
       "norm_label": "manifest.ts",
-      "id": "src_lib_og_manifest"
+      "id": "src_lib_og_manifest",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "OgPage",
@@ -2292,9 +2278,10 @@
       "source_file": "src/lib/og/manifest.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 3,
+      "community": 0,
       "norm_label": "ogpage",
-      "id": "src_lib_og_manifest_ogpage"
+      "id": "src_lib_og_manifest_ogpage",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "OG_PAGES",
@@ -2302,9 +2289,10 @@
       "source_file": "src/lib/og/manifest.ts",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 3,
+      "community": 0,
       "norm_label": "og_pages",
-      "id": "src_lib_og_manifest_og_pages"
+      "id": "src_lib_og_manifest_og_pages",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "ogImageFor()",
@@ -2312,9 +2300,10 @@
       "source_file": "src/lib/og/manifest.ts",
       "source_location": "L17",
       "_origin": "ast",
-      "community": 3,
+      "community": 0,
       "norm_label": "ogimagefor()",
-      "id": "src_lib_og_manifest_ogimagefor"
+      "id": "src_lib_og_manifest_ogimagefor",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "coverage.ts",
@@ -2324,7 +2313,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "coverage.ts",
-      "id": "src_lib_scratch_coverage"
+      "id": "src_lib_scratch_coverage",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "CoverageGrid",
@@ -2334,7 +2324,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "coveragegrid",
-      "id": "src_lib_scratch_coverage_coveragegrid"
+      "id": "src_lib_scratch_coverage_coveragegrid",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "createGrid()",
@@ -2344,7 +2335,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "creategrid()",
-      "id": "src_lib_scratch_coverage_creategrid"
+      "id": "src_lib_scratch_coverage_creategrid",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "paintCircle()",
@@ -2354,7 +2346,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "paintcircle()",
-      "id": "src_lib_scratch_coverage_paintcircle"
+      "id": "src_lib_scratch_coverage_paintcircle",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "fractionPainted()",
@@ -2364,7 +2357,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "fractionpainted()",
-      "id": "src_lib_scratch_coverage_fractionpainted"
+      "id": "src_lib_scratch_coverage_fractionpainted",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "DigPhase",
@@ -2374,7 +2368,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "digphase",
-      "id": "src_lib_scratch_coverage_digphase"
+      "id": "src_lib_scratch_coverage_digphase",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "advancePhase()",
@@ -2384,7 +2379,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "advancephase()",
-      "id": "src_lib_scratch_coverage_advancephase"
+      "id": "src_lib_scratch_coverage_advancephase",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "letter-schema.ts",
@@ -2394,7 +2390,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letter-schema.ts",
-      "id": "src_lib_scratch_letter_schema"
+      "id": "src_lib_scratch_letter_schema",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "letterSchema",
@@ -2404,7 +2401,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letterschema",
-      "id": "src_lib_scratch_letter_schema_letterschema"
+      "id": "src_lib_scratch_letter_schema_letterschema",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "LetterData",
@@ -2414,7 +2412,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letterdata",
-      "id": "src_lib_scratch_letter_schema_letterdata"
+      "id": "src_lib_scratch_letter_schema_letterdata",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "daily.ts",
@@ -2424,7 +2423,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "daily.ts",
-      "id": "src_lib_weave_daily"
+      "id": "src_lib_weave_daily",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "pickDaily()",
@@ -2434,7 +2434,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "pickdaily()",
-      "id": "src_lib_weave_daily_pickdaily"
+      "id": "src_lib_weave_daily_pickdaily",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "draft.ts",
@@ -2444,7 +2445,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "draft.ts",
-      "id": "src_lib_weave_draft"
+      "id": "src_lib_weave_draft",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "Draft",
@@ -2454,7 +2456,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "draft",
-      "id": "src_lib_weave_draft_draft"
+      "id": "src_lib_weave_draft_draft",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "shaftAt()",
@@ -2464,7 +2467,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "shaftat()",
-      "id": "src_lib_weave_draft_shaftat"
+      "id": "src_lib_weave_draft_shaftat",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "treadleAt()",
@@ -2474,7 +2478,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "treadleat()",
-      "id": "src_lib_weave_draft_treadleat"
+      "id": "src_lib_weave_draft_treadleat",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "isWarpOver()",
@@ -2484,7 +2489,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "iswarpover()",
-      "id": "src_lib_weave_draft_iswarpover"
+      "id": "src_lib_weave_draft_iswarpover",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "gcd()",
@@ -2494,7 +2500,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "gcd()",
-      "id": "src_lib_weave_draft_gcd"
+      "id": "src_lib_weave_draft_gcd",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "lcm()",
@@ -2504,7 +2511,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "lcm()",
-      "id": "src_lib_weave_draft_lcm"
+      "id": "src_lib_weave_draft_lcm",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "export.ts",
@@ -2514,7 +2522,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "export.ts",
-      "id": "src_lib_weave_export"
+      "id": "src_lib_weave_export",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "tileSizePx()",
@@ -2524,7 +2533,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tilesizepx()",
-      "id": "src_lib_weave_export_tilesizepx"
+      "id": "src_lib_weave_export_tilesizepx",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "renderTile()",
@@ -2532,9 +2542,10 @@
       "source_file": "src/lib/weave/export.ts",
       "source_location": "L21",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": "rendertile()",
-      "id": "src_lib_weave_export_rendertile"
+      "id": "src_lib_weave_export_rendertile",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "render2d.ts",
@@ -2544,7 +2555,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "render2d.ts",
-      "id": "src_lib_weave_render2d"
+      "id": "src_lib_weave_render2d",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "ClothPick",
@@ -2554,7 +2566,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "clothpick",
-      "id": "src_lib_weave_render2d_clothpick"
+      "id": "src_lib_weave_render2d_clothpick",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "ClothView",
@@ -2564,7 +2577,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "clothview",
-      "id": "src_lib_weave_render2d_clothview"
+      "id": "src_lib_weave_render2d_clothview",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "tileDims()",
@@ -2574,7 +2588,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "tiledims()",
-      "id": "src_lib_weave_render2d_tiledims"
+      "id": "src_lib_weave_render2d_tiledims",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "segment()",
@@ -2582,9 +2597,10 @@
       "source_file": "src/lib/weave/render2d.ts",
       "source_location": "L39",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": "segment()",
-      "id": "src_lib_weave_render2d_segment"
+      "id": "src_lib_weave_render2d_segment",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "shadow()",
@@ -2592,9 +2608,10 @@
       "source_file": "src/lib/weave/render2d.ts",
       "source_location": "L57",
       "_origin": "ast",
-      "community": 1,
+      "community": 10,
       "norm_label": "shadow()",
-      "id": "src_lib_weave_render2d_shadow"
+      "id": "src_lib_weave_render2d_shadow",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "drawCloth()",
@@ -2604,7 +2621,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "drawcloth()",
-      "id": "src_lib_weave_render2d_drawcloth"
+      "id": "src_lib_weave_render2d_drawcloth",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "schema.ts",
@@ -2614,7 +2632,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "schema.ts",
-      "id": "src_lib_weave_schema"
+      "id": "src_lib_weave_schema",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "yarnSchema",
@@ -2624,7 +2643,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "yarnschema",
-      "id": "src_lib_weave_schema_yarnschema"
+      "id": "src_lib_weave_schema_yarnschema",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "Yarn",
@@ -2634,7 +2654,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "yarn",
-      "id": "src_lib_weave_schema_yarn"
+      "id": "src_lib_weave_schema_yarn",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "stripeSchema",
@@ -2644,7 +2665,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "stripeschema",
-      "id": "src_lib_weave_schema_stripeschema"
+      "id": "src_lib_weave_schema_stripeschema",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "draftSchema",
@@ -2654,7 +2676,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "draftschema",
-      "id": "src_lib_weave_schema_draftschema"
+      "id": "src_lib_weave_schema_draftschema",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "presetSchema",
@@ -2664,7 +2687,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "presetschema",
-      "id": "src_lib_weave_schema_presetschema"
+      "id": "src_lib_weave_schema_presetschema",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "Preset",
@@ -2674,7 +2698,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "preset",
-      "id": "src_lib_weave_schema_preset"
+      "id": "src_lib_weave_schema_preset",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "stripes.ts",
@@ -2684,7 +2709,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "stripes.ts",
-      "id": "src_lib_weave_stripes"
+      "id": "src_lib_weave_stripes",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "Stripe",
@@ -2694,7 +2720,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "stripe",
-      "id": "src_lib_weave_stripes_stripe"
+      "id": "src_lib_weave_stripes_stripe",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "seqLength()",
@@ -2704,7 +2731,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "seqlength()",
-      "id": "src_lib_weave_stripes_seqlength"
+      "id": "src_lib_weave_stripes_seqlength",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "yarnAt()",
@@ -2714,7 +2742,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "yarnat()",
-      "id": "src_lib_weave_stripes_yarnat"
+      "id": "src_lib_weave_stripes_yarnat",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "404.astro",
@@ -2722,9 +2751,10 @@
       "source_file": "src/pages/404.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "404.astro",
-      "id": "src_pages_404"
+      "id": "src_pages_404",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "about.astro",
@@ -2732,9 +2762,10 @@
       "source_file": "src/pages/about.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "about.astro",
-      "id": "src_pages_about"
+      "id": "src_pages_about",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "contact.astro",
@@ -2744,7 +2775,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "contact.astro",
-      "id": "src_pages_contact"
+      "id": "src_pages_contact",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "pages/index.astro",
@@ -2754,7 +2786,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "pages/index.astro",
-      "id": "src_pages_index"
+      "id": "src_pages_index",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "[slug].astro",
@@ -2762,9 +2795,10 @@
       "source_file": "src/pages/lab/[slug].astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "[slug].astro",
-      "id": "src_pages_lab_slug"
+      "id": "src_pages_lab_slug",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "getStaticPaths()",
@@ -2772,19 +2806,10 @@
       "source_file": "src/pages/lab/[slug].astro",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "getstaticpaths()",
-      "id": "src_pages_lab_slug_getstaticpaths"
-    },
-    {
-      "label": "../../experiments/registry",
-      "file_type": "code",
-      "source_file": "src/experiments/registry",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "../../experiments/registry",
-      "id": "c_git_birchdesignlab_src_experiments_registry"
+      "id": "src_pages_lab_slug_getstaticpaths",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "lab/index.astro",
@@ -2794,7 +2819,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "lab/index.astro",
-      "id": "src_pages_lab_index"
+      "id": "src_pages_lab_index",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "entries",
@@ -2804,7 +2830,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "entries",
-      "id": "src_pages_lab_index_entries"
+      "id": "src_pages_lab_index_entries",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "services.astro",
@@ -2814,7 +2841,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "services.astro",
-      "id": "src_pages_services"
+      "id": "src_pages_services",
+      "community_name": "Page Fonts & Style Imports"
     },
     {
       "label": "styleguide.astro",
@@ -2822,9 +2850,10 @@
       "source_file": "src/pages/styleguide.astro",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "styleguide.astro",
-      "id": "src_pages_styleguide"
+      "id": "src_pages_styleguide",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "semanticSwatches",
@@ -2832,39 +2861,10 @@
       "source_file": "src/pages/styleguide.astro",
       "source_location": "L14",
       "_origin": "ast",
-      "community": 2,
+      "community": 15,
       "norm_label": "semanticswatches",
-      "id": "src_pages_styleguide_semanticswatches"
-    },
-    {
-      "label": "@fontsource-variable/eb-garamond",
-      "file_type": "code",
-      "source_file": "@fontsource-variable/eb-garamond",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource-variable/eb-garamond",
-      "id": "eb_garamond"
-    },
-    {
-      "label": "@fontsource-variable/newsreader",
-      "file_type": "code",
-      "source_file": "@fontsource-variable/newsreader",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource-variable/newsreader",
-      "id": "newsreader"
-    },
-    {
-      "label": "@fontsource-variable/source-serif-4",
-      "file_type": "code",
-      "source_file": "@fontsource-variable/source-serif-4",
-      "confidence": "EXTRACTED",
-      "_origin": "ast",
-      "community": 2,
-      "norm_label": "@fontsource-variable/source-serif-4",
-      "id": "source_serif_4"
+      "id": "src_pages_styleguide_semanticswatches",
+      "community_name": "BDL-001 Bark Engine Interaction"
     },
     {
       "label": "bark-lock-aspect.test.ts",
@@ -2872,9 +2872,10 @@
       "source_file": "tests/bark-lock-aspect.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "bark-lock-aspect.test.ts",
-      "id": "tests_bark_lock_aspect_test"
+      "id": "tests_bark_lock_aspect_test",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "mockCtx()",
@@ -2882,9 +2883,10 @@
       "source_file": "tests/bark-lock-aspect.test.ts",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "mockctx()",
-      "id": "tests_bark_lock_aspect_test_mockctx"
+      "id": "tests_bark_lock_aspect_test_mockctx",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "dash()",
@@ -2892,9 +2894,10 @@
       "source_file": "tests/bark-lock-aspect.test.ts",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "dash()",
-      "id": "tests_bark_lock_aspect_test_dash"
+      "id": "tests_bark_lock_aspect_test_dash",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "mockCanvas()",
@@ -2902,9 +2905,10 @@
       "source_file": "tests/bark-lock-aspect.test.ts",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "mockcanvas()",
-      "id": "tests_bark_lock_aspect_test_mockcanvas"
+      "id": "tests_bark_lock_aspect_test_mockcanvas",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "bark-pattern.test.ts",
@@ -2914,7 +2918,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "bark-pattern.test.ts",
-      "id": "tests_bark_pattern_test"
+      "id": "tests_bark_pattern_test",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "bdl-003-letters.test.ts",
@@ -2924,7 +2929,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "bdl-003-letters.test.ts",
-      "id": "tests_bdl_003_letters_test"
+      "id": "tests_bdl_003_letters_test",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "color.test.ts",
@@ -2934,7 +2940,8 @@
       "_origin": "ast",
       "community": 16,
       "norm_label": "color.test.ts",
-      "id": "tests_color_test"
+      "id": "tests_color_test",
+      "community_name": "Color Utilities"
     },
     {
       "label": "draw2d.test.ts",
@@ -2942,9 +2949,10 @@
       "source_file": "tests/draw2d.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "draw2d.test.ts",
-      "id": "tests_draw2d_test"
+      "id": "tests_draw2d_test",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "mockCtx()",
@@ -2952,9 +2960,10 @@
       "source_file": "tests/draw2d.test.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "mockctx()",
-      "id": "tests_draw2d_test_mockctx"
+      "id": "tests_draw2d_test_mockctx",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "dash()",
@@ -2962,9 +2971,10 @@
       "source_file": "tests/draw2d.test.ts",
       "source_location": "L23",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "dash()",
-      "id": "tests_draw2d_test_dash"
+      "id": "tests_draw2d_test_dash",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "lab-schema.test.ts",
@@ -2974,7 +2984,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "lab-schema.test.ts",
-      "id": "tests_lab_schema_test"
+      "id": "tests_lab_schema_test",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "valid",
@@ -2984,7 +2995,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "valid",
-      "id": "tests_lab_schema_test_valid"
+      "id": "tests_lab_schema_test_valid",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "letter-schema.test.ts",
@@ -2994,7 +3006,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "letter-schema.test.ts",
-      "id": "tests_letter_schema_test"
+      "id": "tests_letter_schema_test",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "valid",
@@ -3004,7 +3017,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "valid",
-      "id": "tests_letter_schema_test_valid"
+      "id": "tests_letter_schema_test_valid",
+      "community_name": "Novgorod Letter Content & Schema"
     },
     {
       "label": "og-manifest.test.ts",
@@ -3012,9 +3026,10 @@
       "source_file": "tests/og-manifest.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 3,
+      "community": 0,
       "norm_label": "og-manifest.test.ts",
-      "id": "tests_og_manifest_test"
+      "id": "tests_og_manifest_test",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "og-render.test.ts",
@@ -3024,7 +3039,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "og-render.test.ts",
-      "id": "tests_og_render_test"
+      "id": "tests_og_render_test",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "seed",
@@ -3034,7 +3050,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "seed",
-      "id": "tests_og_render_test_seed"
+      "id": "tests_og_render_test_seed",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "parse-color.test.ts",
@@ -3042,9 +3059,10 @@
       "source_file": "tests/parse-color.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 10,
       "norm_label": "parse-color.test.ts",
-      "id": "tests_parse_color_test"
+      "id": "tests_parse_color_test",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "scratch-coverage.test.ts",
@@ -3054,7 +3072,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "scratch-coverage.test.ts",
-      "id": "tests_scratch_coverage_test"
+      "id": "tests_scratch_coverage_test",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "trace-to-strokes.test.ts",
@@ -3064,7 +3083,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "trace-to-strokes.test.ts",
-      "id": "tests_trace_to_strokes_test"
+      "id": "tests_trace_to_strokes_test",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "svg()",
@@ -3074,7 +3094,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "svg()",
-      "id": "tests_trace_to_strokes_test_svg"
+      "id": "tests_trace_to_strokes_test_svg",
+      "community_name": "SVG Stroke Tracing Script"
     },
     {
       "label": "weave-daily.test.ts",
@@ -3084,7 +3105,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "weave-daily.test.ts",
-      "id": "tests_weave_daily_test"
+      "id": "tests_weave_daily_test",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "weave-data.test.ts",
@@ -3094,7 +3116,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "weave-data.test.ts",
-      "id": "tests_weave_data_test"
+      "id": "tests_weave_data_test",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "weave-draft.test.ts",
@@ -3104,7 +3127,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "weave-draft.test.ts",
-      "id": "tests_weave_draft_test"
+      "id": "tests_weave_draft_test",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "plain",
@@ -3114,7 +3138,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "plain",
-      "id": "tests_weave_draft_test_plain"
+      "id": "tests_weave_draft_test_plain",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "twill",
@@ -3124,7 +3149,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "twill",
-      "id": "tests_weave_draft_test_twill"
+      "id": "tests_weave_draft_test_twill",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "weave-export.test.ts",
@@ -3134,7 +3160,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "weave-export.test.ts",
-      "id": "tests_weave_export_test"
+      "id": "tests_weave_export_test",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "plain",
@@ -3144,7 +3171,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "plain",
-      "id": "tests_weave_export_test_plain"
+      "id": "tests_weave_export_test_plain",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "mockCtx()",
@@ -3154,7 +3182,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "mockctx()",
-      "id": "tests_weave_export_test_mockctx"
+      "id": "tests_weave_export_test_mockctx",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "warp",
@@ -3164,7 +3193,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "warp",
-      "id": "tests_weave_export_test_warp"
+      "id": "tests_weave_export_test_warp",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "weft",
@@ -3174,7 +3204,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "weft",
-      "id": "tests_weave_export_test_weft"
+      "id": "tests_weave_export_test_weft",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "hex()",
@@ -3184,7 +3215,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "hex()",
-      "id": "tests_weave_export_test_hex"
+      "id": "tests_weave_export_test_hex",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "weave-render2d.test.ts",
@@ -3194,7 +3226,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "weave-render2d.test.ts",
-      "id": "tests_weave_render2d_test"
+      "id": "tests_weave_render2d_test",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "plain",
@@ -3204,7 +3237,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "plain",
-      "id": "tests_weave_render2d_test_plain"
+      "id": "tests_weave_render2d_test_plain",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "mockCtx()",
@@ -3214,7 +3248,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "mockctx()",
-      "id": "tests_weave_render2d_test_mockctx"
+      "id": "tests_weave_render2d_test_mockctx",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "view()",
@@ -3224,7 +3259,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "view()",
-      "id": "tests_weave_render2d_test_view"
+      "id": "tests_weave_render2d_test_view",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "weave-schema.test.ts",
@@ -3234,7 +3270,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "weave-schema.test.ts",
-      "id": "tests_weave_schema_test"
+      "id": "tests_weave_schema_test",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "goodDraft",
@@ -3244,7 +3281,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "gooddraft",
-      "id": "tests_weave_schema_test_gooddraft"
+      "id": "tests_weave_schema_test_gooddraft",
+      "community_name": "Loom Presets & Yarn Data"
     },
     {
       "label": "weave-stripes.test.ts",
@@ -3254,7 +3292,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "weave-stripes.test.ts",
-      "id": "tests_weave_stripes_test"
+      "id": "tests_weave_stripes_test",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "seq",
@@ -3264,7 +3303,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "seq",
-      "id": "tests_weave_stripes_test_seq"
+      "id": "tests_weave_stripes_test_seq",
+      "community_name": "Bark Rendering Primitives"
     },
     {
       "label": "tsconfig.json",
@@ -3274,7 +3314,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "tsconfig.json",
-      "id": "tsconfig"
+      "id": "tsconfig",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "extends",
@@ -3284,7 +3325,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "extends",
-      "id": "tsconfig_extends"
+      "id": "tsconfig_extends",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "astro/tsconfigs/strict",
@@ -3294,7 +3336,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "astro/tsconfigs/strict",
-      "id": "ref_astro_tsconfigs_strict"
+      "id": "ref_astro_tsconfigs_strict",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "include",
@@ -3304,7 +3347,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "include",
-      "id": "tsconfig_include"
+      "id": "tsconfig_include",
+      "community_name": "TypeScript Config"
     },
     {
       "label": ".astro/types.d.ts",
@@ -3314,7 +3358,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": ".astro/types.d.ts",
-      "id": "ref_astro_types_d_ts"
+      "id": "ref_astro_types_d_ts",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "src/**/*",
@@ -3324,7 +3369,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "src/**/*",
-      "id": "ref_src"
+      "id": "ref_src",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "tests/**/*",
@@ -3334,7 +3380,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "tests/**/*",
-      "id": "ref_tests"
+      "id": "ref_tests",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "exclude",
@@ -3344,7 +3391,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "exclude",
-      "id": "tsconfig_exclude"
+      "id": "tsconfig_exclude",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "dist",
@@ -3354,7 +3402,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "dist",
-      "id": "ref_dist"
+      "id": "ref_dist",
+      "community_name": "TypeScript Config"
     },
     {
       "label": "vitest.config.ts",
@@ -3364,7 +3413,8 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "vitest.config.ts",
-      "id": "vitest_config"
+      "id": "vitest_config",
+      "community_name": "Vitest Config"
     },
     {
       "label": "Deploying birchdesignlab.com (Deploy Guide)",
@@ -3377,7 +3427,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "deploying birchdesignlab.com (deploy guide)",
-      "id": "docs_deploy"
+      "id": "docs_deploy",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Handoff 2026-07-18: Design-System Port Complete & Deployed",
@@ -3390,7 +3441,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "handoff 2026-07-18: design-system port complete & deployed",
-      "id": "docs_design_handoff_07_18_26"
+      "id": "docs_design_handoff_07_18_26",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Handoff 2026-07-16",
@@ -3403,7 +3455,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "handoff 2026-07-16",
-      "id": "docs_handoff_2026_07_16"
+      "id": "docs_handoff_2026_07_16",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Birch Design Lab \u2014 Lab Architecture Handoff",
@@ -3416,7 +3469,8 @@
       "contributor": null,
       "community": 12,
       "norm_label": "birch design lab \u2014 lab architecture handoff",
-      "id": "docs_lab_architecture_handoff"
+      "id": "docs_lab_architecture_handoff",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "Lab Backlog",
@@ -3429,7 +3483,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "lab backlog",
-      "id": "docs_lab_backlog"
+      "id": "docs_lab_backlog",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan",
@@ -3442,7 +3497,8 @@
       "contributor": null,
       "community": 0,
       "norm_label": "birch design lab website (core + lab framework + bdl-001) implementation plan",
-      "id": "docs_superpowers_plans_2026_07_15_website_core"
+      "id": "docs_superpowers_plans_2026_07_15_website_core",
+      "community_name": "OG Image Generation Pipeline"
     },
     {
       "label": "Bark-Generated OG Images Implementation Plan",
@@ -3453,9 +3509,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 10,
       "norm_label": "bark-generated og images implementation plan",
-      "id": "docs_superpowers_plans_2026_07_16_bark_og_images"
+      "id": "docs_superpowers_plans_2026_07_16_bark_og_images",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "BDL-003 Novgorod Letters Implementation Plan",
@@ -3468,7 +3525,8 @@
       "contributor": null,
       "community": 5,
       "norm_label": "bdl-003 novgorod letters implementation plan",
-      "id": "docs_superpowers_plans_2026_07_16_bdl_003_novgorod_letters"
+      "id": "docs_superpowers_plans_2026_07_16_bdl_003_novgorod_letters",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "BDL-004 The Loom Implementation Plan",
@@ -3481,7 +3539,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bdl-004 the loom implementation plan",
-      "id": "docs_superpowers_plans_2026_07_16_bdl_004_the_loom"
+      "id": "docs_superpowers_plans_2026_07_16_bdl_004_the_loom",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Wall Labels Implementation Plan",
@@ -3494,7 +3553,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "wall labels implementation plan",
-      "id": "docs_superpowers_plans_2026_07_16_wall_labels"
+      "id": "docs_superpowers_plans_2026_07_16_wall_labels",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Birch Design Lab \u2014 Website Design Spec",
@@ -3507,7 +3567,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "birch design lab \u2014 website design spec",
-      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design"
+      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Bark-Generated OG Images \u00b7 Design",
@@ -3520,7 +3581,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bark-generated og images \u00b7 design",
-      "id": "docs_superpowers_specs_2026_07_16_bark_og_images_design"
+      "id": "docs_superpowers_specs_2026_07_16_bark_og_images_design",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "BDL-003 \u00b7 Novgorod Letters \u00b7 Design",
@@ -3533,7 +3595,8 @@
       "contributor": null,
       "community": 5,
       "norm_label": "bdl-003 \u00b7 novgorod letters \u00b7 design",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "BDL-004 \u00b7 The Loom \u00b7 Design",
@@ -3546,7 +3609,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bdl-004 \u00b7 the loom \u00b7 design",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Wall Labels \u00b7 How-to-Operate Placards \u00b7 Design",
@@ -3559,7 +3623,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "wall labels \u00b7 how-to-operate placards \u00b7 design",
-      "id": "docs_superpowers_specs_2026_07_16_wall_labels_design"
+      "id": "docs_superpowers_specs_2026_07_16_wall_labels_design",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Marcellus Font SIL Open Font License",
@@ -3570,9 +3635,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 10,
       "norm_label": "marcellus font sil open font license",
-      "id": "scripts_og_fonts_ofl"
+      "id": "scripts_og_fonts_ofl",
+      "community_name": "BDL-004 Loom Experiment UI"
     },
     {
       "label": "BDL-001 The Bark Engine (Lab Content Entry)",
@@ -3585,7 +3651,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bdl-001 the bark engine (lab content entry)",
-      "id": "src_content_lab_bdl_001"
+      "id": "src_content_lab_bdl_001",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "BDL-002 The Styleguide (Lab Content Entry)",
@@ -3598,7 +3665,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bdl-002 the styleguide (lab content entry)",
-      "id": "src_content_lab_bdl_002"
+      "id": "src_content_lab_bdl_002",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "BDL-003 Novgorod Letters (Lab Content Entry)",
@@ -3611,7 +3679,8 @@
       "contributor": null,
       "community": 5,
       "norm_label": "bdl-003 novgorod letters (lab content entry)",
-      "id": "src_content_lab_bdl_003"
+      "id": "src_content_lab_bdl_003",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "BDL-004 The Loom (Lab Content Entry)",
@@ -3624,7 +3693,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bdl-004 the loom (lab content entry)",
-      "id": "src_content_lab_bdl_004"
+      "id": "src_content_lab_bdl_004",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Node 22.16.0 pin via .nvmrc for deterministic Cloudflare builds",
@@ -3637,7 +3707,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "node 22.16.0 pin via .nvmrc for deterministic cloudflare builds",
-      "id": "docs_deploy_nvmrc_node_pin"
+      "id": "docs_deploy_nvmrc_node_pin",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Flip host from Cloudflare Pages to Workers, triggered by the contact form",
@@ -3650,7 +3721,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "flip host from cloudflare pages to workers, triggered by the contact form",
-      "id": "docs_lab_backlog_pages_to_workers_migration"
+      "id": "docs_lab_backlog_pages_to_workers_migration",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "BarkField lockAspect prop fixes lenticel streaking on non-square canvases",
@@ -3663,7 +3735,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "barkfield lockaspect prop fixes lenticel streaking on non-square canvases",
-      "id": "docs_design_handoff_07_18_26_lockaspect"
+      "id": "docs_design_handoff_07_18_26_lockaspect",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Rewritten reveal plumbing: .reveal-on/.is-settled gated IntersectionObserver",
@@ -3676,7 +3749,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "rewritten reveal plumbing: .reveal-on/.is-settled gated intersectionobserver",
-      "id": "docs_design_handoff_07_18_26_reveal_plumbing"
+      "id": "docs_design_handoff_07_18_26_reveal_plumbing",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "--gf-link-hover token resolves loud-link hover collision across dark/light faces",
@@ -3689,7 +3763,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "--gf-link-hover token resolves loud-link hover collision across dark/light faces",
-      "id": "docs_design_handoff_07_18_26_gf_link_hover_token"
+      "id": "docs_design_handoff_07_18_26_gf_link_hover_token",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Marcellus ships weight 400 only; headings dropped to 400 to avoid faux-bold",
@@ -3702,7 +3777,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "marcellus ships weight 400 only; headings dropped to 400 to avoid faux-bold",
-      "id": "docs_design_handoff_07_18_26_marcellus_single_weight"
+      "id": "docs_design_handoff_07_18_26_marcellus_single_weight",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Billboard green locked: forest/fern day/night AA-contrast pair",
@@ -3715,7 +3791,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "billboard green locked: forest/fern day/night aa-contrast pair",
-      "id": "docs_handoff_2026_07_16_billboard_green"
+      "id": "docs_handoff_2026_07_16_billboard_green",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Bark liveness effects (wake, gust, grow-in, tap pulse) debut in BDL-001 before graduating sitewide",
@@ -3728,7 +3805,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bark liveness effects (wake, gust, grow-in, tap pulse) debut in bdl-001 before graduating sitewide",
-      "id": "docs_handoff_2026_07_16_bark_liveness_effects"
+      "id": "docs_handoff_2026_07_16_bark_liveness_effects",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Bark seed-by-date strategy: the site grows a new tree daily",
@@ -3741,7 +3819,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "bark seed-by-date strategy: the site grows a new tree daily",
-      "id": "docs_handoff_2026_07_16_seed_by_date"
+      "id": "docs_handoff_2026_07_16_seed_by_date",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Lab as one typed content collection (experiment/study) rather than two collections",
@@ -3754,7 +3833,8 @@
       "contributor": null,
       "community": 12,
       "norm_label": "lab as one typed content collection (experiment/study) rather than two collections",
-      "id": "docs_lab_architecture_handoff_single_collection_typed"
+      "id": "docs_lab_architecture_handoff_single_collection_typed",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "Accession numbering: globally sequential, immutable specimen numbers",
@@ -3767,7 +3847,8 @@
       "contributor": null,
       "community": 12,
       "norm_label": "accession numbering: globally sequential, immutable specimen numbers",
-      "id": "docs_lab_architecture_handoff_accession_numbering"
+      "id": "docs_lab_architecture_handoff_accession_numbering",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "Lab toggle filters already-rendered DOM rather than fetching, to keep every specimen link in the static HTML for SEO",
@@ -3780,7 +3861,8 @@
       "contributor": null,
       "community": 12,
       "norm_label": "lab toggle filters already-rendered dom rather than fetching, to keep every specimen link in the static html for seo",
-      "id": "docs_lab_architecture_handoff_toggle_filters_dom"
+      "id": "docs_lab_architecture_handoff_toggle_filters_dom",
+      "community_name": "Lab Content Schema & Architecture"
     },
     {
       "label": "Lab visual identity will eventually branch away from the site theme (undecided)",
@@ -3793,7 +3875,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "lab visual identity will eventually branch away from the site theme (undecided)",
-      "id": "docs_lab_backlog_lab_visual_identity"
+      "id": "docs_lab_backlog_lab_visual_identity",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Presentation-ceiling note: Lab specs underspecify arrival, motion, and material feel versus the awwwards bar",
@@ -3806,7 +3889,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "presentation-ceiling note: lab specs underspecify arrival, motion, and material feel versus the awwwards bar",
-      "id": "docs_lab_backlog_presentation_ceiling"
+      "id": "docs_lab_backlog_presentation_ceiling",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Generative bark system: seeded pattern core + WebGL draw layer, the site's signature",
@@ -3819,7 +3903,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "generative bark system: seeded pattern core + webgl draw layer, the site's signature",
-      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_bark_system"
+      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_bark_system",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Chiaroscuro dark-default dual theme (dark face default, light a true inverse)",
@@ -3832,7 +3917,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "chiaroscuro dark-default dual theme (dark face default, light a true inverse)",
-      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_chiaroscuro_theme"
+      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_chiaroscuro_theme",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Vanilla CSS design tokens chosen over Tailwind for a bespoke animation-heavy design with no breaking majors",
@@ -3845,7 +3931,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "vanilla css design tokens chosen over tailwind for a bespoke animation-heavy design with no breaking majors",
-      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_vanilla_css_tokens"
+      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_vanilla_css_tokens",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "The Lab: numbered specimen-catalog experiments, one folder per experiment, zero infra per piece",
@@ -3858,7 +3945,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "the lab: numbered specimen-catalog experiments, one folder per experiment, zero infra per piece",
-      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_lab_specimen_catalog"
+      "id": "docs_superpowers_specs_2026_07_15_birchdesignlab_website_design_lab_specimen_catalog",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "OG card seed derivation matches the site's date-seed strategy, so the card is the tree of the deploy",
@@ -3871,7 +3959,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "og card seed derivation matches the site's date-seed strategy, so the card is the tree of the deploy",
-      "id": "docs_superpowers_specs_2026_07_16_bark_og_images_design_daily_seed"
+      "id": "docs_superpowers_specs_2026_07_16_bark_og_images_design_daily_seed",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Two-layer scratch reveal: strokes uncovered first, then translation blooms in place (meet the artifact before the meaning)",
@@ -3884,7 +3973,8 @@
       "contributor": null,
       "community": 5,
       "norm_label": "two-layer scratch reveal: strokes uncovered first, then translation blooms in place (meet the artifact before the meaning)",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design_two_layer_reveal"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design_two_layer_reveal",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "Hand-traced letterforms from published gramota drawings, because a font cannot fake a seven-year-old's hand",
@@ -3897,7 +3987,8 @@
       "contributor": null,
       "community": 5,
       "norm_label": "hand-traced letterforms from published gramota drawings, because a font cannot fake a seven-year-old's hand",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design_hand_traced_strokes"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design_hand_traced_strokes",
+      "community_name": "BDL-003 Novgorod Letters"
     },
     {
       "label": "Four-shaft draft engine: threading/tie-up/treadling interlacement math drives the weave pattern",
@@ -3910,7 +4001,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "four-shaft draft engine: threading/tie-up/treadling interlacement math drives the weave pattern",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design_draft_engine"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design_draft_engine",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Canvas2D per-thread rendering chosen over WebGL/SVG-DOM for the loom: debuggable compositing, WebGL slot already occupied by bark",
@@ -3923,7 +4015,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "canvas2d per-thread rendering chosen over webgl/svg-dom for the loom: debuggable compositing, webgl slot already occupied by bark",
-      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design_canvas2d_choice"
+      "id": "docs_superpowers_specs_2026_07_16_bdl_004_the_loom_design_canvas2d_choice",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "House rule: experiment page floating chrome layout (wall label bottom-left, tweak controls bottom-right, specimen plate strip along the bottom)",
@@ -3936,7 +4029,8 @@
       "contributor": null,
       "community": 3,
       "norm_label": "house rule: experiment page floating chrome layout (wall label bottom-left, tweak controls bottom-right, specimen plate strip along the bottom)",
-      "id": "docs_superpowers_specs_2026_07_16_wall_labels_design_house_rule_chrome"
+      "id": "docs_superpowers_specs_2026_07_16_wall_labels_design_house_rule_chrome",
+      "community_name": "Site Design Rationale & Deploy"
     },
     {
       "label": "Favicon Abstract Mark (Staggered Bars Glyph)",
@@ -3949,7 +4043,8 @@
       "contributor": null,
       "community": 19,
       "norm_label": "favicon abstract mark (staggered bars glyph)",
-      "id": "public_favicon_svg_mark"
+      "id": "public_favicon_svg_mark",
+      "community_name": "Favicon Mark"
     },
     {
       "label": "Graphify Tool Workflow",
@@ -3960,9 +4055,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_graphify_workflow",
       "community": 17,
-      "norm_label": "graphify tool workflow"
+      "norm_label": "graphify tool workflow",
+      "id": "claude_graphify_workflow",
+      "community_name": "Graphify Tool Setup"
     },
     {
       "label": "Shared Memory (Zettelkasten + Project Graph)",
@@ -3973,9 +4069,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_shared_memory",
       "community": 17,
-      "norm_label": "shared memory (zettelkasten + project graph)"
+      "norm_label": "shared memory (zettelkasten + project graph)",
+      "id": "claude_shared_memory",
+      "community_name": "Graphify Tool Setup"
     },
     {
       "label": "Birch Design Lab \u2014 Founding Record (document)",
@@ -3986,9 +4083,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_birch_design_lab_founding_record_document",
       "community": 4,
-      "norm_label": "birch design lab \u2014 founding record (document)"
+      "norm_label": "birch design lab \u2014 founding record (document)",
+      "id": "docs_birch_design_lab_founding_record_document",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Birch Design Lab (Year-One Legal Name)",
@@ -4000,9 +4098,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Won because the three-word form is the only candidate that is a complete sentence and follows the surname+trade+workplace naming formula (Johnson Printing Works, Wright Brothers Cycle Shop); earns its length by telling a non-technical business owner who/what/where in one breath; passed the phone-answer test.",
-      "id": "docs_birch_design_lab_founding_record_birch_design_lab",
       "community": 4,
-      "norm_label": "birch design lab (year-one legal name)"
+      "norm_label": "birch design lab (year-one legal name)",
+      "id": "docs_birch_design_lab_founding_record_birch_design_lab",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Birch Labs (Established-Era Name)",
@@ -4014,9 +4113,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Natural erosion once referrals do the explaining; carries the Bell Labs institutional echo and science sentiment.",
-      "id": "docs_birch_design_lab_founding_record_birch_labs",
       "community": 4,
-      "norm_label": "birch labs (established-era name)"
+      "norm_label": "birch labs (established-era name)",
+      "id": "docs_birch_design_lab_founding_record_birch_labs",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Birch (Eventual Spoken Name)",
@@ -4028,9 +4128,10 @@
       "author": null,
       "contributor": null,
       "rationale": "The spoken name was never a choice \u2014 no one says the suffix out loud; what clients will have been calling it all along.",
-      "id": "docs_birch_design_lab_founding_record_birch",
       "community": 4,
-      "norm_label": "birch (eventual spoken name)"
+      "norm_label": "birch (eventual spoken name)",
+      "id": "docs_birch_design_lab_founding_record_birch",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "BDL (Initialism)",
@@ -4042,9 +4143,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Quiet monogram use only.",
-      "id": "docs_birch_design_lab_founding_record_bdl",
       "community": 4,
-      "norm_label": "bdl (initialism)"
+      "norm_label": "bdl (initialism)",
+      "id": "docs_birch_design_lab_founding_record_bdl",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Word-Association Triad (Who/What/Where)",
@@ -4056,9 +4158,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Birch = who (the founder), Design = what (the good sold), Lab = where (the bench); the 'feels twenty years old' filter was pointing at this structure the whole time. Rhythm: BIRCH-de-SIGN-LAB, ending on two hard beats like a door closing.",
-      "id": "docs_birch_design_lab_founding_record_word_association_triad",
       "community": 4,
-      "norm_label": "word-association triad (who/what/where)"
+      "norm_label": "word-association triad (who/what/where)",
+      "id": "docs_birch_design_lab_founding_record_word_association_triad",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Etymological Line (beorc \u2192 bright)",
@@ -4070,9 +4173,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Old English beorc, from a root meaning 'to shine' (same syllable as 'bright'); birch is the shining tree, white against dark wood, first to return after fire, the threshold tree of the north.",
-      "id": "docs_birch_design_lab_founding_record_etymological_line",
       "community": 4,
-      "norm_label": "etymological line (beorc \u2192 bright)"
+      "norm_label": "etymological line (beorc \u2192 bright)",
+      "id": "docs_birch_design_lab_founding_record_etymological_line",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Founding Myth (Pioneer Species + Birch-Bark Paper)",
@@ -4084,9 +4188,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Birch is a pioneer species that stabilizes ground after fire; birch bark is the oldest paper of the north (Novgorod medieval letters survived 800 years). For a business building surfaces where small companies speak to the world, that is the job description growing in the yard.",
-      "id": "docs_birch_design_lab_founding_record_founding_myth",
       "community": 4,
-      "norm_label": "the founding myth (pioneer species + birch-bark paper)"
+      "norm_label": "the founding myth (pioneer species + birch-bark paper)",
+      "id": "docs_birch_design_lab_founding_record_founding_myth",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Credo",
@@ -4098,9 +4203,10 @@
       "author": null,
       "contributor": null,
       "rationale": "\"First green after the fire \u2014 and the bark you write on.\" \u2014 one-sentence distillation of the founding myth.",
-      "id": "docs_birch_design_lab_founding_record_credo",
       "community": 4,
-      "norm_label": "the credo"
+      "norm_label": "the credo",
+      "id": "docs_birch_design_lab_founding_record_credo",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Chiaroscuro Principle",
@@ -4112,9 +4218,10 @@
       "author": null,
       "contributor": null,
       "rationale": "The word forks tonally (shining renewal vs. the disciplinary birch rod/fasces). Verdict: the fork is the aesthetic \u2014 quiet luxury is chiaroscuro. Drives the light/dark-mode-native identity decision, with dark mode as the founder's default face.",
-      "id": "docs_birch_design_lab_founding_record_chiaroscuro_principle",
       "community": 4,
-      "norm_label": "the chiaroscuro principle"
+      "norm_label": "the chiaroscuro principle",
+      "id": "docs_birch_design_lab_founding_record_chiaroscuro_principle",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Surname Effect",
@@ -4126,9 +4233,10 @@
       "author": null,
       "contributor": null,
       "rationale": "\"Birch built our site\" parses as a person built it; surname-based firms read as established by default \u2014 a referral-economy advantage no other candidate had. Reinforced by the founder physically resembling the namesake tree (tall, pale, suited to the north).",
-      "id": "docs_birch_design_lab_founding_record_surname_effect",
       "community": 4,
-      "norm_label": "the surname effect"
+      "norm_label": "the surname effect",
+      "id": "docs_birch_design_lab_founding_record_surname_effect",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Fathom Sentence (Retained Meaning)",
@@ -4140,9 +4248,10 @@
       "author": null,
       "contributor": null,
       "rationale": "\"To measure the unknown using yourself as the ruler.\" The line that started the entire search stays in the brand's private mythology though the Fathom name did not survive; usable in about-page/process copy without naming it.",
-      "id": "docs_birch_design_lab_founding_record_fathom_sentence",
       "community": 4,
-      "norm_label": "the fathom sentence (retained meaning)"
+      "norm_label": "the fathom sentence (retained meaning)",
+      "id": "docs_birch_design_lab_founding_record_fathom_sentence",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Grand Seiko White Birch (SLGH005) \u2014 North Star Object",
@@ -4154,9 +4263,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Bark texture rendered in metal; luxury that whispers, restraint everywhere \u2014 the visual register handed to the eventual designer.",
-      "id": "docs_birch_design_lab_founding_record_grand_seiko_white_birch",
       "community": 4,
-      "norm_label": "grand seiko white birch (slgh005) \u2014 north star object"
+      "norm_label": "grand seiko white birch (slgh005) \u2014 north star object",
+      "id": "docs_birch_design_lab_founding_record_grand_seiko_white_birch",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Lenticel Dashes (Mark Concept)",
@@ -4168,9 +4278,10 @@
       "author": null,
       "contributor": null,
       "rationale": "The horizontal bark marks \u2014 instantly birch, fully abstract, doubles as lines of text/writing; only light-field identity in a market of dark-navy dev shops, ownable.",
-      "id": "docs_birch_design_lab_founding_record_lenticel_dashes",
       "community": 4,
-      "norm_label": "lenticel dashes (mark concept)"
+      "norm_label": "lenticel dashes (mark concept)",
+      "id": "docs_birch_design_lab_founding_record_lenticel_dashes",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Graveyard, Final Edition",
@@ -4182,9 +4293,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Retired candidates with causes of death: Fathom (name already claimed by multiple firms), Helm (weak phonetic onset/coda, fails phone test), Harbor (hijacked ear \u2014 Harbor Freight, care-industry warmth), Sound (killed twice \u2014 Sound Lab reads as recording studio), Keel ('keel over' idiom dominates locally; KeelWorks claimed), Birchworks/fused forms (ch-w seam stumbles), double suffixes (Works/Lab/Studio/Design never stack), plus an earlier graveyard (Current, Tidal, Delta, Flux, Apex, Nautilus, Range, Arbor, Root, Cascade, Vantage, Strata).",
-      "id": "docs_birch_design_lab_founding_record_graveyard",
       "community": 4,
-      "norm_label": "the graveyard, final edition"
+      "norm_label": "the graveyard, final edition",
+      "id": "docs_birch_design_lab_founding_record_graveyard",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Epic Framework (Lesson of Record)",
@@ -4196,9 +4308,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Built to find the sublime, it did its job by failing \u2014 overruled by three things it had no columns for: the mouth, the market, and the founder's actual affections; its real function was to exhaust every alternative until the honest answer was the only one standing.",
-      "id": "docs_birch_design_lab_founding_record_epic_framework",
       "community": 4,
-      "norm_label": "the epic framework (lesson of record)"
+      "norm_label": "the epic framework (lesson of record)",
+      "id": "docs_birch_design_lab_founding_record_epic_framework",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Mouth Lens (Decisive Lesson)",
@@ -4210,9 +4323,10 @@
       "author": null,
       "contributor": null,
       "rationale": "A service firm's name is a sound event in other people's mouths \u2014 referrals, phone static, local accents. Test phonetic onset/coda, semantic hijack, the referral sentence, and the phone answer; plosive onsets read solid, B is the sturdiest in the language.",
-      "id": "docs_birch_design_lab_founding_record_mouth_lens",
       "community": 4,
-      "norm_label": "the mouth lens (decisive lesson)"
+      "norm_label": "the mouth lens (decisive lesson)",
+      "id": "docs_birch_design_lab_founding_record_mouth_lens",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Three Legs: Myth, Mouth, Availability",
@@ -4224,9 +4338,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Every candidate needed all three legs. Birch was the only word that ended with all three present (myth thinnest but real, mouth strongest, field most scattered).",
-      "id": "docs_birch_design_lab_founding_record_three_legs",
       "community": 4,
-      "norm_label": "three legs: myth, mouth, availability"
+      "norm_label": "three legs: myth, mouth, availability",
+      "id": "docs_birch_design_lab_founding_record_three_legs",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Outstanding Admin (Domains, Trademark, LLC, Visual Identity)",
@@ -4238,9 +4353,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Remaining tasks: check birchdesignlab.com and fallback domains immediately; USPTO TESS knockout search under Class 42; LLC filing as Birch Design Lab; register social handles; visual identity work led by founder with a graphics person.",
-      "id": "docs_birch_design_lab_founding_record_outstanding_admin",
       "community": 4,
-      "norm_label": "outstanding admin (domains, trademark, llc, visual identity)"
+      "norm_label": "outstanding admin (domains, trademark, llc, visual identity)",
+      "id": "docs_birch_design_lab_founding_record_outstanding_admin",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Business Naming \u2014 Handoff Document",
@@ -4251,9 +4367,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_naming_handoff_document",
       "community": 4,
-      "norm_label": "business naming \u2014 handoff document"
+      "norm_label": "business naming \u2014 handoff document",
+      "id": "docs_naming_handoff_document",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Brief",
@@ -4265,9 +4382,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Solo software + web development business for non-technical clients; what a name pings in a developer's head was explicitly ruled irrelevant. Goal: depth, meaning, symbolism, history \u2014 a brand epic, touchstone example Fathom = 'to measure the unknown using yourself as the ruler.'",
-      "id": "docs_naming_handoff_brief",
       "community": 4,
-      "norm_label": "the brief"
+      "norm_label": "the brief",
+      "id": "docs_naming_handoff_brief",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Naming System (Suffix Format)",
@@ -4279,9 +4397,10 @@
       "author": null,
       "contributor": null,
       "rationale": "[Word] Design Lab / Solution Lab(s) / Design(s) / Lab(s), eventually just [Word]; the suffix is a lever controlling the initialism and domain.",
-      "id": "docs_naming_handoff_naming_system",
       "community": 4,
-      "norm_label": "the naming system (suffix format)"
+      "norm_label": "the naming system (suffix format)",
+      "id": "docs_naming_handoff_naming_system",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Design Filter (Surface Test)",
@@ -4293,9 +4412,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Short (1-3 syllables), feels established not 2024-startup, signals competence not creativity-for-its-own-sake, layered/multiple meaning. Rejects overly literal names and corny puns.",
-      "id": "docs_naming_handoff_design_filter",
       "community": 4,
-      "norm_label": "the design filter (surface test)"
+      "norm_label": "the design filter (surface test)",
+      "id": "docs_naming_handoff_design_filter",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Brand Epic (Decisive Lens)",
@@ -4307,9 +4427,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Midway through, this overrode the surface filter: the brand's spine is the sublime \u2014 human competence set against overwhelming force. Test: is there a human in the picture, and are they in the struggle, above it, or sheltered from it?",
-      "id": "docs_naming_handoff_brand_epic",
       "community": 4,
-      "norm_label": "the brand epic (decisive lens)"
+      "norm_label": "the brand epic (decisive lens)",
+      "id": "docs_naming_handoff_brand_epic",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Conflict Frames (Man vs. God/Nature/Self/Society)",
@@ -4321,9 +4442,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Priority order: man vs god (favorite), man vs nature (favorite), man vs self (favorite, added later), man vs society (not a priority), cute/voice-driven branding explicitly not the approach.",
-      "id": "docs_naming_handoff_conflict_frames",
       "community": 4,
-      "norm_label": "conflict frames (man vs. god/nature/self/society)"
+      "norm_label": "conflict frames (man vs. god/nature/self/society)",
+      "id": "docs_naming_handoff_conflict_frames",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "The Graveyard (Cut Words)",
@@ -4335,9 +4457,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Current, Tidal, Delta, Flux, Apex, Nautilus cut for distinctiveness collisions; Sound too common to own; Range generic; Arbor too soft; Root contested ownership; Cascade no protagonist/struggle and real-world firm collisions; Vantage reads cheesy/techy; Strata too abstract, no human actor.",
-      "id": "docs_naming_handoff_graveyard",
       "community": 4,
-      "norm_label": "the graveyard (cut words)"
+      "norm_label": "the graveyard (cut words)",
+      "id": "docs_naming_handoff_graveyard",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Fathom \u2014 The Mind (Finalist)",
@@ -4349,9 +4472,10 @@
       "author": null,
       "contributor": null,
       "rationale": "OE f\u00e6\u00f0m, the span of outstretched arms, a body-measure to sound the sea's depth. Bedrock meaning: take the measure of the unknown using yourself as the ruler. Verb: to understand \u2014 most intellectual of the four. Most crowded name commercially (Fathom Software LLC, Fathom Analytics, etc.). Tagline: 'Depth you can build on.' Initialism FDL.",
-      "id": "docs_naming_handoff_fathom",
       "community": 4,
-      "norm_label": "fathom \u2014 the mind (finalist)"
+      "norm_label": "fathom \u2014 the mind (finalist)",
+      "id": "docs_naming_handoff_fathom",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Helm \u2014 The Will (Finalist)",
@@ -4363,9 +4487,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Root helma (tiller) + helmaz (helmet); Greek cousin kybernetes (steersman) -> govern, cybernetics. Verb: to command. Most complete name, works across all four frames including man vs society (ship of state). Tagline: 'Steady at the helm.' Initialism HDL.",
-      "id": "docs_naming_handoff_helm",
       "community": 4,
-      "norm_label": "helm \u2014 the will (finalist)"
+      "norm_label": "helm \u2014 the will (finalist)",
+      "id": "docs_naming_handoff_helm",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Harbor \u2014 The Heart (Finalist)",
@@ -4377,9 +4502,10 @@
       "author": null,
       "contributor": null,
       "rationale": "OE herebeorg = army + shelter, a refuge built because the host is under threat. Verb: to keep. Casts a different protagonist \u2014 you are the place the storm is survived, the keeper, not the operator. Tagline: 'A safe harbor for your ideas.' Initialism HSL.",
-      "id": "docs_naming_handoff_harbor",
       "community": 4,
-      "norm_label": "harbor \u2014 the heart (finalist)"
+      "norm_label": "harbor \u2014 the heart (finalist)",
+      "id": "docs_naming_handoff_harbor",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Birch \u2014 Stands Apart (Finalist)",
@@ -4391,9 +4517,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Root beorc (birch-rune of renewal) from PIE bhereg- 'to shine, bright, white' \u2014 the shining tree. Epic is renewal, not struggle (pioneer species, first green after fire) \u2014 sits a step outside the favored confrontation frame. Literary anchor: Frost's Birches. Tonal instability: to birch = to flog, the fasces. Most personal word, least control over symbolism. Tagline: 'Fine-grained work.' Initialism BSL.",
-      "id": "docs_naming_handoff_birch",
       "community": 4,
-      "norm_label": "birch \u2014 stands apart (finalist)"
+      "norm_label": "birch \u2014 stands apart (finalist)",
+      "id": "docs_naming_handoff_birch",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Four-Frame Re-Ranking",
@@ -4405,9 +4532,10 @@
       "author": null,
       "contributor": null,
       "rationale": "Fathom & Helm lead man-vs-god/nature; man-vs-self levels out across all four; man-vs-society nearly inverts (Strata/Helm/Harbor/Birch lead, Fathom trails). Helm is the only word that never leaves the table across all frames.",
-      "id": "docs_naming_handoff_four_frame_reranking",
       "community": 4,
-      "norm_label": "four-frame re-ranking"
+      "norm_label": "four-frame re-ranking",
+      "id": "docs_naming_handoff_four_frame_reranking",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Practical Reality Checks (Collision, Domains, Trademark)",
@@ -4419,9 +4547,10 @@
       "author": null,
       "contributor": null,
       "rationale": "All four finalists already in use by web/design shops elsewhere; severity worst-to-least: Fathom, Helm, Harbor, Birch. No usable .lab/.labs TLD exists \u2014 suffix must go in the domain or use .studio/.design/.dev/etc. Trademark would file in Class 42; not cleared without USPTO TESS search.",
-      "id": "docs_naming_handoff_practical_reality_checks",
       "community": 4,
-      "norm_label": "practical reality checks (collision, domains, trademark)"
+      "norm_label": "practical reality checks (collision, domains, trademark)",
+      "id": "docs_naming_handoff_practical_reality_checks",
+      "community_name": "Brand Naming & Founding Record"
     },
     {
       "label": "Suggested Next Steps",
@@ -4433,12 +4562,45 @@
       "author": null,
       "contributor": null,
       "rationale": "Commission a construction pass on the live list (founding myth, credo, etymological line) plus initial visual/color translation; run USPTO Class 42 TESS search and lock the domain form before committing.",
-      "id": "docs_naming_handoff_next_steps",
       "community": 4,
-      "norm_label": "suggested next steps"
+      "norm_label": "suggested next steps",
+      "id": "docs_naming_handoff_next_steps",
+      "community_name": "Brand Naming & Founding Record"
     }
   ],
   "links": [
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-07-16-wall-labels.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "docs_superpowers_plans_2026_07_16_wall_labels",
+      "target": "src_components_walllabel"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-07-16-wall-labels-design.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_16_wall_labels_design_house_rule_chrome",
+      "target": "src_components_walllabel"
+    },
+    {
+      "relation": "references",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-16-wall-labels.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_pages_lab_slug",
+      "target": "src_components_walllabel"
+    },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
@@ -5796,15 +5958,6 @@
     },
     {
       "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/Seo.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_components_seo",
-      "target": "c_git_birchdesignlab_src_lib_og_manifest"
-    },
-    {
-      "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/layouts/BaseLayout.astro",
@@ -5872,15 +6025,6 @@
       "target": "src_components_siteheader"
     },
     {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/SpecimenCard.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_components_specimencard",
-      "target": "astro_content"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/SpecimenCard.astro",
@@ -5902,33 +6046,6 @@
       "confidence_score": 1.0,
       "source": "src_pages_lab_index",
       "target": "src_components_specimencard"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/index.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_index",
-      "target": "astro_content"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/lab/index.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_lab_index",
-      "target": "astro_content"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/lab/[slug].astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_lab_slug",
-      "target": "astro_content"
     },
     {
       "relation": "imports_from",
@@ -5965,38 +6082,6 @@
       "confidence_score": 1.0,
       "source": "src_layouts_experimentlayout",
       "target": "src_components_themebootstrap"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-07-16-wall-labels.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_07_16_wall_labels",
-      "target": "src_components_walllabel"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/specs/2026-07-16-wall-labels-design.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_specs_2026_07_16_wall_labels_design_house_rule_chrome",
-      "target": "src_components_walllabel"
-    },
-    {
-      "relation": "references",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/superpowers/plans/2026-07-16-wall-labels.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_lab_slug",
-      "target": "src_components_walllabel"
     },
     {
       "relation": "contains",
@@ -6191,42 +6276,6 @@
     },
     {
       "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-002/Experiment.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_002_experiment",
-      "target": "500_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-002/Experiment.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_002_experiment",
-      "target": "c_git_birchdesignlab_src_lib_color"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-002/Experiment.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_002_experiment",
-      "target": "cormorant"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-002/Experiment.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_002_experiment",
-      "target": "fraunces"
-    },
-    {
-      "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/experiments/registry.ts",
@@ -6236,42 +6285,6 @@
       "confidence_score": 1.0,
       "source": "src_experiments_registry",
       "target": "src_experiments_bdl_002_experiment"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "fraunces"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "cormorant"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "500_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "c_git_birchdesignlab_src_lib_color"
     },
     {
       "relation": "references",
@@ -6292,24 +6305,6 @@
       "weight": 1.0,
       "source": "docs_superpowers_specs_2026_07_16_bdl_003_novgorod_letters_design_two_layer_reveal",
       "target": "src_experiments_bdl_003_digcanvas"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-003/DigCanvas.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_003_digcanvas",
-      "target": "c_git_birchdesignlab_src_lib_scratch_coverage"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-003/DigCanvas.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_003_digcanvas",
-      "target": "c_git_birchdesignlab_src_lib_scratch_letter_schema"
     },
     {
       "relation": "contains",
@@ -6506,15 +6501,6 @@
       "confidence_score": 1.0,
       "source": "src_experiments_bdl_003_digcanvas_scratch",
       "target": "src_experiments_bdl_003_digcanvas_composite"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-003/NovgorodLetters.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_003_novgorodletters",
-      "target": "c_git_birchdesignlab_src_lib_scratch_coverage"
     },
     {
       "relation": "imports_from",
@@ -6793,15 +6779,6 @@
       "target": "src_experiments_bdl_004_clothcanvas"
     },
     {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/ClothCanvas.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_clothcanvas",
-      "target": "c_git_birchdesignlab_src_lib_weave_render2d"
-    },
-    {
       "relation": "calls",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -6827,52 +6804,7 @@
       "_origin": "ast",
       "confidence_score": 1.0,
       "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_weave_render2d"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/DraftPanel.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_draftpanel",
-      "target": "c_git_birchdesignlab_src_experiments_bdl_004_data_presets"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/DraftPanel.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_draftpanel",
-      "target": "c_git_birchdesignlab_src_lib_weave_draft"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
       "target": "src_experiments_bdl_004_draftpanel"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_experiments_bdl_004_data_presets"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_weave_draft"
     },
     {
       "relation": "imports_from",
@@ -6912,51 +6844,6 @@
       "_origin": "ast",
       "confidence_score": 1.0,
       "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_experiments_bdl_004_data_yarns"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_bark_pattern"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_weave_daily"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_weave_export"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
-      "target": "c_git_birchdesignlab_src_lib_weave_stripes"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/TheLoom.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_theloom",
       "target": "src_experiments_bdl_004_treadlebar"
     },
     {
@@ -6977,24 +6864,6 @@
       "weight": 1.0,
       "source": "src_experiments_bdl_004_theloom",
       "target": "src_lib_weave_daily_pickdaily"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/YarnShelf.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_yarnshelf",
-      "target": "c_git_birchdesignlab_src_experiments_bdl_004_data_yarns"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/experiments/bdl-004/YarnShelf.svelte",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_experiments_bdl_004_yarnshelf",
-      "target": "c_git_birchdesignlab_src_lib_weave_stripes"
     },
     {
       "relation": "contains",
@@ -7254,24 +7123,6 @@
     },
     {
       "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/BaseLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_baselayout",
-      "target": "400_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/BaseLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_baselayout",
-      "target": "600_css"
-    },
-    {
-      "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/layouts/BaseLayout.astro",
@@ -7293,15 +7144,6 @@
       "confidence_score": 1.0,
       "source": "src_layouts_baselayout",
       "target": "c_git_birchdesignlab_src_styles_tokens_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/BaseLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_baselayout",
-      "target": "marcellus"
     },
     {
       "relation": "contains",
@@ -7388,42 +7230,6 @@
     },
     {
       "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/ExperimentLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_experimentlayout",
-      "target": "marcellus"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "marcellus"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/ExperimentLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_experimentlayout",
-      "target": "400_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/ExperimentLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_experimentlayout",
-      "target": "600_css"
-    },
-    {
-      "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/layouts/ExperimentLayout.astro",
@@ -7445,15 +7251,6 @@
       "confidence_score": 1.0,
       "source": "src_layouts_experimentlayout",
       "target": "c_git_birchdesignlab_src_styles_base_css"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/layouts/ExperimentLayout.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_layouts_experimentlayout",
-      "target": "400_italic_css"
     },
     {
       "relation": "imports_from",
@@ -10397,15 +10194,6 @@
       "target": "src_pages_lab_slug"
     },
     {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/lab/[slug].astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_lab_slug",
-      "target": "c_git_birchdesignlab_src_experiments_registry"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/lab/[slug].astro",
@@ -10426,33 +10214,6 @@
       "confidence_score": 1.0,
       "source": "src_pages_lab_index",
       "target": "src_pages_lab_index_entries"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "eb_garamond"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "newsreader"
-    },
-    {
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/styleguide.astro",
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_pages_styleguide",
-      "target": "source_serif_4"
     },
     {
       "relation": "contains",
@@ -11944,5 +11705,5 @@
       "source_file": "docs/superpowers/specs/2026-07-16-wall-labels-design.md"
     }
   ],
-  "built_at_commit": "3d68af40935cf6ec07304c102750474bf808868a"
+  "built_at_commit": "af337ec0150c82a133e01495742120943122650e"
 }

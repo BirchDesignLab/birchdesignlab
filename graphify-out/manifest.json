@@ -80,9 +80,9 @@
     "semantic_hash": "c9e00145732ed9817f2b10cfb79105c0"
   },
   "src/components/WallLabel.astro": {
-    "mtime": 1784250326.5870566,
-    "ast_hash": "38dc58a821a3f8f8479e651e003d4f1f",
-    "semantic_hash": "38dc58a821a3f8f8479e651e003d4f1f"
+    "mtime": 1784593841.2257164,
+    "ast_hash": "eca44c373423f537086579c04e0bff29",
+    "semantic_hash": ""
   },
   "src/content.config.ts": {
     "mtime": 1784167836.0721962,
