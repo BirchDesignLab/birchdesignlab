@@ -1,16 +1,16 @@
 # Graph Report - birchdesignlab  (2026-07-20)
 
 ## Corpus Check
-- 107 files · ~65,807 words
+- 107 files · ~65,900 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 381 nodes · 633 edges · 21 communities (18 shown, 3 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 16 edges (avg confidence: 0.78)
+- 390 nodes · 645 edges · 21 communities (18 shown, 3 thin omitted)
+- Extraction: 97% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 16 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `af337ec0`
+- Built from commit: `5c6528f9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -38,7 +38,7 @@
 ## God Nodes (most connected - your core abstractions)
 1. `./DigCanvas.svelte` - 17 edges
 2. `drawBarkDashes()` - 16 edges
-3. `../layouts/BaseLayout.astro` - 14 edges
+3. `../layouts/BaseLayout.astro` - 13 edges
 4. `BarkRenderer` - 13 edges
 5. `../components/BarkField.astro` - 12 edges
 6. `./BarkEngine.svelte` - 10 edges
@@ -73,12 +73,12 @@
 ## Communities (21 total, 3 thin omitted)
 
 ### Community 0 - "OG Image Generation Pipeline"
-Cohesion: 0.14
+Cohesion: 0.15
 Nodes (19): Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan, outDir, seed, drawTracked(), renderOgCard(), BarkOptions, clamp01(), DEFAULTS (+11 more)
 
 ### Community 1 - "Bark Rendering Primitives"
 Cohesion: 0.13
-Nodes (21): Draft, gcd(), isWarpOver(), lcm(), shaftAt(), treadleAt(), tileSizePx(), ClothPick (+13 more)
+Nodes (22): Draft, gcd(), isWarpOver(), lcm(), shaftAt(), treadleAt(), renderTile(), tileSizePx() (+14 more)
 
 ### Community 2 - "Page Fonts & Style Imports"
 Cohesion: 0.10
@@ -114,7 +114,7 @@ Nodes (13): absolutizeAndTransform(), apply(), attrValue(), extractStrokes(), fm
 
 ### Community 10 - "BDL-004 Loom Experiment UI"
 Cohesion: 0.14
-Nodes (15): Bark-Generated OG Images Implementation Plan, Marcellus Font SIL Open Font License, Ctx2DLike, drawBarkDashes(), parseColor(), Dash, compile(), createBarkRenderer() (+7 more)
+Nodes (14): Bark-Generated OG Images Implementation Plan, Marcellus Font SIL Open Font License, Ctx2DLike, drawBarkDashes(), parseColor(), Dash, compile(), createBarkRenderer() (+6 more)
 
 ### Community 11 - "Novgorod Letter Content & Schema"
 Cohesion: 0.30
@@ -129,8 +129,8 @@ Cohesion: 0.22
 Nodes (8): astro/tsconfigs/strict, .astro/types.d.ts, dist, src/**/*, tests/**/*, exclude, extends, include
 
 ### Community 15 - "BDL-001 Bark Engine Interaction"
-Cohesion: 0.10
-Nodes (10): ./letters, ../lib/bark, ../../components/SpecimenPlate.astro, ./BarkEngine.svelte, barkAlphas, lastPointer, randomSeed(), rebuild() (+2 more)
+Cohesion: 0.08
+Nodes (12): ./letters, ../layouts/BaseLayout.astro, ../lib/bark, ../lib/color, ../../components/SpecimenPlate.astro, ./BarkEngine.svelte, barkAlphas, lastPointer (+4 more)
 
 ### Community 16 - "Color Utilities"
 Cohesion: 0.80
@@ -141,7 +141,7 @@ Nodes (3): contrast(), luminance(), rgbToHex()
   docs/superpowers/specs/2026-07-16-bdl-003-novgorod-letters-design.md · relation: references
 
 ## Knowledge Gaps
-- **92 isolated node(s):** `name`, `type`, `version`, `private`, `node` (+87 more)
+- **93 isolated node(s):** `semanticSwatches`, `../layouts/BaseLayout.astro`, `name`, `type`, `version` (+88 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -151,14 +151,14 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Lab Backlog` and `BDL-003 · Novgorod Letters · Design`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **Why does `./DigCanvas.svelte` connect `BDL-003 Novgorod Letters` to `OG Image Generation Pipeline`, `BDL-004 Loom Experiment UI`, `BDL-001 Bark Engine Interaction`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
-- **Why does `generateBark()` connect `OG Image Generation Pipeline` to `Page Fonts & Style Imports`, `BDL-003 Novgorod Letters`?**
-  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+  _High betweenness centrality (0.113) - this node is a cross-community bridge._
 - **Why does `../components/BarkField.astro` connect `Page Fonts & Style Imports` to `OG Image Generation Pipeline`, `BDL-004 Loom Experiment UI`, `Site Design Rationale & Deploy`, `BDL-001 Bark Engine Interaction`?**
-  _High betweenness centrality (0.077) - this node is a cross-community bridge._
-- **What connects `name`, `type`, `version` to the rest of the system?**
-  _92 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+- **Why does `generateBark()` connect `OG Image Generation Pipeline` to `Page Fonts & Style Imports`, `BDL-003 Novgorod Letters`?**
+  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+- **What connects `semanticSwatches`, `../layouts/BaseLayout.astro`, `name` to the rest of the system?**
+  _93 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `OG Image Generation Pipeline` be split into smaller, more focused modules?**
-  _Cohesion score 0.14022988505747128 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14532019704433496 - nodes in this community are weakly interconnected._
 - **Should `Bark Rendering Primitives` be split into smaller, more focused modules?**
-  _Cohesion score 0.13257575757575757 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13368983957219252 - nodes in this community are weakly interconnected._

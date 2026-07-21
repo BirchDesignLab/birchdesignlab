@@ -100,9 +100,9 @@
     "semantic_hash": "a4d13d255bd9a9f8c2ef3536f919ef74"
   },
   "src/experiments/bdl-002/Experiment.astro": {
-    "mtime": 1784207190.4134173,
-    "ast_hash": "e0ace22b9d3a80f33f810f2a6d5ec58c",
-    "semantic_hash": "e0ace22b9d3a80f33f810f2a6d5ec58c"
+    "mtime": 1784594549.3733823,
+    "ast_hash": "d46e0c5fafed8299e92846fc09762564",
+    "semantic_hash": ""
   },
   "src/experiments/bdl-003/DigCanvas.svelte": {
     "mtime": 1784227597.8220959,
@@ -310,9 +310,9 @@
     "semantic_hash": "afd3a19cf30feb8e9c0082860515876b"
   },
   "src/pages/styleguide.astro": {
-    "mtime": 1784215165.468028,
-    "ast_hash": "8c81bef1feba5b83fa27ec4d46a74dc7",
-    "semantic_hash": "8c81bef1feba5b83fa27ec4d46a74dc7"
+    "mtime": 1784594565.9868848,
+    "ast_hash": "d5ab15de30d5849ead48c3610a50929b",
+    "semantic_hash": ""
   },
   "tests/bark-lock-aspect.test.ts": {
     "mtime": 1784520562.07768,
