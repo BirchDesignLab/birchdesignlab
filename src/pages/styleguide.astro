@@ -321,7 +321,12 @@ const semanticSwatches = [
       `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
       `:root[data-theme='light'] {\n${block(p.light)}\n  --billboard-color: ${bc.light};\n}\n` +
       // Base .smallcaps is now uppercase (Marcellus); Cormorant SC wants lowercase.
-      (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`)
+      (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`) +
+      // base.css's body transition doesn't retrigger when background-color only
+      // changes via a var() dependency updated by swapping this override
+      // stylesheet's content -- it gets stuck showing the pre-swap color
+      // indefinitely (see the identical fix in bdl-002/Experiment.astro).
+      `body { transition: none; }\n`
     );
   };
 
