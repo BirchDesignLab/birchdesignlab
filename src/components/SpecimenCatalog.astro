@@ -46,7 +46,9 @@ const { entries, filterable = false } = Astro.props;
     text-transform: uppercase; letter-spacing: var(--tracking-wide);
     font-size: var(--text-sm); line-height: 1;
     color: var(--mark-muted); background: transparent;
-    border: 1px solid var(--line); padding: 0.5em 1em 0.4em;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    padding: 0.5em 1em 0.4em;
     cursor: pointer;
   }
   .filter button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
