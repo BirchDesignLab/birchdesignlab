@@ -8,44 +8,21 @@ const email = 'hello@birchdesignlab.com';
 >
   <section class="wrap">
     <header class="intro">
-      <!-- first-draft copy: founder rewrite comes with the content pass -->
+      <!-- provisional copy -->
       <p class="smallcaps kicker">Contact</p>
       <h1>Start a conversation</h1>
-      <p class="subline">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
+      <p class="subline">No forms, no intake funnel. An email arrives, a person reads it.</p>
     </header>
-
-    <!-- No-JS-first: a plain POST the Worker answers with a redirect to
-         /contact/sent. The `company` field is the honeypot; humans never see
-         it, bots autofill it and get silently dropped. -->
-    <form class="contact-form" method="post" action="/api/contact">
-      <div class="field">
-        <label for="cf-name">Name</label>
-        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
-      </div>
-      <div class="field">
-        <label for="cf-email">Email</label>
-        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
-      </div>
-      <div class="field">
-        <label for="cf-message">What are you working on?</label>
-        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
-      </div>
-      <div class="field hp" aria-hidden="true">
-        <label for="cf-company">Leave this field empty</label>
-        <input id="cf-company" name="company" type="text" tabindex="-1" autocomplete="off" />
-      </div>
-      <button class="cta-engraved" type="submit"
-        ><span class="fill" aria-hidden="true"></span><span class="lbl">Send it</span></button>
-    </form>
   </section>
 
   <section class="loud" data-reveal>
     <div class="wrap loud-inner">
-      <!-- first-draft copy -->
-      <p class="invite">Prefer to skip the form? Email works the same.</p>
+      <!-- provisional copy -->
+      <p class="invite">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
       <a class="mail" href={`mailto:${email}`}>{email}</a>
-      <p class="fine">Either way, one person reads it. The same one who builds the work.</p>
+      <p class="fine">No preparation required. One person reads every message.</p>
     </div>
+    <!-- Renovation slot: contact form lands with the Pages-to-Workers migration (docs/lab-backlog.md). -->
   </section>
 </BaseLayout>
 
@@ -55,40 +32,7 @@ const email = 'hello@birchdesignlab.com';
   .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
   .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
 
-  .contact-form {
-    display: grid; gap: var(--space-4);
-    max-width: 44rem;
-    padding-block: 0 var(--space-6);
-  }
-  .field { display: grid; gap: var(--space-1); }
-  .field label { color: var(--mark-muted); font-size: var(--text-sm); }
-  .field input, .field textarea {
-    font: inherit; color: var(--mark);
-    background: transparent;
-    border: 1px solid var(--line);
-    padding: 0.6em 0.75em;
-    /* square corners, house geometry (wall-label tags, theme toggle) */
-    border-radius: 0;
-  }
-  .field textarea { resize: vertical; min-height: 9rem; }
-  .field input:focus-visible, .field textarea:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 0;
-    border-color: var(--accent);
-  }
-  /* .cta-engraved was authored for <a>; neutralize the button UA styles. */
-  .contact-form .cta-engraved {
-    justify-self: start;
-    background: transparent; cursor: pointer;
-  }
-
-  /* Honeypot: removed from sight and tab order, still in the form payload. */
-  .hp {
-    position: absolute; width: 1px; height: 1px;
-    overflow: hidden; clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  /* Loud moment — the direct-email alternative (.loud primitive in base.css). */
+  /* Loud moment — the CTA (.loud primitive in base.css). */
   .invite {
     font-family: var(--font-display); font-size: var(--text-2xl);
     line-height: 1.2; max-width: 24ch;
