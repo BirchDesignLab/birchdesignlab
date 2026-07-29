@@ -8,7 +8,9 @@ BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026
 
 ## Concepts, ranked by projected effort (lowest first)
 
-### 1. BDL-004 · The Loom · artistic · mobile-native
+### 1. ~~BDL-004 · The Loom~~ · RETIRED 2026-07-29
+
+**Built, tested, shipped, then pulled.** Founder verdict: visually unacceptable, redo unlikely. The whole build (components, weave lib, tests, catalog entry) lives in `attic/bdl-004/` with a resurrection note; it is out of the site, the registry, and the test run. The BDL-004 designation stays burned; the next experiment takes the next number.
 
 **Specced 2026-07-16:** `docs/superpowers/specs/2026-07-16-bdl-004-the-loom-design.md`. The paragraphs below are the pre-spec sketch, kept for the record.
 
@@ -48,6 +50,15 @@ Liked, not dead. Revisit when the moment fits.
 
 - **Tonight's Sky.** Star chart of the visitor's actual sky, computed client-side from clock and location. Shelved because the location permission prompt ruins immersion; Lab pieces stay permission-free for now. Revisit when heavier location-needing work makes the prompt worth it. Overlaps the Orrery conceptually anyway; the Orrery scratches the itch without asking anything.
 - **One Kilobyte.** Entire experiment, markup plus style plus script, under 1024 bytes, live byte counter on the page. Demoscene discipline, pure optimization flex. Shelved as a someday treat, not a priority.
+
+## Direction set 2026-07-29 (founder session)
+
+- **The Lab becomes the entire portfolio.** Two kinds of resident: experiments (technical/artistic flexes, the current BDL-00N line) and specimens/case studies of client work. Exact shape not fully flushed out; `docs/lab-architecture-handoff.md` (the experiment/study split, accession numbers, filterable catalog) is the live starting point, NOT stale — reconcile it with the shipped schema when building.
+- **First case study: Cheer and Chatter** (just wrapped). Director's-commentary voice is part of the format, not a separate idea. Client cleared publishing basically anything short of extremely personal details.
+- **BDL-003 gate changed.** The founder hand-trace pass (Task 8) is deferred indefinitely — too much time/effort right now. New gate: BDL-003 needs a **complete visual rework** before the trace pass is even worth sitting down for. It survives the Loom's fate only because it is a thematic lynchpin.
+- **Conversion path is the near-term priority.** Pages-to-Workers migration + contact form slot right behind the hygiene commit; specimen/case-study work after that.
+- **Whole-hog content/writing pass wanted** across the site. Founder does not consider Claude Code the tool for good creative writing; treat this as founder-led with mechanical support. Sequencing unchanged (after Lab work).
+- **Lab presentation language / visual identity** stays a "come back to very soon" item ahead of the Lab theme pass.
 
 ## Parked site notes (not experiments)
 
