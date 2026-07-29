@@ -24,7 +24,7 @@ The Lab's second resident type: **studies** (client work), joining experiments i
 
 - **Base:** `designation` (`/^BDL-\d{3}$/`), `title`, `summary`, `date` (coerced), `tech: string[]`, `status: 'live' | 'forthcoming'` (default live).
 - **Experiment** (`type: 'experiment'`): `device` enum as today; optional `howto` (1-4) and `href` (leading `/`); refine keeps "howto or href required".
-- **Study** (`type: 'study'`): required `client`, `liveUrl` (full URL), `hero` (`image()` + `alt`); optional `gallery: { src: image(), alt, caption? }[]`. No `device`, no `howto`.
+- **Study** (`type: 'study'`): required `client`, `liveUrl` (full URL), `hero` (`image()` + `alt`). No `device`, no `howto`. No `gallery` field: body images are standard markdown images with relative paths, which Astro already routes through the image pipeline; the narrative places its own figures.
 
 Notes:
 - `type` must be authored explicitly in every entry (discriminated unions cannot default it). The three existing entries each gain `type: experiment`.
