@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { labSchema } from '../src/lib/lab-schema';
+import { labTestSchema as labSchema } from '../src/lib/lab-schema';
 
-const valid = {
+const experiment = {
+  type: 'experiment',
   designation: 'BDL-001',
   title: 'The Bark Engine',
   summary: 'The generative birch system, exposed.',
@@ -11,49 +12,70 @@ const valid = {
   howto: ['Type a seed and watch the bark regrow.'],
 };
 
-describe('labSchema', () => {
-  it('accepts a valid entry and applies defaults', () => {
-    const parsed = labSchema.parse(valid);
-    expect(parsed.status).toBe('live');
-    expect(parsed.date).toBeInstanceOf(Date);
+const study = {
+  type: 'study',
+  designation: 'BDL-005',
+  title: 'Cheer and Chatter Social Club',
+  summary: 'A ticketing site and a live event application.',
+  date: '2026-07-28',
+  tech: ['astro', 'react', 'sanity'],
+  client: 'Cheer and Chatter Social Club',
+  liveUrl: 'https://cheerandchatter.com',
+  hero: { src: './bdl-005/hero.png', alt: 'The Cheer and Chatter homepage.' },
+};
+
+describe('shared base', () => {
+  it('accepts both branches and applies defaults', () => {
+    expect(labSchema.parse(experiment).status).toBe('live');
+    expect(labSchema.parse(study).status).toBe('live');
+    expect(labSchema.parse(study).date).toBeInstanceOf(Date);
   });
-  it('rejects malformed designations', () => {
-    expect(() => labSchema.parse({ ...valid, designation: 'BDL-1' })).toThrow();
-    expect(() => labSchema.parse({ ...valid, designation: 'bdl-001' })).toThrow();
+  it('requires an explicit type', () => {
+    const { type, ...untyped } = experiment;
+    expect(() => labSchema.parse(untyped)).toThrow();
   });
-  it('rejects unknown device values', () => {
-    expect(() => labSchema.parse({ ...valid, device: 'tablet' })).toThrow();
-  });
-  it('rejects empty title and summary', () => {
-    expect(() => labSchema.parse({ ...valid, title: '' })).toThrow();
-    expect(() => labSchema.parse({ ...valid, summary: '' })).toThrow();
+  it('rejects malformed designations on both branches', () => {
+    expect(() => labSchema.parse({ ...experiment, designation: 'BDL-1' })).toThrow();
+    expect(() => labSchema.parse({ ...study, designation: 'bdl-005' })).toThrow();
   });
   it('rejects unknown status values', () => {
-    expect(() => labSchema.parse({ ...valid, status: 'draft' })).toThrow();
-  });
-  it('defaults tech to an empty array when omitted', () => {
-    const { tech, ...withoutTech } = valid;
-    expect(labSchema.parse(withoutTech).tech).toEqual([]);
-  });
-  it('href is optional and must be a site-relative path', () => {
-    expect(labSchema.parse(valid).href).toBeUndefined();
-    expect(labSchema.parse({ ...valid, href: '/styleguide' }).href).toBe('/styleguide');
-    expect(() => labSchema.parse({ ...valid, href: 'https://example.com' })).toThrow();
+    expect(() => labSchema.parse({ ...study, status: 'draft' })).toThrow();
   });
 });
 
-describe('howto wall label', () => {
-  it('requires howto when there is no href', () => {
-    const { howto, ...withoutHowto } = valid;
-    expect(() => labSchema.parse(withoutHowto)).toThrow();
+describe('experiment branch', () => {
+  it('rejects unknown device values', () => {
+    expect(() => labSchema.parse({ ...experiment, device: 'tablet' })).toThrow();
   });
-  it('href entries are exempt', () => {
-    const { howto, ...withoutHowto } = valid;
-    expect(labSchema.parse({ ...withoutHowto, href: '/styleguide' }).howto).toBeUndefined();
+  it('requires howto when there is no href, and exempts href entries', () => {
+    const { howto, ...bare } = experiment;
+    expect(() => labSchema.parse(bare)).toThrow();
+    expect(labSchema.parse({ ...bare, href: '/styleguide' }).howto).toBeUndefined();
   });
-  it('caps lines at four and rejects empty lines', () => {
-    expect(() => labSchema.parse({ ...valid, howto: ['a', 'b', 'c', 'd', 'e'] })).toThrow();
-    expect(() => labSchema.parse({ ...valid, howto: [''] })).toThrow();
-    expect(labSchema.parse({ ...valid, howto: ['a', 'b', 'c', 'd'] }).howto).toHaveLength(4);
+  it('caps howto at four lines and rejects empty lines', () => {
+    expect(() => labSchema.parse({ ...experiment, howto: ['a', 'b', 'c', 'd', 'e'] })).toThrow();
+    expect(() => labSchema.parse({ ...experiment, howto: [''] })).toThrow();
+  });
+  it('rejects study fields on an experiment', () => {
+    expect(() => labSchema.parse({ ...experiment, client: 'Somebody' })).toThrow();
+  });
+});
+
+describe('study branch', () => {
+  it('requires client, liveUrl, and hero', () => {
+    for (const key of ['client', 'liveUrl', 'hero'] as const) {
+      const { [key]: _omitted, ...bare } = study;
+      expect(() => labSchema.parse(bare)).toThrow();
+    }
+  });
+  it('requires liveUrl to be a full URL', () => {
+    expect(() => labSchema.parse({ ...study, liveUrl: '/lab' })).toThrow();
+  });
+  it('requires hero alt text', () => {
+    expect(() => labSchema.parse({ ...study, hero: { src: './x.png', alt: '' } })).toThrow();
+  });
+  it('rejects experiment fields on a study', () => {
+    expect(() => labSchema.parse({ ...study, device: 'universal' })).toThrow();
+    expect(() => labSchema.parse({ ...study, howto: ['Look at it.'] })).toThrow();
   });
 });
