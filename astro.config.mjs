@@ -6,6 +6,10 @@ export default defineConfig({
   site: 'https://birchdesignlab.com',
   integrations: [
     svelte(),
-    sitemap({ filter: (page) => !page.includes('/styleguide') }),
+    sitemap({
+      // styleguide is an internal instrument; /contact/sent is a redirect
+      // target with no standalone meaning. Neither belongs in the sitemap.
+      filter: (page) => !page.includes('/styleguide') && !page.includes('/contact/sent'),
+    }),
   ],
 });

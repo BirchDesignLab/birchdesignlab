@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .astro/
+.wrangler/
 public/og/
 # Knowledge graph lives outside the repo (C:\vault\graphify\birchdesignlab).
 # Blanket-ignore any stray local rebuild so it can never be committed again.

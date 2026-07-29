@@ -1,0 +1,45 @@
+// Cloudflare Workers config: static Astro build served from dist/ plus one
+// Worker route (POST /api/contact). Replaces the old Cloudflare Pages setup;
+// see docs/deploy.md for the migration story and founder dashboard steps.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "birchdesignlab",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-07-01",
+
+  // Astro's static output. Requests that match a file are served straight from
+  // the edge and never invoke the Worker; everything else (i.e. /api/contact)
+  // falls through to worker/index.ts. 404s serve Astro's dist/404.html.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page"
+  },
+
+  // Email Sending binding. The from-address list is deliberately restricted so
+  // a bug in the Worker can never send as anything but the forms address.
+  // Requires the domain to be onboarded once: `wrangler email sending enable
+  // birchdesignlab.com` (founder step, adds SPF/DKIM DNS records).
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["forms@birchdesignlab.com"]
+    }
+  ],
+
+  // Per-IP rate limit for the contact endpoint: 5 submissions per minute.
+  // The ratelimit binding still lives under `unsafe` in wrangler's schema
+  // (open beta naming), but it is the documented Workers rate-limiting API.
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "CONTACT_RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": { "limit": 5, "period": 60 }
+      }
+    ]
+  },
+
+  "observability": { "enabled": true }
+}

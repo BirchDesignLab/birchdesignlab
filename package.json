@@ -13,6 +13,9 @@
     "check": "astro check",
     "test": "vitest run",
     "trace": "node scripts/trace-to-strokes.mjs",
+    "types": "wrangler types",
+    "deploy": "npm run build && wrangler deploy",
+    "dev:worker": "npm run build && wrangler dev",
     "og": "tsx scripts/og/generate.ts",
     "prebuild": "npm run og"
   },
@@ -36,6 +39,7 @@
     "@napi-rs/canvas": "^1.0.2",
     "tsx": "^4.23.1",
     "typescript": "^5.6.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "wrangler": "^4.115.0"
   }
 }
