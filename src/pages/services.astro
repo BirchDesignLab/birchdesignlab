@@ -115,14 +115,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .row { grid-template-columns: 1fr; gap: var(--space-2); }
   }
 
-  /* Loud moment — closing CTA (shared .loud pattern). */
-  .loud {
-    background: var(--green-field); color: var(--gf-mark);
-    border-top: 1px solid var(--line);
-    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
-    --link: var(--gf-link); --mark: var(--gf-mark);
-  }
-  .loud-inner { padding-block: var(--space-7); }
+  /* Loud moment — closing CTA (.loud primitive in base.css). */
   .pull {
     font-family: var(--font-display); font-size: var(--text-2xl);
     line-height: 1.2; max-width: 26ch;

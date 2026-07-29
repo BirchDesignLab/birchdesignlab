@@ -121,14 +121,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   .door p { color: var(--mark-muted); max-width: 44ch; }
   .door .more-link { align-self: start; margin-top: var(--space-2); }
 
-  /* Loud moment — green Lab preview (shared .loud pattern). */
-  .loud {
-    background: var(--green-field); color: var(--gf-mark);
-    border-top: 1px solid var(--line);
-    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
-    --link: var(--gf-link); --mark: var(--gf-mark);
-  }
-  .loud-inner { padding-block: var(--space-7); }
+  /* Loud moment — green Lab preview (.loud primitive in base.css). */
   .kicker { color: var(--accent); }
   .pull {
     font-family: var(--font-display); font-size: var(--text-2xl);

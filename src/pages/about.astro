@@ -10,9 +10,6 @@ import BarkField from '../components/BarkField.astro';
     <BarkField density={170} lockAspect />
     <h1>The shining tree</h1>
   </header>
-  <!-- <section class="wrap preprose">
-    <h2>The shining tree</h2>
-  </section> -->
   <section class="wrap prose">
     <!-- provisional copy throughout -->
     <article class="epic">
@@ -42,7 +39,7 @@ import BarkField from '../components/BarkField.astro';
       </p>
       <p>
         The shining tree was a carrier of everyday people's communications.
-        And they survive nearly a millenium in the mud.
+        And they survive nearly a millennium in the mud.
       </p>
     </article>
 
@@ -95,24 +92,12 @@ import BarkField from '../components/BarkField.astro';
     color: var(--billboard-color);
   }
 
-  /* "The shining tree" aligns with the etym paragraph below; the epic's
-     top border is the seam between this heading and the prose. */
-  /*.preprose { padding-block: var(--space-4); }*/
-
-  /*.prose { display: grid; gap: var(--space-4); padding-block: var(--space-5) var(--space-4); }*/
   .prose { display: grid; gap: var(--space-4); padding-block: 0 var(--space-4); }
   .epic, .myth, .founder { border-top: 1px solid var(--line); padding-top: var(--space-5); max-width: 60ch; }
   .etym { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.4; }
   .epic p + p, .myth p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
 
-  /* Loud moment — manifesto pull-quote, NO CTA (shared .loud pattern). */
-  .loud {
-    background: var(--green-field); color: var(--gf-mark);
-    border-top: 1px solid var(--line);
-    --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
-    --link: var(--gf-link); --mark: var(--gf-mark);
-  }
-  .loud-inner { padding-block: var(--space-7); }
+  /* Loud moment — manifesto pull-quote, NO CTA (.loud primitive in base.css). */
   .manifesto {
     font-family: var(--font-display); font-size: var(--text-3xl);
     line-height: 1.15; max-width: 20ch;

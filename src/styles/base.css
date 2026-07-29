@@ -90,6 +90,17 @@ img, canvas, svg, video { max-width: 100%; display: block; }
    light, plain --gf-accent collides on dark. */
 .loud a:hover, .loud .more-link:hover { color: var(--gf-link-hover); }
 
+/* The loud moment itself — one green field per page, border-top only (the next
+   section/footer owns the seam below). Remaps the working tokens to the --gf-*
+   loud-face values so children restyle without knowing they sit on green. */
+.loud {
+  background: var(--green-field); color: var(--gf-mark);
+  border-top: 1px solid var(--line);
+  --accent: var(--gf-accent); --on-accent: var(--gf-on-accent);
+  --link: var(--gf-link); --mark: var(--gf-mark);
+}
+.loud-inner { padding-block: var(--space-7); }
+
 /* Quiet weighted reveals — the loud moment arrives; everything else is already there.
    Gated by .reveal-on (added to <html> by JS); without it content is never hidden,
    so no-JS and pre-hydration paint everything visible. */

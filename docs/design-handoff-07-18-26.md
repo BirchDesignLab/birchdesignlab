@@ -1,6 +1,6 @@
 # Handoff 2026-07-18 — design-system port complete & deployed
 
-Delta since [design-handoff-07-16](design-handoff-07-16) (the kit-port plan). That doc was the source; this one records what actually shipped. Live on Cloudflare Pages, commit `28642fe` on `main`. Parent: [birch-design-lab website spec](superpowers/specs/2026-07-15-birchdesignlab-website-design.md).
+Delta since [design-handoff-07-16](design-handoff-07-16.md) (the kit-port plan). That doc was the source; this one records what actually shipped. Live on Cloudflare Pages, commit `28642fe` on `main`. Parent: [birch-design-lab website spec](superpowers/specs/2026-07-15-birchdesignlab-website-design.md).
 
 ## What shipped
 
