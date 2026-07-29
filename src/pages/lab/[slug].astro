@@ -26,7 +26,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
 {entry.data.type === 'study' ? (
   <StudyLayout title={pageTitle} description={summary} designation={designation}>
     <header class="hero">
-      <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1920]} sizes="100vw" loading="eager" />
+      <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1440]} sizes="100vw" loading="eager" fetchpriority="high" />
       <div class="hero-veil"></div>
       <div class="hero-text wrap">
         <p class="designation smallcaps">{designation} &middot; Study</p>
@@ -48,7 +48,8 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
       <Content />
     </article>
 
-    <section class="loud" data-reveal>
+    {/* Static loud band: studies ship no JS, so no reveal here until the theme pass decides motion. */}
+    <section class="loud">
       <div class="wrap loud-inner">
         <!-- first-draft copy -->
         <p class="pull">Your project gets this same table. Same hands, same candor.</p>
