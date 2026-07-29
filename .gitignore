@@ -2,9 +2,7 @@ node_modules/
 dist/
 .astro/
 public/og/
-graphify-out/cost.json
-graphify-out/.graphify_python
-graphify-out/.graphify_root
-graphify-out/cache/
-graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+# Knowledge graph lives outside the repo (C:\vault\graphify\birchdesignlab).
+# Blanket-ignore any stray local rebuild so it can never be committed again.
+graphify-out/
 docs/refs/
