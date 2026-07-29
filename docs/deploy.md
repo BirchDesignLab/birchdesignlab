@@ -19,6 +19,12 @@ Repo: `BirchDesignLab/birchdesignlab`.
 
 ## One-time setup (founder, in dashboard / CLI)
 
+**Completed 2026-07-29** except step 2: Email Sending onboarding is deferred
+until the founder opts into the paid plan. Until then the contact form markup
+stays out of prod (held locally) and /contact remains mailto-only; the
+Worker's email path degrades to a 502 page pointing at hello@.
+The Pages project is deleted; Workers Builds is the only deploy pipeline.
+
 1. **Log wrangler into the account that owns `birchdesignlab.com`**
    (`npx wrangler login`). As of 2026-07-29 the local OAuth token points at the
    Cheer and Chatter account.
