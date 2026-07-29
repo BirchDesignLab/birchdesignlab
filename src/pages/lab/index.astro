@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SpecimenCard from '../../components/SpecimenCard.astro';
+import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
 
 const entries = (await getCollection('lab')).sort((a, b) =>
   b.data.designation.localeCompare(a.data.designation),
@@ -9,25 +9,22 @@ const entries = (await getCollection('lab')).sort((a, b) =>
 ---
 <BaseLayout
   title="The Lab · Birch Design Lab"
-  description="Numbered experiments in design and web engineering. A specimen catalog."
+  description="Numbered experiments and client studies in design and web engineering. A specimen catalog."
 >
   <section class="wrap">
     <header class="intro">
       <h1>The Lab</h1>
-      <!-- provisional copy -->
+      <!-- first-draft copy -->
       <p>
-        Numbered experiments. Some artistic, some technical, each one a
-        working specimen.
+        Numbered specimens, all working. Experiments are things we build to
+        learn in the open; studies are client work, shown the same way.
       </p>
     </header>
-    <div class="catalog">
-      {entries.map((entry) => <SpecimenCard entry={entry} level="h2" />)}
-    </div>
+    <SpecimenCatalog entries={entries} filterable />
   </section>
 </BaseLayout>
 
 <style>
   .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
   .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
-  .catalog { border-bottom: 1px solid var(--line); }
 </style>

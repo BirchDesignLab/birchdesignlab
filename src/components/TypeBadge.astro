@@ -1,0 +1,15 @@
+---
+interface Props { type: 'experiment' | 'study' }
+const { type } = Astro.props;
+---
+<span class="badge">{type}</span>
+
+<style>
+  .badge {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1; color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
+  }
+</style>

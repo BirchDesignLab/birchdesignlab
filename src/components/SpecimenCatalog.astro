@@ -1,0 +1,55 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import SpecimenCard from './SpecimenCard.astro';
+
+interface Props {
+  entries: CollectionEntry<'lab'>[];
+  filterable?: boolean;
+}
+const { entries, filterable = false } = Astro.props;
+---
+{filterable && (
+  <div class="filter smallcaps" role="group" aria-label="Filter specimens">
+    <button type="button" data-set="all" aria-pressed="true">All</button>
+    <button type="button" data-set="experiment" aria-pressed="false">Experiments</button>
+    <button type="button" data-set="study" aria-pressed="false">Studies</button>
+  </div>
+)}
+<div class="catalog" data-filter="all">
+  {entries.map((entry) => <SpecimenCard entry={entry} level="h2" />)}
+</div>
+
+{filterable && (
+  <script>
+    for (const group of document.querySelectorAll('.filter')) {
+      const catalog = group.nextElementSibling as HTMLElement;
+      group.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('button[data-set]');
+        if (!btn || !catalog) return;
+        catalog.dataset.filter = (btn as HTMLElement).dataset.set!;
+        for (const b of group.querySelectorAll('button')) {
+          b.setAttribute('aria-pressed', String(b === btn));
+        }
+      });
+    }
+  </script>
+)}
+
+<style>
+  .catalog { border-bottom: 1px solid var(--line); }
+  /* Filter: pure show/hide of already-rendered DOM (SEO: every card ships
+     in the HTML regardless of state). Square geometry per house rules. */
+  .filter { display: none; gap: var(--space-2); margin-bottom: var(--space-3); }
+  :global(html.js) .filter { display: flex; }
+  .filter button {
+    font: inherit; font-family: var(--font-smallcaps);
+    text-transform: uppercase; letter-spacing: var(--tracking-wide);
+    font-size: var(--text-sm); line-height: 1;
+    color: var(--mark-muted); background: transparent;
+    border: 1px solid var(--line); padding: 0.5em 1em 0.4em;
+    cursor: pointer;
+  }
+  .filter button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
+  .catalog[data-filter='experiment'] :global(.card[data-type='study']),
+  .catalog[data-filter='study'] :global(.card[data-type='experiment']) { display: none; }
+</style>

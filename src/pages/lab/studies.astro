@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
+
+const entries = (await getCollection('lab', ({ data }) => data.type === 'study')).sort(
+  (a, b) => b.data.designation.localeCompare(a.data.designation),
+);
+---
+<BaseLayout
+  title="Studies · The Lab · Birch Design Lab"
+  description="Client work, catalogued like everything else in the Lab."
+>
+  <section class="wrap">
+    <header class="intro">
+      <p class="smallcaps kicker"><a href="/lab">The Lab</a></p>
+      <h1>Studies</h1>
+      <!-- first-draft copy -->
+      <p>Client work, catalogued like everything else here. Real projects, real constraints, shown with the same candor as the experiments.</p>
+    </header>
+    <SpecimenCatalog entries={entries} />
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .kicker a { color: var(--accent); text-decoration: none; }
+  .kicker a:hover { text-decoration: underline; }
+</style>

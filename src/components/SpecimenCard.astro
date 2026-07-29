@@ -1,26 +1,28 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import DeviceBadge from './DeviceBadge.astro';
+import TypeBadge from './TypeBadge.astro';
 
 interface Props {
   entry: CollectionEntry<'lab'>
   level?: 'h2' | 'h3'
 }
 const { entry, level = 'h3' } = Astro.props;
-const { designation, title, summary, date, tech, device, status } = entry.data;
+const { designation, title, summary, date, tech, status } = entry.data;
 const live = status === 'live';
 const href = entry.data.href ?? `/lab/${entry.id}`;
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
 ---
-<article class="card">
+<article class="card" data-type={entry.data.type}>
   <p class="designation smallcaps">{designation}</p>
   <Heading>
     {live ? <a href={href}>{title}</a> : <span>{title} <em class="soon">forthcoming</em></span>}
   </Heading>
   <p class="summary">{summary}</p>
   <p class="meta">
-    <DeviceBadge device={device} />
+    <TypeBadge type={entry.data.type} />
+    {entry.data.type === 'experiment' && <DeviceBadge device={entry.data.device} />}
     {tech.map((t) => <span class="tag">{t}</span>)}
     <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time>
   </p>
