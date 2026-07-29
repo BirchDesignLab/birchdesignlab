@@ -1,43 +1,113 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import StudyLayout from '../../layouts/StudyLayout.astro';
 import SpecimenPlate from '../../components/SpecimenPlate.astro';
 import WallLabel from '../../components/WallLabel.astro';
 import { experimentComponents } from '../../experiments/registry';
 
 export async function getStaticPaths() {
-  // Entries with their own route (href) get no generated /lab page.
+  // Every live entry generates, except experiments with their own route (href).
   const entries = await getCollection(
     'lab',
-    ({ data }) => data.status === 'live' && !data.href,
+    ({ data }) => data.status === 'live' && !(data.type === 'experiment' && data.href),
   );
   return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
-const { designation, title, summary, tech } = entry.data;
+const { designation, title, summary, tech, date } = entry.data;
 const { Content } = await render(entry);
-const Experiment = experimentComponents[designation];
+const pageTitle = `${designation} ${title} · Birch Design Lab`;
+const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+const Experiment = entry.data.type === 'experiment' ? experimentComponents[designation] : undefined;
 ---
-<ExperimentLayout
-  title={`${designation} ${title} · Birch Design Lab`}
-  description={summary}
-  designation={designation}
->
-  {entry.data.howto && <WallLabel lines={entry.data.howto} />}
-  {Experiment ? (
-    <Experiment />
-  ) : (
-    <div class="wrap missing"><p>This specimen has no interactive stage yet.</p></div>
-  )}
-  <SpecimenPlate designation={designation} title={title} tech={tech}>
-    <Content />
-  </SpecimenPlate>
-  <noscript>
-    <p class="wrap">This experiment requires JavaScript; the specimen plate below describes it.</p>
-  </noscript>
-</ExperimentLayout>
+{entry.data.type === 'study' ? (
+  <StudyLayout title={pageTitle} description={summary} designation={designation}>
+    <header class="hero">
+      <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1920]} sizes="100vw" loading="eager" />
+      <div class="hero-veil"></div>
+      <div class="hero-text wrap">
+        <p class="designation smallcaps">{designation} &middot; Study</p>
+        <h1>{title}</h1>
+        <p class="hero-summary">{summary}</p>
+      </div>
+    </header>
+
+    <section class="plate wrap">
+      <dl>
+        <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>
+        <div><dt class="smallcaps">Delivered</dt><dd>{dateLabel}</dd></div>
+        <div><dt class="smallcaps">Built with</dt><dd class="chips">{tech.map((t) => <span class="tag">{t}</span>)}</dd></div>
+        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a></dd></div>
+      </dl>
+    </section>
+
+    <article class="prose wrap">
+      <Content />
+    </article>
+
+    <section class="loud" data-reveal>
+      <div class="wrap loud-inner">
+        <!-- first-draft copy -->
+        <p class="pull">Your project gets this same table. Same hands, same candor.</p>
+        <a class="cta-engraved" href="/contact"><span class="fill" aria-hidden="true"></span><span class="lbl">Start a conversation</span></a>
+      </div>
+    </section>
+  </StudyLayout>
+) : (
+  <ExperimentLayout title={pageTitle} description={summary} designation={designation}>
+    {entry.data.howto && <WallLabel lines={entry.data.howto} />}
+    {Experiment ? (
+      <Experiment />
+    ) : (
+      <div class="wrap missing"><p>This specimen has no interactive stage yet.</p></div>
+    )}
+    <SpecimenPlate designation={designation} title={title} tech={tech}>
+      <Content />
+    </SpecimenPlate>
+    <noscript>
+      <p class="wrap">This experiment requires JavaScript; the specimen plate below describes it.</p>
+    </noscript>
+  </ExperimentLayout>
+)}
 
 <style>
   .missing { min-height: 60vh; display: grid; place-items: center; color: var(--mark-muted); }
+
+  /* Stage hero: full-bleed image, washed for legibility, identity overlaid.
+     About-hero grammar: it scrolls away. */
+  .hero { position: relative; min-height: 62vh; display: grid; align-items: end; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-veil { position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--field) 88%, transparent), color-mix(in srgb, var(--field) 30%, transparent) 55%, transparent); }
+  .hero-text { position: relative; padding-block: var(--space-5); }
+  .hero-text .designation { color: var(--accent); }
+  .hero-text h1 { font-size: var(--text-3xl); margin-top: var(--space-1); }
+  .hero-summary { color: var(--mark-muted); max-width: 44ch; margin-top: var(--space-2); }
+
+  /* Plate block: SpecimenPlate's language, in flow. */
+  .plate { padding-block: var(--space-4); border-bottom: 1px solid var(--line); }
+  .plate dl { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); margin: 0; }
+  .plate dt { color: var(--accent); font-size: var(--text-sm); }
+  .plate dd { margin: 0.35em 0 0; }
+  .plate .tag { border: 1px solid var(--line); padding: 0.2em 0.6em; margin-right: var(--space-1); font-size: var(--text-sm); color: var(--mark-muted); white-space: nowrap; }
+  .plate a { color: var(--link); }
+
+  /* Narrative column. */
+  .prose { max-width: 68ch; padding-block: var(--space-6); display: grid; gap: var(--space-3); }
+  .prose :global(h2) { font-size: var(--text-xl); margin-top: var(--space-4); }
+  .prose :global(p) { color: var(--mark-muted); line-height: 1.6; }
+  .prose :global(img) { max-width: 100%; height: auto; border: 1px solid var(--line); margin-block: var(--space-2); }
+  /* Director's commentary: blockquotes are the founder's voice, offset and
+     accent-marked so they read as asides, not citations. */
+  .prose :global(blockquote) {
+    margin: var(--space-3) 0; padding: var(--space-2) var(--space-4);
+    border-left: 2px solid var(--accent);
+    font-style: italic; color: var(--mark);
+  }
+  .prose :global(blockquote p) { color: var(--mark); }
+
+  .pull { font-family: var(--font-display); font-size: var(--text-2xl); line-height: 1.2; max-width: 24ch; }
+  .loud .cta-engraved { margin-top: var(--space-5); }
 </style>

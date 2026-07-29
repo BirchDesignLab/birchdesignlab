@@ -50,7 +50,8 @@ describe('experiment branch', () => {
   it('requires howto when there is no href, and exempts href entries', () => {
     const { howto, ...bare } = experiment;
     expect(() => labSchema.parse(bare)).toThrow();
-    expect(labSchema.parse({ ...bare, href: '/styleguide' }).howto).toBeUndefined();
+    const result = labSchema.parse({ ...bare, href: '/styleguide' });
+    expect(result.type === 'experiment' && result.howto).toBeUndefined();
   });
   it('caps howto at four lines and rejects empty lines', () => {
     expect(() => labSchema.parse({ ...experiment, howto: ['a', 'b', 'c', 'd', 'e'] })).toThrow();

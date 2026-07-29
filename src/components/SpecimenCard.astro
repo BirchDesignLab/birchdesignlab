@@ -10,7 +10,7 @@ interface Props {
 const { entry, level = 'h3' } = Astro.props;
 const { designation, title, summary, date, tech, status } = entry.data;
 const live = status === 'live';
-const href = entry.data.href ?? `/lab/${entry.id}`;
+const href = (entry.data.type === 'experiment' ? entry.data.href : undefined) ?? `/lab/${entry.id}`;
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
 ---
