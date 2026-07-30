@@ -29,15 +29,24 @@ const Heading = level;
 </article>
 
 <style>
-  .card { padding-block: var(--space-4); border-top: 1px solid var(--line); }
+  /* Loose density: gallery pacing. --space-6 is fluid (clamp 2.5-4rem), so
+     narrow viewports rest on the 2.5rem floor. The inline padding plus its
+     negative margin lets a row treatment bleed past the text column. */
+  .card {
+    padding-block: var(--space-6);
+    padding-inline: var(--space-3);
+    margin-inline: calc(var(--space-3) * -1);
+    border-top: 1px solid var(--line);
+  }
   .designation { color: var(--accent); font-size: var(--text-sm); }
+  .card h2, .card h3 { margin-top: var(--space-1); }
   h2 a, h3 a { color: var(--mark); text-decoration: none; }
   h2 a:hover, h3 a:hover { color: var(--accent); }
   .soon { color: var(--mark-muted); font-size: var(--text-sm); font-style: italic; }
-  .summary { color: var(--mark-muted); max-width: 52ch; }
+  .summary { color: var(--mark-muted); max-width: 52ch; margin-top: var(--space-2); }
   .meta {
     display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
-    margin-top: var(--space-2); font-size: var(--text-sm); color: var(--mark-muted);
+    margin-top: var(--space-4); font-size: var(--text-sm); color: var(--mark-muted);
   }
   .tag::before { content: '·'; margin-right: var(--space-2); }
 </style>
