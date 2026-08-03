@@ -7,9 +7,12 @@ export default defineConfig({
   integrations: [
     svelte(),
     sitemap({
-      // styleguide is an internal instrument; /contact/sent is a redirect
-      // target with no standalone meaning. Neither belongs in the sitemap.
-      filter: (page) => !page.includes('/styleguide') && !page.includes('/contact/sent'),
+      // styleguide and the Regulator are internal instruments; /contact/sent is
+      // a redirect target with no standalone meaning. None belong in the sitemap.
+      filter: (page) =>
+        !page.includes('/styleguide') &&
+        !page.includes('/lab/bdl-006') &&
+        !page.includes('/contact/sent'),
     }),
   ],
 });

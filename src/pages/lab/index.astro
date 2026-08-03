@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
 
-const entries = (await getCollection('lab')).sort((a, b) =>
+// Noindexed entries are instruments: reachable by direct URL, never listed.
+const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((a, b) =>
   b.data.designation.localeCompare(a.data.designation),
 );
 ---

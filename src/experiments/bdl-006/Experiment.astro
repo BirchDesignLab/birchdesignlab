@@ -1,0 +1,17 @@
+---
+import BarkField from '../../components/BarkField.astro';
+import Regulator from './Regulator.svelte';
+---
+<div class="stage">
+  <!-- The demo field: server-rendered so BarkField's own script claims it, and
+       left at the component default so the grain readout starts honest. -->
+  <BarkField density={140} />
+  <div class="bench wrap">
+    <Regulator client:load surface="stage" />
+  </div>
+</div>
+
+<style>
+  .stage { position: relative; min-height: 100vh; display: grid; align-items: start; }
+  .bench { padding-block: var(--space-7) var(--space-6); max-width: 56rem; }
+</style>

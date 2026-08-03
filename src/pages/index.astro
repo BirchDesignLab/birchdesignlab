@@ -5,7 +5,7 @@ import BarkField from '../components/BarkField.astro';
 
 // Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
 // specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
-const featured = (await getCollection('lab', ({ data }) => data.status === 'live'))
+const featured = (await getCollection('lab', ({ data }) => data.status === 'live' && !data.noindex))
   .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
   .slice(0, 2);
 ---
@@ -73,6 +73,16 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
     </section>
   )}
 </BaseLayout>
+
+<script>
+  // BDL-006 rides the flagship at /?tune only. The import is dynamic, so the
+  // instrument is a separate chunk that ordinary visitors never fetch; what
+  // ships to everyone else is this check.
+  if (location.search.includes('tune')) {
+    const { mountRegulator } = await import('../experiments/bdl-006/mount');
+    mountRegulator('overlay');
+  }
+</script>
 
 <style>
   .hero {

@@ -21,6 +21,9 @@ export function makeLabSchema(image: () => z.ZodTypeAny) {
     date: z.coerce.date(),
     tech: z.array(z.string()).default([]),
     status: z.enum(['live', 'forthcoming']).default('live'),
+    /** Instruments that ship publicly but stay out of search and the sitemap
+        (the /styleguide convention: unlinked, noindexed, filtered). */
+    noindex: z.boolean().default(false),
   };
 
   const experiment = z

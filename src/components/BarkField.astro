@@ -77,6 +77,17 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
       };
       reducedMotion.addEventListener('change', handleReducedMotionChange);
 
+      // Retune: BDL-006 regenerates the field at a new grain without a remount.
+      // Same seed, so it stays the same tree — only the dash count moves.
+      // WebGL only; the 2D fallback has no incremental path and ignores this.
+      const handleRetune = (event: Event) => {
+        const next = Number((event as CustomEvent<{ density?: number }>).detail?.density);
+        if (!Number.isFinite(next) || next <= 0) return;
+        gl.setDashes(generateBark(seed, { density: next }));
+        if (reducedMotion.matches) gl.renderOnce();
+      };
+      document.addEventListener('bark:retune', handleRetune);
+
       // Depth parallax: deeper dashes lag the scroll (uniform read per frame).
       const handleScroll = () => {
         if (reducedMotion.matches) return;
@@ -92,6 +103,7 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
         resizeObserver.disconnect();
         mutationObserver.disconnect();
         reducedMotion.removeEventListener('change', handleReducedMotionChange);
+        document.removeEventListener('bark:retune', handleRetune);
         removeEventListener('scroll', handleScroll);
       });
     } else {
