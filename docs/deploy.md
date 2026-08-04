@@ -155,8 +155,43 @@ a third-party script, though on its own it is not worth a CSP.
    corrects the request after the browser has sent it in the clear, whereas
    HSTS stops that first insecure request happening at all.
 2. **Cloudflare Web Analytics.** Free, cookieless, no consent banner. No code
-   change needed now that there is no CSP to widen.
+   change needed now that there is no CSP to widen. See the analytics pathway
+   below.
 3. **Google Search Console.** Verify the property before 2026-09-01.
+
+### Analytics pathway (decided 2026-08-03)
+
+Two tools, different jobs. Plausible was considered and passed over: founder's
+read is that it is lacking, which is fair, since minimalism is the product.
+
+**Cloudflare Web Analytics: always on.** Free, cookieless, needs no consent
+banner, a few KB. Enable it before 2026-09-01 so there is traffic history from
+launch day rather than starting the clock later. It answers pageviews,
+referrers, and Core Web Vitals, and nothing else.
+
+**TWIPLA: a deliberate temporary instrument, not a permanent tag.** Base script
+is around 30KB compressed, plus roughly 35KB more if session recording is
+enabled. That matters here because the website spec treats Lighthouse 100s as a
+brand feature, and third-party JavaScript of that size is the most likely thing
+to cost it. So do not leave it running.
+
+The reason to reach for it at all: it answers a question Cloudflare cannot.
+Founder does not know whether the Lab experiments land with a non-technical
+visitor (see the 2026-08-03 direction set in `docs/lab-backlog.md`). Heatmaps
+and session replay show whether someone drags the Regulator's crown or reads two
+lines and leaves. Turn it on for a study window, gather the behavioral answer,
+turn it off.
+
+Two cautions when that window happens:
+
+- **Mask the contact form inputs before recording anything.** Session replay
+  will otherwise capture people typing their name, email, and message.
+- The free tier is 25 session recordings, 1 heatmap, 1 funnel. That is a sample
+  to reason from, not a dataset to conclude from.
+
+Both are third-party scripts, so either one fires trigger 1 in the CSP section
+above. That does not change the decision; the answer stays that a CSP is still
+not worth it here.
 
 ### Headers the Worker must set when the contact form ships
 
