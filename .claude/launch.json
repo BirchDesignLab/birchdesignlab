@@ -12,6 +12,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "4399"],
       "port": 4399
+    },
+    {
+      "// preview": "Serves dist/, so it is the only way to exercise the CSP: Astro's experimental.csp does not apply in dev. Build first.",
+      "name": "preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--port", "4400"],
+      "port": 4400
     }
   ]
 }

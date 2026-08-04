@@ -89,6 +89,15 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 
 - **MDX for study narratives, post-theming.** Founder call 2026-07-29 during the BDL-005 design round: studies author in plain markdown (blockquote commentary asides) for now; add the MDX integration after the Lab theme pass so component-rich narratives (galleries, embeds, asides as components) become possible without pre-theming one-off components.
 
+- **A real logo.** The 512x512 mark at `public/og/logo.png` is generated at
+  build time from the favicon geometry and is a placeholder: it is a faithful
+  scale-up of a 32px favicon, so the padding is proportionally large and the
+  lenticels sit small in the frame. Fine for a knowledge-panel logo, wrong for
+  a real mark. Founder verdict 2026-08-03: "logo sucks but it's fine for now."
+  Try Claude's design tooling or an MCP first; commission someone if that does
+  not land. Replacing the file needs no code change, the structured data and
+  manifest already point at that path.
+
 - **Astro 5 to 7 upgrade.** npm audit (2026-07-29) flags Astro <=7.0.9 advisories (XSS in define:vars/spread props/server islands, plus vulnerable esbuild/sharp pins). All involve rendering untrusted data, which this static site does not do, so exposure is near zero today; the contact Worker escapes its own output. Still worth doing as its own piece of work: `npm audit fix --force` jumps two majors and should not be run casually. Do it when the stack is quiet, run the full test suite and a visual pass after.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
