@@ -1,0 +1,7 @@
+---
+import { buildOrganization } from '../lib/seo/organization';
+
+// Astro.site comes from `site` in astro.config.mjs.
+const organization = buildOrganization(Astro.site!);
+---
+<script type="application/ld+json" is:inline set:html={JSON.stringify(organization)} />

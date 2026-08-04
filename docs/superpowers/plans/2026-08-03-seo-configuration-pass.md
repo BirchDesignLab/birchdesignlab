@@ -557,17 +557,44 @@ Replace: `<h2>The Styleguide</h2>`
 
 If the exact text differs, locate the single `<h1>` in that file and demote it. Do not change the visible wording.
 
-- [ ] **Step 5: Demote the styleguide's second h1**
+- [ ] **Step 5: Fix the styleguide's second h1 without shrinking the specimen**
 
-Modify `src/pages/styleguide.astro`. It renders two `<h1>` elements. The first, `<h1>Styleguide</h1>` in the `.intro` header, is the page's real heading and stays. Find the second `<h1>` and change it to `<h2>`.
+Modify `src/pages/styleguide.astro`. It renders two `<h1>` elements:
 
-Run this to locate both:
+- Line 33, `<h1>Styleguide</h1>` in the `.intro` header. This is the page's real heading. **Leave it.**
+- Line 78, `<h1>The shining tree</h1>`. This is a **type specimen** inside a block labelled `h1 / h2 / h3`, demonstrating the heading scale.
 
-```bash
-grep -n '<h1' src/pages/styleguide.astro
+Do not demote the specimen to `<h2>`: the block already contains an `<h2>`, so that would show the same size twice and destroy what the sample demonstrates. Convert it to a paragraph styled identically instead, which preserves every rendered pixel while removing the duplicate heading from the document outline.
+
+Find:
+
+```astro
+      <h1>The shining tree</h1>
 ```
 
-Keep the first, demote the second.
+Replace with:
+
+```astro
+      <!-- Styled as h1 rather than being one: this is a type specimen, and a
+           second h1 on the page is a document-outline bug. Rendering is
+           identical, so the sample still shows the real h1 scale. -->
+      <p class="h1-spec">The shining tree</p>
+```
+
+Then add the matching rule to the page's `<style>` block, next to the existing `.specimens` rules near line 191. The values are copied from `base.css`, where `h1, h2, h3` share the display family and `h1` is `--text-2xl`:
+
+```css
+  /* Mirrors base.css h1 exactly, so the specimen keeps showing h1's real scale. */
+  .specimens .h1-spec {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.15;
+    font-size: var(--text-2xl);
+    margin-top: var(--space-2);
+  }
+```
+
+Note the existing selector `.specimens h1, .specimens h3 { margin-top: var(--space-2); }` near line 196. Leaving it is harmless, since `.specimens h3` still matches, but the `h1` half is now dead. Remove just the `.specimens h1` from that selector list, leaving `.specimens h3 { margin-top: var(--space-2); }`.
 
 - [ ] **Step 6: Rebuild**
 
@@ -617,12 +644,17 @@ git commit -m "fix(a11y): exactly one h1 per page, emitted by ExperimentLayout"
 ### Task 5: Icons, manifest, and the sitemap link
 
 **Files:**
-- Create: `public/site.webmanifest`
-- Modify: `src/layouts/BaseLayout.astro`, `src/layouts/ExperimentLayout.astro`, `src/layouts/StudyLayout.astro`, `scripts/og/generate.ts`
+- Create: `public/site.webmanifest`, `src/components/HeadCommon.astro`
+- Modify: `src/layouts/BaseLayout.astro`, `src/layouts/ExperimentLayout.astro`, `src/layouts/StudyLayout.astro`, `src/pages/lab/[slug].astro`
 
 **Interfaces:**
-- Consumes: `renderLogo` and `LOGO_SIZE` from Task 2.
-- Produces: `/og/logo.png` reused as the apple-touch-icon source. No new exports.
+- Consumes: `/og/logo.png` from Task 2; the `<slot name="head" />` added to `BaseLayout` in Task 3.
+- Produces: `HeadCommon.astro` with props `{ title: string; description: string; noindex?: boolean }`, rendering the head content every layout shares. `StudyLayout` gains a `noindex?: boolean` prop.
+
+**Two decisions folded in from the pre-flight review, agreed with the founder:**
+
+1. **Extract rather than duplicate.** The three layouts already repeat five to six head lines each. Adding three more to every one would take it to eight or nine. A shared component holds them once.
+2. **`StudyLayout` gains `noindex`.** The `noindex` field lives on the lab schema's shared base, so it applies to studies as well as experiments, but `StudyLayout` has no handling for it and `[slug].astro` never passes it. A study marked `noindex: true` renders indexable today. That is a latent bug, fixed here because this task already edits both files.
 
 - [ ] **Step 1: Write the manifest**
 
@@ -646,44 +678,107 @@ Create `public/site.webmanifest`. All strings here are external-facing, so no em
 
 `display: browser` is deliberate. This is a website, not an installable app, and claiming `standalone` invites an install prompt nobody wants.
 
-- [ ] **Step 2: Link the manifest and the touch icon in BaseLayout**
+- [ ] **Step 2: Create the shared head component**
 
-Modify `src/layouts/BaseLayout.astro`. Find:
+Create `src/components/HeadCommon.astro`. This is every line the three layouts had in common, plus the three new ones:
 
 ```astro
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+---
+/** The head content every layout shares. Extracted when the manifest and
+    touch-icon links would have made it a third copy of the same block.
+    Layout-specific tags stay in the layout. */
+import Seo from './Seo.astro';
+import ThemeBootstrap from './ThemeBootstrap.astro';
+
+interface Props { title: string; description: string; noindex?: boolean }
+const { title, description, noindex = false } = Astro.props;
+---
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/og/logo.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<Seo title={title} description={description} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+<ThemeBootstrap />
+```
+
+- [ ] **Step 3: Use it in BaseLayout**
+
+Modify `src/layouts/BaseLayout.astro`. Replace the `Seo` and `ThemeBootstrap` imports with:
+
+```astro
+import HeadCommon from '../components/HeadCommon.astro';
+```
+
+Then replace the entire `<head>` block with:
+
+```astro
+  <head>
+    <HeadCommon title={title} description={description} noindex={noindex} />
+    <slot name="head" />
+  </head>
+```
+
+`<slot name="head" />` was added in Task 3 and carries the Organization JSON-LD. It must survive this refactor. Rendering it after `HeadCommon` is fine; head tag order does not matter here.
+
+- [ ] **Step 4: Use it in ExperimentLayout**
+
+Modify `src/layouts/ExperimentLayout.astro`. Replace the `Seo` and `ThemeBootstrap` imports with:
+
+```astro
+import HeadCommon from '../components/HeadCommon.astro';
+```
+
+Then replace the entire `<head>` block with:
+
+```astro
+  <head>
+    <HeadCommon title={title} description={description} noindex={noindex} />
+  </head>
+```
+
+- [ ] **Step 5: Use it in StudyLayout, which also gains noindex**
+
+`StudyLayout` has no `noindex` handling, but the `noindex` field lives on the lab schema's shared base and therefore applies to studies. A study marked `noindex: true` currently renders indexable.
+
+Modify `src/layouts/StudyLayout.astro`. Replace the `Seo` and `ThemeBootstrap` imports with:
+
+```astro
+import HeadCommon from '../components/HeadCommon.astro';
+```
+
+Change the Props interface and destructuring:
+
+```astro
+interface Props { title: string; description: string; designation: string; noindex?: boolean }
+const { title, description, designation, noindex = false } = Astro.props;
+```
+
+Then replace the entire `<head>` block with:
+
+```astro
+  <head>
+    <HeadCommon title={title} description={description} noindex={noindex} />
+  </head>
+```
+
+- [ ] **Step 6: Pass noindex to StudyLayout from the route**
+
+Modify `src/pages/lab/[slug].astro`. Find the `StudyLayout` opening tag:
+
+```astro
+  <StudyLayout title={pageTitle} description={summary} designation={designation}>
 ```
 
 Replace with:
 
 ```astro
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/og/logo.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+  <StudyLayout title={pageTitle} description={summary} designation={designation} noindex={entry.data.noindex}>
 ```
 
-- [ ] **Step 3: Give the other two layouts the same head links**
-
-`ExperimentLayout` and `StudyLayout` are standalone documents that do not use `BaseLayout`, and both omit the sitemap link it carries.
-
-In **both** `src/layouts/ExperimentLayout.astro` and `src/layouts/StudyLayout.astro`, find:
-
-```astro
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-```
-
-Replace with:
-
-```astro
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/og/logo.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
-```
-
-- [ ] **Step 4: Verify every page carries them**
+- [ ] **Step 7: Verify every page carries the head links**
 
 Run:
 
@@ -694,17 +789,28 @@ for f in $(find dist -name '*.html' | sort); do printf "%-45s manifest=%s sitema
 
 Expected: every file shows `1` for all three.
 
-- [ ] **Step 5: Confirm the manifest is valid JSON and reachable**
+- [ ] **Step 8: Verify the refactor changed nothing else**
+
+The noindex pages must still be noindexed, and the JSON-LD must still be present after BaseLayout's head was rewritten:
+
+```bash
+grep -l 'noindex, nofollow' dist/styleguide/index.html dist/contact/sent/index.html dist/lab/bdl-006/index.html
+grep -c 'application/ld+json' dist/index.html
+```
+
+Expected: all three files listed, and `1` for the JSON-LD.
+
+- [ ] **Step 9: Confirm the manifest is valid JSON and reachable**
 
 Run: `node -e "console.log(JSON.parse(require('fs').readFileSync('dist/site.webmanifest','utf8')).name)"`
 Expected: `Birch Design Lab`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 npx vitest run && npx astro check
-git add public/site.webmanifest src/layouts/BaseLayout.astro src/layouts/ExperimentLayout.astro src/layouts/StudyLayout.astro
-git commit -m "feat(seo): web manifest, apple-touch-icon, and sitemap links on every layout"
+git add public/site.webmanifest src/components/HeadCommon.astro src/layouts/BaseLayout.astro src/layouts/ExperimentLayout.astro src/layouts/StudyLayout.astro "src/pages/lab/[slug].astro"
+git commit -m "feat(seo): shared head component with manifest, touch icon, and sitemap links"
 ```
 
 ---

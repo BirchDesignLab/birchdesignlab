@@ -19,15 +19,18 @@ Repo: `BirchDesignLab/birchdesignlab`.
 
 ## One-time setup (founder, in dashboard / CLI)
 
-**Completed 2026-07-29** except step 2: Email Sending onboarding is deferred
+**Completed 2026-07-29** except steps 2 and 6. Email Sending onboarding is deferred
 until the founder opts into the paid plan. Until then the contact form markup
 stays out of prod (held locally) and /contact remains mailto-only; the
 Worker's email path degrades to a 502 page pointing at hello@.
 The Pages project is deleted; Workers Builds is the only deploy pipeline.
+Step 6, the `www` redirect, is still outstanding as of 2026-08-03.
 
 1. **Log wrangler into the account that owns `birchdesignlab.com`**
-   (`npx wrangler login`). As of 2026-07-29 the local OAuth token points at the
-   Cheer and Chatter account.
+   (`npx wrangler login`). Verified 2026-08-03: the local token authenticates as
+   `birchdesignlab@gmail.com` and exposes exactly one account, so there is no
+   wrong-account risk when deploying locally. The 2026-07-29 note about the
+   Cheer and Chatter account is stale.
 2. **Enable Email Sending for the domain** (adds SPF/DKIM DNS records):
    `npx wrangler email sending enable birchdesignlab.com`
    (or dashboard: Compute & AI → Email Service → Email Sending → Onboard
@@ -41,12 +44,26 @@ The Pages project is deleted; Workers Builds is the only deploy pipeline.
 4. **Move the custom domain**: remove `birchdesignlab.com` (and `www`) from
    the old Pages project, add them to the Worker (Settings → Domains & Routes).
 5. **Delete the Pages project** once the Worker serves the domain.
+6. **Redirect `www` to the apex.** Verified 2026-08-03: `www.birchdesignlab.com`
+   serves the site directly with no redirect, and `http://www` upgrades to
+   `https://www` rather than to the apex, so the duplicate host survives the
+   HTTPS upgrade. Canonical tags already point at the apex, so Google will
+   consolidate, but the clean fix is a Redirect Rule: `www` to apex, 301,
+   preserving path and query. Dashboard step, not code.
 
 ## Every deploy after that
 
-`git push` to main. Workers Builds runs the build and `wrangler deploy`.
-Manual escape hatch: `npm run deploy` (builds, then deploys with local
-wrangler auth).
+Branch, open a PR, review, merge to `main`. Workers Builds then builds the
+merge commit and runs `wrangler deploy`. Merging is what deploys; there is no
+separate deploy step, and nothing should be pushed directly to `main`.
+
+Manual escape hatch: `npm run deploy` builds and deploys with local wrangler
+auth, bypassing Workers Builds entirely. Use it when the Builds pipeline is
+down, as on 2026-08-03, when a Cloudflare incident ("Workers Build Failures")
+left a build stuck in Initialize for 39 minutes. It deploys the **working
+tree**, not the committed tree, so stash anything held back first. The contact
+form markup sits in a named stash for exactly this reason; check
+`git stash list` before running it.
 
 ## Local dev
 
