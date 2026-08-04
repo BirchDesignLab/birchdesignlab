@@ -24,7 +24,7 @@ const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'lo
 const Experiment = entry.data.type === 'experiment' ? experimentComponents[designation] : undefined;
 ---
 {entry.data.type === 'study' ? (
-  <StudyLayout title={pageTitle} description={summary} designation={designation}>
+  <StudyLayout title={pageTitle} description={summary} designation={designation} noindex={entry.data.noindex}>
     <header class="hero">
       <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1440]} sizes="100vw" loading="eager" fetchpriority="high" />
       <div class="hero-veil"></div>

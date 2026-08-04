@@ -5,21 +5,16 @@ import '@fontsource/spectral/400-italic.css';
 import '@fontsource/spectral/600.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
-import Seo from '../components/Seo.astro';
-import ThemeBootstrap from '../components/ThemeBootstrap.astro';
+import HeadCommon from '../components/HeadCommon.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
-interface Props { title: string; description: string; designation: string }
-const { title, description, designation } = Astro.props;
+interface Props { title: string; description: string; designation: string; noindex?: boolean }
+const { title, description, designation, noindex = false } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <Seo title={title} description={description} />
-    <ThemeBootstrap />
+    <HeadCommon title={title} description={description} noindex={noindex} />
   </head>
   <body>
     <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>

@@ -5,8 +5,7 @@ import '@fontsource/spectral/400-italic.css';
 import '@fontsource/spectral/600.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
-import Seo from '../components/Seo.astro';
-import ThemeBootstrap from '../components/ThemeBootstrap.astro';
+import HeadCommon from '../components/HeadCommon.astro';
 
 /** `title` is the full page title; `heading` is the specimen's own title,
     which is what the h1 says. Keeping them separate stops the heading from
@@ -23,12 +22,7 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <Seo title={title} description={description} />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <ThemeBootstrap />
+    <HeadCommon title={title} description={description} noindex={noindex} />
   </head>
   <body>
     <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>
