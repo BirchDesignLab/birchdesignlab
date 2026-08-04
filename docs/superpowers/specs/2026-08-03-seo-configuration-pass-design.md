@@ -160,6 +160,13 @@ Baseline confirmed 2026-08-03: the site currently sends **no** security headers.
 
 ### 4.1 CSP through Astro, not by hand
 
+> **OUTCOME 2026-08-03: not shipped.** This section records what was agreed
+> before the work; the verification gate then rejected it. CSP broke
+> `/styleguide` and `/lab/bdl-002` silently, and the cost/benefit did not hold
+> up for a site with no injection surface. `docs/deploy.md` carries the
+> decision, the measurements, and the two triggers that would re-open it, and is
+> authoritative over this section. Do not implement the rest of 4.1 from here.
+
 The installed Astro is 5.18.2 and `csp` is present in its configuration schema,
 so `experimental: { csp: true }` computes hashes for every inline script and
 style at build time and emits a per page meta CSP.

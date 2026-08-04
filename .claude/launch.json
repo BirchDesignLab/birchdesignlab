@@ -12,6 +12,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "4399"],
       "port": 4399
+    },
+    {
+      "// preview": "Serves the built dist/, so it exercises anything dev cannot: prebuilt output, real bundling, generated meta. Build first. Note it does NOT apply public/_headers, which is a Cloudflare feature — use `npm run dev:worker` (wrangler dev) to verify response headers.",
+      "name": "preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--port", "4400"],
+      "port": 4400
     }
   ]
 }
