@@ -21,6 +21,7 @@ const { title, description, noindex = false } = Astro.props;
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo title={title} description={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <slot name="head" />
     <ThemeBootstrap />
   </head>
   <body>

@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BarkField from '../components/BarkField.astro';
+import StructuredData from '../components/StructuredData.astro';
 
 // Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
 // specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
@@ -13,6 +14,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   title="Birch Design Lab · Custom software and websites"
   description="A design lab building custom software and custom websites for businesses that want to grow. Quiet, fast, built to last."
 >
+  <StructuredData slot="head" />
   <section class="hero">
     <BarkField density={170} live />
     <h1 class="billboard">
