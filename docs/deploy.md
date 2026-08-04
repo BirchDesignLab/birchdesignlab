@@ -59,11 +59,17 @@ Shipped 2026-08-03: `public/_headers` sets `X-Content-Type-Options`,
 **No `Permissions-Policy`, deliberately.** It was written and then removed the
 same day. Founder direction 2026-08-03: the Lab is going to use location,
 camera, microphone, accelerometer, and whatever else an experiment needs, plus
-GSAP. "The lab is the lab and the lab is free." A header enumerating disabled
-features is a tripwire for that: the next experiment reaches for `midi` or `xr`
-and is blocked by a line nobody remembers writing. `X-Frame-Options: DENY`
-already stops third parties embedding the site, which was the only protection
-the header was really buying here.
+GSAP. "The lab is the lab and the lab is free."
+
+The conflict was direct, not hypothetical: `geolocation=()`, `camera=()`, and
+`microphone=()` block **first-party** use, not just embedded third parties. That
+kills Tonight's Sky and anything else the Lab now intends. Note that the header
+only ever constrains the features it names, so unnamed ones keep their default
+`self` allowlist; the problem was the three it named, not some future `midi`.
+
+It was dropped rather than relaxed to `(self)` because `(self)` protects nothing
+this site is exposed to: no third-party scripts, no third-party iframes, and
+`X-Frame-Options: DENY` already refuses embedding outright.
 
 ### CSP: tested, deliberately not shipped
 
@@ -86,6 +92,13 @@ pass.
 Revisit when the contact form ships. That is when the site starts accepting user
 input, which is when CSP starts earning its keep.
 
+One thing to carry into that revisit: Cloudflare injects the Web Analytics
+beacon at the edge, after Astro has generated the page and its policy, so the
+beacon's hash can never be in it. Any future CSP must allow
+`https://static.cloudflareinsights.com` in `script-src` and
+`https://cloudflareinsights.com` in `connect-src`, or the site blocks its own
+analytics. Recorded here because it is invisible until it bites.
+
 ### Founder dashboard steps, not code
 
 1. **HSTS.** SSL/TLS then Edge Certificates. Verified not set on 2026-08-03.
@@ -103,11 +116,16 @@ are served by the assets layer before the Worker runs, so every response is
 covered today, but `/api/contact` responses come from `worker/index.ts` and
 would carry no security headers at all.
 
-When the form ships, apply the same four headers to every path the Worker
-answers: the 303 redirect to `/contact/sent/`, the 400 malformed submission
-page, the 429 rate limit page, the 405 method-not-allowed response, and the 502
-degraded email path. Use one helper that every response passes through rather
-than repeating four literals at five call sites.
+Note this is already partly live: `/api/contact` exists in production today and
+its 405 and error responses ship unheadered. Only the form markup is stashed.
+Exposure is negligible (the 405 body is a fixed string and `errorPage` escapes
+its one interpolation), but the gap is real now, not hypothetical.
+
+Apply the same three headers to every path the Worker answers: the 303 redirect
+to `/contact/sent/`, the 400 malformed submission page, the 429 rate limit page,
+the 405 method-not-allowed response, and the 502 degraded email path. Use one
+helper that every response passes through rather than repeating three literals
+at five call sites.
 
 The contact form markup is parked in a named git stash, so pick this up at the
 same time as `git stash pop`.
