@@ -111,7 +111,17 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 
 - **Code-review backlog from the SEO pass (2026-08-03), none blocking.** The site description now lives in three places (`src/lib/seo/organization.ts`, `public/site.webmanifest`, and `index.astro`'s meta) and has already drifted. `site.webmanifest` hardcodes `512x512` against `LOGO_SIZE` in `scripts/og/logo.ts`, two sources of truth with nothing tying them. `scripts/og/logo.ts` exports `renderLogoCanvas`/`BG`/`MARK`/`DASHES` purely for pixel tests. Those tests verify self-consistency rather than fidelity to `favicon.svg`; the fix is a test that parses the SVG's rects. `StructuredData.astro` injects `JSON.stringify` via `set:html` with no escaping of `<`, harmless while every field is a static constant but worth noting before `sameAs` lands. Nothing automated covers `StructuredData.astro`, the head slot, or home-page-only JSON-LD placement, which would need a new dist-reading test category. `bdl-006` runs `h1` to `h3`, a skipped level, and the styleguide specimen block still has real `h2`/`h3` while its `h1` is now a styled `p`; both belong to the theme pass.
 
-- **Astro 5 to 7 upgrade.** npm audit (2026-07-29) flags Astro <=7.0.9 advisories (XSS in define:vars/spread props/server islands, plus vulnerable esbuild/sharp pins). All involve rendering untrusted data, which this static site does not do, so exposure is near zero today; the contact Worker escapes its own output. Still worth doing as its own piece of work: `npm audit fix --force` jumps two majors and should not be run casually. Do it when the stack is quiet, run the full test suite and a visual pass after.
+- **Dependency upgrades: get to newest stable, stay there.** Founder direction 2026-08-04: the standing pattern is **newest stable and secure**. Not bleeding edge, not frozen. The policy itself lives in `CLAUDE.md`; this entry is the work queued against it.
+
+  **Audited 2026-08-04.** Installed Astro is **5.18.2**; `npm audit` reports 9 vulnerabilities (4 high, 3 moderate, 2 low) across three independent groups:
+
+  1. **Astro 5 to 7.1.6** (two majors) pulls `astro`, `esbuild`, `sharp`, and `@astrojs/svelte` 7 to 9. **The advisories are not reachable here**, verified by grep: no `define:vars`, no spread props on elements, no `server:defer`, no SSR, output is static. The one `set:html` takes a static constant. Exposure is a red number in `npm audit`, not a real risk.
+  2. **Wrangler to 4.35** (one major) clears the `undici` and `miniflare` highs. Separate from Astro, deploy toolchain rather than site, much smaller blast radius. Worth doing first.
+  3. **`fast-uri` and `postcss`** have non-major fixes. Plain `npm audit fix`, no breaking changes, free.
+
+  **Do (3) any time. Do (2) in a quiet window. Do (1) as its own piece of work, and not before 2026-09-01** — there is no security pressure and it competes with the Lab direction session, which is what actually decides whether launch lands.
+
+  What the Astro jump actually touches: content collections (`content.config.ts`, the glob loader, `lab-schema.ts`, and zod if it majors too), `@astrojs/sitemap` compatibility, the three Svelte 5 islands, and `astro:assets` image optimization used by the BDL-005 hero. The 123 tests plus `astro check` catch structural breakage; they do **not** catch rendering and CSS drift, so it needs a real browser pass like the CSP gate got. Fully reversible: revert the commit, redeploy.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 
