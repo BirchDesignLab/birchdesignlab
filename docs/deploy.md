@@ -54,10 +54,16 @@ Step 6, the `www` redirect, is still outstanding as of 2026-08-03.
 ## Security headers and analytics
 
 Shipped 2026-08-03: `public/_headers` sets `X-Content-Type-Options`,
-`Referrer-Policy`, `Permissions-Policy`, and `X-Frame-Options` on every static
-asset. `Permissions-Policy` disables camera, microphone, and geolocation at the
-browser level, which turns the Lab's no-permission-prompts rule from a
-convention into something enforced.
+`Referrer-Policy`, and `X-Frame-Options` on every static asset.
+
+**No `Permissions-Policy`, deliberately.** It was written and then removed the
+same day. Founder direction 2026-08-03: the Lab is going to use location,
+camera, microphone, accelerometer, and whatever else an experiment needs, plus
+GSAP. "The lab is the lab and the lab is free." A header enumerating disabled
+features is a tripwire for that: the next experiment reaches for `midi` or `xr`
+and is blocked by a line nobody remembers writing. `X-Frame-Options: DENY`
+already stops third parties embedding the site, which was the only protection
+the header was really buying here.
 
 ### CSP: tested, deliberately not shipped
 

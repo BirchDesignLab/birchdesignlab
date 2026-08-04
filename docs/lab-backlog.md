@@ -48,7 +48,7 @@ Most expensive item here: the cost is artisan hours placing gradients until the 
 
 Liked, not dead. Revisit when the moment fits.
 
-- **Tonight's Sky.** Star chart of the visitor's actual sky, computed client-side from clock and location. Shelved because the location permission prompt ruins immersion; Lab pieces stay permission-free for now. Revisit when heavier location-needing work makes the prompt worth it. Overlaps the Orrery conceptually anyway; the Orrery scratches the itch without asking anything.
+- **Tonight's Sky.** ~~Shelved.~~ **UNSHELVED 2026-08-03.** Star chart of the visitor's actual sky, computed client-side from clock and location. It was shelved because the location prompt ruins immersion and Lab pieces stayed permission-free. That rule is dead: founder direction 2026-08-03 is that the Lab may use location, camera, microphone, accelerometer, or anything else an experiment needs. "The lab is the lab and the lab is free." Still overlaps the Orrery conceptually, so sequence them deliberately rather than building both.
 - **One Kilobyte.** Entire experiment, markup plus style plus script, under 1024 bytes, live byte counter on the page. Demoscene discipline, pure optimization flex. Shelved as a someday treat, not a priority.
 
 ## Direction set 2026-07-29 (founder session)
@@ -59,6 +59,13 @@ Liked, not dead. Revisit when the moment fits.
 - **Conversion path is the near-term priority.** Pages-to-Workers migration + contact form slot right behind the hygiene commit; specimen/case-study work after that.
 - **Whole-hog content/writing pass wanted** across the site. Founder does not consider Claude Code the tool for good creative writing; treat this as founder-led with mechanical support. Sequencing unchanged (after Lab work).
 - **Lab presentation language / visual identity** stays a "come back to very soon" item ahead of the Lab theme pass.
+
+## Direction set 2026-08-03 (founder session)
+
+- **The Lab rolls heavy.** Founder verdict, verbatim: *"we need to roll heavy in the lab. i wanted to be tentative at first but, within the bounds of 'quiet luxury,' smack people in the face with technical and artistic flex. I hated the experiments because they're paltry and boring. even i can't get excited for that and it's my site. how am i going to explain it to someone who's not 7/8ths as technical as i am"*. The early tentativeness is retired. Both halves of the bar bind: flex hard, stay inside quiet luxury. The test is what a **non-technical** visitor feels in the first five seconds; impressive-to-engineers is not the target. This is grounds for revisiting shipped pieces, not only for judging new ones. Needs its own session.
+- **Permission prompts are allowed.** The permission-free rule is dead: *"the lab is the lab and the lab is free."* Location, camera, microphone, accelerometer, whatever a piece needs. Tonight's Sky is unshelved as a direct result, and no Lab concept gets rejected for needing a prompt. Still design the prompt moment deliberately; an unexplained prompt on load is bad interaction design, but that is craft now, not a rule.
+- **GSAP is in.** Recorded above under the concept list. The website spec already reserved it as an island-scoped future Lab piece, so nothing structural blocks it.
+- **A real logo.** The generated 512x512 mark is a placeholder; see the note in the parked list below.
 
 ## Parked site notes (not experiments)
 
@@ -73,7 +80,8 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Per-experiment OG art.** Each Lab piece gets its own OG card instead of sharing the catalog's. Worthwhile once the catalog holds about a dozen live experiments.
 - **Daily OG rebuild.** Cloudflare deploy hook on a cron so the OG card's tree is truly daily rather than tree-of-last-deploy. Only matters if platform OG caching ever stops making it moot.
 - **GSAP as a Lab-piece technology.** Banned from the core site by the spec, deliberately reserved for a future Lab experiment that wants heavyweight motion. No concept attached yet.
-- **Heavier location-aware work.** Founder intends eventually to build pieces that justify a location permission prompt. When that day comes, Tonight's Sky (shelved above) comes off the shelf with it.
+- **Heavier location-aware work.** ~~Waiting on a decision about permission prompts.~~ **Unblocked 2026-08-03.** Permission prompts are allowed in the Lab now, so location-aware pieces need no special justification. Tonight's Sky came off the shelf with this.
+- **GSAP.** Founder direction 2026-08-03: the Lab is going to use it. The website spec already reserved room for it as an island-scoped future Lab piece, so nothing structural blocks it; it is a dependency decision and a first piece to use it.
 - **Copy pass on the business pages (redo).** A founder copy pass was done 2026-07-16 and carried through the 2026-07 design-system port, but founder judges it weak and wants a quality rewrite over home/services/about/contact. First-draft, not final (founder territory per the writing rules); sequence after the Lab work, not before.
 - **About page design revisit (Claude Design check).** Founder wants a brief pass over the About page run against Claude's design guidance — a check, NOT a rework. Just validating the page against some things, no rebuild intended. Low-effort review, do when founder has time.
 - ~~**Shorter About bark hero (~1/2 homepage height).**~~ **Done 2026-07-19.** About's hero is now `min-height: 44vh` with `lockAspect` on its `BarkField`, founder-approved on sight. One consequence worth knowing before touching it again: `lockAspect` fixes dash *shape*, not dash *scale*. Because locked dash width is measured against canvas height, About's lenticels render ~4x narrower than Home's (mean 10.7px vs 42.9px at 1265px wide) and ink coverage fell from 3.83% to 0.98%, so About reads as a finer, sparser grain than Home's bold marks. That is the current intent. If a future pass wants About's marks to carry Home's visual weight, the knob is `density` (~600 restores 3.87% coverage, matching About's old weight with many more fine marks); matching Home's mark *size* instead would need wider dashes in `pattern.ts`, which is generation, not draw.
