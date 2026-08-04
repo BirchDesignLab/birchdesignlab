@@ -19,11 +19,12 @@ Repo: `BirchDesignLab/birchdesignlab`.
 
 ## One-time setup (founder, in dashboard / CLI)
 
-**Completed 2026-07-29** except step 2: Email Sending onboarding is deferred
+**Completed 2026-07-29** except steps 2 and 6. Email Sending onboarding is deferred
 until the founder opts into the paid plan. Until then the contact form markup
 stays out of prod (held locally) and /contact remains mailto-only; the
 Worker's email path degrades to a 502 page pointing at hello@.
 The Pages project is deleted; Workers Builds is the only deploy pipeline.
+Step 6, the `www` redirect, is still outstanding as of 2026-08-03.
 
 1. **Log wrangler into the account that owns `birchdesignlab.com`**
    (`npx wrangler login`). Verified 2026-08-03: the local token authenticates as
@@ -52,17 +53,17 @@ The Pages project is deleted; Workers Builds is the only deploy pipeline.
 
 ## Every deploy after that
 
-`git push` to main. Workers Builds runs the build and `wrangler deploy`.
-Manual escape hatch: `npm run deploy` (builds, then deploys with local
-wrangler auth).
+Branch, open a PR, review, merge to `main`. Workers Builds then builds the
+merge commit and runs `wrangler deploy`. Merging is what deploys; there is no
+separate deploy step, and nothing should be pushed directly to `main`.
 
-Deploys now follow a pull request: branch, PR, review, merge to `main`, and
-Workers Builds deploys the merge. On 2026-08-03 a Cloudflare incident
-("Workers Build Failures") left a build stuck in Initialize for 39 minutes;
-`npm run deploy` bypasses Workers Builds entirely and was used to ship. It
-builds from the **working tree**, not from the commit, so stash anything held
-back first. The contact form markup is currently in a named stash for exactly
-this reason.
+Manual escape hatch: `npm run deploy` builds and deploys with local wrangler
+auth, bypassing Workers Builds entirely. Use it when the Builds pipeline is
+down, as on 2026-08-03, when a Cloudflare incident ("Workers Build Failures")
+left a build stuck in Initialize for 39 minutes. It deploys the **working
+tree**, not the committed tree, so stash anything held back first. The contact
+form markup sits in a named stash for exactly this reason; check
+`git stash list` before running it.
 
 ## Local dev
 
