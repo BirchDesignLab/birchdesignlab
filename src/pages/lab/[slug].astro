@@ -58,7 +58,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
     </section>
   </StudyLayout>
 ) : (
-  <ExperimentLayout title={pageTitle} description={summary} designation={designation} noindex={entry.data.noindex}>
+  <ExperimentLayout title={pageTitle} description={summary} designation={designation} heading={title} noindex={entry.data.noindex}>
     {entry.data.howto && <WallLabel lines={entry.data.howto} />}
     {Experiment ? (
       <Experiment />

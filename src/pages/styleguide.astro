@@ -75,7 +75,10 @@ const semanticSwatches = [
       <p class="hero-spec">The shining tree</p>
 
       <p class="spec-label smallcaps">h1 / h2 / h3</p>
-      <h1>The shining tree</h1>
+      <!-- Styled as h1 rather than being one: this is a type specimen, and a
+           second h1 on the page is a document-outline bug. Rendering is
+           identical, so the sample still shows the real h1 scale. -->
+      <p class="h1-spec">The shining tree</p>
       <h2>Two facts about the tree</h2>
       <h3>The bark you write on</h3>
 
@@ -193,7 +196,15 @@ const semanticSwatches = [
   .wordmark-spec { font-size: var(--text-lg); }
   .hero-spec { font-family: var(--font-display); font-size: var(--text-hero); line-height: 1.1; }
   .specimens h2 { margin-top: var(--space-2); padding-top: 0; border-top: none; }
-  .specimens h1, .specimens h3 { margin-top: var(--space-2); }
+  .specimens h3 { margin-top: var(--space-2); }
+  /* Mirrors base.css h1 exactly, so the specimen keeps showing h1's real scale. */
+  .specimens .h1-spec {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.15;
+    font-size: var(--text-2xl);
+    margin-top: var(--space-2);
+  }
   .body-spec { max-width: 60ch; margin-top: var(--space-2); }
   .muted-spec { color: var(--mark-muted); }
 

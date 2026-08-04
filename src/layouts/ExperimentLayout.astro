@@ -8,8 +8,17 @@ import '../styles/base.css';
 import Seo from '../components/Seo.astro';
 import ThemeBootstrap from '../components/ThemeBootstrap.astro';
 
-interface Props { title: string; description: string; designation: string; noindex?: boolean }
-const { title, description, designation, noindex = false } = Astro.props;
+/** `title` is the full page title; `heading` is the specimen's own title,
+    which is what the h1 says. Keeping them separate stops the heading from
+    reading "BDL-006 · BDL-006 The Regulator · Birch Design Lab". */
+interface Props {
+  title: string;
+  description: string;
+  designation: string;
+  heading: string;
+  noindex?: boolean;
+}
+const { title, description, designation, heading, noindex = false } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -24,6 +33,11 @@ const { title, description, designation, noindex = false } = Astro.props;
   <body>
     <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>
     <main id="main">
+      {/* The stages are deliberately immersive, so the page's real heading is
+          available to screen readers and crawlers without intruding on the
+          design. SpecimenPlate renders the title inside a summary element,
+          which is not a heading. */}
+      <h1 class="visually-hidden">{designation} &middot; {heading}</h1>
       <slot />
     </main>
   </body>
