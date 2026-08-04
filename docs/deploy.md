@@ -89,6 +89,30 @@ The fix is to stop injecting stylesheets and set the tokens directly via
 is a refactor of a shipped Lab experiment, so it was not done during a security
 pass.
 
+**What actually survives, measured 2026-08-03 against the real policy** (which
+emits only `script-src` and `style-src`, with no `style-src-attr`, no
+`unsafe-hashes`, no `unsafe-inline`):
+
+| How a style is set | Under CSP |
+|---|---|
+| `el.style.setProperty()` (CSSOM) | applies |
+| `setAttribute('style', ...)` | blocked |
+| `<style>` element with unhashed text | blocked, `.sheet` is null |
+
+This is why BDL-006 passed the gate and the styleguide did not, and it is mostly
+luck: Svelte 5 writes reactive `style={...}` bindings through CSSOM, so the
+Regulator's crown rotation and ramp demo keep working. Hand-authored inline
+style attributes are the real casualty. Three exist today and will need moving
+to CSSOM or to a class before CSP can ship:
+
+- `src/experiments/bdl-006/Crown.svelte` (crown indicator rotation)
+- `src/experiments/bdl-006/Regulator.svelte` (ramp applied to the demo element)
+- `src/pages/styleguide.astro` (swatch chip backgrounds)
+
+The two Svelte ones are re-set through CSSOM on hydration, so they self-heal
+after the island mounts; the cost there is a wrong first paint, not a dead
+control. The styleguide chip is server-rendered only and would simply be blank.
+
 Revisit when the contact form ships. That is when the site starts accepting user
 input, which is when CSP starts earning its keep.
 
