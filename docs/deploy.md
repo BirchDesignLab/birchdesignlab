@@ -71,10 +71,26 @@ It was dropped rather than relaxed to `(self)` because `(self)` protects nothing
 this site is exposed to: no third-party scripts, no third-party iframes, and
 `X-Frame-Options: DENY` already refuses embedding outright.
 
-### CSP: tested, deliberately not shipped
+### CSP: tested and rejected
 
-Astro's `experimental.csp` was enabled and verified in a real browser on
-2026-08-03. It works everywhere except `/styleguide` and `/lab/bdl-002`, which
+**Decision 2026-08-03: not shipping a Content-Security-Policy.** Not deferred,
+not a TODO. It was enabled, measured in a real browser, and turned down on
+merit. Re-open it only if one of the triggers at the end of this section fires.
+
+**Why it does not pay for itself here.** CSP stops injected script from
+executing, which needs an injection path to exist. This site has none: static
+pages, no user-submitted content rendered anywhere, no third-party scripts, no
+CDN, no embeds, private repo. The contact form does not change that either;
+submissions are emailed, never rendered back onto a page.
+
+The one genuine threat it touches is a compromised npm dependency shipping
+malicious code in the bundle. `'self'` would not stop that, because the code is
+same-origin. It would only limit where stolen data could be sent, via
+`connect-src`. Partial mitigation of an unlikely event, bought at the cost of
+breaking working pages.
+
+**And it does break working pages.** Astro's `experimental.csp` works everywhere
+except `/styleguide` and `/lab/bdl-002`, which
 both create a `<style>` element at runtime and rewrite its `textContent` to swap
 palettes and typefaces. Under hash-based `style-src` the element keeps its text
 but `.sheet` is null, so nothing applies, and **no console error is raised**.
@@ -113,15 +129,24 @@ The two Svelte ones are re-set through CSSOM on hydration, so they self-heal
 after the island mounts; the cost there is a wrong first paint, not a dead
 control. The styleguide chip is server-rendered only and would simply be blank.
 
-Revisit when the contact form ships. That is when the site starts accepting user
-input, which is when CSP starts earning its keep.
+**Triggers that would re-open this.** Two, and neither is on the roadmap:
 
-One thing to carry into that revisit: Cloudflare injects the Web Analytics
-beacon at the edge, after Astro has generated the page and its policy, so the
-beacon's hash can never be in it. Any future CSP must allow
+1. **A third-party script is added.** An analytics beacon, an embed, a chat
+   widget, anything served from a host you do not control.
+2. **User-generated content gets rendered on a page.** Anything a stranger can
+   put into the HTML a visitor receives.
+
+If either fires, the work is: move the three inline style attributes listed
+above to CSSOM or classes, refactor the styleguide and BDL-002 off runtime
+stylesheet injection, then re-run the gate.
+
+One trap to carry into that work if it ever happens: Cloudflare injects the Web
+Analytics beacon at the edge, after Astro has generated the page and its policy,
+so the beacon's hash can never be in it. A policy would have to allow
 `https://static.cloudflareinsights.com` in `script-src` and
 `https://cloudflareinsights.com` in `connect-src`, or the site blocks its own
-analytics. Recorded here because it is invisible until it bites.
+analytics. Note this is also trigger 1: enabling Web Analytics is itself adding
+a third-party script, though on its own it is not worth a CSP.
 
 ### Founder dashboard steps, not code
 
