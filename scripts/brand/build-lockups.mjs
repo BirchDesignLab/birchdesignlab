@@ -15,7 +15,7 @@ import opentype from 'opentype.js';
 const CACHE = path.join('scripts', 'brand', '.cache');
 const TTF = path.join(CACHE, 'Marcellus-Regular.ttf');
 const FONT_URL =
-  'https://raw.githubusercontent.com/google/fonts/main/ofl/marcellus/Marcellus-Regular.ttf';
+  'https://raw.githubusercontent.com/google/fonts/90abd17b4f97671435798b6147b698aa9087612f/ofl/marcellus/Marcellus-Regular.ttf';
 const OUT = path.join('assets', 'brand');
 
 const PAPER = '#f4f0e6';
