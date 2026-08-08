@@ -7,3 +7,4 @@ public/og/
 # Blanket-ignore any stray local rebuild so it can never be committed again.
 graphify-out/
 docs/refs/
+.superpowers/
