@@ -3,7 +3,7 @@
 The knowledge graph moved to `C:\vault\graphify\birchdesignlab\graphify-out\` (its `.graphify_root` points back at this repo). Nothing graphify-related belongs inside this repo; `graphify-out/` is blanket-gitignored.
 
 - Query: `graphify query "<question>" --graph C:\vault\graphify\birchdesignlab\graphify-out\graph.json` (same `--graph` flag for `path`/`explain`)
-- Rebuild after code changes: `graphify update C:\vault\graphify\birchdesignlab` (AST-only, no API cost)
+- Rebuild after code changes: run `graphify update C:\git\birchdesignlab` (the real repo path, NOT the vault path — `update` always treats its path arg as the literal scan root and ignores `.graphify_root`, so pointing it at the vault re-extracts the vault's own exported `.md` notes and corrupts `graph.json`). This writes to the repo-local `graphify-out\` (AST-only, no API cost). Then copy `graph.json`, `graph.html`, `GRAPH_REPORT.md`, `.graphify_labels.json`, `manifest.json` into the vault folder and confirm `graphify-out\.graphify_root` there still reads `C:\git\birchdesignlab` (the copy doesn't touch it, but check anyway).
 
 ## Shared Memory
 
