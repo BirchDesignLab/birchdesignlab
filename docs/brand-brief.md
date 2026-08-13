@@ -16,6 +16,11 @@ The studio's visual language is settled and good. The typography, palette, and
 the material feel of the site are not in question and are not up for redesign.
 What is missing is a mark that belongs to them.
 
+**This brief deliberately does not recommend a direction.** It records the
+constraints, the system, and what has already been tried, and it stops there.
+Symbol, wordmark, wordmark plus a separate small mark, or something nobody here
+has thought of are all open, and none of them is a compromise.
+
 ## The studio in one paragraph
 
 Birch Design Lab is a one-person studio building custom software and custom
@@ -45,9 +50,9 @@ drawing.
 2. **What should it say about the studio?** "Careful" and "made by a person" are
    implied by everything else on the site. Whether the mark should also say
    technical, or crafted, or old, or precise, has never been decided in writing.
-3. **Does the studio want a symbol at all,** or is a wordmark alone the honest
-   answer for a one-person practice? A wordmark would sidestep the favicon
-   problem described below, at the cost of having nothing that works at 16px.
+3. **Does the studio want a symbol at all,** or is a wordmark the honest answer
+   for a one-person practice? A wordmark and a separate small mark for tab-sized
+   placements is a normal arrangement, not a workaround.
 
 ## Where the mark has to work
 
@@ -65,11 +70,12 @@ are actual, not aspirational.
 
 Two things follow from that table.
 
-**The range is brutal.** The same mark has to survive a 16px browser tab and a
-band roughly 880px wide on a television across a room. The August 2026 attempt
-handled this by drawing two marks, a dense nine-dash version and a simplified
-four-dash version for anything under about 32px. That is a legitimate solution
-and it is also an admission that the dense mark does not scale.
+**The range is wide.** The same identity has to cover a 16px browser tab and a
+band roughly 880px wide on a television across a room. Nothing requires one
+drawing to do both. The August 2026 attempt used two, a dense nine-dash mark and
+a simplified four-dash cut for anything under about 32px, and that is a normal
+way to solve it. A wordmark paired with a separate small mark solves it the same
+way.
 
 **Almost nothing is adopted.** The site still serves the old placeholder
 everywhere. Whatever comes out of the sweep gets wired in once, cleanly, and the
@@ -123,10 +129,10 @@ On 08-13-26 the founder restated that none of this is settled and that the whole
 set is a bridge to the September 2026 launch rather than a decision. It is
 shipping. It is not chosen.
 
-**The pattern worth noticing.** Every rejected candidate and the accepted one are
-the same idea: horizontal dashes on a dark field. Seven variations on one theme
-were mocked, and the theme itself was never the thing being tested. That is the
-most useful thing in this document.
+**One observation, offered as fact rather than direction.** Every rejected
+candidate and the accepted one are the same idea: horizontal dashes on a dark
+field. Seven variations on one theme were mocked; the theme itself was never the
+thing being tested.
 
 ## Open decisions
 
@@ -140,29 +146,33 @@ most useful thing in this document.
 
 ## What a finished delivery looks like
 
+Whatever shape the identity takes, these are the pieces the site needs. How they
+are drawn, and whether they are one idea or several, is open.
+
 - Vector source, editable, not a traced raster.
-- The primary mark.
-- A small-size variant if the primary does not hold at 16px, which is likely.
-- One lockup at minimum, mark plus wordmark, with the wordmark as outlines so it
-  does not depend on Marcellus being installed.
-- Both faces, or an explicit decision that the mark always carries its own field.
+- Whatever the primary is: a mark, a wordmark, or a lockup of both.
+- Something that works at tab size. It can be a reduced cut of the primary, a
+  monogram, or an unrelated small mark. Any of those is fine.
+- Any wordmark shipped as outlines, so standalone files do not depend on
+  Marcellus being installed.
+- Both faces, or an explicit decision that the artwork always carries its own
+  field.
 - One-colour artwork for anything printed or stamped.
 
 ## How to judge a candidate
 
-Not by looking at it large. Every mark looks fine large.
+Not by looking at it large. Everything looks fine large. These are checks, in no
+particular order of authority, and none of them is a veto.
 
-1. Render it at 16px in a browser tab, next to a dozen other tabs. Is it
-   identifiable, or is it a smudge?
-2. Render it one-colour, no accent. Does it still work?
-3. Put it in the site header, at text size, beside Marcellus small caps. Does it
-   belong to the same family or is it a guest?
-4. Put it on a television across a room. Does it hold?
-5. Show it to somebody who is not technical and does not know the studio. Ask
-   what kind of business it is. Their answer is the only real test the site's own
-   quality bar recognises.
-
-A candidate that fails 1 or 3 is not a candidate, however good it looks at 512px.
+- In the site header, at text size, beside Marcellus small caps. Does it belong
+  to the same family, or does it read as a guest?
+- On a television across a room, as the client credit slide.
+- One-colour, no accent.
+- Shown to somebody who is not technical and does not know the studio: what kind
+  of business do they think this is?
+- At 16px in a tab strip, as hygiene. It needs to be distinguishable and not
+  ugly. It does not need to carry the brand, and a separate drawing may do this
+  job.
 
 ## Where the current files are
 
