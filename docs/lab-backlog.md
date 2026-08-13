@@ -48,7 +48,7 @@ Most expensive item here: the cost is artisan hours placing gradients until the 
 
 Liked, not dead. Revisit when the moment fits.
 
-- **Tonight's Sky.** ~~Shelved.~~ **UNSHELVED 2026-08-03.** Star chart of the visitor's actual sky, computed client-side from clock and location. It was shelved because the location prompt ruins immersion and Lab pieces stayed permission-free. That rule is dead: founder direction 2026-08-03 is that the Lab may use location, camera, microphone, accelerometer, or anything else an experiment needs. "The lab is the lab and the lab is free." Still overlaps the Orrery conceptually, so sequence them deliberately rather than building both.
+- **Tonight's Sky.** ~~Shelved.~~ **UNSHELVED 2026-08-03** (permission prompts now allowed — "the lab is the lab and the lab is free"). Star chart of the visitor's actual sky, computed client-side from clock and location. Overlaps the Orrery conceptually; sequence them deliberately rather than building both.
 - **One Kilobyte.** Entire experiment, markup plus style plus script, under 1024 bytes, live byte counter on the page. Demoscene discipline, pure optimization flex. Shelved as a someday treat, not a priority.
 
 ## Direction set 2026-07-29 (founder session)
@@ -64,8 +64,14 @@ Liked, not dead. Revisit when the moment fits.
 
 - **The Lab rolls heavy.** Founder verdict, verbatim: *"we need to roll heavy in the lab. i wanted to be tentative at first but, within the bounds of 'quiet luxury,' smack people in the face with technical and artistic flex. I hated the experiments because they're paltry and boring. even i can't get excited for that and it's my site. how am i going to explain it to someone who's not 7/8ths as technical as i am"*. The early tentativeness is retired. Both halves of the bar bind: flex hard, stay inside quiet luxury. The test is what a **non-technical** visitor feels in the first five seconds; impressive-to-engineers is not the target. This is grounds for revisiting shipped pieces, not only for judging new ones. Needs its own session.
 - **Permission prompts are allowed.** The permission-free rule is dead: *"the lab is the lab and the lab is free."* Location, camera, microphone, accelerometer, whatever a piece needs. Tonight's Sky is unshelved as a direct result, and no Lab concept gets rejected for needing a prompt. Still design the prompt moment deliberately; an unexplained prompt on load is bad interaction design, but that is craft now, not a rule.
-- **GSAP is in.** Recorded above under the concept list. The website spec already reserved it as an island-scoped future Lab piece, so nothing structural blocks it.
-- **A real logo.** The generated 512x512 mark is a placeholder; see the note in the parked list below.
+- **GSAP is in.** Recorded above under the concept list. The website spec already reserved it as an island-scoped future Lab piece, so nothing structural blocks it. *Expanded 2026-08-13 — see that direction set: every experiment is opened up, not one reserved piece.*
+- **A real logo.** The generated 512x512 mark is a placeholder; see the note in the parked list below. *Resolved 2026-08-08 — mark chosen; see the parked-list entry.*
+
+## Direction set 2026-08-13 (founder session)
+
+- **The animation line is redrawn.** The 2026-08-03 "flex within quiet luxury" bound is split in two: **quiet luxury now names the business pages** (home, services, about, contact — Lighthouse 100s, restrained, no heavy motion), and **the Lab is unbound** — GSAP and anything else, "any and everything to flex technically," for every experiment, not a single reserved piece. In the C&C live app the slideshow screen is the one animated surface (zero animation elsewhere there), and the BDL slide rides it. The Lab's quality bar is unchanged: what a non-technical visitor feels in the first five seconds.
+- **Nothing brand-side is settled.** Founder, 2026-08-13: still hates the logo and the sponsor screen. The 2026-08-08 mark, lockups, and sponsor card are a **bridge to 2026-09-01**, not decisions — "we have enough to get us to 9/1." Do not describe them as chosen or approved anywhere.
+- **Design sweep planned within roughly a month** (stated 2026-08-08): the logo question reopens in full there — mark direction, lockups, favicon/OG adoption, light-face variants. The copy rewrite rides the same window.
 
 ## Parked site notes (not experiments)
 
@@ -83,10 +89,9 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **Heavier location-aware work.** ~~Waiting on a decision about permission prompts.~~ **Unblocked 2026-08-03.** Permission prompts are allowed in the Lab now, so location-aware pieces need no special justification. Tonight's Sky came off the shelf with this.
 - **Copy pass on the business pages (redo).** A founder copy pass was done 2026-07-16 and carried through the 2026-07 design-system port, but founder judges it weak and wants a quality rewrite over home/services/about/contact. First-draft, not final (founder territory per the writing rules); sequence after the Lab work, not before.
 - **About page design revisit (Claude Design check).** Founder wants a brief pass over the About page run against Claude's design guidance — a check, NOT a rework. Just validating the page against some things, no rebuild intended. Low-effort review, do when founder has time.
-- ~~**Shorter About bark hero (~1/2 homepage height).**~~ **Done 2026-07-19.** About's hero is now `min-height: 44vh` with `lockAspect` on its `BarkField`, founder-approved on sight. One consequence worth knowing before touching it again: `lockAspect` fixes dash *shape*, not dash *scale*. Because locked dash width is measured against canvas height, About's lenticels render ~4x narrower than Home's (mean 10.7px vs 42.9px at 1265px wide) and ink coverage fell from 3.83% to 0.98%, so About reads as a finer, sparser grain than Home's bold marks. That is the current intent. If a future pass wants About's marks to carry Home's visual weight, the knob is `density` (~600 restores 3.87% coverage, matching About's old weight with many more fine marks); matching Home's mark *size* instead would need wider dashes in `pattern.ts`, which is generation, not draw.
+- ~~**Shorter About bark hero.**~~ **Done 2026-07-19**, founder-approved (44vh, `lockAspect`). Kept caveat: `lockAspect` fixes dash shape not scale, so About renders a finer sparser grain than Home by design; to re-weight it, the knob is `density` (~600), not dash width.
 
-- **Flip the host from Cloudflare Pages to Workers.** ~~Agreed 2026-07-19.~~ **DONE 2026-07-29.** Worker live on both domains via Workers Builds, Pages project deleted, endpoint verified in prod. One remainder: Email Sending onboarding deferred (paid plan, founder call); until then the form markup stays held back locally and /contact is mailto-only. Original rationale kept below.
-  Agreed 2026-07-19. The site is on Pages today, which is correct for a purely static build: Cloudflare runs `npm run build` and serves `dist` off the CDN, no per-request code. The contact form changes that, and the founder expects it sooner rather than later. Cloudflare has been steering new projects toward Workers and treating Pages as the settled path, and Workers Static Assets now covers the static side, so the form is the natural moment to move rather than bolting a Pages Function onto a product being wound down. Note this supersedes the "contact form via Cloudflare Pages Functions" renovation path recorded in the website spec and core plan; do the migration and the form as one piece of work, not two. Deploy config that has to survive the move is in `docs/deploy.md` (build command, output dir, the `.nvmrc` Node pin, custom domain).
+- ~~**Flip the host from Cloudflare Pages to Workers.**~~ **DONE 2026-07-29.** Worker live on both domains, Pages project deleted, verified in prod. Remainder: Email Sending onboarding deferred (paid plan, founder call); until then the form markup stays in its named git stash and /contact is mailto-only. Rationale and deploy config: `docs/deploy.md`; supersedes the spec's "Pages Functions" renovation path.
 
 - **Curator's note placards on studies.** Founder liked the concept 2026-07-29, deferred: repurpose the wall-label form (square-tagged placard) as a short curator's note on study pages ("Commissioned work. Client's own vendor accounts throughout."). Cheap build: optional `note` field on the study schema branch, rendered in wall-label styling near the plate block. Decide during the Lab theme pass, which owns placard furniture.
 
@@ -96,14 +101,13 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 
 - **MDX for study narratives, post-theming.** Founder call 2026-07-29 during the BDL-005 design round: studies author in plain markdown (blockquote commentary asides) for now; add the MDX integration after the Lab theme pass so component-rich narratives (galleries, embeds, asides as components) become possible without pre-theming one-off components.
 
-- **A real logo.** The 512x512 mark at `public/og/logo.png` is generated at
-  build time from the favicon geometry and is a placeholder: it is a faithful
-  scale-up of a 32px favicon, so the padding is proportionally large and the
-  lenticels sit small in the frame. Fine for a knowledge-panel logo, wrong for
-  a real mark. Founder verdict 2026-08-03: "logo sucks but it's fine for now."
-  Try Claude's design tooling or an MCP first; commission someone if that does
-  not land. Replacing the file needs no code change, the structured data and
-  manifest already point at that path.
+- **A real logo — STILL OPEN; interim mark shipped 2026-08-08 (PR #9).** The
+  dense-bark scatter mark and two lockups in `assets/brand/` (lockups
+  generated by `scripts/brand/build-lockups.mjs`; never hand-edit them) are a
+  bridge to launch, not a decision — founder still dislikes the logo
+  (2026-08-13). The generated favicon scale-up at `public/og/logo.png` is
+  still what the site serves. The design sweep reopens the whole question;
+  replacing the file needs no code change.
 
 - **One loose end from the 2026-08-04 dashboard work.** The Cloudflare Web Analytics beacon is enabled but not appearing in the HTML. Purge cache and recheck; if it is still absent, embed the snippet manually in `HeadCommon.astro`. Documented in `docs/deploy.md`. (A second issue, two simultaneous DMARC records silently disabling DMARC entirely, was found and fixed the same day; the trap is written up in `docs/deploy.md` so it does not recur.)
 
