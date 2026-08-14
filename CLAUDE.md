@@ -26,9 +26,9 @@ The reason is insurance. If a run goes wrong, or the same job comes back in six
 months, the script and the reasoning behind it still exist. A script that lived
 in `%TEMP%` is gone the moment it would have been useful.
 
-This applies to throwaway helpers too, including commit-message files: use
-`git commit -m` with repeated flags rather than writing a file somewhere and
-deleting it.
+**Scope: scripts.** Genuinely disposable working files are fine in a scratch
+directory. Commit-message drafts, diff dumps, notes to self. The rule is about
+executable work that could ever be run twice, not about every byte written.
 
 ## Git workflow
 
