@@ -56,6 +56,30 @@ crossing 18s. Edit and re-run.
 It is a script rather than a hand edit because a re-export drops the bindings
 again, and a re-export is expected.
 
+## Why the wordmarks were outlined
+
+The export leaves the wordmark as live `<text>` in `Marcellus, serif`. That only
+renders correctly where Marcellus is installed, or where the host page loads it.
+An SVG in an `<img>`, as a CSS background, or handed to a rasteriser cannot
+reach a page's webfonts, so it quietly falls back to a generic serif. Different
+logo, no error.
+
+It hid because the review sheet loads Marcellus itself, so the marks look right
+there and only there. It surfaced when the first PNG batch came out in the wrong
+face.
+
+`scripts/brand/outline-logo-text.mjs` converts the text in the 8 affected marks
+(`8b` ×4, `10d` ×4) to paths, using the same pinned Google Fonts TTF as
+`build-lockups.mjs`, whose own header states the rule: outlined "so the SVGs
+render with no font installed". The live text is kept in a comment beside each
+path as the editable source.
+
+`rasterize-logos.mjs` now refuses to render any SVG still containing `<text>`,
+so this cannot recur silently.
+
+**Re-run it after any re-export.** A fresh export brings live text back, exactly
+as it brings back missing animation bindings.
+
 ## Checking a re-export
 
 Verified 2026-08-13: a second export pulled straight from Claude Design was
