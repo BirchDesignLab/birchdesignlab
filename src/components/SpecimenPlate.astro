@@ -6,6 +6,7 @@ const { designation, title, tech } = Astro.props;
   <summary>
     <span class="smallcaps">Specimen plate</span>
     <span class="id">{designation} &middot; {title}</span>
+    <span class="dash" aria-hidden="true"></span>
   </summary>
   <div class="body">
     <slot />
@@ -20,7 +21,13 @@ const { designation, title, tech } = Astro.props;
     position: fixed; inset: auto 0 0 0; z-index: 20;
     background: color-mix(in srgb, var(--field) 88%, transparent);
     backdrop-filter: blur(8px);
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-accent);
+  }
+  /* A plate only ever renders on a live specimen's page, so the dash needs no
+     condition: [slug].astro's getStaticPaths filters to status === 'live'. */
+  .dash {
+    display: inline-block; width: 0.85em; height: 2px;
+    background: var(--accent); align-self: center;
   }
   summary {
     cursor: pointer; list-style: none;
@@ -41,7 +48,8 @@ const { designation, title, tech } = Astro.props;
     font-family: var(--font-smallcaps);
     letter-spacing: var(--tracking-wide); text-transform: uppercase;
     font-size: 0.68rem; line-height: 1;
-    border: 1px solid var(--line);
+    color: var(--accent);
+    border: 1px solid var(--line-accent);
     padding: 0.35em 0.8em 0.25em; margin-right: var(--space-2);
   }
 </style>

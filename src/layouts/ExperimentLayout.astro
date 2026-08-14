@@ -25,7 +25,7 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
     <HeadCommon title={title} description={description} noindex={noindex} />
   </head>
   <body>
-    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>
+    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
     <main id="main">
       {/* The stages are deliberately immersive, so the page's real heading is
           available to screen readers and crawlers without intruding on the
@@ -46,4 +46,5 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
     backdrop-filter: blur(6px);
   }
   .hatch:hover { color: var(--mark); }
+  .hatch-id { color: var(--accent); }
 </style>
