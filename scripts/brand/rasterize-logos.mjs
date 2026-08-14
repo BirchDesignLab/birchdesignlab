@@ -33,6 +33,17 @@ const FAVICON_SIZES = [32, 180, 512];
 
 const render = async (file, width) => {
   const svg = readFileSync(join(SRC, file));
+  // A second silent-substitution guard, added after the first version of this
+  // script shipped eight PNGs with the wrong typeface. Live <text> renders in
+  // whatever font the rasterising machine happens to have; Marcellus is not
+  // installed here and the repo ships only woff/woff2, which fontconfig cannot
+  // use, so it fell back to a generic serif and said nothing.
+  // Outlined paths have no font dependency at all.
+  if (svg.includes('<text')) {
+    throw new Error(
+      `${file}: still contains live <text>. Rasterising it would bake in whatever font this machine has. Run scripts/brand/outline-logo-text.mjs first.`,
+    );
+  }
   // density lifts the rasterisation resolution before resize, so hairlines and
   // square stroke caps stay crisp instead of being resampled from a small base.
   return sharp(svg, { density: 384 }).resize({ width }).png({ compressionLevel: 9 }).toBuffer();
