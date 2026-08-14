@@ -155,7 +155,23 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
   generated favicon and `public/og/logo.png`; favicon, OG cards, the web
   manifest, and the site header and footer all still point at the placeholder.
   The 2026-08-08 dense-bark mark and its lockups are superseded, and so is the
-  Cheer and Chatter brand kit copied from them.
+  Cheer and Chatter brand kit copied from them. Founder 08-13-26: adoption is
+  wanted but deliberately later.
+
+  **The asset pipeline is finished and scripted**, all of it re-runnable after
+  the re-export the kit expects:
+
+  - `scripts/brand/outline-logo-text.mjs` — outlines the wordmarks to Marcellus
+    paths. **Run this first after any re-export**, or the marks render in a
+    fallback serif everywhere except the review sheet.
+  - `scripts/brand/inline-logo-animations.mjs` — gives the 11 animated marks
+    their own keyframes. Timing is one number per mark here.
+  - `scripts/brand/rasterize-logos.mjs` — 29 PNGs of the static set. Refuses to
+    run against live `<text>` or a dropped `mix-blend-mode`.
+
+  Both silent-substitution failures this pass hit (a rasteriser dropping the
+  blend, a missing font swapping the typeface) are now guarded rather than
+  trusted. `assets/brand/logos/README.md` is the operating manual.
 
 - **One loose end from the 2026-08-04 dashboard work.** The Cloudflare Web Analytics beacon is enabled but not appearing in the HTML. Purge cache and recheck; if it is still absent, embed the snippet manually in `HeadCommon.astro`. Documented in `docs/deploy.md`. (A second issue, two simultaneous DMARC records silently disabling DMARC entirely, was found and fixed the same day; the trap is written up in `docs/deploy.md` so it does not recur.)
 
