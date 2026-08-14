@@ -15,9 +15,17 @@ const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'sh
 const Heading = level;
 ---
 <article class="card" data-type={entry.data.type}>
-  <p class="designation smallcaps">{designation}</p>
+  <p class="status">
+    <span class="designation smallcaps">{designation}</span>
+    {live
+      ? <span class="working">
+          <span class="dash" aria-hidden="true"></span>
+          <span class="working-label">working specimen</span>
+        </span>
+      : <span class="soon">forthcoming</span>}
+  </p>
   <Heading>
-    {live ? <a href={href}>{title}</a> : <span>{title} <em class="soon">forthcoming</em></span>}
+    {live ? <a href={href}>{title}</a> : <span>{title}</span>}
   </Heading>
   <p class="summary">{summary}</p>
   <p class="meta">
@@ -36,17 +44,45 @@ const Heading = level;
     padding-block: var(--space-6);
     padding-inline: var(--space-3);
     margin-inline: calc(var(--space-3) * -1);
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-accent);
+    transition: background-color var(--dur-1) var(--ease-weighted);
   }
+  .card:hover { background: var(--green-surface); }
+
+  /* Status line. The designation is CLASSIFICATION and stays accent on every
+     row, forthcoming included; only the marker beside it carries state. */
+  .status { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
   .designation { color: var(--accent); font-size: var(--text-sm); }
+  .working { display: flex; align-items: center; gap: var(--space-2); color: var(--accent); }
+  .working .dash { display: inline-block; width: 0.85em; height: 2px; background: var(--accent); }
+  /* Chip typography is declared in full rather than borrowing the global
+     .smallcaps utility, because that utility also sets font-size: 0.82em and
+     these chips are pinned at 0.68rem. Every chip across this pass is written
+     the same way, in five files, which is what makes them comparable. */
+  .working-label, .soon, .tag {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1;
+  }
+  /* Leather, not green: waiting is not working. The word stays "forthcoming"
+     because "in progress" would be a claim about right now. */
+  .soon {
+    color: var(--accent-strong); border: 1px solid var(--accent-strong);
+    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
+  }
+
   .card h2, .card h3 { margin-top: var(--space-1); }
   h2 a, h3 a { color: var(--mark); text-decoration: none; }
   h2 a:hover, h3 a:hover { color: var(--accent); }
-  .soon { color: var(--mark-muted); font-size: var(--text-sm); font-style: italic; }
   .summary { color: var(--mark-muted); max-width: 52ch; margin-top: var(--space-2); }
   .meta {
     display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
     margin-top: var(--space-4); font-size: var(--text-sm); color: var(--mark-muted);
   }
-  .tag::before { content: '·'; margin-right: var(--space-2); }
+  /* Tech goes from dot-separated text to chips, so the meta row reads as one
+     family of tags rather than badges followed by prose. */
+  .tag {
+    color: var(--accent); border: 1px solid var(--line-accent);
+    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
+  }
 </style>

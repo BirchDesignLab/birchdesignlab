@@ -54,6 +54,14 @@
   --ease-weighted: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-1: 300ms;
   --dur-2: 600ms;
+
+  /* Derived, not a palette value: the accent-tinted hairline the Lab's loud
+     grammar uses in place of --line. Defined once here rather than repeating
+     the color-mix at eight call sites. It resolves per face for free, because
+     var() substitutes the winning --accent on the same element, and the
+     face blocks below redefine --accent on :root. Decorative only, never text,
+     so the 45% mix is not held to a text contrast ratio. */
+  --line-accent: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* --- semantic: dark (the default face) --- */

@@ -8,7 +8,10 @@ const { type } = Astro.props;
   .badge {
     font-family: var(--font-smallcaps);
     letter-spacing: var(--tracking-wide); text-transform: uppercase;
-    font-size: 0.68rem; line-height: 1; color: var(--accent);
+    font-size: 0.68rem; line-height: 1;
+    /* Filled, not outlined: type is classification, and the loud grammar
+       gives classification the most solid treatment on the row. */
+    color: var(--on-accent); background: var(--accent);
     border: 1px solid var(--accent);
     padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
