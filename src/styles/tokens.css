@@ -64,8 +64,12 @@
   --line-accent: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* --- semantic: dark (the default face) --- */
-:root, :root[data-theme='dark'] {
+/* --- semantic: dark (the default face) ---
+   Keyed on data-face, not data-theme: data-theme is what the visitor chose,
+   data-face is what this page paints. They differ only inside the Lab, which
+   answers the site with the opposite face. Before JS runs neither attribute
+   exists and bare :root gives the dark default, exactly as before. */
+:root, :root[data-face='dark'] {
   color-scheme: dark;
   --field: var(--charcoal);
   --field-raised: var(--charcoal-raised);
@@ -91,7 +95,7 @@
 }
 
 /* --- semantic: light (the true inverse) --- */
-:root[data-theme='light'] {
+:root[data-face='light'] {
   color-scheme: light;
   --field: var(--bark-white);
   --field-raised: var(--bark-white-dim);

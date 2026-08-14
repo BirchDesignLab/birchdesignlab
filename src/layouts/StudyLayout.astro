@@ -12,7 +12,7 @@ interface Props { title: string; description: string; designation: string; noind
 const { title, description, designation, noindex = false } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-zone="lab">
   <head>
     <HeadCommon title={title} description={description} noindex={noindex} />
   </head>

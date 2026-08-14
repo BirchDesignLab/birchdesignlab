@@ -8,11 +8,11 @@ import HeadCommon from '../components/HeadCommon.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
-interface Props { title: string; description: string; noindex?: boolean }
-const { title, description, noindex = false } = Astro.props;
+interface Props { title: string; description: string; noindex?: boolean; zone?: 'lab' }
+const { title, description, noindex = false, zone } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-zone={zone}>
   <head>
     <HeadCommon title={title} description={description} noindex={noindex} />
     <slot name="head" />
