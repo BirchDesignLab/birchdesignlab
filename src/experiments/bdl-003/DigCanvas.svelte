@@ -227,7 +227,7 @@
       if (reduced.matches) gl?.renderOnce();
       composite();
     });
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
     return () => { ro.disconnect(); mo.disconnect(); gl?.destroy(); };
   });
 </script>

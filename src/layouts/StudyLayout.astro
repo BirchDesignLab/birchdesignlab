@@ -12,12 +12,12 @@ interface Props { title: string; description: string; designation: string; noind
 const { title, description, designation, noindex = false } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-zone="lab">
   <head>
     <HeadCommon title={title} description={description} noindex={noindex} />
   </head>
   <body>
-    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; {designation}</a>
+    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
     <main id="main">
       <slot />
     </main>
@@ -34,4 +34,5 @@ const { title, description, designation, noindex = false } = Astro.props;
     backdrop-filter: blur(6px);
   }
   .hatch:hover { color: var(--mark); }
+  .hatch-id { color: var(--accent); }
 </style>

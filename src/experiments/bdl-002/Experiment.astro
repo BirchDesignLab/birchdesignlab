@@ -167,10 +167,14 @@ import '@fontsource/cormorant-sc/500.css';
     const f = faces[state.face];
     const c = colors[state.color];
     return (
-      `:root, :root[data-theme='dark'] {\n${block(p.dark)}\n` +
+      // data-face, not data-theme: this room previews the face the page is
+      // PAINTING. On /lab/bdl-002 those differ, because the Lab answers the
+      // site with the opposite face, and keying on the visitor's stored choice
+      // would drop the dark palette onto a light page.
+      `:root, :root[data-face='dark'] {\n${block(p.dark)}\n` +
       `  --font-display: ${f.stack};\n  --font-billboard: ${f.stack};\n` +
       `  --billboard-weight: ${f.weight};\n  --billboard-color: ${c.value};\n}\n` +
-      `:root[data-theme='light'] {\n${block(p.light)}\n}\n` +
+      `:root[data-face='light'] {\n${block(p.light)}\n}\n` +
       (f.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`) +
       // base.css's body transition doesn't retrigger when background-color only
       // changes via a var() dependency updated by swapping this override
@@ -267,7 +271,7 @@ import '@fontsource/cormorant-sc/500.css';
     try { localStorage.setItem('theme', next); } catch { /* fine */ }
   });
   new MutationObserver(apply).observe(document.documentElement, {
-    attributes: true, attributeFilter: ['data-theme'],
+    attributes: true, attributeFilter: ['data-theme', 'data-face'],
   });
 
   window.addEventListener('pagehide', (event) => {

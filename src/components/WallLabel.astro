@@ -5,7 +5,12 @@ const { lines } = Astro.props;
 <details class="label" open>
   <summary><span class="smallcaps">How to operate</span></summary>
   <ol>
-    {lines.map((line) => <li>{line}</li>)}
+    {lines.map((line, i) => (
+      <li>
+        <span class="step" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        {line}
+      </li>
+    ))}
   </ol>
 </details>
 
@@ -25,7 +30,14 @@ const { lines } = Astro.props;
     max-width: 30ch;
     background: color-mix(in srgb, var(--field) 88%, transparent);
     backdrop-filter: blur(8px);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-accent);
+  }
+  /* Numerals are aria-hidden: the <ol> already conveys order to assistive
+     technology, and announcing "01" before every step is noise. */
+  .step {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    color: var(--accent); font-size: 0.75em; margin-right: var(--space-2);
   }
   summary {
     cursor: pointer; list-style: none;

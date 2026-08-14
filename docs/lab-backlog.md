@@ -73,6 +73,36 @@ Liked, not dead. Revisit when the moment fits.
 - **Nothing brand-side is settled.** Founder, 2026-08-13: still hates the logo and the sponsor screen. The 2026-08-08 mark, lockups, and sponsor card are a **bridge to 2026-09-01**, not decisions — "we have enough to get us to 9/1." Do not describe them as chosen or approved anywhere.
 - **Design sweep planned within roughly a month** (stated 2026-08-08): the logo question reopens in full there — mark direction, lockups, favicon/OG adoption, light-face variants. The copy rewrite rides the same window.
 
+## The Lab's four design passes — where they stand
+
+The Lab was to get four passes: **accent, density, texture, motion**. They were
+reviewed as frames in a Claude Design project. Recording the identifiers here
+because the frames were once downloaded, deleted, and unreferenced anywhere in
+the repo, and recovering them cost a session.
+
+- **Project** `027db389-4762-4e10-9ccd-6ab6a7752652`, files `CatalogFrame.dc.html`,
+  `Lab Density Pass.dc.html`, `Lab Accent Pass.dc.html`.
+- **Design system** `birch-design-lab-design-system-9084dec9-3437-4b45-9433-4ff780cc0cf9`.
+
+| Pass | State |
+|---|---|
+| Density | **Shipped 07-30-26** (`c9186df`), the loose variant |
+| Accent | **Shipped 08-13-26**, the loud variant (frame 1c), plus the chiaroscuro flip |
+| Texture | **Never drawn.** No frame exists. Stages still show placeholder treatment. |
+| Motion | **Never drawn**, and has since grown: the 08-13 direction asks for the Lab's presentation language, entrance beats, transition grammar and a motion budget, with GSAP available |
+
+The founder's summary of the first two, from the time: *"loud accents with the
+relaxed spacing."* Both halves are now in.
+
+Spec and plan: `docs/superpowers/specs/2026-08-13-lab-accent-pass-design.md`,
+`docs/superpowers/plans/2026-08-13-lab-accent-pass.md`.
+
+Two decisions worth not relitigating. The forthcoming chip keeps the word
+**"forthcoming"**; the frame's "in progress" was declined because it is a claim
+about right now that has to stay true through quiet weeks. And the working dash
+is sized in `em`, so it is deliberately smaller beside the specimen plate's
+smaller type than it is in the catalog: it scales with the text it marks.
+
 ## Parked site notes (not experiments)
 
 Side ideas from earlier sessions, gathered here so the handoff stops carrying them:

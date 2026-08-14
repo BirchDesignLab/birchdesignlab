@@ -95,7 +95,7 @@
         renderer?.setAlpha(...barkAlphas());
         if (reduced.matches) renderer?.renderOnce();
       });
-      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
       const onReducedChange = () => {
         if (reduced.matches) { renderer?.stop(); renderer?.renderOnce(); } else renderer?.start();
       };
@@ -111,7 +111,7 @@
     const ro = new ResizeObserver(() => rebuild());
     ro.observe(canvas);
     const mo = new MutationObserver(() => rebuild());
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
     return () => { ro.disconnect(); mo.disconnect(); };
   });
 </script>

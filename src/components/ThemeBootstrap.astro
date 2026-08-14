@@ -1,11 +1,20 @@
 ---
 // Shared pre-paint theme bootstrap (single source of truth for the theme
-// contract: `data-theme` on <html>, localStorage key 'theme', `.js` marker).
+// contract: `data-theme` (what the visitor chose) and `data-face` (what this
+// page paints) on <html>, localStorage key 'theme', `.js` marker).
 ---
 <script is:inline>
-  document.documentElement.classList.add('js');
+  const root = document.documentElement;
+  root.classList.add('js');
   let stored = null;
   try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
   const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  document.documentElement.dataset.theme = stored || system;
+  const site = stored || system;
+  root.dataset.theme = site;
+  // Chiaroscuro: the Lab answers the site with the opposite face, so entering
+  // it reads as the lights changing. The zone is stamped server-side, so this
+  // resolves pre-paint with no flash and without a second palette in CSS.
+  root.dataset.face = root.dataset.zone === 'lab'
+    ? (site === 'dark' ? 'light' : 'dark')
+    : site;
 </script>

@@ -54,10 +54,22 @@
   --ease-weighted: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-1: 300ms;
   --dur-2: 600ms;
+
+  /* Derived, not a palette value: the accent-tinted hairline the Lab's loud
+     grammar uses in place of --line. Defined once here rather than repeating
+     the color-mix at eight call sites. It resolves per face for free, because
+     var() substitutes the winning --accent on the same element, and the
+     face blocks below redefine --accent on :root. Decorative only, never text,
+     so the 45% mix is not held to a text contrast ratio. */
+  --line-accent: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* --- semantic: dark (the default face) --- */
-:root, :root[data-theme='dark'] {
+/* --- semantic: dark (the default face) ---
+   Keyed on data-face, not data-theme: data-theme is what the visitor chose,
+   data-face is what this page paints. They differ only inside the Lab, which
+   answers the site with the opposite face. Before JS runs neither attribute
+   exists and bare :root gives the dark default, exactly as before. */
+:root, :root[data-face='dark'] {
   color-scheme: dark;
   --field: var(--charcoal);
   --field-raised: var(--charcoal-raised);
@@ -83,7 +95,7 @@
 }
 
 /* --- semantic: light (the true inverse) --- */
-:root[data-theme='light'] {
+:root[data-face='light'] {
   color-scheme: light;
   --field: var(--bark-white);
   --field-raised: var(--bark-white-dim);
@@ -110,10 +122,14 @@
 }
 
 /* --- no-JS fallback: honor a light system preference ---
-   Without JS the bootstrap never sets data-theme, so the :root dark
+   Without JS the bootstrap never sets data-face, so the :root dark
    default would win. html:not(.js) (0,1,1) outranks :root (0,1,0);
    with JS the .js class makes this rule inert.
-   KEEP IN SYNC with :root[data-theme='light'] above. */
+   This is also why a no-JS visitor gets an UNINVERTED Lab: the inversion
+   needs the bootstrap to compute a face, and this block only knows the
+   system preference. Accepted deliberately; the alternative is a second
+   copy of both palettes.
+   KEEP IN SYNC with :root[data-face='light'] above. */
 @media (prefers-color-scheme: light) {
   html:not(.js) {
     color-scheme: light;
