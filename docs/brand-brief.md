@@ -222,7 +222,7 @@ tested. Testing it is what produced a mark the founder kept.
 | Something that works at tab size | `8c`, same geometry at a heavier stroke (20 vs 14) — a real small-size cut, not a shrink |
 | A lockup, wordmark as outlines | `8b` system sheet: stacked and horizontal, both faces |
 | Both faces, or a decision | Both faces, throughout |
-| One-colour artwork | Not delivered. The mark is two strokes by construction; a single-colour reduction still needs drawing. |
+| One-colour artwork | **Declined on merit (founder, 08-13-26).** Single-colour versions were explored and none of them worked; the direction went the other way instead. The two overlapping strokes are the idea, not a decoration on top of it, and flattening them removes the mark. Accepted cost: no print or stamp reduction exists. |
 
 **Open questions this closed.** Whether the mark inverts (yes, and the day face
 carries its own neutral rather than inverting mechanically). Whether a symbol was
@@ -234,9 +234,16 @@ primary (both ship; stacked and horizontal are contextual, not rivals).
 - **Adoption.** The site still serves the old generated favicon and `og/logo.png`.
   Favicon, OG cards, web manifest, site header and footer all still point at the
   placeholder. This is mechanical and is the natural next task.
-- **One-colour artwork**, for print or stamping.
 - **The Cheer and Chatter re-export.** Their slideshow was built so the brand kit
   is a file swap; the interim dense-bark card there is now superseded.
-- **The animated set** (`9e` settle, `9f` pass, `9g` drawn and breathing, `9h`
-  flip, plus the `11`/`12` explorations). Kept, unassigned. The Lab's motion pass
-  is the obvious home.
+- **The animated set is not self-contained.** `9e` settle, `9f` pass, `9g` drawn
+  and breathing, `9h` flip and the `11`/`12` explorations carry only hook classes
+  (`.bg`, `.m`, `.n`, `.d`); every keyframe lives in the CSS of
+  `Locked Marks.dc.html`. Opened on their own the files are static marks. The
+  durations, all in that sheet: settle 9s, pass 13s, drawn 11s + 14s write with
+  the second stroke offset −1.2s / −0.9s, flip 16s, rise 14s, breathe 7s,
+  crossing 18s, sheen 9s.
+
+  Making them portable means inlining each animation's keyframes into its own
+  SVG, which also turns timing into one editable number per file. Worth doing
+  before anything consumes them, and the Lab's motion pass is the obvious home.

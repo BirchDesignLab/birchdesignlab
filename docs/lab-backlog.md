@@ -77,9 +77,12 @@ Liked, not dead. Revisit when the moment fits.
   entry in the parked list below. The 08-08 set is superseded, not shipping.
 - **Design sweep, reduced.** The logo question is answered, so the sweep no
   longer owns mark direction, lockups or light-face variants. What remains is
-  **adoption** (favicon, OG, manifest, header, footer), a one-colour reduction,
-  the Cheer and Chatter re-export, and the copy rewrite that always rode the
-  same window.
+  **adoption** (favicon, OG, manifest, header, footer), the Cheer and Chatter
+  re-export, and the copy rewrite that always rode the same window.
+- **No one-colour mark, deliberately.** Single-colour versions were explored and
+  none worked; the founder went the other direction. The two overlapping strokes
+  are the idea, so flattening them removes the mark. Accepted cost: nothing to
+  print or stamp in one ink. Do not reopen this as an oversight.
 
 ## The Lab's four design passes — where they stand
 
