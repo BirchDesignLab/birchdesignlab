@@ -56,6 +56,28 @@ The governing idea, in the frame's own terms: **green means working, leather
 means waiting.** Accent is a status colour, not decoration. That is why
 "in progress" moves off green.
 
+**With one important qualification, which the frame observes and an early draft
+of this spec got wrong.** Green carries two jobs, and only one of them is
+status. The designation (`BDL-005`) and the type badge (experiment / study) are
+**classification**, and they stay accent on every row including forthcoming
+ones, exactly as they do in frame 1c today. The status rule governs the status
+language only: the working-specimen dash and label, and the in-progress chip.
+A forthcoming row therefore still shows an accent designation and an accent
+type badge, and nothing about its *state* is green.
+
+### Repo facts, checked
+
+- **`status` already exists** in [`lab-schema.ts`](../../../src/lib/lab-schema.ts)
+  as `z.enum(['live', 'forthcoming'])`, defaulting to `live`. The whole
+  live-versus-waiting grammar ports with no schema change.
+- **`TypeBadge` and `DeviceBadge` are their own components**, and
+  `SpecimenCard` is their only consumer. Restyling them is contained to the
+  Lab and cannot leak onto another surface.
+- **Forthcoming rows are not links today.** `SpecimenCard` renders a `<span>`
+  rather than an `<a>` when `status !== 'live'`. The loud treatment keeps that.
+- **The working-specimen dash and label are new markup.** Nothing in the repo
+  carries them yet.
+
 ### Catalog rows (`SpecimenCard`, `SpecimenCatalog`)
 
 | Property | Today | Loud |
@@ -64,7 +86,7 @@ means waiting.** Accent is a status colour, not decoration. That is why
 | Catalog bottom rule | `var(--line)` | same accent-tinted mix |
 | Row hover | none | `background: var(--green-surface)`, transitioned |
 | Live specimen | nothing | accent dash, `0.85em` wide, `2px` tall, plus a `working specimen` smallcaps label beside the designation |
-| Forthcoming | italic muted "forthcoming" | `in progress` chip, bordered and lettered in `var(--accent-strong)` |
+| Forthcoming | italic muted "forthcoming" | `in progress` chip, bordered and lettered in `var(--accent-strong)` (see the copy note below) |
 | Type badge | accent text, accent border | filled: `background: var(--accent)`, `color: var(--on-accent)` |
 | Device badge | unchanged | unchanged, stays `--mark-muted` on `--line` |
 | Tech tags | `·` separated text | chips, accent text, border in the 45% accent mix |
@@ -73,6 +95,15 @@ means waiting.** Accent is a status colour, not decoration. That is why
 | Title hover | accent | unchanged |
 
 Spacing is not touched. The density pass settled it.
+
+**A copy change is hiding in that table, and it is the founder's call, not
+mine.** The schema value stays `forthcoming`; what changes is the word on
+screen, from "forthcoming" to "in progress". They do not mean the same thing.
+"Forthcoming" says a thing is coming; "in progress" says someone is working on
+it right now, which is a claim that has to stay true. Per the house writing
+rules, visible copy is founder territory, so the frame's wording is carried
+here as a proposal rather than a decision. Keeping "forthcoming" and simply
+moving it into the leather chip is equally valid and changes nothing else.
 
 ### The count
 
@@ -187,8 +218,10 @@ attribute still changes whenever the Lab's face does.
 ## Acceptance
 
 - Catalog, stage chrome, and study page carry the loud grammar on both faces.
-- Green appears only on working things. Nothing forthcoming or in progress is
-  green anywhere.
+- No **status** language is green except working ones: the dash and its label
+  appear only on live specimens, and the in-progress chip is leather everywhere
+  it appears. Classification stays accent regardless of status, so an accent
+  designation and accent type badge on a forthcoming row is correct, not a bug.
 - Home's Lab preview carries the working-specimen dash.
 - Filtering announces its result through the `aria-live` count.
 - Navigating from any site page into the Lab visibly flips the face, in both
