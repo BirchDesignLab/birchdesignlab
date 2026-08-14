@@ -104,9 +104,9 @@ Replace the whole `<article>` block in `src/components/SpecimenCard.astro` (line
     {live
       ? <span class="working">
           <span class="dash" aria-hidden="true"></span>
-          <span class="smallcaps">working specimen</span>
+          <span class="working-label">working specimen</span>
         </span>
-      : <span class="soon smallcaps">forthcoming</span>}
+      : <span class="soon">forthcoming</span>}
   </p>
   <Heading>
     {live ? <a href={href}>{title}</a> : <span>{title}</span>}
@@ -115,7 +115,7 @@ Replace the whole `<article>` block in `src/components/SpecimenCard.astro` (line
   <p class="meta">
     <TypeBadge type={entry.data.type} />
     {entry.data.type === 'experiment' && <DeviceBadge device={entry.data.device} />}
-    {tech.map((t) => <span class="tag smallcaps">{t}</span>)}
+    {tech.map((t) => <span class="tag">{t}</span>)}
     <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time>
   </p>
 </article>
@@ -147,11 +147,18 @@ Replace the whole `<style>` block in `src/components/SpecimenCard.astro`:
   .designation { color: var(--accent); font-size: var(--text-sm); }
   .working { display: flex; align-items: center; gap: var(--space-2); color: var(--accent); }
   .working .dash { display: inline-block; width: 0.85em; height: 2px; background: var(--accent); }
-  .working .smallcaps { font-size: 0.68rem; line-height: 1; }
+  /* Chip typography is declared in full rather than borrowing the global
+     .smallcaps utility, because that utility also sets font-size: 0.82em and
+     these chips are pinned at 0.68rem. Every chip across this pass is written
+     the same way, in five files, which is what makes them comparable. */
+  .working-label, .soon, .tag {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1;
+  }
   /* Leather, not green: waiting is not working. The word stays "forthcoming"
      because "in progress" would be a claim about right now. */
   .soon {
-    font-size: 0.68rem; line-height: 1;
     color: var(--accent-strong); border: 1px solid var(--accent-strong);
     padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
@@ -167,7 +174,6 @@ Replace the whole `<style>` block in `src/components/SpecimenCard.astro`:
   /* Tech goes from dot-separated text to chips, so the meta row reads as one
      family of tags rather than badges followed by prose. */
   .tag {
-    font-size: 0.68rem; line-height: 1;
     color: var(--accent); border: 1px solid var(--line-accent);
     padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
@@ -662,7 +668,7 @@ Every previous task checked one surface. This one checks that they agree with ea
 
 `/`, `/lab`, `/lab/experiments`, `/lab/studies`, `/lab/bdl-001`, `/lab/bdl-005`, and `/styleguide`. On dark and on light. Looking for:
 
-- Chip geometry identical everywhere: same `0.68rem`, same `0.35em 0.8em 0.25em` padding, same square corners. Chips that disagree by a pixel are the most likely defect in this pass, because they were written in five separate files.
+- Chip geometry identical everywhere: same `0.68rem`, same `0.35em 0.8em 0.25em` padding, same square corners. Chips that disagree by a pixel are the most likely defect in this pass, because they were written in five separate files. Note that none of them uses the global `.smallcaps` utility, deliberately: it sets `font-size: 0.82em`, and a chip that quietly picks that up instead of `0.68rem` is exactly the drift this step is looking for.
 - No neutral `--line` hairline left inside the Lab where its neighbours went accent.
 - The dash the same width and weight on the home preview, the catalog, the plate, and the study.
 
