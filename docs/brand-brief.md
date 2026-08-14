@@ -236,14 +236,26 @@ primary (both ship; stacked and horizontal are contextual, not rivals).
   placeholder. This is mechanical and is the natural next task.
 - **The Cheer and Chatter re-export.** Their slideshow was built so the brand kit
   is a file swap; the interim dense-bark card there is now superseded.
-- **The animated set is not self-contained.** `9e` settle, `9f` pass, `9g` drawn
-  and breathing, `9h` flip and the `11`/`12` explorations carry only hook classes
-  (`.bg`, `.m`, `.n`, `.d`); every keyframe lives in the CSS of
-  `Locked Marks.dc.html`. Opened on their own the files are static marks. The
-  durations, all in that sheet: settle 9s, pass 13s, drawn 11s + 14s write with
-  the second stroke offset −1.2s / −0.9s, flip 16s, rise 14s, breathe 7s,
-  crossing 18s, sheen 9s.
+- **Timing on the animated marks.** They work; the founder wants to tune some.
+  One number per mark in `scripts/brand/inline-logo-animations.mjs`.
 
-  Making them portable means inlining each animation's keyframes into its own
-  SVG, which also turns timing into one editable number per file. Worth doing
-  before anything consumes them, and the Lab's motion pass is the obvious home.
+## Done since the lock, same day
+
+- **The static set rasterises to PNG.** 29 files at 512 and 2048, plus the
+  favicon cut at 32/180/512, via `scripts/brand/rasterize-logos.mjs`. That script
+  refuses to write if the mark's `mix-blend-mode` did not survive rasterisation,
+  because a renderer that drops the blend produces a visibly different logo.
+- **The animated marks animate on their own.** The export ships them with class
+  hooks but no CSS: every keyframe lived in `Locked Marks.dc.html`, so the
+  standalone files were static. `scripts/brand/inline-logo-animations.mjs`
+  injects each file's keyframes, bindings and a reduced-motion guard. Confirmed
+  against a second export: the exporter never bakes animation, so this is a
+  permanent pipeline step rather than a repair.
+- **The wordmarks are Marcellus again.** They shipped as live `<text>`, which
+  falls back to a generic serif anywhere the font is not installed, which is
+  everywhere except the review sheet. Now outlined to paths by
+  `scripts/brand/outline-logo-text.mjs`, same pinned TTF as `build-lockups.mjs`.
+  Accepted cost, founder 08-13-26: outlined type is not selectable.
+- **`11a`–`11d` and `12a`–`12d` are direct exports with no animation to
+  recover** — they are not in the locked sheet, so no bindings exist. Fine as
+  static marks. Four are filter-based and parked.
