@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/birch-design-lab-design-system-9084dec9-3437-4b45-9433-4ff780cc0cf9/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/birch-design-lab-design-system-9084dec9-3437-4b45-9433-4ff780cc0cf9/tokens/colors.css">
+<script src="_ds/birch-design-lab-design-system-9084dec9-3437-4b45-9433-4ff780cc0cf9/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#eae5da;font-family:Spectral,serif}
+a{color:#2f6644}a:hover{color:#1f1b15}
+.dv-turn{padding:40px 44px 32px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1c1a17;color:#f4f0e6;text-decoration:none}
+.dv-tname{font-family:Marcellus,serif;font-size:14px;text-transform:uppercase;letter-spacing:0.14em;color:#1f1b15}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.1);color:#1f1b15;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 Spectral,serif;color:rgba(31,27,21,.65)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.1);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2b4a37;color:#f5f1e8}
+@keyframes bdl-draw{0%{stroke-dashoffset:100}45%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
+@keyframes bdl-settle{0%,12%{transform:translate(-26px,10px)}40%,84%{transform:translate(0,0)}100%{transform:translate(-26px,10px)}}
+@keyframes bdl-pass{0%,100%{transform:translateX(-30px)}50%{transform:translateX(34px)}}
+@keyframes bdl-breathe2{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes bdl-faceA{0%,42%{opacity:1}52%,92%{opacity:0}100%{opacity:1}}
+@keyframes bdl-faceB{0%,42%{opacity:0}52%,92%{opacity:1}100%{opacity:0}}
+@keyframes bdl-bg{0%,42%{background-color:#1c1a17}52%,92%{background-color:#f5f1e8}100%{background-color:#1c1a17}}
+@keyframes bdl-write{0%{stroke-dashoffset:100}32%{stroke-dashoffset:0}88%{stroke-dashoffset:0}100%{stroke-dashoffset:100}}
+@keyframes bdl-rise{0%,26%{opacity:0;transform:translateY(8px)}38%,86%{opacity:1;transform:translateY(0)}94%,100%{opacity:0;transform:translateY(8px)}}
+@keyframes bdl-sheen{0%{transform:translateX(0)}40%,100%{transform:translateX(330px)}}
+@keyframes bdl-cross{0%,8%{transform:translateX(-34px)}46%,58%{transform:translateX(34px)}96%,100%{transform:translateX(-34px)}}
+@media (prefers-reduced-motion: reduce){.dv-card *{animation:none !important}}
+</style>
+</helmet>
+<section class="dv-turn" id="animated" style="border-bottom: 1px solid rgba(0,0,0,.08)">
+<div class="dv-thd"><a class="dv-tid" href="#animated">Animated</a><span class="dv-tname">The animated set · kept from turn 9 · animated SVG files linked per card</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="9e"><div class="dv-olabel"><a class="dv-oid" href="#9e">9e</a>The settle · <a href="files/9e-settle.svg" download>svg</a></div>
+<div class="dv-card" style="width: 230px">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200">
+<g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g>
+<g style="animation: bdl-settle 9s cubic-bezier(0.22, 1, 0.36, 1) infinite"><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></g>
+</svg></div>
+</div></div>
+
+<div class="dv-opt" id="9f"><div class="dv-olabel"><a class="dv-oid" href="#9f">9f</a>The pass · <a href="files/9f-pass.svg" download>svg</a></div>
+<div class="dv-card" style="width: 230px">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200">
+<g style="mix-blend-mode: screen"><path d="M64 18 V182 M64 30 L126 62 L64 94 M64 94 L132 130 L64 170" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g>
+<g style="animation: bdl-pass 13s ease-in-out infinite"><g style="mix-blend-mode: screen"><path d="M64 18 V182 M64 30 L126 62 L64 94 M64 94 L132 130 L64 170" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></g>
+</svg></div>
+</div></div>
+
+<div class="dv-opt" id="9g"><div class="dv-olabel"><a class="dv-oid" href="#9g">9g</a>Drawn and breathing · <a href="files/9g-drawn.svg" download>svg</a></div>
+<div class="dv-card" style="width: 230px">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200">
+<g style="animation: bdl-breathe2 7s ease-in-out infinite"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9" pathLength="100" stroke-dasharray="100" style="animation: bdl-draw 11s cubic-bezier(0.22, 1, 0.36, 1) infinite"></path></g></g>
+<g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" pathLength="100" stroke-dasharray="100" style="animation: bdl-draw 11s cubic-bezier(0.22, 1, 0.36, 1) -1.2s infinite"></path></g>
+</svg></div>
+</div></div>
+
+<div class="dv-opt" id="9h"><div class="dv-olabel"><a class="dv-oid" href="#9h">9h</a>The flip · <a href="files/9h-flip.svg" download>svg</a></div>
+<div class="dv-card" style="width: 400px">
+<div style="position: relative; height: 300px; animation: bdl-bg 16s ease-in-out infinite; background: #1c1a17">
+<svg width="170" height="170" viewBox="0 0 200 200" style="position: absolute; left: 50%; top: 50%; margin: -85px 0 0 -85px; animation: bdl-faceA 16s ease-in-out infinite"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></svg>
+<svg width="170" height="170" viewBox="0 0 200 200" style="position: absolute; left: 50%; top: 50%; margin: -85px 0 0 -85px; opacity: 0; animation: bdl-faceB 16s ease-in-out infinite"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></svg>
+</div>
+</div></div>
+
+<div class="dv-opt" id="10d-stacked"><div class="dv-olabel"><a class="dv-oid" href="#10d-stacked">10d</a>Signature, stacked · <a href="files/10d-signature-stacked-night.svg" download>night svg</a> · <a href="files/10d-signature-stacked-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 560px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="260" height="200" viewBox="0 0 320 220"><g transform="translate(110, 10) scale(0.6)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="15" stroke-linecap="square" opacity="0.9" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) infinite"></path></g><g style="mix-blend-mode: screen"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) -0.9s infinite"></path></g></g><text x="160" y="178" text-anchor="middle" font-family="Marcellus, serif" font-size="22" letter-spacing="4" fill="#f4f0e6" style="animation: bdl-rise 14s cubic-bezier(0.22, 1, 0.36, 1) infinite">BIRCH DESIGN LAB</text></svg></div>
+<div style="background: #f5f1e8; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="260" height="200" viewBox="0 0 320 220"><g transform="translate(110, 10) scale(0.6)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="15" stroke-linecap="square" opacity="0.8" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) infinite"></path></g><g style="mix-blend-mode: multiply"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" opacity="0.85" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) -0.9s infinite"></path></g></g><text x="160" y="178" text-anchor="middle" font-family="Marcellus, serif" font-size="22" letter-spacing="4" fill="#1f1b15" style="animation: bdl-rise 14s cubic-bezier(0.22, 1, 0.36, 1) infinite">BIRCH DESIGN LAB</text></svg></div>
+</div></div>
+
+<div class="dv-opt" id="10d-horiz"><div class="dv-olabel"><a class="dv-oid" href="#10d-horiz">10d</a>Signature, horizontal · <a href="files/10d-signature-horizontal-night.svg" download>night svg</a> · <a href="files/10d-signature-horizontal-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 720px">
+<div style="background: #1c1a17; height: 130px; display: flex; align-items: center; justify-content: center"><svg width="420" height="100" viewBox="0 0 460 110"><g transform="translate(8, 5) scale(0.5)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="15" stroke-linecap="square" opacity="0.9" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) infinite"></path></g><g style="mix-blend-mode: screen"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) -0.9s infinite"></path></g></g><text x="110" y="66" font-family="Marcellus, serif" font-size="26" letter-spacing="5" fill="#f4f0e6" style="animation: bdl-rise 14s cubic-bezier(0.22, 1, 0.36, 1) infinite">BIRCH DESIGN LAB</text></svg></div>
+<div style="background: #f5f1e8; height: 130px; display: flex; align-items: center; justify-content: center"><svg width="420" height="100" viewBox="0 0 460 110"><g transform="translate(8, 5) scale(0.5)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="15" stroke-linecap="square" opacity="0.8" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) infinite"></path></g><g style="mix-blend-mode: multiply"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" opacity="0.85" pathLength="100" stroke-dasharray="100" style="animation: bdl-write 14s cubic-bezier(0.22, 1, 0.36, 1) -0.9s infinite"></path></g></g><text x="110" y="66" font-family="Marcellus, serif" font-size="26" letter-spacing="5" fill="#1f1b15" style="animation: bdl-rise 14s cubic-bezier(0.22, 1, 0.36, 1) infinite">BIRCH DESIGN LAB</text></svg></div>
+</div></div>
+
+<div class="dv-opt" id="10f"><div class="dv-olabel"><a class="dv-oid" href="#10f">10f</a>The lacquer · <a href="files/10f-lacquer-night.svg" download>night svg</a> · <a href="files/10f-lacquer-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 720px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 400px; display: flex; align-items: center; justify-content: center"><svg width="330" height="330" viewBox="0 0 200 200"><defs><linearGradient id="lgf-n" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f0e6" stop-opacity="0"></stop><stop offset="0.5" stop-color="#f4f0e6" stop-opacity="0.8"></stop><stop offset="1" stop-color="#f4f0e6" stop-opacity="0"></stop></linearGradient><mask id="mf-n"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="white" stroke-width="14" stroke-linecap="square"></path><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="white" stroke-width="14" stroke-linecap="square"></path></mask></defs><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g><g mask="url(#mf-n)"><g transform="rotate(18 100 100)"><rect x="-90" y="-40" width="50" height="280" fill="url(#lgf-n)" style="animation: bdl-sheen 9s ease-in-out infinite"></rect></g></g></svg></div>
+<div style="background: #f5f1e8; height: 400px; display: flex; align-items: center; justify-content: center"><svg width="330" height="330" viewBox="0 0 200 200"><defs><linearGradient id="lgf-d" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f0e6" stop-opacity="0"></stop><stop offset="0.5" stop-color="#f4f0e6" stop-opacity="0.7"></stop><stop offset="1" stop-color="#f4f0e6" stop-opacity="0"></stop></linearGradient><mask id="mf-d"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="white" stroke-width="14" stroke-linecap="square"></path><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="white" stroke-width="14" stroke-linecap="square"></path></mask></defs><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g><g mask="url(#mf-d)"><g transform="rotate(18 100 100)"><rect x="-90" y="-40" width="50" height="280" fill="url(#lgf-d)" style="animation: bdl-sheen 9s ease-in-out infinite"></rect></g></g></svg></div>
+</div></div>
+
+<div class="dv-opt" id="10g"><div class="dv-olabel"><a class="dv-oid" href="#10g">10g</a>The crossing · <a href="files/10g-crossing.svg" download>svg</a></div>
+<div class="dv-card" style="width: 440px">
+<div style="position: relative; height: 380px">
+<div style="position: absolute; inset: 0 50% 0 0; background: #1c1a17"></div>
+<div style="position: absolute; inset: 0 0 0 50%; background: #f5f1e8"></div>
+<svg width="320" height="320" viewBox="0 0 200 200" style="position: absolute; left: 60px; top: 30px">
+<defs><clipPath id="c10g-l"><rect x="0" y="0" width="100" height="200"></rect></clipPath><clipPath id="c10g-r"><rect x="100" y="0" width="100" height="200"></rect></clipPath></defs>
+<g clip-path="url(#c10g-l)"><g style="animation: bdl-cross 18s ease-in-out infinite"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></g></g>
+<g clip-path="url(#c10g-r)"><g style="animation: bdl-cross 18s ease-in-out infinite"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></g></g>
+</svg>
+</div>
+</div></div>
+
+</div>
+</section>
+<section class="dv-turn" id="locked">
+<div class="dv-thd"><a class="dv-tid" href="#locked">Locked</a><span class="dv-tname">The locked set · night stone + canopy, day leather + canopy · SVG files linked per card</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="8a"><div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a>Mark alone · <a href="files/8a-mark-night.svg" download>night svg</a> · <a href="files/8a-mark-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 400px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></svg></div>
+<div style="background: #f5f1e8; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></svg></div>
+</div></div>
+
+<div class="dv-opt" id="8b"><div class="dv-olabel"><a class="dv-oid" href="#8b">8b</a>System sheet · <a href="files/8b-stacked-night.svg" download>stacked n</a> · <a href="files/8b-stacked-day.svg" download>stacked d</a> · <a href="files/8b-horizontal-night.svg" download>horiz n</a> · <a href="files/8b-horizontal-day.svg" download>horiz d</a></div>
+<div class="dv-card" style="width: 480px">
+<div style="background: #1c1a17; padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 16px">
+<svg width="230" height="165" viewBox="0 0 320 220"><g transform="translate(110, 10) scale(0.6)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="15" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square"></path></g></g><text x="160" y="178" text-anchor="middle" font-family="Marcellus, serif" font-size="22" letter-spacing="4" fill="#f4f0e6">BIRCH DESIGN LAB</text></svg>
+<svg width="380" height="84" viewBox="0 0 460 110"><g transform="translate(8, 5) scale(0.5)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="15" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square"></path></g></g><text x="110" y="66" font-family="Marcellus, serif" font-size="26" letter-spacing="5" fill="#f4f0e6">BIRCH DESIGN LAB</text></svg>
+</div>
+<div style="background: #f5f1e8; padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 16px">
+<svg width="230" height="165" viewBox="0 0 320 220"><g transform="translate(110, 10) scale(0.6)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="15" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" opacity="0.85"></path></g></g><text x="160" y="178" text-anchor="middle" font-family="Marcellus, serif" font-size="22" letter-spacing="4" fill="#1f1b15">BIRCH DESIGN LAB</text></svg>
+<svg width="380" height="84" viewBox="0 0 460 110"><g transform="translate(8, 5) scale(0.5)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="15" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M72 14 V178 M72 26 L134 58 L72 90 M72 90 L140 126 L72 166" fill="none" stroke="#2f6644" stroke-width="15" stroke-linecap="square" opacity="0.85"></path></g></g><text x="110" y="66" font-family="Marcellus, serif" font-size="26" letter-spacing="5" fill="#1f1b15">BIRCH DESIGN LAB</text></svg>
+</div>
+</div></div>
+
+<div class="dv-opt" id="8c"><div class="dv-olabel"><a class="dv-oid" href="#8c">8c</a>Favicon scale · <a href="files/8c-favicon.svg" download>svg</a></div>
+<div class="dv-card" style="width: 400px">
+<div style="background: #1c1a17; height: 110px; display: flex; align-items: center; justify-content: center; gap: 26px">
+<svg width="48" height="48" viewBox="0 0 200 200"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="18" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="18" stroke-linecap="square"></path></g></svg>
+<svg width="32" height="32" viewBox="0 0 200 200"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="20" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="20" stroke-linecap="square"></path></g></svg>
+<svg width="16" height="16" viewBox="0 0 200 200"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="24" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="24" stroke-linecap="square"></path></g></svg>
+<svg width="16" height="16" viewBox="0 0 200 200"><path d="M64 18 V182 M64 30 L126 62 L64 94 M64 94 L132 130 L64 170" fill="none" stroke="#a3bd8f" stroke-width="26" stroke-linecap="square"></path></svg>
+</div>
+<div style="background: #f5f1e8; height: 110px; display: flex; align-items: center; justify-content: center; gap: 26px">
+<svg width="48" height="48" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="18" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="18" stroke-linecap="square" opacity="0.85"></path></g></svg>
+<svg width="32" height="32" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="20" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="20" stroke-linecap="square" opacity="0.85"></path></g></svg>
+<svg width="16" height="16" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="24" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="24" stroke-linecap="square" opacity="0.85"></path></g></svg>
+<svg width="16" height="16" viewBox="0 0 200 200"><path d="M64 18 V182 M64 30 L126 62 L64 94 M64 94 L132 130 L64 170" fill="none" stroke="#2b4a37" stroke-width="26" stroke-linecap="square"></path></svg>
+</div>
+</div></div>
+
+<div class="dv-opt" id="8d"><div class="dv-olabel"><a class="dv-oid" href="#8d">8d</a>Rug scale · <a href="files/8d-rug.svg" download>svg</a></div>
+<div class="dv-card" style="width: 920px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 520px; display: flex; align-items: center; justify-content: center"><svg width="440" height="440" viewBox="0 0 200 200"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></svg></div>
+<div style="background: #f5f1e8; height: 520px; display: flex; align-items: center; justify-content: center"><svg width="440" height="440" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></svg></div>
+</div></div>
+
+<div class="dv-opt" id="8e"><div class="dv-olabel"><a class="dv-oid" href="#8e">8e</a>The seam, vertical · <a href="files/8e-seam-vertical.svg" download>svg</a></div>
+<div class="dv-card" style="width: 440px">
+<div style="position: relative; height: 400px">
+<div style="position: absolute; inset: 0 50% 0 0; background: #1c1a17"></div>
+<div style="position: absolute; inset: 0 0 0 50%; background: #f5f1e8"></div>
+<svg width="330" height="330" viewBox="0 0 200 200" style="position: absolute; left: 55px; top: 35px">
+<defs><clipPath id="c8e-l"><rect x="0" y="0" width="100" height="200"></rect></clipPath><clipPath id="c8e-r"><rect x="100" y="0" width="100" height="200"></rect></clipPath></defs>
+<g clip-path="url(#c8e-l)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></g>
+<g clip-path="url(#c8e-r)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></g>
+</svg>
+</div>
+</div></div>
+
+<div class="dv-opt" id="8h"><div class="dv-olabel"><a class="dv-oid" href="#8h">8h</a>The seam, horizontal · <a href="files/8e-seam-horizontal.svg" download>svg</a></div>
+<div class="dv-card" style="width: 440px">
+<div style="position: relative; height: 400px">
+<div style="position: absolute; inset: 0 0 50% 0; background: #1c1a17"></div>
+<div style="position: absolute; inset: 50% 0 0 0; background: #f5f1e8"></div>
+<svg width="330" height="330" viewBox="0 0 200 200" style="position: absolute; left: 55px; top: 35px">
+<defs><clipPath id="c8h-t"><rect x="0" y="0" width="200" height="103"></rect></clipPath><clipPath id="c8h-b"><rect x="0" y="103" width="200" height="97"></rect></clipPath></defs>
+<g clip-path="url(#c8h-t)"><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></g>
+<g clip-path="url(#c8h-b)"><g style="mix-blend-mode: multiply"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square" opacity="0.8"></path></g><g style="mix-blend-mode: multiply"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g></g>
+</svg>
+</div>
+</div></div>
+
+<div class="dv-opt" id="8f"><div class="dv-olabel"><a class="dv-oid" href="#8f">8f</a>The echo · <a href="files/8f-echo-night.svg" download>night svg</a> · <a href="files/8f-echo-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 400px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200"><g style="mix-blend-mode: screen" opacity="0.25"><path d="M34 28 V192 M34 40 L96 72 L34 104 M34 104 L102 140 L34 180" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: screen" opacity="0.55"><path d="M46 24 V188 M46 36 L108 68 L46 100 M46 100 L114 136 L46 176" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: screen" opacity="0.9"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></svg></div>
+<div style="background: #f5f1e8; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 200 200"><g style="mix-blend-mode: multiply" opacity="0.2"><path d="M34 28 V192 M34 40 L96 72 L34 104 M34 104 L102 140 L34 180" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: multiply" opacity="0.45"><path d="M46 24 V188 M46 36 L108 68 L46 100 M46 100 L114 136 L46 176" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: multiply" opacity="0.8"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#4a3a2c" stroke-width="14" stroke-linecap="square"></path></g><g style="mix-blend-mode: multiply" opacity="0.85"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path></g></svg></div>
+</div></div>
+
+<div class="dv-opt" id="8g"><div class="dv-olabel"><a class="dv-oid" href="#8g">8g</a>The eclipse tile · <a href="files/8g-tile-night.svg" download>night svg</a> · <a href="files/8g-tile-day.svg" download>day svg</a></div>
+<div class="dv-card" style="width: 400px; display: grid; grid-template-columns: 1fr 1fr">
+<div style="background: #1c1a17; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="150" height="150" viewBox="0 0 200 200"><rect width="200" height="200" fill="#22322a"></rect><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#a3bd8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g></svg></div>
+<div style="background: #f5f1e8; height: 230px; display: flex; align-items: center; justify-content: center"><svg width="150" height="150" viewBox="0 0 200 200"><rect width="200" height="200" fill="#2b4a37"></rect><g style="mix-blend-mode: screen"><path d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172" fill="none" stroke="#f5f1e8" stroke-width="14" stroke-linecap="square" opacity="0.85"></path></g><g style="mix-blend-mode: screen"><path d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168" fill="none" stroke="#a3bd8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path></g></svg></div>
+</div></div>
+
+</div>
+<p style="margin: 22px 0 0; font: 13px/1.5 Spectral, serif; color: rgba(31,27,21,.55)">Lockup SVGs load Marcellus from Google Fonts when opened in a browser; other tools may need the font installed. Explorations continue on <a href="Logo Explorations.dc.html">the board</a>.</p>
+</section>
+</x-dc>
+</body>
+</html>
