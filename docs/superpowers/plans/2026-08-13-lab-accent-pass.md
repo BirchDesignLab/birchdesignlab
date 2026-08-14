@@ -10,7 +10,9 @@
 
 **Spec:** [`2026-08-13-lab-accent-pass-design.md`](../specs/2026-08-13-lab-accent-pass-design.md). Design frame: Claude Design project `027db389-4762-4e10-9ccd-6ab6a7752652`, file `Lab Accent Pass.dc.html`, option 1c.
 
-**This plan covers Part one of that spec only.** The chiaroscuro flip is Part two and gets its own plan; it is the only part that can break something already working, and Part one ships without it.
+**The chiaroscuro flip is Task 7 and comes last.** It is the only part of this pass that can break something already working, so it sits behind a task boundary rather than in a separate document: a reviewer can reject Task 7 and merge Tasks 1 through 6 unaffected.
+
+**The flip's mechanism changed while this plan was written, and it got simpler.** The spec describes moving the semantic tokens onto a `data-face` attribute that works anywhere in the tree, so a Lab subtree could invert inside a normally-faced page, and it flags that `BarkField` would need its colour read-target changed as a consequence. That turns out to be unnecessary. Every Lab surface is a whole page, and all three layouts render their own `<html>` element, so the inversion happens at the root. Nothing is nested, so nothing needs subtree scoping, and `BarkField` keeps reading from `document.documentElement`, which now simply carries the Lab's face. The spec has been corrected to match.
 
 ## Global Constraints
 
@@ -40,6 +42,10 @@
 | `src/layouts/ExperimentLayout.astro` (modify) | Accent designation in the hatch pill |
 | `src/layouts/StudyLayout.astro` (modify) | Accent designation in the hatch pill |
 | `src/pages/lab/[slug].astro` (modify) | Study page: live chip, accent tech chips, accent hairlines, living-specimen dash |
+| `src/components/ThemeBootstrap.astro` (modify) | Task 7: computes the face, inverting it in the Lab zone |
+| `src/components/ThemeToggle.astro` (modify) | Task 7: keeps face in step with the site preference |
+| `src/layouts/BaseLayout.astro` (modify) | Task 7: optional `zone` prop stamped on `<html>` |
+| `src/components/BarkField.astro` (modify) | Task 7: one attribute added to an observer filter |
 
 `DeviceBadge.astro` is deliberately untouched. It stays muted on `--line` in every frame, because a device hint is neither classification nor status.
 
@@ -371,11 +377,22 @@ git add src/lib/specimen-count.ts tests/specimen-count.test.ts src/components/Sp
 git commit -m "feat(lab): specimen count that stays true under filtering"
 ```
 
-- [ ] **Step 9: Raise the copy conflict, do not fix it**
+- [ ] **Step 9: Fix the copy the count contradicts**
 
-`/lab`'s intro reads "Numbered specimens, all working." With BDL-003 forthcoming, the count directly below it will say something like `6 specimens · 3 working`, contradicting it on screen.
+`/lab`'s intro reads "Numbered specimens, all working." With BDL-003 forthcoming, the count directly below it would say `6 specimens · 3 working` and contradict it on screen.
 
-Copy is founder territory per the house writing rules. Do not rewrite the sentence. Note it in the PR description so it lands in front of the founder with the rest of the pass.
+**The founder settled this on 08-13-26: the sentence becomes "Numbered specimens."** The claim moves out of the prose and into the count, which is the thing that can actually stay true.
+
+In `src/pages/lab/index.astro`:
+
+```astro
+      <p>
+        Numbered specimens. Experiments are things we build to
+        learn in the open; studies are client work, shown the same way.
+      </p>
+```
+
+Amend the commit from Step 8 rather than adding a second one; it is the same change.
 
 ---
 
@@ -676,9 +693,180 @@ git add docs/lab-backlog.md
 git commit -m "docs: accent pass shipped, two passes left undrawn"
 ```
 
+---
+
+### Task 7: The chiaroscuro flip
+
+The Lab always renders the opposite face from the site. Last, and separable: if this task is rejected, Tasks 1 through 6 stand on their own.
+
+**Files:**
+- Modify: `src/styles/tokens.css:60` and `:86` (two selectors)
+- Modify: `src/components/ThemeBootstrap.astro`
+- Modify: `src/components/ThemeToggle.astro:23-29`
+- Modify: `src/layouts/ExperimentLayout.astro:23`, `src/layouts/StudyLayout.astro:15`, `src/layouts/BaseLayout.astro:11-15`
+- Modify: `src/pages/lab/index.astro`, `src/pages/lab/experiments.astro`, `src/pages/lab/studies.astro` (one prop each)
+- Modify: `src/components/BarkField.astro` (two observer filters)
+
+**How it works, in one paragraph.** The server stamps `data-zone="lab"` on `<html>` for every Lab page. The existing pre-paint bootstrap reads that, and writes two attributes: `data-theme` stays exactly what it is today, the site preference and the storage contract, and a new `data-face` carries what should actually be painted, which is the inverse inside the Lab zone and identical everywhere else. The semantic token blocks key off `data-face` instead of `data-theme`. Nothing nests, so nothing needs subtree scoping, and there is no second copy of either palette.
+
+- [ ] **Step 1: Point the token blocks at the face**
+
+In `src/styles/tokens.css`, change two selectors only. Line 60:
+
+```css
+/* --- semantic: dark (the default face) ---
+   Keyed on data-face, not data-theme: data-theme is what the visitor chose,
+   data-face is what this page paints. They differ only inside the Lab, which
+   answers the site with the opposite face. Before JS runs neither attribute
+   exists and bare :root gives the dark default, exactly as before. */
+:root, :root[data-face='dark'] {
+```
+
+Line 86:
+
+```css
+/* --- semantic: light (the true inverse) --- */
+:root[data-face='light'] {
+```
+
+Every declaration inside both blocks is untouched. The no-JS `@media (prefers-color-scheme: light)` block at line 117 is untouched too, and keeps its KEEP IN SYNC note.
+
+- [ ] **Step 2: Teach the bootstrap about the zone**
+
+Replace the script in `src/components/ThemeBootstrap.astro`:
+
+```astro
+<script is:inline>
+  const root = document.documentElement;
+  root.classList.add('js');
+  let stored = null;
+  try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
+  const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  const site = stored || system;
+  root.dataset.theme = site;
+  // Chiaroscuro: the Lab answers the site with the opposite face, so entering
+  // it reads as the lights changing. The zone is stamped server-side, so this
+  // resolves pre-paint with no flash and without a second palette in CSS.
+  root.dataset.face = root.dataset.zone === 'lab'
+    ? (site === 'dark' ? 'light' : 'dark')
+    : site;
+</script>
+```
+
+Update the comment above it so the contract line stays honest:
+
+```astro
+---
+// Shared pre-paint theme bootstrap (single source of truth for the theme
+// contract: `data-theme` (what the visitor chose) and `data-face` (what this
+// page paints) on <html>, localStorage key 'theme', `.js` marker).
+---
+```
+
+- [ ] **Step 3: Keep the toggle in step**
+
+Replace the script in `src/components/ThemeToggle.astro`:
+
+```astro
+<script>
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+    root.dataset.theme = next;
+    // Same inversion rule as the bootstrap. On a Lab page this flips the Lab
+    // too, just to the opposite face from the one the visitor picked.
+    root.dataset.face = root.dataset.zone === 'lab'
+      ? (next === 'dark' ? 'light' : 'dark')
+      : next;
+    try { localStorage.setItem('theme', next); } catch { /* storage blocked: theme still switches, just not persisted */ }
+  });
+</script>
+```
+
+The dot's position rule at line 20 stays keyed to `data-theme` and must not be changed. The toggle reports the visitor's own choice, not the face of whatever page it happens to be sitting on.
+
+- [ ] **Step 4: Stamp the zone on the Lab's three layouts**
+
+`src/layouts/ExperimentLayout.astro`, line 23:
+
+```astro
+<html lang="en" data-zone="lab">
+```
+
+`src/layouts/StudyLayout.astro`, line 15:
+
+```astro
+<html lang="en" data-zone="lab">
+```
+
+`src/layouts/BaseLayout.astro` serves the whole site, so it takes the zone as a prop. Change its props and its html tag:
+
+```astro
+interface Props { title: string; description: string; noindex?: boolean; zone?: 'lab' }
+const { title, description, noindex = false, zone } = Astro.props;
+```
+
+```astro
+<html lang="en" data-zone={zone}>
+```
+
+An undefined `zone` renders no attribute at all, so every page outside the Lab is byte-identical to today.
+
+- [ ] **Step 5: Pass it from the three Lab catalog pages**
+
+In `src/pages/lab/index.astro`, `src/pages/lab/experiments.astro`, and `src/pages/lab/studies.astro`, add the prop to the `<BaseLayout>` call. For example:
+
+```astro
+<BaseLayout
+  title="The Lab · Birch Design Lab"
+  description="Numbered experiments and client studies in design and web engineering. A specimen catalog."
+  zone="lab"
+>
+```
+
+`/styleguide` is deliberately not in this list. It is a Lab entry by designation but it lives at its own route and its whole purpose is demonstrating the site's own faces; inverting it would make it lie about what it is showing.
+
+- [ ] **Step 6: Widen the bark observers by one attribute**
+
+`BarkField` reads its colour from `document.documentElement`, which is exactly where the face now lives, so its read target is correct with no change. Its two `MutationObserver` filters watch `data-theme` alone, though, and the attribute that now changes what it should paint is `data-face`. In `src/components/BarkField.astro`, at both observer sites (near lines 73 and 116):
+
+```js
+attributeFilter: ['data-theme', 'data-face'],
+```
+
+In practice both attributes always change together, so this is belt and braces rather than a live bug. Add it anyway: a future page that sets a face without a theme would otherwise leave the bark stranded in the wrong colour, and that failure would be very hard to attribute.
+
+- [ ] **Step 7: Prove there is no flash**
+
+Set the site to light, then navigate from `/` to `/lab`. The Lab must render dark from its very first painted frame. A flash of the site's face before the inversion means the bootstrap is running too late, which would mean it moved out of `<head>`.
+
+Then reload `/lab` directly, hard-refresh, and check again. A direct load is the case a client-side navigation would hide.
+
+- [ ] **Step 8: Walk both directions on both faces**
+
+- `/` dark, `/lab` light. Toggle on `/lab`: the site preference becomes light and the Lab repaints dark.
+- Navigate back to `/`: it is light, matching what the toggle now says.
+- `/lab/bdl-001` and `/lab/bdl-005`: both inverted, and neither has a toggle of its own, which is correct since only `SiteHeader` renders one.
+- The bark on `/` and on `/about` still repaints correctly when toggling. This is the regression most likely to bite, because it is the one thing the flip touches that lives outside the Lab.
+- `/styleguide` still follows the site face and does not invert.
+
+- [ ] **Step 9: Check the no-JS path, and confirm it is the accepted behaviour**
+
+Disable JavaScript and load `/lab`. Expect: no inversion, the Lab renders in the system face. This is the outcome the spec accepted rather than solved, and the reason is worth re-reading before anybody decides it is a bug. A CSS-only inversion needs a second full copy of both palettes under the media query, and the file already carries a KEEP IN SYNC warning over the one duplicate it has.
+
+- [ ] **Step 10: Verify and commit**
+
+Run: `npx vitest run` — expect green, unchanged count.
+Run: `npx astro check` — expect 0 errors.
+Run: `npm run build` — expect clean.
+
+```bash
+git add src/styles/tokens.css src/components/ThemeBootstrap.astro src/components/ThemeToggle.astro src/components/BarkField.astro src/layouts/BaseLayout.astro src/layouts/ExperimentLayout.astro src/layouts/StudyLayout.astro src/pages/lab/index.astro src/pages/lab/experiments.astro src/pages/lab/studies.astro
+git commit -m "feat(lab): chiaroscuro flip, the Lab answers the site with the opposite face"
+```
+
 ## Out of scope
 
-- **The chiaroscuro flip.** Part two of the spec, its own plan.
 - **Texture and motion**, neither of which was ever drawn. Motion has since grown into the Lab presentation-language work in the backlog.
 - **Density.** Settled 07-30 and not reopened.
 - **The `/lab` intro copy**, which this pass contradicts and deliberately does not rewrite. Founder territory. Raised in Task 2, Step 9.
