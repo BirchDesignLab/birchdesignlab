@@ -8,6 +8,13 @@
 > The files below stay because the Cheer and Chatter slideshow still references
 > the copy of them in that repo, and because the sponsor card is the reference
 > for what replaces it. Do not build anything new on them.
+>
+> `logos/png/` holds rasterised copies of the static set at 512 and 2048, plus
+> the favicon cut at 32/180/512, for the places that refuse SVG. Regenerate with
+> `node scripts/brand/rasterize-logos.mjs`; never hand-edit them. That script
+> verifies the mark's `mix-blend-mode` survived rasterisation and refuses to
+> write anything if it did not, because a rasteriser that drops the blend
+> produces a visibly different logo.
 
 Source of truth for the dense-bark mark and lockups, chosen 2026-08-08
 (spec: `docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).

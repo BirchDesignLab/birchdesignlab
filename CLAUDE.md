@@ -12,6 +12,24 @@ The knowledge graph moved to `C:\vault\graphify\birchdesignlab\graphify-out\` (i
 
 After significant decisions, log an atomic note in C:\vault\zettelkasten\ and link it back to this project.
 
+## Scripts stay in the repo, not in temp
+
+Founder direction 2026-08-13, carried over from the Cheer & Chatter repo.
+
+**No scratchpad, no temp directories.** Anything worth running is worth keeping:
+one-off scripts, migrations, backfills, rasterisers, ops probes. They go in
+`scripts/`, in a subfolder when there is a natural grouping
+(`scripts/brand/`, `scripts/og/`, `scripts/migrations/`), and they get
+committed.
+
+The reason is insurance. If a run goes wrong, or the same job comes back in six
+months, the script and the reasoning behind it still exist. A script that lived
+in `%TEMP%` is gone the moment it would have been useful.
+
+This applies to throwaway helpers too, including commit-message files: use
+`git commit -m` with repeated flags rather than writing a file somewhere and
+deleting it.
+
 ## Git workflow
 
 Branch and open a PR for review. Do not commit directly to `main`. Merging to
