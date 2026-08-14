@@ -122,10 +122,14 @@
 }
 
 /* --- no-JS fallback: honor a light system preference ---
-   Without JS the bootstrap never sets data-theme, so the :root dark
+   Without JS the bootstrap never sets data-face, so the :root dark
    default would win. html:not(.js) (0,1,1) outranks :root (0,1,0);
    with JS the .js class makes this rule inert.
-   KEEP IN SYNC with :root[data-theme='light'] above. */
+   This is also why a no-JS visitor gets an UNINVERTED Lab: the inversion
+   needs the bootstrap to compute a face, and this block only knows the
+   system preference. Accepted deliberately; the alternative is a second
+   copy of both palettes.
+   KEEP IN SYNC with :root[data-face='light'] above. */
 @media (prefers-color-scheme: light) {
   html:not(.js) {
     color-scheme: light;
