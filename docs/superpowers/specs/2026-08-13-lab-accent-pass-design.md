@@ -155,35 +155,51 @@ subtree-level inversion impossible today.
 
 ### The change
 
-Semantics move from `:root[data-theme=…]` onto a **face attribute that works
-anywhere in the tree**: `[data-face='dark']` and `[data-face='light']`. The
-bootstrap sets both attributes on `<html>`: `data-theme` stays the site
-preference and the storage contract, unchanged, and `data-face` mirrors it.
-Lab layouts set the inverted `data-face` on their own root element, and the
-subtree re-tokenizes by inheritance.
+*Revised at plan time, 08-13-26. The first version of this section had the Lab
+inverting a subtree inside a normally-faced page. That is not what the Lab is:
+every Lab surface is a whole page, and all three layouts render their own
+`<html>`. Inverting at the root is simpler, needs no subtree scoping, and drops
+the `BarkField` change the earlier version required. The simpler version is
+what follows; the original is kept below it for the record.*
+
+The server stamps `data-zone="lab"` on `<html>` for Lab pages. The existing
+pre-paint bootstrap reads it and writes two attributes: `data-theme` stays
+exactly what it is today, the visitor's choice and the storage contract, and a
+new `data-face` carries what the page actually paints, which is the inverse
+inside the Lab zone and identical to `data-theme` everywhere else. The semantic
+token blocks key off `data-face`.
+
+Nothing nests, so there is no second copy of either palette, and pages outside
+the Lab render byte-identical markup to today.
+
+**Superseded approach, for the record:** semantics move onto a face attribute
+that works anywhere in the tree, and Lab layouts set the inverted `data-face`
+on their own root element so the subtree re-tokenizes by inheritance. This
+works, but it buys subtree flexibility nothing in the Lab needs, and it forces
+the `BarkField` change described below.
 
 The `--gf-*` loud-band tokens live in the same blocks, so the green bands invert
 along with everything else for free.
 
-### The snag, and it is the real work
+### What this does to BarkField, which is much less than it looked like
 
 [`BarkField.astro`](../../../src/components/BarkField.astro) reads its colour
-from `getComputedStyle(document.documentElement)`. On a Lab page with an
-inverted subtree, that returns the **site's** `--mark`, so the bark would draw
-in the wrong face while everything around it inverted.
+from `getComputedStyle(document.documentElement)`. Under the superseded
+subtree approach that was a real defect: the document element would carry the
+site's face while the bark sat inside an inverted Lab, and the bark would draw
+in the wrong colour. Fixing it meant changing the read target inside a
+component the handoff marks repo-authoritative.
 
-The fix is to read from the canvas element instead of the document element.
-Custom properties inherit, so the canvas already resolves the face of whatever
-subtree it sits in, and the same code then works both inverted and not.
+Inverting at the root removes the problem rather than solving it. The document
+element *is* what carries the Lab's face, so the existing read is already
+correct and the component's guards are untouched.
 
-This is a change to a component the handoff marks repo-authoritative. It is a
-one-line read-target change, its guards are untouched, and the existing bark
-tests plus a real-browser check on both faces cover it. It is called out here so
-it is a decision rather than a surprise.
-
-The component's `MutationObserver` needs no change. It watches `data-theme` on
-`<html>`, and since the Lab's face is always derived from the site face, that
-attribute still changes whenever the Lab's face does.
+One small change remains, and it is precautionary rather than a fix. The two
+`MutationObserver` filters watch `data-theme` alone, and the attribute that now
+governs painted colour is `data-face`. In practice both always change together,
+so nothing is broken today. `data-face` joins the filter anyway, because a
+future page that set a face without a theme would strand the bark in the wrong
+colour, and that failure would be miserable to attribute.
 
 ### Decisions this forces
 
