@@ -29,7 +29,10 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
       <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1440]} sizes="100vw" loading="eager" fetchpriority="high" />
       <div class="hero-veil"></div>
       <div class="hero-text wrap">
-        <p class="designation smallcaps">{designation} &middot; Study</p>
+        <p class="designation smallcaps">
+          {designation} &middot; Study
+          <span class="live">live</span>
+        </p>
         <h1>{title}</h1>
         <p class="hero-summary">{summary}</p>
       </div>
@@ -40,7 +43,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
         <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>
         <div><dt class="smallcaps">Delivered</dt><dd>{dateLabel}</dd></div>
         <div><dt class="smallcaps">Built with</dt><dd class="chips">{tech.map((t) => <span class="tag">{t}</span>)}</dd></div>
-        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a></dd></div>
+        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a><span class="dash" aria-hidden="true"></span></dd></div>
       </dl>
     </section>
 
@@ -79,7 +82,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
 
   /* Stage hero: full-bleed image, washed for legibility, identity overlaid.
      About-hero grammar: it scrolls away. */
-  .hero { position: relative; min-height: 62vh; display: grid; align-items: end; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .hero { position: relative; min-height: 62vh; display: grid; align-items: end; overflow: hidden; border-bottom: 1px solid var(--line-accent); }
   .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .hero-veil { position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--field) 88%, transparent), color-mix(in srgb, var(--field) 30%, transparent) 55%, transparent); }
   .hero-text { position: relative; padding-block: var(--space-5); }
@@ -88,12 +91,33 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
   .hero-summary { color: var(--mark-muted); max-width: 44ch; margin-top: var(--space-2); }
 
   /* Plate block: SpecimenPlate's language, in flow. */
-  .plate { padding-block: var(--space-4); border-bottom: 1px solid var(--line); }
+  .plate { padding-block: var(--space-4); border-bottom: 1px solid var(--line-accent); }
   .plate dl { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); margin: 0; }
   .plate dt { color: var(--accent); font-size: var(--text-sm); }
   .plate dd { margin: 0.35em 0 0; }
-  .plate .tag { border: 1px solid var(--line); padding: 0.2em 0.6em; margin-right: var(--space-1); font-size: var(--text-sm); color: var(--mark-muted); white-space: nowrap; }
+  .plate .tag {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1;
+    color: var(--accent); border: 1px solid var(--line-accent);
+    padding: 0.35em 0.8em 0.25em; margin-right: var(--space-1); white-space: nowrap;
+  }
   .plate a { color: var(--link); }
+
+  /* Filled, matching the catalog's type badge: a published study is the most
+     definite thing on the page. Studies only generate a page when status is
+     'live', so the chip is unconditional. */
+  .live {
+    font-family: var(--font-smallcaps);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    font-size: 0.68rem; line-height: 1;
+    color: var(--on-accent); background: var(--accent); border: 1px solid var(--accent);
+    padding: 0.35em 0.8em 0.25em; margin-left: var(--space-3); white-space: nowrap;
+  }
+  .plate .dash {
+    display: inline-block; width: 0.85em; height: 2px;
+    background: var(--accent); margin-left: var(--space-2); vertical-align: middle;
+  }
 
   /* Narrative column. */
   .prose { max-width: 68ch; padding-block: var(--space-6); display: grid; gap: var(--space-3); }
