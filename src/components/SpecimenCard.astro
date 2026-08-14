@@ -14,7 +14,7 @@ const href = (entry.data.type === 'experiment' ? entry.data.href : undefined) ??
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
 ---
-<article class="card" data-type={entry.data.type}>
+<article class="card" data-type={entry.data.type} data-status={status}>
   <p class="status">
     <span class="designation smallcaps">{designation}</span>
     {live

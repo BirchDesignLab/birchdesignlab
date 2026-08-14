@@ -1,13 +1,16 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import SpecimenCard from './SpecimenCard.astro';
+import { specimenCountLabel } from '../lib/specimen-count';
 
 interface Props {
   entries: CollectionEntry<'lab'>[];
   filterable?: boolean;
 }
 const { entries, filterable = false } = Astro.props;
+const working = entries.filter((e) => e.data.status === 'live').length;
 ---
+<p class="count smallcaps" aria-live="polite">{specimenCountLabel(entries.length, working)}</p>
 {filterable && (
   <div class="filter smallcaps" role="group" aria-label="Filter specimens">
     <button type="button" data-set="all" aria-pressed="true">All</button>
@@ -21,14 +24,27 @@ const { entries, filterable = false } = Astro.props;
 
 {filterable && (
   <script>
+    import { specimenCountLabel } from '../lib/specimen-count';
+
     for (const group of document.querySelectorAll('.filter')) {
       const catalog = group.nextElementSibling as HTMLElement;
+      // The count sits above the filter row, so it is the group's previous
+      // sibling. Recounted from the DOM rather than from a passed-in figure:
+      // the cards are the source of truth and cannot drift from it.
+      const count = group.previousElementSibling as HTMLElement | null;
       group.addEventListener('click', (e) => {
         const btn = (e.target as HTMLElement).closest('button[data-set]');
         if (!btn || !catalog) return;
-        catalog.dataset.filter = (btn as HTMLElement).dataset.set!;
+        const set = (btn as HTMLElement).dataset.set!;
+        catalog.dataset.filter = set;
         for (const b of group.querySelectorAll('button')) {
           b.setAttribute('aria-pressed', String(b === btn));
+        }
+        if (count) {
+          const shown = [...catalog.querySelectorAll<HTMLElement>('.card')]
+            .filter((c) => set === 'all' || c.dataset.type === set);
+          const live = shown.filter((c) => c.dataset.status === 'live').length;
+          count.textContent = specimenCountLabel(shown.length, live);
         }
       });
     }
@@ -36,7 +52,9 @@ const { entries, filterable = false } = Astro.props;
 )}
 
 <style>
-  .catalog { border-bottom: 1px solid var(--line); }
+  /* Accent-tinted, matching the row hairlines above it. */
+  .catalog { border-bottom: 1px solid var(--line-accent); }
+  .count { color: var(--accent); font-size: var(--text-sm); margin-bottom: var(--space-4); }
   /* Filter: pure show/hide of already-rendered DOM (SEO: every card ships
      in the HTML regardless of state). Square geometry per house rules. */
   .filter { display: none; gap: var(--space-2); margin-bottom: var(--space-4); }
@@ -50,8 +68,14 @@ const { entries, filterable = false } = Astro.props;
     border-radius: 0;
     padding: 0.5em 1em 0.4em;
     cursor: pointer;
+    transition: color var(--dur-1) var(--ease-weighted),
+                background-color var(--dur-1) var(--ease-weighted),
+                border-color var(--dur-1) var(--ease-weighted);
   }
-  .filter button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
+  /* Filled when active, the loud grammar's strongest control state. */
+  .filter button[aria-pressed='true'] {
+    color: var(--on-accent); background: var(--accent); border-color: var(--accent);
+  }
   .catalog[data-filter='experiment'] :global(.card[data-type='study']),
   .catalog[data-filter='study'] :global(.card[data-type='experiment']) { display: none; }
 </style>
