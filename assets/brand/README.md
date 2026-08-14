@@ -1,5 +1,14 @@
 # Brand assets
 
+> **The dense-bark set below is SUPERSEDED (2026-08-13).** The real mark is in
+> [`logos/`](logos/): a stem with two chevron branches, drawn twice at an offset,
+> neutral plus canopy green, with night and day faces. Outcome and open items at
+> the foot of [`../../docs/brand-brief.md`](../../docs/brand-brief.md).
+>
+> The files below stay because the Cheer and Chatter slideshow still references
+> the copy of them in that repo, and because the sponsor card is the reference
+> for what replaces it. Do not build anything new on them.
+
 Source of truth for the dense-bark mark and lockups, chosen 2026-08-08
 (spec: `docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).
 

@@ -5,6 +5,12 @@ mark: a hired designer, or the founder working in a design tool. It gathers what
 is already known, decided, and rejected, so a first round does not spend itself
 rediscovering it.*
 
+> **ANSWERED 08-13-26. The mark is locked.** The founder took this brief into
+> Claude Design and came back with a locked set; the files are in
+> `assets/brand/logos/`. What it settled and what it did not is recorded in
+> [Outcome](#outcome) at the foot of this document. The rest of the brief is
+> kept as written, because the failure record is what made the round work.
+
 ## The short version
 
 Birch Design Lab needs a real logo. The mark it uses today is a placeholder that
@@ -190,3 +196,47 @@ Everything below is in the `birchdesignlab` repository.
 
 Replacing the mark needs no code change beyond swapping files and wiring the
 adoption, which is not the designer's problem.
+
+## Outcome
+
+Locked 08-13-26, in `assets/brand/logos/` (`Locked Marks.dc.html` is the review
+sheet; `files/` holds 33 SVGs; the zip is the untouched original delivery).
+
+**The mark.** A vertical stem with two chevron branches, drawn twice at a 12px
+offset so the two strokes overlap. One stroke carries the neutral, one carries
+canopy green `#2f6644`. On the night face the neutral is warm stone `#a89f8f`,
+blended `screen` on charcoal; on the day face it is leather `#4a3a2c`, blended
+`multiply` on paper. Geometry is identical across both faces and every lockup.
+
+**It is not horizontal dashes.** Every previous candidate, the seven declined on
+08-08 and the placeholder before them, was a variation on lenticel dashes. This
+brief's one substantive observation was that the theme itself had never been
+tested. Testing it is what produced a mark the founder kept.
+
+**What the brief asked for, and what came back:**
+
+| Asked | Delivered |
+|---|---|
+| Vector source, editable | 33 SVGs, hand-authored paths |
+| The primary | `8a` mark alone, night and day |
+| Something that works at tab size | `8c`, same geometry at a heavier stroke (20 vs 14) — a real small-size cut, not a shrink |
+| A lockup, wordmark as outlines | `8b` system sheet: stacked and horizontal, both faces |
+| Both faces, or a decision | Both faces, throughout |
+| One-colour artwork | Not delivered. The mark is two strokes by construction; a single-colour reduction still needs drawing. |
+
+**Open questions this closed.** Whether the mark inverts (yes, and the day face
+carries its own neutral rather than inverting mechanically). Whether a symbol was
+wanted at all (yes, with wordmark lockups alongside it in `10d`). Which lockup is
+primary (both ship; stacked and horizontal are contextual, not rivals).
+
+**Still open, and none of it is design work:**
+
+- **Adoption.** The site still serves the old generated favicon and `og/logo.png`.
+  Favicon, OG cards, web manifest, site header and footer all still point at the
+  placeholder. This is mechanical and is the natural next task.
+- **One-colour artwork**, for print or stamping.
+- **The Cheer and Chatter re-export.** Their slideshow was built so the brand kit
+  is a file swap; the interim dense-bark card there is now superseded.
+- **The animated set** (`9e` settle, `9f` pass, `9g` drawn and breathing, `9h`
+  flip, plus the `11`/`12` explorations). Kept, unassigned. The Lab's motion pass
+  is the obvious home.
