@@ -55,3 +55,26 @@ crossing 18s. Edit and re-run.
 
 It is a script rather than a hand edit because a re-export drops the bindings
 again, and a re-export is expected.
+
+## Checking a re-export
+
+Verified 2026-08-13: a second export pulled straight from Claude Design was
+**byte-identical to the zip across all 33 files**, and carried no animation
+either. So the missing CSS is how the exporter behaves, not a bad download, and
+the inlining step above is a permanent part of the pipeline rather than a
+one-time repair.
+
+When the next export arrives, compare it against the zip before replacing
+anything. `files/` should differ from a fresh export in exactly the 11 animated
+marks and nowhere else; anything else that moved is a real upstream change worth
+looking at.
+
+```powershell
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zip = [System.IO.Compression.ZipFile]::OpenRead("assets/brand/logos/Birch Design Lab logo brief.zip")
+foreach ($e in $zip.Entries) { if ($e.Name) { $s = $e.Open(); $ms = New-Object System.IO.MemoryStream; $s.CopyTo($ms); $s.Close()
+  $old = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($ms.ToArray()))
+  $new = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([IO.File]::ReadAllBytes("<new-export>/$($e.Name)")))
+  if ($old -ne $new) { "changed: $($e.Name)" } } }
+$zip.Dispose()
+```
