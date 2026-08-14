@@ -86,7 +86,7 @@ type badge, and nothing about its *state* is green.
 | Catalog bottom rule | `var(--line)` | same accent-tinted mix |
 | Row hover | none | `background: var(--green-surface)`, transitioned |
 | Live specimen | nothing | accent dash, `0.85em` wide, `2px` tall, plus a `working specimen` smallcaps label beside the designation |
-| Forthcoming | italic muted "forthcoming" | `in progress` chip, bordered and lettered in `var(--accent-strong)` (see the copy note below) |
+| Forthcoming | italic muted "forthcoming" | `forthcoming` chip, bordered and lettered in `var(--accent-strong)` |
 | Type badge | accent text, accent border | filled: `background: var(--accent)`, `color: var(--on-accent)` |
 | Device badge | unchanged | unchanged, stays `--mark-muted` on `--line` |
 | Tech tags | `·` separated text | chips, accent text, border in the 45% accent mix |
@@ -96,14 +96,13 @@ type badge, and nothing about its *state* is green.
 
 Spacing is not touched. The density pass settled it.
 
-**A copy change is hiding in that table, and it is the founder's call, not
-mine.** The schema value stays `forthcoming`; what changes is the word on
-screen, from "forthcoming" to "in progress". They do not mean the same thing.
+**The word stays "forthcoming" (FOUNDER, 08-13-26).** Frame 1c relabels the
+chip "in progress"; that is declined. The two do not mean the same thing.
 "Forthcoming" says a thing is coming; "in progress" says someone is working on
-it right now, which is a claim that has to stay true. Per the house writing
-rules, visible copy is founder territory, so the frame's wording is carried
-here as a proposal rather than a decision. Keeping "forthcoming" and simply
-moving it into the leather chip is equally valid and changes nothing else.
+it right now, which is a claim that would have to stay true on a public page
+across quiet weeks. So the treatment changes and the word does not: the italic
+muted "forthcoming" becomes a leather chip reading **forthcoming**. The schema
+value was already `forthcoming` and is untouched.
 
 ### The count
 
