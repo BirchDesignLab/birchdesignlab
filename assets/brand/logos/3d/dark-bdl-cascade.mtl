@@ -1,0 +1,13 @@
+# Exported by three-d-stage
+newmtl canopy
+Kd 0.0284 0.1329 0.0578
+Ks 0.2000 0.2000 0.2000
+Ns 100
+d 1.0000
+
+newmtl stone
+Kd 0.3916 0.3467 0.2747
+Ks 0.2000 0.2000 0.2000
+Ns 90
+d 1.0000
+
