@@ -24,7 +24,7 @@ const entries = (await getCollection('lab', ({ data }) => data.type === 'study' 
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure); }
   .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
   .kicker a { color: var(--accent); text-decoration: none; }
   .kicker a:hover { text-decoration: underline; }
