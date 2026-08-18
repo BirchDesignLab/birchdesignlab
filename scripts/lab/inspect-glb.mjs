@@ -27,7 +27,7 @@ console.log('');
 for (const m of gltf.materials ?? []) {
   const pbr = m.pbrMetallicRoughness ?? {};
   console.log(`--- ${m.name}`);
-  console.log('  baseColorFactor   ', pbr.baseColorFactor ?? '(none, defaults white)');
+  console.log('  baseColorFactor   ', pbr.baseColorFactor ? linearToSrgbHex(pbr.baseColorFactor) : '(none, defaults white)');
   console.log('  baseColorTexture  ', pbr.baseColorTexture ? 'yes' : 'no');
   console.log('  metallic/roughness', pbr.metallicFactor ?? '(1)', '/', pbr.roughnessFactor ?? '(1)');
   console.log('  mrTexture         ', pbr.metallicRoughnessTexture ? 'yes' : 'no');

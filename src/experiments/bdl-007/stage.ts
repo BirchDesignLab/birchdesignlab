@@ -24,15 +24,15 @@ const PULSE_AMP = 0.05;
  * has to come from somewhere. Giving them a real albedo lets the emissive
  * go back to being a breath rather than the entire surface.
  *
- * The values are sampled from the photographs the model was built against
- * (scripts/lab/sample-reference-colors.mjs), not picked by eye. Moss and
- * lichen get different greens because the references disagree: the moss
- * reference runs saturated, the lichen reference runs olive-grey. Both are
- * pulled slightly lighter than the photograph's dominant family, since a
- * photo carries its own baked lighting and this is albedo.
+ * These are brand tokens, and that is not a guess. The smaller exports from
+ * the same design tool (assets/brand/logos/3d/dark-bdl-cascade.glb) DO carry
+ * baseColorFactor, and converting those from glTF's linear space to sRGB
+ * returns tokens.css values exactly: stone #a89f8f, leather #4a3a2c. The
+ * tool authors materials from the palette. The big model's moss reads white
+ * only because its colour lived in the staging code rather than the mesh.
  */
-const MOSS_ALBEDO = '#5b7a2e';
-const LICHEN_ALBEDO = '#8b9070';
+const MOSS_ALBEDO = '#a3bd8f';    /* --green-moss */
+const LICHEN_ALBEDO = '#a89f8f';  /* --stone-warm */
 const PULSE_PERIOD = 9;                 // seconds
 const TILT_LIMIT = (35 * Math.PI) / 180;
 const ZOOM_MIN = 0.8;
