@@ -4,6 +4,12 @@
  * three.js and the model arrive only when the stage scrolls into view.
  * The C&C break-screen rule, reused: nothing the visitor sees may depend
  * on code that might not arrive.
+ *
+ * On the still's sizes: it is object-fit: contain inside a padded stage
+ * whose height is capped at min(88vh, 900px), so it never occupies
+ * anything close to the viewport width. At its 592x963 aspect it lands
+ * around 470px wide at that cap. The old 100vw asked the browser to pick
+ * the largest candidate for an image that is displayed small.
  */
 import still from './still.png';
 import { Image } from 'astro:assets';
@@ -13,9 +19,10 @@ import { Image } from 'astro:assets';
     src={still}
     alt="The organic Birch Design Lab wordmark, birch and moss, at rest."
     class="still"
-    widths={[768, 1200]}
-    sizes="100vw"
+    widths={[296, 592]}
+    sizes="(max-width: 640px) 60vw, 470px"
     loading="eager"
+    fetchpriority="high"
   />
   <canvas class="scene" aria-hidden="true"></canvas>
   <p class="veil smallcaps" data-veil hidden>Waking the grove</p>
