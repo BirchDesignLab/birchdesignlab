@@ -28,7 +28,7 @@ const PULSE_AMP = 0.05;
  * stars visibly swell/shrink frame to frame and it starts reading as a
  * throb instead. Dial this one constant to retune.
  */
-const PULSE_SCALE_AMP = 0.03;
+const PULSE_SCALE_AMP = 0.1;
 /**
  * Bump strength. The Draco pass drops the two bump images along with the
  * vendor extension (EXT_materials_bump) that pointed at them — three's
@@ -283,6 +283,12 @@ export function mountStage(
             const breath = { value: 1 };
             m.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
               shader.uniforms.uBreath = breath;
+              // three auto-declares its own built-in uniforms and nothing
+              // else, so a uniform added from here has to be declared in
+              // the GLSL by hand. Binding the value without the declaration
+              // fails to compile, and nothing on the JS side says so.
+              shader.vertexShader = `uniform float uBreath;
+${shader.vertexShader}`;
               shader.vertexShader = shader.vertexShader.replace(
                 '#include <begin_vertex>',
                 '#include <begin_vertex>\n\ttransformed *= uBreath;',
