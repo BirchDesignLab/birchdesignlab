@@ -102,6 +102,11 @@ export function mountStage(
     depthWrite: false,
   });
   const flyPoints = new THREE.Points(flyGeo, flyMat);
+  // The position buffer is rewritten every frame but three only computes
+  // the Points bounding sphere once, lazily, from the buffer at creation
+  // time (all zeros) and never recomputes it — leave frustum culling off
+  // so the flock can't be clipped against a stale sphere.
+  flyPoints.frustumCulled = false;
   // Parented to rig (not scene) so the constellation rotates with the tree;
   // gather targets below are sampled in this same rig-local frame.
   rig.add(flyPoints);
@@ -156,6 +161,7 @@ export function mountStage(
     rig.updateMatrixWorld(true);
     const rigWorldInverse = new THREE.Matrix4().copy(rig.matrixWorld).invert();
     const localMatrix = new THREE.Matrix4();
+    const instMat = new THREE.Matrix4();
     model.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -169,9 +175,27 @@ export function mountStage(
         }
       }
       localMatrix.multiplyMatrices(rigWorldInverse, obj.matrixWorld);
+      const v = new THREE.Vector3();
+      // GLTF's EXT_mesh_gpu_instancing nodes load as InstancedMesh: moss
+      // and lichen are placed per-instance via instanceMatrix, not by the
+      // node transform, so the base geometry (read below for non-instanced
+      // meshes like canopy) sits at the node pivot — the geometric centre
+      // of the letterform, not a real surface point. Sample real instance
+      // origins instead, thinned to ~12 per node so 40 flies spread across
+      // the roughly 100-150 resulting targets instead of stacking on a
+      // handful of node pivots.
+      if ((obj as THREE.InstancedMesh).isInstancedMesh) {
+        const im = obj as THREE.InstancedMesh;
+        const step = Math.max(1, Math.floor(im.count / 12));
+        for (let i = 0; i < im.count; i += step) {
+          im.getMatrixAt(i, instMat);
+          v.setFromMatrixPosition(instMat).applyMatrix4(localMatrix);
+          verts.push([v.x, v.y, v.z]);
+        }
+        return;
+      }
       const pos = obj.geometry.getAttribute('position');
       const stride = Math.max(1, Math.floor(pos.count / 8));
-      const v = new THREE.Vector3();
       for (let i = 0; i < pos.count; i += stride) {
         v.fromBufferAttribute(pos, i).applyMatrix4(localMatrix);
         verts.push([v.x, v.y, v.z]);
