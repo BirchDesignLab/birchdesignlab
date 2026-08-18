@@ -1,0 +1,77 @@
+---
+/**
+ * The Shining Tree shell. Renders the committed still from first paint;
+ * three.js and the model arrive only when the stage scrolls into view.
+ * The C&C break-screen rule, reused: nothing the visitor sees may depend
+ * on code that might not arrive.
+ */
+import still from './still.png';
+import { Image } from 'astro:assets';
+---
+<div class="stage" data-stage>
+  <Image src={still} alt="" class="still" widths={[768, 1200]} sizes="100vw" loading="eager" />
+  <canvas class="scene" aria-label="The organic Birch Design Lab wordmark in three dimensions. Drag to turn it."></canvas>
+  <p class="veil smallcaps" data-veil>Waking the grove</p>
+  <p class="no-webgl" data-no-webgl hidden>This specimen needs WebGL; here it is at rest.</p>
+</div>
+
+<script>
+  const stage = document.querySelector<HTMLElement>('[data-stage]')!;
+  const canvas = stage.querySelector<HTMLCanvasElement>('canvas.scene')!;
+  const veil = stage.querySelector<HTMLElement>('[data-veil]')!;
+  let dispose: (() => void) | undefined;
+
+  const showFallback = () => {
+    veil.hidden = true;
+    stage.querySelector<HTMLElement>('[data-no-webgl]')!.hidden = false;
+  };
+
+  const probe = document.createElement('canvas');
+  const hasWebGL = !!(probe.getContext('webgl2') ?? probe.getContext('webgl'));
+
+  if (!hasWebGL) {
+    showFallback();
+  } else {
+    const io = new IntersectionObserver(async ([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      const { mountStage } = await import('./stage');
+      dispose = mountStage(canvas, {
+        onReady: () => stage.classList.add('is-live'),
+        onError: () => showFallback(),
+      });
+    });
+    io.observe(stage);
+  }
+
+  document.addEventListener('astro:before-swap', () => dispose?.(), { once: true });
+</script>
+
+<style>
+  .stage {
+    position: relative;
+    height: min(88vh, 900px);
+    background: var(--field);
+    overflow: hidden;
+  }
+  .still, .scene {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .still { object-fit: contain; padding: 8%; opacity: 0.45; transition: opacity var(--dur-2) var(--ease-weighted); }
+  .scene { opacity: 0; transition: opacity var(--dur-2) var(--ease-weighted); touch-action: none; }
+  .stage.is-live .still { opacity: 0; }
+  .stage.is-live .scene { opacity: 1; }
+  .veil {
+    position: absolute; left: 50%; bottom: var(--space-4);
+    transform: translateX(-50%);
+    color: var(--mark-muted); letter-spacing: var(--tracking-wide);
+    transition: opacity var(--dur-2) var(--ease-weighted);
+  }
+  .stage.is-live .veil { opacity: 0; }
+  .no-webgl {
+    position: absolute; left: 50%; bottom: var(--space-4);
+    transform: translateX(-50%);
+    color: var(--mark-muted);
+  }
+</style>
