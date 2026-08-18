@@ -14,8 +14,8 @@ import stoneBump from './stone-bump.webp';
 const MODEL_URL = '/models/bdlOrganic.draco.glb';
 const DRACO_PATH = '/draco/';
 const LIVING = /moss|canopy|lichen/i;   // verified material names in the glb
-const IDLE_YAW = (Math.PI * 2) / 30;    // one rotation per 30s
-const GATHER_AFTER_MS = 8000;
+const IDLE_YAW = (Math.PI * 2) / 60;    // one rotation per 60s
+const GATHER_AFTER_MS = 20000;
 const FLY_COUNT = 40;
 const FLY_BOUNDS = 1.9;
 const PULSE_MID = 0.07;
@@ -28,7 +28,7 @@ const PULSE_AMP = 0.05;
  * stars visibly swell/shrink frame to frame and it starts reading as a
  * throb instead. Dial this one constant to retune.
  */
-const PULSE_SCALE_AMP = 0.1;
+const PULSE_SCALE_AMP = 0.25;
 /**
  * Bump strength. The Draco pass drops the two bump images along with the
  * vendor extension (EXT_materials_bump) that pointed at them — three's
@@ -60,7 +60,7 @@ const STONE_BUMP_FACTOR = 0.005 * BUMP_SCALE_MULTIPLIER;
  */
 const MOSS_ALBEDO = '#a3bd8f';    /* --green-moss */
 const LICHEN_ALBEDO = '#a89f8f';  /* --stone-warm */
-const PULSE_PERIOD = 9;                 // seconds
+const PULSE_PERIOD = 20;                // seconds
 const TILT_LIMIT = (35 * Math.PI) / 180;
 const ZOOM_MIN = 0.8;
 const ZOOM_MAX = 1.8;
@@ -298,7 +298,14 @@ ${shader.vertexShader}`;
             // program to (or take a program from) an otherwise-identical
             // moss/lichen material that never got onBeforeCompile wired up,
             // silently dropping or duplicating the uBreath injection.
-            m.customProgramCacheKey = () => 'bdl007-breath-scale';
+            // Per material, not a shared constant. three caches compiled
+            // programs by this key, so moss and lichen returning the same
+            // string lets it compile once and hand that one program to
+            // both. Only the first material's onBeforeCompile runs, so the
+            // other draws with a program whose uBreath was never bound to
+            // its uniform object, and it sits still while its twin breathes.
+            const cacheKey = `bdl007-breath-scale:${m.name}`;
+            m.customProgramCacheKey = () => cacheKey;
             breathUniforms.push(breath);
           }
         }
