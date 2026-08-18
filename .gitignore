@@ -9,3 +9,6 @@ graphify-out/
 docs/refs/
 .superpowers/
 scripts/brand/.cache/
+# 3D logo exports: glb only, obj/mtl blow up repo size (60MB+ per asset)
+assets/brand/logos/3d/*.obj
+assets/brand/logos/3d/*.mtl
