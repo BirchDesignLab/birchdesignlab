@@ -23,10 +23,12 @@ const PULSE_AMP = 0.05;
 /**
  * Scale companion to the brightness pulse, applied only to the instanced
  * moss/lichen (see PULSE_SCALE_UNIFORM below) so the breath reads as size
- * as well as light. Kept small on purpose: this is a slow ambient cue, not
- * a heartbeat. ~0.02-0.04 (2-4%) still reads as breathing; past ~0.06 the
- * stars visibly swell/shrink frame to frame and it starts reading as a
- * throb instead. Dial this one constant to retune.
+ * as well as light. 0.25 (25%) is the shipped value, tuned by eye on the
+ * real page: the lower range that would read as "breathing" on paper (a
+ * few percent) was not visible at this model's scale and viewing distance
+ * on the actual stage, so the owner dialed it up until the pulse read
+ * clearly. Do not "correct" this back down without re-tuning live against
+ * the real page — a small value here reads as no motion at all.
  */
 const PULSE_SCALE_AMP = 0.25;
 /**
@@ -179,7 +181,7 @@ export function mountStage(
   // itself must be created and stored up front, not re-created per frame.
   const breathUniforms: { value: number }[] = [];
   // A GLTF material can be shared across several mesh nodes (moss-star and
-  // lichen-crust are each split across 11 nodes); guard against wiring
+  // lichen-crust are each split across 10 nodes); guard against wiring
   // onBeforeCompile onto the same material object more than once.
   const breathWired = new Set<THREE.Material>();
   let gatherTargets: Vec3[] = [];
@@ -246,11 +248,18 @@ export function mountStage(
       if (!(obj instanceof THREE.Mesh)) return;
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
       for (const m of mats) {
-        if (m instanceof THREE.MeshStandardMaterial && m.name === 'canopy') {
+        // Matched by material name first, narrowed by class second: the
+        // glb's current export happens to put KHR_materials_clearcoat on
+        // stone (MeshPhysicalMaterial), but bumpMap/bumpScale live on the
+        // shared MeshStandardMaterial base. Matching on
+        // MeshPhysicalMaterial specifically would silently drop stone's
+        // bump the moment a re-export loses clearcoat and it comes back
+        // as a plain MeshStandardMaterial.
+        if (m.name === 'canopy' && m instanceof THREE.MeshStandardMaterial) {
           m.bumpMap = canopyBumpTexture;
           m.bumpScale = CANOPY_BUMP_FACTOR;
           m.needsUpdate = true;
-        } else if (m instanceof THREE.MeshPhysicalMaterial && m.name === 'stone') {
+        } else if (m.name === 'stone' && m instanceof THREE.MeshStandardMaterial) {
           m.bumpMap = stoneBumpTexture;
           m.bumpScale = STONE_BUMP_FACTOR;
           m.needsUpdate = true;
@@ -575,8 +584,22 @@ ${shader.vertexShader}`;
         obj.geometry.dispose();
         const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
         for (const m of mats) disposeMaterial(m);
+        // InstancedMesh (moss/lichen, 20 nodes total) holds its
+        // instanceMatrix as a separate GPU buffer that geometry.dispose()
+        // does not touch; without this the buffer leaks on every unmount.
+        if (obj instanceof THREE.InstancedMesh) obj.dispose();
       }
     });
+    // Attached to a material inside the load success callback (see
+    // loader.load above). If the load errored, or `disposed` was already
+    // true when it resolved, neither texture was ever assigned to a
+    // material, so the traverse above never reaches them — dispose both
+    // explicitly here. Texture.dispose() is safe to call more than once
+    // (it just re-dispatches its 'dispose' event), so no guard is needed
+    // against the case where they *were* attached and already disposed
+    // above.
+    canopyBumpTexture.dispose();
+    stoneBumpTexture.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
   };

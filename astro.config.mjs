@@ -10,13 +10,23 @@ import sitemap from '@astrojs/sitemap';
  * public/draco/. Nothing ever requests the emitted ones; they are pure
  * deploy weight. Drop them from the bundle.
  *
- * Deliberately narrow: it matches the decoder filenames only, and throws if
- * the pattern stops matching anything, so a three upgrade that renames or
- * removes these cannot leave this silently pruning nothing (or worse,
- * something else).
+ * Deliberately narrow: it matches the decoder filenames only, and requires
+ * the chunk's originalFileName to show it actually came from three's own
+ * draco libs directory, so a three upgrade that renames or removes these
+ * cannot leave this silently pruning nothing (or worse, something else) —
+ * and a deliberate, unrelated `?url` import that happens to share one of
+ * these basenames survives instead of being silently deleted from the
+ * bundle. If matches ever drop to zero in both Astro builds, it warns
+ * rather than throwing (see the dropped === 0 branch below).
  */
 function dropUnusedDracoDecoder() {
   const DECODER = /^draco_(decoder|wasm_wrapper)\..*\.(js|wasm)$/;
+  // Provenance check: three's DRACOLoader pulls these from
+  // three/examples/jsm/libs/draco/... via module-scope `new URL(...)`.
+  // Requiring the resolved source path to pass through that directory
+  // (in addition to the filename pattern) means an unrelated file that
+  // merely shares a decoder's basename is never dropped.
+  const FROM_THREE_DRACO_LIBS = /[\\/]three[\\/]examples[\\/]jsm[\\/]libs[\\/]draco[\\/]/;
   return {
     name: 'bdl-drop-unused-draco-decoder',
     apply: 'build',
@@ -26,6 +36,8 @@ function dropUnusedDracoDecoder() {
       for (const [file, chunk] of Object.entries(bundle)) {
         const name = file.split('/').pop();
         if (!DECODER.test(name)) continue;
+        const originalFileName = chunk.type === 'asset' ? chunk.originalFileName : undefined;
+        if (!originalFileName || !FROM_THREE_DRACO_LIBS.test(originalFileName)) continue;
         const source = chunk.type === 'asset' ? chunk.source : chunk.code;
         bytes += typeof source === 'string' ? Buffer.byteLength(source) : source.length;
         delete bundle[file];

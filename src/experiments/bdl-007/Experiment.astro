@@ -59,6 +59,11 @@ import { Image } from 'astro:assets';
     stage.classList.remove('is-waking');
     stage.classList.add('is-live');
     veil.hidden = true;
+    // The watchdog is advisory, not terminal: a late-but-successful load
+    // (a stalled connection that eventually delivers) must still reach a
+    // live stage rather than being stuck behind the failure copy the
+    // watchdog already showed. Clear whatever showFallback() left up.
+    fallback.hidden = true;
     stillImg.alt = '';
     canvas.removeAttribute('aria-hidden');
     canvas.setAttribute('role', 'img');
