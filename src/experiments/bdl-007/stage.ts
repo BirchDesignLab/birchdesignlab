@@ -23,9 +23,19 @@ const TILT_LIMIT = (35 * Math.PI) / 180;
 const ZOOM_MIN = 0.8;
 const ZOOM_MAX = 1.8;
 
+/**
+ * Signed offset from `angle` to the nearest multiple of a full turn,
+ * in (-PI, PI]. Used for shortest-arc easing back to yaw 0 so a
+ * double-click reset never reverses through the long way round.
+ */
+function shortestTurnOffset(angle: number): number {
+  const twoPi = Math.PI * 2;
+  return angle - twoPi * Math.round(angle / twoPi);
+}
+
 export function mountStage(
   canvas: HTMLCanvasElement,
-  opts: { onReady?: () => void } = {},
+  opts: { onReady?: () => void; onError?: (err: unknown) => void } = {},
 ): () => void {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -92,7 +102,9 @@ export function mountStage(
     depthWrite: false,
   });
   const flyPoints = new THREE.Points(flyGeo, flyMat);
-  scene.add(flyPoints);
+  // Parented to rig (not scene) so the constellation rotates with the tree;
+  // gather targets below are sampled in this same rig-local frame.
+  rig.add(flyPoints);
   const syncFlies = () => {
     for (let i = 0; i < FLY_COUNT; i++) {
       flyPositions[i * 3] = flies[i].pos[0];
@@ -134,8 +146,16 @@ export function mountStage(
     rig.add(model);
 
     // Living materials breathe; their vertices seed the gather points.
+    // Sampled in rig-local space (rig's own transform backed out), not
+    // world space: the render loop has been writing rig.rotation since
+    // mount, so world-space matrices would bake in whatever yaw the rig
+    // held at this exact moment. flyPoints is parented to rig, so its
+    // gather targets must live in that same rig-local frame to stay put
+    // as the rig keeps turning.
     const verts: Vec3[] = [];
-    model.updateMatrixWorld(true);
+    rig.updateMatrixWorld(true);
+    const rigWorldInverse = new THREE.Matrix4().copy(rig.matrixWorld).invert();
+    const localMatrix = new THREE.Matrix4();
     model.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -148,16 +168,21 @@ export function mountStage(
           livingMats.push(m);
         }
       }
+      localMatrix.multiplyMatrices(rigWorldInverse, obj.matrixWorld);
       const pos = obj.geometry.getAttribute('position');
       const stride = Math.max(1, Math.floor(pos.count / 8));
       const v = new THREE.Vector3();
       for (let i = 0; i < pos.count; i += stride) {
-        v.fromBufferAttribute(pos, i).applyMatrix4(obj.matrixWorld);
+        v.fromBufferAttribute(pos, i).applyMatrix4(localMatrix);
         verts.push([v.x, v.y, v.z]);
       }
     });
     gatherTargets = verts;
     opts.onReady?.();
+  }, undefined, (err) => {
+    if (disposed) return;
+    console.error('[bdl-007] failed to load stage model', err);
+    opts.onError?.(err);
   });
 
   // ---- interaction ----
@@ -200,17 +225,33 @@ export function mountStage(
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    yawVel = dx * 0.005;
-    pitchVel = dy * 0.004;
-    yaw += yawVel;
-    pitch = THREE.MathUtils.clamp(pitch + pitchVel, -TILT_LIMIT, TILT_LIMIT);
+    const dYaw = dx * 0.005;
+    const dPitch = dy * 0.004;
+    yaw += dYaw;
+    pitch = THREE.MathUtils.clamp(pitch + dPitch, -TILT_LIMIT, TILT_LIMIT);
+    // Store as a per-second velocity (reference cadence: 60Hz pointermove)
+    // so the momentum coast below can scale it by dt and stay frame-rate
+    // independent while feeling identical to the original 60Hz behavior.
+    yawVel = dYaw * 60;
+    pitchVel = dPitch * 60;
     lastInteraction = performance.now();
   };
-  const onPointerUp = (e: PointerEvent) => {
-    pointers.delete(e.pointerId);
+  const releasePointer = (pointerId: number) => {
+    pointers.delete(pointerId);
     if (pointers.size < 2) pinchDist = 0;
-    if (pointers.size === 0) dragging = false;
+    if (pointers.size === 1) {
+      // Lifting one finger out of a pinch: re-arm dragging from the
+      // surviving pointer instead of waiting for a fresh pointerdown.
+      const [remaining] = pointers.values();
+      dragging = true;
+      lastX = remaining.x;
+      lastY = remaining.y;
+    } else if (pointers.size === 0) {
+      dragging = false;
+    }
   };
+  const onPointerUp = (e: PointerEvent) => releasePointer(e.pointerId);
+  const onLostPointerCapture = (e: PointerEvent) => releasePointer(e.pointerId);
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
     zoom = THREE.MathUtils.clamp(zoom * (e.deltaY < 0 ? 1.07 : 0.93), ZOOM_MIN, ZOOM_MAX);
@@ -224,6 +265,7 @@ export function mountStage(
   el.addEventListener('pointermove', onPointerMove);
   el.addEventListener('pointerup', onPointerUp);
   el.addEventListener('pointercancel', onPointerUp);
+  el.addEventListener('lostpointercapture', onLostPointerCapture);
   el.addEventListener('wheel', onWheel, { passive: false });
   el.addEventListener('dblclick', onDblClick);
 
@@ -265,8 +307,8 @@ export function mountStage(
 
     // momentum after release, exponentially damped
     if (!dragging && (Math.abs(yawVel) > 1e-4 || Math.abs(pitchVel) > 1e-4)) {
-      yaw += yawVel;
-      pitch = THREE.MathUtils.clamp(pitch + pitchVel, -TILT_LIMIT, TILT_LIMIT);
+      yaw += yawVel * dt;
+      pitch = THREE.MathUtils.clamp(pitch + pitchVel * dt, -TILT_LIMIT, TILT_LIMIT);
       const damp = Math.exp(-2.2 * dt);
       yawVel *= damp;
       pitchVel *= damp;
@@ -275,11 +317,12 @@ export function mountStage(
     // double-tap reset: ease home, then hand control back
     if (resetting) {
       const k = 1 - Math.exp(-4 * dt);
-      yaw += (0 - (yaw % (Math.PI * 2))) * k;
+      const yawOffset = shortestTurnOffset(yaw);
+      yaw += (0 - yawOffset) * k;
       pitch += (0 - pitch) * k;
       zoom += (1 - zoom) * k;
       yawVel = 0; pitchVel = 0;
-      if (Math.abs(yaw % (Math.PI * 2)) < 0.01 && Math.abs(pitch) < 0.01 && Math.abs(zoom - 1) < 0.01) {
+      if (Math.abs(shortestTurnOffset(yaw)) < 0.01 && Math.abs(pitch) < 0.01 && Math.abs(zoom - 1) < 0.01) {
         resetting = false;
       }
     }
@@ -310,7 +353,43 @@ export function mountStage(
   };
   raf = requestAnimationFrame(tick);
 
+  // ---- WebGL context loss ----
+  // A GPU reset or a laptop waking from sleep can invalidate the context.
+  // Without this, the rAF loop keeps calling renderer.render() against a
+  // dead context and floods the console. preventDefault() on the loss
+  // event tells the browser we intend to handle it (and may restore it)
+  // rather than leaving the canvas permanently blank.
+  const onContextLost = (e: Event) => {
+    e.preventDefault();
+    running = false;
+    cancelAnimationFrame(raf);
+  };
+  const onContextRestored = () => {
+    if (disposed) return;
+    // three.js re-creates GPU resources for objects still referenced by
+    // the scene graph on the next render call, so simply resuming the
+    // loop is sufficient here. If that ever proves unreliable, fall back
+    // to leaving the stage stopped (the static fallback) instead of
+    // resuming a half-restored renderer.
+    running = !document.hidden && inView;
+    prev = performance.now();
+    raf = requestAnimationFrame(tick);
+  };
+  canvas.addEventListener('webglcontextlost', onContextLost, false);
+  canvas.addEventListener('webglcontextrestored', onContextRestored, false);
+
   // ---- dispose ----
+  const disposeMaterial = (m: THREE.Material) => {
+    // material.dispose() drops GPU program state but not texture-valued
+    // properties (map, emissiveMap, normalMap, etc.) — those are separate
+    // GPU resources that leak on unmount unless disposed explicitly.
+    const props = m as unknown as Record<string, unknown>;
+    for (const key of Object.keys(props)) {
+      const value = props[key];
+      if (value instanceof THREE.Texture) value.dispose();
+    }
+    m.dispose();
+  };
   return () => {
     disposed = true;
     cancelAnimationFrame(raf);
@@ -321,16 +400,20 @@ export function mountStage(
     el.removeEventListener('pointermove', onPointerMove);
     el.removeEventListener('pointerup', onPointerUp);
     el.removeEventListener('pointercancel', onPointerUp);
+    el.removeEventListener('lostpointercapture', onLostPointerCapture);
     el.removeEventListener('wheel', onWheel);
     el.removeEventListener('dblclick', onDblClick);
+    canvas.removeEventListener('webglcontextlost', onContextLost, false);
+    canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
     draco.dispose();
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
         const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        for (const m of mats) m.dispose();
+        for (const m of mats) disposeMaterial(m);
       }
     });
     renderer.dispose();
+    renderer.forceContextLoss();
   };
 }
