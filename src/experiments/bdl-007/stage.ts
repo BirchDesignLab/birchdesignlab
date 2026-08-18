@@ -8,6 +8,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { createFlies, stepFlies, scatter, type Vec3 } from './fireflies';
+import canopyBump from './canopy-bump.webp';
+import stoneBump from './stone-bump.webp';
 
 const MODEL_URL = '/models/bdlOrganic.draco.glb';
 const DRACO_PATH = '/draco/';
@@ -18,6 +20,22 @@ const FLY_COUNT = 40;
 const FLY_BOUNDS = 1.9;
 const PULSE_MID = 0.07;
 const PULSE_AMP = 0.05;
+/**
+ * Bump strength. The Draco pass drops the two bump images along with the
+ * vendor extension (EXT_materials_bump) that pointed at them — three's
+ * GLTFLoader ignores that extension entirely, so the images are shipped as
+ * plain textures and wired to bumpMap by hand in the traverse below.
+ *
+ * The per-material factors (0.02 canopy, 0.005 stone) are the values
+ * authored in EXT_materials_bump, extracted from the uncompressed export.
+ * three's bumpScale is not the same unit as that vendor factor, so these
+ * are carried through as a shared multiplier rather than assumed correct:
+ * if the relief reads as flat, raise BUMP_SCALE_MULTIPLIER first (try
+ * 10-40) before touching the per-material ratio between canopy and stone.
+ */
+const BUMP_SCALE_MULTIPLIER = 1;
+const CANOPY_BUMP_FACTOR = 0.02 * BUMP_SCALE_MULTIPLIER;
+const STONE_BUMP_FACTOR = 0.005 * BUMP_SCALE_MULTIPLIER;
 /**
  * moss-star and lichen-crust ship with no baseColorTexture and no
  * baseColorFactor, so they load pure white and every bit of their colour
@@ -163,6 +181,26 @@ export function mountStage(
   draco.setDecoderPath(DRACO_PATH);
   const loader = new GLTFLoader();
   loader.setDRACOLoader(draco);
+
+  // Bump maps for canopy and stone, shipped as standalone textures because
+  // the Draco pass drops the images that carried them (see BUMP_SCALE
+  // comment above). Configured to match how GLTFLoader sets up the model's
+  // own baseColorTextures: flipY off (glTF images are not flipped; three's
+  // TextureLoader defaults to flipY = true, which would mirror the relief
+  // vertically), REPEAT wrap on both axes (every sampler in the source glb
+  // uses REPEAT), and no colorSpace conversion — bump data is not color, so
+  // it must stay linear/raw rather than being treated as sRGB.
+  const textureLoader = new THREE.TextureLoader();
+  const configureBumpTexture = (texture: THREE.Texture) => {
+    texture.flipY = false;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.needsUpdate = true;
+    return texture;
+  };
+  const canopyBumpTexture = configureBumpTexture(textureLoader.load(canopyBump.src));
+  const stoneBumpTexture = configureBumpTexture(textureLoader.load(stoneBump.src));
+
   loader.load(MODEL_URL, (gltf) => {
     if (disposed) return;
     const model = gltf.scene;
@@ -189,6 +227,17 @@ export function mountStage(
     model.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (const m of mats) {
+        if (m instanceof THREE.MeshStandardMaterial && m.name === 'canopy') {
+          m.bumpMap = canopyBumpTexture;
+          m.bumpScale = CANOPY_BUMP_FACTOR;
+          m.needsUpdate = true;
+        } else if (m instanceof THREE.MeshPhysicalMaterial && m.name === 'stone') {
+          m.bumpMap = stoneBumpTexture;
+          m.bumpScale = STONE_BUMP_FACTOR;
+          m.needsUpdate = true;
+        }
+      }
       const living = mats.some((m) => LIVING.test(m.name ?? ''));
       if (!living) return;
       for (const m of mats) {
