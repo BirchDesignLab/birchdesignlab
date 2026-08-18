@@ -65,8 +65,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
           {featured.map((entry) => (
             <li class="specimen">
               <span class="designation smallcaps">{entry.data.designation}</span>
-              <span class="dash" aria-hidden="true"></span>
-              <span class="sep" aria-hidden="true">&middot;</span>
+              <span class="tick" aria-hidden="true"></span>
               <span class="spec-summary">{entry.data.summary}</span>
             </li>
           ))}
@@ -145,14 +144,13 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
     display: flex; flex-direction: column; gap: var(--space-2);
   }
   .designation { color: var(--accent); }
-  /* Same working-specimen dash as the Lab catalog. --accent, not --gf-accent:
+  /* Same working-specimen tick as the Lab catalog. --accent, not --gf-accent:
      .loud remaps --accent to the loud value precisely so children do not have
      to know they sit on green, and the .designation beside it relies on that. */
-  .specimen .dash {
-    display: inline-block; width: 0.85em; height: 2px;
-    background: var(--accent); margin-left: var(--space-2);
+  .specimen .tick {
+    display: inline-block; width: 2px; height: 0.9em;
+    background: var(--accent); margin-inline: var(--space-2) var(--space-2);
     vertical-align: middle;
   }
-  .sep { margin-inline: 0.4em; opacity: 0.6; }
   .loud .more-link { display: inline-block; margin-top: var(--space-5); }
 </style>
