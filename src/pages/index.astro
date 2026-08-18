@@ -121,7 +121,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   }
   .subline {
     margin-top: var(--space-4); font-size: var(--text-lg);
-    color: var(--mark-muted); max-width: 44ch;
+    color: var(--mark-muted); max-width: var(--measure);
   }
 
   /* Two doors. */
@@ -131,7 +131,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
     gap: var(--space-6); margin-top: var(--space-4);
   }
   .door { display: flex; flex-direction: column; gap: var(--space-2); }
-  .door p { color: var(--mark-muted); max-width: 44ch; }
+  .door p { color: var(--mark-muted); max-width: var(--measure); }
   .door .more-link { align-self: start; margin-top: var(--space-2); }
 
   /* Loud moment — green Lab preview (.loud primitive in base.css). */

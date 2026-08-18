@@ -43,7 +43,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
         <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>
         <div><dt class="smallcaps">Delivered</dt><dd>{dateLabel}</dd></div>
         <div><dt class="smallcaps">Built with</dt><dd class="chips">{tech.map((t) => <span class="tag">{t}</span>)}</dd></div>
-        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a><span class="dash" aria-hidden="true"></span></dd></div>
+        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a></dd></div>
       </dl>
     </section>
 
@@ -88,11 +88,12 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
   .hero-text { position: relative; padding-block: var(--space-5); }
   .hero-text .designation { color: var(--accent); }
   .hero-text h1 { font-size: var(--text-3xl); margin-top: var(--space-1); }
-  .hero-summary { color: var(--mark-muted); max-width: 44ch; margin-top: var(--space-2); }
+  .hero-summary { color: var(--mark-muted); max-width: var(--measure); margin-top: var(--space-2); }
 
   /* Plate block: SpecimenPlate's language, in flow. */
   .plate { padding-block: var(--space-4); border-bottom: 1px solid var(--line-accent); }
-  .plate dl { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); margin: 0; }
+  /* One even row on desktop, stacking as the viewport narrows. */
+  .plate dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--space-4) var(--space-5); margin: 0; }
   .plate dt { color: var(--accent); font-size: var(--text-sm); }
   .plate dd { margin: 0.35em 0 0; }
   .plate .tag {
@@ -114,16 +115,13 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
     color: var(--on-accent); background: var(--accent); border: 1px solid var(--accent);
     padding: 0.35em 0.8em 0.25em; margin-left: var(--space-3); white-space: nowrap;
   }
-  .plate .dash {
-    display: inline-block; width: 0.85em; height: 2px;
-    background: var(--accent); margin-left: var(--space-2); vertical-align: middle;
-  }
 
-  /* Narrative column. */
-  .prose { max-width: 68ch; padding-block: var(--space-6); display: grid; gap: var(--space-3); }
-  .prose :global(h2) { font-size: var(--text-xl); margin-top: var(--space-4); }
-  .prose :global(p) { color: var(--mark-muted); line-height: 1.6; }
-  .prose :global(img) { max-width: 100%; height: auto; border: 1px solid var(--line); margin-block: var(--space-2); }
+  /* Narrative column. The Lab uses its space (founder call 08-18-26): the
+     study article runs the full wrap, headings scale up with the viewport. */
+  .prose { max-width: none; padding-block: var(--space-6); display: grid; gap: var(--space-3); }
+  .prose :global(h2) { font-size: clamp(2.25rem, 2.5vw + 1rem, 3rem); margin-top: var(--space-4); }
+  .prose :global(p) { color: var(--mark-muted); line-height: 1.6; max-width: var(--measure-wide); }
+  .prose :global(img) { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); margin-block: var(--space-2); margin-inline: auto; }
   /* Director's commentary: blockquotes are the founder's voice, offset and
      accent-marked so they read as asides, not citations. */
   .prose :global(blockquote) {

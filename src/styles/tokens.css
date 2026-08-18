@@ -49,6 +49,12 @@
   --space-6: clamp(2.5rem, 2vw + 1.75rem, 4rem);
   --space-7: clamp(4rem, 8vw + 1rem, 7rem);
   --max-content: 68rem;
+  /* Reading measures (founder call 08-18-26: the old 52-68ch caps read as
+     cramped on desktop). Two tiers: --measure for intros and summaries,
+     --measure-wide for long-form article prose. Mobile is unaffected — the
+     viewport constrains first. */
+  --measure: 80ch;
+  --measure-wide: 105ch;
 
   /* --- motion: luxury moves slowly --- */
   --ease-weighted: cubic-bezier(0.22, 1, 0.36, 1);

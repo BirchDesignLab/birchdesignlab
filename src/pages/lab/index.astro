@@ -27,6 +27,6 @@ const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-5); max-width: 52ch; }
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure); }
   .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
 </style>
