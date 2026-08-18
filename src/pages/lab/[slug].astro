@@ -96,12 +96,14 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
   .plate dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--space-4) var(--space-5); margin: 0; }
   .plate dt { color: var(--accent); font-size: var(--text-sm); }
   .plate dd { margin: 0.35em 0 0; }
+  /* Chips wrap inside their own column instead of overflowing the track. */
+  .plate .chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
   .plate .tag {
     font-family: var(--font-smallcaps);
     letter-spacing: var(--tracking-wide); text-transform: uppercase;
     font-size: 0.68rem; line-height: 1;
     color: var(--accent); border: 1px solid var(--line-accent);
-    padding: 0.35em 0.8em 0.25em; margin-right: var(--space-1); white-space: nowrap;
+    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
   .plate a { color: var(--link); }
 
@@ -116,11 +118,12 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
     padding: 0.35em 0.8em 0.25em; margin-left: var(--space-3); white-space: nowrap;
   }
 
-  /* Narrative column. The Lab uses its space (founder call 08-18-26): the
-     study article runs the full wrap, headings scale up with the viewport. */
-  .prose { max-width: none; padding-block: var(--space-6); display: grid; gap: var(--space-3); }
-  .prose :global(h2) { font-size: clamp(2.25rem, 2.5vw + 1rem, 3rem); margin-top: var(--space-4); }
-  .prose :global(p) { color: var(--mark-muted); line-height: 1.6; max-width: var(--measure-wide); }
+  /* Narrative column. Full-wrap variant tried 08-18-26 and walked back the
+     same day (founder: "turned the knob too far") — the article reads at
+     --measure-wide, centered by .wrap. */
+  .prose { max-width: var(--measure-wide); padding-block: var(--space-6); display: grid; gap: var(--space-3); }
+  .prose :global(h2) { font-size: var(--text-2xl); margin-top: var(--space-4); }
+  .prose :global(p) { color: var(--mark-muted); line-height: 1.6; }
   .prose :global(img) { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); margin-block: var(--space-2); margin-inline: auto; }
   /* Director's commentary: blockquotes are the founder's voice, offset and
      accent-marked so they read as asides, not citations. */

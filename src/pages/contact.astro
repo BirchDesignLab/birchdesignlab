@@ -20,14 +20,14 @@ const email = 'hello@birchdesignlab.com';
       <!-- provisional copy -->
       <p class="invite">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
       <a class="mail" href={`mailto:${email}`}>{email}</a>
-      <p class="fine">No preparation required. One person reads every message.</p>
+      <p class="fine">No preparation required.</p>
     </div>
     <!-- Renovation slot: contact form lands with the Pages-to-Workers migration (docs/lab-backlog.md). -->
   </section>
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure); }
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
   .kicker { color: var(--accent); }
   .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
   .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
@@ -35,7 +35,7 @@ const email = 'hello@birchdesignlab.com';
   /* Loud moment — the CTA (.loud primitive in base.css). */
   .invite {
     font-family: var(--font-display); font-size: var(--text-2xl);
-    line-height: 1.2; max-width: 24ch;
+    line-height: 1.2; max-width: 34ch;
   }
   .mail {
     display: inline-block; margin-top: var(--space-4);
