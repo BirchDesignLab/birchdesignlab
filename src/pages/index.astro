@@ -32,7 +32,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   </section>
 
   <section class="wrap doors">
-    <h2>What we build</h2>
+    <h2 class="doors-kicker">What we build</h2>
     <div class="door-grid">
       <!-- provisional copy -->
       <article class="door">
@@ -42,7 +42,6 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
           a monster, the process that you dread every week that eats into your weekends?
           We can design, build, and maintain what fixes it.
         </p>
-        <a class="more-link" href="/services">How we build software <span class="arw" aria-hidden="true">&rarr;</span></a>
       </article>
       <article class="door">
         <h3>Websites</h3>
@@ -51,7 +50,6 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
           as the only one to even consider calling. No templates, no builders, no bloat.
           Every site designed and constructed by hand.
         </p>
-        <a class="more-link" href="/services">How we build websites <span class="arw" aria-hidden="true">&rarr;</span></a>
       </article>
     </div>
   </section>
@@ -125,19 +123,27 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
 
   /* Two doors. */
   .doors { padding-block: 0 var(--space-7); }
+  /* Section label, not a second headline -- same eyebrow treatment as the
+     "Services"/"FROM THE LAB" kickers elsewhere, so the door titles below
+     are the only thing at headline weight. */
+  .doors-kicker {
+    font-family: var(--font-smallcaps); font-size: var(--text-sm);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    color: var(--accent);
+  }
   .door-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-6); margin-top: var(--space-4);
   }
   .door { display: flex; flex-direction: column; gap: var(--space-2); }
+  .door h3 { font-size: var(--text-xl); }
   .door p { color: var(--mark-muted); max-width: var(--measure); }
-  .door .more-link { align-self: start; margin-top: var(--space-2); }
 
   /* Loud moment — green Lab preview (.loud primitive in base.css). */
   .kicker { color: var(--accent); }
   .pull {
     font-family: var(--font-display); font-size: var(--text-2xl);
-    line-height: 1.2; max-width: 24ch; margin-top: var(--space-3);
+    line-height: 1.2; max-width: 34ch; margin-top: var(--space-3);
   }
   .specimens {
     list-style: none; padding: 0; margin-top: var(--space-5);
