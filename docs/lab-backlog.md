@@ -6,6 +6,25 @@
 
 BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026-07-16 evening: the goal right now is quick wins before the link spreads, the Painting is the most expensive item on this page, and 003 is already a heavy build. The Loom takes 004; the Painting returns to the backlog unnumbered and gets a number at its own build time.
 
+## In flight
+
+### BDL-007 · The Shining Tree · SPECCED + PLANNED 08-18-26, ready to execute
+
+Interactive three.js stage for the organic 3D wordmark (bdlOrganic).
+Museum-at-night scene, weighted drag/flick/zoom, two living beats: moss
+that breathes on a 9s cycle, and ~40 fireflies that gather to the moss
+after 8s of stillness and scatter on a grab. Idle yaw one turn per 30s
+until first grab. Reduced motion honored narrowly (interaction stays,
+autonomous motion stops). One new dependency: `three`. Uses the 3.2MB
+draco glb already made for the C&C break screen.
+
+- Spec (founder-approved): `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
+- Plan (5 tasks, full code inline): `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
+- To pick up: branch `feat/bdl-007-shining-tree` off main, execute the plan
+  (subagent-driven recommended; superpowers:subagent-driven-development or
+  superpowers:executing-plans). Execution-approach choice was still open at
+  the 08-18 session end.
+
 ## Concepts, ranked by projected effort (lowest first)
 
 ### 1. ~~BDL-004 · The Loom~~ · RETIRED 2026-07-29
