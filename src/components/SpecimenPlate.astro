@@ -24,14 +24,16 @@ const { designation, title, tech } = Astro.props;
     border-top: 1px solid var(--line-accent);
   }
   /* A plate only ever renders on a live specimen's page, so the dash needs no
-     condition: [slug].astro's getStaticPaths filters to status === 'live'. */
+     condition: [slug].astro's getStaticPaths filters to status === 'live'.
+     Vertical, matching the catalog/billboard tick (founder call 08-18-26:
+     horizontal read as an em dash). */
   .dash {
-    display: inline-block; width: 0.85em; height: 2px;
-    background: var(--accent); align-self: center;
+    display: inline-block; width: 2px; height: 0.9em;
+    background: var(--accent); vertical-align: middle;
   }
   summary {
     cursor: pointer; list-style: none;
-    display: flex; gap: var(--space-3); align-items: baseline;
+    display: flex; gap: var(--space-3); align-items: center;
     padding: var(--space-3) var(--space-4);
     color: var(--mark-muted); font-size: var(--text-sm);
   }

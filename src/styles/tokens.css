@@ -72,9 +72,11 @@
 
 /* --- semantic: dark (the default face) ---
    Keyed on data-face, not data-theme: data-theme is what the visitor chose,
-   data-face is what this page paints. They differ only inside the Lab, which
-   answers the site with the opposite face. Before JS runs neither attribute
-   exists and bare :root gives the dark default, exactly as before. */
+   data-face is what this page paints -- normally the same value, but the
+   BDL-002 room preview overrides data-face-scoped vars locally to demo a
+   palette without touching the visitor's actual choice. Before JS runs
+   neither attribute exists and bare :root gives the dark default, exactly
+   as before. */
 :root, :root[data-face='dark'] {
   color-scheme: dark;
   --field: var(--charcoal);

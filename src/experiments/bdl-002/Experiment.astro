@@ -171,11 +171,14 @@ import '@fontsource/cormorant-sc/500.css';
       // PAINTING. On /lab/bdl-002 those differ, because the Lab answers the
       // site with the opposite face, and keying on the visitor's stored choice
       // would drop the dark palette onto a light page.
-      `:root, :root[data-face='dark'] {\n${block(p.dark)}\n` +
-      `  --font-display: ${f.stack};\n  --font-billboard: ${f.stack};\n` +
-      `  --billboard-weight: ${f.weight};\n  --billboard-color: ${c.value};\n}\n` +
+      `:root, :root[data-face='dark'] {\n${block(p.dark)}\n}\n` +
       `:root[data-face='light'] {\n${block(p.light)}\n}\n` +
-      (f.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`) +
+      // Font/billboard/smallcaps overrides are scoped to .room, not :root --
+      // unscoped they leaked onto the persistent .hatch back-to-lab link and
+      // any other chrome sharing the page, which isn't part of this preview.
+      `.room {\n  --font-display: ${f.stack};\n  --font-billboard: ${f.stack};\n` +
+      `  --billboard-weight: ${f.weight};\n  --billboard-color: ${c.value};\n}\n` +
+      (f.upper ? '' : `.room .smallcaps { text-transform: lowercase; font-size: 1em; }\n`) +
       // base.css's body transition doesn't retrigger when background-color only
       // changes via a var() dependency updated by swapping this override
       // stylesheet's content -- it gets stuck showing the pre-swap color
@@ -266,8 +269,10 @@ import '@fontsource/cormorant-sc/500.css';
   [seedEl, densityEl, loEl, hiEl].forEach((el) => el.addEventListener('input', redraw));
 
   document.getElementById('room-theme')!.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = next;
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+    root.dataset.theme = next;
+    root.dataset.face = next;
     try { localStorage.setItem('theme', next); } catch { /* fine */ }
   });
   new MutationObserver(apply).observe(document.documentElement, {

@@ -11,10 +11,8 @@
   const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   const site = stored || system;
   root.dataset.theme = site;
-  // Chiaroscuro: the Lab answers the site with the opposite face, so entering
-  // it reads as the lights changing. The zone is stamped server-side, so this
-  // resolves pre-paint with no flash and without a second palette in CSS.
-  root.dataset.face = root.dataset.zone === 'lab'
-    ? (site === 'dark' ? 'light' : 'dark')
-    : site;
+  // data-face used to invert in the Lab (chiaroscuro), but that made every
+  // site<->lab crossing flip the theme underfoot while navigating. Dropped
+  // 08-18-26; data-face now just mirrors data-theme.
+  root.dataset.face = site;
 </script>
