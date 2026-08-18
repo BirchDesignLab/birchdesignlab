@@ -19,7 +19,7 @@ const Heading = level;
     <span class="designation smallcaps">{designation}</span>
     {live
       ? <span class="working">
-          <span class="dash" aria-hidden="true"></span>
+          <span class="tick" aria-hidden="true"></span>
           <span class="working-label">working specimen</span>
         </span>
       : <span class="soon">forthcoming</span>}
@@ -54,7 +54,9 @@ const Heading = level;
   .status { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
   .designation { color: var(--accent); font-size: var(--text-sm); }
   .working { display: flex; align-items: center; gap: var(--space-2); color: var(--accent); }
-  .working .dash { display: inline-block; width: 0.85em; height: 2px; background: var(--accent); }
+  /* Vertical tick (founder call 08-18-26: the horizontal bar read as an em
+     dash, which the copy rules banned; upright it reads as a plot mark). */
+  .working .tick { display: inline-block; width: 2px; height: 0.9em; background: var(--accent); }
   /* Chip typography is declared in full rather than borrowing the global
      .smallcaps utility, because that utility also sets font-size: 0.82em and
      these chips are pinned at 0.68rem. Every chip across this pass is written
