@@ -21,6 +21,15 @@ const FLY_BOUNDS = 1.9;
 const PULSE_MID = 0.07;
 const PULSE_AMP = 0.05;
 /**
+ * Scale companion to the brightness pulse, applied only to the instanced
+ * moss/lichen (see PULSE_SCALE_UNIFORM below) so the breath reads as size
+ * as well as light. Kept small on purpose: this is a slow ambient cue, not
+ * a heartbeat. ~0.02-0.04 (2-4%) still reads as breathing; past ~0.06 the
+ * stars visibly swell/shrink frame to frame and it starts reading as a
+ * throb instead. Dial this one constant to retune.
+ */
+const PULSE_SCALE_AMP = 0.03;
+/**
  * Bump strength. The Draco pass drops the two bump images along with the
  * vendor extension (EXT_materials_bump) that pointed at them — three's
  * GLTFLoader ignores that extension entirely, so the images are shipped as
@@ -164,6 +173,15 @@ export function mountStage(
 
   // ---- state ----
   const livingMats: THREE.MeshStandardMaterial[] = [];
+  // Uniform objects injected into moss/lichen shaders (see onBeforeCompile
+  // below), kept here so the render loop can write to them every frame.
+  // onBeforeCompile only runs once at shader compile time, so the uniform
+  // itself must be created and stored up front, not re-created per frame.
+  const breathUniforms: { value: number }[] = [];
+  // A GLTF material can be shared across several mesh nodes (moss-star and
+  // lichen-crust are each split across 11 nodes); guard against wiring
+  // onBeforeCompile onto the same material object more than once.
+  const breathWired = new Set<THREE.Material>();
   let gatherTargets: Vec3[] = [];
   let yaw = 0, pitch = 0, zoom = 1;
   let yawVel = 0, pitchVel = 0;
@@ -252,6 +270,31 @@ export function mountStage(
           m.emissive = new THREE.Color('#a3bd8f');
           m.emissiveIntensity = PULSE_MID;
           livingMats.push(m);
+
+          // Scale pulse, moss/lichen only (not canopy — see module doc).
+          // Both are GPU-instanced, so scaling per-vertex in the shader
+          // BEFORE instanceMatrix is applied (three inserts that multiply
+          // right after <begin_vertex>) grows/shrinks each star about its
+          // own local origin. Scaling the InstancedMesh object itself, or
+          // its node, would instead scale the whole cluster away from the
+          // node pivot — every star drifting off the bark surface.
+          if (/moss|lichen/i.test(m.name) && !breathWired.has(m)) {
+            breathWired.add(m);
+            const breath = { value: 1 };
+            m.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
+              shader.uniforms.uBreath = breath;
+              shader.vertexShader = shader.vertexShader.replace(
+                '#include <begin_vertex>',
+                '#include <begin_vertex>\n\ttransformed *= uBreath;',
+              );
+            };
+            // Without this, three's shader cache can hand this material's
+            // program to (or take a program from) an otherwise-identical
+            // moss/lichen material that never got onBeforeCompile wired up,
+            // silently dropping or duplicating the uBreath injection.
+            m.customProgramCacheKey = () => 'bdl007-breath-scale';
+            breathUniforms.push(breath);
+          }
         }
       }
       localMatrix.multiplyMatrices(rigWorldInverse, obj.matrixWorld);
@@ -435,10 +478,14 @@ export function mountStage(
     camera.position.z = BASE_DIST / zoom;
 
     // moss breath (held at mid under reduced motion)
-    const pulse = reduceMotion
-      ? PULSE_MID
-      : PULSE_MID + PULSE_AMP * Math.sin((t * Math.PI * 2) / PULSE_PERIOD);
+    const phase = (t * Math.PI * 2) / PULSE_PERIOD;
+    const pulse = reduceMotion ? PULSE_MID : PULSE_MID + PULSE_AMP * Math.sin(phase);
     for (const m of livingMats) m.emissiveIntensity = pulse;
+    // Same phase as the brightness pulse so size and light breathe together.
+    // Reduced motion holds this at exactly 1.0 (no scale) — autonomous
+    // motion must fully stop, matching the emissive branch above.
+    const scale = reduceMotion ? 1 : 1 + PULSE_SCALE_AMP * Math.sin(phase);
+    for (const u of breathUniforms) u.value = scale;
 
     // fireflies (static constellation under reduced motion)
     if (!reduceMotion) {
