@@ -8,31 +8,51 @@ BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026
 
 ## In flight
 
-### BDL-007 · The Shining Tree · BUILT 08-18-26, awaiting founder visual pass
+### BDL-007 · The Shining Tree · SHIPPED 08-18-26
 
-Interactive three.js stage for the organic 3D wordmark (bdlOrganic).
-Museum-at-night scene, weighted drag/flick/zoom, two living beats: moss
-that breathes on a 9s cycle, and ~40 fireflies that gather to the moss
-after 8s of stillness and scatter on a grab. Idle yaw one turn per 30s
-until first grab. Reduced motion honored narrowly (interaction stays,
-autonomous motion stops). One new dependency: `three`. Uses the 3.2MB
-draco glb already made for the C&C break screen.
+Interactive three.js stage for the organic 3D wordmark (bdlOrganic). Live
+at `/lab/bdl-007`, and featured on the home page, which takes the two
+newest `status: live` specimens by designation rather than any flag.
 
-- Spec (founder-approved): `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
-- Plan (5 tasks, full code inline): `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
-- Built on branch `feat/bdl-007-shining-tree` (6 tasks' worth of commits,
-  subagent-driven). Code review clean; the automated browser pane in this
-  environment cannot composite frames, so the visual pass is the founder's.
-- Open backlog from the final review, none blocking: 1.3MB of dead Draco
-  assets ship in `dist/_astro/` (Vite resolves three's module-scope decoder
-  defaults even though `setDecoderPath('/draco/')` overrides them); no cache
-  headers on `/models/*` or `/draco/*` in `public/_headers`, so the 3.2MB
-  glb revalidates on every repeat visit; the still uses `sizes="100vw"` and
-  `fetchpriority="auto"` while being the page's LCP element; flick momentum
-  assumes a 60Hz pointer cadence; no keyboard path for turning the model.
-  (subagent-driven recommended; superpowers:subagent-driven-development or
-  superpowers:executing-plans). Execution-approach choice was still open at
-  the 08-18 session end.
+Weighted drag/flick/zoom, two living beats: moss that breathes in glow and
+size together, and 40 fireflies that gather to it after a spell of
+stillness and scatter on a grab. Idle yaw until first grab, then never
+again. Reduced motion honored narrowly (interaction stays, autonomous
+motion stops). One new dependency: `three`.
+
+**Shipped timings differ from the spec.** 60s idle yaw, 20s breath, 20s
+gather, against the spec's 30/9/8; retuned by eye against the real page.
+The spec stays as the record of what was agreed, so read the code for what
+ships.
+
+- Spec: `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
+- Plan: `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
+- PR #29 (the build, 15 commits, subagent-driven), PR #32 (the still,
+  re-shot against the tuned lighting)
+
+Two things about the model that were not obvious and cost real time:
+
+- The glb declares `EXT_mesh_gpu_instancing`. Moss and lichen are placed
+  by `instanceMatrix`, not node transforms, so anything sampling the
+  surface must go through `getMatrixAt`. Sampling base geometry gives node
+  pivots buried inside the letterforms.
+- A uniform added through `onBeforeCompile` has to be declared in the GLSL
+  by hand. three auto-declares only its own built-ins, and binding a value
+  without the declaration fails to compile with no signal on the JS side.
+
+Material names mislead: `canopy` is the green moss and lichen cover,
+`stone` is the birch bark face.
+
+**Still open, none blocking.** No cache headers on `/models/*` or
+`/draco/*` in `public/_headers`, so the 3.2MB glb revalidates on every
+repeat visit. Flick momentum assumes a 60Hz pointer cadence, so a flick on
+a 120Hz touch device coasts about half as far. No keyboard path for
+turning the model. `reduceMotion` is sampled once at mount with no change
+listener. The decoded gltf leaks if teardown wins the race with the loader.
+
+Closed since the final review: the 1.3MB of dead Draco decoder copies are
+dropped by a build plugin in `astro.config.mjs`, and the still's
+`sizes`/`fetchpriority` were corrected in #32.
 
 ## Concepts, ranked by projected effort (lowest first)
 
