@@ -1,0 +1,37 @@
+# Exported by three-d-stage
+newmtl canopy
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 12
+d 1.0000
+
+newmtl stone
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 100
+d 1.0000
+
+newmtl peel-outside
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 100
+d 1.0000
+
+newmtl peel-underside
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 44
+d 1.0000
+
+newmtl moss-star
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 8
+d 1.0000
+
+newmtl lichen-crust
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 30
+d 1.0000
+
