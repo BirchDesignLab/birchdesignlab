@@ -16,8 +16,23 @@ const IDLE_YAW = (Math.PI * 2) / 30;    // one rotation per 30s
 const GATHER_AFTER_MS = 8000;
 const FLY_COUNT = 40;
 const FLY_BOUNDS = 1.9;
-const PULSE_MID = 0.18;
-const PULSE_AMP = 0.15;
+const PULSE_MID = 0.07;
+const PULSE_AMP = 0.05;
+/**
+ * moss-star and lichen-crust ship with no baseColorTexture and no
+ * baseColorFactor, so they load pure white and every bit of their colour
+ * has to come from somewhere. Giving them a real albedo lets the emissive
+ * go back to being a breath rather than the entire surface.
+ *
+ * The values are sampled from the photographs the model was built against
+ * (scripts/lab/sample-reference-colors.mjs), not picked by eye. Moss and
+ * lichen get different greens because the references disagree: the moss
+ * reference runs saturated, the lichen reference runs olive-grey. Both are
+ * pulled slightly lighter than the photograph's dominant family, since a
+ * photo carries its own baked lighting and this is albedo.
+ */
+const MOSS_ALBEDO = '#5b7a2e';
+const LICHEN_ALBEDO = '#8b9070';
 const PULSE_PERIOD = 9;                 // seconds
 const TILT_LIMIT = (35 * Math.PI) / 180;
 const ZOOM_MIN = 0.8;
@@ -41,18 +56,27 @@ export function mountStage(
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Without this the key and rim sum well past 1.0 on lit faces and clip to
+  // flat white. ACES rolls the highlights off instead, so the lights below
+  // are tuned lower than they would be for a linear response.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
   const BASE_DIST = 5;
   camera.position.set(0, 0.4, BASE_DIST);
 
-  // Lighting: warm raking key, cool rim, ambient floor.
-  const key = new THREE.DirectionalLight(0xffe2bb, 2.6);
+  // Lighting: warm raking key, cool rim, ambient floor. The tints are held
+  // close to neutral on purpose. These surfaces are rough (0.94 on canopy,
+  // 0.96 on moss), so the diffuse lobe is broad and a strongly warm key
+  // meeting a strongly cool rim fringes across the whole form rather than
+  // reading as two lights. Most of the shaping is intensity, not hue.
+  const key = new THREE.DirectionalLight(0xfff0dd, 1.9);
   key.position.set(2, 1.1, 2);
-  const rim = new THREE.DirectionalLight(0xa9c8ff, 1.5);
+  const rim = new THREE.DirectionalLight(0xdde6f5, 0.75);
   rim.position.set(-1.6, 2.4, -2.4);
-  const floor = new THREE.AmbientLight(0xffffff, 0.35);
+  const floor = new THREE.AmbientLight(0xffffff, 0.55);
   scene.add(key, rim, floor);
 
   // Pedestal without geometry: a radial-gradient blob under the model.
@@ -169,6 +193,13 @@ export function mountStage(
       if (!living) return;
       for (const m of mats) {
         if (m instanceof THREE.MeshStandardMaterial && LIVING.test(m.name ?? '')) {
+          // canopy carries its own baseColorTexture; tinting it would stain
+          // the bark. Only the untextured moss and lichen need an albedo.
+          if (!m.map) {
+            m.color = new THREE.Color(
+              /lichen/i.test(m.name) ? LICHEN_ALBEDO : MOSS_ALBEDO,
+            );
+          }
           m.emissive = new THREE.Color('#a3bd8f');
           m.emissiveIntensity = PULSE_MID;
           livingMats.push(m);
