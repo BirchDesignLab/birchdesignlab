@@ -51,7 +51,11 @@ const Heading = level;
 
   /* Status line. The designation is CLASSIFICATION and stays accent on every
      row, forthcoming included; only the marker beside it carries state. */
-  .status { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+  /* center, not baseline: .working is itself a flex container, so its
+     synthesized baseline is its bottom margin edge rather than text baseline
+     -- baseline alignment here floats the tick+label chip above the
+     designation text instead of matching it. */
+  .status { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
   .designation { color: var(--accent); font-size: var(--text-sm); }
   .working { display: flex; align-items: center; gap: var(--space-2); color: var(--accent); }
   /* Vertical tick (founder call 08-18-26: the horizontal bar read as an em
