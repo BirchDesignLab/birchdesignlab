@@ -8,7 +8,7 @@ BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026
 
 ## In flight
 
-### BDL-007 · The Shining Tree · SPECCED + PLANNED 08-18-26, ready to execute
+### BDL-007 · The Shining Tree · BUILT 08-18-26, awaiting founder visual pass
 
 Interactive three.js stage for the organic 3D wordmark (bdlOrganic).
 Museum-at-night scene, weighted drag/flick/zoom, two living beats: moss
@@ -20,7 +20,16 @@ draco glb already made for the C&C break screen.
 
 - Spec (founder-approved): `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
 - Plan (5 tasks, full code inline): `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
-- To pick up: branch `feat/bdl-007-shining-tree` off main, execute the plan
+- Built on branch `feat/bdl-007-shining-tree` (6 tasks' worth of commits,
+  subagent-driven). Code review clean; the automated browser pane in this
+  environment cannot composite frames, so the visual pass is the founder's.
+- Open backlog from the final review, none blocking: 1.3MB of dead Draco
+  assets ship in `dist/_astro/` (Vite resolves three's module-scope decoder
+  defaults even though `setDecoderPath('/draco/')` overrides them); no cache
+  headers on `/models/*` or `/draco/*` in `public/_headers`, so the 3.2MB
+  glb revalidates on every repeat visit; the still uses `sizes="100vw"` and
+  `fetchpriority="auto"` while being the page's LCP element; flick momentum
+  assumes a 60Hz pointer cadence; no keyboard path for turning the model.
   (subagent-driven recommended; superpowers:subagent-driven-development or
   superpowers:executing-plans). Execution-approach choice was still open at
   the 08-18 session end.

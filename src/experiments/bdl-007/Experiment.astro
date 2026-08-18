@@ -1,0 +1,159 @@
+---
+/**
+ * The Shining Tree shell. Renders the committed still from first paint;
+ * three.js and the model arrive only when the stage scrolls into view.
+ * The C&C break-screen rule, reused: nothing the visitor sees may depend
+ * on code that might not arrive.
+ */
+import still from './still.png';
+import { Image } from 'astro:assets';
+---
+<div class="stage" data-stage>
+  <Image
+    src={still}
+    alt="The organic Birch Design Lab wordmark, birch and moss, at rest."
+    class="still"
+    widths={[768, 1200]}
+    sizes="100vw"
+    loading="eager"
+  />
+  <canvas class="scene" aria-hidden="true"></canvas>
+  <p class="veil smallcaps" data-veil hidden>Waking the grove</p>
+  <p class="fallback" data-fallback hidden></p>
+</div>
+
+<script>
+  const stage = document.querySelector<HTMLElement>('[data-stage]')!;
+  const canvas = stage.querySelector<HTMLCanvasElement>('canvas.scene')!;
+  const stillImg = stage.querySelector<HTMLImageElement>('img.still')!;
+  const veil = stage.querySelector<HTMLElement>('[data-veil]')!;
+  const fallback = stage.querySelector<HTMLElement>('[data-fallback]')!;
+  const LIVE_LABEL = 'The organic Birch Design Lab wordmark in three dimensions. Drag to turn it.';
+  const NO_WEBGL_COPY = 'This device does not support WebGL. Here is the wordmark at rest.';
+  const MODEL_ERROR_COPY = 'The model failed to load. Here is the wordmark at rest.';
+  const START_ERROR_COPY = 'The viewer could not start. Here is the wordmark at rest.';
+  const LOAD_TIMEOUT_MS = 20000;
+
+  let dispose: (() => void) | undefined;
+  let torn = false;
+  let loadWatchdog: ReturnType<typeof setTimeout> | undefined;
+
+  const clearWatchdog = () => {
+    if (loadWatchdog !== undefined) {
+      clearTimeout(loadWatchdog);
+      loadWatchdog = undefined;
+    }
+  };
+
+  const showFallback = (copy: string) => {
+    clearWatchdog();
+    stage.classList.remove('is-waking');
+    stage.classList.remove('is-live');
+    veil.hidden = true;
+    fallback.textContent = copy;
+    fallback.hidden = false;
+  };
+
+  const goLive = () => {
+    clearWatchdog();
+    stage.classList.remove('is-waking');
+    stage.classList.add('is-live');
+    veil.hidden = true;
+    // The watchdog is advisory, not terminal: a late-but-successful load
+    // (a stalled connection that eventually delivers) must still reach a
+    // live stage rather than being stuck behind the failure copy the
+    // watchdog already showed. Clear whatever showFallback() left up.
+    fallback.hidden = true;
+    stillImg.alt = '';
+    canvas.removeAttribute('aria-hidden');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', LIVE_LABEL);
+  };
+
+  // Module-scope probe context would sit in the tab's context budget for
+  // the document's whole lifetime; release it once the capability check
+  // is done so it doesn't compete with the renderer's own context.
+  const probe = document.createElement('canvas');
+  const probeGl = probe.getContext('webgl2') ?? probe.getContext('webgl');
+  const hasWebGL = !!probeGl;
+  probeGl?.getExtension('WEBGL_lose_context')?.loseContext();
+
+  if (!hasWebGL) {
+    showFallback(NO_WEBGL_COPY);
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      stage.classList.add('is-waking');
+      veil.hidden = false;
+      // A stall (not a rejection) leaves the veil up forever: 3.2MB of glb
+      // over a bad connection can hang without the dynamic import or the
+      // GLTFLoader ever calling back. This watchdog is the exit for that
+      // case; it's cancelled the moment any real outcome (live or error)
+      // happens, and cleared on teardown so it can't fire after pagehide.
+      loadWatchdog = setTimeout(() => showFallback(MODEL_ERROR_COPY), LOAD_TIMEOUT_MS);
+      void (async () => {
+        try {
+          const { mountStage } = await import('./stage');
+          // Teardown may have fired while the chunk was in flight; don't
+          // mount onto a canvas that's already gone.
+          if (torn) return;
+          dispose = mountStage(canvas, {
+            onReady: goLive,
+            onError: () => showFallback(MODEL_ERROR_COPY),
+          });
+        } catch (err) {
+          // A rejected dynamic import (stale chunk hash after a deploy)
+          // or a synchronous throw from mountStage (context creation
+          // failure despite the probe succeeding) both land here.
+          console.error('[bdl-007] failed to start stage', err);
+          if (!torn) showFallback(START_ERROR_COPY);
+        }
+      })();
+    });
+    io.observe(stage);
+  }
+
+  // No astro:before-swap here: this repo has no ClientRouter, so that
+  // event never fires. pagehide with the persisted guard is the house
+  // convention (see BarkField.astro, bdl-002/Experiment.astro).
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) return;
+    torn = true;
+    clearWatchdog();
+    dispose?.();
+  });
+</script>
+
+<style>
+  .stage {
+    position: relative;
+    height: min(88vh, 900px);
+    background: var(--field);
+    overflow: hidden;
+  }
+  .still, .scene {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .still { object-fit: contain; padding: 8%; opacity: 1; transition: opacity var(--dur-2) var(--ease-weighted); }
+  .scene { opacity: 0; pointer-events: none; transition: opacity var(--dur-2) var(--ease-weighted); touch-action: none; }
+  .stage.is-waking .still { opacity: 0.45; }
+  .stage.is-live .still { opacity: 0; }
+  .stage.is-live .scene { opacity: 1; pointer-events: auto; }
+  .veil {
+    position: absolute; left: 50%; bottom: var(--space-4);
+    transform: translateX(-50%);
+    max-width: min(32ch, calc(100% - 2 * var(--space-4)));
+    text-align: center;
+    color: var(--mark-muted); letter-spacing: var(--tracking-wide);
+  }
+  .fallback {
+    position: absolute; left: 50%; bottom: var(--space-4);
+    transform: translateX(-50%);
+    max-width: min(32ch, calc(100% - 2 * var(--space-4)));
+    text-align: center;
+    color: var(--mark-muted);
+  }
+</style>
