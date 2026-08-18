@@ -1,7 +1,15 @@
 ---
 /** The head content every layout shares. Extracted when the manifest and
     touch-icon links would have made it a third copy of the same block.
-    Layout-specific tags stay in the layout. */
+    Layout-specific tags stay in the layout.
+
+    On the icon set: the SVG is the real one, and the 32px PNG exists only
+    because anything that will not take an SVG icon otherwise falls through
+    to /favicon.ico, which does not exist, and shows nothing at all. iOS
+    ignores SVG for the touch icon, so that gets its own 180px PNG. All are
+    committed assets; the touch icon used to point at /og/logo.png, a build
+    artefact in a gitignored directory. The JSON-LD Organization logo still
+    points there deliberately: that is a schema.org logo, not an icon. */
 import Seo from './Seo.astro';
 import ThemeBootstrap from './ThemeBootstrap.astro';
 
@@ -11,7 +19,8 @@ const { title, description, noindex = false } = Astro.props;
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="apple-touch-icon" href="/og/logo.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <Seo title={title} description={description} />
