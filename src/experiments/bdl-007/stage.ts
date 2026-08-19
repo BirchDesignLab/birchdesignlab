@@ -105,9 +105,11 @@ export function mountStage(
   const FIT_FILL = 0.74;   // fraction of the tighter axis the mark fills; the
                            // rest is air so nothing clips the top on a short
                            // landscape window or hides behind the plate bar
-  const FRAME_LIFT = 0.12; // gentle downward tilt, proportional to mark height
-  const FRAME_RISE = 0.05; // aim just below centre so the mark clears the
-                           // fixed plate bar without riding the top edge
+  const FRAME_LIFT = 0.10; // gentle downward tilt, proportional to mark height
+  const FRAME_DROP = 0.22; // aim slightly ABOVE centre so the mark drops a
+                           // touch: it is top-heavy (the chunky B up top, thin
+                           // strokes trailing down), so a bbox-centred fit
+                           // reads as riding high
   let fitDist = BASE_DIST;
   const markHalf = { w: 1.1, h: 1.1 };
   const frameCamera = () => {
@@ -518,9 +520,9 @@ ${shader.vertexShader}`;
     // centre so the mark stays framed and centred on any viewport instead of
     // sitting low on tall phones. zoom rides on top as a multiplier.
     camera.position.set(0, markHalf.h * FRAME_LIFT, fitDist / zoom);
-    // Aim a little below the mark's centre so it rides slightly high in the
-    // frame rather than reading as low, which it did on tall phones.
-    camera.lookAt(0, -markHalf.h * FRAME_RISE, 0);
+    // Aim a little above the mark's centre so the top-heavy silhouette drops
+    // to a visual centre instead of riding high.
+    camera.lookAt(0, markHalf.h * FRAME_DROP, 0);
 
     // moss breath (held at mid under reduced motion)
     const phase = (t * Math.PI * 2) / PULSE_PERIOD;
