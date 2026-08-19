@@ -12,11 +12,14 @@ const working = entries.filter((e) => e.data.status === 'live').length;
 ---
 <p class="count smallcaps" aria-live="polite">{specimenCountLabel(entries.length, working)}</p>
 {filterable && (
-  <div class="filter smallcaps" role="group" aria-label="Filter specimens">
-    <button type="button" data-set="all" aria-pressed="true">All</button>
-    <button type="button" data-set="experiment" aria-pressed="false">Experiments</button>
-    <button type="button" data-set="study" aria-pressed="false">Studies</button>
-  </div>
+  <nav class="filter smallcaps" aria-label="Browse specimens by type">
+    {/* Real links (crawlable, no-JS navigable) to the dedicated category pages.
+        With JS they are hijacked into an in-place filter (see the script), so the
+        catalog never reloads. aria-current marks the active set. */}
+    <a href="/lab" data-set="all" aria-current="true">All</a>
+    <a href="/lab/experiments" data-set="experiment">Experiments</a>
+    <a href="/lab/studies" data-set="study">Studies</a>
+  </nav>
 )}
 <div class="catalog" data-filter="all">
   {entries.map((entry) => <SpecimenCard entry={entry} level="h2" />)}
@@ -33,12 +36,18 @@ const working = entries.filter((e) => e.data.status === 'live').length;
       // the cards are the source of truth and cannot drift from it.
       const count = group.previousElementSibling as HTMLElement | null;
       group.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement).closest('button[data-set]');
-        if (!btn || !catalog) return;
-        const set = (btn as HTMLElement).dataset.set!;
+        const link = (e.target as HTMLElement).closest('a[data-set]') as HTMLAnchorElement | null;
+        if (!link || !catalog) return;
+        // Let modifier / middle clicks fall through to real navigation
+        // (open-in-new-tab still reaches the dedicated category page).
+        const me = e as MouseEvent;
+        if (me.button !== 0 || me.metaKey || me.ctrlKey || me.shiftKey || me.altKey) return;
+        e.preventDefault(); // JS present: filter in place instead of navigating.
+        const set = link.dataset.set!;
         catalog.dataset.filter = set;
-        for (const b of group.querySelectorAll('button')) {
-          b.setAttribute('aria-pressed', String(b === btn));
+        for (const a of group.querySelectorAll('a[data-set]')) {
+          if (a === link) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
         }
         if (count) {
           const shown = [...catalog.querySelectorAll<HTMLElement>('.card')]
@@ -55,12 +64,13 @@ const working = entries.filter((e) => e.data.status === 'live').length;
   /* Accent-tinted, matching the row hairlines above it. */
   .catalog { border-bottom: 1px solid var(--line-accent); }
   .count { color: var(--accent); font-size: var(--text-sm); margin-bottom: var(--space-4); }
-  /* Filter: pure show/hide of already-rendered DOM (SEO: every card ships
-     in the HTML regardless of state). Square geometry per house rules. */
-  .filter { display: none; gap: var(--space-2); margin-bottom: var(--space-4); }
-  :global(html.js) .filter { display: flex; }
-  .filter button {
-    font: inherit; font-family: var(--font-smallcaps);
+  /* Filter: real links to the category pages, shown with or without JS (so
+     crawlers and no-JS visitors can reach /lab/experiments and /lab/studies).
+     JS upgrades them into a pure show/hide of already-rendered DOM (every card
+     ships in the HTML regardless of state). Square geometry per house rules. */
+  .filter { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .filter a {
+    font-family: var(--font-smallcaps); text-decoration: none;
     text-transform: uppercase; letter-spacing: var(--tracking-wide);
     font-size: var(--text-sm); line-height: 1;
     color: var(--mark-muted); background: transparent;
@@ -72,8 +82,9 @@ const working = entries.filter((e) => e.data.status === 'live').length;
                 background-color var(--dur-1) var(--ease-weighted),
                 border-color var(--dur-1) var(--ease-weighted);
   }
+  .filter a:hover { color: var(--mark); }
   /* Filled when active, the loud grammar's strongest control state. */
-  .filter button[aria-pressed='true'] {
+  .filter a[aria-current='true'] {
     color: var(--on-accent); background: var(--accent); border-color: var(--accent);
   }
   .catalog[data-filter='experiment'] :global(.card[data-type='study']),
