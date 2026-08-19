@@ -382,6 +382,44 @@ brand-entity gap, and only registering the profiles fixes it), per-experiment OG
 art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
 `site.webmanifest` 512x512 / description hand-sync. All unchanged.
 
+### Founder responses to the audit (08-18-26, same session)
+
+- **Voice / identity (audit #1).** Founder constraint: identity must stay
+  obfuscated while a day-job noncompete is unresolved (founder is a 10-year
+  engineer). The real protection is that no personal name appears anywhere, not
+  the choice of "we" vs "I"; the live defect is the *inconsistency*. Revised
+  recommendation: pick one register and hold it, leaning to an **unnamed studio
+  "we"** for the most distance from the individual, keeping the accountability
+  promise without "I", and reviewing About's biographical specifics ("one man",
+  "over a decade on the Gulf Coast") as possible identity breadcrumbs. Not legal
+  advice: an employment lawyer should read the noncompete; enforceability varies
+  by state and obfuscation is not a legal shield.
+- **Testimonial (audit #2).** Decision: place the client quote *inside* the
+  BDL-005 specimen as a pull-quote, not a separate testimonials page. Blocked on
+  Cheer & Chatter fully wrapping and the founder asking permission.
+- **Homepage links (audit #3).** Confirmed: the only /services link was just
+  removed, and there was never a body link to /contact (header/footer only).
+  Reinforces the "homepage internal linking + conversion" follow-up.
+- **Orphan /lab/experiments + /lab/studies (audit #4).** Confirmed intentional:
+  they exist as crawlable category URLs because the in-page /lab filter is JS and
+  does not navigate. The gap stands anyway: nothing links to them, so they are
+  orphans. Fix that honors the intent = wire real links to them (progressive-
+  enhancement anchors on the filter chips, or a "Browse: Experiments / Studies"
+  line in the /lab intro), rather than canonicalizing them away.
+- **Pricing (audit #9).** Decision: founder will not list prices (has a rough
+  base structure from market-asking). Reduce to at most a no-numbers reassurance
+  line ("leave discovery with a fixed number before any commitment"), or drop.
+- **Provisional copy (audit #8).** Founder ran a copy pass 08-18-26; improved.
+  Remove the `<!-- provisional copy -->` markers as each page is finalized.
+- **Contact form / plan (audit #10).** The contact Worker emails hello@ via the
+  `send_email` binding (`wrangler.jsonc`), which is Email Routing's Worker
+  binding and free-tier, not necessarily the paid "Email Sending" product the
+  deploy notes gate on. Verify the free send path against current Cloudflare docs
+  (recipient must be a verified Email Routing destination; `wrangler email
+  sending enable` adds SPF/DKIM); if it works on the free plan, the stashed form
+  can ship. The service-area / response-time copy line on /contact needs no plan
+  either way. Cross-ref `docs/deploy.md` "One-time setup" step 2.
+
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 
 These are not ideas to develop here; the website spec and core plan already carry them: contact form via Cloudflare Pages Functions (**superseded** — see the Pages-to-Workers item above), Sanity CMS swap via Content Layer loader, Tailwind as a per-island addition, Google Workspace for send-as on hello@.
