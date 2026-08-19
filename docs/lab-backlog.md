@@ -411,14 +411,28 @@ art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
   line ("leave discovery with a fixed number before any commitment"), or drop.
 - **Provisional copy (audit #8).** Founder ran a copy pass 08-18-26; improved.
   Remove the `<!-- provisional copy -->` markers as each page is finalized.
-- **Contact form / plan (audit #10).** The contact Worker emails hello@ via the
-  `send_email` binding (`wrangler.jsonc`), which is Email Routing's Worker
-  binding and free-tier, not necessarily the paid "Email Sending" product the
-  deploy notes gate on. Verify the free send path against current Cloudflare docs
-  (recipient must be a verified Email Routing destination; `wrangler email
-  sending enable` adds SPF/DKIM); if it works on the free plan, the stashed form
-  can ship. The service-area / response-time copy line on /contact needs no plan
-  either way. Cross-ref `docs/deploy.md` "One-time setup" step 2.
+- **Contact form / plan (audit #10) — RESOLVED via Cloudflare docs 08-18-26.**
+  The paid-plan assumption in `docs/deploy.md` is wrong for a self-notifying
+  form. Current Cloudflare Email Service docs
+  (`/email-service/platform/pricing/`, `/platform/limits/`):
+  - Sending to **arbitrary recipients requires Workers Paid.**
+  - **Sending to a verified destination address in your account is free on all
+    plans, "including when only Email Routing is configured,"** and such sends
+    "do not count toward your monthly quota or your daily sending limits."
+  - So a contact form that only notifies the owner is the **free** case, with no
+    Workers Paid and no `wrangler email sending enable` (Email Routing alone
+    suffices), **provided the Worker sends to a verified Email Routing
+    destination** (the real inbox), not an arbitrary address.
+  - Action to ship free: (1) confirm the owner inbox is a verified Destination
+    address in Email Routing (it already is — hello@ forwards there);
+    (2) set `CONTACT_TO` in `worker/index.ts` to that verified destination (or
+    test whether sending to the `hello@` routing address also qualifies — the
+    one thing worth a live test); (3) `git stash pop` the form, wire it into
+    `contact.astro`, add the two missing Worker response headers
+    (`docs/deploy.md` "Headers the Worker must set"); (4) deploy, send a test,
+    confirm receipt; own PR. Limits on the free path: 50 recipients/msg, 25 MiB.
+  - The service-area / response-time copy line on /contact needs no plan either
+    way. Supersedes `docs/deploy.md` "One-time setup" step 2's paid-plan gate.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 
