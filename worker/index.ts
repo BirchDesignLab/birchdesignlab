@@ -17,7 +17,11 @@ export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/contact') {
+    // Accept the trailing-slash variant too. The form posts to /api/contact,
+    // but a stale cached 301 (or any slash-normalizing hop) can turn that into
+    // /api/contact/, which would otherwise fall through to the assets layer and
+    // 405 the POST. Matching both keeps the endpoint robust to that.
+    if (url.pathname === '/api/contact' || url.pathname === '/api/contact/') {
       if (request.method !== 'POST') {
         return new Response('Method not allowed', { status: 405, headers: { Allow: 'POST' } });
       }
