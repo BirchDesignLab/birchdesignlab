@@ -180,7 +180,7 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **About page design revisit (Claude Design check).** Founder wants a brief pass over the About page run against Claude's design guidance — a check, NOT a rework. Just validating the page against some things, no rebuild intended. Low-effort review, do when founder has time.
 - ~~**Shorter About bark hero.**~~ **Done 2026-07-19**, founder-approved (44vh, `lockAspect`). Kept caveat: `lockAspect` fixes dash shape not scale, so About renders a finer sparser grain than Home by design; to re-weight it, the knob is `density` (~600), not dash width.
 
-- ~~**Flip the host from Cloudflare Pages to Workers.**~~ **DONE 2026-07-29.** Worker live on both domains, Pages project deleted, verified in prod. Remainder: Email Sending onboarding deferred (paid plan, founder call); until then the form markup stays in its named git stash and /contact is mailto-only. Rationale and deploy config: `docs/deploy.md`; supersedes the spec's "Pages Functions" renovation path.
+- ~~**Flip the host from Cloudflare Pages to Workers.**~~ **DONE 2026-07-29.** Worker live on both domains, Pages project deleted, verified in prod. ~~Remainder: Email Sending onboarding deferred (paid plan, founder call); until then the form markup stays in its named git stash and /contact is mailto-only.~~ **Contact form SHIPPED and LIVE 08-19-26** (PRs #36 / #43 / #45): the Worker was always deployed; only the front-end markup was stashed. It emails the verified Email Routing destination `birchdesignlab@gmail.com`, which is **free on all plans** — no Email Sending onboarding / paid plan needed. The 405 that blocked real submits was Cloudflare Static Assets intercepting navigation POSTs before the Worker; fixed with `assets.run_worker_first: ['/api/*']`. The old `stash@{0}` is now obsolete (safe to drop). Rationale and deploy config: `docs/deploy.md`; supersedes the spec's "Pages Functions" renovation path.
 
 - **Curator's note placards on studies.** Founder liked the concept 2026-07-29, deferred: repurpose the wall-label form (square-tagged placard) as a short curator's note on study pages ("Commissioned work. Client's own vendor accounts throughout."). Cheap build: optional `note` field on the study schema branch, rendered in wall-label styling near the plate block. Decide during the Lab theme pass, which owns placard furniture.
 
@@ -251,6 +251,29 @@ complete OG core, working sitemap, honest minimal Organization JSON-LD, and
 answer-engine-friendly prose (offering / audience / hire-path all crawlable, not
 locked in canvas). The real gaps are **conversion, proof, and voice**, not
 plumbing.
+
+### Execution since the audit (08-18 / 08-19) — see `docs/handoff-8-19-26.md`
+
+Most of the audit's actionable items shipped this session, in small PRs:
+
+- **Voice unified to studio "we"** (#37), not first-person — the founder tried
+  "I" (#35, closed) and reversed. Contact copy followed.
+- **Geography + credibility** (#41): "New Orleans to Mobile" on home; an
+  enterprise-credibility line on Services. Kept generic per the obfuscation call.
+- **Conversion linking**: home closing CTA to /contact (#40); a single
+  "How we build ->" services link under the doors (#42).
+- **Orphan Lab pages fixed** (#38): the filter chips are now real progressive-
+  enhancement `<a href>` links to `/lab/experiments` and `/lab/studies`.
+- **Contact form is LIVE** (#36 / #43 / #45): see the Pages-to-Workers item above
+  for the full story (405 root cause = Static Assets intercepting nav POSTs, fixed
+  with `run_worker_first`; notify inbox is the verified free destination).
+- **Process copy tweaks** (#39) and the **sent page** got the shining-tree bark
+  hero (#46).
+
+Still open (founder / later): client testimonial (needs C&C wrap + permission),
+per-experiment OG art, `sameAs` (needs accounts), font preload + metric fallback,
+bdl-007 keyboard, optional WebSite schema / `og:locale` / `llms.txt`, and the
+/contact right-hand-space design note.
 
 ### Shipped this pass — PR branch `seo/prelaunch-pass`
 
