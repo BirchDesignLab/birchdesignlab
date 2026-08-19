@@ -5,6 +5,8 @@ import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import StudyLayout from '../../layouts/StudyLayout.astro';
 import SpecimenPlate from '../../components/SpecimenPlate.astro';
 import WallLabel from '../../components/WallLabel.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { buildBreadcrumb } from '../../lib/seo/jsonld';
 import { experimentComponents } from '../../experiments/registry';
 
 export async function getStaticPaths() {
@@ -22,9 +24,19 @@ const { Content } = await render(entry);
 const pageTitle = `${designation} ${title} · Birch Design Lab`;
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 const Experiment = entry.data.type === 'experiment' ? experimentComponents[designation] : undefined;
+
+// Home > The Lab > <entry>. Trailing slashes match the page canonicals so the
+// breadcrumb item URLs and the <link rel=canonical> agree. Skipped for
+// noindexed instruments (they are not meant to surface).
+const breadcrumb = buildBreadcrumb(Astro.site!, [
+  { name: 'Home', url: '/' },
+  { name: 'The Lab', url: '/lab/' },
+  { name: title, url: `/lab/${entry.id}/` },
+]);
 ---
 {entry.data.type === 'study' ? (
   <StudyLayout title={pageTitle} description={summary} designation={designation} noindex={entry.data.noindex}>
+    {!entry.data.noindex && <JsonLd slot="head" data={breadcrumb} />}
     <header class="hero">
       <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1440]} sizes="100vw" loading="eager" fetchpriority="high" />
       <div class="hero-veil"></div>
@@ -62,6 +74,7 @@ const Experiment = entry.data.type === 'experiment' ? experimentComponents[desig
   </StudyLayout>
 ) : (
   <ExperimentLayout title={pageTitle} description={summary} designation={designation} heading={title} noindex={entry.data.noindex}>
+    {!entry.data.noindex && <JsonLd slot="head" data={breadcrumb} />}
     {entry.data.howto && <WallLabel lines={entry.data.howto} />}
     {Experiment ? (
       <Experiment />

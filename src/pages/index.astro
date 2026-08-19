@@ -3,6 +3,11 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BarkField from '../components/BarkField.astro';
 import StructuredData from '../components/StructuredData.astro';
+import { SITE_DESCRIPTION } from '../lib/seo/site';
+
+// Home meta = the shared brand blurb plus one home-only line. Deriving it from
+// SITE_DESCRIPTION keeps it from drifting against the Organization schema.
+const description = `${SITE_DESCRIPTION} Quiet, fast, built to last.`;
 
 // Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
 // specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
@@ -12,7 +17,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
 ---
 <BaseLayout
   title="Birch Design Lab · Custom software and websites"
-  description="A design lab building custom software and custom websites for businesses that want to grow. Quiet, fast, built to last."
+  description={description}
 >
   <StructuredData slot="head" />
   <section class="hero">
@@ -23,7 +28,6 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   </section>
 
   <section class="wrap opener">
-    <!-- provisional copy: founder may replace -->
     <p class="opener-lead">A design lab, not an agency.</p>
     <p class="subline">
       Custom software and websites for businesses that want to grow and thrive.
@@ -34,7 +38,6 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   <section class="wrap doors">
     <h2 class="doors-kicker">What we build</h2>
     <div class="door-grid">
-      <!-- provisional copy -->
       <article class="door">
         <h3>Software</h3>
         <p>
