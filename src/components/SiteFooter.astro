@@ -11,7 +11,7 @@ const year = new Date().getFullYear();
       <a href="/contact">Contact</a>
       <!-- Reserved room (spec §8): Work, Field Notes, social handles -->
     </nav>
-    <p class="fine">&copy; {year} Birch Design Lab</p>
+    <p class="fine">&copy; {year} Birch Design Lab <span aria-hidden="true">&middot;</span> <a href="/privacy">Privacy</a></p>
   </div>
 </footer>
 
@@ -26,4 +26,6 @@ const year = new Date().getFullYear();
   nav a { color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm); }
   nav a:hover { color: var(--mark); }
   .fine { color: var(--mark-muted); font-size: var(--text-sm); }
+  .fine a { color: var(--mark-muted); text-decoration: none; }
+  .fine a:hover { color: var(--mark); }
 </style>

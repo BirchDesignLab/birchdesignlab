@@ -1,0 +1,88 @@
+---
+/* Privacy policy.
+
+   Basic and accurate, not final. Every sentence describes what the site
+   actually does today: Google Analytics and the contact form, nothing else.
+   No placeholders or TODOs in the rendered page. A founder voice-and-legal
+   pass, the GA retention figure, and a Google Ads clause are backlogged
+   (see docs/lab-backlog.md, Parked site notes).
+
+   Not legal advice. If the business takes on clients with their own
+   compliance needs, or you start running Google Ads, have this reviewed.
+
+   No emdashes (external copy). Unnamed studio voice, no founder name. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const updated = 'August 19, 2026';
+---
+<BaseLayout
+  title="Privacy · Birch Design Lab"
+  description="How Birch Design Lab handles the small amount of data this site collects."
+>
+  <section class="wrap">
+    <header class="intro">
+      <p class="smallcaps kicker">Privacy</p>
+      <h1>What we collect, and why.</h1>
+      <p class="subline">
+        The short version. This site measures its own traffic and lets you send us a message. Nothing more. We do not sell your data, and we never have.
+      </p>
+      <p class="fine-print">Last updated {updated}.</p>
+    </header>
+
+    <article class="clause">
+      <h2>Analytics</h2>
+      <p>
+        We use Google Analytics to understand how many people visit, which pages they read, and roughly where in the world they are. It tells us whether the work is landing, not who you are.
+      </p>
+      <p>
+        Google Analytics sets cookies in your browser and collects standard usage data. The pages you view, your approximate location from your IP address, and your device and browser type. This data goes to Google and is subject to Google's own privacy terms. We load it only after the page has finished rendering, so it never slows down your visit.
+      </p>
+      <p>
+        You can opt out. Most browsers let you block or clear cookies, and Google offers a browser add-on that turns off Google Analytics everywhere. If your browser sends a Do Not Track signal, we would rather you know that Google Analytics does not currently honor it, so the browser controls are the reliable route.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>When you contact us</h2>
+      <p>
+        If you send a message through the contact form, we receive what you type. Your name, your email address, and the details of your message. We use it to reply to you and to talk through your project. That is all.
+      </p>
+      <p>
+        We do not add you to a mailing list, and we do not pass your message to anyone else. It sits in our inbox like any other email.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>Who we share it with</h2>
+      <p>
+        The two services above are the only third parties involved. Google, for analytics. And the email provider that carries your message to our inbox. This site is hosted on Cloudflare, which processes requests to serve the pages to you. We do not sell, rent, or trade any of it.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>How long we keep it</h2>
+      <p>
+        Analytics data is held by Google under the retention period set on our account and Google's own policies. Messages you send us stay in our inbox for as long as we are in touch about your project, and are cleared out when they are no longer needed.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>Reaching us</h2>
+      <p>
+        Questions about any of this, or a request to see or delete what we hold, go to <a href="mailto:birchdesignlab@gmail.com">birchdesignlab@gmail.com</a>. A real person reads it.
+      </p>
+    </article>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+  .fine-print { color: var(--mark-muted); font-size: var(--text-sm); margin-top: var(--space-4); }
+
+  .clause { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: var(--measure-wide); }
+  .clause p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .clause a { color: var(--accent); }
+</style>
