@@ -248,6 +248,17 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 
 - ~~**Flip the host from Cloudflare Pages to Workers.**~~ **DONE 2026-07-29.** Worker live on both domains, Pages project deleted, verified in prod. ~~Remainder: Email Sending onboarding deferred (paid plan, founder call); until then the form markup stays in its named git stash and /contact is mailto-only.~~ **Contact form SHIPPED and LIVE 08-19-26** (PRs #36 / #43 / #45): the Worker was always deployed; only the front-end markup was stashed. It emails the verified Email Routing destination `birchdesignlab@gmail.com`, which is **free on all plans** — no Email Sending onboarding / paid plan needed. The 405 that blocked real submits was Cloudflare Static Assets intercepting navigation POSTs before the Worker; fixed with `assets.run_worker_first: ['/api/*']`. The old `stash@{0}` is now obsolete (safe to drop). Rationale and deploy config: `docs/deploy.md`; supersedes the spec's "Pages Functions" renovation path.
 
+- **Privacy policy refinement.** `/privacy` shipped 08-19-26 with basic,
+  accurate copy (Google Analytics + contact form, the only two data flows the
+  site has), linked from the footer. First-draft, not final: a founder
+  voice-and-legal pass is owed (copy is founder territory per the writing
+  rules). Three concrete edits waiting on real facts: (1) state the actual GA
+  data-retention setting once confirmed in GA Admin, Data Settings; (2) add a
+  Google Ads clause on advertising cookies and remarketing when Ads goes live,
+  the tag is already in place so only the disclosure is missing; (3) a proper
+  legal review if the business takes on clients with their own compliance
+  needs. Page and file header: `src/pages/privacy.astro`.
+
 - **Curator's note placards on studies.** Founder liked the concept 2026-07-29, deferred: repurpose the wall-label form (square-tagged placard) as a short curator's note on study pages ("Commissioned work. Client's own vendor accounts throughout."). Cheap build: optional `note` field on the study schema branch, rendered in wall-label styling near the plate block. Decide during the Lab theme pass, which owns placard furniture.
 
 - **Theme-pass triage from the BDL-005 final review (2026-07-29).** Extract the shared chrome-free shell (StudyLayout duplicates ExperimentLayout's hatch/head; the hatch pill has two sources of truth). Add an `aria-live` count to the catalog filter so assistive tech hears result changes. Give `/lab/studies` a deliberate empty state in case a study is ever pulled. Study loud band ships static (no reveal JS on study pages per spec); theme pass decides its motion. Imagery rule for future studies: capture heroes at 1920px+ so responsive widths stay honest. Recapture host-console.png against the production live app someday (localhost URL visible in frame).
