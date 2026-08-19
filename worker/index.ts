@@ -4,13 +4,19 @@
  * which in practice means the contact endpoint (plus stray 404s that the
  * assets config already resolves to Astro's 404 page).
  *
- * POST /api/contact: honeypot -> rate limit -> validate -> email to hello@,
+ * POST /api/contact: honeypot -> rate limit -> validate -> email the owner,
  * then a 303 redirect so the no-JS form lands on /contact/sent. Errors return
  * plain pages rather than JSON because the form works without JavaScript.
  */
 import { parseContactSubmission } from '../src/lib/contact/validate';
 
-const CONTACT_TO = 'hello@birchdesignlab.com';
+// Notification recipient. Must be a VERIFIED Email Routing destination: sending
+// to a verified destination is free on all plans (Cloudflare Email Service),
+// whereas sending to hello@ (a routing address, not a destination) is rejected
+// on the free plan and returns 502. Kept out of any visitor-facing output.
+const CONTACT_TO = 'birchdesignlab@gmail.com';
+// Public address shown to visitors in the 502 fallback (never the private inbox).
+const CONTACT_PUBLIC = 'hello@birchdesignlab.com';
 const CONTACT_FROM = { email: 'forms@birchdesignlab.com', name: 'birchdesignlab.com contact form' };
 
 export default {
@@ -81,7 +87,7 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
     return errorPage(
       url,
       502,
-      `The message did not go through. Email ${CONTACT_TO} directly and it will reach the same person.`
+      `The message did not go through. Email ${CONTACT_PUBLIC} directly and it will reach the same person.`
     );
   }
 
