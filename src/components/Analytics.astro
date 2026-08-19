@@ -18,16 +18,21 @@ const prod = import.meta.env.PROD;
 ---
 {prod && (
   <script is:inline>
+    // Set up dataLayer and a global gtag immediately: trivial, no network.
+    // This queues the js/config calls and — crucially — leaves window.gtag
+    // available so Google Ads conversion and event snippets work later.
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', 'G-44Y71C24L7');
+    // Defer only the heavy gtag.js download: after load, on first idle, so it
+    // never touches the critical render path. dataLayer queue flushes on arrival.
     addEventListener('load', () => {
       const boot = () => {
         const g = document.createElement('script');
         g.async = true;
         g.src = 'https://www.googletagmanager.com/gtag/js?id=G-44Y71C24L7';
         document.head.appendChild(g);
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){ dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-44Y71C24L7');
       };
       'requestIdleCallback' in window
         ? requestIdleCallback(boot, { timeout: 3000 })
