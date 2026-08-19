@@ -2,30 +2,46 @@
 // Confirmation target for the contact form's 303 redirect. Static page so it
 // works without JavaScript; noindexed because it is meaningless as an entry.
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BarkField from '../../components/BarkField.astro';
 ---
 <BaseLayout
   title="Message sent · Birch Design Lab"
   description="Your message is on its way to Birch Design Lab."
   noindex
 >
-  <section class="wrap">
-    <header class="intro">
-      <!-- first-draft copy -->
-      <p class="smallcaps kicker">Contact</p>
-      <h1>Sent.</h1>
-      <p class="subline">
-        Your message landed in the right inbox. A person reads it, the same one
-        who would build your project, and you'll hear back soon.
-      </p>
-      <p class="back"><a class="more-link" href="/">Back to the front page</a></p>
-    </header>
+  <header class="hero">
+    <BarkField density={170} lockAspect />
+    <h1>Sent.</h1>
+  </header>
+  <section class="wrap prose">
+    <!-- first-draft copy -->
+    <p class="subline">
+      Your message landed in the right inbox. A person reads it, the same one
+      who would build your project, and you'll hear back soon.
+    </p>
+    <p class="back"><a class="more-link" href="/">Back to the front page</a></p>
   </section>
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-7); max-width: var(--measure); }
-  .kicker { color: var(--accent); }
-  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
-  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+  /* About's shining-tree hero grammar: a full-bleed bark field with the word
+     overlaid. lockAspect keeps the lenticels from smearing at this short band
+     height (see About). */
+  .hero {
+    position: relative; min-height: 44vh;
+    display: grid; place-items: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding-inline: var(--space-4);
+  }
+  .hero h1 {
+    position: relative;
+    font-size: var(--text-3xl);
+    text-align: center;
+    /* billboard color so the word holds contrast over the brightest lenticels */
+    color: var(--billboard-color);
+  }
+  .prose { padding-block: var(--space-6) var(--space-7); max-width: var(--measure); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); }
   .back { margin-top: var(--space-5); }
 </style>
