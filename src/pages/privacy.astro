@@ -1,0 +1,94 @@
+---
+/* Privacy policy.
+
+   FOUNDER REVIEW BEFORE LINKING. This is a foundation, not final copy. The
+   analytics and contact-form sections describe what the site actually does
+   today and are accurate. The rest is scaffolding in the house voice for you
+   to voice and, where noted, to decide. It is intentionally NOT linked from
+   the footer yet, so it is not publicly surfaced until you approve it.
+
+   Not legal advice. If the business takes on clients with their own
+   compliance needs, or you start running Google Ads, have this reviewed.
+
+   No emdashes (external copy). Unnamed studio voice, no founder name. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const updated = 'August 19, 2026';
+---
+<BaseLayout
+  title="Privacy · Birch Design Lab"
+  description="How Birch Design Lab handles the small amount of data this site collects."
+>
+  <section class="wrap">
+    <header class="intro">
+      <p class="smallcaps kicker">Privacy</p>
+      <h1>What we collect, and why.</h1>
+      <p class="subline">
+        The short version. This site measures its own traffic and lets you send us a message. Nothing more. We do not sell your data, and we never have.
+      </p>
+      <p class="fine-print">Last updated {updated}.</p>
+    </header>
+
+    <article class="clause">
+      <h2>Analytics</h2>
+      <p>
+        We use Google Analytics to understand how many people visit, which pages they read, and roughly where in the world they are. It tells us whether the work is landing, not who you are.
+      </p>
+      <p>
+        Google Analytics sets cookies in your browser and collects standard usage data. The pages you view, your approximate location from your IP address, and your device and browser type. This data goes to Google and is subject to Google's own privacy terms. We load it only after the page has finished rendering, so it never slows down your visit.
+      </p>
+      <p>
+        You can opt out. Most browsers let you block or clear cookies, and Google offers a browser add-on that turns off Google Analytics everywhere. If your browser sends a Do Not Track signal, we would rather you know that Google Analytics does not currently honor it, so the browser controls are the reliable route.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>When you contact us</h2>
+      <p>
+        If you send a message through the contact form, we receive what you type. Your name, your email address, and the details of your message. We use it to reply to you and to talk through your project. That is all.
+      </p>
+      <p>
+        We do not add you to a mailing list, and we do not pass your message to anyone else. It sits in our inbox like any other email.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>Who we share it with</h2>
+      <p>
+        The two services above are the only third parties involved. Google, for analytics. And the email provider that carries your message to our inbox. This site is hosted on Cloudflare, which processes requests to serve the pages to you. We do not sell, rent, or trade any of it.
+      </p>
+      {/* FOUNDER TODO: if/when Google Ads goes live, add a short clause here on
+          advertising cookies and remarketing, and note the AdSettings opt-out.
+          The tag is already in place; the disclosure is what is missing. */}
+    </article>
+
+    <article class="clause">
+      <h2>How long we keep it</h2>
+      <p>
+        {/* FOUNDER TODO: confirm your Google Analytics data-retention setting
+            (Admin, Data Settings, Data Retention) and state it here. Default is
+            often 2 or 14 months. Below is a safe placeholder. */}
+        Analytics data is retained by Google according to the retention period set on the account. Messages you send us are kept for as long as we are in touch about your project, and cleared out when they are no longer needed.
+      </p>
+    </article>
+
+    <article class="clause">
+      <h2>Reaching us</h2>
+      <p>
+        Questions about any of this, or a request to see or delete what we hold, go to <a href="mailto:birchdesignlab@gmail.com">birchdesignlab@gmail.com</a>. A real person reads it.
+      </p>
+    </article>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+  .fine-print { color: var(--mark-muted); font-size: var(--text-sm); margin-top: var(--space-4); }
+
+  .clause { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: var(--measure-wide); }
+  .clause p { color: var(--mark-muted); margin-top: var(--space-3); }
+  .clause a { color: var(--accent); }
+</style>
