@@ -55,6 +55,8 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
         </p>
       </article>
     </div>
+    <!-- provisional copy: swap the label freely -->
+    <a class="more-link doors-more" href="/services">How we build <span class="arw" aria-hidden="true">&rarr;</span></a>
   </section>
 
   {featured.length > 0 && (
@@ -150,6 +152,9 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   .door { display: flex; flex-direction: column; gap: var(--space-2); }
   .door h3 { font-size: var(--text-xl); }
   .door p { color: var(--mark-muted); max-width: var(--measure); }
+  /* Single services link below the grid, left-aligned in the flow (the two
+     per-door links read as redundant; a lone centered one floated oddly). */
+  .doors-more { display: inline-block; margin-top: var(--space-5); }
 
   /* Loud moment — green Lab preview (.loud primitive in base.css). */
   .kicker { color: var(--accent); }
