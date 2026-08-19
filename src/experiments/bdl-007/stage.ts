@@ -102,9 +102,12 @@ export function mountStage(
   // the mark small and adrift near the bottom. Fit the front silhouette to
   // whichever axis is tighter, recomputed on resize, and look at the centre
   // so the mark stays put instead of drifting low the taller the screen gets.
-  const FIT_FILL = 0.82;   // fraction of the tighter axis the mark fills at rest
-  const FRAME_LIFT = 0.16; // gentle downward tilt, proportional to mark height
-  const FRAME_RISE = 0.14; // aim below centre so the mark sits a touch high, not low
+  const FIT_FILL = 0.74;   // fraction of the tighter axis the mark fills; the
+                           // rest is air so nothing clips the top on a short
+                           // landscape window or hides behind the plate bar
+  const FRAME_LIFT = 0.12; // gentle downward tilt, proportional to mark height
+  const FRAME_RISE = 0.05; // aim just below centre so the mark clears the
+                           // fixed plate bar without riding the top edge
   let fitDist = BASE_DIST;
   const markHalf = { w: 1.1, h: 1.1 };
   const frameCamera = () => {
@@ -130,26 +133,11 @@ export function mountStage(
   const floor = new THREE.AmbientLight(0xffffff, 0.55);
   scene.add(key, rim, floor);
 
-  // Pedestal without geometry: a radial-gradient blob under the model.
-  const blobCanvas = document.createElement('canvas');
-  blobCanvas.width = blobCanvas.height = 256;
-  const bctx = blobCanvas.getContext('2d')!;
-  const grad = bctx.createRadialGradient(128, 128, 8, 128, 128, 126);
-  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  bctx.fillStyle = grad;
-  bctx.fillRect(0, 0, 256, 256);
-  const shadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.4, 3.4),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(blobCanvas),
-      transparent: true,
-      depthWrite: false,
-    }),
-  );
-  shadow.rotation.x = -Math.PI / 2;
-  shadow.position.y = -1.25;
-  scene.add(shadow);
+  // No ground shadow. The scene is a night field of stars and fireflies, so
+  // the mark reads as floating; a fixed pedestal plane both implied a floor
+  // that isn't there and, once the camera distance became aspect-aware, drew
+  // at wildly different sizes across viewports (a hard blob on desktop, a
+  // smear when framed close). Removed rather than patched.
 
   // The model turns inside this group; drag and idle yaw drive the group.
   const rig = new THREE.Group();
