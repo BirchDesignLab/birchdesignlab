@@ -12,6 +12,7 @@
     points there deliberately: that is a schema.org logo, not an icon. */
 import Seo from './Seo.astro';
 import ThemeBootstrap from './ThemeBootstrap.astro';
+import Analytics from './Analytics.astro';
 
 interface Props { title: string; description: string; noindex?: boolean }
 const { title, description, noindex = false } = Astro.props;
@@ -26,3 +27,4 @@ const { title, description, noindex = false } = Astro.props;
 <Seo title={title} description={description} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
 <ThemeBootstrap />
+<Analytics />

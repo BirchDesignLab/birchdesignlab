@@ -1,0 +1,37 @@
+---
+/** Site analytics. Production-only.
+
+    GA4 for now. Cloudflare Web Analytics and TWIPLA were considered and
+    deferred — one vendor until there's a reason for more. Google Ads will
+    share this exact tag (gtag.js, same G-id) when it's set up, so conversion
+    and remarketing ride on this with no rework.
+
+    Loaded lazily: the tag is injected only after `load`, on the first idle
+    callback. gtag.js never touches the critical render path, so business
+    pages hold their Lighthouse scores. Every visitor who stays past first
+    paint is still counted; only sub-`load` bouncers slip, the tradeoff every
+    deferred tracker makes.
+
+    Gated on import.meta.env.PROD so dev and preview traffic never reaches
+    the property. */
+const prod = import.meta.env.PROD;
+---
+{prod && (
+  <script is:inline>
+    addEventListener('load', () => {
+      const boot = () => {
+        const g = document.createElement('script');
+        g.async = true;
+        g.src = 'https://www.googletagmanager.com/gtag/js?id=G-44Y71C24L7';
+        document.head.appendChild(g);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-44Y71C24L7');
+      };
+      'requestIdleCallback' in window
+        ? requestIdleCallback(boot, { timeout: 3000 })
+        : setTimeout(boot, 1200);
+    });
+  </script>
+)}
