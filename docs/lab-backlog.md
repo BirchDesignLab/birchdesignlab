@@ -54,6 +54,61 @@ Closed since the final review: the 1.3MB of dead Draco decoder copies are
 dropped by a build plugin in `astro.config.mjs`, and the still's
 `sizes`/`fetchpriority` were corrected in #32.
 
+## Prod ops notes
+
+### 08-19-26 — Safari "connection is not private" report (birchdesignlab.com)
+
+A friend of the founder got Safari's "This Connection Is Not Private /
+certificate is not valid" on birchdesignlab.com. Investigated same day:
+the live cert is fully valid from an outside vantage. Both apex and www
+serve a Google Trust Services cert (CF's default issuer), notBefore
+2026-07-29, notAfter 2026-10-27, SANs cover birchdesignlab.com,
+*.birchdesignlab.com and www. `curl` reports ssl_verify_result=0, the
+chain verifies OK, apex returns 200 and www 301-redirects to apex.
+
+So the site is not misconfigured. The warning is device- or network-side,
+or a transient CF edge blip. Ranked causes: (1) the friend's iPhone clock
+set before the cert's 07-29 notBefore, which makes Safari read any valid
+cert as not-yet-valid; (2) a TLS-intercepting network (captive portal,
+content filter, some VPN/DNS) — retry on cellular; (3) transient edge
+provisioning, gone on retry. Ask for the exact URL, WiFi vs cellular, and
+whether the device date is correct before touching Cloudflare SSL/TLS
+settings. Not reproduced from here.
+
+Follow-up: founder believes it was the friend's WORK network. That makes
+corporate TLS inspection the leading explanation: an SSL-inspecting
+middlebox (Zscaler/Netskope/Palo Alto/Fortinet/Cisco et al.) decrypts and
+re-signs HTTPS with the company root. A managed laptop trusts that root; a
+personal iPhone on guest/BYOD WiFi does not, so Safari reports the re-signed
+cert as impersonation. A young domain (launched this month) is also commonly
+intercepted or blocked by enterprise filters as newly-registered. This reads
+as a legitimate proxy, not a lingering breach: covert MITM avoids triggering
+warnings, and interception is not site-specific. To confirm, have the friend
+read the warning cert's Issuer (corporate/vendor CA = inspection; unrelated
+self-signed = report to their IT). Not the founder's network to probe.
+
+Escalation 08-19-26: the friend's employer is a 10-15 person shop, not a
+corporation, and had sensitive data stolen a few months ago. That lowers
+the odds of legitimate enterprise TLS inspection and raises the weight of
+"something still wrong on the network." Still calibrated, not alarmist:
+small shops do run prosumer firewalls/DNS filters (Sophos, Fortinet,
+SonicWall, Meraki, NextDNS, Cloudflare Gateway) that also re-sign HTTPS.
+The site is confirmed not the vector (valid cert, Cloudflare DNS). Decisive
+tell is the warning cert's issuer: known filter/firewall vendor = benign;
+self-signed / unknown CA / mismatched org / very-recently-issued = escalate.
+Separators between filter and attacker, all read-only on the friend's own
+device: (1) scope — if major sites (bank, Apple) also warn, treat the
+network as hostile; (2) DNS — if the domain resolves to a private IP
+(10.x/192.168.x) on the work WiFi vs Cloudflare ranges on cellular, that's
+LAN DNS hijacking; (3) cellular clean confirms it's that network. Post-breach
+device hygiene: check Settings for unknown configuration profiles and
+untrusted root certs (a rogue trusted root is how MITM goes silent; getting
+a warning means the device did NOT silently trust the fake cert). If issuer
+is unknown/self-signed, or major sites warn, or DNS points to a private IP,
+the network should be treated as compromised and handled by a real security
+professional. NOT the founder's to probe: testing someone else's employer
+network is unauthorized regardless of the breach.
+
 ## Concepts, ranked by projected effort (lowest first)
 
 ### 1. ~~BDL-004 · The Loom~~ · RETIRED 2026-07-29
