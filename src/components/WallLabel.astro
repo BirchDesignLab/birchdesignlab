@@ -3,7 +3,7 @@ interface Props { lines: string[] }
 const { lines } = Astro.props;
 ---
 <details class="label" open>
-  <summary><span class="smallcaps">How to operate</span></summary>
+  <summary><span class="smallcaps">How to operate</span><span class="caret" aria-hidden="true"></span></summary>
   <ol>
     {lines.map((line, i) => (
       <li>
@@ -41,11 +41,26 @@ const { lines } = Astro.props;
   }
   summary {
     cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
     color: var(--mark-muted); font-size: var(--text-sm);
+    transition: color var(--dur-2) var(--ease-weighted),
+                background var(--dur-2) var(--ease-weighted);
   }
   summary::-webkit-details-marker { display: none; }
-  summary:hover { color: var(--mark); }
+  /* Hover wash plus a brightening label so the strip reads as a control. */
+  summary:hover { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  /* Disclosure caret at the far edge, dropdown convention: chevron down means
+     "expand", flipping up when open. The one element that says this opens. */
+  .caret {
+    margin-left: auto;
+    width: 0.5rem; height: 0.5rem;
+    border-right: 1.5px solid var(--accent);
+    border-bottom: 1.5px solid var(--accent);
+    transform: rotate(45deg);
+    transition: transform var(--dur-2) var(--ease-weighted);
+  }
+  .label[open] .caret { transform: rotate(-135deg); }
   ol {
     margin: 0; padding: 0 var(--space-4) var(--space-3);
     list-style: none;
@@ -57,9 +72,12 @@ const { lines } = Astro.props;
       position: static;
       max-width: none;
       border-inline: none;
-      /* Clears the fixed "back to Lab" hatch pill (top: var(--space-3),
-         ~2.7rem tall) so the label no longer starts underneath it. */
-      margin-top: 3.5rem;
+      /* Clearance for the fixed hatch pill lives on <main> in
+         ExperimentLayout, as padding: a margin here is the label's first
+         in-flow margin and collapses out through <main>, so the hatch ends
+         up overlapping the expanded list (the .visually-hidden h1 before it
+         is position:absolute, so the label really is main's first in-flow
+         child). Padding on main cannot collapse. */
     }
   }
 </style>

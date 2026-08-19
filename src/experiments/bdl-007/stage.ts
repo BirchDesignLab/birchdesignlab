@@ -96,6 +96,33 @@ export function mountStage(
   const BASE_DIST = 5;
   camera.position.set(0, 0.4, BASE_DIST);
 
+  // Aspect-aware framing. The mark is scaled to a fixed size, but how much of
+  // the frame it fills depends on the viewport: a tall phone has a narrow
+  // horizontal field of view, so a distance tuned for a wide desktop leaves
+  // the mark small and adrift near the bottom. Fit the front silhouette to
+  // whichever axis is tighter, recomputed on resize, and look at the centre
+  // so the mark stays put instead of drifting low the taller the screen gets.
+  const FIT_FILL = 0.74;   // fraction of the tighter axis the mark fills; the
+                           // rest is air so nothing clips the top on a short
+                           // landscape window or hides behind the plate bar
+  const FRAME_LIFT = 0.10; // gentle downward tilt, proportional to mark height
+  const FRAME_DROP = 0.22; // aim slightly ABOVE centre so the mark drops a
+                           // touch: it is top-heavy (the chunky B up top, thin
+                           // strokes trailing down), so a bbox-centred fit
+                           // reads as riding high
+  let fitDist = BASE_DIST;
+  const markHalf = { w: 1.1, h: 1.1 };
+  const frameCamera = () => {
+    const vFov = THREE.MathUtils.degToRad(camera.fov);
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const distV = markHalf.h / FIT_FILL / Math.tan(vFov / 2);
+    const distH = markHalf.w / FIT_FILL / Math.tan(hFov / 2);
+    // max() so both axes fit: the tighter one fills FIT_FILL, the looser one
+    // keeps extra air. A little depth pokes out of the silhouette as it turns,
+    // and the 18% margin absorbs it.
+    fitDist = Math.max(distV, distH);
+  };
+
   // Lighting: warm raking key, cool rim, ambient floor. The tints are held
   // close to neutral on purpose. These surfaces are rough (0.94 on canopy,
   // 0.96 on moss), so the diffuse lobe is broad and a strongly warm key
@@ -108,26 +135,11 @@ export function mountStage(
   const floor = new THREE.AmbientLight(0xffffff, 0.55);
   scene.add(key, rim, floor);
 
-  // Pedestal without geometry: a radial-gradient blob under the model.
-  const blobCanvas = document.createElement('canvas');
-  blobCanvas.width = blobCanvas.height = 256;
-  const bctx = blobCanvas.getContext('2d')!;
-  const grad = bctx.createRadialGradient(128, 128, 8, 128, 128, 126);
-  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  bctx.fillStyle = grad;
-  bctx.fillRect(0, 0, 256, 256);
-  const shadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.4, 3.4),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(blobCanvas),
-      transparent: true,
-      depthWrite: false,
-    }),
-  );
-  shadow.rotation.x = -Math.PI / 2;
-  shadow.position.y = -1.25;
-  scene.add(shadow);
+  // No ground shadow. The scene is a night field of stars and fireflies, so
+  // the mark reads as floating; a fixed pedestal plane both implied a floor
+  // that isn't there and, once the camera distance became aspect-aware, drew
+  // at wildly different sizes across viewports (a hard blob on desktop, a
+  // smear when framed close). Removed rather than patched.
 
   // The model turns inside this group; drag and idle yaw drive the group.
   const rig = new THREE.Group();
@@ -231,6 +243,12 @@ export function mountStage(
     model.position.sub(center).multiplyScalar(scale);
     model.scale.setScalar(scale);
     rig.add(model);
+
+    // Real silhouette half-extents now that the scale is known, so the camera
+    // frames the actual mark rather than the 1.1 placeholder.
+    markHalf.w = (size.x * scale) / 2;
+    markHalf.h = (size.y * scale) / 2;
+    frameCamera();
 
     // Living materials breathe; their vertices seed the gather points.
     // Sampled in rig-local space (rig's own transform backed out), not
@@ -455,6 +473,7 @@ ${shader.vertexShader}`;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    frameCamera();
   };
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
@@ -497,7 +516,13 @@ ${shader.vertexShader}`;
     }
 
     rig.rotation.set(pitch, yaw, 0);
-    camera.position.z = BASE_DIST / zoom;
+    // Aspect-aware distance, a small proportional lift, and a look at the
+    // centre so the mark stays framed and centred on any viewport instead of
+    // sitting low on tall phones. zoom rides on top as a multiplier.
+    camera.position.set(0, markHalf.h * FRAME_LIFT, fitDist / zoom);
+    // Aim a little above the mark's centre so the top-heavy silhouette drops
+    // to a visual centre instead of riding high.
+    camera.lookAt(0, markHalf.h * FRAME_DROP, 0);
 
     // moss breath (held at mid under reduced motion)
     const phase = (t * Math.PI * 2) / PULSE_PERIOD;

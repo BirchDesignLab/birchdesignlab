@@ -43,10 +43,24 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
   .hatch {
     position: fixed; top: var(--space-3); left: var(--space-3); z-index: 20;
     color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm);
-    background: color-mix(in srgb, var(--field) 70%, transparent);
+    background: color-mix(in srgb, var(--field) 82%, transparent);
+    /* A real edge: --line-accent (accent at 45%) blended into the dark stage.
+       This reads as a defined pill instead of a smudge, on the stage and over
+       scrolling text alike. */
+    border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
     padding: var(--space-1) var(--space-3); border-radius: 999px;
     backdrop-filter: blur(6px);
   }
-  .hatch:hover { color: var(--mark); }
+  .hatch:hover { color: var(--mark); border-color: var(--accent); }
   .hatch-id { color: var(--accent); }
+
+  /* The pill floats top-left on every size; the gap around it is deliberate.
+     On mobile it also passes over the in-flow wall label, so reserve space
+     below it here on main as padding: a first-child margin would collapse out
+     through main and let the pill overlap the label at rest (the
+     visually-hidden h1 above the label is position:absolute, so the label is
+     main's first in-flow child). Padding cannot collapse. */
+  @media (max-width: 720px) {
+    #main { padding-top: 3.25rem; }
+  }
 </style>
