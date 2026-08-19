@@ -54,6 +54,27 @@ Closed since the final review: the 1.3MB of dead Draco decoder copies are
 dropped by a build plugin in `astro.config.mjs`, and the still's
 `sizes`/`fetchpriority` were corrected in #32.
 
+## Prod ops notes
+
+### 08-19-26 — Safari "connection is not private" report (birchdesignlab.com)
+
+A friend of the founder got Safari's "This Connection Is Not Private /
+certificate is not valid" on birchdesignlab.com. Investigated same day:
+the live cert is fully valid from an outside vantage. Both apex and www
+serve a Google Trust Services cert (CF's default issuer), notBefore
+2026-07-29, notAfter 2026-10-27, SANs cover birchdesignlab.com,
+*.birchdesignlab.com and www. `curl` reports ssl_verify_result=0, the
+chain verifies OK, apex returns 200 and www 301-redirects to apex.
+
+So the site is not misconfigured. The warning is device- or network-side,
+or a transient CF edge blip. Ranked causes: (1) the friend's iPhone clock
+set before the cert's 07-29 notBefore, which makes Safari read any valid
+cert as not-yet-valid; (2) a TLS-intercepting network (captive portal,
+content filter, some VPN/DNS) — retry on cellular; (3) transient edge
+provisioning, gone on retry. Ask for the exact URL, WiFi vs cellular, and
+whether the device date is correct before touching Cloudflare SSL/TLS
+settings. Not reproduced from here.
+
 ## Concepts, ranked by projected effort (lowest first)
 
 ### 1. ~~BDL-004 · The Loom~~ · RETIRED 2026-07-29
