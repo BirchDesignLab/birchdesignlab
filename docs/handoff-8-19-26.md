@@ -101,9 +101,8 @@ fallback** (FOUT/CLS), **bdl-007 keyboard** control, optional **WebSite schema**
    **A** two-column (form + email aside), **B** bark panel on the right, **C**
    center the column. The *sent* page got the bark hero (an A/B-analog); the
    *contact* page itself still has the empty right.
-3. **Rebuild graphify** — the graph is STALE after this session's many merges.
-   `graphify update C:\git\birchdesignlab`, then copy the outputs into the vault
-   (see `CLAUDE.md`).
+3. ~~**Rebuild graphify**~~ — **DONE 08-19-26** after the #52 merge (2759 nodes,
+   3081 edges); outputs copied into the vault, root pointer verified.
 4. **Drop the obsolete contact stash** (`git stash drop`) once you're sure.
 5. Remaining audit items above (testimonial, per-experiment OG, `sameAs`, etc.).
 
@@ -117,3 +116,33 @@ fallback** (FOUT/CLS), **bdl-007 keyboard** control, optional **WebSite schema**
   author is not worth it and is itself more identity-meddling).
 - Workflow unchanged: branch + PR for everything, never straight to `main`
   (merge = prod deploy via Workers Builds).
+
+## Addendum — analytics + privacy (08-19-26, later same day)
+
+Two more PRs merged after the audit/contact-form work above.
+
+- **#51 — strip provisional/first-draft markers** (other session): removed
+  "provisional"/"first-draft" copy markers across the pages and added a test
+  gating against their reintroduction (`tests/no-draft-markers.test.ts`).
+- **#52 — Google Analytics 4 + privacy policy.**
+  - **GA4 `G-44Y71C24L7`**, site-wide via a new `src/components/Analytics.astro`
+    rendered from `HeadCommon` (so every layout gets it from one place).
+  - **Prod-gated** (`import.meta.env.PROD`) — dev/preview never hit the property.
+  - **Lazy-loaded:** `dataLayer` + a global `window.gtag` are set up
+    synchronously (no network); the `gtag.js` download is deferred to the first
+    idle callback after `load`, off the critical render path. Global `gtag` is
+    intentional so future **Google Ads** conversion/event snippets work with no
+    rework (Ads is planned; the tag is the shared foundation).
+  - **Lighthouse held at 100/100/100/100** on all four business pages (home,
+    services, about, contact) with the tag live. The deferred load costs nothing
+    in the lab trace.
+  - **`/privacy`** page shipped, linked from the footer (BaseLayout, every page).
+    Basic-but-accurate copy covering the only two data flows the site has (GA +
+    contact form). No placeholders in the rendered page. A founder voice/legal
+    pass, the real GA retention figure, and an Ads clause are tracked in
+    `lab-backlog.md` under Parked site notes.
+
+Analytics stack decision: founder floated stacking GA + Cloudflare Web Analytics
++ TWIPLA, then narrowed to **GA only for now** (Cloudflare/TWIPLA not set up, and
+Google Ads is coming so GA is the anchor). The perf-preserving loading approach
+above is the reusable pattern if more trackers are added later.
