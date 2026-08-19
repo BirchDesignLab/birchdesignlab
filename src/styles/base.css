@@ -29,6 +29,18 @@ a:active { opacity: 0.55; transition-duration: 100ms; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+/* Skip-to-content link. Global so the chrome-free Lab layouts (which do not
+   include SiteHeader) share the same treatment as the business pages. */
+.skip {
+  position: absolute; left: -100vw; top: 0;
+  background: var(--field-raised); color: var(--mark);
+  padding: var(--space-2) var(--space-3);
+}
+.skip:focus { left: 0; z-index: 30; }
+/* main takes tabindex=-1 so the skip link moves focus into content, not just
+   the scroll position. Keep the programmatic focus visually quiet. */
+main:focus { outline: none; }
+
 img, canvas, svg, video { max-width: 100%; display: block; }
 
 .wrap { max-width: var(--max-content); margin-inline: auto; padding-inline: var(--space-4); }

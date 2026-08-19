@@ -15,10 +15,12 @@ const { title, description, designation, noindex = false } = Astro.props;
 <html lang="en" data-zone="lab">
   <head>
     <HeadCommon title={title} description={description} noindex={noindex} />
+    <slot name="head" />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
-    <main id="main">
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <SiteFooter />

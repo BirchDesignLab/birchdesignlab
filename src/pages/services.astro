@@ -1,10 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import JsonLd from '../components/JsonLd.astro';
+import { buildService } from '../lib/seo/organization';
+
+const service = buildService(Astro.site!);
 ---
 <BaseLayout
   title="Services · Birch Design Lab"
   description="Custom software and custom websites for businesses that want to grow, designed, constructed, and cared for by one accountable craftsman."
 >
+  <JsonLd slot="head" data={service} />
   <section class="wrap">
     <header class="intro">
       <!-- provisional copy throughout this page -->

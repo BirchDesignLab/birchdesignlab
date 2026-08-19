@@ -225,7 +225,7 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 
 - **Brand social accounts to `sameAs`.** Founder intends to create the BDL accounts (Postiz mentioned for automation). `sameAs` is deliberately omitted from the Organization structured data while empty rather than emitted as an empty array. When the handles exist they land in two places: Search Console's platform list, and a one-line addition to `src/lib/seo/organization.ts`. This is the single biggest weakness in the brand-search signal and no amount of markup fixes it; only registering the profiles does.
 
-- **Code-review backlog from the SEO pass (2026-08-03), none blocking.** The site description now lives in three places (`src/lib/seo/organization.ts`, `public/site.webmanifest`, and `index.astro`'s meta) and has already drifted. `site.webmanifest` hardcodes `512x512` against `LOGO_SIZE` in `scripts/og/logo.ts`, two sources of truth with nothing tying them. `scripts/og/logo.ts` exports `renderLogoCanvas`/`BG`/`MARK`/`DASHES` purely for pixel tests. Those tests verify self-consistency rather than fidelity to `favicon.svg`; the fix is a test that parses the SVG's rects. `StructuredData.astro` injects `JSON.stringify` via `set:html` with no escaping of `<`, harmless while every field is a static constant but worth noting before `sameAs` lands. Nothing automated covers `StructuredData.astro`, the head slot, or home-page-only JSON-LD placement, which would need a new dist-reading test category. `bdl-006` runs `h1` to `h3`, a skipped level, and the styleguide specimen block still has real `h2`/`h3` while its `h1` is now a styled `p`; both belong to the theme pass.
+- **Code-review backlog from the SEO pass (2026-08-03), none blocking.** ~~The site description now lives in three places (`src/lib/seo/organization.ts`, `public/site.webmanifest`, and `index.astro`'s meta) and has already drifted.~~ **Partly resolved 08-18-26:** `organization.ts` and the home meta now both derive from a single `SITE_DESCRIPTION` in `src/lib/seo/site.ts`; `public/site.webmanifest` is static JSON and remains a third, hand-synced copy. `site.webmanifest` hardcodes `512x512` against `LOGO_SIZE` in `scripts/og/logo.ts`, two sources of truth with nothing tying them. `scripts/og/logo.ts` exports `renderLogoCanvas`/`BG`/`MARK`/`DASHES` purely for pixel tests. Those tests verify self-consistency rather than fidelity to `favicon.svg`; the fix is a test that parses the SVG's rects. ~~`StructuredData.astro` injects `JSON.stringify` via `set:html` with no escaping of `<`, harmless while every field is a static constant but worth noting before `sameAs` lands.~~ **Resolved 08-18-26:** all JSON-LD now serializes through `serializeJsonLd` (`src/lib/seo/jsonld.ts`), which escapes `<`. Nothing automated covers `StructuredData.astro`, the head slot, or home-page-only JSON-LD placement, which would need a new dist-reading test category. `bdl-006` runs `h1` to `h3`, a skipped level, and the styleguide specimen block still has real `h2`/`h3` while its `h1` is now a styled `p`; both belong to the theme pass.
 
 - **Dependency upgrades: get to newest stable, stay there.** Founder direction 2026-08-04: the standing pattern is **newest stable and secure**. Not bleeding edge, not frozen. The policy itself lives in `CLAUDE.md`; this entry is the work queued against it.
 
@@ -238,6 +238,149 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
   **Do (3) any time. Do (2) in a quiet window. Do (1) as its own piece of work, and not before 2026-09-01** — there is no security pressure and it competes with the Lab direction session, which is what actually decides whether launch lands.
 
   What the Astro jump actually touches: content collections (`content.config.ts`, the glob loader, `lab-schema.ts`, and zod if it majors too), `@astrojs/sitemap` compatibility, the three Svelte 5 islands, and `astro:assets` image optimization used by the BDL-005 hero. The 123 tests plus `astro check` catch structural breakage; they do **not** catch rendering and CSS drift, so it needs a real browser pass like the CSP gate got. Fully reversible: revert the commit, redeploy.
+
+## SEO + site-quality pass — 08-18-26
+
+Full pre-launch audit of the whole site across six dimensions (head / metadata /
+indexation, structured data + AEO, performance / CWV, content / IA / internal
+linking, accessibility, positioning / differentiation), each finding
+independently verified. Headline: the SEO **foundation is genuinely strong** —
+no indexing bugs, unique titles and descriptions, correct canonicals (apex +
+trailing slash matching the sitemap), `lang`, correctly scoped `noindex`,
+complete OG core, working sitemap, honest minimal Organization JSON-LD, and
+answer-engine-friendly prose (offering / audience / hire-path all crawlable, not
+locked in canvas). The real gaps are **conversion, proof, and voice**, not
+plumbing.
+
+### Shipped this pass — PR branch `seo/prelaunch-pass`
+
+Nine invisible-correctness fixes (no copy, positioning, or visible-UX change);
+vitest 138/138, `astro check` clean, build clean, all dist-verified:
+
+- **BreadcrumbList JSON-LD** on `/lab/<slug>` (Home > The Lab > entry) — the one
+  schema type here that yields a visible SERP rich result, from data already on
+  hand. Guarded off for noindexed instruments. A `<slot name="head" />` was added
+  to both Lab layouts to carry it.
+- **Service JSON-LD** on `/services` (plain `Service`, provider = Organization,
+  the two offerings as `serviceType`). Entity / AEO signal; deliberately not
+  `ProfessionalService` (that is a LocalBusiness subtype and would invite
+  address warnings against the founder-abstracted, no-local-intent posture).
+- **`main` is focusable** (`tabindex="-1"`) on every layout so the skip link
+  moves focus, not just scroll position; **skip link added to the two Lab
+  layouts** (they carry no SiteHeader). `.skip` hoisted to `base.css` so all
+  layouts share one treatment.
+- **Theme toggle** now exposes state to assistive tech: dynamic `aria-label`
+  ("Switch to light/dark theme") plus `aria-pressed`, synced on load and on
+  toggle.
+- **`og:image:alt` + `twitter:image:alt`** (per-page title).
+- **`Cache-Control: public, max-age=31536000, immutable` on `/_astro/*`** in
+  `public/_headers` (content-hashed, safe forever). Unhashed `/models/*` and
+  `/draco/*` are deliberately still uncovered — see the follow-up below.
+- **404 `noindex`** (belt-and-suspenders; still confirm the Worker returns a true
+  404 status for unmatched routes).
+- **Description de-dup**: `organization.ts` and the home meta now derive from
+  `SITE_DESCRIPTION` in `src/lib/seo/site.ts` (webmanifest remains a hand-synced
+  third copy).
+- **Latin-only fonts on the business pages**: `BaseLayout` imports
+  `@fontsource/marcellus/latin.css` + spectral `latin-400/600`. Home and services
+  CSS bundles verified free of cyrillic / greek / vietnamese / latin-ext.
+- Also folded in: `StructuredData.astro` now serializes via `serializeJsonLd`
+  (escapes `<`), closing the 08-03 set:html note.
+
+### Founder territory — copy / positioning (before or at launch)
+
+Not touched, per the writing rules. These are the highest-impact items and they
+are yours:
+
+- **Unify the voice to one register (HIGH).** Copy flip-flops "we" ↔ "I" across
+  home / services / contact, quietly contradicting the one-accountable-person
+  wedge that is the entire differentiator (`index.astro:30` singular vs `:43` /
+  `:61` "we"; `contact.astro:14` "I answer" vs `:21` "Tell us"). About and
+  Contact are emphatically singular. Pick one register and hold it site-wide;
+  first-person singular is the braver, on-brand choice. Subsumed by the queued
+  business-page copy rewrite — raise its priority.
+- **One real client testimonial (HIGH).** No client-attributed quote exists
+  anywhere; the Cheer & Chatter client already cleared publishing "basically
+  anything." A named human vouching de-risks "unknown solo vs agency" more than
+  any craft copy. Place a pull-quote on home (near "From the lab") and on the
+  BDL-005 study. Needs client outreach.
+- **Segment / local phrase on the money pages (MED).** "small business" appears
+  nowhere in `src/pages`; "Gulf Coast" only mid-paragraph on About. One honest
+  mention of the segment / geography in the Services intro and/or home subline
+  captures local + long-tail intent a solo local studio can realistically win.
+- **Services H1 could carry the service keyword (LOW).** H1 is "Two things, done
+  properly." while "custom software / websites" live only in the H2s and title.
+  Optional; home H1 as brand name is fine.
+- **Pricing posture (MED).** No price, range, or model anywhere; a bespoke,
+  custom-everything studio with no numbers can read "expensive and
+  unpredictable." A quiet-luxury posture line (not a menu) — e.g. "leave
+  discovery with a plain-language scope and a fixed number" — removes the
+  open-ended-bill fear. Founder decision.
+- **Contact context (MED).** Mailto-only with no service-area or response-time.
+  Independent of the stashed form: add a service-area line and an "I reply within
+  one business day" promise to /contact and/or the footer.
+- **Provisional copy is still shipping.** Every business page carries a
+  `<!-- provisional copy -->` marker. Lock a finished home hero / opener,
+  Services intro, and Contact CTA before 9/1; Lab specimen copy can trail.
+- **"Studies" is plural with one entry (LOW).** Soften the plural framing or
+  fast-track a second study; the single study is strong enough to headline.
+
+### Standout moves (the "how do I stand out" ask)
+
+- **Name the bark (LOW effort, highest payoff).** The living BarkField behind
+  home and about IS BDL-001, a working generative system, but nothing on the page
+  says so. One restrained line near the hero ("The bark behind this page is
+  generated live") linking to BDL-001 converts ambient craft into a felt "wow" on
+  the highest-traffic page without breaking quiet luxury. Best impact-to-effort
+  on the site.
+- **Client testimonial** (above) — also the top trust lever.
+- **Adopt the locked mark** in header / footer. Both are text-only today while
+  the 08-13 locked mark sits unused; cheapest perceived-polish lift with a
+  finished asset behind it. (Adoption was deliberately deferred; this is a design
+  call, not an oversight.)
+
+### Technical follow-ups — not shipped, ranked
+
+- **Homepage internal linking + conversion (MED).** Home's only body link goes to
+  /lab; the Software / Websites "doors" do not link to /services and there is no
+  body CTA to /contact. Wire the doors to /services and add a "Start a project"
+  CTA (the existing `.cta-engraved` pattern). Structural, but the anchor copy is
+  founder territory, so it stayed out of the invisible batch.
+- **Orphan `/lab/experiments` + `/lab/studies` (MED).** Both are indexable and in
+  the sitemap but have zero inbound links (the /lab filter is in-page JS). Either
+  make the /lab filter chips real links to them (progressive enhancement, which
+  kills the orphan status) or canonical them to /lab and drop them from the
+  sitemap. Do not leave them unlinked-but-indexable.
+- **Cache headers for `/models/*` + `/draco/*` (MED).** The 3.2MB glb still
+  revalidates every visit (existing "still open" item from BDL-007). Either add a
+  rule or hash the glb filename so it can be `immutable` like `/_astro/*` now is.
+- **Latin-subset the Lab-detail + styleguide fonts (LOW).** `ExperimentLayout`
+  and `StudyLayout` still import bare `@fontsource/marcellus` + full spectral;
+  styleguide loads six families at full subset (its purpose is type specimens, so
+  check before trimming). Only latin glyphs are ever used, but `unicode-range`
+  already prevents the download, so this is CSS / request hygiene, not bytes. The
+  business pages are already done.
+- **Font preload + metric fallback (LOW).** Marcellus (the home LCP billboard) is
+  discovered only after CSS parses and has no metric-adjusted fallback, so it
+  FOUT-swaps with a small CLS on the largest type on the site (bounded by the
+  fixed-height centered hero). Preload the display + body woff2 on business routes
+  and add a `size-adjust` fallback @font-face (or adopt Astro 5's fonts API).
+  Verify with a real-browser CLS trace; not Lighthouse-scored.
+- **bdl-007 keyboard control (LOW).** The three.js stage is pointer / wheel only
+  (WCAG 2.1.1 in principle). Contained because the canvas is `role="img"` with a
+  real still + alt fallback. Accept as a documented Lab exception, or add
+  `tabindex=0` + arrow / ± keys mirroring the Crown.
+- **Smaller nits:** optional `WebSite` JSON-LD node (marginal without a
+  SearchAction, since there is no site search); `og:locale=en_US`; `CreativeWork`
+  on the study page; a speculative `public/llms.txt`; verify the deployed host
+  3xx-redirects the slashless `/path` to `/path/`.
+
+### Still-open known items, re-confirmed accurate by this pass
+
+`sameAs` (blocked on real social accounts existing — the single biggest
+brand-entity gap, and only registering the profiles fixes it), per-experiment OG
+art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
+`site.webmanifest` 512x512 / description hand-sync. All unchanged.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 

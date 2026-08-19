@@ -1,0 +1,10 @@
+---
+/** Inline a JSON-LD block. Use with `slot="head"` so it lands in <head>.
+    Serialization escapes `<` (see serializeJsonLd) so content-derived values
+    cannot break out of the inline script. */
+import { serializeJsonLd } from '../lib/seo/jsonld';
+
+interface Props { data: unknown }
+const { data } = Astro.props;
+---
+<script type="application/ld+json" is:inline set:html={serializeJsonLd(data)} />
