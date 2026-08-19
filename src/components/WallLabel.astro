@@ -57,9 +57,12 @@ const { lines } = Astro.props;
       position: static;
       max-width: none;
       border-inline: none;
-      /* Clears the fixed "back to Lab" hatch pill (top: var(--space-3),
-         ~2.7rem tall) so the label no longer starts underneath it. */
-      margin-top: 3.5rem;
+      /* Clearance for the fixed hatch pill lives on <main> in
+         ExperimentLayout, as padding: a margin here is the label's first
+         in-flow margin and collapses out through <main>, so the hatch ends
+         up overlapping the expanded list (the .visually-hidden h1 before it
+         is position:absolute, so the label really is main's first in-flow
+         child). Padding on main cannot collapse. */
     }
   }
 </style>

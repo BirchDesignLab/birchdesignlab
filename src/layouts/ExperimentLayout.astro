@@ -49,4 +49,25 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
   }
   .hatch:hover { color: var(--mark); }
   .hatch-id { color: var(--accent); }
+
+  /* On mobile the fixed hatch pill floats over the top of the page. Reserve
+     space below it here, on main, as padding: a first-child margin inside
+     main would collapse out and let the hatch overlap the content (this bit
+     the WallLabel). Desktop keeps the immersive full-bleed stage. */
+  @media (max-width: 720px) {
+    /* A floating pill works over the immersive stage but not over the
+       in-flow wall label above it: as the page scrolls, the full-width label
+       text passes through the pill's band and pokes out beside it. On mobile
+       the hatch becomes a solid full-width bar so every scrolled row passes
+       cleanly behind it. */
+    .hatch {
+      top: 0; left: 0; right: 0;
+      border-radius: 0;
+      padding: var(--space-2) var(--space-3);
+      background: var(--field);
+      border-bottom: 1px solid var(--line-accent);
+      backdrop-filter: none;
+    }
+    #main { padding-top: 3rem; }
+  }
 </style>

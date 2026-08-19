@@ -96,6 +96,28 @@ export function mountStage(
   const BASE_DIST = 5;
   camera.position.set(0, 0.4, BASE_DIST);
 
+  // Aspect-aware framing. The mark is scaled to a fixed size, but how much of
+  // the frame it fills depends on the viewport: a tall phone has a narrow
+  // horizontal field of view, so a distance tuned for a wide desktop leaves
+  // the mark small and adrift near the bottom. Fit the front silhouette to
+  // whichever axis is tighter, recomputed on resize, and look at the centre
+  // so the mark stays put instead of drifting low the taller the screen gets.
+  const FIT_FILL = 0.82;   // fraction of the tighter axis the mark fills at rest
+  const FRAME_LIFT = 0.16; // gentle downward tilt, proportional to mark height
+  const FRAME_RISE = 0.14; // aim below centre so the mark sits a touch high, not low
+  let fitDist = BASE_DIST;
+  const markHalf = { w: 1.1, h: 1.1 };
+  const frameCamera = () => {
+    const vFov = THREE.MathUtils.degToRad(camera.fov);
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const distV = markHalf.h / FIT_FILL / Math.tan(vFov / 2);
+    const distH = markHalf.w / FIT_FILL / Math.tan(hFov / 2);
+    // max() so both axes fit: the tighter one fills FIT_FILL, the looser one
+    // keeps extra air. A little depth pokes out of the silhouette as it turns,
+    // and the 18% margin absorbs it.
+    fitDist = Math.max(distV, distH);
+  };
+
   // Lighting: warm raking key, cool rim, ambient floor. The tints are held
   // close to neutral on purpose. These surfaces are rough (0.94 on canopy,
   // 0.96 on moss), so the diffuse lobe is broad and a strongly warm key
@@ -231,6 +253,12 @@ export function mountStage(
     model.position.sub(center).multiplyScalar(scale);
     model.scale.setScalar(scale);
     rig.add(model);
+
+    // Real silhouette half-extents now that the scale is known, so the camera
+    // frames the actual mark rather than the 1.1 placeholder.
+    markHalf.w = (size.x * scale) / 2;
+    markHalf.h = (size.y * scale) / 2;
+    frameCamera();
 
     // Living materials breathe; their vertices seed the gather points.
     // Sampled in rig-local space (rig's own transform backed out), not
@@ -455,6 +483,7 @@ ${shader.vertexShader}`;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    frameCamera();
   };
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
@@ -497,7 +526,13 @@ ${shader.vertexShader}`;
     }
 
     rig.rotation.set(pitch, yaw, 0);
-    camera.position.z = BASE_DIST / zoom;
+    // Aspect-aware distance, a small proportional lift, and a look at the
+    // centre so the mark stays framed and centred on any viewport instead of
+    // sitting low on tall phones. zoom rides on top as a multiplier.
+    camera.position.set(0, markHalf.h * FRAME_LIFT, fitDist / zoom);
+    // Aim a little below the mark's centre so it rides slightly high in the
+    // frame rather than reading as low, which it did on tall phones.
+    camera.lookAt(0, -markHalf.h * FRAME_RISE, 0);
 
     // moss breath (held at mid under reduced motion)
     const phase = (t * Math.PI * 2) / PULSE_PERIOD;
