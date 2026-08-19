@@ -27,8 +27,19 @@ ships.
 
 - Spec: `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
 - Plan: `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
-- PR #29 (the build, 15 commits, subagent-driven), PR #32 (the still,
-  re-shot against the tuned lighting)
+- PR #29 (the build, subagent-driven), #32 (re-shot still), #30 (brand test),
+  #31 (8c favicon set), #48 (mobile framing + disclosure affordances +
+  bordered hatch + ground shadow removed)
+
+**Mobile + polish pass (#48), 08-19-26.** Framing is now aspect-aware
+(`frameCamera()` fits the front silhouette to the tighter axis, recomputed on
+resize) and aims above centre (`FRAME_DROP`) because the mark is top-heavy;
+`FIT_FILL` 0.74 keeps margin so nothing clips. The ground-shadow pedestal was
+removed (a fixed plane drew as a blob/smear once distance was aspect-aware,
+and implied a floor the starfield lacks). The specimen plate and how-to label
+got disclosure carets + a hover wash. The hatch kept its floating pill but
+gained an accent-60% border (`--line-accent` at 45% blended in). Verified in
+real Chrome; the preview pane can't composite WebGL.
 
 Two things about the model that were not obvious and cost real time:
 
