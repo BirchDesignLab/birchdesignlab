@@ -75,6 +75,18 @@ provisioning, gone on retry. Ask for the exact URL, WiFi vs cellular, and
 whether the device date is correct before touching Cloudflare SSL/TLS
 settings. Not reproduced from here.
 
+Follow-up: founder believes it was the friend's WORK network. That makes
+corporate TLS inspection the leading explanation: an SSL-inspecting
+middlebox (Zscaler/Netskope/Palo Alto/Fortinet/Cisco et al.) decrypts and
+re-signs HTTPS with the company root. A managed laptop trusts that root; a
+personal iPhone on guest/BYOD WiFi does not, so Safari reports the re-signed
+cert as impersonation. A young domain (launched this month) is also commonly
+intercepted or blocked by enterprise filters as newly-registered. This reads
+as a legitimate proxy, not a lingering breach: covert MITM avoids triggering
+warnings, and interception is not site-specific. To confirm, have the friend
+read the warning cert's Issuer (corporate/vendor CA = inspection; unrelated
+self-signed = report to their IT). Not the founder's network to probe.
+
 ## Concepts, ranked by projected effort (lowest first)
 
 ### 1. ~~BDL-004 · The Loom~~ · RETIRED 2026-07-29
