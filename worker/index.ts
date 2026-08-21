@@ -19,6 +19,24 @@ const CONTACT_TO = 'birchdesignlab@gmail.com';
 const CONTACT_PUBLIC = 'hello@birchdesignlab.com';
 const CONTACT_FROM = { email: 'forms@birchdesignlab.com', name: 'birchdesignlab.com contact form' };
 
+// Referrer-Policy and X-Frame-Options are NOT applied by public/_headers to
+// Worker-generated responses: the assets layer serves static files before the
+// Worker runs, so only those get _headers. The zone already adds
+// X-Content-Type-Options and HSTS to Worker responses; these two are the gap.
+// Route every Worker response through secure() so all five paths carry them.
+// See docs/deploy.md, "Headers the Worker must set".
+const SECURITY_HEADERS: Record<string, string> = {
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'DENY',
+};
+
+function secure(response: Response): Response {
+  for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(header, value);
+  }
+  return response;
+}
+
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
@@ -29,7 +47,7 @@ export default {
     // 405 the POST. Matching both keeps the endpoint robust to that.
     if (url.pathname === '/api/contact' || url.pathname === '/api/contact/') {
       if (request.method !== 'POST') {
-        return new Response('Method not allowed', { status: 405, headers: { Allow: 'POST' } });
+        return secure(new Response('Method not allowed', { status: 405, headers: { Allow: 'POST' } }));
       }
       return handleContact(request, env, url);
     }
@@ -98,7 +116,14 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
  *  Trailing slash matches Astro's directory-format output and saves the
  *  assets layer's 307 canonicalization hop. */
 function sentRedirect(url: URL): Response {
-  return Response.redirect(new URL('/contact/sent/', url.origin).toString(), 303);
+  // Built by hand rather than Response.redirect so secure() can add headers:
+  // a response from Response.redirect() has an immutable headers guard.
+  return secure(
+    new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/contact/sent/', url.origin).toString() },
+    }),
+  );
 }
 
 /** Minimal self-contained error page; the form itself is no-JS, so errors have
@@ -127,10 +152,12 @@ function errorPage(url: URL, status: number, detail: string): Response {
 </main>
 </body>
 </html>`;
-  return new Response(html, {
-    status,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  });
+  return secure(
+    new Response(html, {
+      status,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    }),
+  );
 }
 
 function escapeHtml(s: string): string {

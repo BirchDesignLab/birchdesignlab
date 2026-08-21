@@ -28,6 +28,11 @@ export type ContactParseResult =
  *  domain. Full RFC 5322 rejects nothing bots send and annoys real people. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Control characters: the C0 range (\x00-\x1f) plus DEL (\x7f). `name` flows
+ *  into the email Subject header in the Worker, where a raw CR/LF is the classic
+ *  header-injection primitive, so any run of these is collapsed to one space. */
+const CONTROL_CHARS = /[\x00-\x1f\x7f]+/g;
+
 export function parseContactSubmission(
   fields: Record<string, string | undefined>
 ): ContactParseResult {
@@ -37,7 +42,10 @@ export function parseContactSubmission(
     return { ok: false, honeypot: true };
   }
 
-  const name = (fields.name ?? '').trim();
+  // `email` is already whitespace-free via EMAIL_RE; `message` is body-only, so
+  // its newlines are legitimate and left intact. Only `name` is sanitized,
+  // because only `name` reaches an email header.
+  const name = (fields.name ?? '').replace(CONTROL_CHARS, ' ').trim();
   const email = (fields.email ?? '').trim();
   const message = (fields.message ?? '').trim();
 
