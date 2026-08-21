@@ -58,6 +58,18 @@ describe('parseContactSubmission', () => {
     }
   });
 
+  it('collapses control characters in the name so it cannot inject an email header', () => {
+    const result = parseContactSubmission({
+      ...good,
+      name: 'Ada\r\nBcc: evil@example.com',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected a valid submission');
+    expect(result.data.name).toBe('Ada Bcc: evil@example.com');
+    expect(result.data.name.includes('\n')).toBe(false);
+    expect(result.data.name.includes('\r')).toBe(false);
+  });
+
   it('enforces length caps', () => {
     const over = (n: number) => 'x'.repeat(n + 1);
     expect(parseContactSubmission({ ...good, name: over(LIMITS.name) }).ok).toBe(false);
