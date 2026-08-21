@@ -12,19 +12,25 @@ Repo: `BirchDesignLab/birchdesignlab`.
 - `wrangler.jsonc` serves `dist/` as Workers Static Assets and runs
   `worker/index.ts` only for requests that match no file. In practice that is
   `POST /api/contact`: honeypot, then per-IP rate limit (5/min), then
-  validation (`src/lib/contact/validate.ts`), then an email to
-  `hello@birchdesignlab.com` via the Email Sending binding (from
-  `forms@birchdesignlab.com`), then a 303 to `/contact/sent/`.
+  validation (`src/lib/contact/validate.ts`), then an email to the verified
+  business inbox `birchdesignlab@gmail.com` via the Email Sending binding (from
+  `forms@birchdesignlab.com`), then a 303 to `/contact/sent/`. The recipient is
+  a **verified Email Routing destination**, which is free to send to on all
+  plans; sending to a routing *address* like `hello@` is rejected (502), so the
+  destination address matters.
 - 404s serve Astro's `dist/404.html` via `not_found_handling`.
 
 ## One-time setup (founder, in dashboard / CLI)
 
-**Completed 2026-07-29** except steps 2 and 6. Email Sending onboarding is deferred
-until the founder opts into the paid plan. Until then the contact form markup
-stays out of prod (held locally) and /contact remains mailto-only; the
-Worker's email path degrades to a 502 page pointing at hello@.
-The Pages project is deleted; Workers Builds is the only deploy pipeline.
-Step 6, the `www` redirect, is still outstanding as of 2026-08-03.
+**Completed 2026-07-29**, with steps 2 and 6 since resolved. The contact form
+**shipped live and free 2026-08-19** (#36/#43/#45) and is fully working: it
+emails the **verified Email Routing destination** `birchdesignlab@gmail.com`,
+which is **free on all plans** (Cloudflare Email Service). Because of that, the
+paid Email Sending onboarding in step 2 is **not required** and was not done.
+`/contact` is a real, live form — not mailto-only — and nothing is held back
+locally. Step 6, the `www` redirect, was **done and verified 2026-08-04** (see
+the dashboard-steps section below). The Pages project is deleted; Workers Builds
+is the only deploy pipeline.
 
 1. **Log wrangler into the account that owns `birchdesignlab.com`**
    (`npx wrangler login`). Verified 2026-08-03: the local token authenticates as
@@ -36,6 +42,10 @@ Step 6, the `www` redirect, is still outstanding as of 2026-08-03.
    (or dashboard: Compute & AI → Email Service → Email Sending → Onboard
    Domain). Email Routing on `hello@` is already active and untouched;
    sending is a separate onboarding.
+   **Not required for the contact form** (and not done): the form emails a
+   *verified Routing destination* (`birchdesignlab@gmail.com`), which is free.
+   This step is only needed if you later want to send *as* the domain to
+   arbitrary external addresses (e.g. autoresponders to the visitor).
 3. **Create the Worker from git**: dashboard → Workers & Pages → Create →
    Workers → Import a repository → select the repo.
    - Build command: `npm run build`
@@ -189,19 +199,29 @@ All verified live unless noted.
 5. **Google Search Console.** DONE. Domain property, verified automatically
    through the Cloudflare integration (do not delete that TXT record).
    `sitemap-index.xml` submitted.
-6. **Cloudflare Web Analytics.** Enabled, **but the beacon is not appearing in
-   the HTML** as of 2026-08-04. Checked cache-busted. `Cache-Control` is
-   `public, max-age=0, must-revalidate` with no `no-transform`, so that known
-   blocker is not the cause. Most likely the edge is serving HTML cached from
-   before it was switched on, or automatic injection does not reach
-   Worker-served assets. Next step: purge cache and recheck. If it is still
-   absent, embed the snippet manually in `src/components/HeadCommon.astro`.
+6. **Site analytics — shipped as GA4, not Cloudflare Web Analytics.** The
+   original plan (CF Web Analytics, below) was superseded. **GA4**
+   (`G-44Y71C24L7`) shipped 2026-08-19 (#52) as `src/components/Analytics.astro`,
+   prod-gated and lazily loaded on the first idle after `load` so it never
+   touches the critical render path (business pages hold their Lighthouse
+   scores), imported from `HeadCommon.astro`. The global `gtag` is exposed so
+   Google Ads can share the same tag with no rework. Cloudflare Web Analytics
+   and TWIPLA were considered and deferred (one vendor until there is a reason
+   for more), so the old "beacon not appearing in the HTML" note is moot — there
+   is no CF beacon to embed.
 
 Not on this list because it is not a Cloudflare step: **BIMI** shows a logo
 beside your name in inboxes and needs a Verified Mark Certificate (roughly a
 thousand dollars a year) plus a registered trademark. Ignore it.
 
-### Analytics pathway (decided 2026-08-03)
+### Analytics pathway (decided 2026-08-03, revised 2026-08-19)
+
+**Revision 2026-08-19:** the site shipped **GA4** (`G-44Y71C24L7`) as the single
+always-on tag instead of Cloudflare Web Analytics — see dashboard step 6 and
+`src/components/Analytics.astro`. The "Cloudflare Web Analytics: always on" plan
+below is kept as the record of the reasoning, but is **not what shipped**. The
+TWIPLA study-window guidance still stands if the "do the Lab experiments land
+with a non-technical visitor?" question is ever worth a behavioral read.
 
 Two tools, different jobs. Plausible was considered and passed over: founder's
 read is that it is lacking, which is fair, since minimalism is the product.
@@ -241,10 +261,11 @@ not worth it here.
 are served by the assets layer before the Worker runs, so those are covered, but
 `/api/contact` responses come from `worker/index.ts`.
 
-This is already partly live: `/api/contact` exists in production today, and only
-the form markup is stashed. Exposure is negligible (the 405 body is a fixed
-string and `errorPage` escapes its one interpolation), but the gap is real now,
-not hypothetical.
+This is live now: `/api/contact` and the contact form both ship in production
+(the old "form markup stashed" state is gone — the form shipped and the stash
+was dropped). Exposure is negligible (the 405 body is a fixed string and
+`errorPage` escapes its one interpolation), but the gap is real, and closing it
+is **still open** as a pre-launch task as of 2026-08-20.
 
 **Two headers short, not three.** The zone-level No-Sniff toggle (dashboard step
 3 above) covers `X-Content-Type-Options`, and HSTS is a zone setting, so both
@@ -258,9 +279,6 @@ the 405 method-not-allowed response, and the 502 degraded email path. Use one
 helper that every response passes through rather than repeating the literals at
 five call sites.
 
-The contact form markup is parked in a named git stash, so pick this up at the
-same time as `git stash pop`.
-
 ## Every deploy after that
 
 Branch, open a PR, review, merge to `main`. Workers Builds then builds the
@@ -271,9 +289,9 @@ Manual escape hatch: `npm run deploy` builds and deploys with local wrangler
 auth, bypassing Workers Builds entirely. Use it when the Builds pipeline is
 down, as on 2026-08-03, when a Cloudflare incident ("Workers Build Failures")
 left a build stuck in Initialize for 39 minutes. It deploys the **working
-tree**, not the committed tree, so stash anything held back first. The contact
-form markup sits in a named stash for exactly this reason; check
-`git stash list` before running it.
+tree**, not the committed tree, so commit or stash anything you do not want
+deployed first. (The old contact-form stash this once warned about is gone — the
+form shipped and the stash was dropped.)
 
 ## Local dev
 
