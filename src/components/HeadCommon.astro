@@ -14,8 +14,8 @@ import Seo from './Seo.astro';
 import ThemeBootstrap from './ThemeBootstrap.astro';
 import Analytics from './Analytics.astro';
 
-interface Props { title: string; description: string; noindex?: boolean }
-const { title, description, noindex = false } = Astro.props;
+interface Props { title: string; description: string; noindex?: boolean; ogImage?: string }
+const { title, description, noindex = false, ogImage } = Astro.props;
 ---
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,7 +24,7 @@ const { title, description, noindex = false } = Astro.props;
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="sitemap" href="/sitemap-index.xml" />
-<Seo title={title} description={description} />
+<Seo title={title} description={description} ogImage={ogImage} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
 <ThemeBootstrap />
 <Analytics />
