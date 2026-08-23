@@ -30,4 +30,13 @@ describe('BarkCredit extraction + home refactor', () => {
     expect(sent).toMatch(/import BarkCredit from '\.\.\/\.\.\/components\/BarkCredit\.astro'/);
     expect(sent).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
   });
+
+  it('/contact has the living bark + trust line, but no BDL-001 credit link', () => {
+    const contact = read('pages/contact.astro');
+    expect(contact).toMatch(/<BarkField[^>]*lockAspect/);          // living bark present
+    expect(contact).toMatch(/Mississippi Gulf Coast/);            // trust line (provisional)
+    expect(contact).toMatch(/A reply within one business day/);
+    expect(contact).not.toMatch(/\/lab\/bdl-001/);                 // no credit off the form page
+    expect(contact).not.toMatch(/BarkCredit/);
+  });
 });
