@@ -1,0 +1,23 @@
+---
+/** Names a living BDL-001 bark field and links to the specimen. Owns the
+ *  hairline smallcaps type + muted->accent hover only; each consumer positions
+ *  it (the field's hero/rail differs per page) by wrapping it in its own
+ *  positioned element. Lifted from the home hero's original inline `.bark-credit`. */
+interface Props { href: string; label: string; class?: string }
+const { href, label, class: className } = Astro.props;
+---
+<a class:list={['bark-credit', 'smallcaps', className]} href={href}>{label}</a>
+
+<style>
+  .bark-credit {
+    z-index: 1;
+    color: var(--mark-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.72;
+    transition: opacity var(--dur-2) var(--ease-weighted),
+                color var(--dur-2) var(--ease-weighted);
+  }
+  .bark-credit:hover,
+  .bark-credit:focus-visible { opacity: 1; color: var(--accent); }
+</style>
