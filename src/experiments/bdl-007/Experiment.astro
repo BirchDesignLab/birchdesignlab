@@ -35,7 +35,7 @@ import { Image } from 'astro:assets';
   const stillImg = stage.querySelector<HTMLImageElement>('img.still')!;
   const veil = stage.querySelector<HTMLElement>('[data-veil]')!;
   const fallback = stage.querySelector<HTMLElement>('[data-fallback]')!;
-  const LIVE_LABEL = 'The organic Birch Design Lab wordmark in three dimensions. Drag to turn it.';
+  const LIVE_LABEL = 'The organic Birch Design Lab wordmark in three dimensions. Drag or use the arrow keys to turn it; press plus or minus to zoom.';
   const NO_WEBGL_COPY = 'This device does not support WebGL. Here is the wordmark at rest.';
   const MODEL_ERROR_COPY = 'The model failed to load. Here is the wordmark at rest.';
   const START_ERROR_COPY = 'The viewer could not start. Here is the wordmark at rest.';
@@ -73,8 +73,13 @@ import { Image } from 'astro:assets';
     fallback.hidden = true;
     stillImg.alt = '';
     canvas.removeAttribute('aria-hidden');
-    canvas.setAttribute('role', 'img');
+    // 'application', not 'img': the live canvas is focusable and keyboard-operated,
+    // so it is a custom widget rather than a static graphic. This signals AT to
+    // pass the arrow/zoom/reset keys through to our handler. The still-image
+    // fallback keeps its plain alt text; only the operable stage takes this role.
+    canvas.setAttribute('role', 'application');
     canvas.setAttribute('aria-label', LIVE_LABEL);
+    canvas.tabIndex = 0; // focusable so keyboard and switch users can turn the model
   };
 
   // Module-scope probe context would sit in the tab's context budget for

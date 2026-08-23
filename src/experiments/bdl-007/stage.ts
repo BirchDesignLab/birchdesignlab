@@ -88,7 +88,15 @@ export function mountStage(
   canvas: HTMLCanvasElement,
   opts: { onReady?: () => void; onError?: (err: unknown) => void } = {},
 ): () => void {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Live, not a one-time read: honor an OS reduced-motion toggle made while the
+  // page is open (matches BarkField and bdl-001). The loop reads this every
+  // frame, so flipping it stops or resumes the autonomous motion mid-session.
+  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let reduceMotion = reduceMotionQuery.matches;
+  const onReduceMotionChange = () => { reduceMotion = reduceMotionQuery.matches; };
+  // The 'change' listener is registered later, in the interaction section, so a
+  // throw during the WebGL renderer construction below cannot leak it (mountStage
+  // would never return its disposer). It is removed in teardown alongside the rest.
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   // Cap at 1.5, not the usual 2. This is a full-viewport canvas, and GPU fill
@@ -245,7 +253,15 @@ export function mountStage(
   const stoneBumpTexture = configureBumpTexture(textureLoader.load(stoneBump.src));
 
   loader.load(MODEL_URL, (gltf) => {
-    if (disposed) return;
+    if (disposed) {
+      // Teardown won the race with the loader: the model finished decoding but
+      // will never be added to the scene, so the dispose traverse never reaches
+      // it. Free its geometry, materials, and textures here, or they leak on
+      // the GPU. draco.dispose() (in the teardown closure) only tears down the
+      // decoder worker pool, not already-decoded geometry.
+      disposeObject3D(gltf.scene);
+      return;
+    }
     const model = gltf.scene;
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
@@ -459,6 +475,43 @@ ${shader.vertexShader}`;
     resetting = true;
     markInteraction();
   };
+  // Keyboard control: the canvas is made focusable (tabindex set in
+  // Experiment.astro on go-live), so keyboard and switch users can turn the
+  // model too, not just pointer users. Arrows nudge, +/- zoom, Home/0 resets.
+  // Crown.svelte (bdl-006) is the sibling pattern. Discrete nudges, so momentum
+  // is zeroed rather than coasted.
+  const onKeyDown = (e: KeyboardEvent) => {
+    // Let browser and system shortcuts through: Ctrl/Cmd +/-/0 (page zoom),
+    // Alt+Arrow (history back/forward), etc. Only unmodified keys drive the
+    // model. Shift is deliberately NOT excluded, since it is needed to type '+'.
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const STEP = 0.12; // radians per arrow press
+    const ZOOM_STEP = 1.1;
+    let handled = true;
+    switch (e.key) {
+      case 'ArrowLeft': yaw -= STEP; break;
+      case 'ArrowRight': yaw += STEP; break;
+      case 'ArrowUp': pitch = THREE.MathUtils.clamp(pitch - STEP, -TILT_LIMIT, TILT_LIMIT); break;
+      case 'ArrowDown': pitch = THREE.MathUtils.clamp(pitch + STEP, -TILT_LIMIT, TILT_LIMIT); break;
+      case '+':
+      case '=': zoom = THREE.MathUtils.clamp(zoom * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX); break;
+      case '-':
+      case '_': zoom = THREE.MathUtils.clamp(zoom / ZOOM_STEP, ZOOM_MIN, ZOOM_MAX); break;
+      case 'Home':
+      case '0': resetting = true; break;
+      default: handled = false;
+    }
+    if (!handled) return;
+    e.preventDefault();
+    everGrabbed = true; // taking keyboard control stops the idle yaw
+    yawVel = 0;
+    pitchVel = 0; // discrete nudges: no momentum coast
+    // A nudge made during a reset ease must cancel the reset, or the reset
+    // branch eases it straight back and the key looks dead. Home/0 keeps
+    // resetting = true (set above); the direct-control keys clear it.
+    if (e.key !== 'Home' && e.key !== '0') resetting = false;
+    markInteraction();
+  };
   el.addEventListener('pointerdown', onPointerDown);
   el.addEventListener('pointermove', onPointerMove);
   el.addEventListener('pointerup', onPointerUp);
@@ -466,6 +519,10 @@ ${shader.vertexShader}`;
   el.addEventListener('lostpointercapture', onLostPointerCapture);
   el.addEventListener('wheel', onWheel, { passive: false });
   el.addEventListener('dblclick', onDblClick);
+  el.addEventListener('keydown', onKeyDown);
+  // Registered here, not at the top, so a throw during renderer construction
+  // cannot leak it; removed in teardown with the rest.
+  reduceMotionQuery.addEventListener('change', onReduceMotionChange);
 
   // ---- pause when unseen ----
   const onVisibility = () => { running = !document.hidden && inView; };
@@ -610,12 +667,26 @@ ${shader.vertexShader}`;
     }
     m.dispose();
   };
+  const disposeObject3D = (root: THREE.Object3D) => {
+    root.traverse((obj) => {
+      if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
+        obj.geometry.dispose();
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (const m of mats) disposeMaterial(m);
+        // InstancedMesh (moss/lichen, 20 nodes total) holds its instanceMatrix
+        // as a separate GPU buffer that geometry.dispose() does not touch;
+        // without this the buffer leaks on every unmount.
+        if (obj instanceof THREE.InstancedMesh) obj.dispose();
+      }
+    });
+  };
   return () => {
     disposed = true;
     cancelAnimationFrame(raf);
     io.disconnect();
     ro.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
+    reduceMotionQuery.removeEventListener('change', onReduceMotionChange);
     el.removeEventListener('pointerdown', onPointerDown);
     el.removeEventListener('pointermove', onPointerMove);
     el.removeEventListener('pointerup', onPointerUp);
@@ -623,20 +694,11 @@ ${shader.vertexShader}`;
     el.removeEventListener('lostpointercapture', onLostPointerCapture);
     el.removeEventListener('wheel', onWheel);
     el.removeEventListener('dblclick', onDblClick);
+    el.removeEventListener('keydown', onKeyDown);
     canvas.removeEventListener('webglcontextlost', onContextLost, false);
     canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
     draco.dispose();
-    scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
-        obj.geometry.dispose();
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        for (const m of mats) disposeMaterial(m);
-        // InstancedMesh (moss/lichen, 20 nodes total) holds its
-        // instanceMatrix as a separate GPU buffer that geometry.dispose()
-        // does not touch; without this the buffer leaks on every unmount.
-        if (obj instanceof THREE.InstancedMesh) obj.dispose();
-      }
-    });
+    disposeObject3D(scene);
     // Attached to a material inside the load success callback (see
     // loader.load above). If the load errored, or `disposed` was already
     // true when it resolved, neither texture was ever assigned to a
