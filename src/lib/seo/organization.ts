@@ -34,7 +34,7 @@ export function buildOrganization(site: URL | string): OrganizationJsonLd {
     '@type': 'Organization',
     name: SITE_NAME,
     url: new URL('/', base).href,
-    logo: new URL('/og/logo.png', base).href,
+    logo: new URL('/icon-512.png', base).href,
     description: SITE_DESCRIPTION,
   };
 }

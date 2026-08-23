@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { hashString } from '../../src/lib/bark/pattern';
 import { OG_PAGES, OG_LAB_CARDS } from '../../src/lib/og/manifest';
 import { renderOgCard } from './render';
-import { renderLogo } from './logo';
 
 const seed = hashString(new Date().toISOString().slice(0, 10)); // same derivation as the site's date strategy
 const outDir = join(process.cwd(), 'public', 'og');
@@ -15,6 +14,3 @@ for (const card of [...OG_PAGES, ...OG_LAB_CARDS]) {
   writeFileSync(file, renderOgCard(seed, card.title));
   console.log(`og: wrote ${card.name}.png`);
 }
-
-writeFileSync(join(outDir, 'logo.png'), renderLogo());
-console.log('og: wrote logo.png');
