@@ -24,4 +24,10 @@ describe('BarkCredit extraction + home refactor', () => {
     // the old inline credit anchor is gone
     expect(home).not.toMatch(/<a class="bark-credit smallcaps"/);
   });
+
+  it('/contact/sent credits BDL-001 with a link', () => {
+    const sent = read('pages/contact/sent.astro');
+    expect(sent).toMatch(/import BarkCredit from '\.\.\/\.\.\/components\/BarkCredit\.astro'/);
+    expect(sent).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
+  });
 });
