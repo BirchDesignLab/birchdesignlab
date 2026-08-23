@@ -22,7 +22,7 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
 <!doctype html>
 <html lang="en" data-zone="lab">
   <head>
-    <HeadCommon title={title} description={description} noindex={noindex} />
+    <HeadCommon title={title} description={description} noindex={noindex} ogImage="lab-experiment" />
     <slot name="head" />
   </head>
   <body>

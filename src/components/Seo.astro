@@ -1,10 +1,13 @@
 ---
 import { ogImageFor } from '../lib/og/manifest';
 
-interface Props { title: string; description: string }
-const { title, description } = Astro.props;
+interface Props { title: string; description: string; ogImage?: string }
+const { title, description, ogImage } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL(`/og/${ogImageFor(Astro.url.pathname)}.png`, Astro.site);
+// An explicit card name wins (the lab layouts pass 'lab-experiment' /
+// 'lab-study', since a /lab/<slug> pathname can't reveal the type); otherwise
+// resolve the card from the pathname.
+const ogImageUrl = new URL(`/og/${ogImage ?? ogImageFor(Astro.url.pathname)}.png`, Astro.site);
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -14,7 +17,7 @@ const ogImage = new URL(`/og/${ogImageFor(Astro.url.pathname)}.png`, Astro.site)
 <meta property="og:type" content="website" />
 <meta property="og:url" content={canonical} />
 <meta property="og:site_name" content="Birch Design Lab" />
-<meta property="og:image" content={ogImage} />
+<meta property="og:image" content={ogImageUrl} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content={title} />

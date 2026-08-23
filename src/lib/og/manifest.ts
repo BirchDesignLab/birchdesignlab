@@ -14,6 +14,19 @@ export const OG_PAGES: OgPage[] = [
   { name: 'lab', route: '/lab', title: 'The Lab' },
 ];
 
+/**
+ * Lab detail cards. Experiments and studies share the /lab/<slug> shape, so a
+ * pathname can't tell them apart; these are resolved by the layout instead
+ * (ExperimentLayout passes 'lab-experiment', StudyLayout passes 'lab-study',
+ * both via the Seo `ogImage` override). They have no `route` because they are
+ * never matched by pathname. Kept separate from OG_PAGES so ogImageFor's route
+ * table stays exact; both lists feed the card generator.
+ */
+export const OG_LAB_CARDS: { name: string; title: string }[] = [
+  { name: 'lab-experiment', title: 'Experiment' },
+  { name: 'lab-study', title: 'Study' },
+];
+
 export function ogImageFor(pathname: string): string {
   const clean = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
   if (clean === '/lab' || clean.startsWith('/lab/')) return 'lab';
