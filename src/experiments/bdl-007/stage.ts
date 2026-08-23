@@ -10,8 +10,13 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { createFlies, stepFlies, scatter, type Vec3 } from './fireflies';
 import canopyBump from './canopy-bump.webp';
 import stoneBump from './stone-bump.webp';
+// Imported via ?url so Astro emits the 3.2MB glb into /_astro/ under a
+// content-hashed name (like the bump maps above), which lets public/_headers
+// cache it immutably and makes a re-export self-invalidate under a new URL.
+// The old fixed /models/ path could never be cached safely (a new model would
+// reuse the same URL), so it revalidated on every repeat visit.
+import MODEL_URL from './bdlOrganic.draco.glb?url';
 
-const MODEL_URL = '/models/bdlOrganic.draco.glb';
 const DRACO_PATH = '/draco/';
 const LIVING = /moss|canopy|lichen/i;   // verified material names in the glb
 const IDLE_YAW = (Math.PI * 2) / 60;    // one rotation per 60s

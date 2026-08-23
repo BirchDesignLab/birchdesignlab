@@ -3,9 +3,17 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
 
-# Astro emits content-hashed filenames into /_astro/ (CSS, JS, and the bundled
-# @fontsource woff2), so they are safe to cache forever: any change ships under
-# a new name. Unhashed /models/* and /draco/* are deliberately NOT covered here
-# (see lab-backlog.md); the glb would need a hashed name first.
+# Astro emits content-hashed filenames into /_astro/ (CSS, JS, the bundled
+# @fontsource woff2, and now the BDL-007 model, imported via ?url so it lands
+# hashed too), so they are safe to cache forever: any change ships under a new
+# name.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The Draco decoder stays in public/draco/ because DRACOLoader needs a directory
+# path (setDecoderPath('/draco/')), so it cannot be a hashed ?url import. It
+# only changes when the `three` version bumps (a deliberate deploy), so a long
+# max-age with background revalidation is safe: repeat visitors skip the
+# blocking revalidation, and a three upgrade is picked up within the window.
+/draco/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
