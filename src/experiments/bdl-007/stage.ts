@@ -21,6 +21,8 @@ const DRACO_PATH = '/draco/';
 const LIVING = /moss|canopy|lichen/i;   // verified material names in the glb
 const IDLE_YAW = (Math.PI * 2) / 60;    // one rotation per 60s
 const GATHER_AFTER_MS = 20000;
+const AMBIENT_FPS = 30;                    // idle/ambient render cadence
+const AMBIENT_FRAME_MS = 1000 / AMBIENT_FPS;
 const FLY_COUNT = 40;
 const FLY_BOUNDS = 1.9;
 const PULSE_MID = 0.07;
@@ -89,7 +91,11 @@ export function mountStage(
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Cap at 1.5, not the usual 2. This is a full-viewport canvas, and GPU fill
+  // cost scales with the square of the pixel ratio, so 1.5 shades ~44% fewer
+  // pixels than 2 on a hidpi display. The model is organic and soft-edged, so
+  // the drop is not visible in practice; antialiasing still carries the edges.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   // Without this the key and rim sum well past 1.0 on lit faces and clip to
   // flat white. ACES rolls the highlights off instead, so the lights below
   // are tuned lower than they would be for a linear response.
@@ -486,11 +492,22 @@ ${shader.vertexShader}`;
 
   // ---- loop ----
   let prev = performance.now();
+  let lastFrame = 0;
   const tick = () => {
     if (disposed) return;
     raf = requestAnimationFrame(tick);
-    if (!running) { prev = performance.now(); return; }
+    if (!running) { prev = performance.now(); lastFrame = 0; return; }
     const now = performance.now();
+    // Throttle the ambient state (breath, fireflies, idle yaw) to AMBIENT_FPS:
+    // those all move slowly, so 30fps reads the same as 60 but halves the GPU
+    // cost of this full-viewport canvas. Active interaction (drag, flick
+    // momentum, the double-tap reset) still renders every frame so it stays
+    // crisp. A skipped frame leaves `prev` untouched, so the next rendered
+    // frame's dt spans the gap (and is clamped below), keeping motion correct.
+    const interacting =
+      dragging || resetting || Math.abs(yawVel) > 1e-4 || Math.abs(pitchVel) > 1e-4;
+    if (!interacting && now - lastFrame < AMBIENT_FRAME_MS) return;
+    lastFrame = now;
     const dt = Math.min((now - prev) / 1000, 1 / 20);
     prev = now;
     const t = now / 1000;
