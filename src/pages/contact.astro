@@ -1,41 +1,50 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import BarkField from '../components/BarkField.astro';
 const email = 'hello@birchdesignlab.com';
+// Trust line copy is provisional; founder finalises the wording + reply promise live.
 ---
 <BaseLayout
   title="Contact · Birch Design Lab"
   description="Start a conversation with Birch Design Lab about your software or website project."
 >
-  <section class="wrap">
-    <header class="intro">
-      <p class="smallcaps kicker">Contact</p>
-      <h1>Start a conversation</h1>
-      <p class="subline">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
-    </header>
+  <section class="contact wrap">
+    <div class="bark-rail">
+      <BarkField live lockAspect density={300} />
+    </div>
+    <div class="form-col">
+      <header class="intro">
+        <p class="smallcaps kicker">Contact</p>
+        <h1>Start a conversation</h1>
+        <p class="subline">Tell us what you're trying to build, fix, or grow. Plain English is the house language.</p>
+      </header>
 
-    <!-- No-JS-first: a plain POST the Worker answers with a redirect to
-         /contact/sent. The `company` field is the honeypot; humans never see
-         it, bots autofill it and get silently dropped (worker/index.ts). -->
-    <form class="contact-form" method="post" action="/api/contact">
-      <div class="field">
-        <label for="cf-name">Name</label>
-        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
-      </div>
-      <div class="field">
-        <label for="cf-email">Email</label>
-        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
-      </div>
-      <div class="field">
-        <label for="cf-message">What are you working on?</label>
-        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
-      </div>
-      <div class="field hp" aria-hidden="true">
-        <label for="cf-company">Leave this field empty</label>
-        <input id="cf-company" name="company" type="text" tabindex="-1" autocomplete="off" />
-      </div>
-      <button class="cta-engraved" type="submit"
-        ><span class="fill" aria-hidden="true"></span><span class="lbl">Send it</span></button>
-    </form>
+      <!-- No-JS-first: a plain POST the Worker answers with a redirect to
+           /contact/sent. The `company` field is the honeypot; humans never see
+           it, bots autofill it and get silently dropped (worker/index.ts). -->
+      <form class="contact-form" method="post" action="/api/contact">
+        <div class="field">
+          <label for="cf-name">Name</label>
+          <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="cf-email">Email</label>
+          <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="cf-message">What are you working on?</label>
+          <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+        </div>
+        <div class="field hp" aria-hidden="true">
+          <label for="cf-company">Leave this field empty</label>
+          <input id="cf-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <button class="cta-engraved" type="submit"
+          ><span class="fill" aria-hidden="true"></span><span class="lbl">Send it</span></button>
+      </form>
+
+      <p class="trust">Mississippi Gulf Coast <span aria-hidden="true">&middot;</span> A reply within one business day.</p>
+    </div>
   </section>
 
   <section class="loud" data-reveal>
@@ -48,7 +57,30 @@ const email = 'hello@birchdesignlab.com';
 </BaseLayout>
 
 <style>
-  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
+  /* Two columns on desktop: form left, living bark rail anchored right. Source
+     order is bark-first so mobile reads bark band -> form; `order` swaps them on
+     desktop. Quiet luxury: the form keeps its comfortable measure and is not
+     stretched to fill its column. */
+  .contact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding-block: var(--space-6) var(--space-6);
+  }
+  .bark-rail { order: 1; position: relative; min-height: 34vh; overflow: hidden; }
+  .form-col { order: 2; }
+  @media (min-width: 720px) {
+    .contact { grid-template-columns: 60% 40%; gap: var(--space-6); align-items: stretch; }
+    .form-col { order: 1; }
+    .bark-rail { order: 2; min-height: 0; }   /* stretch to the form column's height */
+  }
+
+  .trust {
+    margin-top: var(--space-4);
+    color: var(--mark-muted); font-size: var(--text-sm);
+  }
+
+  .intro { padding-block: 0 var(--space-5); max-width: var(--measure-wide); }
   .kicker { color: var(--accent); }
   .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
   .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
@@ -56,7 +88,6 @@ const email = 'hello@birchdesignlab.com';
   .contact-form {
     display: grid; gap: var(--space-4);
     max-width: 44rem;
-    padding-block: 0 var(--space-6);
   }
   .field { display: grid; gap: var(--space-1); }
   .field label { color: var(--mark-muted); font-size: var(--text-sm); }
