@@ -172,6 +172,12 @@ export function createBarkRenderer(
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   let raf = 0;
+  // The bark is a slow, delicate background texture; 60fps is wasted on it.
+  // Cap the animated loop at BARK_FPS to roughly halve its GPU cost. renderOnce
+  // (reduced-motion and the static 2D fallback) is unaffected.
+  const BARK_FPS = 30;
+  const FRAME_INTERVAL = 1000 / BARK_FPS;
+  let lastDraw = 0;
   const t0 = performance.now();
   let growthStart = -1; // -1 = fully grown, no animation pending
   const pointerTarget = { x: 0, y: 0, s: 0 };
@@ -205,12 +211,17 @@ export function createBarkRenderer(
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
   };
 
-  const loop = (now: number) => { frame(now); raf = requestAnimationFrame(loop); };
+  const loop = (now: number) => {
+    raf = requestAnimationFrame(loop);
+    if (now - lastDraw < FRAME_INTERVAL) return;
+    lastDraw = now;
+    frame(now);
+  };
 
   resize();
 
   return {
-    start() { this.stop(); raf = requestAnimationFrame(loop); },
+    start() { this.stop(); lastDraw = 0; raf = requestAnimationFrame(loop); },
     renderOnce() { resize(); frame(t0); },
     stop() { if (raf) cancelAnimationFrame(raf); raf = 0; },
     resize,
