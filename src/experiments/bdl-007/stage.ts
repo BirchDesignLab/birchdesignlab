@@ -445,12 +445,6 @@ ${shader.vertexShader}`;
   const onPointerUp = (e: PointerEvent) => releasePointer(e.pointerId);
   const onLostPointerCapture = (e: PointerEvent) => releasePointer(e.pointerId);
   const onWheel = (e: WheelEvent) => {
-    // Until the visitor has actually grabbed the model, let the wheel scroll
-    // the page through. The stage fills the front-page hero, so turning a
-    // plain scroll-past into a zoom traps a visitor who is only reading. Once
-    // they have engaged (everGrabbed is set on the first pointerdown), the
-    // wheel is theirs to zoom with.
-    if (!everGrabbed) return;
     e.preventDefault();
     zoom = THREE.MathUtils.clamp(zoom * (e.deltaY < 0 ? 1.07 : 0.93), ZOOM_MIN, ZOOM_MAX);
     lastInteraction = performance.now();
