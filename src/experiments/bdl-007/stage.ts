@@ -10,8 +10,13 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { createFlies, stepFlies, scatter, type Vec3 } from './fireflies';
 import canopyBump from './canopy-bump.webp';
 import stoneBump from './stone-bump.webp';
+// Imported via ?url so Astro emits the 3.2MB glb into /_astro/ under a
+// content-hashed name (like the bump maps above), which lets public/_headers
+// cache it immutably and makes a re-export self-invalidate under a new URL.
+// The old fixed /models/ path could never be cached safely (a new model would
+// reuse the same URL), so it revalidated on every repeat visit.
+import MODEL_URL from './bdlOrganic.draco.glb?url';
 
-const MODEL_URL = '/models/bdlOrganic.draco.glb';
 const DRACO_PATH = '/draco/';
 const LIVING = /moss|canopy|lichen/i;   // verified material names in the glb
 const IDLE_YAW = (Math.PI * 2) / 60;    // one rotation per 60s
@@ -440,6 +445,12 @@ ${shader.vertexShader}`;
   const onPointerUp = (e: PointerEvent) => releasePointer(e.pointerId);
   const onLostPointerCapture = (e: PointerEvent) => releasePointer(e.pointerId);
   const onWheel = (e: WheelEvent) => {
+    // Until the visitor has actually grabbed the model, let the wheel scroll
+    // the page through. The stage fills the front-page hero, so turning a
+    // plain scroll-past into a zoom traps a visitor who is only reading. Once
+    // they have engaged (everGrabbed is set on the first pointerdown), the
+    // wheel is theirs to zoom with.
+    if (!everGrabbed) return;
     e.preventDefault();
     zoom = THREE.MathUtils.clamp(zoom * (e.deltaY < 0 ? 1.07 : 0.93), ZOOM_MIN, ZOOM_MAX);
     lastInteraction = performance.now();
