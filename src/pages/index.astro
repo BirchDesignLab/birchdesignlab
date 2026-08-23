@@ -25,6 +25,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
     <h1 class="billboard">
       <span>Birch</span> <span>Design</span> <span>Lab</span>
     </h1>
+    <a class="bark-credit smallcaps" href="/lab/bdl-001">BDL-001 &middot; The Bark Engine, live</a>
   </section>
 
   <section class="wrap opener">
@@ -121,6 +122,25 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   @media (max-width: 640px) {
     .billboard span { display: block; }
   }
+  /* Quiet signature: the hero bark is BDL-001 rendered live, and until now
+     nothing on the page said so. A hairline smallcaps credit, pinned low,
+     links to the specimen. Kept to a footnote so the billboard stays the
+     moment. */
+  .bark-credit {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-4);
+    transform: translateX(-50%);
+    z-index: 1;
+    color: var(--mark-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.72;
+    transition: opacity var(--dur-2) var(--ease-weighted),
+                color var(--dur-2) var(--ease-weighted);
+  }
+  .bark-credit:hover,
+  .bark-credit:focus-visible { opacity: 1; color: var(--accent); }
 
   /* Opener — the interior display moment. */
   .opener { padding-block: var(--space-7); }
