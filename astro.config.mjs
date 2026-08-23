@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
 import sitemap from '@astrojs/sitemap';
+import { FontaineTransform } from 'fontaine';
 
 /**
  * three's DRACOLoader carries module-scope `new URL('../libs/draco/...',
@@ -75,6 +76,22 @@ export default defineConfig({
     }),
   ],
   vite: {
-    plugins: [dropUnusedDracoDecoder()],
+    plugins: [
+      dropUnusedDracoDecoder(),
+      // Metric-matched fallback faces for the self-hosted fonts, to kill the
+      // FOUT/CLS the billboard (Marcellus, the LCP text) otherwise causes when
+      // it swaps in over Georgia. fontaine reads each real font's metrics and
+      // emits a `<Family> fallback` @font-face sized to occupy the same space,
+      // so the swap does not reflow. The generated names ("Marcellus fallback",
+      // "Spectral fallback") are inserted into the --font-* stacks in
+      // tokens.css by hand, because our families are referenced through CSS
+      // custom properties, which fontaine's usage-rewriter does not touch.
+      // resolvePath maps the @fontsource url back to the node_modules file so
+      // the metrics can be read at build time.
+      FontaineTransform.vite({
+        fallbacks: ['Georgia', 'Times New Roman', 'serif'],
+        resolvePath: (id) => new URL(`.${id}`, import.meta.url),
+      }),
+    ],
   },
 });
