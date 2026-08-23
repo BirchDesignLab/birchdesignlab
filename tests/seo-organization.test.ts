@@ -12,7 +12,7 @@ describe('buildOrganization', () => {
   it('carries the brand name and absolute URLs', () => {
     expect(org.name).toBe('Birch Design Lab');
     expect(org.url).toBe('https://birchdesignlab.com/');
-    expect(org.logo).toBe('https://birchdesignlab.com/og/logo.png');
+    expect(org.logo).toBe('https://birchdesignlab.com/icon-512.png');
   });
 
   it('never names a person, because the founder stays abstracted', () => {
