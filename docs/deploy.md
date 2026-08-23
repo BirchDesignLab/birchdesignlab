@@ -263,9 +263,11 @@ are served by the assets layer before the Worker runs, so those are covered, but
 
 This is live now: `/api/contact` and the contact form both ship in production
 (the old "form markup stashed" state is gone — the form shipped and the stash
-was dropped). Exposure is negligible (the 405 body is a fixed string and
-`errorPage` escapes its one interpolation), but the gap is real, and closing it
-is **still open** as a pre-launch task as of 2026-08-20.
+was dropped). **Done 2026-08-23 (#55), tested (#61):** a single `secure()` helper
+in `worker/index.ts` sets both headers on every Worker response, and
+`tests/contact-worker.test.ts` asserts them on each path. As part of the same
+change, `name` is sanitized before it reaches the email Subject (control
+characters collapsed) as a header-injection guard.
 
 **Two headers short, not three.** The zone-level No-Sniff toggle (dashboard step
 3 above) covers `X-Content-Type-Options`, and HSTS is a zone setting, so both
@@ -273,11 +275,10 @@ already appear on Worker responses. Verified 2026-08-04 against the
 `/api/contact` 405. What is missing there is `Referrer-Policy` and
 `X-Frame-Options`.
 
-Apply those two to every path the Worker answers: the 303 redirect to
+Both are now applied to every path the Worker answers (the 303 redirect to
 `/contact/sent/`, the 400 malformed submission page, the 429 rate limit page,
-the 405 method-not-allowed response, and the 502 degraded email path. Use one
-helper that every response passes through rather than repeating the literals at
-five call sites.
+the 405 method-not-allowed response, and the 502 degraded email path) through a
+single `secure()` helper, rather than repeating the literals at five call sites.
 
 ## Every deploy after that
 

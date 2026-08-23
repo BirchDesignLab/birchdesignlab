@@ -7,10 +7,10 @@ The knowledge graph moved to `C:\vault\graphify\birchdesignlab\graphify-out\` (i
 
 ## Shared Memory
 
-- Zettelkasten (cross-project decisions, patterns, infra standards): C:\vault\zettelkasten\
+- Zettelkasten (cross-project decisions, patterns, infra standards): C:\vault\zettelkasten\birchdesignlab\
 - This project's knowledge graph: C:\vault\graphify\birchdesignlab\
 
-After significant decisions, log an atomic note in C:\vault\zettelkasten\ and link it back to this project.
+After significant decisions, log an atomic note in C:\vault\zettelkasten\birchdesignlab\ and link it back to this project.
 
 ## Scripts stay in the repo, not in temp
 
@@ -35,8 +35,6 @@ executable work that could ever be run twice, not about every byte written.
 Branch and open a PR for review. Do not commit directly to `main`. Merging to
 `main` triggers a production deploy through Cloudflare Workers Builds.
 
-This overrides the global instruction to avoid branch ceremony; in this repo,
-branches are wanted. Agreed with the founder 2026-08-03.
 
 Keep `main` in sync under normal circumstances: after a PR merges, pull `main`
 and delete the merged branch locally and on the remote. Work genuinely in

@@ -54,16 +54,20 @@ Two things about the model that were not obvious and cost real time:
 Material names mislead: `canopy` is the green moss and lichen cover,
 `stone` is the birch bark face.
 
-**Still open, none blocking.** No cache headers on `/models/*` or
-`/draco/*` in `public/_headers`, so the 3.2MB glb revalidates on every
-repeat visit. Flick momentum assumes a 60Hz pointer cadence, so a flick on
-a 120Hz touch device coasts about half as far. No keyboard path for
-turning the model. `reduceMotion` is sampled once at mount with no change
-listener. The decoded gltf leaks if teardown wins the race with the loader.
+**Closed 08-23-26 (launch-prep sweep).** Cache headers: the glb moved into the
+experiment dir and is `?url`-imported, so it lands content-hashed in `/_astro/`
+and inherits the immutable rule; the Draco decoder got a bounded rule (#56).
+Keyboard path added (arrows/zoom/reset, `role=application`), `reduceMotion` is
+now live via a change listener, and the gltf teardown leak is disposed (#63).
+GPU cut with pixel-ratio 1.5 and a 30fps ambient throttle (#59).
 
-Closed since the final review: the 1.3MB of dead Draco decoder copies are
-dropped by a build plugin in `astro.config.mjs`, and the still's
-`sizes`/`fetchpriority` were corrected in #32.
+**Still open, not blocking:** flick momentum assumes a 60Hz pointer cadence, so a
+flick on a 120Hz touch device coasts about half as far. The only item from this
+list not closed this session.
+
+Closed earlier: the 1.3MB of dead Draco decoder copies are dropped by a build
+plugin in `astro.config.mjs`, and the still's `sizes`/`fetchpriority` were
+corrected in #32.
 
 ## Prod ops notes
 
