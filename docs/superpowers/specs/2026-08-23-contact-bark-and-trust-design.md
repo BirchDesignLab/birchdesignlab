@@ -42,9 +42,12 @@ ExperimentLayout / WallLabel).
 
 **Desktop (≥720px)** — a two-column grid inside the existing `.wrap`:
 
-- Left column (~58%): the form, existing markup unchanged.
-- Right column (~42%): a `position:relative` bark container, stretched to the
-  grid row height so the rail runs the full height of the form block.
+- Left column (60%): the form, existing markup unchanged, kept at its
+  comfortable measure and left-aligned so it is not stretched to fill the column
+  — quiet luxury, err toward more air than less.
+- Right column (40%): a `position:relative` bark container anchored to the right
+  edge, stretched to the grid row height so the rail runs the full height of the
+  form block. A generous gutter sits between the form and the rail.
 - The trust line sits under the form's submit button, inside the left column.
 - Below the grid: the existing `.loud` email-alternative band, unchanged.
 
