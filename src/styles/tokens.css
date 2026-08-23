@@ -25,14 +25,14 @@
   --green-sage-tint: #e3e9e0;   /* surface tint on light */
 
   /* --- type --- */
-  --font-display: 'Marcellus', 'Iowan Old Style', Georgia, serif;
-  --font-smallcaps: 'Marcellus', 'Iowan Old Style', Georgia, serif;
+  --font-display: 'Marcellus', 'Marcellus fallback', 'Iowan Old Style', Georgia, serif;
+  --font-smallcaps: 'Marcellus', 'Marcellus fallback', 'Iowan Old Style', Georgia, serif;
   /* the home-hero wordmark only; swap here to give the billboard its own look.
      Color is per theme (see the semantic blocks): forest by day, fern at night
      — locked 2026-07-16, styleguide billboard round 3. */
-  --font-billboard: 'Marcellus', 'Iowan Old Style', Georgia, serif;
+  --font-billboard: 'Marcellus', 'Marcellus fallback', 'Iowan Old Style', Georgia, serif;
   --billboard-weight: 500;
-  --font-body: 'Spectral', Georgia, 'Times New Roman', serif;
+  --font-body: 'Spectral', 'Spectral fallback', Georgia, 'Times New Roman', serif;
   --text-sm: 0.875rem;
   --text-base: 1.125rem;
   --text-lg: 1.25rem;
