@@ -115,30 +115,54 @@ export function mountStage(
   const BASE_DIST = 5;
   camera.position.set(0, 0.4, BASE_DIST);
 
-  // Aspect-aware framing. The mark is scaled to a fixed size, but how much of
-  // the frame it fills depends on the viewport: a tall phone has a narrow
-  // horizontal field of view, so a distance tuned for a wide desktop leaves
-  // the mark small and adrift near the bottom. Fit the front silhouette to
-  // whichever axis is tighter, recomputed on resize, and look at the centre
-  // so the mark stays put instead of drifting low the taller the screen gets.
-  const FIT_FILL = 0.74;   // fraction of the tighter axis the mark fills; the
-                           // rest is air so nothing clips the top on a short
-                           // landscape window or hides behind the plate bar
-  const FRAME_LIFT = 0.10; // gentle downward tilt, proportional to mark height
-  const FRAME_DROP = 0.22; // aim slightly ABOVE centre so the mark drops a
-                           // touch: it is top-heavy (the chunky B up top, thin
-                           // strokes trailing down), so a bbox-centred fit
-                           // reads as riding high
+  // Aspect- and occlusion-aware framing. The mark is scaled to a fixed size,
+  // but the on-screen slice of the full-bleed canvas is smaller than the canvas
+  // itself: the SpecimenPlate is position:fixed over the stage bottom, and on a
+  // tall phone the 88vh stage runs partly below the fold. Framing the mark in
+  // the whole canvas — and, worse, aiming ABOVE centre to drop the top-heavy
+  // silhouette — buried its lower half behind the plate on portrait phones.
+  // Instead, measure the visible vertical band each frame and fit + centre the
+  // mark in THAT, so it stays put across scroll, the mobile URL bar collapsing,
+  // and the plate opening.
+  const FIT_FILL = 0.74;   // fraction of the tighter visible axis the mark fills
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const tanV = Math.tan(vFov / 2);
   let fitDist = BASE_DIST;
   const markHalf = { w: 1.1, h: 1.1 };
-  const frameCamera = () => {
-    const vFov = THREE.MathUtils.degToRad(camera.fov);
-    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
-    const distV = markHalf.h / FIT_FILL / Math.tan(vFov / 2);
+
+  // The specimen plate is position:fixed over the stage bottom; null when the
+  // stage is embedded without one, in which case we fall back to the plain
+  // viewport fold. Queried once — it is the same element for the page's life.
+  const plate = document.querySelector<HTMLElement>('details.plate');
+  // The visible band as fractions of canvas height: how tall the un-occluded,
+  // on-screen slice is (`frac`), and where its centre sits (`centerFrac`), both
+  // measured from the canvas top. getBoundingClientRect here is a read against
+  // layout the render loop never mutates, so it does not force a reflow.
+  const measureBand = (): { frac: number; centerFrac: number } => {
+    const r = canvas.getBoundingClientRect();
+    if (r.height === 0) return { frac: 1, centerFrac: 0.5 };
+    let bottom = Math.min(r.bottom, window.innerHeight);        // clip to the fold
+    const plateTop = plate?.getBoundingClientRect().top ?? Infinity;
+    if (plateTop > r.top) bottom = Math.min(bottom, plateTop);  // and to the plate
+    const visTop = Math.max(r.top, 0) - r.top;                  // canvas-local px
+    const visBottom = bottom - r.top;
+    const band = visBottom - visTop;
+    if (band <= 0) return { frac: 1, centerFrac: 0.5 };         // fully off-screen
+    // Floor the fit fraction. If the band ever shrank to a sliver (the stage
+    // transiently scrolling off the top), an unclamped distV would push the
+    // camera past the far plane (100) and cull the mark. 0.12 sits well below
+    // every realistic at-rest / plate-open band (~0.27+), so it only guards the
+    // degenerate transient and never touches normal framing.
+    return { frac: Math.max(band / r.height, 0.12), centerFrac: (visTop + visBottom) / 2 / r.height };
+  };
+
+  const frameCamera = (bandFrac: number) => {
+    const hFov = 2 * Math.atan(tanV * camera.aspect);
+    // Vertical fit against the visible band, horizontal against the full width
+    // (only the bottom is ever occluded, never the sides). max() so the tighter
+    // axis fills FIT_FILL and the looser one keeps extra air.
+    const distV = markHalf.h / FIT_FILL / (bandFrac * tanV);
     const distH = markHalf.w / FIT_FILL / Math.tan(hFov / 2);
-    // max() so both axes fit: the tighter one fills FIT_FILL, the looser one
-    // keeps extra air. A little depth pokes out of the silhouette as it turns,
-    // and the 18% margin absorbs it.
     fitDist = Math.max(distV, distH);
   };
 
@@ -275,7 +299,7 @@ export function mountStage(
     // frames the actual mark rather than the 1.1 placeholder.
     markHalf.w = (size.x * scale) / 2;
     markHalf.h = (size.y * scale) / 2;
-    frameCamera();
+    frameCamera(measureBand().frac);
 
     // Living materials breathe; their vertices seed the gather points.
     // Sampled in rig-local space (rig's own transform backed out), not
@@ -541,7 +565,7 @@ ${shader.vertexShader}`;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    frameCamera();
+    frameCamera(measureBand().frac);
   };
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
@@ -595,13 +619,20 @@ ${shader.vertexShader}`;
     }
 
     rig.rotation.set(pitch, yaw, 0);
-    // Aspect-aware distance, a small proportional lift, and a look at the
-    // centre so the mark stays framed and centred on any viewport instead of
-    // sitting low on tall phones. zoom rides on top as a multiplier.
-    camera.position.set(0, markHalf.h * FRAME_LIFT, fitDist / zoom);
-    // Aim a little above the mark's centre so the top-heavy silhouette drops
-    // to a visual centre instead of riding high.
-    camera.lookAt(0, markHalf.h * FRAME_DROP, 0);
+    // Fit and centre the mark in the visible band, recomputed each frame so
+    // scrolling, the mobile URL bar collapsing, and the plate opening all stay
+    // framed. zoom rides on top of the fitted distance as a multiplier.
+    const band = measureBand();
+    frameCamera(band.frac);
+    const dist = fitDist / zoom;
+    // Pedestal the camera: position and target share the same height, so the
+    // view stays level (no tilt) and the mark's axis (world y = 0) lands at the
+    // band's centre. Solving  centerFrac = 0.5 * (1 + cy / (dist * tanV))  for
+    // cy gives this; a band sitting high (centerFrac < 0.5, the plate eating the
+    // bottom) yields cy < 0, dropping the camera so the mark lifts into the band.
+    const cy = dist * tanV * (2 * band.centerFrac - 1);
+    camera.position.set(0, cy, dist);
+    camera.lookAt(0, cy, 0);
 
     // moss breath (held at mid under reduced motion)
     const phase = (t * Math.PI * 2) / PULSE_PERIOD;
