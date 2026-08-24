@@ -3,13 +3,16 @@ const year = new Date().getFullYear();
 ---
 <footer>
   <div class="wrap grid">
-    <p class="smallcaps">Birch Design Lab</p>
+    <div class="ident">
+      <p class="smallcaps">Birch Design Lab</p>
+      <p class="fine loc">Mississippi Gulf Coast</p>
+    </div>
     <nav aria-label="Footer">
       <a href="/services">Services</a>
       <a href="/lab">Lab</a>
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
-      <!-- Reserved room (spec §8): Work, Field Notes, social handles -->
+      <!-- Reserved room (spec §8): social handles, once registered (see sameAs). -->
     </nav>
     <p class="fine">&copy; {year} Birch Design Lab <span aria-hidden="true">&middot;</span> <a href="/privacy">Privacy</a></p>
   </div>
@@ -26,6 +29,7 @@ const year = new Date().getFullYear();
   nav a { color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm); }
   nav a:hover { color: var(--mark); }
   .fine { color: var(--mark-muted); font-size: var(--text-sm); }
+  .loc { margin-top: var(--space-1); }
   .fine a { color: var(--mark-muted); text-decoration: none; }
   .fine a:hover { color: var(--mark); }
 </style>
