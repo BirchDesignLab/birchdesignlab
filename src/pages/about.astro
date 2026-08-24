@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BarkField from '../components/BarkField.astro';
+import BarkCredit from '../components/BarkCredit.astro';
 ---
 <BaseLayout
   title="About · Birch Design Lab"
@@ -9,6 +10,7 @@ import BarkField from '../components/BarkField.astro';
   <header class="hero">
     <BarkField density={170} lockAspect />
     <h1>The shining tree</h1>
+    <span class="bark-credit-pin"><BarkCredit href="/lab/bdl-001" label="BDL-001 · The Bark Engine, live" /></span>
   </header>
   <section class="wrap prose">
     <article class="epic">
@@ -71,6 +73,13 @@ import BarkField from '../components/BarkField.astro';
     /* billboard color (distinct from the bark's --mark hue) so the H1 keeps
        contrast over the brightest lenticels, not just over the field */
     color: var(--billboard-color);
+  }
+  .bark-credit-pin {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-4);
+    transform: translateX(-50%);
+    z-index: 1;
   }
 
   .prose { display: grid; gap: var(--space-4); padding-block: 0 var(--space-4); }
