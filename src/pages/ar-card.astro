@@ -1,0 +1,237 @@
+---
+/**
+ * AR card landing. The permanent page behind every physical/digital card
+ * channel: /hello (kraft tier 2) rewrites here via public/_redirects, and any
+ * future channel path is one more rewrite line. Reached by scanning a card,
+ * not by search, so it is noindex and excluded from the sitemap.
+ *
+ * Deliberately standalone: no BaseLayout, no site CSS, no webfonts, no GA4.
+ * The critical path is this one HTML document (budget ~14KB) so it is
+ * interactive in under 2s on 4G. Colors mirror the dark face of
+ * src/styles/tokens.css by value; if the palette shifts, update these too.
+ *
+ * The AR experience does not exist yet. AR_ENABLED=false renders no AR UI at
+ * all; enabling it later means flipping the flag and shipping the module at
+ * AR_MODULE_URL (see the mount point marked below). Context and backlog:
+ * docs/ar-card/HANDOFF.md.
+ */
+import { buildVcf } from '../lib/vcard';
+
+const CONFIG = {
+  // AR slot. False = no AR UI renders at all (no teaser). Flip to true once
+  // the module at AR_MODULE_URL exists; nothing else on this page changes.
+  AR_ENABLED: false,
+  AR_MODULE_URL: '/ar-card/ar.js',
+
+  // PLACEHOLDER contact details. Safe to ship (public studio identity only),
+  // but the founder fills name/title/phone with real values before any card
+  // carrying this URL is printed or etched. Empty fields are omitted from the
+  // vCard entirely; values are RFC-escaped by src/lib/vcard.ts, so commas and
+  // semicolons are safe here. Set isOrg false when name becomes a person.
+  card: {
+    isOrg: true,
+    name: 'Birch Design Lab',
+    title: 'Independent design studio',
+    company: 'Birch Design Lab',
+    phone: '',
+    email: 'hello@birchdesignlab.com',
+    url: 'https://birchdesignlab.com',
+  },
+
+  portfolioUrl: '/lab/',
+};
+
+const vcfText = buildVcf(CONFIG.card);
+// data: URI fallback so "Save contact" works even with JavaScript off; the
+// client script upgrades it to a Blob URL, which iOS Safari handles better.
+const vcfDataHref = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcfText);
+
+const title = 'Birch Design Lab';
+const description =
+  'Independent design studio on the Mississippi Gulf Coast. Save our contact card or see the work.';
+const canonical = 'https://birchdesignlab.com/ar-card/';
+const ogImage = 'https://birchdesignlab.com/og/home.png';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1c1a17" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Birch Design Lab" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image:alt" content={title} />
+    <style is:inline>
+      /* Values mirror the dark face in src/styles/tokens.css. */
+      :root {
+        --field: #1c1a17;
+        --mark: #f4f0e6;
+        --muted: #a89f8f;
+        --accent: #a3bd8f;
+        --on-accent: #1c1a17;
+        --line: rgba(244, 240, 230, 0.24);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        background: var(--field);
+        color: var(--mark);
+        font-family: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        width: min(100% - 3rem, 21rem);
+        padding: 2.5rem 0;
+      }
+      .bark {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin-bottom: 2rem;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 400;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .tagline {
+        margin: 0 0 2.25rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .actions {
+        display: grid;
+        gap: 0.75rem;
+      }
+      .btn {
+        display: block;
+        padding: 0.85rem 1rem;
+        border-radius: 6px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1rem;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--on-accent);
+        font-weight: 600;
+      }
+      .btn-secondary {
+        border: 1px solid var(--line);
+        color: var(--mark);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        main {
+          animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes rise {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg class="bark" viewBox="0 0 336 24" aria-hidden="true" focusable="false">
+        <rect width="336" height="24" rx="3" fill="#f5f1e8"></rect>
+        <g fill="#1f1b15">
+          <rect x="18" y="10" width="26" height="3.5" rx="1.75"></rect>
+          <rect x="70" y="6" width="14" height="3" rx="1.5"></rect>
+          <rect x="104" y="14" width="34" height="3.5" rx="1.75"></rect>
+          <rect x="168" y="8" width="20" height="3" rx="1.5"></rect>
+          <rect x="236" y="12" width="30" height="3.5" rx="1.75"></rect>
+          <rect x="296" y="7" width="12" height="3" rx="1.5"></rect>
+        </g>
+        <circle cx="210" cy="16" r="3" fill="#a3bd8f"></circle>
+        <circle cx="54" cy="8" r="2.2" fill="#a3bd8f" opacity="0.8"></circle>
+      </svg>
+      <h1>Birch Design Lab</h1>
+      <p class="tagline">Independent design studio on the Mississippi Gulf Coast.</p>
+      <nav class="actions" aria-label="Card actions">
+        <a class="btn btn-primary" id="save-contact" href={vcfDataHref} download="birch-design-lab.vcf">
+          Save contact
+        </a>
+        <a class="btn btn-secondary" href={CONFIG.portfolioUrl}>See the work</a>
+      </nav>
+      {
+        /* AR MOUNT POINT. Renders only when AR_ENABLED; the client script
+           lazy-loads AR_MODULE_URL and calls mount(root, context) on it. */
+        CONFIG.AR_ENABLED && <div id="ar-root"></div>
+      }
+    </main>
+    <script is:inline define:vars={{ CONFIG, vcfText }}>
+      // Channel = the path the card pointed at (/hello today; future channels
+      // are added in public/_redirects only). c/s are parsed but unused today:
+      // c = card id, s = medium. All generic, nothing hardcoded per channel.
+      var channel = location.pathname.split('/').filter(Boolean).join('/') || 'root';
+      var params = new URLSearchParams(location.search);
+      var context = { channel: channel, c: params.get('c') || '', s: params.get('s') || '' };
+
+      // Fire-and-forget scan beacon. Never blocks render, silently no-ops on
+      // any failure (endpoint down, blocked, old browser).
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(
+            '/api/beacon',
+            JSON.stringify({ ts: Date.now(), path: location.pathname, c: context.c, s: context.s })
+          );
+        }
+      } catch {
+        /* no-op */
+      }
+
+      // Upgrade the vCard link from the no-JS data: URI to a Blob URL; iOS
+      // Safari is more reliable offering "add contact" from a Blob download.
+      try {
+        var save = document.getElementById('save-contact');
+        var blob = new Blob([vcfText], { type: 'text/vcard;charset=utf-8' });
+        save.href = URL.createObjectURL(blob);
+      } catch {
+        /* keep the data: URI */
+      }
+
+      // AR entry. Dead code while AR_ENABLED is false; when true, the module
+      // owns everything inside #ar-root.
+      if (CONFIG.AR_ENABLED) {
+        import(CONFIG.AR_MODULE_URL)
+          .then(function (mod) {
+            mod.mount(document.getElementById('ar-root'), context);
+          })
+          .catch(function () {
+            /* AR is progressive enhancement; the card still works */
+          });
+      }
+    </script>
+  </body>
+</html>

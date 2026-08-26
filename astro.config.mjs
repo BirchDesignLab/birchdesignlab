@@ -68,11 +68,14 @@ export default defineConfig({
     svelte(),
     sitemap({
       // styleguide and the Regulator are internal instruments; /contact/sent is
-      // a redirect target with no standalone meaning. None belong in the sitemap.
+      // a redirect target with no standalone meaning; /ar-card is the QR/NFC
+      // card landing, reached by scanning a card, not by search (also noindex).
+      // None belong in the sitemap.
       filter: (page) =>
         !page.includes('/styleguide') &&
         !page.includes('/lab/bdl-006') &&
-        !page.includes('/contact/sent'),
+        !page.includes('/contact/sent') &&
+        !page.includes('/ar-card'),
     }),
   ],
   vite: {

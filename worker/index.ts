@@ -7,6 +7,11 @@
  * POST /api/contact: honeypot -> rate limit -> validate -> email the owner,
  * then a 303 redirect so the no-JS form lands on /contact/sent. Errors return
  * plain pages rather than JSON because the form works without JavaScript.
+ *
+ * POST /api/beacon: scan counter for the AR card landing (src/pages/ar-card.astro,
+ * context in docs/ar-card/HANDOFF.md). Writes one Analytics Engine data point
+ * per scan: no cookies, no IP, no user agent, no PII of any kind. The contract
+ * is fail-silent: whatever happens, the visitor gets an empty 204.
  */
 import { parseContactSubmission } from '../src/lib/contact/validate';
 
@@ -50,6 +55,14 @@ export default {
         return secure(new Response('Method not allowed', { status: 405, headers: { Allow: 'POST' } }));
       }
       return handleContact(request, env, url);
+    }
+
+    // Same trailing-slash tolerance as /api/contact.
+    if (url.pathname === '/api/beacon' || url.pathname === '/api/beacon/') {
+      if (request.method !== 'POST') {
+        return secure(new Response(null, { status: 405, headers: { Allow: 'POST' } }));
+      }
+      return handleBeacon(request, env);
     }
 
     // Anything else that missed the assets layer: let the assets binding
@@ -110,6 +123,34 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
   }
 
   return sentRedirect(url);
+}
+
+/** Record one card scan in Analytics Engine. Body is the landing page's
+ *  {ts, path, c, s} JSON; everything is optional and length-capped. The index
+ *  is the channel (path with slashes trimmed) so per-channel sampling stays
+ *  fair; blobs keep the raw path plus the parsed-but-unused c/s params.
+ *  Anything malformed is dropped without comment: a beacon endpoint must never
+ *  give a visitor an error, and the binding may be absent in local dev. */
+async function handleBeacon(request: Request, env: Env): Promise<Response> {
+  try {
+    const raw = await request.text();
+    if (raw.length > 0 && raw.length <= 1024) {
+      const data = JSON.parse(raw) as Record<string, unknown>;
+      const str = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
+      const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+      const path = str(data.path, 128);
+      const channel = path.split('/').filter(Boolean).join('/') || 'root';
+      // Not awaited: writeDataPoint is fire-and-forget by design.
+      env.AR_ANALYTICS?.writeDataPoint({
+        indexes: [channel.slice(0, 96)],
+        blobs: [path, str(data.c, 64), str(data.s, 64)],
+        doubles: [num(data.ts)],
+      });
+    }
+  } catch {
+    // Fail silent by contract.
+  }
+  return secure(new Response(null, { status: 204 }));
 }
 
 /** 303 so the browser GETs the confirmation page and refresh cannot resubmit.
