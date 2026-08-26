@@ -38,7 +38,10 @@ const CONFIG = {
     url: 'https://birchdesignlab.com',
   },
 
-  portfolioUrl: '/lab/',
+  // Where the two "go look at us" buttons land. Same-origin paths, because
+  // every channel that reaches this page is already on the site's domain.
+  siteUrl: '/',
+  labUrl: '/lab/',
 };
 
 const vcfText = buildVcf(CONFIG.card);
@@ -105,11 +108,11 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         width: min(100% - 3rem, 21rem);
         padding: 2.5rem 0;
       }
-      .bark {
+      .mark {
         display: block;
-        width: 100%;
-        height: auto;
-        margin-bottom: 2rem;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1.75rem;
       }
       h1 {
         margin: 0 0 0.35rem;
@@ -163,18 +166,22 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
   </head>
   <body>
     <main>
-      <svg class="bark" viewBox="0 0 336 24" aria-hidden="true" focusable="false">
-        <rect width="336" height="24" rx="3" fill="#f5f1e8"></rect>
-        <g fill="#1f1b15">
-          <rect x="18" y="10" width="26" height="3.5" rx="1.75"></rect>
-          <rect x="70" y="6" width="14" height="3" rx="1.5"></rect>
-          <rect x="104" y="14" width="34" height="3.5" rx="1.75"></rect>
-          <rect x="168" y="8" width="20" height="3" rx="1.5"></rect>
-          <rect x="236" y="12" width="30" height="3.5" rx="1.75"></rect>
-          <rect x="296" y="7" width="12" height="3" rx="1.5"></rect>
+      {/* The locked mark, inlined rather than linked: it is the same artwork as
+          public/favicon.svg, and at this size a copy in the document costs less
+          than the round trip a second request would spend. Its plate is the
+          same charcoal as the field, so the strokes read as floating on it. */}
+      <svg class="mark" viewBox="0 0 200 200" role="img" aria-label="Birch Design Lab">
+        <rect width="200" height="200" fill="#1c1a17"></rect>
+        <g style="mix-blend-mode:screen">
+          <path
+            d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172"
+            fill="none" stroke="#a89f8f" stroke-width="20" stroke-linecap="square" opacity="0.9"></path>
         </g>
-        <circle cx="210" cy="16" r="3" fill="#a3bd8f"></circle>
-        <circle cx="54" cy="8" r="2.2" fill="#a3bd8f" opacity="0.8"></circle>
+        <g style="mix-blend-mode:screen">
+          <path
+            d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168"
+            fill="none" stroke="#2f6644" stroke-width="20" stroke-linecap="square"></path>
+        </g>
       </svg>
       <h1>Birch Design Lab</h1>
       <p class="tagline">Independent design studio on the Mississippi Gulf Coast.</p>
@@ -182,7 +189,8 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         <a class="btn btn-primary" id="save-contact" href={vcfDataHref} download="birch-design-lab.vcf">
           Save contact
         </a>
-        <a class="btn btn-secondary" href={CONFIG.portfolioUrl}>See the work</a>
+        <a class="btn btn-secondary" href={CONFIG.siteUrl}>Visit the site</a>
+        <a class="btn btn-secondary" href={CONFIG.labUrl}>Enter the Lab</a>
       </nav>
       {
         /* AR MOUNT POINT. Renders only when AR_ENABLED; the client script

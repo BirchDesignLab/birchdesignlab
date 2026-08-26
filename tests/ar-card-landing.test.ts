@@ -57,6 +57,16 @@ describe('ar-card landing page', () => {
     expect(page).toContain('birch-design-lab.vcf');
   });
 
+  it('offers all three actions, each pointing somewhere real', () => {
+    expect(page).toContain('Save contact');
+    expect(page).toContain('Visit the site');
+    expect(page).toContain('Enter the Lab');
+    expect(page).toMatch(/siteUrl:\s*'\/'/);
+    expect(page).toMatch(/labUrl:\s*'\/lab\/'/);
+    expect(page).toContain('href={CONFIG.siteUrl}');
+    expect(page).toContain('href={CONFIG.labUrl}');
+  });
+
   it('stays out of search results but unfurls when shared', () => {
     expect(page).toContain('noindex');
     expect(page).toContain('og:image');
