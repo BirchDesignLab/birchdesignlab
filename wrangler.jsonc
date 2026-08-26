@@ -49,7 +49,7 @@
   // Scan counter for the AR card landing (POST /api/beacon). The dataset is
   // auto-created on the first write; no dashboard step. Data points carry no
   // PII (no IP, no UA, no cookies). Analytics Engine retention is ~3 months;
-  // docs/ar-card/BACKLOG.md tracks the durable-storage decision.
+  // docs/lab-backlog.md tracks the durable-storage decision under "AR card".
   "analytics_engine_datasets": [
     {
       "binding": "AR_ANALYTICS",
