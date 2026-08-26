@@ -1,7 +1,9 @@
 # AR Card · HANDOFF
 
 Session context for the WebAR business card system. Every session working on
-this project reads this file and `BACKLOG.md` first and updates both last.
+this project reads this file first and updates it last. Work items live in
+`docs/lab-backlog.md` under "AR card"; there is one backlog file for the whole
+repo, so update that one too rather than starting a local list.
 Companion design reference: `docs/bdl-ar-card-prompt-pack-v4.md` (untracked,
 founder working doc) carries the AR-phase constraints (multi-target `.mind`,
 tracking-target rules, vendoring policy).
@@ -29,7 +31,8 @@ file: a three-line page passing a channel label to
 The tier 1 path gets chosen **at tier 1 production time**, because its QR code
 is permanently laser-etched into ~$10/ea wood cards. Choosing early and wrong
 burns physical inventory; choosing late costs nothing. Decision gate lives in
-`BACKLOG.md`. Adding it is one more page file plus a line in the sitemap filter.
+`docs/lab-backlog.md`. Adding it is one more page file plus a line in the
+sitemap filter.
 
 The channel label is what per-channel scan counts group on, so it is stable
 even if the file is renamed. Renaming a label splits its history in two.
@@ -134,7 +137,7 @@ and the AR stub.
   break-screen QR).
 - Beacon endpoint **live with the landing**; scans are counted from first
   deploy. Stats view, rate limiting, and durable storage are still open.
-- AR experience, asset pipeline, QA pass: not started — see `BACKLOG.md`.
+- AR experience, asset pipeline, QA pass: not started — see `docs/lab-backlog.md`.
 
 ## Deploy
 

@@ -13,10 +13,17 @@
  * Reached by scanning a card, not by search, so every channel page is noindex
  * and excluded from the sitemap (see astro.config.mjs).
  *
- * Deliberately standalone: no BaseLayout, no site CSS, no webfonts, no GA4.
- * The critical path is this one HTML document (budget ~14KB) so it is
- * interactive in under 2s on 4G. Colors mirror the dark face of
- * src/styles/tokens.css by value; if the palette shifts, update these too.
+ * Deliberately standalone: no BaseLayout, no site CSS, no linked webfonts, no
+ * GA4. The critical path is this one HTML document so it is interactive in
+ * under 2s on 4G. Colors mirror the dark face of src/styles/tokens.css by
+ * value; if the palette shifts, update these too.
+ *
+ * Marcellus is the exception to "no webfonts", and it is inlined rather than
+ * linked. This page is a stranger's first look at the studio, and the brand
+ * face arriving a beat late (or not at all) reads as a cheap page. The subset
+ * is printable ASCII only, ~8KB of woff2 carried in the document, which is
+ * cheaper than the request and the fallback flash a linked font would cost.
+ * Regenerate with scripts/ar-card/subset-marcellus.mjs.
  *
  * The AR experience does not exist yet. AR_ENABLED=false renders no AR UI at
  * all; enabling it later means flipping the flag and shipping the module at
@@ -24,6 +31,7 @@
  * docs/ar-card/HANDOFF.md.
  */
 import { buildVcf } from '../lib/vcard';
+import { MARCELLUS_WOFF2_BASE64 } from '../lib/card-font';
 
 interface Props {
   /** Analytics label for the card that led here. Becomes the Analytics Engine
@@ -48,15 +56,24 @@ const CONFIG = {
   // into this document's critical path.
   AR_MODULE_URL: '/ar/card-ar.js',
 
-  // PLACEHOLDER contact details. Safe to ship (public studio identity only),
-  // but the founder fills name/title/phone with real values before any card
-  // carrying this URL is printed or etched. Empty fields are omitted from the
-  // vCard entirely; values are RFC-escaped by src/lib/vcard.ts, so commas and
-  // semicolons are safe here. Set isOrg false when name becomes a person.
+  // Public studio identity only, which is the whole point: this is a company
+  // card, and X-ABShowAs:COMPANY keeps it rendering as one rather than as a
+  // person with a blank name.
+  //
+  // Name, title, email and url are real. `phone` is the one gap, and it is
+  // empty on purpose rather than by neglect: an empty field is omitted from
+  // the vCard entirely, so the card simply has no TEL. Filling it with the
+  // personal mobile was considered and declined 08-26-26 (a saved vCard is
+  // permanent per scan, and the number would outlive any later swap in git
+  // history). It gets a Google Voice number before any card is printed or
+  // etched. Reasoning and acceptance: docs/lab-backlog.md, "AR card".
+  //
+  // Values are RFC-escaped by src/lib/vcard.ts, so commas and semicolons are
+  // safe here. Set isOrg false when name becomes a person.
   card: {
     isOrg: true,
     name: 'Birch Design Lab',
-    title: 'Independent design studio',
+    title: 'Independent software engineering and web design studio',
     company: 'Birch Design Lab',
     phone: '',
     email: 'hello@birchdesignlab.com',
@@ -76,7 +93,7 @@ const vcfDataHref = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcfTex
 
 const title = 'Birch Design Lab';
 const description =
-  'Independent design studio on the Mississippi Gulf Coast. Save our contact card or see the work.';
+  'Independent software engineering and web design studio on the Mississippi Gulf Coast. Save our contact card or see the work.';
 const canonical = new URL(path, 'https://birchdesignlab.com').toString();
 const ogImage = 'https://birchdesignlab.com/og/home.png';
 ---
@@ -105,15 +122,36 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
     <meta property="og:image:alt" content={title} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image:alt" content={title} />
+    <style is:inline set:html={`
+      /* The brand face, carried in the document rather than fetched. See the
+         header comment for why this page pays 8KB to avoid one request.
+         font-display is irrelevant to a data: source (nothing is fetched, so
+         there is no block or swap period) and is omitted deliberately. */
+      @font-face {
+        font-family: 'Marcellus';
+        font-style: normal;
+        font-weight: 400;
+        src: url(data:font/woff2;base64,${MARCELLUS_WOFF2_BASE64}) format('woff2');
+      }
+    `}></style>
     <style is:inline>
       /* Values mirror the dark face in src/styles/tokens.css. */
       :root {
         --field: #1c1a17;
         --mark: #f4f0e6;
         --muted: #a89f8f;
+        /* Sage survives as the focus ring only: it is the one green here that
+           reads against both the field and the canopy button it can land on. */
         --accent: #a3bd8f;
-        --on-accent: #1c1a17;
         --line: rgba(244, 240, 230, 0.24);
+        /* The mark's canopy green as it actually appears, which is not the
+           #2f6644 in the SVG: that stroke is blended `screen` over the field,
+           so what the eye gets is 255-(255-a)(255-b)/255 against #1c1a17. Used
+           flat here, it has to be the blended value. The raw stroke colour on
+           this field is 2.57:1 and illegible; this is 3.29:1, which clears AA
+           for large text but not for body, so it stays on the wordmark and the
+           button fill and never lands under 24px. */
+        --canopy: #467655;
       }
       * {
         box-sizing: border-box;
@@ -125,31 +163,50 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         place-items: center;
         background: var(--field);
         color: var(--mark);
-        font-family: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-        line-height: 1.65;
+        /* Marcellus is the whole page, not just the wordmark. The site splits
+           display (Marcellus) from body (Spectral), but four lines of text do
+           not make a body-copy problem, and mixing two faces here would cost a
+           second subset to fix a mismatch nobody asked for. */
+        font-family: 'Marcellus', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+        line-height: 1.6;
         -webkit-font-smoothing: antialiased;
       }
       main {
-        width: min(100% - 3rem, 21rem);
+        width: min(100% - 2.5rem, 23rem);
         padding: 2.5rem 0;
+        text-align: center;
       }
+      /* Sized against the column rather than in fixed pixels: the mark is the
+         first thing a scan resolves into, so it should hold the same share of
+         the card on a 320px phone as on a wide one. 168px is where it stops
+         crowding the wordmark under it.
+
+         The vh term does nothing on a phone held upright (26vh clears 168px
+         from a 646px viewport up), and everything on a short one: turned
+         sideways, or on the last 568px-tall handsets, a mark sized only
+         against the column pushes two of the three actions under the fold. */
       .mark {
         display: block;
-        width: 64px;
-        height: 64px;
-        margin-bottom: 1.75rem;
+        width: min(58%, 168px, 26vh);
+        height: auto;
+        aspect-ratio: 1;
+        margin: 0 auto 2rem;
       }
       h1 {
-        margin: 0 0 0.35rem;
-        font-size: 1.35rem;
+        margin: 0 0 0.5rem;
+        /* Never below 24px: this is the canopy green flat on the field, which
+           only clears contrast as large text. See --canopy. */
+        font-size: 1.7rem;
+        color: var(--canopy);
         font-weight: 400;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
+        line-height: 1.25;
         text-transform: uppercase;
       }
       .tagline {
         margin: 0 0 2.25rem;
         color: var(--muted);
-        font-size: 0.95rem;
+        font-size: 1.0625rem;
       }
       .actions {
         display: grid;
@@ -157,16 +214,22 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
       }
       .btn {
         display: block;
-        padding: 0.85rem 1rem;
+        padding: 0.95rem 1rem;
         border-radius: 6px;
         text-align: center;
         text-decoration: none;
-        font-size: 1rem;
+        font-size: 1.0625rem;
       }
+      /* Marcellus ships one weight. Asking for 600 here used to faux-bold the
+         primary button; the fill and the tracking carry the emphasis instead.
+
+         The label is warm white rather than the charcoal it was under the old
+         sage fill. Canopy is a dark green: charcoal on it is 3.29:1 and fails
+         AA at this size, warm white on it is 4.62:1 and passes. */
       .btn-primary {
-        background: var(--accent);
-        color: var(--on-accent);
-        font-weight: 600;
+        background: var(--canopy);
+        color: var(--mark);
+        letter-spacing: 0.04em;
       }
       .btn-secondary {
         border: 1px solid var(--line);
@@ -175,6 +238,21 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
       :focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 3px;
+      }
+      /* Short viewports, which here means a phone turned sideways or one of the
+         last 568px-tall handsets. The page offers three actions and the whole
+         point is that a stranger sees all three; without this the mark and its
+         breathing room push one or two of them under the fold. */
+      @media (max-height: 640px) {
+        main {
+          padding: 1.5rem 0;
+        }
+        .mark {
+          margin-bottom: 1.4rem;
+        }
+        .tagline {
+          margin-bottom: 1.6rem;
+        }
       }
       @media (prefers-reduced-motion: no-preference) {
         main {
@@ -186,30 +264,61 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
             transform: translateY(12px);
           }
         }
+        /* 9e-settle's gesture: the canopy stroke arrives out of register and
+           settles onto the neutral one. Run once here rather than on the 9s
+           loop the source file carries. The loop spends part of every cycle
+           travelling back out of register, which is fine on a review sheet and
+           wrong on the page a stranger lands on holding the card: it would
+           show them a broken mark on a timer. To restore the loop, add
+           `infinite` and swap `both` out.
+
+           The offset lives only inside this query, so the no-motion mark is
+           simply the registered one with nothing to settle. */
+        .mark .settle {
+          animation: settle 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes settle {
+          from {
+            transform: translate(-26px, 10px);
+          }
+        }
       }
     </style>
   </head>
   <body>
     <main>
-      {/* The locked mark, inlined rather than linked: it is the same artwork as
-          public/favicon.svg, and at this size a copy in the document costs less
-          than the round trip a second request would spend. Its plate is the
-          same charcoal as the field, so the strokes read as floating on it. */}
+      {/* The locked mark, inlined rather than linked, because at this size a
+          copy in the document costs less than the round trip a second request
+          would spend. Its plate is the same charcoal as the field, so the
+          strokes read as floating on it.
+
+          This is the display cut (assets/brand/logos/files/9e-settle.svg, the
+          stroke-width 14 night face), not the favicon cut it used to be. The
+          favicon is drawn at 20 so it survives 32px, and that weight at 104px
+          reads as a blunt shape rather than the mark.
+
+          The source file's own <style> is not carried over: inlined into a
+          document its `.m` hook stops being scoped to the SVG, so the motion
+          is restated in the page's stylesheet under a name that cannot collide
+          with anything. Geometry, faces and the rest of the set are in
+          assets/brand/logos/, with the README there. */}
       <svg class="mark" viewBox="0 0 200 200" role="img" aria-label="Birch Design Lab">
         <rect width="200" height="200" fill="#1c1a17"></rect>
         <g style="mix-blend-mode:screen">
           <path
             d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172"
-            fill="none" stroke="#a89f8f" stroke-width="20" stroke-linecap="square" opacity="0.9"></path>
+            fill="none" stroke="#a89f8f" stroke-width="14" stroke-linecap="square" opacity="0.9"></path>
         </g>
-        <g style="mix-blend-mode:screen">
-          <path
-            d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168"
-            fill="none" stroke="#2f6644" stroke-width="20" stroke-linecap="square"></path>
+        <g class="settle">
+          <g style="mix-blend-mode:screen">
+            <path
+              d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168"
+              fill="none" stroke="#2f6644" stroke-width="14" stroke-linecap="square"></path>
+          </g>
         </g>
       </svg>
       <h1>Birch Design Lab</h1>
-      <p class="tagline">Independent design studio on the Mississippi Gulf Coast.</p>
+      <p class="tagline">Independent software engineering and web design studio on the Mississippi Gulf Coast.</p>
       <nav class="actions" aria-label="Card actions">
         <a class="btn btn-primary" id="save-contact" href={vcfDataHref} download="birch-design-lab.vcf">
           Save contact
