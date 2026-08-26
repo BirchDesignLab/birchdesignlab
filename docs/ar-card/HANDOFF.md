@@ -16,27 +16,35 @@ exists so the AR app later *adds to it and replaces nothing*.
 
 ## URL scheme
 
-**Path = channel label.** One physical page, many channel paths, each wired as
-a one-line 200 rewrite in `public/_redirects`.
+**A channel is a page.** Each card gets its own URL, and that URL is a real
+file: a three-line page passing a channel label to
+`src/components/CardLanding.astro`, which is the landing itself.
 
-| Channel | Path | Status |
-|---|---|---|
-| Tier 2 kraft scatter cards | `/hello` | **Live now** |
-| Tier 1 wood cards | ? | **DELIBERATELY UNDECIDED** |
-| Any digital channel | ? | **DELIBERATELY UNDECIDED** |
+| Channel | Path | Label | Status |
+|---|---|---|---|
+| Tier 2 kraft scatter cards | `/hello` | `kraft` | **Live now** |
+| BDL card QR in Cheer and Chatter's break showcase | `/showcase` | `showcase` | **Live now** |
+| Tier 1 wood cards | ? | ? | **DELIBERATELY UNDECIDED** |
 
 The tier 1 path gets chosen **at tier 1 production time**, because its QR code
-is permanently laser-etched into ~$10/ea wood cards, while NFC chips stay
-rewritable. Choosing early and wrong burns physical inventory; choosing late
-costs nothing. Decision gate lives in `BACKLOG.md`.
+is permanently laser-etched into ~$10/ea wood cards. Choosing early and wrong
+burns physical inventory; choosing late costs nothing. Decision gate lives in
+`BACKLOG.md`. Adding it is one more page file plus a line in the sitemap filter.
 
-The page parses its channel generically off `location.pathname` (slashes
-trimmed, empty = `root`), so a future channel is a rewrite line and zero code
-changes. Unknown paths and the canonical `/ar-card/` itself resolve to the
-same page and are simply logged under their own channel label.
+The channel label is what per-channel scan counts group on, so it is stable
+even if the file is renamed. Renaming a label splits its history in two.
 
-**Query params:** `?c=` card id, `?s=` medium. Parsed on load, carried in the
-beacon, otherwise unused today.
+**Put the trailing slash in the QR payload: `birchdesignlab.com/hello/`, not
+`/hello`.** Astro builds directory-format pages, so the slashless form works
+but costs a 307 canonicalization hop before the page starts loading. One
+redirect is a whole round trip on a phone on 4G, spent before the first byte
+of the page, and the budget here is under two seconds. The old rewrite version
+wired both forms explicitly; a page has no such hook, so the slash belongs in
+the payload instead. This matters most for the wood tier, where the URL is
+etched permanently.
+
+**No query parameters, and no rewrites.** Both were removed 08-26-26; see
+"Simplification" below for why.
 
 ## Perf budgets
 
@@ -48,23 +56,23 @@ beacon, otherwise unused today.
 
 ## Decisions this session (08-25-26)
 
-- **Page lives at `src/pages/ar-card.astro`** — an Astro page (so `astro
-  check`, the build, and the test suite cover it) but fully standalone: no
-  BaseLayout, no site CSS import, no GA4. Token values are mirrored by hand
-  from the dark face of `src/styles/tokens.css` (charcoal field, bark-warm
-  mark, moss accent) with a comment marking the mirror. Builds to
-  `dist/ar-card/index.html`.
-- **Rewrites wired from the repo** via `public/_redirects` — Workers Static
-  Assets supports the file natively, including 200 rewrites (URL stays on the
-  channel path). No dashboard changes needed. Caveat for later: `_redirects`
-  rules do NOT apply to worker-served responses, but only `/api/*` is
-  worker-first here, so channel paths are always asset-served.
-- **`/hello` and `/hello/` both wired** — QR payloads will omit the trailing
-  slash; both forms rewrite so no canonicalization hop ever shows a 404.
-- **AR stubbed, not teased.** `AR_ENABLED: false` in the page's CONFIG renders
-  no AR UI at all. Enabling later = flip the flag and ship a module at
-  `AR_MODULE_URL` exporting `mount(rootEl, {channel, c, s})`; the mount point
-  (`#ar-root`) and lazy `import()` are already in place.
+- **The landing lives in `src/components/CardLanding.astro`**, rendered by a
+  thin page per channel. Fully standalone: no BaseLayout, no site CSS import,
+  no GA4. Token values are mirrored by hand from the dark face of
+  `src/styles/tokens.css` (charcoal field, bark-warm mark, moss accent) with a
+  comment marking the mirror.
+- **AR stubbed, not teased, and per channel.** No page renders AR UI today.
+  Enabling it later = ship a module at `AR_MODULE_URL` (`/ar/card-ar.js`)
+  exporting `mount(rootEl, channel)`, then add `ar` to the channel pages that
+  should have it; the mount point (`#ar-root`) and the lazy fetch are already
+  in place. **AR is a property of the card, not of the app.** `/hello` is a
+  card someone is holding, so it becomes an AR channel. `/showcase` is a QR on
+  a television across a room, and pointing a phone back at that television
+  tracks nothing, so it stays a plain landing forever: mark, save contact,
+  visit the site, enter the Lab. The prop defaults to off so a new channel
+  cannot inherit AR by accident. The module is fetched by URL rather than
+  imported so that turning AR on for a card never pulls AR's weight into the
+  landing's critical path.
 - **vCard is generated client-side** as a Blob download, with a no-JS `data:`
   URI fallback rendered at build time. CRLF line endings (iOS is strict).
   Contact fields sit in the page's CONFIG object, **placeholder-marked**: the
@@ -82,8 +90,8 @@ beacon, otherwise unused today.
   last space when `card.isOrg` is set false.
 - **Beacon endpoint stood up now** (chose the "small job" fork): `POST
   /api/beacon` in `worker/index.ts` writes one Workers Analytics Engine data
-  point per scan — index = channel, blobs = [path, c, s], double = client ts.
-  No cookies, no IP, no UA, no PII. Fail-silent contract: always an empty 204.
+  point per scan — index = channel, double = client ts. That is the entire
+  payload. No cookies, no IP, no UA, no PII. Fail-silent: always an empty 204.
   Binding `AR_ANALYTICS`, dataset `ar_card_scans`, auto-created on first
   write, currently unbilled. **Caveat: AE retention is ~3 months** — fine for
   the per-tier comparison that matters, but the durable-storage decision is a
@@ -96,15 +104,37 @@ beacon, otherwise unused today.
 - **No GA4 on this page** — the site's GA4 stays on business pages; the card
   landing's only analytics is the first-party beacon.
 
+## Simplification (08-26-26)
+
+The first build carried machinery for things that turned out not to exist.
+Founder's call, and the right one: do not carry weight for a future that has
+not been decided.
+
+- **`?c=` card id: removed.** Kraft scatter cards are identical. There is no
+  per-card identity to record, so the parameter labelled nothing.
+- **`?s=` medium: removed.** NFC is dropped — the wood cards cannot be sourced
+  with chips in them — so every scan is a QR scan and the field had one
+  possible value.
+- **`public/_redirects` and `/ar-card`: removed.** Serving every channel from
+  one file behind a 200 rewrite meant a URL existed that nothing explained,
+  which is exactly the confusion it caused. A channel is a page now. The path
+  is the file, the channel label is a prop, and nothing is parsed at runtime.
+- **NFC batch writer: dropped**, not deferred. Nothing else depended on it.
+
+What survived is what earns its place: the channel label (two real channels
+today, a third coming when the wood tier is decided), the beacon, the vCard,
+and the AR stub.
+
 ## Current state
 
 - Landing **done-with-caveat** (AR stubbed; vCard placeholders pending real
-  founder details). Tests: `tests/ar-card-landing.test.ts` (source
-  invariants), `tests/beacon-worker.test.ts` (endpoint behavior).
+  founder details). Tests: `tests/card-landing.test.ts` (source invariants),
+  `tests/beacon-worker.test.ts` (endpoint behavior).
+- Two channels live: `/hello` (kraft) and `/showcase` (the Cheer and Chatter
+  break-screen QR).
 - Beacon endpoint **live with the landing**; scans are counted from first
   deploy. Stats view, rate limiting, and durable storage are still open.
-- AR experience, asset pipeline, NFC writer, QA pass: not started — see
-  `BACKLOG.md`.
+- AR experience, asset pipeline, QA pass: not started — see `BACKLOG.md`.
 
 ## Deploy
 

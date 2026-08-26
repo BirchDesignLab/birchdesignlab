@@ -1,9 +1,17 @@
 ---
 /**
- * AR card landing. The permanent page behind every physical/digital card
- * channel: /hello (kraft tier 2) rewrites here via public/_redirects, and any
- * future channel path is one more rewrite line. Reached by scanning a card,
- * not by search, so it is noindex and excluded from the sitemap.
+ * The card landing page, rendered by one thin page file per channel:
+ * src/pages/hello.astro (kraft cards), src/pages/showcase.astro (the QR on the
+ * Birch Design Lab card in Cheer and Chatter's break screen), and whatever the
+ * wood tier is called once its QR is etched.
+ *
+ * A channel is a page, not a rewrite. The earlier version served every channel
+ * from one file behind public/_redirects, which meant a URL existed that
+ * nothing explained. Now the path is the file, and the channel label is passed
+ * in as a prop rather than read back out of the URL at runtime.
+ *
+ * Reached by scanning a card, not by search, so every channel page is noindex
+ * and excluded from the sitemap (see astro.config.mjs).
  *
  * Deliberately standalone: no BaseLayout, no site CSS, no webfonts, no GA4.
  * The critical path is this one HTML document (budget ~14KB) so it is
@@ -17,11 +25,28 @@
  */
 import { buildVcf } from '../lib/vcard';
 
+interface Props {
+  /** Analytics label for the card that led here. Becomes the Analytics Engine
+   *  index, so it is the value the per-channel counts group by. Keep it short
+   *  and stable: renaming one splits its history in two. */
+  channel: string;
+  /** Canonical path of the page rendering this, for the canonical link tag. */
+  path: string;
+  /** Whether this channel has a physical card to point a camera at. AR is a
+   *  property of the card, not of the app: /hello is a card someone is holding,
+   *  /showcase is a QR on a television across a room, and pointing a phone back
+   *  at that television tracks nothing. Off unless a channel says otherwise, so
+   *  a new channel cannot inherit AR by accident. */
+  ar?: boolean;
+}
+const { channel, path, ar = false } = Astro.props;
+
 const CONFIG = {
-  // AR slot. False = no AR UI renders at all (no teaser). Flip to true once
-  // the module at AR_MODULE_URL exists; nothing else on this page changes.
-  AR_ENABLED: false,
-  AR_MODULE_URL: '/ar-card/ar.js',
+  // Where the AR module will live once it exists. Nothing fetches it until a
+  // channel page passes `ar`, and no channel does yet. Loaded by URL rather
+  // than imported so that turning AR on for a card never pulls AR's weight
+  // into this document's critical path.
+  AR_MODULE_URL: '/ar/card-ar.js',
 
   // PLACEHOLDER contact details. Safe to ship (public studio identity only),
   // but the founder fills name/title/phone with real values before any card
@@ -38,7 +63,10 @@ const CONFIG = {
     url: 'https://birchdesignlab.com',
   },
 
-  portfolioUrl: '/lab/',
+  // Where the two "go look at us" buttons land. Same-origin paths, because
+  // every channel that reaches this page is already on the site's domain.
+  siteUrl: '/',
+  labUrl: '/lab/',
 };
 
 const vcfText = buildVcf(CONFIG.card);
@@ -49,7 +77,7 @@ const vcfDataHref = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcfTex
 const title = 'Birch Design Lab';
 const description =
   'Independent design studio on the Mississippi Gulf Coast. Save our contact card or see the work.';
-const canonical = 'https://birchdesignlab.com/ar-card/';
+const canonical = new URL(path, 'https://birchdesignlab.com').toString();
 const ogImage = 'https://birchdesignlab.com/og/home.png';
 ---
 
@@ -105,11 +133,11 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         width: min(100% - 3rem, 21rem);
         padding: 2.5rem 0;
       }
-      .bark {
+      .mark {
         display: block;
-        width: 100%;
-        height: auto;
-        margin-bottom: 2rem;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1.75rem;
       }
       h1 {
         margin: 0 0 0.35rem;
@@ -163,18 +191,22 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
   </head>
   <body>
     <main>
-      <svg class="bark" viewBox="0 0 336 24" aria-hidden="true" focusable="false">
-        <rect width="336" height="24" rx="3" fill="#f5f1e8"></rect>
-        <g fill="#1f1b15">
-          <rect x="18" y="10" width="26" height="3.5" rx="1.75"></rect>
-          <rect x="70" y="6" width="14" height="3" rx="1.5"></rect>
-          <rect x="104" y="14" width="34" height="3.5" rx="1.75"></rect>
-          <rect x="168" y="8" width="20" height="3" rx="1.5"></rect>
-          <rect x="236" y="12" width="30" height="3.5" rx="1.75"></rect>
-          <rect x="296" y="7" width="12" height="3" rx="1.5"></rect>
+      {/* The locked mark, inlined rather than linked: it is the same artwork as
+          public/favicon.svg, and at this size a copy in the document costs less
+          than the round trip a second request would spend. Its plate is the
+          same charcoal as the field, so the strokes read as floating on it. */}
+      <svg class="mark" viewBox="0 0 200 200" role="img" aria-label="Birch Design Lab">
+        <rect width="200" height="200" fill="#1c1a17"></rect>
+        <g style="mix-blend-mode:screen">
+          <path
+            d="M58 20 V184 M58 32 L120 64 L58 96 M58 96 L126 132 L58 172"
+            fill="none" stroke="#a89f8f" stroke-width="20" stroke-linecap="square" opacity="0.9"></path>
         </g>
-        <circle cx="210" cy="16" r="3" fill="#a3bd8f"></circle>
-        <circle cx="54" cy="8" r="2.2" fill="#a3bd8f" opacity="0.8"></circle>
+        <g style="mix-blend-mode:screen">
+          <path
+            d="M70 16 V180 M70 28 L132 60 L70 92 M70 92 L138 128 L70 168"
+            fill="none" stroke="#2f6644" stroke-width="20" stroke-linecap="square"></path>
+        </g>
       </svg>
       <h1>Birch Design Lab</h1>
       <p class="tagline">Independent design studio on the Mississippi Gulf Coast.</p>
@@ -182,30 +214,22 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         <a class="btn btn-primary" id="save-contact" href={vcfDataHref} download="birch-design-lab.vcf">
           Save contact
         </a>
-        <a class="btn btn-secondary" href={CONFIG.portfolioUrl}>See the work</a>
+        <a class="btn btn-secondary" href={CONFIG.siteUrl}>Visit the site</a>
+        <a class="btn btn-secondary" href={CONFIG.labUrl}>Enter the Lab</a>
       </nav>
       {
-        /* AR MOUNT POINT. Renders only when AR_ENABLED; the client script
-           lazy-loads AR_MODULE_URL and calls mount(root, context) on it. */
-        CONFIG.AR_ENABLED && <div id="ar-root"></div>
+        /* AR MOUNT POINT. Renders only for a channel that opted in; the client
+           script lazy-loads AR_MODULE_URL and calls mount(root, channel). */
+        ar && <div id="ar-root"></div>
       }
     </main>
-    <script is:inline define:vars={{ CONFIG, vcfText }}>
-      // Channel = the path the card pointed at (/hello today; future channels
-      // are added in public/_redirects only). c/s are parsed but unused today:
-      // c = card id, s = medium. All generic, nothing hardcoded per channel.
-      var channel = location.pathname.split('/').filter(Boolean).join('/') || 'root';
-      var params = new URLSearchParams(location.search);
-      var context = { channel: channel, c: params.get('c') || '', s: params.get('s') || '' };
-
+    <script is:inline define:vars={{ CONFIG, vcfText, channel, ar }}>
       // Fire-and-forget scan beacon. Never blocks render, silently no-ops on
-      // any failure (endpoint down, blocked, old browser).
+      // any failure (endpoint down, blocked, old browser). The channel is
+      // baked in by the page that rendered this, so there is nothing to parse.
       try {
         if (navigator.sendBeacon) {
-          navigator.sendBeacon(
-            '/api/beacon',
-            JSON.stringify({ ts: Date.now(), path: location.pathname, c: context.c, s: context.s })
-          );
+          navigator.sendBeacon('/api/beacon', JSON.stringify({ ts: Date.now(), channel: channel }));
         }
       } catch {
         /* no-op */
@@ -221,12 +245,12 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         /* keep the data: URI */
       }
 
-      // AR entry. Dead code while AR_ENABLED is false; when true, the module
-      // owns everything inside #ar-root.
-      if (CONFIG.AR_ENABLED) {
+      // AR entry. Nothing is fetched unless this channel opted in; when it
+      // does, the module owns everything inside #ar-root.
+      if (ar) {
         import(CONFIG.AR_MODULE_URL)
           .then(function (mod) {
-            mod.mount(document.getElementById('ar-root'), context);
+            mod.mount(document.getElementById('ar-root'), channel);
           })
           .catch(function () {
             /* AR is progressive enhancement; the card still works */

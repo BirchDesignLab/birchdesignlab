@@ -68,14 +68,16 @@ export default defineConfig({
     svelte(),
     sitemap({
       // styleguide and the Regulator are internal instruments; /contact/sent is
-      // a redirect target with no standalone meaning; /ar-card is the QR/NFC
-      // card landing, reached by scanning a card, not by search (also noindex).
-      // None belong in the sitemap.
+      // a redirect target with no standalone meaning; /hello and /showcase are
+      // card-scan landings, reached by pointing a phone at a QR code rather
+      // than by search (they are noindex too). None belong in the sitemap.
+      // A new card channel is a new page, so add it here when you add it.
       filter: (page) =>
         !page.includes('/styleguide') &&
         !page.includes('/lab/bdl-006') &&
         !page.includes('/contact/sent') &&
-        !page.includes('/ar-card'),
+        !page.includes('/hello') &&
+        !page.includes('/showcase'),
     }),
   ],
   vite: {

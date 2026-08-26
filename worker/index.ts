@@ -8,10 +8,11 @@
  * then a 303 redirect so the no-JS form lands on /contact/sent. Errors return
  * plain pages rather than JSON because the form works without JavaScript.
  *
- * POST /api/beacon: scan counter for the AR card landing (src/pages/ar-card.astro,
- * context in docs/ar-card/HANDOFF.md). Writes one Analytics Engine data point
- * per scan: no cookies, no IP, no user agent, no PII of any kind. The contract
- * is fail-silent: whatever happens, the visitor gets an empty 204.
+ * POST /api/beacon: scan counter for the card landings (src/components/
+ * CardLanding.astro, context in docs/ar-card/HANDOFF.md). Writes one Analytics
+ * Engine data point per scan: no cookies, no IP, no user agent, no PII of any
+ * kind. The contract is fail-silent: whatever happens, the visitor gets an
+ * empty 204.
  */
 import { parseContactSubmission } from '../src/lib/contact/validate';
 
@@ -126,26 +127,25 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
 }
 
 /** Record one card scan in Analytics Engine. Body is the landing page's
- *  {ts, path, c, s} JSON; everything is optional and length-capped. The index
- *  is the channel (path with slashes trimmed) so per-channel sampling stays
- *  fair; blobs keep the raw path plus the parsed-but-unused c/s params.
+ *  {ts, channel} JSON. The channel is the name of the card that led here
+ *  ("kraft", "showcase", ...), baked into the page rather than parsed out of a
+ *  URL, and it goes in as the index so per-channel counts group on it. That is
+ *  the whole payload: no cookies, no IP, no user agent, nothing per-visitor.
  *  Anything malformed is dropped without comment: a beacon endpoint must never
- *  give a visitor an error, and the binding may be absent in local dev. */
+ *  give a visitor an error, and the binding is absent in local dev. */
 async function handleBeacon(request: Request, env: Env): Promise<Response> {
   try {
     const raw = await request.text();
     if (raw.length > 0 && raw.length <= 1024) {
       const data = JSON.parse(raw) as Record<string, unknown>;
-      const str = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
-      const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
-      const path = str(data.path, 128);
-      const channel = path.split('/').filter(Boolean).join('/') || 'root';
-      // Not awaited: writeDataPoint is fire-and-forget by design.
-      env.AR_ANALYTICS?.writeDataPoint({
-        indexes: [channel.slice(0, 96)],
-        blobs: [path, str(data.c, 64), str(data.s, 64)],
-        doubles: [num(data.ts)],
-      });
+      // 96 bytes is the Analytics Engine index limit. Channel names are short
+      // ASCII labels we choose, so slicing by character is safe here.
+      const channel = typeof data.channel === 'string' ? data.channel.slice(0, 96) : '';
+      const ts = typeof data.ts === 'number' && Number.isFinite(data.ts) ? data.ts : 0;
+      if (channel) {
+        // Not awaited: writeDataPoint is fire-and-forget by design.
+        env.AR_ANALYTICS?.writeDataPoint({ indexes: [channel], doubles: [ts] });
+      }
     }
   } catch {
     // Fail silent by contract.

@@ -25,7 +25,7 @@ function beaconRequest(body: string | null, opts: { method?: string; path?: stri
   return new Request(url, { method, body }) as unknown as WorkerRequest;
 }
 
-const GOOD = JSON.stringify({ ts: 1787700000000, path: '/hello', c: 'k12', s: 'qr' });
+const GOOD = JSON.stringify({ ts: 1787700000000, channel: 'kraft' });
 
 function expectSecureHeaders(res: Response) {
   expect(res.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
@@ -33,18 +33,23 @@ function expectSecureHeaders(res: Response) {
 }
 
 describe('beacon worker', () => {
-  it('records a scan and returns an empty 204', async () => {
+  it('records a scan against its channel and returns an empty 204', async () => {
     const env = makeEnv();
     const res = await worker.fetch(beaconRequest(GOOD), env);
     expect(res.status).toBe(204);
     expect(await res.text()).toBe('');
     expect(env.AR_ANALYTICS.writeDataPoint).toHaveBeenCalledTimes(1);
     expect(env.AR_ANALYTICS.writeDataPoint).toHaveBeenCalledWith({
-      indexes: ['hello'],
-      blobs: ['/hello', 'k12', 'qr'],
+      indexes: ['kraft'],
       doubles: [1787700000000],
     });
     expectSecureHeaders(res);
+  });
+
+  it('keeps each channel separate', async () => {
+    const env = makeEnv();
+    await worker.fetch(beaconRequest(JSON.stringify({ ts: 1, channel: 'showcase' })), env);
+    expect(env.AR_ANALYTICS.writeDataPoint.mock.calls[0][0].indexes).toEqual(['showcase']);
   });
 
   it('accepts the trailing-slash path', async () => {
@@ -54,21 +59,20 @@ describe('beacon worker', () => {
     expect(env.AR_ANALYTICS.writeDataPoint).toHaveBeenCalledTimes(1);
   });
 
-  it('defaults missing fields instead of rejecting them', async () => {
+  it('defaults a missing timestamp rather than rejecting the scan', async () => {
     const env = makeEnv();
-    const res = await worker.fetch(beaconRequest(JSON.stringify({ path: '/hello/' })), env);
-    expect(res.status).toBe(204);
+    await worker.fetch(beaconRequest(JSON.stringify({ channel: 'kraft' })), env);
     expect(env.AR_ANALYTICS.writeDataPoint).toHaveBeenCalledWith({
-      indexes: ['hello'],
-      blobs: ['/hello/', '', ''],
+      indexes: ['kraft'],
       doubles: [0],
     });
   });
 
-  it('indexes an empty or bare path as root', async () => {
+  it('writes nothing when the channel is missing: an unlabelled scan is noise', async () => {
     const env = makeEnv();
-    await worker.fetch(beaconRequest(JSON.stringify({ path: '/' })), env);
-    expect(env.AR_ANALYTICS.writeDataPoint.mock.calls[0][0].indexes).toEqual(['root']);
+    const res = await worker.fetch(beaconRequest(JSON.stringify({ ts: 1 })), env);
+    expect(res.status).toBe(204);
+    expect(env.AR_ANALYTICS.writeDataPoint).not.toHaveBeenCalled();
   });
 
   it('drops malformed JSON silently and still returns 204', async () => {
@@ -81,7 +85,8 @@ describe('beacon worker', () => {
 
   it('drops an oversized body without writing', async () => {
     const env = makeEnv();
-    const res = await worker.fetch(beaconRequest(JSON.stringify({ path: 'x'.repeat(2000) })), env);
+    const body = JSON.stringify({ ts: 1, channel: 'x'.repeat(2000) });
+    const res = await worker.fetch(beaconRequest(body), env);
     expect(res.status).toBe(204);
     expect(env.AR_ANALYTICS.writeDataPoint).not.toHaveBeenCalled();
   });
@@ -93,23 +98,11 @@ describe('beacon worker', () => {
     expect(env.AR_ANALYTICS.writeDataPoint).not.toHaveBeenCalled();
   });
 
-  it('caps blob lengths so junk cannot bloat a data point', async () => {
+  it('caps the channel at the Analytics Engine index limit', async () => {
     const env = makeEnv();
-    // Long enough to overflow every per-field cap, short enough that the
-    // whole body stays under the 1KB drop threshold.
-    const long = 'a'.repeat(200);
-    await worker.fetch(
-      beaconRequest(JSON.stringify({ path: '/' + long, c: long.slice(0, 100), s: long.slice(0, 100) })),
-      env,
-    );
-    const point = env.AR_ANALYTICS.writeDataPoint.mock.calls[0][0] as {
-      indexes: string[];
-      blobs: string[];
-    };
-    expect(point.blobs[0].length).toBe(128);
-    expect(point.blobs[1].length).toBe(64);
-    expect(point.blobs[2].length).toBe(64);
-    expect(point.indexes[0].length).toBeLessThanOrEqual(96);
+    await worker.fetch(beaconRequest(JSON.stringify({ ts: 1, channel: 'a'.repeat(300) })), env);
+    const point = env.AR_ANALYTICS.writeDataPoint.mock.calls[0][0] as { indexes: string[] };
+    expect(point.indexes[0].length).toBe(96);
   });
 
   it('still returns 204 when the analytics binding is absent (local dev)', async () => {
