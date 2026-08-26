@@ -32,16 +32,20 @@ interface Props {
   channel: string;
   /** Canonical path of the page rendering this, for the canonical link tag. */
   path: string;
+  /** Whether this channel has a physical card to point a camera at. AR is a
+   *  property of the card, not of the app: /hello is a card someone is holding,
+   *  /showcase is a QR on a television across a room, and pointing a phone back
+   *  at that television tracks nothing. Off unless a channel says otherwise, so
+   *  a new channel cannot inherit AR by accident. */
+  ar?: boolean;
 }
-const { channel, path } = Astro.props;
+const { channel, path, ar = false } = Astro.props;
 
 const CONFIG = {
-  // AR slot. False = no AR UI renders at all (no teaser). Flip to true once
-  // the module at AR_MODULE_URL exists; nothing else here changes, and every
-  // channel page gets AR at once because they all render this component.
-  // The module is loaded by URL rather than imported so that turning AR on
-  // does not pull its weight into this document's critical path.
-  AR_ENABLED: false,
+  // Where the AR module will live once it exists. Nothing fetches it until a
+  // channel page passes `ar`, and no channel does yet. Loaded by URL rather
+  // than imported so that turning AR on for a card never pulls AR's weight
+  // into this document's critical path.
   AR_MODULE_URL: '/ar/card-ar.js',
 
   // PLACEHOLDER contact details. Safe to ship (public studio identity only),
@@ -214,12 +218,12 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         <a class="btn btn-secondary" href={CONFIG.labUrl}>Enter the Lab</a>
       </nav>
       {
-        /* AR MOUNT POINT. Renders only when AR_ENABLED; the client script
-           lazy-loads AR_MODULE_URL and calls mount(root, channel) on it. */
-        CONFIG.AR_ENABLED && <div id="ar-root"></div>
+        /* AR MOUNT POINT. Renders only for a channel that opted in; the client
+           script lazy-loads AR_MODULE_URL and calls mount(root, channel). */
+        ar && <div id="ar-root"></div>
       }
     </main>
-    <script is:inline define:vars={{ CONFIG, vcfText, channel }}>
+    <script is:inline define:vars={{ CONFIG, vcfText, channel, ar }}>
       // Fire-and-forget scan beacon. Never blocks render, silently no-ops on
       // any failure (endpoint down, blocked, old browser). The channel is
       // baked in by the page that rendered this, so there is nothing to parse.
@@ -241,9 +245,9 @@ const ogImage = 'https://birchdesignlab.com/og/home.png';
         /* keep the data: URI */
       }
 
-      // AR entry. Dead code while AR_ENABLED is false; when true, the module
-      // owns everything inside #ar-root.
-      if (CONFIG.AR_ENABLED) {
+      // AR entry. Nothing is fetched unless this channel opted in; when it
+      // does, the module owns everything inside #ar-root.
+      if (ar) {
         import(CONFIG.AR_MODULE_URL)
           .then(function (mod) {
             mod.mount(document.getElementById('ar-root'), channel);

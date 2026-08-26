@@ -30,6 +30,8 @@ markers), never deleted.
 - [ ] **AR scene (multi-target).** Any known card design locks and triggers
   the same logo experience; rise animation + interactions; clean teardown;
   lazy-loaded only behind a user tap from the landing's `#ar-root` mount.
+  Applies to card channels only: add `ar` to `/hello` (and the wood tier when
+  it exists), never to `/showcase`, which is a QR on a television.
 - [ ] **Asset pipeline + tracking harness.** GLB crunched under the 1.5MB
   budget; multiple source images compile into one `.mind`; a dev harness
   reports fps and time-to-first-lock per target.

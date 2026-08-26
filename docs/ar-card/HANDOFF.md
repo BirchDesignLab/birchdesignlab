@@ -61,14 +61,18 @@ etched permanently.
   no GA4. Token values are mirrored by hand from the dark face of
   `src/styles/tokens.css` (charcoal field, bark-warm mark, moss accent) with a
   comment marking the mirror.
-- **AR stubbed, not teased.** `AR_ENABLED: false` in the CONFIG renders no AR
-  UI at all. Enabling later = flip the flag and ship a module at
-  `AR_MODULE_URL` (`/ar/card-ar.js`) exporting `mount(rootEl, channel)`; the
-  mount point (`#ar-root`) and the lazy `import()` are already in place. Since
-  every channel renders the same component, turning AR on turns it on for all
-  of them at once, which is the point of the component doing the work rather
-  than the pages. The module is fetched by URL rather than imported so that
-  enabling it never pulls AR's weight into the landing's critical path.
+- **AR stubbed, not teased, and per channel.** No page renders AR UI today.
+  Enabling it later = ship a module at `AR_MODULE_URL` (`/ar/card-ar.js`)
+  exporting `mount(rootEl, channel)`, then add `ar` to the channel pages that
+  should have it; the mount point (`#ar-root`) and the lazy fetch are already
+  in place. **AR is a property of the card, not of the app.** `/hello` is a
+  card someone is holding, so it becomes an AR channel. `/showcase` is a QR on
+  a television across a room, and pointing a phone back at that television
+  tracks nothing, so it stays a plain landing forever: mark, save contact,
+  visit the site, enter the Lab. The prop defaults to off so a new channel
+  cannot inherit AR by accident. The module is fetched by URL rather than
+  imported so that turning AR on for a card never pulls AR's weight into the
+  landing's critical path.
 - **vCard is generated client-side** as a Blob download, with a no-JS `data:`
   URI fallback rendered at build time. CRLF line endings (iOS is strict).
   Contact fields sit in the page's CONFIG object, **placeholder-marked**: the

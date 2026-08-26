@@ -38,15 +38,25 @@ describe('card channels', () => {
 });
 
 describe('card landing', () => {
-  it('ships with AR disabled and no AR UI', () => {
-    expect(landing).toMatch(/AR_ENABLED:\s*false/);
-    // The mount point renders only behind the flag, never unconditionally.
-    expect(landing).toMatch(/CONFIG\.AR_ENABLED\s*&&\s*<div id="ar-root">/);
+  it('ships with no AR UI, and treats AR as a per-channel opt-in', () => {
+    // AR belongs to a card someone can point a camera at, not to the app, so
+    // it defaults off and a channel has to ask for it.
+    expect(landing).toMatch(/const \{ channel, path, ar = false \} = Astro\.props/);
+    // The mount point renders only behind that prop, never unconditionally.
+    expect(landing).toMatch(/ar\s*&&\s*<div id="ar-root">/);
     expect(landing).not.toMatch(/coming soon/i);
   });
 
+  it('has no channel opting into AR yet, since the module does not exist', () => {
+    // Only the component invocation counts; the files talk about AR in prose.
+    const tag = (src: string) => (src.match(/<CardLanding[^>]*\/>/) ?? [''])[0];
+    expect(tag(hello)).not.toMatch(/\bar\b/);
+    // /showcase is a QR on a television and never becomes an AR channel.
+    expect(tag(showcase)).not.toMatch(/\bar\b/);
+  });
+
   it('takes its channel as a prop rather than parsing the URL', () => {
-    expect(landing).toMatch(/const \{ channel, path \} = Astro\.props/);
+    expect(landing).toMatch(/= Astro\.props/);
     expect(landing).not.toContain('location.pathname');
     // The per-card and per-medium params are gone: kraft cards are identical
     // and NFC was dropped, so both were labels with nothing to label.
