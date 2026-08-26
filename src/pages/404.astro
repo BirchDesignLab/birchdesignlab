@@ -4,20 +4,85 @@ import BarkField from '../components/BarkField.astro';
 ---
 <BaseLayout title="Not found · Birch Design Lab" description="This page does not exist." noindex>
   <section class="lost">
-    <BarkField density={220} />
-    <div class="wrap copy">
-      <h1 class="smallcaps">Off the trail</h1>
+    <BarkField density={170} />
+    <div class="copy">
+      <h1>Off the trail</h1>
       <p>This page doesn't exist, but the trees are nice here.</p>
-      <a href="/">Back to the clearing &rarr;</a>
     </div>
+    <a class="back" href="/">Back to the clearing &rarr;</a>
   </section>
 </BaseLayout>
 
 <style>
+  /* Home and About's hero construction, at a height between the two: a
+     full-bleed bark field with the heading centered over it. Density matches
+     them at 170; this page ran at 220, which is a lot of lenticel to read a
+     sentence through. */
   .lost {
-    position: relative; min-height: 70vh;
-    display: grid; align-items: center; overflow: hidden;
+    position: relative; min-height: 62vh;
+    display: grid; place-items: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding-inline: var(--space-4);
   }
-  .copy { position: relative; }
-  .copy p { color: var(--mark-muted); margin-block: var(--space-3) var(--space-4); }
+  /* Its own stacking context, so the clearing below can sit behind the words
+     without falling behind the bark canvas. */
+  .copy {
+    position: relative; z-index: 1;
+    text-align: center;
+    max-width: var(--measure);
+  }
+  /* The clearing. A heading can hold its own against lenticels because it is
+     large and coloured for the job; a body-sized sentence cannot, and the
+     strokes crossing it read as strikethrough. This thins the field behind the
+     copy instead of boxing it, so the page keeps looking like woods rather
+     than like a card sitting on woods. */
+  .copy::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--space-4) * -1) calc(var(--space-5) * -1);
+    background: radial-gradient(
+      ellipse at center,
+      var(--field) 38%,
+      color-mix(in srgb, var(--field) 72%, transparent) 64%,
+      transparent 100%
+    );
+    z-index: -1;
+  }
+  .copy h1 {
+    margin-top: 0;
+    font-size: var(--text-3xl);
+    /* billboard colour (distinct from the bark's --mark hue) so the heading
+       keeps contrast over the brightest lenticels, not just over the field */
+    color: var(--billboard-color);
+  }
+  /* Full-strength mark, not --mark-muted: muted over a busy field was the
+     legibility problem, and the clearing is what buys the contrast back. */
+  .copy p {
+    color: var(--mark);
+    margin-block: var(--space-2) 0;
+  }
+  /* Pinned to the foot of the field, the way Home and About pin the bark
+     credit, so the way out sits at the edge of the woods. It gets its own
+     small clearing for the same reason the copy does: it is the one thing on
+     the page someone actually needs to click, and an underlined link with a
+     lenticel running through it reads as damaged. */
+  .back {
+    position: absolute;
+    left: 50%; bottom: var(--space-4);
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .back::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--space-2) * -1) calc(var(--space-4) * -1);
+    background: radial-gradient(
+      ellipse at center,
+      var(--field) 45%,
+      color-mix(in srgb, var(--field) 70%, transparent) 72%,
+      transparent 100%
+    );
+    z-index: -1;
+  }
 </style>
