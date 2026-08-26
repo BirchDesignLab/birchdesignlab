@@ -1,0 +1,7 @@
+# AR card channels. Each channel path 200-rewrites (URL unchanged) to the one
+# landing page at /ar-card/, and the page reads its channel off the pathname.
+# Adding a future channel (tier 1 wood, digital, ...) is one more line here,
+# zero code changes. Served by Workers Static Assets; rules apply only to
+# asset-served requests, which these are (/api/* is the only worker-first path).
+/hello /ar-card/ 200
+/hello/ /ar-card/ 200

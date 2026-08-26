@@ -19,6 +19,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4400"],
       "port": 4400
+    },
+    {
+      "// worker": "Full stack via wrangler dev (rebuilds first): the only mode that exercises public/_redirects rewrites, public/_headers, and the Worker's /api/* routes.",
+      "name": "worker",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:worker"],
+      "port": 8787
     }
   ]
 }
