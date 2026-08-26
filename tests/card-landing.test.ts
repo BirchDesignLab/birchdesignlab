@@ -88,6 +88,19 @@ describe('card landing', () => {
     expect(landing).toContain('twitter:card');
   });
 
+  it('carries Marcellus in the document rather than fetching it', () => {
+    // The page has no BaseLayout and no stylesheet link, so an @fontsource
+    // import cannot reach it. If this ever becomes a linked font, the brand
+    // face arrives late on the two lines that carry the brand.
+    expect(landing).toContain("from '../lib/card-font'");
+    expect(landing).toContain('data:font/woff2;base64');
+    expect(landing).toMatch(/font-family: 'Marcellus'/);
+    // Marcellus ships one weight; anything above 400 faux-bolds.
+    expect(landing).not.toMatch(/font-weight:\s*[5-9]00/);
+    const generated = readFileSync(join(root, 'src', 'lib', 'card-font.ts'), 'utf8');
+    expect(generated).toContain('scripts/ar-card/subset-marcellus.mjs');
+  });
+
   it('honors reduced motion and keeps visitor-facing copy emdash-free', () => {
     expect(landing).toContain('prefers-reduced-motion: no-preference');
     expect(landing).not.toContain(EMDASH);
