@@ -37,9 +37,12 @@ const { channel, path } = Astro.props;
 
 const CONFIG = {
   // AR slot. False = no AR UI renders at all (no teaser). Flip to true once
-  // the module at AR_MODULE_URL exists; nothing else on this page changes.
+  // the module at AR_MODULE_URL exists; nothing else here changes, and every
+  // channel page gets AR at once because they all render this component.
+  // The module is loaded by URL rather than imported so that turning AR on
+  // does not pull its weight into this document's critical path.
   AR_ENABLED: false,
-  AR_MODULE_URL: '/ar-card/ar.js',
+  AR_MODULE_URL: '/ar/card-ar.js',
 
   // PLACEHOLDER contact details. Safe to ship (public studio identity only),
   // but the founder fills name/title/phone with real values before any card
