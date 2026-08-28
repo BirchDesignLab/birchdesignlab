@@ -585,6 +585,88 @@ ever becomes publishable.
 "Gulf Coast"; nothing yet corroborates it in Google's local index. The markup
 is the cheap half of local SEO and the profile is the half that actually ranks.
 
+### AEO — investigated 08-28-26, deliberately declining both
+
+Asked whether to serve markdown to AI crawlers, and whether to add `llms.txt`.
+Answer to both is no, on current evidence:
+
+- **Markdown content negotiation.** No major crawler sends
+  `Accept: text/markdown` by default, so the endpoint rarely fires. Bing fetches
+  both representations and diffs them, making it extra crawl load rather than a
+  saving. The token savings accrue to the crawler's inference bill, not to us.
+  Google's John Mueller called the idea "a stupid idea" publicly (02-26).
+- **`llms.txt`.** Of 500M+ AI bot visits measured over 90 days, 408 touched
+  `/llms.txt`. A second study: 84 of 62,100. GPTBot, ClaudeBot, PerplexityBot,
+  OAI-SearchBot and Google-Extended skip it and crawl the HTML. No major
+  provider has committed to reading it; Google's Gary Illyes said outright that
+  they do not and will not. It stays on the optional list from the 08-18 pass,
+  and it should stay unbuilt.
+
+What actually carries AEO here is the HTML the engines already crawl, which is
+in good shape, plus one thing we have not done: `public/robots.txt` allows every
+crawler, which is correct and worth protecting. The retrieval bots
+(`OAI-SearchBot`, `PerplexityBot`, `ChatGPT-User`, `Claude-User`) are the ones
+that can cite us, as distinct from the training crawlers. Blocking them is the
+one self-inflicted AEO wound available and we have not made it. Do not.
+
+### SEO — the copy-pass list (founder, not started)
+
+Audited 08-28-26 against the built pages and the real competitive set. The
+technical side is at or near its ceiling; what is left is copy and two
+decisions. **The founder has this on their list; nothing below is started.**
+
+Competitive read: the Gulf Coast field is templated location-page shops
+(DreamCo, Toucan, TurkReno's page-per-zip-code, Standard American Web, Gulf
+Coast Web). The bar is low and this is a winnable niche on merit.
+
+**Titles are the weak link.** Every page is `<Thing> · Birch Design Lab`. The
+title tag is still the strongest on-page signal, and brand-first titles are for
+brands that already have search demand. Put the query first, brand last, under
+~60 characters, `·` not emdashes:
+
+| Page | Now | Targets |
+|---|---|---|
+| `/` | `Birch Design Lab · Custom software and websites` | no geography |
+| `/services` | `Services · Birch Design Lab` | nothing; "services" is not a query |
+| `/about`, `/contact` | `About` / `Contact · Birch Design Lab` | fine as they are |
+
+**Four copy notes, none of which cost the voice:**
+
+1. The first 100 words of `/services` should contain the query. The second
+   subline ("the businesses that keep the Gulf Coast running") already does the
+   work; it just sits too late.
+2. H1s keep the voice as long as the title tag carries the query. "Two things,
+   done properly." and "The shining tree" stay. The title tag pays the tax.
+3. One `<h2>` per page in plain words. "Custom software" / "Custom websites"
+   already qualify.
+4. Name the towns once, naturally. People search Gulfport, Biloxi, Ocean
+   Springs, Pascagoula, Bay St. Louis, not "Gulf Coast". One honest sentence, not
+   a stuffed footer.
+
+Pages run 394-675 words. Thin for commercial queries; `/services` would carry
+another 200-300 words of substance well.
+
+**Two decisions that are the founder's:**
+
+- **Page architecture.** Competitors rank on location and service pages. The
+  zip-code doorway version is what Google's doorway guidance targets and would
+  poison the brand besides. The defensible version is a few genuinely distinct
+  pages on the three verticals the copy already names (restaurants, charters,
+  venues). Three good pages beat thirty thin ones.
+- **The NAP problem, which gates everything else.** Local SEO runs on consistent
+  Name / Address / Phone across the web, and we publish none of it on purpose.
+  Google Business Profile is the single highest-leverage item on this list and
+  it needs a verifiable address and a phone number. A service-area business can
+  hide the street address publicly, but Google still verifies against a real one,
+  and the Google Voice number is already gated behind the card-printing
+  decision. Reviews are a direct local ranking factor and cannot start until the
+  profile exists. So: resolve how much identity surface is acceptable, or defer
+  knowingly. Everything else here is worth less than that one call.
+
+**Code-side, available on request, no voice impact:** retitle the four pages
+(wording founder-approved), `og:locale`, an internal-linking pass with
+descriptive anchor text in place of "How we build ->", and an image `alt` audit.
+
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 
 These are not ideas to develop here; the website spec and core plan already carry them: contact form via Cloudflare Pages Functions (**superseded** — see the Pages-to-Workers item above), Sanity CMS swap via Content Layer loader, Tailwind as a per-island addition, Google Workspace for send-as on hello@.
