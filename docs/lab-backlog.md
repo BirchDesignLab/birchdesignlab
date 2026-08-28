@@ -369,6 +369,8 @@ vitest 138/138, `astro check` clean, build clean, all dist-verified:
   the two offerings as `serviceType`). Entity / AEO signal; deliberately not
   `ProfessionalService` (that is a LocalBusiness subtype and would invite
   address warnings against the founder-abstracted, no-local-intent posture).
+  *Partly superseded 08-28-26 — see "Gulf Coast positioning" below. The
+  `/services` node is still a plain `Service`; the home-page node is not.*
 - **`main` is focusable** (`tabindex="-1"`) on every layout so the skip link
   moves focus, not just scroll position; **skip link added to the two Lab
   layouts** (they carry no SiteHeader). `.skip` hoisted to `base.css` so all
@@ -537,6 +539,51 @@ art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
     confirm receipt; own PR. Limits on the free path: 50 recipients/msg, 25 MiB.
   - The service-area / response-time copy line on /contact needs no plan either
     way. Supersedes `docs/deploy.md` "One-time setup" step 2's paid-plan gate.
+
+## Gulf Coast positioning — 08-28-26 (founder call, days before launch)
+
+The founder read the live SERP snippet, disliked it, and rewrote it. The new
+blurb names the region and the model in the founder's own words:
+
+> Custom software and websites for businesses across the Mississippi Gulf Coast
+> that want to grow and thrive. Concocted in a lab where the same hands that
+> build your site answer your email.
+
+That copy already existed as the home-page opener; the meta had simply never
+followed it. It is now `SITE_DESCRIPTION` in `src/lib/seo/site.ts`, which the
+home meta, the webmanifest, and the structured data all derive from. The
+tagline sentence is exported separately as `SITE_TAGLINE` for the places that
+want the short form.
+
+**Length, knowingly.** The full blurb is 187 characters. Google renders roughly
+155, so the second sentence clips in the result. Accepted: the region keyword
+sits in the part that survives, and the hook still reads as entity text for
+answer engines. The old ", Quiet, fast, built to last." tail was dropped rather
+than pushing to 215.
+
+**The schema posture reversed.** Every earlier note in this file and in
+`organization.ts` said no LocalBusiness subtype, because there was no
+local-search intent and the subtype would only invite address warnings. Naming
+the Gulf Coast is local-search intent. So:
+
+- The home-page node is now `ProfessionalService` (a subtype of both
+  `LocalBusiness` and `Organization`) with
+  `areaServed: { "@type": "AdministrativeArea", name: "Mississippi Gulf Coast" }`.
+  One node, not two, so the page still declares a single entity.
+- `/services` stays a plain `Service`, now carrying the same `areaServed` and
+  naming `ProfessionalService` as its `provider`.
+- `address`, `telephone`, and `founder` stay absent. The identity call is
+  unchanged.
+
+**Known and accepted:** Search Console's LocalBusiness report will flag a
+missing `address`. `address` is not required by schema.org and the markup stays
+valid without it; what it costs is the local rich result, which a business with
+no publishable street address was never eligible for. Revisit if an address
+ever becomes publishable.
+
+**Not done, founder territory:** a Google Business Profile. The schema says
+"Gulf Coast"; nothing yet corroborates it in Google's local index. The markup
+is the cheap half of local SEO and the profile is the half that actually ranks.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 
