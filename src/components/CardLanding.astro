@@ -60,13 +60,12 @@ const CONFIG = {
   // card, and X-ABShowAs:COMPANY keeps it rendering as one rather than as a
   // person with a blank name.
   //
-  // Name, title, email and url are real. `phone` is the one gap, and it is
-  // empty on purpose rather than by neglect: an empty field is omitted from
-  // the vCard entirely, so the card simply has no TEL. Filling it with the
-  // personal mobile was considered and declined 08-26-26 (a saved vCard is
-  // permanent per scan, and the number would outlive any later swap in git
-  // history). It gets a Google Voice number before any card is printed or
-  // etched. Reasoning and acceptance: docs/lab-backlog.md, "AR card".
+  // Every field is real as of 08-27-26. `phone` is a Google Voice number,
+  // provisioned for this: the personal mobile was considered as a stopgap and
+  // declined, because a saved vCard is permanent per scan (a later edit
+  // reaches nobody who already saved it) and the number would have outlived
+  // the swap in git history anyway. Waiting for the Voice line cost a day and
+  // closed both. E.164 because iOS and Android both parse it cleanly.
   //
   // Values are RFC-escaped by src/lib/vcard.ts, so commas and semicolons are
   // safe here. Set isOrg false when name becomes a person.
@@ -75,7 +74,7 @@ const CONFIG = {
     name: 'Birch Design Lab',
     title: 'Independent software engineering and web design studio',
     company: 'Birch Design Lab',
-    phone: '',
+    phone: '+15043009372',
     email: 'hello@birchdesignlab.com',
     url: 'https://birchdesignlab.com',
   },
