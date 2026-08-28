@@ -452,14 +452,16 @@ are yours:
   body CTA to /contact. Wire the doors to /services and add a "Start a project"
   CTA (the existing `.cta-engraved` pattern). Structural, but the anchor copy is
   founder territory, so it stayed out of the invisible batch.
-- **Orphan `/lab/experiments` + `/lab/studies` (MED).** Both are indexable and in
-  the sitemap but have zero inbound links (the /lab filter is in-page JS). Either
-  make the /lab filter chips real links to them (progressive enhancement, which
-  kills the orphan status) or canonical them to /lab and drop them from the
-  sitemap. Do not leave them unlinked-but-indexable.
-- **Cache headers for `/models/*` + `/draco/*` (MED).** The 3.2MB glb still
-  revalidates every visit (existing "still open" item from BDL-007). Either add a
-  rule or hash the glb filename so it can be `immutable` like `/_astro/*` now is.
+- ~~**Orphan `/lab/experiments` + `/lab/studies` (MED).**~~ **DONE** — fixed by
+  #38 and this list was never updated. `dist/lab/index.html` carries real
+  `href="/lab/experiments"` and `href="/lab/studies"` anchors. Verified 08-28-26.
+- ~~**Cache headers for `/models/*` + `/draco/*` (MED).**~~ **DONE, both halves.**
+  `public/models/` no longer exists: the glb is imported via `?url` and ships
+  content-hashed as `/_astro/bdlOrganic.draco.<hash>.glb`, so it is already
+  covered by the `/_astro/*` immutable rule. Confirmed against production
+  08-28-26 — that URL returns `Cache-Control: public, max-age=31536000,
+  immutable`. `/draco/*` got its own 7-day + `stale-while-revalidate` rule in
+  `public/_headers`. Nothing left to do.
 - **Latin-subset the Lab-detail + styleguide fonts (LOW).** `ExperimentLayout`
   and `StudyLayout` still import bare `@fontsource/marcellus` + full spectral;
   styleguide loads six families at full subset (its purpose is type specimens, so
@@ -477,9 +479,13 @@ are yours:
   real still + alt fallback. Accept as a documented Lab exception, or add
   `tabindex=0` + arrow / ± keys mirroring the Crown.
 - **Smaller nits:** optional `WebSite` JSON-LD node (marginal without a
-  SearchAction, since there is no site search); `og:locale=en_US`; `CreativeWork`
-  on the study page; a speculative `public/llms.txt`; verify the deployed host
-  3xx-redirects the slashless `/path` to `/path/`.
+  SearchAction, since there is no site search); ~~`og:locale=en_US`~~ **DONE
+  08-28-26**, in `Seo.astro` so every page carries it; `CreativeWork` on the
+  study page (still open, and more attractive now that `/services` will point at
+  BDL-005); ~~a speculative `public/llms.txt`~~ **DECLINED** on evidence, see the
+  AEO section below; ~~verify the deployed host 3xx-redirects the slashless
+  `/path` to `/path/`~~ **VERIFIED 08-28-26** — production returns `307` to the
+  trailing-slash URL on both `/services` and `/lab/bdl-005`.
 
 ### Still-open known items, re-confirmed accurate by this pass
 
