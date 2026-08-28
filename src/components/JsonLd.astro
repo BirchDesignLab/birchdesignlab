@@ -4,7 +4,7 @@
     cannot break out of the inline script. */
 import { serializeJsonLd } from '../lib/seo/jsonld';
 
-interface Props { data: unknown }
+export interface Props { data: unknown }
 const { data } = Astro.props;
 ---
 <script type="application/ld+json" is:inline set:html={serializeJsonLd(data)} />

@@ -412,6 +412,8 @@ vitest 138/138, `astro check` clean, build clean, all dist-verified:
   the two offerings as `serviceType`). Entity / AEO signal; deliberately not
   `ProfessionalService` (that is a LocalBusiness subtype and would invite
   address warnings against the founder-abstracted, no-local-intent posture).
+  *Partly superseded 08-28-26 — see "Gulf Coast positioning" below. The
+  `/services` node is still a plain `Service`; the home-page node is not.*
 - **`main` is focusable** (`tabindex="-1"`) on every layout so the skip link
   moves focus, not just scroll position; **skip link added to the two Lab
   layouts** (they carry no SiteHeader). `.skip` hoisted to `base.css` so all
@@ -493,34 +495,55 @@ are yours:
   body CTA to /contact. Wire the doors to /services and add a "Start a project"
   CTA (the existing `.cta-engraved` pattern). Structural, but the anchor copy is
   founder territory, so it stayed out of the invisible batch.
-- **Orphan `/lab/experiments` + `/lab/studies` (MED).** Both are indexable and in
-  the sitemap but have zero inbound links (the /lab filter is in-page JS). Either
-  make the /lab filter chips real links to them (progressive enhancement, which
-  kills the orphan status) or canonical them to /lab and drop them from the
-  sitemap. Do not leave them unlinked-but-indexable.
-- **Cache headers for `/models/*` + `/draco/*` (MED).** The 3.2MB glb still
-  revalidates every visit (existing "still open" item from BDL-007). Either add a
-  rule or hash the glb filename so it can be `immutable` like `/_astro/*` now is.
+- ~~**Orphan `/lab/experiments` + `/lab/studies` (MED).**~~ **DONE** — fixed by
+  #38 and this list was never updated. `dist/lab/index.html` carries real
+  `href="/lab/experiments"` and `href="/lab/studies"` anchors. Verified 08-28-26.
+- ~~**Cache headers for `/models/*` + `/draco/*` (MED).**~~ **DONE, both halves.**
+  `public/models/` no longer exists: the glb is imported via `?url` and ships
+  content-hashed as `/_astro/bdlOrganic.draco.<hash>.glb`, so it is already
+  covered by the `/_astro/*` immutable rule. Confirmed against production
+  08-28-26 — that URL returns `Cache-Control: public, max-age=31536000,
+  immutable`. `/draco/*` got its own 7-day + `stale-while-revalidate` rule in
+  `public/_headers`. Nothing left to do.
 - **Latin-subset the Lab-detail + styleguide fonts (LOW).** `ExperimentLayout`
   and `StudyLayout` still import bare `@fontsource/marcellus` + full spectral;
   styleguide loads six families at full subset (its purpose is type specimens, so
   check before trimming). Only latin glyphs are ever used, but `unicode-range`
   already prevents the download, so this is CSS / request hygiene, not bytes. The
   business pages are already done.
-- **Font preload + metric fallback (LOW).** Marcellus (the home LCP billboard) is
-  discovered only after CSS parses and has no metric-adjusted fallback, so it
-  FOUT-swaps with a small CLS on the largest type on the site (bounded by the
-  fixed-height centered hero). Preload the display + body woff2 on business routes
-  and add a `size-adjust` fallback @font-face (or adopt Astro 5's fonts API).
-  Verify with a real-browser CLS trace; not Lighthouse-scored.
-- **bdl-007 keyboard control (LOW).** The three.js stage is pointer / wheel only
-  (WCAG 2.1.1 in principle). Contained because the canvas is `role="img"` with a
-  real still + alt fallback. Accept as a documented Lab exception, or add
-  `tabindex=0` + arrow / ± keys mirroring the Crown.
-- **Smaller nits:** optional `WebSite` JSON-LD node (marginal without a
-  SearchAction, since there is no site search); `og:locale=en_US`; `CreativeWork`
-  on the study page; a speculative `public/llms.txt`; verify the deployed host
-  3xx-redirects the slashless `/path` to `/path/`.
+- **Font preload + metric fallback (LOW) — PRELOAD DONE 08-28-26, fallback still
+  open.** The preload half shipped: `BaseLayout` imports the Marcellus and
+  Spectral 400 woff2 through `?url` and emits `<link rel="preload" as="font">`
+  for both, so all five business pages (home, services, about, contact, privacy)
+  fetch them in the first wave instead of after CSS parse. The `?url` import
+  matters — it resolves to the same content-hashed asset the stylesheet uses, so
+  there is no double fetch; verified in `dist` that the preload href and the CSS
+  `url()` carry an identical hash. Spectral 600 is deliberately left out: preloads
+  compete for the same early bandwidth and the semibold face is not critical-path.
+  The Lab layouts are untouched (different layout, no preload).
+  **Still open: the `size-adjust` metric fallback**, which is the half that
+  actually removes the CLS rather than shortening it. Held back because it
+  changes rendered type and needs a real-browser trace to verify, per the
+  standing rule about not shipping visual changes unseen.
+- **bdl-007 keyboard control — ACCEPTED AS A LAB EXCEPTION, 08-28-26.** Founder
+  call. The three.js stage stays pointer / wheel only. The containment argument
+  is what makes it acceptable: the canvas is `role="img"` with a real still image
+  and alt text, so a keyboard user is never blocked from the content, only from
+  the toy. This is the documented exception, not an outstanding defect. The Lab
+  rolls heavy and this is the cost. Revisit only if the Lab grows an experiment
+  where the interaction *is* the content.
+- **Smaller nits:** ~~optional `WebSite` JSON-LD node (marginal without a
+  SearchAction, since there is no site search)~~ **DONE 08-28-26**, shipped
+  knowingly marginal: no `SearchAction`, because there is no site search and
+  inventing one would be a lie to the crawler. What it buys is a small entity
+  signal naming the site, its language, and its publisher. Add the SearchAction
+  if a site search ever ships; ~~`og:locale=en_US`~~ **DONE
+  08-28-26**, in `Seo.astro` so every page carries it; `CreativeWork` on the
+  study page (still open, and more attractive now that `/services` will point at
+  BDL-005); ~~a speculative `public/llms.txt`~~ **DECLINED** on evidence, see the
+  AEO section below; ~~verify the deployed host 3xx-redirects the slashless
+  `/path` to `/path/`~~ **VERIFIED 08-28-26** — production returns `307` to the
+  trailing-slash URL on both `/services` and `/lab/bdl-005`.
 
 ### Still-open known items, re-confirmed accurate by this pass
 
@@ -580,6 +603,133 @@ art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
     confirm receipt; own PR. Limits on the free path: 50 recipients/msg, 25 MiB.
   - The service-area / response-time copy line on /contact needs no plan either
     way. Supersedes `docs/deploy.md` "One-time setup" step 2's paid-plan gate.
+
+## Gulf Coast positioning — 08-28-26 (founder call, days before launch)
+
+The founder read the live SERP snippet, disliked it, and rewrote it. The new
+blurb names the region and the model in the founder's own words:
+
+> Custom software and websites for businesses across the Mississippi Gulf Coast
+> that want to grow and thrive. Concocted in a lab where the same hands that
+> build your site answer your email.
+
+That copy already existed as the home-page opener; the meta had simply never
+followed it. It is now `SITE_DESCRIPTION` in `src/lib/seo/site.ts`, which the
+home meta, the webmanifest, and the structured data all derive from. The
+tagline sentence is exported separately as `SITE_TAGLINE` for the places that
+want the short form.
+
+**Length, knowingly.** The full blurb is 187 characters. Google renders roughly
+155, so the second sentence clips in the result. Accepted: the region keyword
+sits in the part that survives, and the hook still reads as entity text for
+answer engines. The old ", Quiet, fast, built to last." tail was dropped rather
+than pushing to 215.
+
+**The schema posture reversed.** Every earlier note in this file and in
+`organization.ts` said no LocalBusiness subtype, because there was no
+local-search intent and the subtype would only invite address warnings. Naming
+the Gulf Coast is local-search intent. So:
+
+- The home-page node is now `ProfessionalService` (a subtype of both
+  `LocalBusiness` and `Organization`) with
+  `areaServed: { "@type": "AdministrativeArea", name: "Mississippi Gulf Coast" }`.
+  One node, not two, so the page still declares a single entity.
+- `/services` stays a plain `Service`, now carrying the same `areaServed` and
+  naming `ProfessionalService` as its `provider`.
+- `address`, `telephone`, and `founder` stay absent. The identity call is
+  unchanged.
+
+**Known and accepted:** Search Console's LocalBusiness report will flag a
+missing `address`. `address` is not required by schema.org and the markup stays
+valid without it; what it costs is the local rich result, which a business with
+no publishable street address was never eligible for. Revisit if an address
+ever becomes publishable.
+
+**Not done, founder territory:** a Google Business Profile. The schema says
+"Gulf Coast"; nothing yet corroborates it in Google's local index. The markup
+is the cheap half of local SEO and the profile is the half that actually ranks.
+
+### AEO — investigated 08-28-26, deliberately declining both
+
+Asked whether to serve markdown to AI crawlers, and whether to add `llms.txt`.
+Answer to both is no, on current evidence:
+
+- **Markdown content negotiation.** No major crawler sends
+  `Accept: text/markdown` by default, so the endpoint rarely fires. Bing fetches
+  both representations and diffs them, making it extra crawl load rather than a
+  saving. The token savings accrue to the crawler's inference bill, not to us.
+  Google's John Mueller called the idea "a stupid idea" publicly (02-26).
+- **`llms.txt`.** Of 500M+ AI bot visits measured over 90 days, 408 touched
+  `/llms.txt`. A second study: 84 of 62,100. GPTBot, ClaudeBot, PerplexityBot,
+  OAI-SearchBot and Google-Extended skip it and crawl the HTML. No major
+  provider has committed to reading it; Google's Gary Illyes said outright that
+  they do not and will not. It stays on the optional list from the 08-18 pass,
+  and it should stay unbuilt.
+
+What actually carries AEO here is the HTML the engines already crawl, which is
+in good shape, plus one thing we have not done: `public/robots.txt` allows every
+crawler, which is correct and worth protecting. The retrieval bots
+(`OAI-SearchBot`, `PerplexityBot`, `ChatGPT-User`, `Claude-User`) are the ones
+that can cite us, as distinct from the training crawlers. Blocking them is the
+one self-inflicted AEO wound available and we have not made it. Do not.
+
+### SEO — the copy-pass list (founder, not started)
+
+Audited 08-28-26 against the built pages and the real competitive set. The
+technical side is at or near its ceiling; what is left is copy and two
+decisions. **The founder has this on their list; nothing below is started.**
+
+Competitive read: the Gulf Coast field is templated location-page shops
+(DreamCo, Toucan, TurkReno's page-per-zip-code, Standard American Web, Gulf
+Coast Web). The bar is low and this is a winnable niche on merit.
+
+**Titles are the weak link.** Every page is `<Thing> · Birch Design Lab`. The
+title tag is still the strongest on-page signal, and brand-first titles are for
+brands that already have search demand. Put the query first, brand last, under
+~60 characters, `·` not emdashes:
+
+| Page | Now | Targets |
+|---|---|---|
+| `/` | `Birch Design Lab · Custom software and websites` | no geography |
+| `/services` | `Services · Birch Design Lab` | nothing; "services" is not a query |
+| `/about`, `/contact` | `About` / `Contact · Birch Design Lab` | fine as they are |
+
+**Four copy notes, none of which cost the voice:**
+
+1. The first 100 words of `/services` should contain the query. The second
+   subline ("the businesses that keep the Gulf Coast running") already does the
+   work; it just sits too late.
+2. H1s keep the voice as long as the title tag carries the query. "Two things,
+   done properly." and "The shining tree" stay. The title tag pays the tax.
+3. One `<h2>` per page in plain words. "Custom software" / "Custom websites"
+   already qualify.
+4. Name the towns once, naturally. People search Gulfport, Biloxi, Ocean
+   Springs, Pascagoula, Bay St. Louis, not "Gulf Coast". One honest sentence, not
+   a stuffed footer.
+
+Pages run 394-675 words. Thin for commercial queries; `/services` would carry
+another 200-300 words of substance well.
+
+**Two decisions that are the founder's:**
+
+- **Page architecture.** Competitors rank on location and service pages. The
+  zip-code doorway version is what Google's doorway guidance targets and would
+  poison the brand besides. The defensible version is a few genuinely distinct
+  pages on the three verticals the copy already names (restaurants, charters,
+  venues). Three good pages beat thirty thin ones.
+- **The NAP problem, which gates everything else.** Local SEO runs on consistent
+  Name / Address / Phone across the web, and we publish none of it on purpose.
+  Google Business Profile is the single highest-leverage item on this list and
+  it needs a verifiable address and a phone number. A service-area business can
+  hide the street address publicly, but Google still verifies against a real one,
+  and the Google Voice number is already gated behind the card-printing
+  decision. Reviews are a direct local ranking factor and cannot start until the
+  profile exists. So: resolve how much identity surface is acceptable, or defer
+  knowingly. Everything else here is worth less than that one call.
+
+**Code-side, available on request, no voice impact:** retitle the four pages
+(wording founder-approved), `og:locale`, an internal-linking pass with
+descriptive anchor text in place of "How we build ->", and an image `alt` audit.
 
 ## Documented renovation paths (recorded elsewhere, listed for completeness)
 

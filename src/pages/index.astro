@@ -6,9 +6,11 @@ import BarkCredit from '../components/BarkCredit.astro';
 import StructuredData from '../components/StructuredData.astro';
 import { SITE_DESCRIPTION } from '../lib/seo/site';
 
-// Home meta = the shared brand blurb plus one home-only line. Deriving it from
-// SITE_DESCRIPTION keeps it from drifting against the Organization schema.
-const description = `${SITE_DESCRIPTION} Quiet, fast, built to last.`;
+// Home meta is the shared brand blurb verbatim, matching both the opener copy
+// below and the ProfessionalService schema. It used to append "Quiet, fast,
+// built to last."; the blurb now runs to 187 characters on its own, and a
+// third sentence would only add weight past what a search result renders.
+const description = SITE_DESCRIPTION;
 
 // Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
 // specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
@@ -17,7 +19,7 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
   .slice(0, 2);
 ---
 <BaseLayout
-  title="Birch Design Lab · Custom software and websites"
+  title="Custom software and web design · Mississippi Gulf Coast"
   description={description}
 >
   <StructuredData slot="head" />

@@ -1,8 +1,13 @@
 ---
-import { buildOrganization } from '../lib/seo/organization';
+import { buildOrganization, buildWebSite } from '../lib/seo/organization';
 import { serializeJsonLd } from '../lib/seo/jsonld';
 
 // Astro.site comes from `site` in astro.config.mjs.
+// Two nodes rather than one @graph: separate blocks are equally well understood
+// and keep each builder independently testable. The business entity carries the
+// weight; WebSite is the smaller companion signal (see buildWebSite).
 const organization = buildOrganization(Astro.site!);
+const website = buildWebSite(Astro.site!);
 ---
 <script type="application/ld+json" is:inline set:html={serializeJsonLd(organization)} />
+<script type="application/ld+json" is:inline set:html={serializeJsonLd(website)} />

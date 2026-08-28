@@ -7,6 +7,7 @@ import SpecimenPlate from '../../components/SpecimenPlate.astro';
 import WallLabel from '../../components/WallLabel.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import { buildBreadcrumb } from '../../lib/seo/jsonld';
+import { buildCreativeWork } from '../../lib/seo/organization';
 import { experimentComponents } from '../../experiments/registry';
 
 export async function getStaticPaths() {
@@ -33,10 +34,24 @@ const breadcrumb = buildBreadcrumb(Astro.site!, [
   { name: 'The Lab', url: '/lab/' },
   { name: title, url: `/lab/${entry.id}/` },
 ]);
+
+// The Lab is the portfolio, so every entry declares itself a CreativeWork made
+// by the business. Studies carry the client; experiments have none and drop the
+// field. Skipped for noindexed instruments, same rule as the breadcrumb.
+const creativeWork = buildCreativeWork(Astro.site!, {
+  designation,
+  title,
+  summary,
+  slug: entry.id,
+  date,
+  tech,
+  client: entry.data.type === 'study' ? entry.data.client : undefined,
+});
 ---
 {entry.data.type === 'study' ? (
   <StudyLayout title={pageTitle} description={summary} designation={designation} noindex={entry.data.noindex}>
     {!entry.data.noindex && <JsonLd slot="head" data={breadcrumb} />}
+    {!entry.data.noindex && <JsonLd slot="head" data={creativeWork} />}
     <header class="hero">
       <Image src={entry.data.hero.src} alt={entry.data.hero.alt} class="hero-img" widths={[768, 1280, 1440]} sizes="100vw" loading="eager" fetchpriority="high" />
       <div class="hero-veil"></div>
@@ -74,6 +89,7 @@ const breadcrumb = buildBreadcrumb(Astro.site!, [
 ) : (
   <ExperimentLayout title={pageTitle} description={summary} designation={designation} heading={title} noindex={entry.data.noindex}>
     {!entry.data.noindex && <JsonLd slot="head" data={breadcrumb} />}
+    {!entry.data.noindex && <JsonLd slot="head" data={creativeWork} />}
     {entry.data.howto && <WallLabel lines={entry.data.howto} />}
     {Experiment ? (
       <Experiment />
