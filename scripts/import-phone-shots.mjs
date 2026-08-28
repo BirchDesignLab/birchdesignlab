@@ -3,7 +3,12 @@
 // runs the night from a phone, so a phone capture is the truer portrait; the
 // cost is iOS chrome, which this script removes.
 //
-//   node scripts/import-phone-shots.mjs
+//   node scripts/import-phone-shots.mjs <source-dir>
+//
+// <source-dir> is wherever the phone captures landed on this machine (the
+// photo-sync folder, a card mount, a download dir). It is an argument rather
+// than a default because it is a property of the operator's machine, not of
+// this project; PHONE_SHOTS_DIR works too, if you would rather set it once.
 //
 // Two cleanups, both about chrome rather than content:
 //
@@ -27,7 +32,15 @@
 import sharp from 'sharp';
 import path from 'node:path';
 
-const SRC = process.argv[2] ?? 'C:/Users/thesk/Pictures/iCloud Photos/Photos';
+const SRC = process.argv[2] ?? process.env.PHONE_SHOTS_DIR;
+if (!SRC) {
+  console.error(
+    'usage: node scripts/import-phone-shots.mjs <source-dir>\n' +
+      '  <source-dir> holds the phone captures named in `shots` below.\n' +
+      '  PHONE_SHOTS_DIR is read as a fallback.',
+  );
+  process.exit(1);
+}
 const DST = 'src/content/lab/bdl-005';
 
 // Sampled off the field itself, not guessed from the palette: the capture is
