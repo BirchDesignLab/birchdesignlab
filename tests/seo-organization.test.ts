@@ -3,10 +3,12 @@ import {
   buildOrganization,
   buildService,
   buildCreativeWork,
+  buildWebSite,
 } from '../src/lib/seo/organization';
 
 const org = buildOrganization('https://birchdesignlab.com');
 const service = buildService('https://birchdesignlab.com');
+const website = buildWebSite('https://birchdesignlab.com');
 
 const study = buildCreativeWork('https://birchdesignlab.com', {
   designation: 'BDL-005',
@@ -92,8 +94,28 @@ describe('buildService', () => {
   });
 
   it('names both offerings and points at the services page', () => {
-    expect(service.serviceType).toEqual(['Custom software', 'Custom websites']);
+    expect(service.serviceType).toEqual(['Custom software', 'Web design']);
     expect(service.url).toBe('https://birchdesignlab.com/services');
+  });
+});
+
+describe('buildWebSite', () => {
+  it('declares itself a WebSite in American English', () => {
+    expect(website['@type']).toBe('WebSite');
+    expect(website.inLanguage).toBe('en-US');
+    expect(website.url).toBe('https://birchdesignlab.com/');
+  });
+
+  it('names the same publisher the business node declares', () => {
+    expect(website.publisher).toEqual({
+      '@type': 'ProfessionalService',
+      name: 'Birch Design Lab',
+      url: 'https://birchdesignlab.com/',
+    });
+  });
+
+  it('claims no SearchAction, because there is no site search to point one at', () => {
+    expect(JSON.stringify(website)).not.toMatch(/SearchAction/);
   });
 });
 

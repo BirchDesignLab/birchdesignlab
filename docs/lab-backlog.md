@@ -468,18 +468,33 @@ are yours:
   check before trimming). Only latin glyphs are ever used, but `unicode-range`
   already prevents the download, so this is CSS / request hygiene, not bytes. The
   business pages are already done.
-- **Font preload + metric fallback (LOW).** Marcellus (the home LCP billboard) is
-  discovered only after CSS parses and has no metric-adjusted fallback, so it
-  FOUT-swaps with a small CLS on the largest type on the site (bounded by the
-  fixed-height centered hero). Preload the display + body woff2 on business routes
-  and add a `size-adjust` fallback @font-face (or adopt Astro 5's fonts API).
-  Verify with a real-browser CLS trace; not Lighthouse-scored.
-- **bdl-007 keyboard control (LOW).** The three.js stage is pointer / wheel only
-  (WCAG 2.1.1 in principle). Contained because the canvas is `role="img"` with a
-  real still + alt fallback. Accept as a documented Lab exception, or add
-  `tabindex=0` + arrow / ± keys mirroring the Crown.
-- **Smaller nits:** optional `WebSite` JSON-LD node (marginal without a
-  SearchAction, since there is no site search); ~~`og:locale=en_US`~~ **DONE
+- **Font preload + metric fallback (LOW) — PRELOAD DONE 08-28-26, fallback still
+  open.** The preload half shipped: `BaseLayout` imports the Marcellus and
+  Spectral 400 woff2 through `?url` and emits `<link rel="preload" as="font">`
+  for both, so all five business pages (home, services, about, contact, privacy)
+  fetch them in the first wave instead of after CSS parse. The `?url` import
+  matters — it resolves to the same content-hashed asset the stylesheet uses, so
+  there is no double fetch; verified in `dist` that the preload href and the CSS
+  `url()` carry an identical hash. Spectral 600 is deliberately left out: preloads
+  compete for the same early bandwidth and the semibold face is not critical-path.
+  The Lab layouts are untouched (different layout, no preload).
+  **Still open: the `size-adjust` metric fallback**, which is the half that
+  actually removes the CLS rather than shortening it. Held back because it
+  changes rendered type and needs a real-browser trace to verify, per the
+  standing rule about not shipping visual changes unseen.
+- **bdl-007 keyboard control — ACCEPTED AS A LAB EXCEPTION, 08-28-26.** Founder
+  call. The three.js stage stays pointer / wheel only. The containment argument
+  is what makes it acceptable: the canvas is `role="img"` with a real still image
+  and alt text, so a keyboard user is never blocked from the content, only from
+  the toy. This is the documented exception, not an outstanding defect. The Lab
+  rolls heavy and this is the cost. Revisit only if the Lab grows an experiment
+  where the interaction *is* the content.
+- **Smaller nits:** ~~optional `WebSite` JSON-LD node (marginal without a
+  SearchAction, since there is no site search)~~ **DONE 08-28-26**, shipped
+  knowingly marginal: no `SearchAction`, because there is no site search and
+  inventing one would be a lie to the crawler. What it buys is a small entity
+  signal naming the site, its language, and its publisher. Add the SearchAction
+  if a site search ever ships; ~~`og:locale=en_US`~~ **DONE
   08-28-26**, in `Seo.astro` so every page carries it; `CreativeWork` on the
   study page (still open, and more attractive now that `/services` will point at
   BDL-005); ~~a speculative `public/llms.txt`~~ **DECLINED** on evidence, see the

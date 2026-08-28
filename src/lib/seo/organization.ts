@@ -64,6 +64,44 @@ export function buildOrganization(site: URL | string): OrganizationJsonLd {
   };
 }
 
+export interface WebSiteJsonLd {
+  '@context': 'https://schema.org';
+  '@type': 'WebSite';
+  name: string;
+  url: string;
+  description: string;
+  inLanguage: 'en-US';
+  publisher: { '@type': 'ProfessionalService'; name: string; url: string };
+}
+
+/**
+ * WebSite node for the home page.
+ *
+ * Known to be marginal, and shipped knowingly. `WebSite`'s one rich result is
+ * the sitelinks search box, which needs a `SearchAction` pointing at a real
+ * site search; there is none here and inventing one would be a lie to the
+ * crawler. What is left is a small entity signal: it names the site, ties it to
+ * the publisher declared on the same page, and states the language. Cheap,
+ * honest, no warnings. If a site search ever ships, add the SearchAction here
+ * and the rich result becomes available.
+ */
+export function buildWebSite(site: URL | string): WebSiteJsonLd {
+  const base = typeof site === 'string' ? new URL(site) : site;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: new URL('/', base).href,
+    description: SITE_DESCRIPTION,
+    inLanguage: 'en-US',
+    publisher: {
+      '@type': 'ProfessionalService',
+      name: SITE_NAME,
+      url: new URL('/', base).href,
+    },
+  };
+}
+
 export interface CreativeWorkJsonLd {
   '@context': 'https://schema.org';
   '@type': 'CreativeWork';
@@ -157,8 +195,8 @@ export function buildService(site: URL | string): ServiceJsonLd {
   return {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'Custom software and websites',
-    serviceType: ['Custom software', 'Custom websites'],
+    name: 'Custom software and web design',
+    serviceType: ['Custom software', 'Web design'],
     url: new URL('/services', base).href,
     description: SITE_DESCRIPTION,
     areaServed: areaServed(),

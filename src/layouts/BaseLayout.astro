@@ -2,6 +2,20 @@
 import '@fontsource/marcellus/latin.css';
 import '@fontsource/spectral/latin-400.css';
 import '@fontsource/spectral/latin-600.css';
+
+// Preload the two faces that render above the fold on every business page:
+// Marcellus (the display type, and the home billboard that is the LCP element)
+// and Spectral 400 (body). Without this they are discovered only after the CSS
+// parses, so the largest type on the site FOUT-swaps.
+//
+// Imported through `?url` rather than hardcoded so the href is the same
+// content-hashed asset the stylesheet resolves to. A literal path would drift
+// on any @fontsource bump and silently fetch the file twice.
+//
+// Spectral 600 is deliberately not preloaded: preloads compete for the same
+// early bandwidth, and the semibold face is not on the critical path.
+import marcellusLatin400 from '@fontsource/marcellus/files/marcellus-latin-400-normal.woff2?url';
+import spectralLatin400 from '@fontsource/spectral/files/spectral-latin-400-normal.woff2?url';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import HeadCommon from '../components/HeadCommon.astro';
@@ -15,6 +29,8 @@ const { title, description, noindex = false, zone } = Astro.props;
 <html lang="en" data-zone={zone}>
   <head>
     <HeadCommon title={title} description={description} noindex={noindex} />
+    <link rel="preload" as="font" type="font/woff2" href={marcellusLatin400} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={spectralLatin400} crossorigin />
     <slot name="head" />
   </head>
   <body>

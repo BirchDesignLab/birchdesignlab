@@ -16,7 +16,7 @@ export const SITE_NAME = 'Birch Design Lab';
  * ~155 characters a search result will actually render.
  */
 export const SITE_TAGLINE =
-  'Custom software and websites for businesses across the Mississippi Gulf Coast that want to grow and thrive.';
+  'Custom software and web design for businesses across the Mississippi Gulf Coast that want to grow and thrive.';
 
 /**
  * Tagline plus the hook. 187 characters, so a search result clips the second
