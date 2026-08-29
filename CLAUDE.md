@@ -68,3 +68,7 @@ sitting on known advisories**. Not bleeding edge, not frozen.
   genuinely reachable. Reversibility is the point: revert the commit, redeploy.
 
 Current queue and the reasoning behind it live in `docs/lab-backlog.md`.
+
+## AR card
+
+WebAR business card system: read `docs/ar-card/HANDOFF.md` first; work items live in `docs/lab-backlog.md` under "AR card".
