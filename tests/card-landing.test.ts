@@ -10,6 +10,7 @@ const root = join(__dirname, '..');
 const landing = readFileSync(join(root, 'src', 'components', 'CardLanding.astro'), 'utf8');
 const hello = readFileSync(join(root, 'src', 'pages', 'hello.astro'), 'utf8');
 const showcase = readFileSync(join(root, 'src', 'pages', 'showcase.astro'), 'utf8');
+const greetings = readFileSync(join(root, 'src', 'pages', 'greetings.astro'), 'utf8');
 const astroConfig = readFileSync(join(root, 'astro.config.mjs'), 'utf8');
 const EMDASH = String.fromCharCode(0x2014);
 
@@ -17,6 +18,7 @@ describe('card channels', () => {
   it('gives every channel its own page, with no rewrite indirection', () => {
     expect(hello).toContain('channel="kraft"');
     expect(showcase).toContain('channel="showcase"');
+    expect(greetings).toContain('channel="wood"');
     // public/_redirects is what the rewrite version needed. Its absence is the
     // point: a channel is a page now, so the URL a card carries is a real file.
     expect(existsSync(join(root, 'public', '_redirects'))).toBe(false);
@@ -25,15 +27,17 @@ describe('card channels', () => {
   it('keeps the channel pages out of the sitemap', () => {
     expect(astroConfig).toContain("page.includes('/hello')");
     expect(astroConfig).toContain("page.includes('/showcase')");
+    expect(astroConfig).toContain("page.includes('/greetings')");
   });
 
-  it('does not invent channels beyond the two that exist', () => {
-    // The tier 1 wood path is deliberately undecided until its QR is etched,
-    // so a third channel page appearing here should be a conscious act.
+  it('does not invent channels beyond the three that exist', () => {
+    // /greetings (tier 1 wood) was decided and wired 08-28-26 (AR card prompt
+    // pack v4) — see docs/ar-card/HANDOFF.md. A fourth channel page appearing
+    // here should still be a conscious act.
     const channelPages = readdirSync(join(root, 'src', 'pages'))
       .filter(f => f.endsWith('.astro'))
       .filter(f => readFileSync(join(root, 'src', 'pages', f), 'utf8').includes('CardLanding'));
-    expect(channelPages.sort()).toEqual(['hello.astro', 'showcase.astro']);
+    expect(channelPages.sort()).toEqual(['greetings.astro', 'hello.astro', 'showcase.astro']);
   });
 });
 

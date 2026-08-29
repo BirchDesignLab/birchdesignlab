@@ -1,0 +1,16 @@
+---
+// Tier 1 wood cards. The channel label is what per-channel scan counts group
+// by, so it stays stable even if this file is renamed.
+//
+// This is a card someone is holding, so it is an AR channel: add `ar` here
+// once the module exists. It is off today because the module does not.
+//
+// Path decided 08-28-26 (AR card prompt pack v4): /greetings = tier 1 wood.
+// The URL is wired now because wiring costs nothing; the one-way door is
+// etching it into physical wood, which has not happened yet. See
+// docs/ar-card/HANDOFF.md and docs/lab-backlog.md ("AR card" > decision
+// gates) before ordering a run of etched cards.
+import CardLanding from '../components/CardLanding.astro';
+---
+
+<CardLanding channel="wood" path="/greetings/" />

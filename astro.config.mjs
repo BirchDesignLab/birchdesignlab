@@ -68,16 +68,18 @@ export default defineConfig({
     svelte(),
     sitemap({
       // styleguide and the Regulator are internal instruments; /contact/sent is
-      // a redirect target with no standalone meaning; /hello and /showcase are
-      // card-scan landings, reached by pointing a phone at a QR code rather
-      // than by search (they are noindex too). None belong in the sitemap.
-      // A new card channel is a new page, so add it here when you add it.
+      // a redirect target with no standalone meaning; /hello, /showcase and
+      // /greetings are card-scan landings, reached by pointing a phone at a
+      // QR code rather than by search (they are noindex too). None belong in
+      // the sitemap. A new card channel is a new page, so add it here when
+      // you add it.
       filter: (page) =>
         !page.includes('/styleguide') &&
         !page.includes('/lab/bdl-006') &&
         !page.includes('/contact/sent') &&
         !page.includes('/hello') &&
-        !page.includes('/showcase'),
+        !page.includes('/showcase') &&
+        !page.includes('/greetings'),
     }),
   ],
   vite: {
