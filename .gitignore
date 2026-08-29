@@ -7,6 +7,15 @@ public/og/
 # Blanket-ignore any stray local rebuild so it can never be committed again.
 graphify-out/
 docs/refs/
+# Founder working docs: prompt packs, harvest packs, copy reviews. Drafting
+# material that feeds the tracked docs rather than being one. Listed by name
+# rather than by a docs/*.md pattern, because docs/ is also where the real
+# tracked documents live (lab-backlog.md, deploy.md, ar-card/HANDOFF.md) and a
+# blanket rule there would silently swallow the next one. Add new ones here.
+docs/bdl-ar-card-prompt-pack-v3.md
+docs/bdl-ar-card-prompt-pack-v4.md
+docs/bdl005-refresh-pack-8-26-26.md
+docs/birch-design-lab-copy-review.md
 .superpowers/
 scripts/brand/.cache/
 # 3D logo exports: glb only, obj/mtl blow up repo size (60MB+ per asset)
