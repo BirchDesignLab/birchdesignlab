@@ -158,9 +158,10 @@ granular choice.
 Add conversion / remarketing as a Zaraz tool or trigger — not an inline gtag
 snippet. Same edge layer, no Lighthouse cost, no code change.
 
-## Loose end
+## Privacy policy
 
-`src/pages/privacy.astro` says analytics loads "only after the page has finished
-rendering." Zaraz loads earlier than the old deferred bootstrap did (still
-lightweight, edge-served). Revisit that sentence for accuracy — backlog, not
-blocking.
+`src/pages/privacy.astro` updated to match (PR #79): discloses the opt-in
+consent banner, leads the opt-out with it, drops the stale "loads only after
+the page has finished rendering" line, and moves the public contact address to
+`hello@birchdesignlab.com`. The worker notify destination stays the verified
+Email Routing target (`birchdesignlab@gmail.com`); `hello@` forwards there.
