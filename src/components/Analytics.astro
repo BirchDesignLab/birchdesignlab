@@ -1,42 +1,20 @@
 ---
-/** Site analytics. Production-only.
+/** Site analytics — DORMANT.
 
-    GA4 for now. Cloudflare Web Analytics and TWIPLA were considered and
-    deferred — one vendor until there's a reason for more. Google Ads will
-    share this exact tag (gtag.js, same G-id) when it's set up, so conversion
-    and remarketing ride on this with no rework.
+    GA4 (G-44Y71C24L7) is now injected by Cloudflare Zaraz at the edge, not by
+    this component. Zaraz loads the tag from /cdn-cgi/zaraz/s.js, off the main
+    thread, and is the single place tags are managed — no redeploy to add or
+    change one. See docs/analytics.md for the Zaraz config of record.
 
-    Loaded lazily: the tag is injected only after `load`, on the first idle
-    callback. gtag.js never touches the critical render path, so business
-    pages hold their Lighthouse scores. Every visitor who stays past first
-    paint is still counted; only sub-`load` bouncers slip, the tradeoff every
-    deferred tracker makes.
+    This file is kept on purpose, rendering nothing, for two reasons:
+      1. It documents where analytics lived and why it moved, so the history
+         isn't a silent deletion.
+      2. It's the obvious home if a tag ever needs to move back into code
+         (e.g. something Zaraz can't express) — restore the gtag bootstrap
+         from git history rather than reinventing it.
 
-    Gated on import.meta.env.PROD so dev and preview traffic never reaches
-    the property. */
-const prod = import.meta.env.PROD;
+    Do NOT re-add a client-side gtag.js load here while Zaraz injects the same
+    G-id: the two double-count every pageview. That state shipped once (site
+    tag + Zaraz both live) and this cutover fixes it. If you bring gtag back,
+    remove the GA4 tool from Zaraz first. */
 ---
-{prod && (
-  <script is:inline>
-    // Set up dataLayer and a global gtag immediately: trivial, no network.
-    // This queues the js/config calls and — crucially — leaves window.gtag
-    // available so Google Ads conversion and event snippets work later.
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function(){ dataLayer.push(arguments); };
-    gtag('js', new Date());
-    gtag('config', 'G-44Y71C24L7');
-    // Defer only the heavy gtag.js download: after load, on first idle, so it
-    // never touches the critical render path. dataLayer queue flushes on arrival.
-    addEventListener('load', () => {
-      const boot = () => {
-        const g = document.createElement('script');
-        g.async = true;
-        g.src = 'https://www.googletagmanager.com/gtag/js?id=G-44Y71C24L7';
-        document.head.appendChild(g);
-      };
-      'requestIdleCallback' in window
-        ? requestIdleCallback(boot, { timeout: 3000 })
-        : setTimeout(boot, 1200);
-    });
-  </script>
-)}
