@@ -77,13 +77,21 @@ Injected at the top of the modal (inside its shadow root), above Zaraz's own
 
 ### Field 2 — Custom CSS
 
-Brand dark face. The modal renders in a **shadow root** inside
-`.cf_modal_container`, so: font families work by name (document `@font-face`
-reaches shadow DOM) but CSS custom properties do NOT cross — hence hardcoded
-hex. Selectors verified against the live DOM 09-01-26. Zaraz fixes the title
-text ("Cookie Settings") and the three button labels ("Accept All" / "Reject
-All" / "Confirm My Choices") — not editable. `transition:none` on `.cf_button`
-defeats Zaraz's blue background transition.
+Brand dark face, **simple two-button banner**. The modal renders in a **shadow
+root** inside `.cf_modal_container`, so: font families work by name (document
+`@font-face` reaches shadow DOM) but CSS custom properties do NOT cross — hence
+hardcoded hex. Selectors verified against the live DOM 09-01-26. Zaraz fixes the
+title text ("Cookie Settings") and the button labels — not editable.
+`transition:none` on `.cf_button` defeats Zaraz's blue background transition.
+
+**Single-purpose simplification:** with only the Analytics purpose, the granular
+toggle and "Confirm My Choices" are redundant — Accept All / Reject All each set
+that one purpose. So the CSS hides `.cf_consent-container` (the toggle), its
+`hr`, and `#cf_consent-buttons__save`, leaving a clean Accept/Reject pair. The
+intro text discloses what's collected, so nothing material is hidden.
+**If a second purpose (e.g. Marketing for Ads) is ever added, REMOVE these
+`display:none` rules** — otherwise Marketing gets bundled under Accept with no
+granular choice.
 
 ```css
 .cf_modal {
@@ -115,29 +123,34 @@ defeats Zaraz's blue background transition.
 }
 .bdl-consent-legal a:hover { color: #f4f0e6; }
 
-.cf_modal hr { border: 0; border-top: 1px solid rgba(244,240,230,.14); margin: 1.25rem 0; }
+/* Simple banner: hide single-purpose toggle, its divider, and the redundant
+   "Confirm My Choices". Accept All / Reject All carry the one purpose.
+   REMOVE these three rules if a second purpose is ever added. */
+.cf_modal hr { display: none !important; }
+.cf_consent-container { display: none !important; }
+#cf_consent-buttons__save { display: none !important; }
 
-.cf_consent-container { list-style: none; margin: 0; padding: 0; }
-.cf_consent-element label h3 {
-  font-family: 'Marcellus', Georgia, serif; font-weight: 400;
-  font-size: 1rem; color: #f4f0e6; margin: 0 0 .25rem;
+/* Two-button row */
+.cf_consent-buttons {
+  background-color: transparent !important; display: flex !important;
+  flex-direction: row !important; flex-wrap: wrap !important;
+  align-items: stretch !important; justify-content: stretch !important;
+  gap: .6rem !important; margin: 1.4rem 0 0 !important; padding: 0 !important;
+  height: auto !important; min-height: 0 !important; max-width: none !important;
 }
-.cf_consent-element label p { font-size: .9rem; line-height: 1.5; color: #a89f8f; margin: 0; }
-.cf-checkbox { accent-color: #a3bd8f; }
-
-.cf_consent-buttons { background-color: transparent !important; display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem !important; }
 .cf_button {
-  font-family: 'Marcellus', Georgia, serif; letter-spacing: .08em;
-  text-transform: uppercase; font-size: .8rem; padding: .65rem 1.1rem;
-  border-radius: 3px; cursor: pointer; flex: 1 1 auto;
+  display: block !important; flex: 1 1 0 !important; width: auto !important;
+  box-sizing: border-box !important; text-align: center !important;
+  font-family: 'Marcellus', Georgia, serif !important; letter-spacing: .08em !important;
+  text-transform: uppercase !important; font-size: .8rem !important;
+  padding: .75rem 1rem !important; line-height: 1.2 !important; height: auto !important;
+  border-radius: 3px !important; cursor: pointer !important; margin: 0 !important;
   transition: none !important;
 }
 .cf_button--accept { background-color: #a3bd8f !important; color: #1c1a17 !important; border: 0 !important; }
 .cf_button--accept:hover { filter: brightness(1.08); }
 .cf_button--reject { background-color: transparent !important; color: #f4f0e6 !important; border: 1px solid rgba(244,240,230,.28) !important; }
 .cf_button--reject:hover { border-color: #a3bd8f !important; }
-.cf_button--save { background-color: transparent !important; color: #a3bd8f !important; border: 1px solid rgba(163,189,143,.5) !important; }
-.cf_button--save:hover { background-color: rgba(163,189,143,.1) !important; }
 ```
 
 ## When Google Ads is set up
