@@ -14,6 +14,16 @@ dashboard, not in git. Keep it in sync when you change the Zaraz setup.
 - **Consent:** Zaraz Consent Management enabled 09-01-26. One purpose
   (**Analytics**) gates the GA4 tag. See "Consent management" below.
 
+## Scope — marketing site only
+
+Zaraz auto-injects across the whole Cloudflare zone, which included the
+self-hosted admin tool at **postiz.birchdesignlab.com** (consent nag on the
+tool + our own Postiz sessions polluting GA4). Excluded 09-01-26 via a
+**Configuration Rule** ("Zaraz off - Postiz"): `http.host eq
+"postiz.birchdesignlab.com"` → **Disable Zaraz**. Verified: no `zaraz/s.js`,
+no modal, no gtag on that host. Add a similar rule for any future
+subdomain/tool that shouldn't be tracked.
+
 ## Why edge, not client code
 
 - Perf scales: more tags cost ~the same as one; business pages hold Lighthouse.
