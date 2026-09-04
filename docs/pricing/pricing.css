@@ -1,0 +1,8 @@
+/* Price sheet — the only styling this document needs beyond the letterhead.
+   Both the light and the night variant use this file; the face is chosen by
+   which theme-*.css the HTML links, so there is one copy of these rules. */
+
+/* Fixed columns so the offering and price never rewrap against each other and
+   the "what it is" prose gets the rest of the table. */
+td.phase{ width:1.75in; }
+td.price{ width:1.3in; }

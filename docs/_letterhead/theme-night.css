@@ -1,0 +1,28 @@
+/* Dark face: bark-black field, bark-white ink, greens lightened to carry on it.
+   Pairs with the night wordmark (assets/brand/logos/files/8b-horizontal-night.svg).
+   A document opts in with <body data-letterhead="night">, which is also what
+   tells the build scripts which mark to inject.
+
+   The bars keep their dark forest and leather fills: they carry light text and
+   read the same on either field, so only the text and accent roles flip. */
+:root{
+  /* surfaces and text */
+  --field:#1c1a17;            /* bark-black */
+  --ink:#f4f0e6;              /* bark-white */
+  --muted:#a89f8f;            /* stone */
+  --sage:#242e28;             /* zebra rows, callout fill */
+  --line:rgba(244,240,230,.16);
+
+  /* bars: dark plates carrying light text, same in both faces */
+  --bar:#2b4a37;              /* forest — table headers */
+  --bar-alt:#4a3a2c;          /* leather — group bands */
+  --on-bar:#f4f0e6;
+
+  /* roles that flip between faces */
+  --heading:#7fbf9a;          /* lightened canopy */
+  --emphasis:#7fbf9a;         /* lightened canopy */
+  --dash:#a3bd8f;             /* moss */
+  --rule-accent:#a3bd8f;      /* moss */
+  --price:#c9a675;            /* warm highlight for figures */
+  --callout-edge:#a3bd8f;     /* moss */
+}

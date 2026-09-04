@@ -103,6 +103,70 @@ The WebAR business card system. Merged here 08-26-26 from `docs/ar-card/BACKLOG.
 
 - [ ] Dedicated OG card for the landing (`scripts/og/` manifest entry); currently reuses `/og/home.png`, which unfurls fine.
 
+## Branded client documents
+
+How BDL produces the documents it sends to clients: proposals, quotes,
+reviews, reclaim estimates, the price sheet. One branded face, one render
+path, so a new document is written rather than assembled, and every one that
+goes out looks like it came from the same studio.
+
+Started 09-03-26. Reusable internal tooling per house practice, and not
+invented here: two proven approaches were already sitting in the Cheer &
+Chatter repo (they produced the delivered project-review PDF and the two
+owner-manual DOCX files), unwired to this one. Ingested, then generalized.
+The price sheet is the first document through it, not the point of it.
+Expect the shape to move as real documents land — see the tasks below.
+
+**The shape, as built.** The tooling is document-agnostic; pricing is its
+first caller, not its subject. A new document is a content file and nothing
+else.
+
+- **`scripts/docs/check-pages.mjs <doc.html>`** measures every `.page` for
+  clipped overflow and shoots each one. **`build-pdf.mjs <doc.html>
+  [out.pdf]`** renders. Both take a path and know nothing about any
+  particular document. Always run the checker first: `.page` is
+  `overflow:hidden`, so content that does not fit is CLIPPED rather than
+  reflowed, nothing errors, and the only signal in print is text colliding
+  with the footer.
+- **`docs/_letterhead/`** is the shared face: `letterhead.css` (the skeleton,
+  written once, colors expressed as role tokens) plus `theme-day.css` and
+  `theme-night.css`. A document links theme, then skeleton, then its own
+  thin CSS. `docs/pricing/pricing.css` is what a document-specific file
+  should look like: two column widths.
+- **The wordmark is injected at render time** (`scripts/docs/letterhead.mjs`)
+  from `assets/brand/logos/files/8b-horizontal-{day,night}.svg`, into empty
+  `<div class="letterhead" data-for="...">` placeholders;
+  `<body data-letterhead="night">` picks the face. Before this each page
+  carried its own pasted 15KB copy of the outlined mark — the two price-sheet
+  variants were 57KB each and about 90% logo path, and one truncated paste
+  rendered as "BIRCH DE" on a single page while the others were fine. Now
+  11KB, one source. Documents opened straight in a browser show an empty
+  letterhead; that is expected, render through the scripts.
+- **Source material:** `scripts/docs/reference/cheer-chatter/` — the three
+  original C&C scripts, byte-identical, plus a README on what each does and
+  what's ported vs. not.
+
+### Tasks
+
+- [ ] **Port `build-manual-docx.mjs`** once a real DOCX deliverable is
+  needed. Same conversion coverage (headings/bold/italic/code/lists/tables/
+  images/rules) should already fit anything markdown-authored in this repo's
+  `docs/`. Likely first caller is the one-page proposal template (§9.5 of the
+  services handoff), which wants to be editable rather than a PDF. `docx`
+  stays out of `package.json` per the source repo's own reasoning; a scratch
+  `NODE_PATH` install is the pattern to keep.
+- [ ] **Prove the letterhead on a second document.** Everything above is
+  factored against one caller, which is exactly how a bad abstraction gets
+  locked in. The proposal template is the test: whatever it needs that
+  `letterhead.css` cannot give it is the real boundary between shared and
+  doc-specific, and the split should move to wherever that lands.
+- [ ] **Decide the light/dark selection rule.** Price sheet has both faces;
+  no rule yet for which goes out by default (valuation-style night for pitch
+  decks and leave-behinds vs. day for print-and-read documents?).
+- [ ] **Pricing content is frozen until the February 15, 2027 review**
+  (founder, 09-03-26), so this tooling should not be exercised by editing the
+  price sheet. Next real document drives the next change to it.
+
 ## Prod ops notes
 
 ### 08-19-26 — Safari "connection is not private" report (birchdesignlab.com)
