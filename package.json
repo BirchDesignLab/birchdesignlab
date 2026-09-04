@@ -11,6 +11,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "verify": "npm run test && npm run check && npm run build",
     "test": "vitest run",
     "trace": "node scripts/trace-to-strokes.mjs",
     "types": "wrangler types",

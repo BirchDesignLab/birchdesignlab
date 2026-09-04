@@ -40,8 +40,17 @@ Keep `main` in sync under normal circumstances: after a PR merges, pull `main`
 and delete the merged branch locally and on the remote. Work genuinely in
 flight is exempt.
 
-Before opening a PR: `npx vitest run`, `npx astro check`, and `npm run build`
-must all be clean.
+Before opening a PR, run the gate:
+
+```bash
+npm run verify
+```
+
+That is `vitest run`, `astro check` and `npm run build` in one command, and it
+must be clean. Run it as one command rather than three by hand — the three-part
+version was easy to skip, and `astro check` in particular was silently
+unrunnable for a while (it OOMed on a vendored three.js build that tsconfig now
+excludes) without anyone noticing the gate had stopped existing.
 
 ## Dependencies: newest stable and secure
 
