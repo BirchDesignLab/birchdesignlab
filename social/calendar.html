@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birch Design Lab — September 2026 Content Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f1ede4; --panel:#faf7f0; --panel-2:#e9e3d6; --ink:#2a2724; --ink-soft:#5d5751; --rule:#cfc7b7;
+  --moss:#4e6a45; --moss-deep:#33472d; --moss-tint:#dce5d2; --bark:#7a5c43; --bark-tint:#eadfd2;
+  --x:#2a2724; --fb:#3a5a8a; --ig:#9a3d74; --btn:#2a2724; --btn-ink:#faf7f0; --focus:#4e6a45;
+  --serif:"Fraunces", Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --sans:"Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1a1815; --panel:#232019; --panel-2:#2c2822; --ink:#ebe5d7; --ink-soft:#aaa294; --rule:#3d372e;
+    --moss:#95b385; --moss-deep:#c4d6b6; --moss-tint:#2a3325; --bark:#caa47f; --bark-tint:#3a2f25;
+    --x:#e6e0d3; --fb:#98b7ea; --ig:#e392c6; --btn:#ebe5d7; --btn-ink:#1a1815; --focus:#95b385;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1a1815; --panel:#232019; --panel-2:#2c2822; --ink:#ebe5d7; --ink-soft:#aaa294; --rule:#3d372e;
+  --moss:#95b385; --moss-deep:#c4d6b6; --moss-tint:#2a3325; --bark:#caa47f; --bark-tint:#3a2f25;
+  --x:#e6e0d3; --fb:#98b7ea; --ig:#e392c6; --btn:#ebe5d7; --btn-ink:#1a1815; --focus:#95b385;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+a{color:var(--moss)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding:2rem 1.25rem 5rem}
+.masthead{padding:2rem 0 1.5rem}
+.masthead .kicker{font-size:1rem;color:var(--ink-soft);margin:0}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.02;letter-spacing:-.015em;margin:.3rem 0 .9rem}
+.lede{max-width:66ch;color:var(--ink-soft);font-size:1.1rem;line-height:1.5;margin:0 0 1.25rem}
+.jump{display:flex;flex-wrap:wrap;gap:.4rem;margin:0;padding:0;list-style:none}
+.jump a{display:inline-block;font-size:.92rem;padding:.3rem .65rem;border:1px solid var(--rule);border-radius:3px;color:var(--ink);text-decoration:none;background:var(--panel)}
+.jump a:hover{border-color:var(--moss);color:var(--moss)}
+.lenticel{height:10px;margin:2.75rem 0 1.25rem;background:
+  linear-gradient(90deg, var(--ink) 0 26px, transparent 26px 100%) 0 4px/210px 2px repeat-x,
+  linear-gradient(90deg, transparent 0 88px, var(--ink) 88px 102px, transparent 102px 100%) 0 5px/210px 2px repeat-x,
+  linear-gradient(90deg, transparent 0 150px, var(--ink) 150px 190px, transparent 190px 100%) 0 3px/210px 2px repeat-x;
+  opacity:.55}
+h2{font-family:var(--serif);font-weight:500;font-size:1.95rem;line-height:1.1;letter-spacing:-.01em;margin:0}
+h3{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0 0 .5rem}
+section{scroll-margin-top:1rem}
+.day-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem 1rem}
+.day-head .date{font-size:1rem;color:var(--ink-soft)}
+.pillar{display:inline-block;font-size:.88rem;padding:.15rem .55rem;border-radius:3px;background:var(--moss-tint);color:var(--moss-deep)}
+.pillar.locked{background:var(--bark-tint);color:var(--bark)}
+.idea{max-width:78ch;color:var(--ink-soft);margin:.6rem 0 1.25rem}
+.idea b{color:var(--ink);font-weight:600}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:.95rem}
+th,td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--ink-soft);background:var(--panel-2)}
+tr:last-child td{border-bottom:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.25rem}
+.post{background:var(--panel);border-top:3px solid var(--x);padding:1rem 1.1rem 1.1rem;display:flex;flex-direction:column;gap:.9rem}
+.post.fb{border-top-color:var(--fb)} .post.ig{border-top-color:var(--ig)}
+.post-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem}
+.post-head .platform{font-weight:600;font-size:1.05rem}
+.post.fb .platform{color:var(--fb)} .post.ig .platform{color:var(--ig)}
+.post-head .fmt{color:var(--ink-soft);font-size:.95rem}
+.post-head .time{color:var(--ink-soft);font-size:.95rem;flex-basis:100%}
+.copywrap{border-left:3px solid var(--moss);background:var(--paper);padding:.75rem .9rem .85rem 1rem}
+.copybar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem}
+.copybar span{font-size:.9rem;color:var(--ink-soft)}
+.copy-btn{font:600 .85rem/1 var(--sans);background:var(--btn);color:var(--btn-ink);border:0;border-radius:3px;padding:.4rem .65rem;cursor:pointer}
+.copy-btn:hover{opacity:.88}
+.copy{font-family:var(--serif);font-size:1.05rem;line-height:1.55;margin:0}
+.copy p{margin:0 0 .8em} .copy p:last-child{margin:0}
+.thread{counter-reset:tw} .thread p{position:relative;padding-left:1.7rem;counter-increment:tw}
+.thread p::before{content:counter(tw);position:absolute;left:0;top:.15em;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--moss)}
+.meta{display:grid;grid-template-columns:6.2rem 1fr;gap:.35rem .6rem;margin:0;font-size:.95rem}
+.meta dt{color:var(--ink-soft)} .meta dd{margin:0}
+.meta code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;background:var(--panel-2);padding:.05rem .3rem;border-radius:3px}
+.slides{margin:.25rem 0 0;padding-left:1.25rem} .slides li{margin:.2rem 0}
+.aside{background:var(--panel);border-left:3px solid var(--bark);padding:.85rem 1rem;margin:1rem 0 0;max-width:80ch}
+.aside p{margin:0 0 .6em} .aside p:last-child{margin:0}
+.prose{max-width:76ch} .prose p{margin:.4rem 0 .9rem}
+.prose ol,.prose ul{padding-left:1.3rem} .prose li{margin:.45rem 0}
+footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--rule);color:var(--ink-soft);font-size:.95rem;max-width:76ch}
+@media (max-width:640px){.wrap{padding:1.25rem .9rem 4rem} .grid{grid-template-columns:1fr} .meta{grid-template-columns:1fr} .meta dt{margin-top:.35rem}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+.sched{width:100%;min-width:0;font-size:.95rem} .sched th{white-space:nowrap}
+.kv{display:grid;grid-template-columns:8rem 1fr;gap:.3rem .8rem;margin:.5rem 0 0;font-size:.95rem} .kv dt{color:var(--ink-soft)} .kv dd{margin:0}
+.tag{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;background:var(--panel-2);padding:.05rem .35rem;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="kicker">Birch Design Lab</p>
+  <h1>September 2026 content calendar, revised</h1>
+  <p class="lede">Revised Wednesday, September 2. Thirteen posting days and thirty-nine posts across X, Facebook, and Instagram, built for two jobs: first followers and first clients. Nothing here needs a camera — every visual is rendered from the styleguide or recorded from birchdesignlab.com by the Claude Code prompts that travel with this page. Cheer and Chatter's events, photos, and link are out; BDL-005 stays as a lab specimen. Postiz is on hold, so the workflow runs on Meta Business Suite and x.com. All times are Central.</p>
+  <ul class="jump">
+    <li><a href="#overview">Overview</a></li><li><a href="#schedule">Days and times</a></li>
+    <li><a href="#sep-02">Sep 2</a></li><li><a href="#sep-03">Sep 3</a></li>
+    <li><a href="#sep-08">Sep 8</a></li><li><a href="#sep-09">Sep 9</a></li><li><a href="#sep-10">Sep 10</a></li>
+    <li><a href="#sep-15">Sep 15</a></li><li><a href="#sep-16">Sep 16</a></li><li><a href="#sep-17">Sep 17</a></li>
+    <li><a href="#sep-22">Sep 22</a></li><li><a href="#sep-23">Sep 23</a></li><li><a href="#sep-24">Sep 24</a></li>
+    <li><a href="#sep-29">Sep 29</a></li><li><a href="#sep-30">Sep 30</a></li>
+    <li><a href="#workflow">Posting without Postiz</a></li><li><a href="#growth">From zero</a></li><li><a href="#assets">Assets</a></li><li><a href="#questions">Open questions</a></li>
+  </ul>
+</header>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="overview">
+  <h2>The month at a glance</h2>
+  <p class="idea">One core idea per date, adapted three ways. Default slots: X 9:00 AM (scheduled the night before on x.com; the two threads go out by hand at 7:00 PM), Facebook 6:30 PM and Instagram 6:45 PM (both scheduled free in Meta Business Suite). Tonight's launch runs 6:30, 6:45, 7:00. Asset IDs point to the manifest at the bottom of this page.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Date</th><th>Pillar</th><th>Core idea</th><th>X</th><th>Facebook</th><th>Instagram</th><th>Assets</th></tr></thead>
+    <tbody>
+      <tr><td>Wed, Sep 2</td><td>P1 · Launch (locked copy)</td><td>Birch Design Lab is live</td><td>Video, 7:00 PM</td><td>Video, 6:30 PM</td><td>Reel, 6:45 PM</td><td>V007</td></tr>
+      <tr><td>Thu, Sep 3</td><td>P4 · Educational</td><td>The five-second test</td><td>Post + card</td><td>Post + card</td><td>Carousel, 10 slides</td><td>C-03, K-03</td></tr>
+      <tr><td>Tue, Sep 8</td><td>P2 · Founder story</td><td>Why the lab exists</td><td>Thread, 5 tweets, 7:00 PM</td><td>First-person post</td><td>Single image</td><td>C-08</td></tr>
+      <tr><td>Wed, Sep 9</td><td>P6 · From the Lab</td><td>BDL-007, the wordmark</td><td>Video</td><td>Video</td><td>Reel</td><td>V007B</td></tr>
+      <tr><td>Thu, Sep 10</td><td>P3 · Services</td><td>Two things, done properly</td><td>Post + card</td><td>Post, ends on a question</td><td>Single image + Story poll</td><td>C-10</td></tr>
+      <tr><td>Tue, Sep 15</td><td>P4 · Educational</td><td>Five quiet ways a website loses customers (comment offer, approved)</td><td>List post + card</td><td>Numbered post</td><td>Carousel, 8 slides</td><td>C-15, K-15</td></tr>
+      <tr><td>Wed, Sep 16</td><td>P6 · From the Lab</td><td>BDL-005, the ticketing site and live event app</td><td>Video</td><td>Video</td><td>Reel (fallback: carousel)</td><td>V005, C-16, K-16</td></tr>
+      <tr><td>Thu, Sep 17</td><td>P2 · Founder story</td><td>Solo by choice</td><td>Post + card</td><td>First-person post</td><td>Single image</td><td>C-17</td></tr>
+      <tr><td>Tue, Sep 22</td><td>P3 · Services</td><td>How a website gets built here</td><td>Thread, 5 tweets, 7:00 PM</td><td>Process post</td><td>Carousel, 8 slides</td><td>C-22, K-22</td></tr>
+      <tr><td>Wed, Sep 23</td><td>P4 · Educational</td><td>Three lines every homepage needs</td><td>List post + card</td><td>Post, invites a first line</td><td>Carousel, 7 slides</td><td>C-23, K-23</td></tr>
+      <tr><td>Thu, Sep 24</td><td>P1 · About BDL</td><td>A lab, not an agency</td><td>Post + still</td><td>Positioning post</td><td>Carousel, 7 slides</td><td>S007, K-24</td></tr>
+      <tr><td>Tue, Sep 29</td><td>Evergreen (P4)</td><td>The five-second test as a kinetic-type Reel</td><td>Post + 1:1 crop</td><td>Post + crop</td><td>Reel</td><td>V029</td></tr>
+      <tr><td>Wed, Sep 30</td><td>Best performer</td><td>Month one: the tree from a third angle, and the standing offer</td><td>Video</td><td>Closing post</td><td>Reel</td><td>V007C</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="aside">
+    <p><b>What changed since the first version.</b> The launch moved to tonight. Tuesday–Thursday stays, with the evidence below. The Cheer and Chatter pillar is retired: no event dates, no photos, no link, and no "care" story; BDL-005 remains as a specimen, client unnamed by default. Specimens are BDL-005 and BDL-007 only — nothing else from the lab is mentioned. No filmed video and no photography anywhere: every visual is a rendered card, a still, or a recording of the site. Postiz notes are replaced by a Meta Business Suite and x.com workflow. The Sep 15 comment offer stays as you approved it. Consulting is not mentioned, since the site doesn't mention it yet.</p>
+    <p><b>Pillar coverage.</b> P4 Educational leads with three slots (Sep 3, 23, and the Sep 15 list, plus the Sep 29 evergreen). P1, P2, P3, and P6 each run twice. Direct promotion sits on Sep 10 and Sep 22, with soft offers on Sep 3, 15, 23, and 30 — the value-to-promotion split holds at roughly 80/20, but every value post now ends with a small, specific ask, because an account with zero followers can't afford posts that ask for nothing.</p>
+    <p><b>Sep 29 and 30 are decision slots</b> with defaults and swap rules, so nothing gets produced from scratch in the last week.</p>
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="schedule" class="prose">
+  <h2>Days and times: why Tuesday–Thursday stays</h2>
+  <p>You asked not to post Tue/Wed/Thu unless that's actually the optimal schedule. For this audience it is. The 2026 timing studies (Sprout Social's engagement analysis, Buffer's post-level data, Hootsuite's) agree on the shape: <b>Wednesday is the strongest single day, Thursday second, Tuesday close behind; Friday and Saturday are the weakest.</b> Weekends earn a slot only for consumer and event content, and this calendar no longer carries any. So the three days stay, and each week's strongest visual lands on Wednesday.</p>
+  <p>Evening posting is not a compromise. Buffer's 2026 data has 6–9 PM beating mornings on Instagram most days, and Facebook shows a second daily peak in the early evening — which is when a shop owner finally sits down with the phone. Since you'll be posting after work at first, the defaults lean into that instead of fighting it.</p>
+  <dl class="kv">
+    <dt>X</dt><dd>9:00 AM, scheduled the night before on x.com (free, single posts only). The two threads (Sep 8, Sep 22) go out by hand at 7:00 PM — about five minutes each.</dd>
+    <dt>Facebook</dt><dd>6:30 PM, scheduled in Meta Business Suite.</dd>
+    <dt>Instagram</dt><dd>6:45 PM, scheduled in Meta Business Suite. Wednesdays also do well at noon; after four weeks, check Insights and move the Wednesday post to 12:00 PM if your audience peaks earlier.</dd>
+    <dt>Tonight</dt><dd>Launch at 6:30 (Facebook), 6:45 (Instagram), 7:00 (X). If tonight is missed, post the launch Thursday, run the five-second test on Sep 8 and the founder thread on Sep 17, and let "solo by choice" wait for October.</dd>
+    <dt>Frequency</dt><dd>Three posts per platform per week is the floor Instagram and Facebook need to keep showing a new account to anyone; consistency (the same days every week) matters more than volume. X rewards more — the zero-cost extra is ten minutes of replies on posting days, not more posts.</dd>
+  </dl>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-02" class="day">
+  <div class="day-head"><span class="date">Wednesday, September 2, 2026</span><h2>Birch Design Lab is live</h2><span class="pillar locked">Day 1 · locked copy, posted tonight</span></div>
+  <p class="idea"><b>Core idea:</b> the launch announcement on the BDL-007 wordmark loop. Copy is exactly as delivered; only the times moved, because yesterday's window was missed and Wednesday evening is the strongest slot of the week. Post Facebook first, then Instagram, then X, and put the site link in the Facebook first comment.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Native video post</span><span class="time">7:00 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Birch Design Lab is live. Custom software + web design for Gulf Coast businesses — built by one pair of hands, no templates, no bloat. Still getting the lab set up around here. More soon.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007-SQ</span> — BDL-007 wordmark loop, 1:1 1080×1080, H.264 MP4, 30fps, silent AAC, seamless ~8s loop returning to its first frame, well under 100MB. No captions; optional tiny static "birchdesignlab.com" lower-corner tag.</dd>
+        <dt>Label</dt><dd><code>BDL-Launch-D1-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Native video post</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Birch Design Lab is live! We build custom software and websites for businesses across the Mississippi Gulf Coast — the kind of tools and sites that actually fit how you work, built by hand instead of pulled off a template. We're still getting spun up here on the page, so bear with us over the next few weeks. In the meantime, say hello, ask a question, or just follow along — behind-the-scenes looks at what we're building are coming. Thanks for being here from day one.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007-SQ</span> — same loop, 1:1. Link in the first comment, not the post body: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Launch-D1-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Reel, 9:16 (or feed video, 4:5)</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>🌳 Birch Design Lab is live. Custom software and web design for businesses across the Mississippi Gulf Coast — designed and built by hand, one project at a time. Still spinning up around here — more is coming soon. Thanks for being here early.</p><p>#MSGulfCoast #CustomSoftware #WebDesign #BuiltByHand #DesignLab</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #CustomSoftware #WebDesign #BuiltByHand #DesignLab</dd>
+        <dt>Visual</dt><dd><span class="tag">V007-VT</span> as a Reel for reach (9:16 1080×1920), or <span class="tag">V007-PT</span> as a 4:5 feed video. Same loop, no kinetic captions. Instagram needs a professional account linked to the Facebook Page.</dd>
+        <dt>Label</dt><dd><code>BDL-Launch-D1-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-03" class="day">
+  <div class="day-head"><span class="date">Thursday, September 3, 2026</span><h2>The five-second test</h2><span class="pillar">P4 · Educational: how local businesses stand out</span></div>
+  <p class="idea"><b>Core idea:</b> A local business website has one job — tell a stranger what to do next: call, book, order, or walk in. Hand your phone to someone who has never been to your place, give them five seconds, and ask what they were supposed to do. Design is the strategy, not the decoration. This is the month's most shareable post; pin it on all three platforms once it's up.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Single post + image</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Hand your phone to a stranger with your website open. Give them five seconds. Can they tell what to do next — call, book, order, walk in?</p><p>If not, the site isn't working. It's decorating.</p><p>Pick one action. Put it where the thumb lands. Everything else is second.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-03-SQ</span> — typographic card, 1:1: Call. Book. Order. Walk in. stacked large in the site's display face, "Pick one." small beneath. Rendered from the styleguide, no photo.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D3-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Text post + image</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Here's a test you can run today. It costs nothing.</p><p>Pull up your website on your phone and hand it to someone who's never been to your place — a neighbor, a cousin, the person behind you in line. Give them five seconds. Then ask: what were you supposed to do there?</p><p>If they hesitate, that's the whole problem. Not the colors. Not the logo. Not whether the photos are new. A visitor arrives with a question — can I get a table, do y'all do this, are you open right now — and the site's only job is to answer it and point to the next step. Call, book, order, walk in. One of those, big enough to hit with a thumb, before anyone scrolls.</p><p>Most local business sites we look at say everything and ask for nothing. The homepage welcomes you. It tells the story. It lists the services. And the phone number lives in small type at the bottom, under the copyright.</p><p>Design is strategy here, not decoration. The strategy is: decide what you want the visitor to do, then build the page so that's the easiest thing on it.</p><p>Run the five-second test this week. If you'd like a second pair of eyes on what you find, message the page with your link — no pitch, just an honest read.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-03-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D3-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Carousel, 4:5, 10 slides</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Your website has one job: tell a stranger what to do next.</p><p>Call. Book. Order. Walk in. One of those, big enough for a thumb, before anyone scrolls.</p><p>Run the five-second test this week — hand your phone to someone who's never been to your place, give them five seconds, ask what they were supposed to do. If they hesitate, you've found the fix.</p><p>Save this for the next time someone tells you your site "just needs a refresh." It probably needs a decision. And if you want a second pair of eyes, DM the link — no pitch, an honest read.</p><p>#MSGulfCoast #GulfCoastBusiness #SmallBusinessWebsite #WebDesignTips #LocalBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #GulfCoastBusiness #SmallBusinessWebsite #WebDesignTips #LocalBusiness</dd>
+        <dt>Slides</dt><dd><ol class="slides">
+          <li>Your website has one job. Most don't do it.</li>
+          <li>A stranger lands on your site with a question. Can I book? Are you open? Do y'all do this?</li>
+          <li>The site's only job: answer it — then point to the next step.</li>
+          <li>Call. Book. Order. Walk in. Pick one.</li>
+          <li>Restaurant → the menu on the page, and "Order" before anyone scrolls.</li>
+          <li>Salon, studio, clinic → "Book" in the first screen, on your own site.</li>
+          <li>Shop, bar, venue → hours, address, and a tappable phone number at the top.</li>
+          <li>The five-second test: hand your phone to a stranger. Ask them what to do.</li>
+          <li>Decide what you want them to do. Build the page so it's the easiest thing on it. That's design as strategy.</li>
+          <li>Birch Design Lab. Custom software and web design for the Mississippi Gulf Coast. Link in bio.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">K-03</span> — 1080×1350, one idea per slide, slide 1 set large as the hook, slide 4 is C-03 recropped, slide 10 is the standing brand slide <span class="tag">C-BRAND</span>.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D3-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-08" class="day">
+  <div class="day-head"><span class="date">Tuesday, September 8, 2026</span><h2>Why the lab exists</h2><span class="pillar">P2 · Founder story (anonymized)</span></div>
+  <p class="idea"><b>Core idea:</b> More than a decade building software inside large companies taught the founder what careful work looks like — and the businesses they actually visited were running on a monster spreadsheet and a group text. The lab closes that gap: enterprise-grade care, scaled to one pair of hands, pointed at the businesses down the road. No name, no photo, no identifying detail. The X thread is posted by hand in the evening.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Thread, 5 tweets, card on tweet 1</span><span class="time">7:00 PM CT (by hand)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Thread — one block per tweet</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy thread">
+          <p>Before Birch Design Lab, I spent over a decade building software inside large companies. Careful work, real budgets, systems that ran all night without anyone watching. And one thing I couldn't stop noticing:</p>
+          <p>The businesses I actually visited — the diner, the shop, the venue — ran on something else entirely. A spreadsheet with a monster inside it. A paper calendar. A group text where the orders lived.</p>
+          <p>Not because those owners didn't care. Because nobody had ever built them a tool that fit. They got templates, builders, and whatever came with the register. The careful work was priced for companies with an IT department.</p>
+          <p>So that's the lab: the care I learned at scale, put in one pair of hands and pointed at the businesses down the road. Small, sturdy tools. Sites built around what the visitor should do next.</p>
+          <p>Solo by choice. The best work I've ever seen was done by one person who understood the whole thing, start to finish. That's the bet. birchdesignlab.com</p>
+        </div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-08-SQ</span> on tweet 1 — a quote card: "The care I learned at scale, in one pair of hands, pointed at the businesses down the road." Typographic, no photo.</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D8-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">First-person post + image</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>A little about the person behind this page — without a name, because the work should do the talking.</p><p>Before Birch Design Lab, I spent more than a decade building software inside large companies. The kind of systems that run all night without anyone watching, built by careful people with real budgets. I learned what good looks like there: what it means to test something properly, to write it down so the next person can understand it, to keep a thing running for years instead of months.</p><p>And the whole time, the businesses I actually spent my money at — the lunch spot, the shop, the place with the trivia night — were running on a spreadsheet nobody wanted to open, a paper calendar, and a group text where the orders lived. Not because the owners didn't care. Because nobody had ever built them a tool that fit. They got templates, builders, and whatever came bundled with the register. The careful work was priced for companies with an IT department.</p><p>That gap is why the lab exists. Take the care I learned at scale, put it in one pair of hands, and point it at the businesses down the road.</p><p>Solo by choice, by the way. The best work I've ever seen was done by one person who understood the whole thing, start to finish. When you call, you get the person who built it. When you email, same.</p><p>More on how it all works in the coming weeks. For now — thanks for reading this far.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-08-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D8-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Single image, 4:5</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Before the lab: more than a decade building software inside large companies. Careful people, real budgets, systems that ran all night.</p><p>The businesses I actually loved — the lunch spot, the shop, the trivia night — ran on a spreadsheet nobody wanted to open and a group text where the orders lived. Nobody had ever built them a tool that fit.</p><p>Birch Design Lab is that gap, closed. The care I learned at scale, in one pair of hands, pointed at the businesses down the road.</p><p>Solo by choice. When you call, you get the person who built it.</p><p>#MSGulfCoast #FounderStory #SmallBusinessOwner #CustomSoftware #BuiltByHand</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #FounderStory #SmallBusinessOwner #CustomSoftware #BuiltByHand</dd>
+        <dt>Visual</dt><dd><span class="tag">C-08-PT</span> — the same quote card at 4:5 1080×1350.</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D8-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-09" class="day">
+  <div class="day-head"><span class="date">Wednesday, September 9, 2026</span><h2>BDL-007, the wordmark</h2><span class="pillar">P6 · From the Lab</span></div>
+  <p class="idea"><b>Core idea:</b> The lab keeps its portfolio as numbered specimens. BDL-007 is the wordmark: the name grown from birch and moss in three dimensions, standing on its pedestal and breathing, with fireflies after dark. Birch comes from an Old English root meaning "to shine," so the tree named for light gets a few lights of its own. Everything we sell, we practice in the open. Wednesday gets the second camera angle, not the launch clip.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Native video post</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>From the Lab, specimen BDL-007: the wordmark.</p><p>It isn't a logo file. It's our name, grown from birch and moss, standing on a pedestal and breathing — with a little company after dark.</p><p>We build our own things the way we build yours. Everything we sell, we practice in the open.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007B-SQ</span> — the second framing: close-up or low angle, moss in the foreground, one firefly passing through frame, 6–8s seamless loop, 1:1.</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D9-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Native video post</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>A peek inside the lab.</p><p>We keep our portfolio the way a lab keeps its notebook: as numbered specimens. Some are experiments built to learn in the open. Some are client work, shown the same way. The idea is simple — everything we sell, we practice where you can see it.</p><p>This is specimen BDL-007: the wordmark.</p><p>Most businesses get a logo as a file. A flat shape that goes on the sign, the invoice, the corner of the website. We wanted the name to be a place instead. So it's grown, in three dimensions, from birch and moss. It stands on a pedestal. It breathes. Stay a moment and you'll notice it has company after dark.</p><p>Birch, if you're curious, comes from an Old English root meaning "to shine." A tree named for light ought to have a few small lights of its own.</p><p>Why show you a logo that breathes? Because it's the same care that goes into a booking page or an order tool. The parts you never see get built as carefully as the parts you do — and if we'll spend this long on our own name, imagine what we'll do with your menu.</p><p>Watch it live on the site — link in the first comment.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007B-SQ</span>. First comment: the BDL-007 specimen page URL (confirm it — see open questions).</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D9-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Reel, 9:16, 6–8s loop</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>From the Lab — specimen BDL-007: the wordmark.</p><p>Not a logo file. Our name, grown from birch and moss, standing on a pedestal and breathing. Stay a moment — it has company after dark.</p><p>Birch comes from an Old English root meaning "to shine." A tree named for light gets a few small lights of its own.</p><p>We number everything we build, experiments and client work alike, because everything we sell, we practice in the open. Watch it live: link in bio.</p><p>#DesignLab #GenerativeDesign #Branding #WebDesign #MSGulfCoast</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#DesignLab #GenerativeDesign #Branding #WebDesign #MSGulfCoast</dd>
+        <dt>Visual</dt><dd><span class="tag">V007B-VT</span> — the same second framing at 9:16 1080×1920; the camera moves for the tall frame, no letterboxing. Seamless loop so the Reel's auto-loop reads as endless. No captions.</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D9-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-10" class="day">
+  <div class="day-head"><span class="date">Thursday, September 10, 2026</span><h2>Two things, done properly</h2><span class="pillar">P3 · Services (direct promotion slot)</span></div>
+  <p class="idea"><b>Core idea:</b> The spreadsheet that became a monster, the paper calendar, the group text where the orders live. Custom software replaces the system you've been limping along with, then grows with you. Web design that's fast, clear, hand-built, and designed around what the visitor should do next. Two things, done properly, by the same hands — named the way the site names them.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Single post + image</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Somewhere on the Coast there's a spreadsheet with too many tabs and one person who knows how it works.</p><p>We replace it with a small, sturdy tool built around how you run the place, then keep it running as you grow.</p><p>Custom software. Web design. Two things, done properly.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-10-SQ</span> — two-panel card, 1:1: left "Custom software" with "for the spreadsheet that became a monster," right "Web design" with "built around what the visitor does next," and "Two things, done properly." across the bottom.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D10-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Text post + image, ends on a question</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Every business has one. The spreadsheet that started as a list and became a monster. The paper calendar that can't be in two places. The group text where the orders live, scrolling past faster than anyone can read them.</p><p>They work, sort of. Until the one person who understands the spreadsheet takes a week off.</p><p>We do two things, and we do them properly.</p><p>Custom software: a small, sturdy tool that replaces the system you've been limping along with — built around how you actually run the place, not how a template thinks you should. And it doesn't stop at delivery. As the business grows past the tool, we grow the tool.</p><p>Web design: fast, clear, hand-built, no templates and no builders. Designed around one question — what should the visitor do next? Call, book, order, walk in. Menus that update in minutes instead of a PDF. Booking that stays on your own site instead of sending your customers somewhere else.</p><p>That's the whole menu. Two things, done properly, by the same hands start to finish.</p><p>So — what's the spreadsheet in your business that everyone's afraid to touch? Tell us in the comments. We've seen some monsters.</p><p>#MSGulfCoast</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast</dd>
+        <dt>Visual</dt><dd><span class="tag">C-10-SQ</span>. First comment: birchdesignlab.com/services.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D10-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Single image, 4:5, plus a Story poll</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Two things, done properly.</p><p>Custom software — for the spreadsheet that became a monster, the paper calendar that can't be in two places, the group text where the orders live. A small, sturdy tool built around how you run the place, and kept running as you grow past it.</p><p>Web design — fast, clear, hand-built. No templates, no builders. Designed around one question: what should the visitor do next?</p><p>Same hands, start to finish. That's the whole menu.</p><p>What's the system your business is limping along on? We've seen some monsters. 👇</p><p>#MSGulfCoast #CustomSoftware #WebDesign #SmallBusinessTools #GulfCoastBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #CustomSoftware #WebDesign #SmallBusinessTools #GulfCoastBusiness</dd>
+        <dt>Visual</dt><dd><span class="tag">C-10-PT</span> — the two-panel card at 4:5. Same evening, a Story with Instagram's native poll sticker: "What runs your business right now?" Spreadsheet / Group text / Paper / A real tool. Zero production; the poll is the point.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D10-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-15" class="day">
+  <div class="day-head"><span class="date">Tuesday, September 15, 2026</span><h2>Five quiet ways a website loses customers</h2><span class="pillar">P4 · Educational: how local businesses stand out</span></div>
+  <p class="idea"><b>Core idea:</b> Five common mistakes that never generate a complaint — people just leave: the PDF menu, hours that don't match Google, a "Book now" that sends people to someone else's site, a phone number that isn't tappable, a homepage that welcomes everyone and asks for nothing. None needs a redesign; each needs a decision and an afternoon. The Facebook comment offer stays as approved; Tuesday gives it the whole week to run.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">List post + image</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Five quiet ways a website loses customers:</p><p>1. The menu is a PDF<br>2. Hours don't match Google<br>3. 'Book now' sends people to someone else's site<br>4. The phone number isn't tappable<br>5. The homepage welcomes everyone, asks for nothing</p><p>Number four is a ten-minute fix.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-15-SQ</span> — numbered list card, 1:1, the five lines in the display face, "Nobody complains. They just leave." as the small footer line.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D15-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Numbered post + image, comment offer</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Five quiet ways a website loses customers — quiet because nobody complains. They just leave.</p><p>1. The menu is a PDF. On a phone it's a pinch-and-zoom chore, Google can't read what's in it, and updating it means calling somebody. A menu that lives on the page updates in minutes and shows up when someone searches "crab cakes near me."</p><p>2. Your hours on the site don't match your hours on Google. People trust whichever one they saw first, and then they show up to a locked door. Pick one source of truth and make everything point to it.</p><p>3. "Book now" sends people to a third-party site. Every time your customer leaves your site to book, someone else owns that relationship — and usually charges you for it. Booking that stays on your own site is possible for most businesses, and cheaper than you'd think.</p><p>4. The phone number isn't tappable. This is the ten-minute fix. On a phone, a number should be a button.</p><p>5. The homepage welcomes everyone and asks for nothing. "Welcome to our website!" is not an action. Call, book, order, walk in — pick the one you want most and make it the biggest thing on the screen.</p><p>None of these need a redesign. They need a decision and an afternoon. If you want a second pair of eyes on your site, drop the link in the comments and we'll give you an honest read — no pitch.</p><p>#MSGulfCoast</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast</dd>
+        <dt>Visual</dt><dd><span class="tag">C-15-SQ</span>. First comment: birchdesignlab.com. Answer every link within a day, in public, kindly and specifically — the replies are the post.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D15-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Carousel, 4:5, 8 slides</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Five quiet ways a website loses customers. Quiet, because nobody complains — they just leave.</p><p>The PDF menu. The hours that don't match Google. The booking button that sends people to someone else's site. The phone number you can't tap. The homepage that welcomes everyone and asks for nothing.</p><p>None of these need a redesign. They need a decision and an afternoon.</p><p>Save this one — and check your own site against it tonight. Want an honest read? DM the link.</p><p>#SmallBusinessWebsite #WebDesignTips #MSGulfCoast #RestaurantMarketing #LocalBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#SmallBusinessWebsite #WebDesignTips #MSGulfCoast #RestaurantMarketing #LocalBusiness</dd>
+        <dt>Slides</dt><dd><ol class="slides">
+          <li>Five quiet ways your website loses customers. (Nobody complains. They just leave.)</li>
+          <li>1 — The menu is a PDF. Pinch, zoom, give up. Google can't read it either.</li>
+          <li>Fix: a menu that lives on the page. Updates in minutes. Searchable.</li>
+          <li>2 — Hours on the site don't match hours on Google. Someone's showing up to a locked door.</li>
+          <li>3 — "Book now" sends people to someone else's site. Now they own the relationship.</li>
+          <li>4 — The phone number isn't a button. Ten-minute fix.</li>
+          <li>5 — "Welcome to our website!" is not an action. Call. Book. Order. Walk in. Pick one.</li>
+          <li>None of this needs a redesign. It needs a decision and an afternoon. Save this.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">K-15</span> — 1080×1350, each mistake as a large numeral with the line beneath; all typographic, no mockups. This carousel doubles as the Sep 29 alternate Reel.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D15-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-16" class="day">
+  <div class="day-head"><span class="date">Wednesday, September 16, 2026</span><h2>BDL-005, the ticketing site and the live event app</h2><span class="pillar">P6 · From the Lab (client work as a specimen)</span></div>
+  <p class="idea"><b>Core idea:</b> A ticketing site and a live event application for themed game nights on the Gulf Coast: one couple, one phone, one venue TV. The owners edit the site themselves; the app pairs the host's phone with the venue TV by a five-character code and caches locally for bad venue wifi. Working link from day one, site live on day 13, version one in six weeks, first two ticketed nights sold out. The client is unnamed by default; no event dates, no photos, no link to their site. Every visual comes from the BDL-005 page on birchdesignlab.com, or from typography.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Native video post</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>From the Lab, BDL-005: a ticketing site and a live event app for themed game nights on the Gulf Coast.</p><p>One phone, one venue TV, paired by a five-character code. Bad bar wifi? It caches locally.</p><p>Site live on day 13. Version one in six weeks. First two nights sold out.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V005-SQ</span> — a 1:1 recording of the BDL-005 specimen page framed on its strongest screen, or the fallback three-beat number loop (13 → 6 → 2) built from <span class="tag">C-16</span>.</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D16-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Native video post</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>From the Lab, specimen BDL-005: a ticketing site and a live event app.</p><p>The client runs themed game nights around the Gulf Coast — one couple, one phone, one venue TV, and a room full of people with their phones face-down.</p><p>They needed two things. A site that sells tickets and that they could change themselves: new night, new venue, new price, no code, no waiting on us. And a way to run the night itself.</p><p>So the app pairs the host's phone with the venue's TV using a five-character code, and the game runs from there. Venue wifi being what it is, everything caches locally — when the connection drops, the game doesn't.</p><p>The numbers, because we prefer those to adjectives: a working link from day one. Site live on day thirteen. Version one delivered in six weeks. The first two ticketed nights sold out.</p><p>This is the shape of most of the software work we do. Not a giant platform — a small, sturdy tool that fits how one business actually runs. If there's a night, a list, or a spreadsheet you're running by hand, that's exactly the conversation to have. Message the page.</p><p>The specimen page is in the first comment.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V005-SQ</span>. First comment: the BDL-005 specimen page URL on birchdesignlab.com — nothing else.</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D16-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Reel, 9:16, 10–12s (fallback: carousel, 6 slides)</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>From the Lab — specimen BDL-005: a ticketing site and a live event app for themed game nights on the Gulf Coast.</p><p>One couple. One phone. One venue TV, paired by a five-character code. Bad bar wifi? Everything caches locally, so when the signal drops, the game doesn't.</p><p>Working link from day one. Site live on day 13. Version one in six weeks. First two ticketed nights sold out.</p><p>This is the shape of most software we build: a small, sturdy tool that fits how one business actually runs. Got a night, a list, or a spreadsheet you're running by hand? That's the conversation. Link in bio.</p><p>#CustomSoftware #SmallBusinessTools #DesignLab #MSGulfCoast #GulfCoastBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#CustomSoftware #SmallBusinessTools #DesignLab #MSGulfCoast #GulfCoastBusiness</dd>
+        <dt>Slides</dt><dd>Fallback carousel <span class="tag">K-16</span>, used only if the specimen page has nothing worth recording:<ol class="slides">
+          <li>Six weeks. Two sold-out nights. One phone and one TV.</li>
+          <li>A ticketing site the owners change themselves. New night, new venue, new price — no code.</li>
+          <li>A live event app: the host's phone and the venue TV, paired by a five-character code.</li>
+          <li>Bar wifi is bad. The app caches locally, so the game keeps going when the signal doesn't.</li>
+          <li>Working link from day one. Live on day 13. Version one in six weeks. First two nights sold out.</li>
+          <li>Birch Design Lab. Custom software and web design for the Mississippi Gulf Coast. Link in bio.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">V005-VT</span> — a scroll-capture of the BDL-005 specimen page, 9:16 1080×1920, 10–12s, eased, holding on the first and last screens. Numbers, screens, and typography only: no client name, logo, faces, or dates in frame.</dd>
+        <dt>Label</dt><dd><code>BDL-Lab-D16-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-17" class="day">
+  <div class="day-head"><span class="date">Thursday, September 17, 2026</span><h2>Solo by choice</h2><span class="pillar">P2 · Founder story (anonymized)</span></div>
+  <p class="idea"><b>Core idea:</b> Why the lab is one person: inside big software, a simple change passes through many careful hands, each a little further from the person who asked. Here, the person who hears the problem builds the fix, tests it, writes the note, and answers when you write back. Solo by choice means taking on only what one pair of hands can do properly. Stays generic — no identifying detail, and no filmed Reel; a quote card carries it.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Single post + image</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>People ask why the lab is one person and not a team.</p><p>In a decade-plus inside big software, I watched simple changes pass through six pairs of hands. Each one careful. Each one a little further from the person who asked.</p><p>One pair of hands, start to finish. Solo by choice.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-17-SQ</span> — quote card, 1:1: "One pair of hands, start to finish. Solo by choice."</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D17-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">First-person post + image</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Why one person?</p><p>It's the question I get most, and it deserves a real answer.</p><p>For more than a decade I built software inside big organizations, and the thing I watched most closely wasn't the code. It was the path a simple change took. A business owner asks for something small — move this button, add this field — and the request passes through a salesperson, a project manager, a designer, a developer, a tester, and back. Everyone careful. Everyone a little further from the person who asked. By the time it lands, it's been translated five times.</p><p>I don't think that's anyone's fault. It's what layers do.</p><p>So the lab has none. When you describe the problem, the person listening is the person who'll build the fix, test it on a phone, write the note explaining it, and answer when you write back. Every detail passes through the same eyes. Nothing gets lost in the handoff, because there isn't one.</p><p>Solo by choice doesn't mean small ambitions. It means I'll only take on what one pair of hands can do properly — and then do it properly. The best work I've ever been part of was done that way. This is the version of that work I always wanted to do for the businesses I actually visit.</p><p>Most of this work starts the same way, by the way: someone is tired of doing a thing by hand, and someone else says, "I could build that." If that first someone is you, the door's open.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-17-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D17-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Single image, 4:5</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Why one person?</p><p>Inside big software, a simple change passes through six pairs of hands — each one careful, each one a little further from the person who asked.</p><p>Here, the person who hears the problem builds the fix, tests it on a phone, writes the note, and answers when you write back. Nothing lost in the handoff, because there isn't one.</p><p>Solo by choice. It usually starts with someone tired of doing a thing by hand — and someone else saying, "I could build that."</p><p>#SoloFounder #FounderStory #MSGulfCoast #BuiltByHand #CustomSoftware</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#SoloFounder #FounderStory #MSGulfCoast #BuiltByHand #CustomSoftware</dd>
+        <dt>Visual</dt><dd><span class="tag">C-17-PT</span> — the same quote card at 4:5.</dd>
+        <dt>Label</dt><dd><code>BDL-Founder-D17-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-22" class="day">
+  <div class="day-head"><span class="date">Tuesday, September 22, 2026</span><h2>How a website gets built here</h2><span class="pillar">P3 · Services (direct promotion slot)</span></div>
+  <p class="idea"><b>Core idea:</b> The four steps, told plainly. Discovery is a real conversation with no intake forms that ends in a scope you can read — and sometimes ends with "you don't need a new site yet." Build gives you a working link from day one. Launch is tested on real phones and shipped with a plain-English owner's manual. Care keeps it fast, secure, and current as the business grows past it. Confirm the step names match the site before this goes out (open questions). The X thread is posted by hand in the evening.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Thread, 5 tweets, card on tweet 1</span><span class="time">7:00 PM CT (by hand)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Thread — one block per tweet</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy thread">
+          <p>How a website gets built at the lab. Four steps, no fog:</p>
+          <p>1. Discovery. A real conversation — no intake forms. We talk about what a visitor should do next: call, book, order, walk in. It ends with a scope you can actually read. Sometimes it ends with 'you don't need a new site yet.' That's fine too.</p>
+          <p>2. Build. You get a working link from day one, not a mockup reveal at the end. Click around it while it grows. Change your mind early, when changing your mind is cheap.</p>
+          <p>3. Launch. Tested on real phones, not just a big monitor. Delivered with a plain-English owner's manual — how to update the menu, change the hours, add an event — so you're not calling us for the small stuff.</p>
+          <p>4. Care. A site isn't finished at launch; it's just started. We keep it fast, secure, and current as the business grows past it. Same hands, the whole way. birchdesignlab.com</p>
+        </div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-22-SQ</span> — four-step card, 1:1: Discovery → Build → Launch → Care in a single line with one plain phrase under each.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D22-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Process post + image</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>How a website gets built here — because "we'll take care of everything" isn't an answer, it's a fog.</p><p>Discovery. We talk. No intake form, no forty-question survey. What do you do, who walks in the door, and what should a visitor to your site do next — call, book, order, walk in? It ends with a scope you can actually read, in plain English, with a price. Sometimes it ends with "you don't need a new site yet; fix these three things and call me in a year." That's a fine outcome too.</p><p>Build. You get a working link from day one. Not a mockup, not a reveal — a real site you can open on your own phone and click around while it grows. It's much cheaper to change your mind in week one than in week six, so we make week one the easy time to do it.</p><p>Launch. Tested on real devices — your phone, your customers' phones, the old tablet at the counter. Then it ships with an owner's manual written for the owner: how to update the menu, change the hours, add an event, swap a photo. You shouldn't need to call us for the small stuff.</p><p>Care. A site isn't finished at launch; it's just started. We keep it fast, secure, and current, and when the business grows past what we built, we grow the build. That's the part most people never get offered and end up needing most.</p><p>Same hands, all four steps. If you've been putting off the website conversation because you weren't sure what it involved — this is what it involves. Message the page; the door's open.</p><p>#MSGulfCoast</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast</dd>
+        <dt>Visual</dt><dd><span class="tag">C-22-SQ</span>. First comment: birchdesignlab.com/services.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D22-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Carousel, 4:5, 8 slides</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>How a website gets built here — four steps, no fog.</p><p>Discovery: a real conversation, no intake forms, ending in a scope you can actually read. Build: a working link from day one, so you can change your mind while it's cheap. Launch: tested on real phones, delivered with a plain-English owner's manual. Care: kept fast, secure, and current as you grow past it.</p><p>Same hands, all four steps.</p><p>If you've been putting off the website conversation because you weren't sure what it involved — this is what it involves. DM us; the door's open.</p><p>#WebDesignProcess #MSGulfCoast #SmallBusinessWebsite #CustomWebsite #GulfCoastBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#WebDesignProcess #MSGulfCoast #SmallBusinessWebsite #CustomWebsite #GulfCoastBusiness</dd>
+        <dt>Slides</dt><dd><ol class="slides">
+          <li>How a website gets built here. Four steps, no fog.</li>
+          <li>1. Discovery. A real conversation, no intake forms.</li>
+          <li>It ends with a scope you can actually read. Sometimes it ends with "you don't need a new site yet." Also fine.</li>
+          <li>2. Build. A working link from day one — not a mockup reveal at the end.</li>
+          <li>Change your mind in week one, when changing your mind is cheap.</li>
+          <li>3. Launch. Tested on real phones. Shipped with a plain-English owner's manual.</li>
+          <li>4. Care. Fast, secure, current — and grown as the business grows past it.</li>
+          <li>Same hands, all four steps. Birch Design Lab. Mississippi Gulf Coast. Link in bio.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">K-22</span> — 1080×1350, the step number set large on slides 2, 4, 6, 7; all typographic.</dd>
+        <dt>Label</dt><dd><code>BDL-Services-D22-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-23" class="day">
+  <div class="day-head"><span class="date">Wednesday, September 23, 2026</span><h2>Three lines every homepage needs</h2><span class="pillar">P4 · Educational: how local businesses stand out</span></div>
+  <p class="idea"><b>Core idea:</b> Before anyone scrolls, a local business homepage needs three lines: what you are and where; one true, specific reason to choose you; and what to do next, as one button. Everything else lives below. It's fresh in mind because the lab's own copy pass is in progress, and it's the kind of post owners screenshot. The Facebook version invites people to post their first line — a light ask that starts conversations.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">List post + image</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Three lines every local business homepage needs before anyone scrolls:</p><p>1. What you are, and where. 'Wood-fired pizza, Ocean Springs.'<br>2. One true, specific reason to choose you.<br>3. What to do next — one button. Call, book, order, directions.</p><p>Everything else goes below.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">C-23-SQ</span> — list card, 1:1: "Three lines every homepage needs" with the three numbered lines and "Everything else goes below." as the footer.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D23-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Text post + image, invites a first line</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Three lines. That's what the top of a local business homepage needs — before anyone scrolls, before the photos, before the story.</p><p>Line one: what you are, and where. "Wood-fired pizza in Ocean Springs." "Same-day phone repair, Gulfport." Say it the way a friend would, not the way a brochure would.</p><p>Line two: one true, specific reason to choose you. Not "quality and service." Something only you can say — the oven came from Naples, the owner answers the phone, the dough gets two days. Specific is believable. Vague is invisible.</p><p>Line three: what to do next, as one button. Call, book, order, directions. Pick the one you want most and make it the biggest thing on the screen.</p><p>Everything else — the history, the full menu, the team — lives below, for the people who want it. The top of the page is for the stranger who's deciding in five seconds.</p><p>We're in the middle of rewriting our own site's copy right now, so this is fresh in mind. If you want, drop your first line in the comments and we'll tell you honestly whether it lands.</p><p>#MSGulfCoast</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast</dd>
+        <dt>Visual</dt><dd><span class="tag">C-23-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D23-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Carousel, 4:5, 7 slides</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Three lines every local business homepage needs, before anyone scrolls.</p><p>1. What you are, and where.<br>2. One true, specific reason to choose you.<br>3. What to do next — one button.</p><p>Everything else lives below. The top of the page is for the stranger deciding in five seconds.</p><p>Save this for your next rewrite. We're mid-rewrite on our own site, so we feel you.</p><p>#SmallBusinessWebsite #Copywriting #WebDesignTips #MSGulfCoast #LocalBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#SmallBusinessWebsite #Copywriting #WebDesignTips #MSGulfCoast #LocalBusiness</dd>
+        <dt>Slides</dt><dd><ol class="slides">
+          <li>Three lines every local business homepage needs. (Before anyone scrolls.)</li>
+          <li>Line 1 — What you are, and where. "Wood-fired pizza in Ocean Springs."</li>
+          <li>Line 2 — One true, specific reason to choose you. Specific is believable. Vague is invisible.</li>
+          <li>Line 3 — What to do next. One button: call, book, order, directions.</li>
+          <li>Not this: "Welcome to our website! We are committed to quality and service." Three lines that say nothing.</li>
+          <li>This: "Same-day phone repair in Gulfport. The owner fixes it while you wait." Then one button: Call.</li>
+          <li>Birch Design Lab. Custom software and web design for the Mississippi Gulf Coast. Link in bio.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">K-23</span> — 1080×1350; slides 5 and 6 are set as a before/after pair in the same layout, the bad example in the soft ink color and the good one in full ink. The example businesses are invented, not clients.</dd>
+        <dt>Label</dt><dd><code>BDL-Edu-D23-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-24" class="day">
+  <div class="day-head"><span class="date">Thursday, September 24, 2026</span><h2>A lab, not an agency</h2><span class="pillar">P1 · About BDL</span></div>
+  <p class="idea"><b>Core idea:</b> What "a design lab, not an agency" means in practice: an agency has layers, a lab is one bench, and the same hands that build your site answer your email. Working link from day one, plain-English owner's manual, everything practiced in the open first, and a short menu on purpose. No "thank you for two weeks of follows" framing — a new account shouldn't presume an audience. The visual is a still from the wordmark.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Single post + still</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>A design lab, not an agency. The difference, in one sentence:</p><p>The same hands that build your site answer your email.</p><p>No account manager. No handoff. No 'let me check with the team.' That's the whole pitch.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">S007-SQ</span> — a still of the wordmark at the neutral breath, 1:1.</dd>
+        <dt>Label</dt><dd><code>BDL-About-D24-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Positioning post + still</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>It's the first line on our site, so here's what "a design lab, not an agency" actually means.</p><p>An agency has layers. Someone sells the work, someone manages the account, someone designs it, someone else builds it, and your question travels through all of them before it comes back. A lab is one bench. The same hands that build your site answer your email. When something needs changing, you're talking to the person who can change it, that afternoon.</p><p>A few other things we mean by it:</p><p>We build in the open. You get a working link from day one, not a mockup reveal at the end.<br>We write things down in plain English. Every project ships with an owner's manual you can actually read.<br>We practice what we sell. Our own site is a set of numbered experiments — we test ideas on ourselves first.<br>We say no to work that doesn't fit. Two things, done properly, beats ten things done roughly.</p><p>The job isn't to make your business look like every other business. It's to make what's already good about it easy to see.</p><p>If that sounds like the kind of help you've been looking for, the door's open — message the page, or the link's in the first comment.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">S007-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-About-D24-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Carousel, 4:5, 7 slides</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>A design lab, not an agency. What that actually means:</p><p>An agency has layers. A lab is one bench. The same hands that build your site answer your email.</p><p>Working link from day one. Plain-English owner's manual at the end. Everything we sell, practiced in the open first. And a short menu on purpose — two things, done properly.</p><p>The job: make what's already good about your business easy to see.</p><p>#MSGulfCoast #DesignLab #WebDesign #CustomSoftware #SmallBusinessSupport</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #DesignLab #WebDesign #CustomSoftware #SmallBusinessSupport</dd>
+        <dt>Slides</dt><dd><ol class="slides">
+          <li>A design lab, not an agency. What that actually means.</li>
+          <li>An agency has layers. Your question travels through all of them.</li>
+          <li>A lab is one bench. The same hands that build your site answer your email.</li>
+          <li>Working link from day one. No mockup reveal.</li>
+          <li>Every project ships with a plain-English owner's manual.</li>
+          <li>Two things, done properly. We say no to the rest.</li>
+          <li>The job: make what's already good about your business easy to see. Birch Design Lab — link in bio.</li>
+        </ol></dd>
+        <dt>Visual</dt><dd><span class="tag">K-24</span> — 1080×1350, slide 1 set over <span class="tag">S007-PT</span> (the wordmark still at 4:5), the rest typographic; slide 7 carries the wordmark small.</dd>
+        <dt>Label</dt><dd><code>BDL-About-D24-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-29" class="day">
+  <div class="day-head"><span class="date">Tuesday, September 29, 2026</span><h2>Evergreen: the five-second test, as motion</h2><span class="pillar">Evergreen repost (P4)</span></div>
+  <p class="idea"><b>Default:</b> the Sep 3 five-second test, reworded and turned into a kinetic-type Reel rendered from the styleguide — no phone, no hands, no filming. <b>Swap rule:</b> on Sep 28, rank Sep 3, Sep 15, and Sep 23 in native Insights — saves and shares first, then comments, then reach. If Sep 15 won, use the alternate: the K-15 carousel rendered as a slideshow Reel, with the hooks below swapped for its first line. If Sep 23 won, do the same with K-23.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Single post + 1:1 loop</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>The five-second test, one more time, because it keeps being true:</p><p>Open your website on your phone. Hand it to a stranger. Can they tell what to do next — call, book, order, walk in?</p><p>Decide what you want them to do. Make it the easiest thing on the page.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V029-SQ</span> — the kinetic-type loop at 1:1, 9s, silent.</dd>
+        <dt>Label</dt><dd><code>BDL-Evergreen-D29-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Text post + loop</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>We posted this a few weeks ago and it's the one people keep bringing up, so here it is again in a different shape.</p><p>The five-second test: open your website on your phone, hand it to someone who's never been to your place, and ask them what they were supposed to do there. Call, book, order, walk in — if they can't name one, the site is decorating, not working.</p><p>The fix isn't a redesign. It's a decision. Choose the one thing you most want a visitor to do, and build the first screen around it — big enough to hit with a thumb, before anyone scrolls.</p><p>Watch the short version below. Then go run the test on your own site tonight, and tell us in the comments what happened.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V029-SQ</span>. First comment: birchdesignlab.com.</dd>
+        <dt>Label</dt><dd><code>BDL-Evergreen-D29-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Reel, 9:16, 9s loop</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Five seconds. That's how long a stranger gives your website before deciding whether to bother.</p><p>Hand your phone to someone who's never been to your place. Ask them what they're supposed to do. Call, book, order, walk in — if they can't name one, the site is decorating, not working.</p><p>The fix isn't a redesign. It's a decision. Choose the one thing, and make it the easiest thing on the page.</p><p>(We posted the carousel version earlier this month — this is the one to send to the friend who "needs a new website.")</p><p>#MSGulfCoast #SmallBusinessWebsite #WebDesignTips #GulfCoastBusiness #LocalBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #SmallBusinessWebsite #WebDesignTips #GulfCoastBusiness #LocalBusiness</dd>
+        <dt>Visual</dt><dd><span class="tag">V029-VT</span> — kinetic type, 9:16 1080×1920, 9s: "5 seconds." then Call. / Book. / Order. / Walk in. / Pick one., each holding about 1.4s, set very large on the paper ground, hard cuts or short fades, no bouncing. Returns to its first frame so the auto-loop is clean. Alternate: <span class="tag">K-15-reel-VT</span>, the five-quiet-ways slides as a slideshow Reel.</dd>
+        <dt>Label</dt><dd><code>BDL-Evergreen-D29-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="sep-30" class="day">
+  <div class="day-head"><span class="date">Wednesday, September 30, 2026</span><h2>Month one: the tree, one more angle, and the offer</h2><span class="pillar">Best-performer re-run</span></div>
+  <p class="idea"><b>Default:</b> the wordmark from a third framing (a slow orbit), with a closing-the-month hook and the standing "honest read" offer — because the launch and Sep 9 are the likeliest winners, and the ask is what turns a good month of posts into a first client. <b>Swap rule:</b> on Sep 28, take whichever single post ranked highest across all platforms. If it's the wordmark, run this as written. If it's something else, keep the offer paragraphs and re-run that post's visual with the fresh hook; the month should end on the ask either way.</p>
+  <div class="grid">
+
+    <article class="post x" data-platform="x">
+      <div class="post-head"><span class="platform">X</span><span class="fmt">Native video post</span><span class="time">9:00 AM CT (scheduled)</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Month one at the lab, in one sentence: the same hands that grew this tree answer your email.</p><p>If your site fails the five-second test, or a spreadsheet is quietly running your business, the honest reads are still open. Send us your link.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007C-SQ</span> — the slow-orbit framing, 1:1, 8s seamless loop.</dd>
+        <dt>Label</dt><dd><code>BDL-BestOf-D30-X</code></dd>
+      </dl>
+    </article>
+
+    <article class="post fb" data-platform="fb">
+      <div class="post-head"><span class="platform">Facebook</span><span class="fmt">Closing post + video</span><span class="time">6:30 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Post copy</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Closing out month one at the lab. Thank you to everyone who found this page in its first few weeks.</p><p>If you're just arriving, here's the month in three posts worth saving: the five-second test (hand your phone to a stranger and ask what to do), five quiet ways a website loses customers (the PDF menu is number one), and the three lines every homepage needs before anyone scrolls.</p><p>And the tree, one more time, from a different angle — because it's still the best explanation of how we work. If someone will spend this long on their own name, imagine what they'll do with your menu.</p><p>The offer stands: send us your website and we'll give you an honest read — no pitch. What's working, what's quietly losing you customers, and the one thing we'd fix first. Message the page, or reply in the first comment.</p><p>October's lab notes are already in the notebook. Glad you're here.</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>None</dd>
+        <dt>Visual</dt><dd><span class="tag">V007C-SQ</span>. First comment: birchdesignlab.com, with a line inviting links as replies.</dd>
+        <dt>Label</dt><dd><code>BDL-BestOf-D30-FB</code></dd>
+      </dl>
+    </article>
+
+    <article class="post ig" data-platform="ig">
+      <div class="post-head"><span class="platform">Instagram</span><span class="fmt">Reel, 9:16, 8s loop</span><span class="time">6:45 PM CT</span></div>
+      <div class="copywrap"><div class="copybar"><span>Caption</span><button class="copy-btn" type="button">Copy</button></div>
+        <div class="copy"><p>Month one at the lab, in one sentence: the same hands that grew this tree answer your email.</p><p>Three posts worth saving if you're new here: the five-second test, five quiet ways a website loses customers, and the three lines every homepage needs.</p><p>The offer stands — send your website and get an honest read. No pitch. Link in bio.</p><p>#MSGulfCoast #DesignLab #WebDesign #CustomSoftware #GulfCoastBusiness</p></div>
+      </div>
+      <dl class="meta">
+        <dt>Hashtags</dt><dd>#MSGulfCoast #DesignLab #WebDesign #CustomSoftware #GulfCoastBusiness</dd>
+        <dt>Visual</dt><dd><span class="tag">V007C-VT</span> — the slow-orbit framing at 9:16, 8s, seamless.</dd>
+        <dt>Label</dt><dd><code>BDL-BestOf-D30-IG</code></dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="workflow" class="prose">
+  <h2>Posting without Postiz</h2>
+  <ol>
+    <li><b>Facebook and Instagram: Meta Business Suite</b> (business.facebook.com). It schedules Page posts, Instagram feed posts, carousels, and Reels for free, and needs no developer account or app review — only an Instagram professional account linked to the Facebook Page through Accounts Center. Schedule the week's six posts in one sitting. It does not reliably schedule an Instagram first comment, so add those by hand after posting; Facebook first comments go on right after the post publishes.</li>
+    <li><b>X: x.com's own scheduler</b> for single posts (free, media included). Threads can't be scheduled natively, so the two threads (Sep 8, Sep 22) go out by hand at 7:00 PM — paste tweet 1, then reply with each block in order. If that's a chore, a free Typefully account schedules threads without touching Meta.</li>
+    <li><b>The Sunday ritual, about 45 minutes.</b> Open this page and <code>social/out/INDEX.md</code> from the asset pipeline; for each of the week's three days, copy the platform's text with its button, attach the listed files, and schedule Facebook and Instagram in Meta Business Suite and X on x.com. Carousel slides upload in file order (01, 02, …). Reels are 9:16; feed images are 4:5 on Instagram and 1:1 on X and Facebook.</li>
+    <li><b>Media.</b> Every video is an H.264 MP4 with a silent AAC track, 30fps, well under 50MB, looping to its first frame. Meta Business Suite takes Reels up to 90s; every loop here is 6–12s. Instagram carousels allow up to 20 slides; the longest here is 10.</li>
+    <li><b>Times</b> are Central. Nothing here needs UTC conversion now that Postiz is out of the loop. If a post slips, post it the same evening rather than the next morning; consistency by day matters more than the exact hour.</li>
+    <li><b>Archive.</b> This page is the record of what was posted; note any edits made at posting time. When the Meta developer app clears and Postiz comes back, nothing in the calendar changes — only where the scheduling happens.</li>
+  </ol>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="growth" class="prose">
+  <h2>From zero: what the posts can't do alone</h2>
+  <p>Three posts a week is the minimum that keeps a new account visible; it is not what grows it. These are the moves that turn the calendar into followers and then into clients, in order of payoff.</p>
+  <ol>
+    <li><b>Plumbing before tonight.</b> Switch Instagram to a professional account and link it to the Facebook Page. Set the bio to something like: <i>Custom software and web design · Mississippi Gulf Coast. Want an honest read of your site? DM the link.</i> Point the link at birchdesignlab.com. Add the three social links to the site footer — there are none there now, so a visitor who likes the site has no way to follow it.</li>
+    <li><b>A Google Business Profile</b> as a service-area business covering the Coast, categories along the lines of website designer and software company. That is where "web designer near me" searches land, and it's a stronger lead source than any single post. It needs no photos of you; the OG image and the wordmark stills cover it.</li>
+    <li><b>Pin the five-second test</b> on all three platforms after Sep 3. It's the post a stranger should see first, and it carries the offer.</li>
+    <li><b>Ten minutes a day, four days a week:</b> follow and leave one real comment on ten local businesses — restaurants, salons, venues, clinics, shops in Gulfport, Biloxi, Ocean Springs, Long Beach, Pass Christian. Comment as a customer would, never as a pitch. From zero, this is the single biggest lever there is; owners notice who shows up in their comments, and they check the profile.</li>
+    <li><b>On X, replies count more than posts.</b> Reply to local business accounts and to web and software conversations on posting days; X rewards frequency and threads of replies read as activity to the algorithm.</li>
+    <li><b>Facebook groups.</b> Join your city's chamber and Main Street business groups. Where the rules allow, share the educational posts only (Sep 3, 15, 23) — never the promotional ones. If you're comfortable being known to your own network as the person behind the lab, sharing Page posts from your personal profile is how most new Pages get their first fifty followers; the brand stays anonymous to everyone else.</li>
+    <li><b>Every "honest read" is Discovery.</b> Answer each one within 48 hours in writing: what's working, what's quietly losing customers, the one fix you'd make first — and end with a scoped offer and a price for that fix. That last line is the path from zero business to some.</li>
+    <li><b>Measure weekly,</b> Sunday, five minutes: followers, saves, shares, profile visits, DMs, and honest reads sent. Use the numbers on Sep 28 for the two swap rules, and after four weeks move the Wednesday Instagram slot to noon if Insights say your audience peaks earlier.</li>
+  </ol>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="assets" class="prose">
+  <h2>Assets: what the pipeline produces</h2>
+  <p>Every visual in the month, by ID. Nothing is photographed or filmed; loops are recorded from the site's own specimens with a deterministic frame-stepped capture, and cards are rendered from the styleguide. The machine-readable version of this list is the manifest at the bottom of the page, which the Claude Code prompts read. Formats: SQ 1080×1080, PT 1080×1350, VT 1080×1920.</p>
+  <dl class="kv">
+    <dt>V007 A/B/C</dt><dd>BDL-007 wordmark loops. A: full wordmark on its pedestal, static camera (SQ, PT, VT) — the launch. B: close-up or low angle with moss and a firefly (SQ, VT) — Sep 9. C: slow orbit (SQ, VT) — Sep 30. Each 6–10s, seamless.</dd>
+    <dt>S007</dt><dd>Stills from A at the neutral breath: SQ, PT, plus a 1200×630 share crop. Sep 24, the Google Business Profile, and any link preview.</dd>
+    <dt>V005</dt><dd>BDL-005 specimen-page recording: scroll-capture at VT, a framed SQ. Fallback: the C-16 numbers animated as a 6s loop. Sep 16.</dd>
+    <dt>V029</dt><dd>Kinetic-type loop, 9s, VT and SQ. Sep 29.</dd>
+    <dt>C-03 … C-23</dt><dd>Typographic cards: C-03 stack (SQ, PT), C-08 quote (SQ, PT), C-10 two-panel (SQ, PT), C-15 list (SQ), C-16 stat (SQ, PT), C-17 quote (SQ, PT), C-22 steps (SQ), C-23 list (SQ), C-BRAND standing brand slide (PT, SQ).</dd>
+    <dt>K-03 … K-24</dt><dd>Carousels at PT: K-03 (10), K-15 (8), K-16 fallback (6), K-22 (8), K-23 (7), K-24 (7). Plus K-15-reel-VT, the slideshow alternate for Sep 29.</dd>
+  </dl>
+  <p><b>By week.</b> Before tonight: V007-A. Before Sep 8: C-03, K-03, C-08, V007-B. Before Sep 15: C-10, C-15, K-15, V005 (or C-16/K-16), C-17. Before Sep 22: C-22, K-22, C-23, K-23, S007, K-24. Before Sep 29: V029, V007-C, K-15-reel. The sensible order is one pipeline run: set-up, then all loops, then all cards, then QA — an evening, not five.</p>
+</section>
+
+<div class="lenticel" role="presentation"></div>
+
+<section id="questions" class="prose">
+  <h2>Open questions for you</h2>
+  <ol>
+    <li><b>Name the BDL-005 client, or not?</b> Every Sep 16 post describes the project without naming them. A name adds credibility; leave it out if the relationship makes that uncomfortable. If yes, "for Cheer and Chatter Social Club" drops into the first sentence of each version.</li>
+    <li><b>Specimen page URLs.</b> The Sep 9 and Sep 16 first comments and "link in bio" point at the BDL-007 and BDL-005 pages. Confirm the public paths (the calendar assumes birchdesignlab.com/lab/bdl-007 and /lab/bdl-005).</li>
+    <li><b>Process step names.</b> Sep 22 uses Discovery → Build → Launch → Care. If the copy pass renamed them, the thread, post, carousel, and C-22 card need the new names.</li>
+    <li><b>Two comment offers.</b> Sep 15 ("drop the link") is approved. Sep 23 asks people to post their homepage's first line — a lighter ask, but it's public too. Keep or cut?</li>
+    <li><b>Threads.</b> Post Sep 8 and Sep 22 by hand at 7:00 PM, or set up a free Typefully account and schedule them? Either works; the copy doesn't change.</li>
+    <li><b>Wordmark framings.</b> The pipeline renders three (full, close-up, orbit). Pick the close-up you like for Sep 9 and the orbit speed for Sep 30 from the contact sheets before those weeks.</li>
+    <li><b>Tonight.</b> If the launch can't go out this evening, use the Thursday fallback in the schedule section rather than posting the launch and the five-second test the same day.</li>
+    <li><b>Founder detail.</b> Sep 17's "someone tired of doing a thing by hand" line is deliberately generic. One true, non-identifying detail would make it warmer; entirely optional.</li>
+  </ol>
+</section>
+
+<script type="application/json" id="asset-manifest">
+{
+  "brand": {
+    "name": "Birch Design Lab",
+    "site": "https://birchdesignlab.com",
+    "tagline": "Custom software and web design · Mississippi Gulf Coast",
+    "url_text": "birchdesignlab.com"
+  },
+  "rules": {
+    "sources": ["local dev server of the birchdesignlab.com repo", "https://birchdesignlab.com"],
+    "never_fetch": ["cheerandchatter.com", "any third-party site"],
+    "no_cache": true,
+    "no_burned_in_text_on_loops": true,
+    "no_photos_no_faces_no_client_names": true,
+    "do_not_modify_site_content": true
+  },
+  "formats": { "SQ": [1080, 1080], "PT": [1080, 1350], "VT": [1080, 1920], "OG": [1200, 630] },
+  "video_spec": {
+    "container": "mp4", "codec": "h264", "profile": "high", "pix_fmt": "yuv420p", "fps": 30, "crf": 18,
+    "faststart": true, "audio": "silent aac, 48000 Hz, stereo, 128k", "max_mb": 50,
+    "loop": "frame N equals frame 0; drop the duplicate last frame so playback wraps seamlessly"
+  },
+  "loops": [
+    { "id": "V007", "variant": "A", "source": "/lab/bdl-007", "framings": ["SQ", "PT", "VT"], "duration_s": 8,
+      "framing_note": "full wordmark on its pedestal, centered, static camera, start at the neutral breath", "use": ["2026-09-02"] },
+    { "id": "V007B", "variant": "B", "source": "/lab/bdl-007", "framings": ["SQ", "VT"], "duration_s": 7,
+      "framing_note": "close-up or low angle, moss in the foreground, one firefly passing through frame", "use": ["2026-09-09"] },
+    { "id": "V007C", "variant": "C", "source": "/lab/bdl-007", "framings": ["SQ", "VT"], "duration_s": 8,
+      "framing_note": "slow full orbit around the pedestal, one revolution per loop", "use": ["2026-09-30"] },
+    { "id": "V005", "kind": "scroll-capture", "source": "/lab/bdl-005", "framings": ["VT", "SQ"], "duration_s": 11,
+      "note": "scroll top to bottom with ease-in-out, hold 1.5s on first and last screens; SQ framed on the strongest screen; numbers, screens and typography only",
+      "fallback": "animate C-16: numerals 13, 6, 2 settle in one after another, hold, return to first frame, 6s loop", "use": ["2026-09-16"] },
+    { "id": "V029", "kind": "kinetic-type", "framings": ["VT", "SQ"], "duration_s": 9,
+      "words": ["5 seconds.", "Call.", "Book.", "Order.", "Walk in.", "Pick one."],
+      "note": "each word holds about 1.4s, hard cut or short opacity fade, display face set very large on the paper ground, no bouncing, returns to first frame", "use": ["2026-09-29"] }
+  ],
+  "stills": [
+    { "id": "S007", "from": "V007", "frame": "neutral breath", "formats": ["SQ", "PT", "OG"], "use": ["2026-09-24", "google-business-profile"] }
+  ],
+  "cards": [
+    { "id": "C-03", "kind": "stack", "formats": ["SQ", "PT"], "lines": ["Call.", "Book.", "Order.", "Walk in."], "footer": "Pick one.", "use": ["2026-09-03"] },
+    { "id": "C-08", "kind": "quote", "formats": ["SQ", "PT"], "quote": "The care I learned at scale, in one pair of hands, pointed at the businesses down the road.", "attribution": "Birch Design Lab", "use": ["2026-09-08"] },
+    { "id": "C-10", "kind": "two-panel", "formats": ["SQ", "PT"],
+      "left": { "title": "Custom software", "sub": "for the spreadsheet that became a monster" },
+      "right": { "title": "Web design", "sub": "built around what the visitor does next" },
+      "footer": "Two things, done properly.", "use": ["2026-09-10"] },
+    { "id": "C-15", "kind": "list", "formats": ["SQ"], "title": "Five quiet ways a website loses customers",
+      "items": ["1. The menu is a PDF", "2. Hours don't match Google", "3. 'Book now' sends people to someone else's site", "4. The phone number isn't tappable", "5. The homepage welcomes everyone, asks for nothing"],
+      "footer": "Nobody complains. They just leave.", "use": ["2026-09-15"] },
+    { "id": "C-16", "kind": "stat", "formats": ["SQ", "PT"], "title": "Specimen BDL-005",
+      "stats": [ { "big": "13", "small": "day the site went live" }, { "big": "6", "small": "weeks to version one" }, { "big": "2", "small": "nights sold out" } ],
+      "use": ["2026-09-16"] },
+    { "id": "C-17", "kind": "quote", "formats": ["SQ", "PT"], "quote": "One pair of hands, start to finish. Solo by choice.", "attribution": "Birch Design Lab", "use": ["2026-09-17"] },
+    { "id": "C-22", "kind": "steps", "formats": ["SQ"], "title": "How a website gets built here",
+      "steps": [ { "name": "Discovery", "sub": "a real conversation, no intake forms" }, { "name": "Build", "sub": "a working link from day one" }, { "name": "Launch", "sub": "tested on real phones, with an owner's manual" }, { "name": "Care", "sub": "kept fast, secure, and current" } ],
+      "use": ["2026-09-22"] },
+    { "id": "C-23", "kind": "list", "formats": ["SQ"], "title": "Three lines every homepage needs",
+      "items": ["1. What you are, and where.", "2. One true, specific reason to choose you.", "3. What to do next — one button."],
+      "footer": "Everything else goes below.", "use": ["2026-09-23"] },
+    { "id": "C-BRAND", "kind": "brand", "formats": ["PT", "SQ"], "lines": ["Birch Design Lab", "Custom software and web design for the Mississippi Gulf Coast.", "birchdesignlab.com"], "use": ["carousel-closers"] }
+  ],
+  "carousels": [
+    { "id": "K-03", "format": "PT", "use": ["2026-09-03"], "slides": [
+      "Your website has one job. Most don't do it.",
+      "A stranger lands on your site with a question. Can I book? Are you open? Do y'all do this?",
+      "The site's only job: answer it — then point to the next step.",
+      "Call. Book. Order. Walk in. Pick one.",
+      "Restaurant → the menu on the page, and \"Order\" before anyone scrolls.",
+      "Salon, studio, clinic → \"Book\" in the first screen, on your own site.",
+      "Shop, bar, venue → hours, address, and a tappable phone number at the top.",
+      "The five-second test: hand your phone to a stranger. Ask them what to do.",
+      "Decide what you want them to do. Build the page so it's the easiest thing on it. That's design as strategy.",
+      "@C-BRAND" ] },
+    { "id": "K-15", "format": "PT", "use": ["2026-09-15", "2026-09-29-alternate"], "slides": [
+      "Five quiet ways your website loses customers. (Nobody complains. They just leave.)",
+      "1 — The menu is a PDF. Pinch, zoom, give up. Google can't read it either.",
+      "Fix: a menu that lives on the page. Updates in minutes. Searchable.",
+      "2 — Hours on the site don't match hours on Google. Someone's showing up to a locked door.",
+      "3 — \"Book now\" sends people to someone else's site. Now they own the relationship.",
+      "4 — The phone number isn't a button. Ten-minute fix.",
+      "5 — \"Welcome to our website!\" is not an action. Call. Book. Order. Walk in. Pick one.",
+      "None of this needs a redesign. It needs a decision and an afternoon. Save this." ] },
+    { "id": "K-16", "format": "PT", "use": ["2026-09-16-fallback"], "slides": [
+      "Six weeks. Two sold-out nights. One phone and one TV.",
+      "A ticketing site the owners change themselves. New night, new venue, new price — no code.",
+      "A live event app: the host's phone and the venue TV, paired by a five-character code.",
+      "Bar wifi is bad. The app caches locally, so the game keeps going when the signal doesn't.",
+      "Working link from day one. Live on day 13. Version one in six weeks. First two nights sold out.",
+      "@C-BRAND" ] },
+    { "id": "K-22", "format": "PT", "use": ["2026-09-22"], "slides": [
+      "How a website gets built here. Four steps, no fog.",
+      "1. Discovery. A real conversation, no intake forms.",
+      "It ends with a scope you can actually read. Sometimes it ends with \"you don't need a new site yet.\" Also fine.",
+      "2. Build. A working link from day one — not a mockup reveal at the end.",
+      "Change your mind in week one, when changing your mind is cheap.",
+      "3. Launch. Tested on real phones. Shipped with a plain-English owner's manual.",
+      "4. Care. Fast, secure, current — and grown as the business grows past it.",
+      "Same hands, all four steps. Birch Design Lab. Mississippi Gulf Coast. Link in bio." ] },
+    { "id": "K-23", "format": "PT", "use": ["2026-09-23"], "slides": [
+      "Three lines every local business homepage needs. (Before anyone scrolls.)",
+      "Line 1 — What you are, and where. \"Wood-fired pizza in Ocean Springs.\"",
+      "Line 2 — One true, specific reason to choose you. Specific is believable. Vague is invisible.",
+      "Line 3 — What to do next. One button: call, book, order, directions.",
+      "Not this: \"Welcome to our website! We are committed to quality and service.\" Three lines that say nothing.",
+      "This: \"Same-day phone repair in Gulfport. The owner fixes it while you wait.\" Then one button: Call.",
+      "@C-BRAND" ] },
+    { "id": "K-24", "format": "PT", "use": ["2026-09-24"], "background_slide_1": "S007-PT", "slides": [
+      "A design lab, not an agency. What that actually means.",
+      "An agency has layers. Your question travels through all of them.",
+      "A lab is one bench. The same hands that build your site answer your email.",
+      "Working link from day one. No mockup reveal.",
+      "Every project ships with a plain-English owner's manual.",
+      "Two things, done properly. We say no to the rest.",
+      "The job: make what's already good about your business easy to see. Birch Design Lab — link in bio." ] }
+  ],
+  "slideshow_reels": [
+    { "id": "K-15-reel", "from": "K-15", "format": "VT", "seconds_per_slide": 1.8, "crossfade_s": 0.3, "use": ["2026-09-29-alternate"] }
+  ],
+  "schedule": [
+    { "date": "2026-09-02", "x": ["V007-SQ"], "fb": ["V007-VT"], "ig": ["V007-VT"] },
+    { "date": "2026-09-03", "x": ["C-03-SQ"], "fb": ["C-03-SQ"], "ig": ["K-03"] },
+    { "date": "2026-09-08", "x": ["C-08-SQ"], "fb": ["C-08-SQ"], "ig": ["C-08-PT"] },
+    { "date": "2026-09-09", "x": ["V007B-SQ"], "fb": ["V007B-VT"], "ig": ["V007B-VT"] },
+    { "date": "2026-09-10", "x": ["C-10-SQ"], "fb": ["C-10-SQ"], "ig": ["C-10-PT"] },
+    { "date": "2026-09-15", "x": ["C-15-SQ"], "fb": ["C-15-SQ"], "ig": ["K-15"] },
+    { "date": "2026-09-16", "x": ["V005-SQ"], "fb": ["V005-VT"], "ig": ["V005-VT", "K-16 (fallback)"] },
+    { "date": "2026-09-17", "x": ["C-17-SQ"], "fb": ["C-17-SQ"], "ig": ["C-17-PT"] },
+    { "date": "2026-09-22", "x": ["C-22-SQ"], "fb": ["C-22-SQ"], "ig": ["K-22"] },
+    { "date": "2026-09-23", "x": ["C-23-SQ"], "fb": ["C-23-SQ"], "ig": ["K-23"] },
+    { "date": "2026-09-24", "x": ["S007-SQ"], "fb": ["S007-SQ"], "ig": ["K-24"] },
+    { "date": "2026-09-29", "x": ["V029-SQ"], "fb": ["V029-VT"], "ig": ["V029-VT", "K-15-reel-VT (alternate)"] },
+    { "date": "2026-09-30", "x": ["V007C-SQ"], "fb": ["V007C-VT"], "ig": ["V007C-VT"] }
+  ]
+}
+</script>
+
+<footer>
+  <p>Birch Design Lab, September 2026, revised September 2. Founder anonymous throughout; client work shown as a specimen without a name, link, or photograph. Copy grabs each post's text with its hashtags; threads copy in order, one blank line between tweets. The JSON manifest above is read by the asset pipeline and doesn't render.</p>
+</footer>
+
+</div>
+<script>
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('.copy-btn');
+  if (!btn) return;
+  var box = btn.closest('.post').querySelector('.copy');
+  var text = box.innerText.replace(/\n{3,}/g, '\n\n').trim();
+  var original = btn.textContent;
+  function done(ok) {
+    btn.textContent = ok ? 'Copied' : 'Select and copy';
+    setTimeout(function () { btn.textContent = original; }, 1600);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.top = '-1000px';
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    document.body.removeChild(ta);
+    done(ok);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+  } else {
+    fallback();
+  }
+});
+</script>
+</body>
+</html>

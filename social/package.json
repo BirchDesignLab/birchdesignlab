@@ -1,0 +1,31 @@
+{
+  "name": "birchdesignlab-social",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Self-contained social asset pipeline. Renders from the site's own dev server; never touches site source.",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "preflight": "node scripts/preflight.mjs",
+    "manifest": "node scripts/manifest.mjs",
+    "loops": "node scripts/preflight.mjs && node render/loops.mjs",
+    "cards": "node scripts/preflight.mjs && node render/cards.mjs",
+    "verify": "node scripts/verify-cli.mjs",
+    "selftest": "node scripts/selftest.mjs",
+    "probe": "node scripts/probe-determinism.mjs",
+    "selftest:capture": "node scripts/selftest-capture.mjs",
+    "selftest:dissolve": "node scripts/selftest-dissolve.mjs",
+    "measure:loop": "node scripts/measure-loop.mjs",
+    "measure:gather": "node scripts/measure-gather.mjs",
+    "measure:scatter": "node scripts/measure-scatter-decay.mjs",
+    "measure:supersample": "node scripts/measure-supersample.mjs",
+    "render:one": "node scripts/render-one.mjs",
+    "render:candidates": "node scripts/render-candidates.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "^1.45.0"
+  }
+}
