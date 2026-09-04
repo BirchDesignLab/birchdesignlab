@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en" data-face="dark" class="js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BDL-007 render harness</title>
+
+<!--
+  Render harness for the Shining Tree.
+
+  It imports the SAME scene module the specimen page loads
+  (/src/experiments/bdl-007/stage.ts) — not a copy, not a reimplementation.
+  If the scene changes, this changes with it.
+
+  What it adds on top, and why none of it belongs in src/:
+
+    - a stage sized exactly to the output frame, with no site chrome, no
+      specimen plate, and no scroll, so measureBand() reports a full,
+      centred band and the camera frames the mark to the frame's own aspect.
+      VT is therefore a real reframe, not a padded SQ.
+    - window.__BDL_READY, set only after a genuine first draw (see below).
+    - deterministic variant framing driven through the scene's own public
+      input surface.
+
+  Served by Vite's /@fs/ route off :4321, so `import '/src/...'` resolves
+  through the dev server's transform pipeline exactly as it does on the site.
+-->
+
+<style>
+  /*
+    The field colour behind an alpha:true canvas. --charcoal from
+    src/styles/tokens.css, the dark face the specimen page paints.
+    Hard-coded rather than imported: an asset that has already been posted
+    must not restyle itself when the site's tokens move. It moves to
+    social/tokens.json with the rest of the snapshot.
+  */
+  :root { --field: #1c1a17; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--field);
+    overflow: hidden;
+  }
+
+  /*
+    Fixed to the viewport and exactly frame-sized. measureBand() clips the
+    canvas rect to window.innerHeight and looks for `details.plate`, which
+    does not exist here — so it returns frac 1, centerFrac 0.5, and the mark
+    sits dead centre with the camera fitted to this aspect.
+  */
+  #scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+
+<script>
+/*
+  Runs before the module script below, so it is in place before stage.ts ever
+  calls getContext().
+
+  stage.ts exposes onReady, but onReady fires when the glb finishes decoding —
+  before a single pixel has been drawn with it. Recording from there would
+  catch one or more frames of an empty field. So the harness wraps the WebGL
+  draw calls themselves and counts them: a real first draw is a draw call
+  issued after the model resolved. That is the hook the scene does not have,
+  added here rather than in src/.
+*/
+(() => {
+  const state = {
+    contexts: [],
+    drawCalls: 0,
+    modelReady: false,
+    fontsReady: false,
+    firstDrawAt: null,
+    rafCallbacks: 0,
+    images: [],
+    flies: null,
+    flyUpdates: 0,
+  };
+  window.__BDL_HARNESS = state;
+
+  /*
+    rAF counter. It lives here, in a page script, rather than in a context
+    init script: page.clock installs its own requestAnimationFrame at document
+    start, so an init-script wrapper is replaced by the clock's and silently
+    counts nothing. Wrapping from here means wrapping whatever the clock left
+    behind, which is the function the scene will actually call.
+  */
+  const realRaf = window.requestAnimationFrame;
+  window.requestAnimationFrame = function (cb) {
+    return realRaf.call(window, function (ts) {
+      state.rafCallbacks++;
+      return cb(ts);
+    });
+  };
+
+  /*
+    Pin performance.now() to the faked Date.
+
+    page.clock fakes performance.now, but not exactly: measured, a runFor(5000)
+    advanced it by 5001ms. That ~1ms of slop is harmless for animation — and
+    catastrophic here, because stage.ts seeds the firefly scatter with
+
+        scatter(flies, 0.8, (performance.now() | 0) % 100000)
+
+    and `| 0` turns a sub-millisecond difference into a completely different
+    PRNG seed. The flock then starts in a different arrangement on every run and
+    never reconverges, because its motion is integrated. That was the entire
+    remaining source of drift: two runs whose mark matched pixel for pixel while
+    forty fireflies sat somewhere else.
+
+    Date.now() IS exactly faked, and the clock is paused at a fixed instant
+    before this runs, so deriving performance.now from it makes the seed a
+    constant. Millisecond resolution is ample at a 33ms frame step.
+  */
+  // ?unsafeSkipPerfNowPin=1 disables this, for scripts/selftest-capture.mjs
+  // only, so the regression test can prove the pin is load-bearing.
+  if (!/[?&]unsafeSkipPerfNowPin=1/.test(location.search)) {
+    const clockOrigin = Date.now();
+    performance.now = () => Date.now() - clockOrigin;
+  }
+
+  /*
+    Track every <img> the page creates, so readiness can wait for them to be
+    DECODED rather than merely downloaded.
+
+    This is the second half of the bump-texture problem. Waiting for the network
+    to go quiet proves the bytes arrived; it does not prove the browser has
+    finished decoding them into something three can upload. three's ImageLoader
+    builds its images with createElementNS, so hooking that catches the canopy
+    and stone bump maps, which are the only textures on this stage that are not
+    already decoded by GLTFLoader before onReady fires.
+
+    Without this, whether the bump maps are on the materials by frame 0 depends
+    on how much REAL time the settle pass happened to take — which made
+    determinism a function of settleFrames, reproducibly and invisibly.
+  */
+  const trackImg = (el, name) => {
+    if (String(name).toLowerCase() === 'img') state.images.push(el);
+    return el;
+  };
+  const origCreateNS = document.createElementNS.bind(document);
+  document.createElementNS = (ns, name, ...rest) => trackImg(origCreateNS(ns, name, ...rest), name);
+  const origCreate = document.createElement.bind(document);
+  document.createElement = (name, ...rest) => trackImg(origCreate(name, ...rest), name);
+
+  /** Resolves once every tracked image has decoded. */
+  window.__BDL_IMAGES_DECODED = async () => {
+    // Re-read each time: images can still be created after the first call.
+    for (let pass = 0; pass < 50; pass++) {
+      const pending = state.images.filter((img) => !img.complete || img.naturalWidth === 0);
+      if (pending.length === 0) break;
+      await Promise.allSettled(
+        pending.map((img) => new Promise((res) => {
+          img.addEventListener('load', res, { once: true });
+          img.addEventListener('error', res, { once: true });
+        }))
+      );
+    }
+    // complete === loaded, which is not the same as decoded. decode() is the
+    // only thing that guarantees the bitmap is ready to hand to the GPU.
+    await Promise.allSettled(state.images.map((img) => (img.decode ? img.decode() : null)));
+    state.imagesDecoded = state.images.length;
+    return state.images.length;
+  };
+
+  const origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+    const ctx = origGetContext.call(this, type, ...rest);
+    if (!ctx || !/webgl/i.test(String(type))) return ctx;
+    if (state.contexts.includes(ctx)) return ctx;
+    state.contexts.push(ctx);
+
+    /*
+      Capture the firefly positions straight off the GPU upload.
+
+      stage.ts keeps `flies` in a module closure and exposes nothing, but every
+      frame syncFlies() rewrites a Float32Array of FLY_COUNT * 3 = 120 floats and
+      hands it to three, which uploads it here. That length is a fingerprint: no
+      other buffer on this stage is 120 floats, and a bounds check on the values
+      (the field is 1.9 units) rejects a coincidence.
+
+      This is how the settle length is derived rather than guessed — the flock's
+      own frame-to-frame displacement is the thing that has to go quiet, and
+      pixels cannot measure it (the mark dominates the mean; one bright dot
+      saturates the peak).
+    */
+    const FLY_FLOATS = 40 * 3;
+    for (const name of ['bufferData', 'bufferSubData']) {
+      const origBuf = ctx[name];
+      if (typeof origBuf !== 'function') continue;
+      ctx[name] = function (...args) {
+        for (const a of args) {
+          if (a instanceof Float32Array && a.length === FLY_FLOATS) {
+            let plausible = true;
+            for (let i = 0; i < a.length; i++) {
+              if (!Number.isFinite(a[i]) || Math.abs(a[i]) > 8) { plausible = false; break; }
+            }
+            if (plausible) {
+              state.flies = Array.from(a);
+              state.flyUpdates++;
+            }
+          }
+        }
+        return origBuf.apply(this, args);
+      };
+    }
+
+    // Count only real geometry submissions. clear() alone is not a draw.
+    for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
+      const orig = ctx[name];
+      if (typeof orig !== 'function') continue;
+      ctx[name] = function (...args) {
+        state.drawCalls++;
+        if (state.firstDrawAt === null) state.firstDrawAt = performance.now();
+        return orig.apply(this, args);
+      };
+    }
+    return ctx;
+  };
+})();
+</script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <!--
+    Relative, so it resolves alongside this file under whatever /@fs/ prefix
+    served it. The module itself imports the scene by absolute path
+    (/src/experiments/...), which the browser fetches from :4321 and Vite
+    transforms — the same request the specimen page makes.
+  -->
+  <script type="module" src="./bdl-007.mjs"></script>
+</body>
+</html>

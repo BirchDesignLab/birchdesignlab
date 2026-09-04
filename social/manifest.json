@@ -1,0 +1,926 @@
+{
+  "generated_from": "social/calendar.html#asset-manifest",
+  "generated_at": "2026-09-03T01:35:45.059Z",
+  "brand": {
+    "name": "Birch Design Lab",
+    "site": "https://birchdesignlab.com",
+    "tagline": "Custom software and web design · Mississippi Gulf Coast",
+    "url_text": "birchdesignlab.com"
+  },
+  "rules": {
+    "sources": [
+      "local dev server of the birchdesignlab.com repo",
+      "https://birchdesignlab.com"
+    ],
+    "never_fetch": [
+      "cheerandchatter.com",
+      "any third-party site"
+    ],
+    "no_cache": true,
+    "no_burned_in_text_on_loops": true,
+    "no_photos_no_faces_no_client_names": true,
+    "do_not_modify_site_content": true
+  },
+  "formats": {
+    "SQ": [
+      1080,
+      1080
+    ],
+    "PT": [
+      1080,
+      1350
+    ],
+    "VT": [
+      1080,
+      1920
+    ],
+    "OG": [
+      1200,
+      630
+    ]
+  },
+  "video_spec": {
+    "container": "mp4",
+    "codec": "h264",
+    "profile": "high",
+    "pix_fmt": "yuv420p",
+    "fps": 30,
+    "crf": 18,
+    "faststart": true,
+    "audio": "silent aac, 48000 Hz, stereo, 128k",
+    "max_mb": 50,
+    "loop": "frame N equals frame 0; drop the duplicate last frame so playback wraps seamlessly"
+  },
+  "loops": [
+    {
+      "id": "V007",
+      "variant": "A",
+      "source": "/lab/bdl-007",
+      "framings": [
+        "SQ",
+        "PT",
+        "VT"
+      ],
+      "duration_s": 8,
+      "framing_note": "full wordmark on its pedestal, centered, static camera, start at the neutral breath",
+      "use": [
+        "2026-09-02"
+      ]
+    },
+    {
+      "id": "V007B",
+      "variant": "B",
+      "source": "/lab/bdl-007",
+      "framings": [
+        "SQ",
+        "VT"
+      ],
+      "duration_s": 7,
+      "framing_note": "close-up or low angle, moss in the foreground, one firefly passing through frame",
+      "use": [
+        "2026-09-09"
+      ]
+    },
+    {
+      "id": "V007C",
+      "variant": "C",
+      "source": "/lab/bdl-007",
+      "framings": [
+        "SQ",
+        "VT"
+      ],
+      "duration_s": 8,
+      "framing_note": "slow full orbit around the pedestal, one revolution per loop",
+      "use": [
+        "2026-09-30"
+      ]
+    },
+    {
+      "id": "V005",
+      "kind": "scroll-capture",
+      "source": "/lab/bdl-005",
+      "framings": [
+        "VT",
+        "SQ"
+      ],
+      "duration_s": 11,
+      "note": "scroll top to bottom with ease-in-out, hold 1.5s on first and last screens; SQ framed on the strongest screen; numbers, screens and typography only",
+      "fallback": "animate C-16: numerals 13, 6, 2 settle in one after another, hold, return to first frame, 6s loop",
+      "use": [
+        "2026-09-16"
+      ]
+    },
+    {
+      "id": "V029",
+      "kind": "kinetic-type",
+      "framings": [
+        "VT",
+        "SQ"
+      ],
+      "duration_s": 9,
+      "words": [
+        "5 seconds.",
+        "Call.",
+        "Book.",
+        "Order.",
+        "Walk in.",
+        "Pick one."
+      ],
+      "note": "each word holds about 1.4s, hard cut or short opacity fade, display face set very large on the paper ground, no bouncing, returns to first frame",
+      "use": [
+        "2026-09-29"
+      ]
+    }
+  ],
+  "stills": [
+    {
+      "id": "S007",
+      "from": "V007",
+      "frame": "neutral breath",
+      "formats": [
+        "SQ",
+        "PT",
+        "OG"
+      ],
+      "use": [
+        "2026-09-24",
+        "google-business-profile"
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "id": "C-03",
+      "kind": "stack",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "lines": [
+        "Call.",
+        "Book.",
+        "Order.",
+        "Walk in."
+      ],
+      "footer": "Pick one.",
+      "use": [
+        "2026-09-03"
+      ]
+    },
+    {
+      "id": "C-08",
+      "kind": "quote",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "quote": "The care I learned at scale, in one pair of hands, pointed at the businesses down the road.",
+      "attribution": "Birch Design Lab",
+      "use": [
+        "2026-09-08"
+      ]
+    },
+    {
+      "id": "C-10",
+      "kind": "two-panel",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "left": {
+        "title": "Custom software",
+        "sub": "for the spreadsheet that became a monster"
+      },
+      "right": {
+        "title": "Web design",
+        "sub": "built around what the visitor does next"
+      },
+      "footer": "Two things, done properly.",
+      "use": [
+        "2026-09-10"
+      ]
+    },
+    {
+      "id": "C-15",
+      "kind": "list",
+      "formats": [
+        "SQ"
+      ],
+      "title": "Five quiet ways a website loses customers",
+      "items": [
+        "1. The menu is a PDF",
+        "2. Hours don't match Google",
+        "3. 'Book now' sends people to someone else's site",
+        "4. The phone number isn't tappable",
+        "5. The homepage welcomes everyone, asks for nothing"
+      ],
+      "footer": "Nobody complains. They just leave.",
+      "use": [
+        "2026-09-15"
+      ]
+    },
+    {
+      "id": "C-16",
+      "kind": "stat",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "title": "Specimen BDL-005",
+      "stats": [
+        {
+          "big": "13",
+          "small": "day the site went live"
+        },
+        {
+          "big": "6",
+          "small": "weeks to version one"
+        },
+        {
+          "big": "2",
+          "small": "nights sold out"
+        }
+      ],
+      "use": [
+        "2026-09-16"
+      ]
+    },
+    {
+      "id": "C-17",
+      "kind": "quote",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "quote": "One pair of hands, start to finish. Solo by choice.",
+      "attribution": "Birch Design Lab",
+      "use": [
+        "2026-09-17"
+      ]
+    },
+    {
+      "id": "C-22",
+      "kind": "steps",
+      "formats": [
+        "SQ"
+      ],
+      "title": "How a website gets built here",
+      "steps": [
+        {
+          "name": "Discovery",
+          "sub": "a real conversation, no intake forms"
+        },
+        {
+          "name": "Build",
+          "sub": "a working link from day one"
+        },
+        {
+          "name": "Launch",
+          "sub": "tested on real phones, with an owner's manual"
+        },
+        {
+          "name": "Care",
+          "sub": "kept fast, secure, and current"
+        }
+      ],
+      "use": [
+        "2026-09-22"
+      ]
+    },
+    {
+      "id": "C-23",
+      "kind": "list",
+      "formats": [
+        "SQ"
+      ],
+      "title": "Three lines every homepage needs",
+      "items": [
+        "1. What you are, and where.",
+        "2. One true, specific reason to choose you.",
+        "3. What to do next — one button."
+      ],
+      "footer": "Everything else goes below.",
+      "use": [
+        "2026-09-23"
+      ]
+    },
+    {
+      "id": "C-BRAND",
+      "kind": "brand",
+      "formats": [
+        "PT",
+        "SQ"
+      ],
+      "lines": [
+        "Birch Design Lab",
+        "Custom software and web design for the Mississippi Gulf Coast.",
+        "birchdesignlab.com"
+      ],
+      "use": [
+        "carousel-closers"
+      ]
+    }
+  ],
+  "carousels": [
+    {
+      "id": "K-03",
+      "format": "PT",
+      "use": [
+        "2026-09-03"
+      ],
+      "slides": [
+        "Your website has one job. Most don't do it.",
+        "A stranger lands on your site with a question. Can I book? Are you open? Do y'all do this?",
+        "The site's only job: answer it — then point to the next step.",
+        "Call. Book. Order. Walk in. Pick one.",
+        "Restaurant → the menu on the page, and \"Order\" before anyone scrolls.",
+        "Salon, studio, clinic → \"Book\" in the first screen, on your own site.",
+        "Shop, bar, venue → hours, address, and a tappable phone number at the top.",
+        "The five-second test: hand your phone to a stranger. Ask them what to do.",
+        "Decide what you want them to do. Build the page so it's the easiest thing on it. That's design as strategy.",
+        "@C-BRAND"
+      ]
+    },
+    {
+      "id": "K-15",
+      "format": "PT",
+      "use": [
+        "2026-09-15",
+        "2026-09-29-alternate"
+      ],
+      "slides": [
+        "Five quiet ways your website loses customers. (Nobody complains. They just leave.)",
+        "1 — The menu is a PDF. Pinch, zoom, give up. Google can't read it either.",
+        "Fix: a menu that lives on the page. Updates in minutes. Searchable.",
+        "2 — Hours on the site don't match hours on Google. Someone's showing up to a locked door.",
+        "3 — \"Book now\" sends people to someone else's site. Now they own the relationship.",
+        "4 — The phone number isn't a button. Ten-minute fix.",
+        "5 — \"Welcome to our website!\" is not an action. Call. Book. Order. Walk in. Pick one.",
+        "None of this needs a redesign. It needs a decision and an afternoon. Save this."
+      ]
+    },
+    {
+      "id": "K-16",
+      "format": "PT",
+      "use": [
+        "2026-09-16-fallback"
+      ],
+      "slides": [
+        "Six weeks. Two sold-out nights. One phone and one TV.",
+        "A ticketing site the owners change themselves. New night, new venue, new price — no code.",
+        "A live event app: the host's phone and the venue TV, paired by a five-character code.",
+        "Bar wifi is bad. The app caches locally, so the game keeps going when the signal doesn't.",
+        "Working link from day one. Live on day 13. Version one in six weeks. First two nights sold out.",
+        "@C-BRAND"
+      ]
+    },
+    {
+      "id": "K-22",
+      "format": "PT",
+      "use": [
+        "2026-09-22"
+      ],
+      "slides": [
+        "How a website gets built here. Four steps, no fog.",
+        "1. Discovery. A real conversation, no intake forms.",
+        "It ends with a scope you can actually read. Sometimes it ends with \"you don't need a new site yet.\" Also fine.",
+        "2. Build. A working link from day one — not a mockup reveal at the end.",
+        "Change your mind in week one, when changing your mind is cheap.",
+        "3. Launch. Tested on real phones. Shipped with a plain-English owner's manual.",
+        "4. Care. Fast, secure, current — and grown as the business grows past it.",
+        "Same hands, all four steps. Birch Design Lab. Mississippi Gulf Coast. Link in bio."
+      ]
+    },
+    {
+      "id": "K-23",
+      "format": "PT",
+      "use": [
+        "2026-09-23"
+      ],
+      "slides": [
+        "Three lines every local business homepage needs. (Before anyone scrolls.)",
+        "Line 1 — What you are, and where. \"Wood-fired pizza in Ocean Springs.\"",
+        "Line 2 — One true, specific reason to choose you. Specific is believable. Vague is invisible.",
+        "Line 3 — What to do next. One button: call, book, order, directions.",
+        "Not this: \"Welcome to our website! We are committed to quality and service.\" Three lines that say nothing.",
+        "This: \"Same-day phone repair in Gulfport. The owner fixes it while you wait.\" Then one button: Call.",
+        "@C-BRAND"
+      ]
+    },
+    {
+      "id": "K-24",
+      "format": "PT",
+      "use": [
+        "2026-09-24"
+      ],
+      "background_slide_1": "S007-PT",
+      "slides": [
+        "A design lab, not an agency. What that actually means.",
+        "An agency has layers. Your question travels through all of them.",
+        "A lab is one bench. The same hands that build your site answer your email.",
+        "Working link from day one. No mockup reveal.",
+        "Every project ships with a plain-English owner's manual.",
+        "Two things, done properly. We say no to the rest.",
+        "The job: make what's already good about your business easy to see. Birch Design Lab — link in bio."
+      ]
+    }
+  ],
+  "slideshow_reels": [
+    {
+      "id": "K-15-reel",
+      "from": "K-15",
+      "format": "VT",
+      "seconds_per_slide": 1.8,
+      "crossfade_s": 0.3,
+      "use": [
+        "2026-09-29-alternate"
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "date": "2026-09-02",
+      "x": [
+        "V007-SQ"
+      ],
+      "fb": [
+        "V007-VT"
+      ],
+      "ig": [
+        "V007-VT"
+      ]
+    },
+    {
+      "date": "2026-09-03",
+      "x": [
+        "C-03-SQ"
+      ],
+      "fb": [
+        "C-03-SQ"
+      ],
+      "ig": [
+        "K-03"
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "x": [
+        "C-08-SQ"
+      ],
+      "fb": [
+        "C-08-SQ"
+      ],
+      "ig": [
+        "C-08-PT"
+      ]
+    },
+    {
+      "date": "2026-09-09",
+      "x": [
+        "V007B-SQ"
+      ],
+      "fb": [
+        "V007B-VT"
+      ],
+      "ig": [
+        "V007B-VT"
+      ]
+    },
+    {
+      "date": "2026-09-10",
+      "x": [
+        "C-10-SQ"
+      ],
+      "fb": [
+        "C-10-SQ"
+      ],
+      "ig": [
+        "C-10-PT"
+      ]
+    },
+    {
+      "date": "2026-09-15",
+      "x": [
+        "C-15-SQ"
+      ],
+      "fb": [
+        "C-15-SQ"
+      ],
+      "ig": [
+        "K-15"
+      ]
+    },
+    {
+      "date": "2026-09-16",
+      "x": [
+        "V005-SQ"
+      ],
+      "fb": [
+        "V005-VT"
+      ],
+      "ig": [
+        "V005-VT",
+        "K-16 (fallback)"
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "x": [
+        "C-17-SQ"
+      ],
+      "fb": [
+        "C-17-SQ"
+      ],
+      "ig": [
+        "C-17-PT"
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "x": [
+        "C-22-SQ"
+      ],
+      "fb": [
+        "C-22-SQ"
+      ],
+      "ig": [
+        "K-22"
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "x": [
+        "C-23-SQ"
+      ],
+      "fb": [
+        "C-23-SQ"
+      ],
+      "ig": [
+        "K-23"
+      ]
+    },
+    {
+      "date": "2026-09-24",
+      "x": [
+        "S007-SQ"
+      ],
+      "fb": [
+        "S007-SQ"
+      ],
+      "ig": [
+        "K-24"
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "x": [
+        "V029-SQ"
+      ],
+      "fb": [
+        "V029-VT"
+      ],
+      "ig": [
+        "V029-VT",
+        "K-15-reel-VT (alternate)"
+      ]
+    },
+    {
+      "date": "2026-09-30",
+      "x": [
+        "V007C-SQ"
+      ],
+      "fb": [
+        "V007C-VT"
+      ],
+      "ig": [
+        "V007C-VT"
+      ]
+    }
+  ],
+  "_rows": [
+    {
+      "id": "V007",
+      "kind": "webgl-loop",
+      "formats": [
+        "SQ",
+        "PT",
+        "VT"
+      ],
+      "source": "/lab/bdl-007",
+      "duration_s": 8,
+      "slides": null,
+      "note": "full wordmark on its pedestal, centered, static camera, start at the neutral breath",
+      "use": [
+        "2026-09-02"
+      ]
+    },
+    {
+      "id": "V007B",
+      "kind": "webgl-loop",
+      "formats": [
+        "SQ",
+        "VT"
+      ],
+      "source": "/lab/bdl-007",
+      "duration_s": 7,
+      "slides": null,
+      "note": "close-up or low angle, moss in the foreground, one firefly passing through frame",
+      "use": [
+        "2026-09-09"
+      ]
+    },
+    {
+      "id": "V007C",
+      "kind": "webgl-loop",
+      "formats": [
+        "SQ",
+        "VT"
+      ],
+      "source": "/lab/bdl-007",
+      "duration_s": 8,
+      "slides": null,
+      "note": "slow full orbit around the pedestal, one revolution per loop",
+      "use": [
+        "2026-09-30"
+      ]
+    },
+    {
+      "id": "V005",
+      "kind": "scroll-capture",
+      "formats": [
+        "VT",
+        "SQ"
+      ],
+      "source": "/lab/bdl-005",
+      "duration_s": 11,
+      "slides": null,
+      "note": "scroll top to bottom with ease-in-out, hold 1.5s on first and last screens; SQ framed on the strongest screen; numbers, screens and typography only",
+      "use": [
+        "2026-09-16"
+      ]
+    },
+    {
+      "id": "V029",
+      "kind": "kinetic-type",
+      "formats": [
+        "VT",
+        "SQ"
+      ],
+      "source": null,
+      "duration_s": 9,
+      "slides": null,
+      "note": "each word holds about 1.4s, hard cut or short opacity fade, display face set very large on the paper ground, no bouncing, returns to first frame",
+      "use": [
+        "2026-09-29"
+      ]
+    },
+    {
+      "id": "S007",
+      "kind": "still",
+      "formats": [
+        "SQ",
+        "PT",
+        "OG"
+      ],
+      "source": "frame of V007",
+      "duration_s": null,
+      "slides": null,
+      "note": "neutral breath",
+      "use": [
+        "2026-09-24",
+        "google-business-profile"
+      ]
+    },
+    {
+      "id": "C-03",
+      "kind": "card:stack",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "Call.",
+      "use": [
+        "2026-09-03"
+      ]
+    },
+    {
+      "id": "C-08",
+      "kind": "card:quote",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "The care I learned at scale, in one pair of hands, pointed at the businesses down the road.",
+      "use": [
+        "2026-09-08"
+      ]
+    },
+    {
+      "id": "C-10",
+      "kind": "card:two-panel",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": null,
+      "use": [
+        "2026-09-10"
+      ]
+    },
+    {
+      "id": "C-15",
+      "kind": "card:list",
+      "formats": [
+        "SQ"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "Five quiet ways a website loses customers",
+      "use": [
+        "2026-09-15"
+      ]
+    },
+    {
+      "id": "C-16",
+      "kind": "card:stat",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "Specimen BDL-005",
+      "use": [
+        "2026-09-16"
+      ]
+    },
+    {
+      "id": "C-17",
+      "kind": "card:quote",
+      "formats": [
+        "SQ",
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "One pair of hands, start to finish. Solo by choice.",
+      "use": [
+        "2026-09-17"
+      ]
+    },
+    {
+      "id": "C-22",
+      "kind": "card:steps",
+      "formats": [
+        "SQ"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "How a website gets built here",
+      "use": [
+        "2026-09-22"
+      ]
+    },
+    {
+      "id": "C-23",
+      "kind": "card:list",
+      "formats": [
+        "SQ"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "Three lines every homepage needs",
+      "use": [
+        "2026-09-23"
+      ]
+    },
+    {
+      "id": "C-BRAND",
+      "kind": "card:brand",
+      "formats": [
+        "PT",
+        "SQ"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": null,
+      "note": "Birch Design Lab",
+      "use": [
+        "carousel-closers"
+      ]
+    },
+    {
+      "id": "K-03",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 10,
+      "note": "Your website has one job. Most don't do it.",
+      "use": [
+        "2026-09-03"
+      ]
+    },
+    {
+      "id": "K-15",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 8,
+      "note": "Five quiet ways your website loses customers. (Nobody complains. They just leave.)",
+      "use": [
+        "2026-09-15",
+        "2026-09-29-alternate"
+      ]
+    },
+    {
+      "id": "K-16",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 6,
+      "note": "Six weeks. Two sold-out nights. One phone and one TV.",
+      "use": [
+        "2026-09-16-fallback"
+      ]
+    },
+    {
+      "id": "K-22",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 8,
+      "note": "How a website gets built here. Four steps, no fog.",
+      "use": [
+        "2026-09-22"
+      ]
+    },
+    {
+      "id": "K-23",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 7,
+      "note": "Three lines every local business homepage needs. (Before anyone scrolls.)",
+      "use": [
+        "2026-09-23"
+      ]
+    },
+    {
+      "id": "K-24",
+      "kind": "carousel",
+      "formats": [
+        "PT"
+      ],
+      "source": null,
+      "duration_s": null,
+      "slides": 7,
+      "note": "A design lab, not an agency. What that actually means.",
+      "use": [
+        "2026-09-24"
+      ]
+    },
+    {
+      "id": "K-15-reel",
+      "kind": "slideshow-reel",
+      "formats": [
+        "VT"
+      ],
+      "source": "slides of K-15",
+      "duration_s": 14.4,
+      "slides": 8,
+      "note": "1.8s/slide, 0.3s crossfade",
+      "use": [
+        "2026-09-29-alternate"
+      ]
+    }
+  ]
+}
