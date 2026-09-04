@@ -1,0 +1,177 @@
+/* Birch Design Lab print letterhead — the skeleton, written once.
+ *
+ * Structure only. Every color here is a role token defined by a theme file
+ * (theme-day.css / theme-night.css), so this file is identical for a light
+ * or dark document and there is exactly one copy of the layout to maintain.
+ * A document links three stylesheets, in this order:
+ *
+ *   <link rel="stylesheet" href="../_letterhead/theme-day.css">
+ *   <link rel="stylesheet" href="../_letterhead/letterhead.css">
+ *   <link rel="stylesheet" href="my-doc.css">        <- doc-specific only
+ *
+ * Pages are hard 8.5x11in boxes with overflow:hidden, so content that does
+ * not fit is CLIPPED rather than reflowed onto a new page. Nothing errors and
+ * the PDF still reports the right page count; the only signal is text
+ * colliding with the footer in print. Run scripts/docs/check-pages.mjs after
+ * any edit — that checker is the only thing that catches it.
+ *
+ * The wordmark is injected into every empty <div class="letterhead"> by the
+ * build and check scripts, from assets/brand/logos/files/. Opening a document
+ * straight in a browser therefore shows an empty letterhead; that is expected,
+ * render it through the scripts to see the mark.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Spectral:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+@page{ size:8.5in 11in; margin:0; }
+
+html,body{ background:var(--field); }
+
+body{
+  font-family:'Spectral',Georgia,'Times New Roman',serif;
+  color:var(--ink);
+  font-size:10.2pt;
+  line-height:1.4;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+
+.page{
+  position:relative;
+  width:8.5in;
+  height:11in;
+  background:var(--field);
+  padding:0.45in 0.7in 0.5in;
+  page-break-after:always;
+  overflow:hidden;
+}
+.page:last-child{ page-break-after:auto; }
+
+/* letterhead: the wordmark, plus an optional right-hand line set by the
+   div's data-for attribute (a recipient, a URL, a date). */
+.letterhead{
+  display:flex; align-items:center; gap:.16in;
+  padding-bottom:.06in;
+  border-bottom:1px solid var(--line);
+  margin-bottom:.09in;
+}
+.letterhead svg.mark{ height:.36in; width:auto; display:block; }
+.letterhead .for{
+  margin-left:auto;
+  font-size:8.5pt;
+  letter-spacing:.06em;
+  color:var(--muted);
+}
+
+/* kicker / doc label */
+.eyebrow{
+  font-family:'Marcellus',Georgia,serif;
+  font-size:9.5pt;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:var(--heading);
+  margin-top:.06in;
+}
+
+h1{
+  font-family:'Marcellus',Georgia,serif;
+  font-weight:400;
+  font-size:26pt;
+  color:var(--ink);
+  line-height:1.08;
+  margin:.05in 0 .04in;
+}
+.meta{ color:var(--muted); font-size:10pt; margin-bottom:.1in; }
+
+.lede{ font-size:10.6pt; margin-bottom:.02in; }
+
+h2{
+  font-family:'Marcellus',Georgia,serif;
+  font-weight:400;
+  font-size:14.5pt;
+  color:var(--heading);
+  margin:.14in 0 .05in;
+  padding-bottom:.045in;
+  border-bottom:1px solid var(--line);
+  position:relative;
+}
+h2::after{
+  content:"";
+  position:absolute;
+  left:0; bottom:-1px;
+  width:46px; height:2.4px;
+  background:var(--rule-accent);
+}
+
+p{ margin:.05in 0; }
+strong{ color:var(--emphasis); font-weight:600; }
+
+/* bullet lists — lenticel dashes, not dots */
+ul.dots{ list-style:none; margin:.06in 0; }
+ul.dots li{
+  position:relative;
+  padding-left:.26in;
+  margin:.045in 0;
+}
+ul.dots li::before{
+  content:"";
+  position:absolute;
+  left:0; top:.085in;
+  width:.14in; height:.032in;
+  border-radius:.016in;
+  background:var(--dash);
+}
+
+/* table */
+table{ width:100%; border-collapse:collapse; margin:.05in 0; font-size:9.2pt; line-height:1.28; }
+thead th{
+  background:var(--bar);
+  color:var(--on-bar);
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-family:'Marcellus',Georgia,serif;
+  font-weight:400;
+  font-size:8pt;
+  text-align:left;
+  padding:.055in .1in;
+}
+thead th.num{ text-align:right; }
+tbody td{
+  padding:.035in .1in;
+  color:var(--ink);
+  vertical-align:top;
+}
+tbody td.num{ text-align:right; white-space:nowrap; }
+tbody tr:nth-child(even){ background:var(--sage); }
+td.phase{ font-weight:600; color:var(--heading); font-family:'Spectral',Georgia,serif; }
+td.price{ font-weight:600; color:var(--price); white-space:nowrap; }
+/* a full-width band naming the group of rows under it */
+td.group{
+  background:var(--bar-alt); color:var(--on-bar);
+  font-family:'Marcellus',Georgia,serif;
+  text-transform:uppercase; letter-spacing:.14em; font-size:8pt;
+  padding:.045in .1in;
+}
+
+/* pull-quote / callout */
+.callout{
+  margin:.1in 0;
+  background:var(--sage);
+  border-left:3px solid var(--callout-edge);
+  border-radius:0 10px 10px 0;
+  padding:.14in .22in;
+}
+.callout p{ margin:.04in 0; }
+
+.small{ font-size:9.6pt; color:var(--muted); margin-top:.06in; }
+
+/* footer */
+.foot{
+  position:absolute;
+  left:0.7in; right:0.7in; bottom:.3in;
+  display:flex; justify-content:space-between;
+  font-size:8.5pt; color:var(--muted);
+  border-top:1px solid var(--line);
+  padding-top:.07in;
+}

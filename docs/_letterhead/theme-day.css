@@ -1,0 +1,24 @@
+/* Light face: bark-white field, forest and leather accents.
+   Pairs with the day wordmark (assets/brand/logos/files/8b-horizontal-day.svg),
+   which the build scripts inject when a document does not ask for night. */
+:root{
+  /* surfaces and text */
+  --field:#f5f1e8;            /* bark-white */
+  --ink:#1f1b15;
+  --muted:#5a5244;            /* stone-dark */
+  --sage:#e3e9e0;             /* zebra rows, callout fill */
+  --line:rgba(31,27,21,.2);
+
+  /* bars: dark plates carrying light text, same in both faces */
+  --bar:#2b4a37;              /* forest — table headers */
+  --bar-alt:#4a3a2c;          /* leather — group bands */
+  --on-bar:#f5f1e8;
+
+  /* roles that flip between faces */
+  --heading:#2b4a37;          /* forest */
+  --emphasis:#2b4a37;         /* forest */
+  --dash:#2b4a37;             /* forest */
+  --rule-accent:#4a3a2c;      /* leather */
+  --price:#4a3a2c;            /* leather */
+  --callout-edge:#2b4a37;     /* forest */
+}

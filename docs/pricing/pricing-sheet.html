@@ -1,0 +1,145 @@
+<!doctype html>
+<!--
+  Birch Design Lab — price sheet, client-facing.
+
+  v2, 09-03-26. Rebuilt against the internal handoff v4 rev 4 (the source of
+  truth for BDL pricing), §2 and §3 only. Owner-facing content exclusively:
+  no framework/build-speed figures, no hour estimates, no pricing-basis
+  reasoning, no pocket items (second language, scheduler, connection plan),
+  no occasional services. Those stay internal per that document's §0.1/§0.2.
+
+  Three hard 8.5x11in .page boxes with overflow:hidden, so anything too tall is
+  CLIPPED, not reflowed. pricing-sheet-dark.html carries identical markup on the
+  night face; keep the two in sync.
+
+    node scripts/docs/check-pages.mjs docs/pricing/pricing-sheet.html
+    node scripts/docs/build-pdf.mjs docs/pricing/pricing-sheet.html \
+      docs/pricing/Birch-Design-Lab-Price-Sheet.pdf
+
+  Run the checker after any edit; the build will render a clipped page without
+  complaining. The letterhead divs are filled in with the wordmark at render
+  time, so they look empty here and in a plain browser.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../_letterhead/theme-day.css">
+<link rel="stylesheet" href="../_letterhead/letterhead.css">
+<link rel="stylesheet" href="pricing.css">
+<title>Birch Design Lab — Price Sheet</title>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<section class="page">
+<div class="letterhead" data-for="birchdesignlab.com"></div>
+
+  <p class="eyebrow">Price sheet</p>
+  <h1>What It Costs</h1>
+  <p class="meta">Effective September 2, 2026 &nbsp;&middot;&nbsp; Held through February 15, 2027</p>
+  <p class="lede">One price for a site, a short list of modules that add to it, and a short extras list. Anything else is new work, quoted in writing before it starts. No surprise line items.</p>
+
+  <h2>The sheet</h2>
+  <table>
+    <thead><tr><th>Offering</th><th>Price</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td class="group" colspan="3">The one-pager</td></tr>
+      <tr><td class="phase">Starter</td><td class="price">$1,000 flat</td><td>One page: who you are, where you are, hours, what you do, how to reach you, photos. Can also be a standalone events page under your existing site's domain; keeping events current is a Care plan. Credits in full toward a Site if you upgrade within 6 months. Half at signing, half at approval.</td></tr>
+      <tr><td class="group" colspan="3">Website</td></tr>
+      <tr><td class="phase">Site</td><td class="price">starting at $2,400</td><td>Five pages &mdash; Home, About, Services (or What We Do), Gallery, Contact &mdash; plus an Events page if you have events.</td></tr>
+      <tr><td class="phase">+ Menu</td><td class="price">+$1,200 &rarr; $3,600</td><td>A real menu from typed data, not a PDF: sections, items, descriptions, prices, sizes, dietary tags. Up to 100 items, typed in by us from whatever you have. Changes are Care edits.</td></tr>
+      <tr><td class="phase">+ Booking</td><td class="price">+$1,200 &rarr; $3,600</td><td>Reservations or scheduling wired in on your own booking account: service or trip pages, the booking embed, the Google &ldquo;Book&rdquo; link. We wire in a booking tool, never build one; its subscription is yours.</td></tr>
+      <tr><td class="phase">+ Store</td><td class="price">+$1,800 &rarr; $4,200</td><td>Catalog pages for up to 50 products; checkout and inventory on your own Square Online or Shopify account; local pickup and pre-order; simple shipping for non-perishable goods.</td></tr>
+      <tr><td class="phase">+ Direct Orders (linked)</td><td class="price">+$1,200 on Menu &rarr; $4,800</td><td>The ordering you already have (Square, Toast, Grubhub, DoorDash, Uber Eats) wired into your site: order buttons, menu parity, pickup flows, the Google &ldquo;Order&rdquo; link. Requires Menu. Payments stay on your account.</td></tr>
+      <tr><td class="phase">+ Direct Orders (built-in)</td><td class="price">+$2,400 on Menu &rarr; $6,000</td><td>Ordering built into your site on your own Stripe or Square account: the card is held at checkout and charged only when you accept; an unaccepted order releases on its own. Staff accept screen; ticket by email, text, and print. Requires Menu. Pickup only at launch.</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Modules add: Site + Menu + Booking = $4,800; Site + Store + Menu = $5,400. Ordering combines with Booking or Store the same way.</p>
+
+  <div class="foot"><span>Birch Design Lab &middot; birchdesignlab.com</span><span>Page 1 of 3</span></div>
+</section>
+
+<!-- PAGE 2 -->
+<section class="page">
+<div class="letterhead" data-for="birchdesignlab.com"></div>
+
+  <p class="eyebrow">Starter and up</p>
+  <h2>Included in every build</h2>
+  <ul class="dots">
+    <li><strong>Google Business Profile</strong> claimed, verified, and completed (two verification attempts included). <strong>Google Analytics and Search Console</strong> set up, consent-gated, and handed to you.</li>
+    <li><strong>A contact form with spam protection,</strong> hours and location structured for search, built for phones first and measured for speed before it goes live.</li>
+    <li><strong>Your domain, in your name, at your registrar.</strong> Hosting on your own Cloudflare account, paid by you &mdash; usually $0. We point the domain at the email provider you choose; we don't provide email.</li>
+    <li><strong>One design review and one revision round.</strong> Changes after approval are Care edits or new work. The timeline is set in the proposal.</li>
+    <li><strong>You supply the photos and the facts.</strong> We send a rough draft of the page text; you finish it. We don't shoot photos or write finished copy (we can refer a photographer). Content more than 30 days late may pause and re-slot the project.</li>
+    <li><strong>Every tool the site relies on is yours</strong> &mdash; booking engine, Square, Shopify &mdash; in your name, paid by you, listed in the proposal. Medical, med-spa, and dispensary sites run with marketing tracking switched off entirely.</li>
+    <li><strong>You own it.</strong> Domain, hosting account, and every third-party account are yours from day one; the site itself once it's paid off. Not offered: social posting, review replies, ad management, email hosting, rush timelines.</li>
+  </ul>
+
+  <p class="eyebrow">After launch</p>
+  <h2>Care plans</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>Price</th><th>What's in it</th></tr></thead>
+    <tbody>
+      <tr><td class="phase">Maintenance</td><td class="price">$100/mo</td><td>Hosting kept healthy, uptime and security monitoring, backups, security updates. Hours and closure changes only, up to 2 a month, same day.</td></tr>
+      <tr><td class="phase">Care</td><td class="price">$200/mo</td><td>Maintenance + content edits + the live events calendar kept current. Up to 8 edits or 2 hours a month, whichever comes first; same week, closures same day.</td></tr>
+      <tr><td class="phase">Concierge</td><td class="price">$300/mo</td><td>Care + small additions that fit in the hour (a seasonal banner, a new event series, a new section on an existing page) + priority. Up to 3 hours a month; next business day.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <p><strong>An edit</strong> changes something that already exists: text, prices, hours, photos, a menu item on or off, a link, an event on the calendar (a batch of events sent together is one edit). <strong>New work</strong> adds or restructures: a new page, section, feature, redesign, or language. New work is never in a plan; Concierge clients get 10% off it and the front of the queue.</p>
+  </div>
+  <ul class="dots">
+    <li><strong>Out-of-plan work</strong> is $150/hr (one-hour minimum) or $300 per new page, quoted in writing first, plan or no plan. Unused allowance doesn't roll over; requests are handled one at a time.</li>
+    <li><strong>Required</strong> (Maintenance or higher) for the first 12 months on any build paid on a plan, any Menu, and any module; optional on a Starter or Site paid standard. <strong>Billed</strong> monthly from go-live, month to month after that, separate from any payment plan. If a plan lapses the site stays up on your account; we stop watching and editing it.</li>
+  </ul>
+
+  <div class="foot"><span>Birch Design Lab &middot; birchdesignlab.com</span><span>Page 2 of 3</span></div>
+</section>
+
+<!-- PAGE 3 -->
+<section class="page">
+<div class="letterhead" data-for="birchdesignlab.com"></div>
+
+  <p class="eyebrow">The only way a quote moves</p>
+  <h2>Extras</h2>
+  <table>
+    <thead><tr><th>Extra</th><th>Price</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="phase">Additional page</td><td class="price">$300 each</td><td>Any page beyond the base set, at build time or later</td></tr>
+      <tr><td class="phase">Menu over 100 items</td><td class="price">+$300</td><td>Per additional 100 items or part thereof</td></tr>
+      <tr><td class="phase">Launch Setup, base</td><td class="price">$600</td><td>Facebook Page and Instagram business account, created or converted from your personal accounts (followers and history kept); Meta Business Portfolio; Instagram linked to the Page; a 45-minute recorded walkthrough. Setup and handoff only &mdash; no posting, no review replies, no management.</td></tr>
+      <tr><td class="phase">Launch Setup, ads</td><td class="price">+$300</td><td>Meta Ads account, pixel and Conversions API connected, a starter campaign skeleton. No management.</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Anything else is new work: $150/hr (one-hour minimum) or $300 per new page, quoted in writing before it starts.</p>
+
+  <p class="eyebrow">One price, two ways to pay</p>
+  <h2>Payment</h2>
+  <table>
+    <thead><tr><th></th><th>At signing</th><th>At go-live</th><th>Then</th></tr></thead>
+    <tbody>
+      <tr><td class="phase">Standard</td><td>50%</td><td>50% at approval &mdash; the site goes live and you own it</td><td>&mdash;</td></tr>
+      <tr><td class="phase">Plan (6 months)</td><td>25%</td><td>25% &mdash; the site goes live</td><td>The remaining 50% in six equal monthly payments, the first one a month after go-live</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Same price either way. No carry, no fee, no interest. The Starter is standard only. A plan sale includes Maintenance or higher for the first 12 months, billed separately from go-live.</p>
+  <p class="small">At $2,400 the plan is $600 + $600, then $200 a month for six months; at $3,600 it's $900 + $900, then $300. The monthly payment is always the price divided by twelve.</p>
+
+  <h2>Holding the site</h2>
+  <ul class="dots">
+    <li><strong>Standard:</strong> paid in full before go-live, so you own the site at go-live.</li>
+    <li><strong>Plan:</strong> the domain and third-party accounts are yours from day one; we hold the hosting account until the final installment clears, then transfer it within five business days.</li>
+    <li><strong>Missed installment:</strong> a reminder at 10 days; at 30 days the site comes down and Care billing pauses; at 60 days all work stops until the balance is paid. No reinstatement fee. You keep the domain and your accounts throughout.</li>
+  </ul>
+
+  <h2>Also</h2>
+  <ul class="dots">
+    <li><strong>Pass-through costs</strong> (registrar and domain-restore fees, your subscriptions) are yours, paid at signing or to the vendor, never financed. The signing payment is non-refundable once work begins. New work during a plan is quoted and paid on its own terms. Extras and Launch Setup don't credit toward an upgrade.</li>
+    <li><strong>At signing we'll ask one question:</strong> can we write this build up as a technical case study and show the live site? Yes unless you say no, and no is fine; you see it before it's published. Everything here is set out in full in the sales agreement you sign.</li>
+  </ul>
+
+  <div class="foot"><span>Birch Design Lab &middot; birchdesignlab.com</span><span>Page 3 of 3</span></div>
+</section>
+
+</body>
+</html>

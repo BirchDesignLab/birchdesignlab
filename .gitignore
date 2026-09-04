@@ -21,3 +21,13 @@ scripts/brand/.cache/
 # 3D logo exports: glb only, obj/mtl blow up repo size (60MB+ per asset)
 assets/brand/logos/3d/*.obj
 assets/brand/logos/3d/*.mtl
+
+# Social asset pipeline outputs: generated video/PNG, regenerable from
+# social/calendar.html + the site itself. Never source.
+social/out/
+
+# Doc-gen outputs (scripts/docs/): delivered PDFs and the page-check
+# screenshots, both regenerable from the .html/.css source with
+# check-pages.mjs / build-pdf.mjs. Never source.
+docs/**/*.pdf
+docs/**/generated/
