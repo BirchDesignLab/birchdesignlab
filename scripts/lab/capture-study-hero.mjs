@@ -45,7 +45,15 @@ const width = Number(arg('width', 1920));
 const height = Number(arg('height', 620));
 const scale = Number(arg('scale', 2));
 
-const browser = await chromium.launch();
+// Headless Chromium falls back to SwiftShader (software GL) unless told
+// otherwise, which both pegs every core and renders this site's bark fields
+// differently from a real browser. `--gpu` opts into the machine's real GPU.
+const gpu = process.argv.includes('--gpu');
+const browser = await chromium.launch(
+  gpu
+    ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] }
+    : {},
+);
 const page = await browser.newPage({
   viewport: { width, height },
   deviceScaleFactor: scale,
@@ -84,8 +92,26 @@ if (clipTo) {
   clip = { x: 0, y: 0, width, height: bottom };
 }
 
+const fullPage = process.argv.includes('--full-page');
+
+// A full-page shot does not scroll, so anything gated on an IntersectionObserver
+// reveal is still at opacity 0 when the shutter fires — the home page's specimen
+// strip photographs as an empty band. Walk the page first, then return to the
+// top, so every observer has fired before the capture.
+if (fullPage) {
+  await page.evaluate(async () => {
+    const step = window.innerHeight * 0.8;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+    window.scrollTo(0, 0);
+    await new Promise((r) => setTimeout(r, 300));
+  });
+}
+
 await mkdir(dirname(out), { recursive: true });
-await page.screenshot({ path: out, scale: 'device', clip });
+await page.screenshot({ path: out, scale: 'device', clip, fullPage });
 await browser.close();
 
 const captured = clip ? clip.height : height;
