@@ -18,6 +18,103 @@ BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026
 
 ## In flight
 
+### BDL-008 · Magnolia & Mane · SHIPPED 09-05-26
+
+Genre study of a Gulf Coast salon site, published from the draft that sat on
+the `lab-drafts` branch as `docs/lab-draft-magnolia-mane.md`. Live at
+`/lab/bdl-008`; the specimen it studies is deployed at
+`https://demo-magnolia-mane-salon.birchdesignlab.workers.dev` and is
+deliberately `noindex`.
+
+*Mirrored from the other repo's `docs/BACKLOG.md` Item 4, which recorded this
+as birchdesignlab's work living in the wrong backlog. Item 4 also covers the
+Bayou Kitchen half, which is still unbuilt.*
+
+**It took BDL-008, not the BDL-009 the draft proposed.** The Bayou Kitchen
+draft in the same branch proposes BDL-008, but a number is claimed at build
+time and Bayou Kitchen has not been built. BDL-007 was the newest shipped, so
+008 was the next free slot and this is the study that actually reached
+publication. **Bayou Kitchen needs renumbering to BDL-009 when it ships** —
+its draft header is now wrong.
+
+**The three blockers the draft named, and how each was settled.**
+
+- **Photography** — resolved as a screenshot, and the blocker was never
+  really achievable as written. Magnolia & Mane is a fictional salon; there
+  is no salon to photograph. BDL-005 already set the precedent that a study
+  hero is a screenshot of the site. The capture is
+  `scripts/lab/capture-study-hero.mjs`, committed rather than run by hand:
+  header plus hero band only, clipped to the `.hero` element so it stops
+  short of the service cards. That matters because **every image on the
+  specimen is a flat placeholder JPG**, and a wider shot advertises the
+  placeholders instead of the site. Captured at 1600 CSS px at 2x (3200x1194,
+  2.68:1), which clears the 1920px+ rule and sits close to the ~2.9:1 the
+  full-bleed hero box crops to.
+- **`liveUrl`** — resolved by the deploy.
+- **Designation** — see above.
+
+**Three claims in the draft were false against the deployed specimen and were
+rewritten, not copy-edited.** This is the part worth remembering: the draft
+was written before the specimen was deployed, and it described the site the
+argument wanted rather than the site that exists.
+
+- **Booking.** The draft claimed every service is its own bookable thing with
+  its own real length, that "the calendar shown is the calendar that's
+  actually open", and that "the booking is final the moment it's made". None
+  of that is true here. There is one `/book` page holding one Cal.com iframe
+  behind one reveal button, pointed at a demonstration account; services carry
+  no duration field and no book button. Rewritten to the narrower claim that
+  is true and still worth making: booking stays on a route the site owns, in
+  the site's own chrome, and nothing third-party is contacted until the
+  visitor clicks. The page now says outright that the calendar is a
+  provider's and not something we wrote.
+- **Consent.** The draft's "nothing fires until a visitor actually says yes"
+  reads as this site's behavior. The specimen ships `consent: { mode:
+  "opt-out" }` and its banner says, visibly, that the site uses marketing
+  analytics by default. Rewritten so opt-out is described as the setting this
+  specimen makes and opt-in as the setting a business can choose instead.
+- **"Nothing phoning home on page load."** A first-party `POST /api/counter`
+  fires on load. The zero-third-party-scripts claim survives and is now
+  stated separately from the counter, which the page describes rather than
+  omits.
+
+**Verified true and kept:** the four prices ($65 / from $120 / $45 / $55,
+matching the live services page), `BeautySalon` JSON-LD with address, geo,
+hours and priced services, no `analytics` block configured at all, zero
+third-party scripts on the homepage, honeypot plus Turnstile on the contact
+form (test site key on the specimen), and the security header set (HSTS
+preload, `nosniff`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`,
+Referrer-Policy, Permissions-Policy).
+
+**New since the draft: the specimen is bilingual,** English at the root and
+Vietnamese at `/vi/`, and the study now argues it as genre rather than
+technology — Ocean Springs sits between the Biloxi and Bayou La Batre
+communities. Translation coverage is complete through nav, FAQ, testimonials,
+service bodies, and localized dates. **The Vietnamese is demo-grade with no
+native-speaker pass**, which the published page states on the record rather
+than burying.
+
+**Confidentiality check performed at publish time, not assumed.** Scanned the
+final copy for the internal framework's name, for any description of a shared
+framework, template, spine, or scaffold, and for build-speed figures. Zero
+hits. The founder copy pass also stripped every em dash: shipped Lab copy is
+em-dash-free and the draft was full of them.
+
+**Still owed.** Lighthouse was not run against the deployed specimen during
+this session. The page claims every build clears 95 / 95 / 95 with a perfect
+SEO score, which is true of the enforced budget in the specimen's
+`lighthouserc.cjs`, not of a run performed on 09-05-26. Worth one real run
+against the live URL to convert a gate into a measurement. Replacing the
+specimen's placeholder JPGs with real imagery would also allow a fuller hero
+crop later.
+
+**Catalog blurb is now slightly wrong, founder call.** `/lab` says "Studies
+are client work, shown in the same way." BDL-008 is a study and is explicitly
+not client work, which its own first screen says out loud, so a reader is
+corrected immediately. Left alone rather than rewritten because that line is
+founder copy and the fix is a wording choice (something closer to "Studies
+are real sites, client work and specimens both"), not a bug.
+
 ### BDL-007 · The Shining Tree · SHIPPED 08-18-26
 
 Interactive three.js stage for the organic 3D wordmark (bdlOrganic). Live
