@@ -16,7 +16,88 @@ The one-way doors. Each has its full entry further down; this list exists so a g
 
 BDL-004 originally reserved the Painting (view-source CSS feat). Reassigned 2026-07-16 evening: the goal right now is quick wins before the link spreads, the Painting is the most expensive item on this page, and 003 is already a heavy build. The Loom takes 004; the Painting returns to the backlog unnumbered and gets a number at its own build time.
 
+## Specimen studies: standing rules
+
+*Pulled forward 09-06-26 from the `docs/specimen-demos-backlog` branch, which
+is now deleted. Everything else on that branch had gone stale: it listed
+sequenced work that is done, and blockers that are resolved.*
+
+**These are genre studies, not client case studies.** Bayou Kitchen and
+Magnolia & Mane are fictional businesses. There is no client and no
+engagement to narrate. Frame them that way if they get edited: they argue
+what a genre of site should do, using one of our own specimen builds as the
+proof. `/lab`'s own blurb was corrected in the same pass, because it used to
+define a study as client work.
+
+**Check at publish time what a specimen study is allowed to say.** These
+describe how our own specimens are built, which is closer to the line than a
+normal experiment writeup. No study may name the framework behind them,
+describe it as a shared or reusable spine, or cite build-speed figures
+("shipped in N hours because…"). Run the check against the final copy every
+time. It is not an assumption inherited from this note, and a draft that read
+clean weeks ago is not evidence about the copy being published today. Compare
+the standing entry further down on what the BDL-005 page is allowed to say
+about its client: same discipline, different subject.
+
+**A fictional specimen's hero is a screenshot.** This supersedes the older
+position that photography was a real blocker and that every Lab still must be
+shot deliberately. That was written before anyone reckoned with the specimens
+being fictional: there is no salon and no restaurant to photograph, and there
+never will be. BDL-005 set the precedent that a study hero can be a
+screenshot of the site; `scripts/lab/capture-study-hero.mjs` is the committed
+tool, and `--clip-to` exists so a shot can stop short of placeholder imagery.
+
+**The actionable version of specimen work lives with the specimens.** Their
+own repo's `docs/BACKLOG.md` holds prerequisites, gates and acceptance
+criteria. Entries here exist so the Lab side is not lost, not to duplicate
+it. (Deliberately not naming that repo or its path here, per the rule above:
+this repo is private today, but private is a setting, not a property, and the
+name appears nowhere else in it.)
+
 ## In flight
+
+### BDL-009 · Bayou Kitchen · FORTHCOMING, blocked
+
+Stood up as `status: forthcoming` in PR #85, which generates no page: the
+catalog row renders and nothing else, so a half-argued study cannot reach a
+reader. Hero captured from the deployed specimen at
+`https://demo-bayou-kitchen.birchdesignlab.workers.dev`.
+
+**The menu half is written and verified. The order-taking half is
+deliberately unwritten.** The draft argued three things: show the menu
+honestly, take a real order, and never lie about whether the kitchen can fill
+it. Only the first is true today. The specimen takes no orders at all:
+checkout rejects every request at the bot-verification gate, no card has ever
+been authorized, and the kitchen board holds nothing because the order webhook
+is unconfigured. That is not something to soften in copy.
+
+`tech` deliberately omits `stripe` and `durable-objects`. Listing them claims
+a payment flow that has never run.
+
+**Blocked on a founder decision:** whether to enable the ordering flow in
+Stripe test mode. Test mode is the right target rather than a compromise, since
+it produces a real authorization and a real webhook. A second prerequisite is
+an access application for the kitchen screen, without which "the kitchen taps
+Accept and that is the moment the customer is charged" cannot be verified at
+all. If the answer is no, BDL-009 either publishes as a menu-honesty study
+alone or waits for a specimen that can take an order.
+
+**Never claim, on any version of this page:** that a card is authorized at
+checkout, that an unacknowledged order releases its hold, that an unverified
+request is prevented from holding a card (true only because nothing can hold
+one), that the audit runs against the served build, that every page scores in
+the high 90s (SEO is 66-69 permanently, by noindex design), that accessibility
+is perfect, that a locked-down business type is prevented from leaking a
+marketing script, that the contact form delivers mail (its sender is on a
+reserved `.example` domain and can never be verified), that SMS works, or that
+the Spanish site is complete.
+
+**Verified, unused, and waiting for that section:** checkout recomputes every
+price from the menu and never reads a price off the request; the contact
+endpoint rejects cross-origin POSTs before anything else runs; the kitchen
+board fails shut (401); bot verification is enforced server-side and is
+deliberately stricter at checkout than on the contact form, which is the most
+defensible security claim available.
 
 ### BDL-008 · Magnolia & Mane · SHIPPED 09-05-26
 
@@ -108,12 +189,46 @@ against the live URL to convert a gate into a measurement. Replacing the
 specimen's placeholder JPGs with real imagery would also allow a fuller hero
 crop later.
 
-**Catalog blurb is now slightly wrong, founder call.** `/lab` says "Studies
-are client work, shown in the same way." BDL-008 is a study and is explicitly
-not client work, which its own first screen says out loud, so a reader is
-corrected immediately. Left alone rather than rewritten because that line is
-founder copy and the fix is a wording choice (something closer to "Studies
-are real sites, client work and specimens both"), not a bug.
+**Catalog blurb fixed 09-06-26.** `/lab` used to say "Studies are client
+work, shown in the same way," which BDL-008 and BDL-009 both contradict. Now
+reads "Studies are finished sites, client work and our own." Considered
+retyping both as experiments instead and rejected it: the schema requires an
+experiment to carry a `howto` wall label or an `href`, and `ExperimentLayout`
+renders an interactive stage, so these would fall through to "no interactive
+stage yet" and lose the hero, the live URL, and the client plate. The page
+shape that fits is `study`; the definition was what was wrong.
+
+**Two false claims were found on the live page and corrected in PR #85.**
+"The translation reaches everywhere the English does" was false:
+`/vi/legal/privacy` and `/vi/legal/terms` 404 while the English return 200,
+and that turns out to be deliberate upstream, where legal routes are declared
+English-only. "A perfect SEO score" was misleading: the audited build is
+crawlable, the deployed specimen is noindexed, so live SEO sits in the 60s
+permanently. The 95 threshold for performance, accessibility and
+best-practices is accurate and stayed; live accessibility measures 96, so the
+page never claimed a perfect accessibility score.
+
+**Two real accessibility defects, in shared chrome, still unfixed and not
+ours to fix here.** A contrast failure on the About-section link (`#b5502d`
+on `#f1eae0`, ratio 4.23 against a 4.5 threshold) and `role="button"` on a
+`<label>` in the mobile nav toggle. Both are present on both specimens
+byte-identically, so they belong upstream and will reach real client sites.
+
+**The plate tick still orphans, and the obvious fix made it worse.** A
+hostname long enough to wrap pushes the accent tick onto a line of its own,
+where it reads as a stray pipe. Tried a baseline-aligned flex row on
+09-06-26 and reverted it: the anchor wraps inside its own flex box and the
+tick ends up floating at the right margin, further from the text than before
+(reproduced at a 390px viewport). Worth knowing that the measurement lied
+too, since making the anchor a flex item collapses its per-line client rects
+into a single box, so a "does the tick share a line with the link" check
+passes while the URL is visibly wrapping.
+
+Inline layout will not bind the tick to the last line while the hostname
+itself wraps mid-word, so the real options are design choices, not CSS
+tweaks: move the tick beside the "Living specimen" label, lead with it
+instead of trailing it, or shorten what the link displays. Founder call.
+BDL-009's hostname will hit this too.
 
 ### BDL-007 · The Shining Tree · SHIPPED 08-18-26
 

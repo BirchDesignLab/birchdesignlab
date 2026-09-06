@@ -134,7 +134,17 @@ const creativeWork = buildCreativeWork(Astro.site!, {
     padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
   .plate a { color: var(--link); }
-  /* The living-things tick: same mark as the catalog's working-specimen tick. */
+  /* The living-things tick: same mark as the catalog's working-specimen tick.
+     KNOWN ISSUE, left as-is deliberately: a hostname long enough to wrap
+     (demo-magnolia-mane-salon…workers.dev, and demo-bayou-kitchen…workers.dev
+     when BDL-009 ships) pushes this onto a line of its own, where it reads as
+     a stray pipe. A baseline-aligned flex row was tried on 09-06-26 and is
+     worse: the anchor wraps inside its own flex box and the tick ends up
+     floating at the right margin, further from the text than before. Binding
+     it to the last line is not something inline layout will do while the
+     hostname itself wraps mid-word, so the real fixes are design choices
+     (move the tick to the label, or lead with it) rather than CSS tweaks.
+     Founder call. */
   .plate .tick {
     display: inline-block; width: 2px; height: 0.9em;
     background: var(--accent); margin-left: var(--space-2);
