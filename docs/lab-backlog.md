@@ -56,6 +56,34 @@ name appears nowhere else in it.)
 
 ## In flight
 
+### BDL-010 / BDL-011 · Period Rooms (theme schools) · IN FLIGHT
+
+Branch `feat/theme-schools-tranche-1`. Handoff:
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26.md`. Six
+tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
+cottagecore, bauhaus, swiss); one PR at the end, schools and BDL-010/011
+going live together.
+
+**Founder read, 09-23-26, first pass at B.** "Very impressed." Vaporwave and
+Bauhaus are great (personal favourites). Grandmillennial and Cottagecore are
+"absolutely selling what we can do." Glassmorphism is the most lackluster,
+Swiss right behind it. Mobile screenshots look good.
+
+**Path to A+ (founder go 09-23-26).** Tier 1 fixes and tooling, Tier 2
+primary-source research dossiers per school plus a critique panel, Tier 3
+revisions fed by the dossiers, then a founder round. Research must come from
+trusted, reliable primary sources.
+
+**Sidenote, 09-23-26: transitions are the next push after A+.** Crank up the
+transitions between schools and the motion within them. The model is the
+wordmark morph: it transforms and moves while the page changes under it.
+Purposefully built, possibly a distinct transition for each pair of schools
+("this is a crown jewel for a while"). Scope it after A+; the research
+dossiers record each school's motion vocabulary for it.
+
+**Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
+original ranking live in `theme-schools-research/`.
+
 ### BDL-009 · Bayou Kitchen · FORTHCOMING, blocked
 
 Stood up as `status: forthcoming` in PR #85, which generates no page: the
