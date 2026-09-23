@@ -2,12 +2,11 @@
 /** Vaporwave's header: a taskbar. The wordmark is the start button, the nav
     is a row of task buttons with the current page pressed in, and the tray
     (katakana and a VCR clock stuck at 12:00) is decoration. */
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
-const path = Astro.url.pathname;
 ---
 <header class="taskbar">
   <a class="skip" href="#main">{chrome.skip}</a>
@@ -21,7 +20,7 @@ const path = Astro.url.pathname;
         <a
           class="task"
           href={hrefFor(to, theme)}
-          aria-current={path.startsWith(hrefFor(to, theme)) ? 'page' : undefined}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
           data-astro-reload={to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}

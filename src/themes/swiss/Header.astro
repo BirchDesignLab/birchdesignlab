@@ -1,12 +1,11 @@
 ---
 /** Swiss header: the wordmark and the nav set on the column grid, one link
     per column, over the hairline guides that run the whole sheet. */
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
-const path = Astro.url.pathname;
 ---
 <div class="sw-guides" aria-hidden="true">
   <div class="sw-row">{Array.from({ length: 12 }, () => <span></span>)}</div>
@@ -19,7 +18,7 @@ const path = Astro.url.pathname;
       {chrome.nav.map(({ to, label }) => (
         <a
           href={hrefFor(to, theme)}
-          aria-current={path === hrefFor(to, theme) ? 'page' : undefined}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
           data-astro-reload={to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}

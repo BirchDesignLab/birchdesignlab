@@ -3,13 +3,12 @@
     then the wordmark written like a jar label (a set serif name, the rest in
     handwriting) and a nav whose current page is stitched underneath. It also
     carries the fireflies canvas, which only shows by lamplight (fx.ts). */
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 import Pressed from './assets/Pressed.astro';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
-const path = Astro.url.pathname;
 const [first, ...rest] = chrome.wordmark;
 ---
 <header class="cc-header">
@@ -24,7 +23,7 @@ const [first, ...rest] = chrome.wordmark;
       {chrome.nav.map(({ to, label }) => (
         <a
           href={hrefFor(to, theme)}
-          aria-current={path.startsWith(hrefFor(to, theme)) ? 'page' : undefined}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
           data-astro-reload={to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}

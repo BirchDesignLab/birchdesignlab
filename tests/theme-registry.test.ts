@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { ALL_THEMES, THEMES, getTheme } from '../src/themes/registry';
-import { PAGE_IDS, SCHOOL_ID, pagePath, pageFromPath, rootPathFor, hrefFor, schoolStaticPaths } from '../src/themes/paths';
+import { PAGE_IDS, SCHOOL_ID, pagePath, pageFromPath, rootPathFor, hrefFor, isCurrent, schoolStaticPaths } from '../src/themes/paths';
 
 const THEMES_DIR = new URL('../src/themes/', import.meta.url);
 const schoolDirs = readdirSync(THEMES_DIR).filter(
@@ -86,6 +86,15 @@ describe('paths', () => {
     for (const p of ['/', '/about/', '/t/', '/t/x/nope/', '/t/X/', '/t/../etc/', '/lab/bdl-001/']) {
       expect(pageFromPath(p), p).toBeNull();
     }
+  });
+
+  it('marks a nav link current only on its own page', () => {
+    expect(isCurrent('contact', '/t/swiss/contact/')).toBe(true);
+    expect(isCurrent('contact', '/t/swiss/contact/sent/')).toBe(false);
+    expect(isCurrent('home', '/t/swiss/')).toBe(true);
+    expect(isCurrent('home', '/t/swiss/about/')).toBe(false);
+    expect(isCurrent('lab', '/t/swiss/')).toBe(false);
+    expect(isCurrent('about', '/about/')).toBe(false);
   });
 
   it('maps a school page to its canonical root page', () => {

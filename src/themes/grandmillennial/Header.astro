@@ -2,13 +2,12 @@
 /** Grandmillennial header: a striped awning with a scalloped, gilt-piped
     edge, and under it a symmetrical masthead, the wordmark centred like a
     monogram with the nav split two and two either side (stacked on phones). */
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 import Defs from './parts/Defs.astro';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
-const path = Astro.url.pathname;
 ---
 <header class="site-header">
   <a class="skip" href="#main">{chrome.skip}</a>
@@ -23,7 +22,7 @@ const path = Astro.url.pathname;
       {chrome.nav.map(({ to, label }) => (
         <a
           href={hrefFor(to, theme)}
-          aria-current={path.startsWith(hrefFor(to, theme)) ? 'page' : undefined}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
           data-astro-reload={to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}

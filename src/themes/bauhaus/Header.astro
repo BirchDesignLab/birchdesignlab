@@ -2,15 +2,11 @@
 /** Bauhaus header: the three primary shapes as a maker's mark, the name set
     lowercase (the Dessau school wrote everything small from 1925), and a nav
     whose current page is a solid red block. A heavy rule closes it. */
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
-/* Exact match on a normalised trailing slash: startsWith would also mark
-   contact "current" while on /contact/sent/, which is a different page. */
-const normalize = (p: string) => (p.endsWith('/') ? p : `${p}/`);
-const path = normalize(Astro.url.pathname);
 ---
 <header class="site-header">
   <a class="skip" href="#main">{chrome.skip}</a>
@@ -27,7 +23,7 @@ const path = normalize(Astro.url.pathname);
       {chrome.nav.map(({ to, label }) => (
         <a
           href={hrefFor(to, theme)}
-          aria-current={path === normalize(hrefFor(to, theme)) ? 'page' : undefined}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
           data-astro-reload={to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}
