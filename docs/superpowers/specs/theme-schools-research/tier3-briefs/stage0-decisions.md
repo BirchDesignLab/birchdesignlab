@@ -120,6 +120,13 @@ bow.
 
 ## Still open from before (carry forward)
 
-- Quiet's header marks Contact as current on the root `/contact/sent/`
-  page. Left alone because quiet renders the live root pages; fixing it
-  would change a production page slightly. The founder's call.
+- Quiet's header marks Contact as current on `/contact/sent/`, on the root
+  site and in `/t/quiet/` alike (one component, `src/themes/quiet/Header.astro`,
+  also rendered by `SiteHeader` on every non-portal page). Founder, 09-23-26:
+  if it is fixed in the portal it must be fixed on the root too.
+  Recommended fix, awaiting the founder's yes, for Stage 1: page links light
+  only on their own page (Contact dark on the sent page), while the Lab link
+  keeps lighting across the whole Lab section (`/lab/`, `/lab/experiments/`,
+  `/lab/studies/`), which the current prefix match does on purpose. The only
+  visible change on the live site is Contact no longer highlighted on the
+  sent page; root copy parity is unaffected.
