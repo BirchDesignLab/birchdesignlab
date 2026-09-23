@@ -253,6 +253,12 @@ Also approved: vaporwave's view-transition background follows the scheme
 (no dark band in light), and `preserveDrawingBuffer` goes if the strips hold
 without it. Then a wave A follow-up, and a stop to assess before wave B.
 
+**At the assessment before wave B (09-23-26).** Swiss's header band on a
+scrolled in-school swap carries the bare field, so the column guides vanish
+from it for the swap: accepted ("your small call on swiss is fine"). The
+guides go at pair stage 4. Wave B runs as planned once the transitions-phase
+list is settled (`tier3-stage2/assessment-before-wave-b.md`).
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
