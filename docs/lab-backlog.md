@@ -56,7 +56,7 @@ name appears nowhere else in it.)
 
 ## In flight
 
-### BDL-010 / BDL-011 · Period Rooms (theme schools) · IN FLIGHT
+### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
 Branch `feat/theme-schools-tranche-1`. Current handoff:
 `docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-tier3.md`
@@ -82,6 +82,11 @@ wordmark morph: it transforms and moves while the page changes under it.
 Purposefully built, possibly a distinct transition for each pair of schools
 ("this is a crown jewel for a while"). Scope it after A+; the research
 dossiers record each school's motion vocabulary for it.
+Founder, 09-23-26 (Stage 1): individual transitions from any school to any
+other, no literal portal or passage gesture, and transitions must never stall
+on loading; preloading and drawing destinations ahead of time, even
+everything up front, is acceptable. The measurements and the off-screen draw
+technique are in `theme-schools-research/tier3-stage1/p4-trace.md`.
 
 **Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
 original ranking live in `theme-schools-research/`.
