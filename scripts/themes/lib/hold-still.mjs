@@ -4,9 +4,13 @@
  *
  * Written 09-23-26 for Tier 3 stage 1 (portal.md P1). The switcher gets its
  * own view-transition name and no animation, so across any swap it should
- * show exactly one of two pictures: itself before the trigger (old label, old
- * place) or itself after the swap has settled (new label, new place, which on
- * phones moves because the bar is centred and its width follows the label).
+ * show exactly one of two pictures: itself before the trigger (old label) or
+ * itself after the swap has settled (new label; the bar keeps one width in
+ * every school, so it stays in place, but the judge accepts a new place).
+ * Both references come from the same film, so a bar that ends the swap
+ * wrong everywhere would match its own "after"; motion.mjs adds the checks
+ * that catch that (the settled bar against the before on an in-school swap,
+ * and the host's computed opacity, filter and transform chain).
  * Anything else on screen in its place (scaled, tilted, blurred, ghosted,
  * clipped by a wipe, or gone) is the switcher riding a school's transition.
  *
@@ -34,7 +38,14 @@ export const HOLD_STILL = {
   /** A button differs when more than this share of its pixels does. Text and
       icons are a few percent of a button, so a missing glyph fails it. */
   cell: 0.01,
-  /** Frame pixels of slack each way, for a snapshot placed a subpixel off. */
+  /** Whole frame pixels of slack each way, the same at any device scale.
+      Only whole-pixel shifts are absorbed: a snapshot drawn at a fractional
+      offset from the live bar resamples every edge, and that fails by design
+      (measured on the self-test's synthetic bar: about 8% at 0.5 CSS px at
+      1x, and 6% at 1 CSS px at 2x). The portal centres the switcher by
+      layout, not a transform, so its snapshot lands on the live bar's
+      pixels; a strip that fails this way has found a real jolt to fix at its
+      source. Never widen this (or blur the comparison) to make a strip pass. */
   shift: 1,
 };
 

@@ -40,6 +40,7 @@ import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { suppressPrompt } from './lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -120,11 +121,7 @@ async function main() {
       await context.addInitScript((s) => {
         try { localStorage.setItem('scheme', s); localStorage.setItem('theme', s); } catch {}
       }, scheme);
-      if (!showPrompt) {
-        await context.addInitScript(() => {
-          try { sessionStorage.setItem('bdl-portal-prompt', 'dismissed'); } catch {}
-        });
-      }
+      if (!showPrompt) await suppressPrompt(context);
       if (hideSwitcher) {
         await context.addInitScript(() => {
           document.addEventListener('DOMContentLoaded', () => {

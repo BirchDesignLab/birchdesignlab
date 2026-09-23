@@ -20,7 +20,7 @@
  *   BDL_GPU=1 node scripts/themes/motion.mjs --base http://127.0.0.1:8787 \
  *     --schools vaporwave,swiss [--scenarios arrive,page,fx] \
  *     [--viewports desktop,mobile] [--schemes dark] [--label motion] \
- *     [--crop switcher|header] [--show-prompt]
+ *     [--crop switcher|header] [--show-prompt] [--unname-switcher]
  * Output: scripts/themes/.out/<label>/<school>__<scenario>__<scheme>__<viewport>.png
  * plus manifest.json.
  *
@@ -42,6 +42,13 @@
  * The switcher's first-load prompt is marked dismissed before any page script
  * runs, so it never sits in a strip; --show-prompt keeps it.
  *
+ * --unname-switcher is the hold-still check's negative control: the switcher
+ * loses its view-transition name (set to none on the element, so no special
+ * build is needed) and rides the root snapshot like the rest of the page.
+ * Every school whose arrival moves the root should then FAIL hold-still;
+ * one that still passes has shown the check cannot see its motion. Film it
+ * under its own --label.
+ *
  * manifest.json merges with the one already in the --label folder: a strip
  * filmed again replaces its old entry (and that entry's problems), and every
  * other entry stays, so a run can be topped up one school at a time.
@@ -52,7 +59,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VIEWPORTS } from './capture.mjs';
-import { toPixels, judgeHoldStill } from './lib/hold-still.mjs';
+import { toPixels, judgeHoldStill, barMismatch, HOLD_STILL } from './lib/hold-still.mjs';
+import { suppressPrompt } from './lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -69,8 +77,9 @@ const viewports = list('viewports', 'desktop,mobile');
 const schemes = list('schemes', 'dark');
 const label = arg('label', 'motion');
 const showPrompt = process.argv.includes('--show-prompt');
-/* The switcher's width follows its label ("Quiet" to "Grandmillennial"), so its
-   crop is padded sideways enough to keep a longer label in frame. */
+const unnameSwitcher = process.argv.includes('--unname-switcher');
+/* The switcher keeps its longest label's width in every school, but its crop
+   is still padded sideways, so a bar that grows or shifts stays in frame. */
 const CROPS = {
   switcher: { sel: 'bdl-switcher', padX: 90, padY: 10 },
   header: { sel: 'header', padX: 0, padY: 8 },
@@ -188,16 +197,28 @@ async function sheet(frames, file, cols, cellW, box = null, vpWidth = 0) {
 
 /** The switcher bar's box and its buttons' boxes, in CSS px, from inside its
     shadow root. The buttons leave out the bar's translucent border and the
-    1px seams between them, which show the page underneath. */
+    1px seams between them, which show the page underneath. `drawn` lists
+    anything on the host or an ancestor that changes how the bar draws (a
+    school rule left on it after the swap), which the pixel check cannot see
+    when the settled frame is its own reference. */
 function measureSwitcher(page) {
   return page.evaluate(() => {
-    const bar = document.querySelector('bdl-switcher')?.shadowRoot?.querySelector('.bar');
+    const host = document.querySelector('bdl-switcher');
+    const bar = host?.shadowRoot?.querySelector('.bar');
     if (!bar) return null;
     const box = (el) => {
       const r = el.getBoundingClientRect();
       return { x: r.left, y: r.top, w: r.width, h: r.height };
     };
-    return { bar: box(bar), buttons: [...bar.children].map(box).filter((b) => b.w && b.h) };
+    const neutral = { opacity: '1', filter: 'none', transform: 'none', clipPath: 'none', mixBlendMode: 'normal', visibility: 'visible' };
+    const drawn = [];
+    for (let el = host; el; el = el.parentElement) {
+      const cs = getComputedStyle(el);
+      for (const [prop, want] of Object.entries(neutral)) {
+        if (cs[prop] !== want) drawn.push(`${el.tagName.toLowerCase()} ${prop}: ${cs[prop]}`);
+      }
+    }
+    return { bar: box(bar), buttons: [...bar.children].map(box).filter((b) => b.w && b.h), drawn };
   });
 }
 
@@ -211,7 +232,7 @@ async function decode(frame) {
 /** Did the bar show only its before or its after picture in every frame?
     The first filmed frame is the last one before the trigger (film() keeps
     it); the last is the settled page. */
-async function holdStill(frames, before, after, vpWidth) {
+async function holdStill(frames, before, after, vpWidth, sameLabel) {
   const imgs = await Promise.all(frames.map(decode));
   const k = imgs[0].width / vpWidth;
   const refs = [
@@ -219,7 +240,17 @@ async function holdStill(frames, before, after, vpWidth) {
     { img: imgs[imgs.length - 1], boxes: toPixels(after.buttons, k) },
   ];
   const verdict = judgeHoldStill(frames.map((f, i) => ({ ms: f.ms, img: imgs[i] })), refs);
-  return { ...verdict, bar: { before: before.bar, after: after.bar }, framesJudged: frames.length };
+  // An in-school swap keeps the label, so the settled bar must be the bar
+  // from before the trigger, not merely a picture every later frame matches.
+  const settled = sameLabel ? Math.round(barMismatch(refs[1].img, refs[0].img, refs[0].boxes) * 1000) / 1000 : null;
+  const settledOk = settled === null || settled <= HOLD_STILL.cell;
+  return {
+    ...verdict,
+    stable: verdict.stable && settledOk,
+    ...(settled === null ? {} : { settledVsBefore: settled }),
+    bar: { before: before.bar, after: after.bar },
+    framesJudged: frames.length,
+  };
 }
 
 /** Follow a link the way a visitor does, so the ClientRouter handles it. */
@@ -234,6 +265,14 @@ async function followLink(page, href) {
     document.body.append(a);
     a.click();
   }, href);
+}
+
+/** A manifest entry for a strip that bailed out before it was filmed, so it
+    replaces (and is replaced by) that strip's entry like any other, and its
+    problems travel with it rather than being carried forward loose. */
+function stub(id, scenario, scheme, vpName) {
+  const file = `${id}__${scenario}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}__FAILED.png`;
+  return { school: id, scenario, scheme, viewport: vpName, crop: crop || null, file, framesFilmed: 0, failed: true, noImage: true, problems: strip.problems };
 }
 
 for (const scheme of schemes) {
@@ -251,9 +290,13 @@ for (const scheme of schemes) {
     await context.addInitScript((s) => {
       try { localStorage.setItem('scheme', s); } catch {}
     }, scheme);
-    if (!showPrompt) {
+    if (!showPrompt) await suppressPrompt(context);
+    if (unnameSwitcher) {
       await context.addInitScript(() => {
-        try { sessionStorage.setItem('bdl-portal-prompt', 'dismissed'); } catch {}
+        document.addEventListener('DOMContentLoaded', () => {
+          const sw = document.querySelector('bdl-switcher');
+          if (sw) sw.style.viewTransitionName = 'none';
+        });
       });
     }
     await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
@@ -286,6 +329,7 @@ for (const scheme of schemes) {
           );
           if (!box) {
             problem(`${id} ${scenario} ${vpName}: no ${CROPS[crop].sel} to crop to`);
+            made.push(stub(id, scenario, scheme, vpName));
             continue;
           }
         }
@@ -307,8 +351,14 @@ for (const scheme of schemes) {
         }
         if (frames.length < 2) {
           problem(`${id} ${scenario} ${vpName}: only ${frames.length} frame(s), nothing moved`);
-          if (!frames.length) continue;
+          if (!frames.length) {
+            made.push(stub(id, scenario, scheme, vpName));
+            continue;
+          }
         }
+        // Without a frame from before the trigger, the first frame (a later
+        // one) stands in as the "before" picture and hides any change.
+        if (frames[0].ms >= 0) problem(`${id} ${scenario} ${scheme} ${vpName}: no frame from before the trigger`);
         const file = `${id}__${scenario}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}${failed ? '__FAILED' : ''}.png`;
         const mobile = !!vp.mobile;
         const picked = pick(frames, plan.frames, plan.ms);
@@ -319,9 +369,18 @@ for (const scheme of schemes) {
           if (!still0?.buttons.length || !still1?.buttons.length) {
             problem(`${id} ${scenario} ${scheme} ${vpName}: could not measure the switcher's buttons`);
           } else {
-            still = await holdStill(frames, still0, still1, vp.width);
+            still = await holdStill(frames, still0, still1, vp.width, scenario === 'page');
             const pct = (still.worst.score * 100).toFixed(1);
-            if (!still.stable) problem(`${id} ${scenario} ${scheme} ${vpName}: switcher moved, worst at +${still.worst.ms} ms (${pct}% of a button off)`);
+            if (still.settledVsBefore > HOLD_STILL.cell) {
+              problem(`${id} ${scenario} ${scheme} ${vpName}: switcher settled unlike its before picture (${(still.settledVsBefore * 100).toFixed(1)}% of a button off)`);
+            }
+            if (!still.stable && still.worst.score > HOLD_STILL.cell) {
+              problem(`${id} ${scenario} ${scheme} ${vpName}: switcher moved, worst at +${still.worst.ms} ms (${pct}% of a button off)`);
+            }
+            if (still1.drawn.length) {
+              still = { ...still, stable: false, drawn: still1.drawn };
+              problem(`${id} ${scenario} ${scheme} ${vpName}: switcher settled with ${still1.drawn.join(', ')}`);
+            }
           }
         }
         made.push({

@@ -18,7 +18,17 @@
  * (scroll position carried proportionally), Shuffle (history replaced, not
  * pushed), Back and Forward, and 24 rapid school changes, after which live
  * WebGL contexts must not exceed the canvases on the page.
- * Throughout: zero page errors, zero console errors, zero failed requests.
+ * The portal runtime, on every swap it records (added 09-23-26 for Tier 3
+ * stage 1): data-to-theme names the destination when the view transition
+ * starts, data-from-theme names the school left when it is ready and is gone
+ * once it has finished, and at rest nothing but the wordmark and the
+ * switcher carries a view-transition name. The switcher: its busy state is
+ * gone after the new page loads, a school picked from the dialog after its
+ * warm-up comes from memory (no second fetch of its HTML), and the dialog
+ * closes when Back navigates away under it.
+ * Throughout: zero page errors, zero console errors, zero failed requests
+ * (a cancelled prefetch, or a warm-up cancelled by a hard load, is listed
+ * but not failed: see the requestfailed handler).
  *
  * Usage (serve a build, e.g. the "preview" launch config on :4400):
  *   BDL_GPU=1 node scripts/themes/smoke.mjs --base http://localhost:4400 [--schools quiet,swiss] [--headed]
@@ -60,6 +70,38 @@ await context.addInitScript(() => {
   };
   // Mark each completed router swap so the script can wait for it.
   document.addEventListener('astro:page-load', () => { window.__loads = (window.__loads || 0) + 1; });
+  // Record the naming attributes around every view transition: when it
+  // starts (the old page is captured), when it is ready (the pseudo-elements
+  // exist) and when it has finished, plus what is named once at rest.
+  const start = Document.prototype.startViewTransition;
+  if (start) {
+    Document.prototype.startViewTransition = function (...args) {
+      const html = document.documentElement;
+      const rec = { to: html.dataset.toTheme ?? null };
+      (window.__vts ||= []).push(rec);
+      const vt = start.apply(this, args);
+      const named = () =>
+        [...document.querySelectorAll('body *')]
+          .filter((el) => el.tagName !== 'BDL-SWITCHER' && !el.hasAttribute('data-astro-transition-scope'))
+          .map((el) => getComputedStyle(el).viewTransitionName)
+          .filter((n) => n && n !== 'none');
+      vt.ready.then(() => {
+        rec.readyTheme = html.dataset.theme ?? null;
+        rec.readyFrom = html.dataset.fromTheme ?? null;
+        rec.namedWhenReady = named();
+      }, () => {});
+      // A task later, so the runtime's own `finished` handler (registered
+      // after this one) has had its turn.
+      const settled = new Promise((resolve) => vt.finished.then(() => setTimeout(resolve, 0), () => resolve()));
+      settled.then(() => {
+        rec.finishedFrom = html.dataset.fromTheme ?? null;
+        rec.finishedTo = html.dataset.toTheme ?? null;
+        rec.namedAtRest = named();
+        rec.done = true;
+      });
+      return vt;
+    };
+  }
   try { localStorage.clear(); } catch {}
 });
 
@@ -69,9 +111,30 @@ page.on('pageerror', (e) => problems.push(`pageerror ${page.url()}: ${e.message}
 page.on('console', (m) => {
   if (m.type() === 'error' && !m.text().includes('net::ERR_FAILED')) problems.push(`console ${page.url()}: ${m.text()}`);
 });
-page.on('requestfailed', (r) => {
+/* Two kinds of cancelled load are not failures, and only these two are let
+   through, each counted and printed so they stay visible:
+   - a speculative load (Sec-Purpose: prefetch) cancelled mid-flight. Astro's
+     hover prefetch can fire just after a click, for the page being opened,
+     and the swap drops its <link rel=prefetch> from the head;
+   - one of the portal's warm-ups (a fetch() for a /t/ page or an /_astro/
+     file) cancelled because this script hard-loaded another page. A page
+     being torn down cancels its fetches whatever the runtime does.
+   Anything else aborted (a router fetch, a stylesheet, a warm-up cancelled
+   while the page lives on) is still a failure. */
+let unloading = false;
+const letThrough = [];
+page.on('requestfailed', async (r) => {
   if (r.url().includes('/cdn-cgi/zaraz/')) return;
-  problems.push(`requestfailed ${page.url()}: ${r.url()} ${r.failure()?.errorText}`);
+  const text = r.failure()?.errorText ?? '';
+  const where = page.url();
+  if (text === 'net::ERR_ABORTED') {
+    const purpose = (await r.allHeaders().catch(() => ({})))['sec-purpose'] ?? '';
+    if (/prefetch/.test(purpose)) return void letThrough.push(`aborted prefetch ${r.url()}`);
+    const path = new URL(r.url()).pathname;
+    const warmUp = r.resourceType() === 'fetch' && r.method() === 'GET' && /^\/(t|_astro)\//.test(path);
+    if (warmUp && unloading) return void letThrough.push(`warm-up cancelled by a hard load ${r.url()}`);
+  }
+  problems.push(`requestfailed ${where}: ${r.method()} ${r.resourceType()} ${r.url()} ${text}`);
 });
 
 let failures = 0;
@@ -110,8 +173,36 @@ async function waitForSwap(prevLoads) {
   await page.waitForTimeout(250);
 }
 
+/** The last view transition's record, once it has finished. */
+async function lastTransition() {
+  await page.waitForFunction(() => window.__vts?.at(-1)?.done, null, { timeout: 5000 }).catch(() => {});
+  return page.evaluate(() => window.__vts?.at(-1) ?? null);
+}
+
+/** The naming contract around the swap just made, from `fromId` to `toId`. */
+async function checkNaming(label, fromId, toId) {
+  const t = await lastTransition();
+  check(
+    !!t && t.to === toId && t.readyTheme === toId && t.readyFrom === fromId,
+    `${label}: data-to-theme at capture, data-from-theme when ready`,
+    JSON.stringify(t && { to: t.to, readyTheme: t.readyTheme, readyFrom: t.readyFrom }),
+  );
+  check(!!t && t.finishedFrom === null && t.finishedTo === null, `${label}: both attributes gone once the transition finished`, JSON.stringify(t && { from: t.finishedFrom, to: t.finishedTo }));
+  check(!!t && t.namedAtRest?.length === 0, `${label}: nothing but the wordmark and the switcher named at rest`, JSON.stringify(t?.namedAtRest));
+  // A school's own <id>-* chrome is named only on an in-school swap.
+  const chrome = t?.namedWhenReady ?? [];
+  const ok = fromId === toId ? chrome.every((n) => n.startsWith(`${toId}-`)) : chrome.length === 0;
+  check(ok, `${label}: school chrome named only in-school`, JSON.stringify(chrome));
+  // Vaporwave's taskbar is the one piece of named chrome today (README).
+  if (fromId === toId && toId === 'vaporwave') check(chrome.includes('vaporwave-taskbar'), `${label}: the taskbar is named for the swap`, JSON.stringify(chrome));
+}
+
+const busyControls = () =>
+  page.evaluate(() => [...document.querySelector('bdl-switcher').shadowRoot.querySelectorAll('[aria-busy]')].map((el) => el.className));
+
 async function hardLoad(path) {
-  await page.goto(base + path, { waitUntil: 'networkidle' });
+  unloading = true;
+  await page.goto(base + path, { waitUntil: 'networkidle' }).finally(() => { unloading = false; });
   await page.evaluate(() => { window.__hard = Math.random(); });
   await page.waitForTimeout(300);
 }
@@ -154,6 +245,7 @@ for (const id of targets) {
     );
     check(s.switcherId === switcher, `${id}: switcher persisted to ${name}`);
     check(s.focusMain, `${id}: focus moved into main on ${name}`);
+    if (name === 'about') await checkNaming(`${id}: in-school swap`, id, id);
   }
 
   // Four swaps through pages with and without WebGL fields: every context a
@@ -190,6 +282,8 @@ if (schools.length > 1) {
   s = await state();
   check(s.theme === b && s.path === `/t/${b}/services/` && s.hardLoadMarker === marker, `switch ${a} -> ${b} keeps the page, client-side`, s.path);
   check(Math.abs(s.scrollRatio - 0.5) < 0.12, 'scroll position carried proportionally', s.scrollRatio.toFixed(2));
+  await checkNaming(`switch ${a} -> ${b}`, a, b);
+  check((await busyControls()).length === 0, 'the busy state is gone once the new page has loaded', JSON.stringify(await busyControls()));
   check(s.switcherLabel === (await page.evaluate((id) => JSON.parse(document.getElementById('bdl-schools').textContent).schools.find((x) => x.id === id).name, b)), 'switcher names the new school');
 
   const hist = s.histLen;
@@ -208,6 +302,34 @@ if (schools.length > 1) {
   await page.waitForTimeout(900);
   s = await state();
   check(s.theme === shuffled && s.js && !!s.scheme, 'Forward returns to the shuffled school', s.theme);
+
+  // A pick from the dialog after its warm-up comes from memory: the page's
+  // HTML is fetched once, by the warm-up, and not again by the router.
+  await hardLoad(`/t/${a}/about/`);
+  const target = `/t/${b}/about/`;
+  const fetched = [];
+  const onRequest = (r) => { if (new URL(r.url()).pathname === target) fetched.push(r.resourceType()); };
+  page.on('request', onRequest);
+  const warmed = page.waitForResponse((r) => new URL(r.url()).pathname === target, { timeout: 10000 }).catch(() => null);
+  await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());
+  check(!!(await warmed), `opening the dialog warms ${target}`);
+  await page.waitForTimeout(1500); // its files too
+  s = await state();
+  await page.evaluate((id) => document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`).click(), b);
+  await waitForSwap(s.loads);
+  page.off('request', onRequest);
+  s = await state();
+  check(s.path === target && fetched.length === 1, 'a warmed pick is not fetched again', `${s.path}, fetched ${fetched.length}x`);
+
+  // Back with the dialog open closes it: the visitor did not pick the page
+  // Back goes to from the dialog.
+  await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());
+  s = await state();
+  await page.goBack();
+  await page.waitForFunction((n) => (window.__loads || 0) > n, s.loads, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  const dialogOpen = await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('dialog').open);
+  check(!dialogOpen && (await state()).path === `/t/${a}/about/`, 'Back with the dialog open closes it', `open ${dialogOpen}`);
 
   // Churn: rapid school changes on the home page (where the backgrounds live),
   // then count live WebGL contexts.
@@ -255,6 +377,10 @@ const leaveHref = await page.evaluate(() => document.querySelector('bdl-switcher
 check(leaveHref === '/about/', 'Leave points at the same page on the root site', leaveHref);
 
 await browser.close();
+if (letThrough.length) {
+  console.log(`${letThrough.length} cancelled loads let through (not failures):`);
+  for (const p of letThrough) console.log(`  ${p}`);
+}
 if (problems.length) {
   failures += problems.length;
   console.log(`${problems.length} runtime problems:`);

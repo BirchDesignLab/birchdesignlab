@@ -35,6 +35,13 @@
  *   pf-memory pf-full, plus the router's HTML fetch answered from memory (a
  *             portal-side HTML cache; the site's HTML always revalidates);
  *   pf-best   pf-render plus pf-memory's HTML from memory;
+ *   switcher-warm  the portal's own warm-up (P4, runtime.ts), as shipped:
+ *             the switcher's dialog is opened on the start page, which warms
+ *             every other school's same page (HTML kept in memory, its
+ *             stylesheets, their Latin fonts, font preloads and module
+ *             scripts fetched into the HTTP cache); once the warm-up has gone
+ *             quiet the dialog is closed and the link followed. The router
+ *             then fetches nothing, so the fetch phase is empty;
  *   warm      a second arrival in the cold run's context (everything cached,
  *             stylesheets already parsed once): the floor a prefetch can reach.
  * The default set is cold, pf-brief, pf-full and warm; name the others in
@@ -55,8 +62,8 @@
  *   BDL_GPU=1 node scripts/themes/trace-arrival.mjs --base http://127.0.0.1:8787 \
  *     [--schools swiss,vaporwave] [--returns swiss,vaporwave] [--runs 7] \
  *     [--viewport desktop|mobile] [--scheme dark] \
- *     [--conditions cold,pf-brief,pf-full,pf-decode,pf-render,pf-memory,pf-best,warm] \
- *     [--no-film] [--latency 40] [--prewarm-kana] [--reanalyse] \
+ *     [--conditions cold,pf-brief,pf-full,pf-decode,pf-render,pf-memory,pf-best,switcher-warm,warm] \
+ *     [--no-film] [--latency 40] [--prewarm-kana] [--reanalyse] [--show-prompt] \
  *     [--trace swiss,vaporwave] [--tag desktop] [--label trace-stage1]
  * Output: scripts/themes/.out/<label>/<tag>.runs.json (every run),
  * <tag>.summary.json and <tag>.summary.md (medians and spread), and
@@ -68,6 +75,7 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VIEWPORTS } from './capture.mjs';
+import { suppressPrompt } from './lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NL = String.fromCharCode(10);
@@ -97,12 +105,17 @@ const latency = Number(arg('latency', '0'));
    renderer has already loaded and shaped them. Isolates how much of
    vaporwave's first render is the system CJK font. */
 const prewarmKana = process.argv.includes('--prewarm-kana');
+/* The switcher's first-load prompt is marked dismissed before any page
+   script runs: in a fresh (cold) context it would show, and its vanishing
+   at the click would count as the arrival's first visible change (and its
+   beacon as idle motion). --show-prompt keeps it. */
+const showPrompt = process.argv.includes('--show-prompt');
 const label = arg('label', 'trace-stage1');
 const tag = arg('tag', vpName);
 const vp = VIEWPORTS[vpName];
 if (!vp) throw new Error(`unknown viewport ${vpName}`);
 for (const c of conditions) {
-  if (!['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'warm'].includes(c)) throw new Error(`unknown condition ${c}`);
+  if (!['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'switcher-warm', 'warm'].includes(c)) throw new Error(`unknown condition ${c}`);
 }
 
 /* After the trigger, how long to keep filming. Every arrival so far has
@@ -311,6 +324,30 @@ async function serveFromMemory(page, to) {
   }, to);
 }
 
+/** switcher-warm: open the switcher's dialog, as a visitor does, and let the
+    portal warm every other school's same page. Waits until the destination
+    has been fetched and the network has been quiet for 800 ms (the warm-up
+    runs one page at a time, so a quiet spell means it is done), then closes
+    the dialog and lets the page settle, so neither the backdrop leaving nor a
+    warm-up still running lands in the measurement. */
+async function switcherWarm(page, to) {
+  await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());
+  await page.waitForFunction(
+    (to) => performance.getEntriesByType('resource').some((e) => new URL(e.name).pathname === to),
+    to,
+    { timeout: 15000 },
+  ).catch(() => problems.push(`switcher-warm: ${to} was never warmed`));
+  let count = -1;
+  for (let quiet = 0, waited = 0; quiet < 800 && waited < 20000; waited += 200) {
+    const now = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => e.responseEnd > 0).length);
+    quiet = now === count ? quiet + 200 : 0;
+    count = now;
+    await page.waitForTimeout(200);
+  }
+  await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('dialog').close());
+  await page.waitForTimeout(400);
+}
+
 /** Share of pixels that differ visibly between two decoded frames. */
 function diffShare(a, b) {
   let moved = 0;
@@ -371,6 +408,7 @@ async function newContext() {
     try { localStorage.setItem('scheme', s); } catch {}
   }, scheme);
   await context.addInitScript(instrument);
+  if (!showPrompt) await suppressPrompt(context);
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send('Network.enable');
@@ -682,6 +720,7 @@ for (const trip of trips) {
       if (trip.dir === 'return') await settle(page, '/t/quiet/');
       await settle(page, trip.from);
       if (condition === 'pf-render' || condition === 'pf-best') await renderOffscreen(page, trip.to);
+      else if (condition === 'switcher-warm') await switcherWarm(page, trip.to);
       else if (condition !== 'cold') await prefetch(page, trip.to, assets, condition !== 'pf-brief');
       if (condition === 'pf-decode') await decodeFonts(page, assets);
       if (condition === 'pf-memory' || condition === 'pf-best') await serveFromMemory(page, trip.to);
@@ -737,7 +776,7 @@ await browser.close();
 
 const summary = [];
 for (const trip of trips) {
-  for (const condition of ['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'warm']) {
+  for (const condition of ['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'switcher-warm', 'warm']) {
     const rs = results.filter((r) => r.id === trip.id && r.dir === trip.dir && r.condition === condition);
     if (!rs.length) continue;
     const ph = rs.map(phases);
