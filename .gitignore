@@ -26,6 +26,9 @@ assets/brand/logos/3d/*.mtl
 # social/calendar.html + the site itself. Never source.
 social/out/
 
+# Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
+scripts/themes/.out/
+
 # Doc-gen outputs (scripts/docs/): delivered PDFs and the page-check
 # screenshots, both regenerable from the .html/.css source with
 # check-pages.mjs / build-pdf.mjs. Never source.
