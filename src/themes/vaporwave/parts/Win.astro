@@ -1,0 +1,27 @@
+---
+/** A retro OS window. The title bar, its buttons, and the optional menu or
+    address bar are decoration (aria-hidden): the section's real heading lives
+    in the body, so the words match every other school. */
+interface Props {
+  title: string;
+  tag?: 'div' | 'article' | 'section';
+  menu?: string[];
+  address?: string;
+  class?: string;
+}
+const { title, tag: Tag = 'div', menu, address, class: className } = Astro.props;
+---
+<Tag class:list={['vw-win', className]}>
+  <div class="vw-win-bar" aria-hidden="true">
+    <span class="vw-win-title">{title}</span>
+    <span class="vw-win-btns"><span></span><span></span><span></span></span>
+  </div>
+  {menu && <div class="vw-win-menu" aria-hidden="true">{menu.map((item) => <span>{item}</span>)}</div>}
+  {address && (
+    <div class="vw-win-address" aria-hidden="true">
+      <span class="vw-win-address-label">Go</span>
+      <span class="vw-win-address-field">{address}</span>
+    </div>
+  )}
+  <div class="vw-win-body"><slot /></div>
+</Tag>

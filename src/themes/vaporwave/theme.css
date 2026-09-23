@@ -1,29 +1,184 @@
 /* Vaporwave: tokens for both schemes, globals, arrival choreography.
    Imported by src/pages/t/vaporwave/[...page].astro only. Every rule is scoped
-   under [data-theme='vaporwave']. See src/themes/README.md. */
+   under [data-theme='vaporwave']. See src/themes/README.md.
+
+   Dark is native: a night sky over a neon grid. Light is "pastel dawn": the
+   same room at sunrise, peach to lavender, with deep purple ink; the neon
+   survives only as fills and shapes, never as small text on pastel. */
 
 :root[data-theme='vaporwave'] {
-  color-scheme: light;
-  --field: #ffffff;
-  --field-raised: #f2f2f2;
-  --mark: #111111;
-  --mark-muted: #555555;
-  --accent: #1a4fd6;
-  --link: #1a4fd6;
-  --on-accent: #ffffff;
-  --font-body: system-ui, sans-serif;
-  --font-display: system-ui, sans-serif;
+  color-scheme: dark;
+
+  --neon-pink: #ff71ce;
+  --neon-cyan: #01cdfe;
+  --neon-mint: #05ffa1;
+  --neon-lav: #b967ff;
+  --sun-yellow: #fffb96;
+
+  --field: #100329;
+  --field-top: #0b0120;
+  --field-foot: #1a0840;
+  --field-raised: #1d0b47;
+  --field-sunk: #0a0220;
+  --mark: #f7efff;
+  --mark-muted: #cbbbea;
+  --accent: var(--neon-pink);
+  --link: var(--neon-cyan);
+  --on-accent: #1a0536;
+  --rule: #3e2383;
+
+  /* Bevels: the light edge top-left, the dark edge bottom-right. */
+  --bevel-hi: #8a68d6;
+  --bevel-lo: #04010c;
+  /* A sunken field's far (bottom/right) bevel edge. Distinct from --bevel-hi
+     because in the light scheme that token is near-white, the same as a
+     sunken field's own fill, and would vanish. */
+  --field-bevel-hi: var(--bevel-hi);
+  --win-drop: rgba(1, 205, 254, 0.2);
+  --btn-hi: #ffc6ec;
+  --btn-lo: #9d2a79;
+  --btn-drop: var(--neon-cyan);
+
+  /* Window title bars: a neon fill with dark ink, the same in both schemes. */
+  --bar-a: #ff71ce;
+  --bar-b: #d9adff;
+  --bar-c: #01cdfe;
+  --bar-ink: #1a0536;
+
+  --task: #1d0b47;
+  --task-pressed: #07011a;
+  --task-ink: #f7efff;
+  --task-current: #ff71ce;
+
+  /* The horizon. fx.ts reads these as hex, so keep them #rrggbb. */
+  --hz-sky-top: #080119;
+  --hz-sky-mid: #2c0b58;
+  --hz-horizon: #ff4fa8;
+  --hz-ground: #0a0120;
+  --hz-grid: #01cdfe;
+  --hz-sun-a: #fffb96;
+  --hz-sun-b: #ff71ce;
+  --hz-sun-c: #8f2bff;
+  --hz-mount: #1d0848;
+  --hz-rim: #ff71ce;
+  --hz-stars: 1;
+  --hz-glow: 0.5;
+  /* How far from the near edge the floor fades in (dy) and how far the
+     ground colour hazes toward the horizon: the dark grid needs no help. */
+  --hz-fade: 0.1;
+  --hz-haze: 0.08;
+  --hz-grid-glow: 0.35;
+  --vignette: rgba(4, 1, 12, 0.45);
+  --scan-alpha: 0.8;
+  --palm: #06011a;
+  --palm-ring: #2c0b58;
+  --chk-a: #1d0b47;
+  --chk-b: #ff71ce;
+
+  --bb-plain: #f7efff;
+  --bb-chrome: linear-gradient(180deg, #f4fbff 0%, #a6ecff 34%, #ffffff 48%, #36106c 50%, #7a1d9c 60%, #ff71ce 78%, #ffe0f4 100%);
+  --bb-depth: #05010f;
+
+  /* The CRT stays a dark screen in both schemes. */
+  --crt-bg: #07011a;
+  --crt-ink: #efe6ff;
+  --crt-phos: #05ffa1;
+  --crt-kick: #ff71ce;
+  --crt-link: #01cdfe;
+  --crt-case-a: #2c1566;
+  --crt-case-b: #13062f;
+
+  --marble: #efe9f5;
+  --marble-vein: #a595c2;
+  --inscription: #2a0a4a;
+  /* The plinth's corner light, also read by Marble.astro's gradient stops:
+     kept as tokens so the contrast checker can measure the real corners, not
+     just the bare stone underneath them. */
+  --marble-tint-pink: rgba(255, 113, 206, 0.35);
+  --marble-tint-cyan: rgba(1, 205, 254, 0.3);
+
+  /* A faint, fixed star speckle behind every page, so the world lives in the
+     flat middle stretch between the hero and the closer, not only at the
+     top and bottom of the page. */
+  --field-atmo:
+    radial-gradient(1.4px 1.4px at 18% 22%, rgba(247, 239, 255, 0.4), transparent 60%),
+    radial-gradient(1.4px 1.4px at 72% 64%, rgba(247, 239, 255, 0.3), transparent 60%),
+    radial-gradient(1px 1px at 46% 84%, rgba(247, 239, 255, 0.35), transparent 60%),
+    radial-gradient(1px 1px at 85% 12%, rgba(247, 239, 255, 0.25), transparent 60%);
+
+  --font-display: 'Libre Caslon Display', 'Libre Caslon Display fallback', Georgia, serif;
+  --font-body: 'Exo 2 Variable', 'Exo 2 Variable fallback', system-ui, sans-serif;
+  --font-chunk: 'Dela Gothic One', 'Dela Gothic One fallback', 'Arial Black', sans-serif;
+  --font-mono: 'VT323', 'VT323 fallback', 'Courier New', monospace;
+
+  --wrap: 1180px;
+  --gutter: clamp(16px, 4vw, 40px);
 }
 
-:root[data-theme='vaporwave'][data-scheme='dark'] {
-  color-scheme: dark;
-  --field: #111111;
-  --field-raised: #1d1d1d;
-  --mark: #f2f2f2;
-  --mark-muted: #b5b5b5;
-  --accent: #8fb0ff;
-  --link: #8fb0ff;
-  --on-accent: #111111;
+:root[data-theme='vaporwave'][data-scheme='light'] {
+  color-scheme: light;
+
+  --field: #fde6ef;
+  --field-top: #ffe4d6;
+  --field-foot: #ebe0ff;
+  --field-raised: #fff7fb;
+  --field-sunk: #ffffff;
+  --mark: #2a0a4a;
+  --mark-muted: #5a3b7e;
+  --accent: #a50f6c;
+  --link: #00657d;
+  --on-accent: #ffffff;
+  --rule: #e4bedf;
+
+  --bevel-hi: #ffffff;
+  --bevel-lo: #b597d8;
+  --field-bevel-hi: #d9c6f2;
+  --win-drop: rgba(143, 43, 255, 0.16);
+  --btn-hi: #e862b4;
+  --btn-lo: #5a0039;
+  --btn-drop: #01cdfe;
+
+  --task: #f3e2ff;
+  --task-pressed: #ffffff;
+  --task-ink: #2a0a4a;
+  --task-current: #a50f6c;
+
+  --hz-sky-top: #cdb6ff;
+  --hz-sky-mid: #ffc8dc;
+  --hz-horizon: #ffd9c2;
+  --hz-ground: #e9d2ff;
+  --hz-grid: #c01f86;
+  --hz-sun-a: #fff6a6;
+  --hz-sun-b: #ff8fc8;
+  --hz-sun-c: #b27dff;
+  --hz-mount: #b9a0ea;
+  --hz-rim: #ffffff;
+  --hz-stars: 0;
+  --hz-glow: 0.12;
+  /* A shorter fade and haze run than dark, so the dawn floor's grid picks up
+     sooner instead of reading as a hazy dead band near the horizon. */
+  --hz-fade: 0.035;
+  --hz-haze: 0.03;
+  --hz-grid-glow: 0.55;
+  --vignette: rgba(75, 34, 114, 0.12);
+  --scan-alpha: 0.2;
+  --palm: #4b2272;
+  --palm-ring: #7a4fae;
+  --chk-a: #ffffff;
+  --chk-b: #ffa6d8;
+
+  --bb-plain: #2a0a4a;
+  --bb-chrome: linear-gradient(180deg, #5b1d9a 0%, #2a0a4a 46%, #ffffff 48%, #a50f6c 52%, #5b1d9a 100%);
+  --bb-depth: #ffffff;
+
+  --crt-case-a: #dccbfb;
+  --crt-case-b: #b8a0ea;
+
+  /* Pastel dawn's atmosphere: soft cloud blobs instead of stars. */
+  --field-atmo:
+    radial-gradient(120px 60px at 20% 24%, rgba(255, 255, 255, 0.5), transparent 70%),
+    radial-gradient(160px 70px at 75% 60%, rgba(255, 255, 255, 0.4), transparent 70%),
+    radial-gradient(100px 50px at 45% 85%, rgba(255, 255, 255, 0.35), transparent 70%);
 }
 
 :where([data-theme='vaporwave']) *,
@@ -31,17 +186,250 @@
 :where([data-theme='vaporwave']) *::after { box-sizing: border-box; }
 
 [data-theme='vaporwave'] body {
+  position: relative;
   margin: 0;
-  background: var(--field);
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--field-top) 0, var(--field) 40rem, var(--field) 60%, var(--field-foot) 100%) var(--field);
   color: var(--mark);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
-[data-theme='vaporwave'] a { color: var(--link); }
-[data-theme='vaporwave'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* The atmosphere layer: fixed so it reads as the room, not the page,
+   and behind everything, so it never competes with content or contrast. */
+[data-theme='vaporwave'] body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: var(--field-atmo);
+  background-repeat: repeat;
+  background-size: 340px 340px;
+}
+/* Element defaults at zero specificity, so every component's scoped rules win. */
+:where([data-theme='vaporwave'] :is(h1, h2, h3, p, ul, ol, figure)) { margin: 0; }
+:where([data-theme='vaporwave'] :is(h1, h2, h3)) { font-weight: 400; }
+:where([data-theme='vaporwave'] a) { color: var(--link); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+:where([data-theme='vaporwave'] a:hover) { text-decoration-thickness: 2px; }
+[data-theme='vaporwave'] ::selection { background: var(--neon-pink); color: #1a0536; }
+[data-theme='vaporwave'] :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
 [data-theme='vaporwave'] main:focus { outline: none; }
-[data-theme='vaporwave'] .skip { position: absolute; left: -100vw; top: 0; }
-[data-theme='vaporwave'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='vaporwave'] .skip {
+  position: absolute; left: -100vw; top: 0;
+  font-family: var(--font-mono); font-size: 1.3rem;
+}
+[data-theme='vaporwave'] .skip:focus {
+  left: 0; z-index: 30; background: var(--bar-a); color: var(--bar-ink); padding: 0.4rem 1rem;
+}
 [data-theme='vaporwave'] img,
 [data-theme='vaporwave'] svg,
 [data-theme='vaporwave'] canvas { max-width: 100%; display: block; }
+
+/* ---------- shared furniture ---------- */
+
+[data-theme='vaporwave'] .vw-wrap {
+  width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter));
+  margin-inline: auto; padding-inline: var(--gutter);
+}
+
+/* Kicker: a DOS prompt with a blinking block cursor. The prompt is generated
+   content with empty alt text, so screen readers hear only the copy. */
+[data-theme='vaporwave'] .vw-kicker {
+  font-family: var(--font-mono); font-size: 1.5rem; line-height: 1;
+  color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+}
+[data-theme='vaporwave'] .vw-kicker::before { content: 'C:\\>' / ''; margin-right: 0.45em; opacity: 0.75; }
+[data-theme='vaporwave'] .vw-kicker::after {
+  content: ''; display: inline-block; width: 0.5em; height: 0.9em; margin-left: 0.3em;
+  vertical-align: -0.08em; background: currentColor;
+  /* WCAG 2.2.2: blinking that starts on its own stops after a few seconds. */
+  animation: vw-blink 1.1s steps(1) 5;
+}
+
+[data-theme='vaporwave'] .vw-kana {
+  font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Meiryo', sans-serif;
+  font-weight: 700; letter-spacing: 0.35em; color: var(--accent);
+}
+
+/* Window: a retro OS window. Title bar and buttons are decoration
+   (aria-hidden); the heading lives in the body. */
+[data-theme='vaporwave'] .vw-win {
+  position: relative;
+  background: var(--field-raised);
+  border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: 12px 12px 0 var(--win-drop);
+}
+[data-theme='vaporwave'] .vw-win-bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.6rem;
+  background: linear-gradient(90deg, var(--bar-a), var(--bar-b) 55%, var(--bar-c));
+  color: var(--bar-ink);
+  font-family: var(--font-mono); font-size: 1.3rem; line-height: 1;
+}
+[data-theme='vaporwave'] .vw-win-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-theme='vaporwave'] .vw-win-title::before {
+  content: ''; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.45em; vertical-align: -0.05em;
+  border-radius: 50%; border: 1px solid var(--bar-ink);
+  background: linear-gradient(180deg, var(--sun-yellow) 0 45%, var(--neon-pink) 45% 60%, transparent 60% 66%, var(--neon-pink) 66% 78%, transparent 78% 84%, var(--neon-lav) 84%);
+}
+[data-theme='vaporwave'] .vw-win-btns { display: flex; gap: 3px; }
+[data-theme='vaporwave'] .vw-win-btns span {
+  position: relative; width: 22px; height: 20px;
+  background: #efe6ff;
+  border: 2px solid; border-color: #ffffff #3a1a66 #3a1a66 #ffffff;
+}
+[data-theme='vaporwave'] .vw-win-btns span::before { content: ''; position: absolute; background: var(--bar-ink); }
+[data-theme='vaporwave'] .vw-win-btns span:nth-child(1)::before { left: 4px; right: 5px; bottom: 3px; height: 2px; }
+[data-theme='vaporwave'] .vw-win-btns span:nth-child(2)::before { inset: 3px 4px 4px 3px; background: none; border: 1px solid var(--bar-ink); border-top-width: 3px; }
+[data-theme='vaporwave'] .vw-win-btns span:nth-child(3)::before,
+[data-theme='vaporwave'] .vw-win-btns span:nth-child(3)::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; background: var(--bar-ink);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+[data-theme='vaporwave'] .vw-win-btns span:nth-child(3)::after { transform: translate(-50%, -50%) rotate(-45deg); }
+[data-theme='vaporwave'] .vw-win-menu {
+  display: flex; gap: 1.2rem; padding: 0.25rem 0.8rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 1.15rem; color: var(--mark-muted);
+}
+[data-theme='vaporwave'] .vw-win-menu span::first-letter { text-decoration: underline; }
+[data-theme='vaporwave'] .vw-win-address {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 1.15rem; line-height: 1; color: var(--mark-muted);
+}
+[data-theme='vaporwave'] .vw-win-address-field {
+  flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  padding: 0.25rem 0.5rem; background: var(--field-sunk); color: var(--mark);
+  border: 2px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+}
+[data-theme='vaporwave'] .vw-win-body { padding: clamp(1.25rem, 3vw, 2.25rem); }
+
+/* Primary button: a chunky bevelled key with a hard neon drop. */
+[data-theme='vaporwave'] .vw-btn {
+  display: inline-flex; align-items: center; gap: 0.7em;
+  padding: 0.95em 1.6em;
+  font: 700 0.9rem/1.1 var(--font-body); letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--on-accent); background: var(--accent);
+  border: 2px solid; border-color: var(--btn-hi) var(--btn-lo) var(--btn-lo) var(--btn-hi);
+  box-shadow: 6px 6px 0 var(--btn-drop);
+  text-decoration: none; cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+[data-theme='vaporwave'] .vw-btn::after {
+  content: ''; width: 0; height: 0;
+  border-left: 0.5em solid currentColor; border-block: 0.32em solid transparent;
+}
+[data-theme='vaporwave'] .vw-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--btn-drop); }
+[data-theme='vaporwave'] .vw-btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--btn-drop); }
+[data-theme='vaporwave'] .vw-btn:focus-visible { outline-offset: 6px; }
+
+/* Secondary link: tracked caps with a play arrow. */
+[data-theme='vaporwave'] .vw-more {
+  display: inline-flex; align-items: center; gap: 0.6em;
+  font: 600 0.85rem/1.2 var(--font-body); letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--link); text-decoration: none;
+  padding-bottom: 0.3em; border-bottom: 2px solid;
+  border-image: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan)) 1;
+}
+[data-theme='vaporwave'] .vw-more::before {
+  content: ''; width: 0; height: 0;
+  border-left: 0.55em solid var(--accent); border-block: 0.35em solid transparent;
+}
+[data-theme='vaporwave'] .vw-more:hover { color: var(--mark); }
+
+/* The striped sun, in CSS, for the smaller horizons. The slits widen toward
+   the bottom, like every sunset on every cassette insert. */
+[data-theme='vaporwave'] .vw-sun {
+  aspect-ratio: 1; border-radius: 50%;
+  background: linear-gradient(180deg, var(--hz-sun-a) 6%, var(--hz-sun-b) 56%, var(--hz-sun-c) 98%);
+  -webkit-mask-image: var(--vw-slits);
+  mask-image: var(--vw-slits);
+  --vw-slits: linear-gradient(180deg, #000 0 40%, transparent 40% 42%, #000 42% 50%, transparent 50% 53%, #000 53% 60%, transparent 60% 64%, #000 64% 70%, transparent 70% 75%, #000 75% 80%, transparent 80% 86%, #000 86% 89.5%, transparent 89.5% 96%, #000 96%);
+}
+
+/* A receding neon floor. The plane is tilted in 3D, so the lines converge on
+   the horizon without any image. */
+[data-theme='vaporwave'] .vw-floor {
+  position: absolute; left: -60%; right: -60%; bottom: 0; height: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 45%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 45%);
+}
+/* The grid itself, on a child so the parent's mask never has to repaint: this
+   layer only ever moves by a composited transform. It runs a tile taller than
+   its box so the translate never uncovers an edge. */
+[data-theme='vaporwave'] .vw-floor::before {
+  content: ''; position: absolute; inset: -64px 0 0;
+  background-image:
+    linear-gradient(var(--hz-grid) 2px, transparent 2px),
+    linear-gradient(90deg, var(--hz-grid) 2px, transparent 2px);
+  background-size: 64px 64px;
+  background-position: center top;
+  transform: perspective(260px) rotateX(62deg) translateY(0);
+  transform-origin: 50% 64px;
+  animation: vw-floor 1.6s linear infinite;
+}
+
+/* CRT scanlines, for the hero and the screen. */
+[data-theme='vaporwave'] .vw-scan {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+
+@keyframes vw-blink { 50% { opacity: 0; } }
+@keyframes vw-floor { to { transform: perspective(260px) rotateX(62deg) translateY(64px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='vaporwave'] .vw-kicker::after,
+  [data-theme='vaporwave'] .vw-floor::before { animation: none; }
+  [data-theme='vaporwave'] .vw-btn { transition: none; }
+}
+
+/* ---------- arrival ----------
+
+   From another school: the set warms up like a CRT, a bright line that opens
+   into the picture. Within this school: a short VHS tracking wobble. Both
+   under 700 ms, and none at all for reduced motion. */
+
+html[data-theme='vaporwave']::view-transition { background: #07011a; }
+
+html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-old(root) {
+  animation: vw-crt-off 220ms ease-in both;
+}
+html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-new(root) {
+  animation: vw-crt-on 640ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html[data-theme='vaporwave'][data-from-theme='vaporwave']::view-transition-new(root) {
+  animation: vw-track 360ms steps(6, end) both;
+}
+html[data-theme='vaporwave'][data-from-theme='vaporwave']::view-transition-old(root) {
+  animation: vw-crt-off 180ms linear both;
+}
+html[data-theme='vaporwave']::view-transition-group(wordmark) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes vw-crt-off {
+  to { opacity: 0; transform: scale(1, 0.02); filter: brightness(3); }
+}
+@keyframes vw-crt-on {
+  0% { opacity: 1; transform: scale(0.02, 0.004); filter: brightness(5) saturate(0); }
+  30% { transform: scale(1, 0.004); filter: brightness(4) saturate(0.2); }
+  65% { transform: scale(1, 1); filter: brightness(1.5) saturate(1.3); }
+  100% { transform: none; filter: none; }
+}
+@keyframes vw-track {
+  0% { transform: translateX(-3%) skewX(-6deg); filter: hue-rotate(60deg) saturate(2); clip-path: inset(0 0 55% 0); }
+  25% { transform: translateX(2%); clip-path: inset(35% 0 0 0); }
+  50% { transform: translateX(-1%); filter: hue-rotate(-30deg); clip-path: inset(0 0 12% 0); }
+  75% { transform: translateX(0.5%); clip-path: inset(0); }
+  100% { transform: none; filter: none; clip-path: inset(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='vaporwave']::view-transition-group(*),
+  html[data-theme='vaporwave']::view-transition-old(*),
+  html[data-theme='vaporwave']::view-transition-new(*) { animation: none !important; }
+}

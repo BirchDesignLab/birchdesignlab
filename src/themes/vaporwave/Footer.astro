@@ -1,4 +1,6 @@
 ---
+/** Vaporwave's footer: the colophon standing at the edge of a checkerboard
+    floor that runs off toward the horizon. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
@@ -6,13 +8,70 @@ interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
 const year = new Date().getFullYear();
 ---
-<footer class="site-footer">
-  <p>{chrome.name}</p>
-  <p>{chrome.location}</p>
-  <nav aria-label="Footer">
-    {chrome.nav.map(({ to, label }) => (
-      <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
-    ))}
-  </nav>
-  <p>&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+<footer class="foot">
+  <div class="vw-wrap foot-grid">
+    <div class="ident">
+      <p class="foot-name">{chrome.name}</p>
+      <p class="foot-loc">{chrome.location}</p>
+    </div>
+    <nav aria-label="Footer">
+      {chrome.nav.map(({ to, label }) => (
+        <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
+      ))}
+    </nav>
+    <p class="fine">&copy; {year} {chrome.name} <span class="sep" aria-hidden="true">&#9670;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+  </div>
+  <div class="floor" aria-hidden="true"><div class="plane"></div></div>
 </footer>
+
+<style>
+  .foot {
+    position: relative; margin-top: clamp(4rem, 9vw, 7rem);
+    border-top: 3px solid; border-image: linear-gradient(90deg, var(--neon-cyan), var(--neon-lav), var(--neon-pink)) 1;
+  }
+  /* A page that already ends on a sunset (home, services, sent) needs no
+     extra run of flat field before the footer's own scene picks it up. */
+  main:has(> :last-child :is(.closer, .ask, .stage)) + .foot { margin-top: 0; }
+  .foot-grid {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem 3rem;
+    padding-block: 2.5rem 2rem; align-items: end;
+  }
+  .foot-name {
+    font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.1;
+    text-transform: uppercase; letter-spacing: 0.3em;
+  }
+  .foot-loc {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono); font-size: 1.4rem; line-height: 1; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; justify-content: flex-end; }
+  nav a {
+    color: var(--mark-muted); text-decoration: none;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  }
+  nav a:hover { color: var(--link); }
+  .fine { grid-column: 1 / -1; font-size: 0.85rem; color: var(--mark-muted); font-family: var(--font-body); }
+  .fine a { color: var(--mark-muted); }
+  .fine a:hover { color: var(--link); }
+  .sep { color: var(--accent); margin-inline: 0.3em; font-size: 0.7em; vertical-align: 0.15em; }
+
+  /* The floor: a checkerboard plane tipped back in perspective, fading into
+     the page field at its far edge. */
+  .floor { position: relative; height: 150px; overflow: hidden; perspective: 320px; }
+  .plane {
+    /* Tall enough that the tipped-back checkerboard still reaches the box's
+       bottom edge instead of running out partway and leaving a flat band. */
+    position: absolute; left: -60%; right: -60%; top: 0; height: 700px;
+    background: conic-gradient(var(--chk-a) 25%, var(--chk-b) 0 50%, var(--chk-a) 0 75%, var(--chk-b) 0) 0 0 / 72px 72px;
+    transform: rotateX(64deg); transform-origin: 50% 0;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 40%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 40%);
+  }
+
+  @media (max-width: 720px) {
+    .foot-grid { grid-template-columns: 1fr; }
+    nav { justify-content: flex-start; }
+    .foot-name { letter-spacing: 0.18em; }
+  }
+</style>

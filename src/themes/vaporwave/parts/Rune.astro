@@ -1,0 +1,30 @@
+---
+/** Beorc, the birch rune, cut into a marble tablet with a neon ghost behind
+    it. The about copy tells its story; this is its picture. Decoration only. */
+import Marble from './Marble.astro';
+
+interface Props { class?: string }
+const { class: className } = Astro.props;
+const stroke = 'M40 16V204M40 16L96 64L40 110L96 158L40 204';
+---
+<div class:list={['vw-rune', className]} aria-hidden="true">
+  <Marble id="rune-tablet" seed={19} />
+  <svg viewBox="0 0 136 220" focusable="false">
+    <path class="ghost" d={stroke} transform="translate(6 4)" />
+    <path class="cut" d={stroke} />
+  </svg>
+</div>
+
+<style>
+  .vw-rune {
+    position: relative; overflow: hidden;
+    aspect-ratio: 3 / 4;
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    box-shadow: 12px 12px 0 var(--win-drop);
+    display: grid; place-items: center;
+  }
+  svg { position: relative; width: 58%; height: auto; overflow: visible; }
+  path { fill: none; stroke-linejoin: miter; stroke-linecap: square; }
+  .ghost { stroke: var(--neon-pink); stroke-width: 12; opacity: 0.9; filter: drop-shadow(0 0 8px var(--neon-pink)); }
+  .cut { stroke: var(--inscription); stroke-width: 12; }
+</style>

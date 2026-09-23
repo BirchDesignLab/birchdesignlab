@@ -1,0 +1,23 @@
+---
+/** Procedural marble as an SVG filter: turbulence noise, whose creases
+    (where it falls to zero) become thin veins over a pale stone flood. No
+    photograph of statuary; the stone is made here. Place inside an
+    <svg><defs>. */
+interface Props { id: string; seed?: number; frequency?: string }
+const { id, seed = 7, frequency = '0.011 0.03' } = Astro.props;
+---
+<filter id={id} x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+  <feTurbulence type="turbulence" baseFrequency={frequency} numOctaves="4" seed={seed} result="noise" />
+  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="level" />
+  <feComponentTransfer in="level" result="bands">
+    <feFuncA type="table" tableValues="0.9 0.35 0.08 0 0 0 0 0 0 0 0 0" />
+  </feComponentTransfer>
+  <feFlood style="flood-color: var(--marble-vein)" result="veinInk" />
+  <feComposite in="veinInk" in2="bands" operator="in" result="veins" />
+  <feGaussianBlur in="veins" stdDeviation="0.5" result="softVeins" />
+  <feFlood style="flood-color: var(--marble)" result="stone" />
+  <feMerge>
+    <feMergeNode in="stone" />
+    <feMergeNode in="softVeins" />
+  </feMerge>
+</filter>

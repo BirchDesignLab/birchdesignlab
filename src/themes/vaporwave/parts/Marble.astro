@@ -1,0 +1,24 @@
+---
+/** A slab of procedural marble that fills its positioned parent, for text to
+    be cut into. Decoration only; the text sits above it in the page. */
+import MarbleFilter from './MarbleFilter.astro';
+
+interface Props { id: string; seed?: number }
+const { id, seed = 3 } = Astro.props;
+---
+<svg class="vw-marble" aria-hidden="true" focusable="false">
+  <defs>
+    <MarbleFilter id={`${id}-marble`} seed={seed} frequency="0.006 0.016" />
+    <linearGradient id={`${id}-light`} x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--marble-tint-pink)" />
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="1" stop-color="var(--marble-tint-cyan)" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" filter={`url(#${id}-marble)`} />
+  <rect width="100%" height="100%" fill={`url(#${id}-light)`} style="mix-blend-mode: multiply" />
+</svg>
+
+<style>
+  .vw-marble { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+</style>

@@ -1,12 +1,68 @@
 ---
+/** Vaporwave sent: a system dialog over the sunset. The message went out;
+    the only button takes you home. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Win from '../parts/Win.astro';
+import Horizon from '../parts/Horizon.astro';
 
 interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section>
-  <h1>{copy.heading}</h1>
-  <p>{copy.body}</p>
-  <a href={hrefFor('home', theme)}>{copy.back}</a>
+<section class="stage">
+  <Horizon class="stage-horizon" />
+  <p class="vw-kana kana" aria-hidden="true">メッセージ送信完了</p>
+  <Win title="transmission.sys" class="dialog">
+    <div class="dialog-row">
+      <div class="icon" aria-hidden="true"><span></span></div>
+      <div>
+        <h1>{copy.heading}</h1>
+        <p>{copy.body}</p>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="vw-btn" href={hrefFor('home', theme)}>{copy.back}</a>
+    </div>
+  </Win>
 </section>
+
+<style>
+  .stage {
+    position: relative; overflow: hidden; isolation: isolate;
+    min-height: clamp(560px, 82vh, 860px);
+    display: grid; justify-items: center; align-content: start; gap: 1.5rem;
+    padding: clamp(3rem, 9vh, 6rem) var(--gutter) 0;
+  }
+  /* The sun sets clear of the dialog rather than half behind it. */
+  .stage :global(.stage-horizon) { --hz-line: 62%; --hz-sun-w: min(28vw, 320px); --hz-sun-x: 84%; z-index: -1; }
+  .kana { position: relative; font-size: 0.85rem; letter-spacing: 0.7em; margin-right: -0.7em; color: var(--neon-pink); }
+  :global([data-scheme='light']) .kana { color: var(--accent); }
+  /* An opaque drop, so nothing of the scene behind shows through the shadow. */
+  .stage :global(.dialog) {
+    width: min(100%, 560px);
+    box-shadow: 12px 12px 0 color-mix(in srgb, var(--win-drop) 100%, var(--field) 100%);
+  }
+  .dialog-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+  /* A tiny striped sun with a tick through it: the "all good" icon. */
+  .icon {
+    position: relative; width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(180deg, var(--hz-sun-a) 0 45%, var(--hz-sun-b) 45% 58%, transparent 58% 64%, var(--hz-sun-b) 64% 76%, transparent 76% 83%, var(--hz-sun-c) 83%);
+  }
+  .icon span {
+    position: absolute; left: 20px; top: 12px; width: 18px; height: 32px;
+    border: solid var(--bar-ink); border-width: 0 6px 6px 0; transform: rotate(40deg);
+  }
+  h1 { font-family: var(--font-display); font-size: clamp(3rem, 8vw, 4.6rem); line-height: 0.95; margin-bottom: 0.9rem; }
+  p { color: var(--mark-muted); }
+  .actions { display: flex; justify-content: flex-end; margin-top: 2rem; }
+
+  @media (max-width: 760px) {
+    /* Narrow screens: the sun sets below the dialog instead of beside it. */
+    .stage { padding-bottom: 280px; }
+    .stage :global(.stage-horizon) { --hz-sun-x: 50%; --hz-sun-w: 56vw; --hz-line: calc(100% - 130px); }
+  }
+  @media (max-width: 520px) {
+    .dialog-row { grid-template-columns: 1fr; }
+    .actions { justify-content: flex-start; }
+  }
+</style>

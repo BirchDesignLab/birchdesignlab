@@ -1,0 +1,42 @@
+---
+/** A small CSS sunset: sky glow, the striped sun sinking behind the horizon,
+    and a neon floor running toward the viewer. Fills its positioned parent.
+    Decoration only. Tune with --hz-line (horizon height), --hz-sun-w and
+    --hz-sun-x on the element. */
+interface Props { class?: string }
+const { class: className } = Astro.props;
+---
+<div class:list={['vw-horizon', className]} aria-hidden="true">
+  <div class="hz-sun"><div class="vw-sun"></div></div>
+  <div class="hz-ground"><div class="vw-floor"></div></div>
+</div>
+
+<style>
+  .vw-horizon {
+    --hz-line: 62%;
+    --hz-sun-w: min(46vw, 420px);
+    --hz-sun-x: 50%;
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    /* Stops at the horizon line: the ground below is painted by .hz-ground
+       alone, so its own mask can melt it into the page instead of showing a
+       solid slab under a fade that has nothing behind it. The sky fades in
+       slowly, so the sun's glow (drawn above this layer) never crosses the
+       box's top edge and leaves a seam. */
+    background: linear-gradient(180deg, transparent 0, transparent calc(var(--hz-line) * 0.25), color-mix(in srgb, var(--hz-sky-mid) 70%, transparent) calc(var(--hz-line) * 0.55), var(--hz-horizon) var(--hz-line), transparent var(--hz-line));
+  }
+  .hz-sun {
+    position: absolute; left: var(--hz-sun-x); bottom: calc(100% - var(--hz-line) - 2px);
+    width: var(--hz-sun-w); translate: -50% 32%;
+    filter: drop-shadow(0 0 40px color-mix(in srgb, var(--hz-sun-b) 60%, transparent));
+    /* Cut at the horizon, so the set part never shows through the floor's fade. */
+    clip-path: inset(-50% -50% 32% -50%);
+  }
+  .hz-ground {
+    position: absolute; left: 0; right: 0; bottom: 0; top: var(--hz-line);
+    background: linear-gradient(180deg, var(--hz-horizon), var(--hz-ground) 30%);
+    overflow: hidden;
+    /* The near edge melts into the page field instead of stopping on a line. */
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+    mask-image: linear-gradient(180deg, #000 70%, transparent);
+  }
+</style>
