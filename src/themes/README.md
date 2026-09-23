@@ -362,9 +362,20 @@ html[data-theme='x']:not([data-from-theme='x'])::view-transition-new(wordmark) {
 - Quiet carries the same default in `src/themes/quiet/portal.css`, which only
   the `/t/quiet/` route imports, so the root pages never load it. Quiet's
   group keeps the browser's default morph (250 ms, `ease`).
-- `motion.mjs --crop wordmark` films the wordmark and judges it: an arrival
-  fails if both images are above 10% opacity at once, an in-school swap if
-  the two add up to less than 90%.
+- `motion.mjs --crop wordmark` films the wordmark and judges it. An arrival
+  fails if both images are above 10% opacity at once (`wordmarkOverlap`), or
+  if the header shows neither above 10% for more than 80 ms
+  (`wordmarkBlank`, the founder's limit on the empty header; tune your fade
+  offsets to it). An in-school swap fails if the wordmark's coverage drops
+  below 90% (`wordmarkBlink`): the two images add up under `plus-lighter`
+  (Astro's crossfade carries it) and composite under `normal` (your own
+  keyframes drop it). Visibility `hidden` counts as 0, and an image counted
+  visible while a clip-path or transform hides it is a problem
+  (`wordmarkDrawn`). The judge still cannot see filters other than
+  `opacity()`, masks, clips above the group, 3D back faces, or what the
+  snapshot's pixels hold, so read the strip too.
+  `rejudge-wordmark.mjs --label <folder>` re-judges filmed strips without
+  filming.
 
 ## Dark and light
 

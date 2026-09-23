@@ -14,8 +14,15 @@
  *   - Astro's matched crossfade on identical images must pass blink;
  *   - nothing sampled, or one image missing, must fail (never a pass);
  *   - the pair's and group's opacity multiply in (a faint group hides both).
+ * Added 09-23-26 (tooling hardening before the sweep):
+ *   - the blank: a 50 ms gap passes, a 120 ms gap fails, and nothing sampled
+ *     (or one image missing) is unsampled, never a pass;
+ *   - the blend: Astro's crossfade blinks when the new image is blended
+ *     normal, and holds under plus-lighter;
+ *   - the drawn check: a clip or a transform that hides a visible image is
+ *     named, a zero inset or a small nudge is not.
  */
-import { judgeWordmark, effective, WORDMARK } from './wordmark-judge.mjs';
+import { judgeWordmark, judgeBlank, judgeDrawn, judgeStripWordmark, isWordmarkProblem, effective, WORDMARK } from './wordmark-judge.mjs';
 
 /** CSS cubic-bezier(x1, y1, x2, y2) as a function of progress. */
 function cubicBezier(x1, y1, x2, y2) {
@@ -91,13 +98,76 @@ const cases = [
   ['no old wordmark, arrival', judgeWordmark(series(() => 0, astroIn), { kind: 'overlap', images: { old: false, new: true } }), false],
 ];
 
+// Added 09-23-26 (tooling hardening): the blank, the blend and the drawn check.
+// Linear ramps: the old image fades out over 40 ms ending at `gone`, the new
+// one fades in over 40 ms from `back`. Under 0.10 the header is blank from
+// gone - 4 to back + 4 ms, the gap plus 8.
+const ramp = (a, b, v0, v1) => (ms) => (ms <= a ? v0 : ms >= b ? v1 : v0 + ((v1 - v0) * (ms - a)) / (b - a));
+const gap = (gone, back) => series(ramp(gone - 40, gone, 1, 0), ramp(back, back + 40, 0, 1));
+const blank50 = judgeBlank(gap(100, 150));
+const blank120 = judgeBlank(gap(100, 220));
+// Astro's crossfade on identical images, blended normal (a school's own
+// in-school keyframes dropping the browser's plus-lighter): at the midpoint
+// the coverage is 0.5 + 0.5 * 0.5 = 0.75.
+const withBlend = (s, blend) => s.map((x) => ({ ...x, old: { ...x.old, blend }, new: { ...x.new, blend } }));
+const drawnOf = (patch) => judgeDrawn(series(() => 1, () => 1).map((s) => ({ ...s, new: { ...s.new, ...patch } })));
+
+cases.push(
+  ['blank, 50 ms gap', blank50, true],
+  ['blank, 120 ms gap', blank120, false],
+  ['blank, no samples', judgeBlank([]), false],
+  ['blank, no old wordmark', judgeBlank(gap(100, 150), { images: { old: false, new: true } }), false],
+  ['blank, README fades at 560 ms ease', judgeBlank(series(readmeOut, readmeIn)), false],
+  ['blank, Astro crossfade (never blank)', judgeBlank(series(astroOut, astroIn)), true],
+  ['Astro crossfade, identical images, normal blend', judgeWordmark(withBlend(series(astroOut, astroIn), 'normal'), { kind: 'blink' }), false],
+  ['Astro crossfade, identical images, plus-lighter from the sample', judgeWordmark(withBlend(series(astroOut, astroIn), 'plus-lighter'), { kind: 'blink', blend: 'normal' }), true],
+  ['no fades at all, in-school swap, normal blend', judgeWordmark(series(() => 1, () => 1), { kind: 'blink', blend: 'normal' }), true],
+  ['new hidden by visibility, in-school swap, normal', judgeWordmark(withBlend(series(astroOut, () => 1), 'normal').map((s) => ({ ...s, new: { ...s.new, vis: 'hidden' } })), { kind: 'blink' }), false],
+);
+// The drawn check: a pass is `suspects` empty.
+const drawnCases = [
+  ['drawn, nothing recorded', judgeDrawn(series(() => 1, () => 1)), { checked: false, n: 0 }],
+  ['drawn, clip none and transform none', drawnOf({ clip: 'none', transform: 'none', w: 200, h: 40 }), { checked: true, n: 0 }],
+  ['drawn, zero inset', drawnOf({ clip: 'inset(0px)', transform: 'none', w: 200, h: 40 }), { checked: true, n: 0 }],
+  ['drawn, half inset', drawnOf({ clip: 'inset(0px 50% 0px 0px)', transform: 'none', w: 200, h: 40 }), { checked: true, n: 1 }],
+  ['drawn, scale 0', drawnOf({ clip: 'none', transform: 'matrix(0, 0, 0, 0, 0, 0)', w: 200, h: 40 }), { checked: true, n: 1 }],
+  ['drawn, translated clear of its box', drawnOf({ clip: 'none', transform: 'matrix(1, 0, 0, 1, 0, -60)', w: 200, h: 40 }), { checked: true, n: 1 }],
+  ['drawn, nudged 10 px', drawnOf({ clip: 'none', transform: 'matrix(1, 0, 0, 1, 10, 0)', w: 200, h: 40 }), { checked: true, n: 0 }],
+  ['drawn, matrix3d scale 0', drawnOf({ clip: 'none', transform: 'matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)', w: 200, h: 40 }), { checked: true, n: 1 }],
+  ['drawn, clipped but invisible anyway', drawnOf({ own: 0, clip: 'inset(0px 50% 0px 0px)', transform: 'none', w: 200, h: 40 }), { checked: true, n: 0 }],
+];
+
 let bad = 0;
-console.log(`thresholds: overlap ${WORDMARK.overlap}, blink ${WORDMARK.blink}`);
+console.log(`thresholds: overlap ${WORDMARK.overlap}, blink ${WORDMARK.blink}, blank ${WORDMARK.blankMs} ms under ${WORDMARK.blankBelow}`);
+for (const [name, v, want] of drawnCases) {
+  const ok = v.checked === want.checked && v.suspects.length === want.n;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'BAD '} ${name}: ${v.checked ? `${v.suspects.length} suspect(s)${v.suspects.length ? ` (${v.suspects.map((s) => s.cause).join(', ')})` : ''}` : 'not checked'}`);
+}
 for (const [name, v, want] of cases) {
   const ok = v.pass === want;
   if (!ok) bad++;
-  const worst = v.worst ? `worst ${v.worst.score} at +${v.worst.ms} ms (old ${v.worst.old}, new ${v.worst.new})` : v.reason;
-  console.log(`${ok ? 'ok  ' : 'BAD '} ${name}: ${v.kind} ${v.pass ? 'pass' : 'FAIL'}${v.unsampled ? ' (unsampled)' : ''}, ${worst}`);
+  const worst = v.worst
+    ? `worst ${v.worst.score} at +${v.worst.ms} ms (old ${v.worst.old}, new ${v.worst.new}${v.worst.blend ? `, ${v.worst.blend}` : ''})`
+    : v.ms != null ? `${v.ms} ms${v.ms ? ` (+${v.start} to +${v.end})` : ''}` : v.reason;
+  console.log(`${ok ? 'ok  ' : 'BAD '} ${name}: ${v.kind ?? 'blank'} ${v.pass ? 'pass' : 'FAIL'}${v.unsampled ? ' (unsampled)' : ''}, ${worst}`);
+}
+// The blank is measured to the crossing, not to the grid: the gap plus 8 ms.
+for (const [v, want] of [[blank50, 58], [blank120, 128]]) {
+  if (Math.abs(v.ms - want) > 1) {
+    bad++;
+    console.log(`BAD  blank measured ${v.ms} ms, expected about ${want}`);
+  }
+}
+// A strip whose sampler saw nothing: the blank is unsampled and a problem.
+const none = judgeStripWordmark({ got: { ok: false, reason: 'no view transition started' }, boxes: { before: { count: 1 }, after: { count: 1 } }, scenario: 'arrive', where: 'x arrive' });
+if (!(none.blank?.unsampled && none.problems.some((p) => p.startsWith('x arrive: wordmarkBlank could not be measured')))) {
+  bad++;
+  console.log('BAD  an arrival with no samples did not report an unmeasured blank');
+}
+if (!none.problems.every((p) => isWordmarkProblem(p, 'x arrive'))) {
+  bad++;
+  console.log('BAD  a wordmark problem is not recognised by isWordmarkProblem');
 }
 // The crossfade's worst moment should be its midpoint, both near one half.
 const mid = judgeWordmark(series(astroOut, astroIn), { kind: 'overlap' }).worst;

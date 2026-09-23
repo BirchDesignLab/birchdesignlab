@@ -86,11 +86,22 @@
  *   wordmarkOverlap  arrive (two schools' wordmarks): fails when both images
  *                    are above 0.10 effective opacity at once;
  *   wordmarkBlink    page (one school's wordmark on both sides): fails when
- *                    the two images sum below 0.90.
+ *                    the wordmark's coverage drops below 0.90 (the two
+ *                    images summed under plus-lighter, composited under
+ *                    normal, by the new image's resolved blend mode).
+ * Added 09-23-26 (tooling hardening before the sweep):
+ *   wordmarkBlank    arrive: the longest span where both images are under
+ *                    0.10 (ms, start, end); fails above 80 ms (founder
+ *                    decision b at the P5 checkpoint).
+ *   wordmarkDrawn    any moment an image counted visible was clipped or
+ *                    transformed out of sight (each is a problem), or
+ *                    `checked: false` for samples that do not record it.
  * The manifest also records what the browser resolved for each image's and
  * the group's animation (name, duration, delay, timing function, fill), and
  * whether the group animates. A strip the judge could not sample (no
- * transition, no wordmark on one side) is a problem, never a pass.
+ * transition, no wordmark on one side) is a problem, never a pass. The
+ * verdicts and their limits are in lib/wordmark-judge.mjs; re-judging a
+ * folder's sample files without filming is rejudge-wordmark.mjs.
  *
  * Every 4xx or 5xx response and every failed request (other than the
  * blocked analytics) is a problem too, so a missing font or model shows up
@@ -107,7 +118,7 @@ import { VIEWPORTS } from './capture.mjs';
 import { toPixels, judgeHoldStill, barMismatch, HOLD_STILL } from './lib/hold-still.mjs';
 import { suppressPrompt } from './lib/portal-prompt.mjs';
 import { PSEUDOS, samplerInit, markTrigger, collect } from './lib/wordmark-sampler.mjs';
-import { judgeWordmark } from './lib/wordmark-judge.mjs';
+import { judgeStripWordmark, describeWordmark, effective } from './lib/wordmark-judge.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -409,35 +420,20 @@ function stub(id, scenario, scheme, vpName) {
     `wordmark` block, and raises a problem for a failure or anything the
     judge could not see. */
 async function judgeStrip(page, where, scenario, before, after) {
-  const kind = scenario === 'page' ? 'blink' : 'overlap';
-  const key = kind === 'blink' ? 'wordmarkBlink' : 'wordmarkOverlap';
   const got = await collect(page);
-  const images = { old: !!before, new: !!after };
-  const verdict = judgeWordmark(got.ok ? got.samples : [], { kind, images });
-  // With both wordmarks there, an empty series means the sampler saw no
-  // transition; say why.
-  if (!got.ok && images.old && images.new) verdict.reason = got.reason;
-  if (verdict.unsampled) problem(`${where}: ${key} could not be judged (${verdict.reason})`);
-  else if (!verdict.pass) {
-    const w = verdict.worst;
-    problem(`${where}: ${key} FAILED at +${w.ms} ms (old ${w.old}, new ${w.new}${kind === 'blink' ? `, sum ${w.score}` : ''})`);
-  }
-  if (before?.count > 1 || after?.count > 1) problem(`${where}: ${Math.max(before?.count ?? 0, after?.count ?? 0)} elements named wordmark on one page`);
-  // A live-frame sample the replay disagrees with means the replay is not
-  // what the browser drew, so the verdict cannot be trusted either way.
-  if (got.ok && got.replayVsLive.worst.diff > 0.05) {
-    const d = got.replayVsLive.worst;
-    problem(`${where}: wordmark replay disagrees with a live sample (${d.part} at +${d.ms} ms: live ${d.live}, replay ${d.replay})`);
-  }
   const { samples, ...rest } = got;
+  const boxes = { before, after };
+  // Every verdict and its problems come from one place, shared with
+  // rejudge-wordmark.mjs.
+  const judged = judgeStripWordmark({ got, samples, boxes, scenario, where });
+  for (const p of judged.problems) problem(p);
   return {
     entry: {
-      [key]: { pass: verdict.pass, unsampled: verdict.unsampled, worst: verdict.worst, threshold: verdict.threshold ?? null, reason: verdict.reason ?? null },
-      judge: { ...rest, samplesJudged: verdict.samples },
-      boxes: { before, after },
+      ...judged.fields,
+      judge: { ...rest, samplesJudged: judged.verdict.samples },
+      boxes,
     },
-    key,
-    verdict,
+    ...judged,
     samples: samples ?? [],
     finishedMs: got.finishedMs ?? null,
     readyMs: got.readyMs ?? null,
@@ -569,10 +565,7 @@ for (const scheme of schemes) {
           // cottagecore arrivals at HEAD: no frame for 300+ ms). A strip
           // with a failing verdict and no frame in its window cannot be
           // checked by eye, and says so.
-          const hot = (wm?.samples ?? []).filter((s) => {
-            const [o, n] = [s.old, s.new].map((i) => (i.own ?? 1) * (i.pair ?? 1) * (i.group ?? 1) * (i.vt ?? 1));
-            return Math.min(o, n) > 0.1;
-          });
+          const hot = (wm?.samples ?? []).filter((s) => Math.min(effective(s.old), effective(s.new)) > 0.1);
           const hotSpan = hot.length ? { fromMs: hot[0].ms, toMs: hot[hot.length - 1].ms } : null;
           denseInfo = {
             untilMs: end,
@@ -598,6 +591,8 @@ for (const scheme of schemes) {
             wm?.readyMs != null ? `ready +${wm.readyMs} ms` : null,
             wm?.finishedMs != null ? `finished +${wm.finishedMs} ms` : null,
             v ? `${wm.key} ${v.unsampled ? 'UNSAMPLED' : v.pass ? 'pass' : 'FAIL'}${v.worst ? ` (worst ${v.worst.score} at +${v.worst.ms} ms)` : ''}` : null,
+            wm?.blank ? `blank ${wm.blank.unsampled ? 'UNSAMPLED' : `${wm.blank.ms} ms ${wm.blank.pass ? 'pass' : 'FAIL'}`}` : null,
+            wm?.drawn?.suspects.length ? 'drawn SUSPECT' : null,
           ].filter(Boolean).join('   ');
           await sheet(shown, join(outDir, file), cols, cellW, box, vp.width, title);
         } else {
@@ -641,13 +636,7 @@ for (const scheme of schemes) {
         let verdict = still
           ? `  switcher ${still.stable ? 'held still' : `MOVED at +${still.worst.ms} ms`} (worst ${(still.worst.score * 100).toFixed(1)}%)`
           : '';
-        if (wm) {
-          const v = wm.verdict;
-          const g = wm.entry.judge;
-          verdict += `  ${wm.key} ${v.unsampled ? `UNSAMPLED (${v.reason})` : v.pass ? 'pass' : 'FAIL'}`;
-          if (v.worst) verdict += ` worst ${v.worst.score} at +${v.worst.ms} ms (old ${v.worst.old}, new ${v.worst.new})`;
-          if (g.ok) verdict += `; group ${g.groupAnimates ? (g.groupMoves ? 'moves' : 'animates in place') : 'does not animate'}`;
-        }
+        if (wm) verdict += `  ${describeWordmark(wm, wm.entry.judge)}`;
         console.log(`${file}  (${frames.length} frames filmed${denseInfo ? `, ${denseInfo.frames} on the sheet` : ''})${verdict}`);
       }
     }

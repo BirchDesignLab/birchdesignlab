@@ -59,7 +59,16 @@ export function samplerInit(PSEUDOS) {
   }
   const byPe = Object.fromEntries(Object.entries(PSEUDOS).map(([k, pe]) => [pe, k]));
   const CSS = ['animationName', 'animationDuration', 'animationDelay', 'animationTimingFunction', 'animationFillMode',
-    'animationIterationCount', 'opacity', 'mixBlendMode', 'objectFit', 'objectPosition', 'height'];
+    'animationIterationCount', 'opacity', 'mixBlendMode', 'objectFit', 'objectPosition', 'height', 'width',
+    'visibility', 'filter', 'clipPath', 'transform'];
+  // What else decides whether an image is seen, read every frame beside the
+  // opacity (the pair and the group only clip; the images do everything).
+  const DRAWN = {
+    old: ['visibility', 'filter', 'mixBlendMode', 'clipPath', 'transform', 'width', 'height'],
+    new: ['visibility', 'filter', 'mixBlendMode', 'clipPath', 'transform', 'width', 'height'],
+    pair: ['clipPath'],
+    group: ['clipPath'],
+  };
   const plain = (o) => JSON.parse(JSON.stringify(o));
   Document.prototype.startViewTransition = function (...args) {
     const run = { calledAt: performance.now(), readyAt: null, finishedAt: null, live: [], anims: {}, css: null, error: null };
@@ -88,9 +97,14 @@ export function samplerInit(PSEUDOS) {
         };
       }
       const op = {};
-      for (const [k, pe] of Object.entries(PSEUDOS)) op[k] = Number(getComputedStyle(document.documentElement, pe).opacity);
+      const drawn = {};
+      for (const [k, pe] of Object.entries(PSEUDOS)) {
+        const cs = getComputedStyle(document.documentElement, pe);
+        op[k] = Number(cs.opacity);
+        if (DRAWN[k]) drawn[k] = Object.fromEntries(DRAWN[k].map((p) => [p, cs[p]]));
+      }
       const progress = groupAnim ? groupAnim.effect.getComputedTiming().progress : null;
-      run.live.push({ t, op, progress, animating: mine.length });
+      run.live.push({ t, op, drawn, progress, animating: mine.length });
       if (!run.css && mine.some((a) => a.startTime != null)) {
         run.css = {};
         for (const [k, pe] of Object.entries(PSEUDOS)) {
@@ -125,8 +139,11 @@ export function markTrigger(page) {
 }
 
 /** In the page: replay the recorded animations on probe elements and read
-    each part's opacity at every time in `times` (page clock, ms). */
-function replayInPage({ anims, times, statics, parts }) {
+    each part's opacity, and the `drawn` properties, at every time in `times`
+    (page clock, ms). A probe is sized like its part, so a transform in
+    percentages resolves as it did on the pseudo. A property no animation
+    touches keeps its static value, read live. */
+function replayInPage({ anims, times, statics, parts, drawnProps, drawnStatics, sizes }) {
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;left:-10px;top:-10px;width:1px;height:1px;overflow:hidden;pointer-events:none;contain:strict';
   document.documentElement.append(host);
@@ -134,7 +151,10 @@ function replayInPage({ anims, times, statics, parts }) {
   for (const part of parts) {
     const el = document.createElement('div');
     el.style.opacity = '1';
+    if (sizes[part]) Object.assign(el.style, { position: 'absolute', width: sizes[part].width, height: sizes[part].height });
     host.append(el);
+    const keep = ['opacity', ...(drawnProps[part] ?? [])];
+    const touched = new Set();
     const list = anims
       .filter((a) => a.part === part)
       .sort((a, b) => a.order - b.order)
@@ -142,22 +162,30 @@ function replayInPage({ anims, times, statics, parts }) {
         const kfs = a.keyframes.map((k) => {
           const f = { offset: k.offset, easing: k.easing };
           if (k.composite && k.composite !== 'auto') f.composite = k.composite;
-          if ('opacity' in k) f.opacity = k.opacity;
+          for (const p of keep) if (p in k) { f[p] = k[p]; touched.add(p); }
           return f;
         });
         const anim = el.animate(kfs, a.timing);
         anim.pause();
-        return { anim, start: a.startTime, rate: a.playbackRate || 1, opacity: kfs.some((k) => 'opacity' in k), long: anim.effect.getComputedTiming().endTime };
+        return { anim, start: a.startTime, rate: a.playbackRate || 1, long: anim.effect.getComputedTiming().endTime };
       });
-    probes[part] = { el, list, opacity: list.some((p) => p.opacity) };
+    probes[part] = { el, list, touched };
   }
   const groupMain = [...(probes.group?.list ?? [])].sort((a, b) => b.long - a.long)[0] ?? null;
   const rows = times.map((T) => {
     for (const p of Object.values(probes)) for (const x of p.list) x.anim.currentTime = (T - x.start) * x.rate;
     const op = {};
-    for (const part of parts) op[part] = probes[part].opacity ? Number(getComputedStyle(probes[part].el).opacity) : statics[part];
+    const drawn = {};
+    for (const part of parts) {
+      const { el, touched } = probes[part];
+      const cs = touched.size ? getComputedStyle(el) : null;
+      op[part] = touched.has('opacity') ? Number(cs.opacity) : statics[part];
+      if (drawnProps[part]) {
+        drawn[part] = Object.fromEntries(drawnProps[part].map((p) => [p, touched.has(p) ? cs[p] : drawnStatics[part]?.[p]]));
+      }
+    }
     const progress = groupMain ? groupMain.anim.effect.getComputedTiming().progress : null;
-    return { T, op, progress };
+    return { T, op, drawn, progress };
   });
   host.remove();
   return rows;
@@ -168,6 +196,11 @@ const median = (xs) => {
   return s.length ? s[Math.floor(s.length / 2)] : 1;
 };
 const r3 = (n) => (n == null ? n : Math.round(n * 1000) / 1000);
+const mode = (xs) => {
+  const n = new Map();
+  for (const x of xs) if (x != null) n.set(x, (n.get(x) ?? 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1])[0]?.[0];
+};
 
 /**
  * Collect the run that followed the trigger. Returns `{ ok, reason? }` plus
@@ -194,11 +227,17 @@ export async function collect(page, { stepMs = 4 } = {}) {
   // A part no animation touches keeps its static opacity, which the live
   // samples read directly.
   const statics = Object.fromEntries(parts.map((p) => [p, median(run.live.map((s) => s.op[p]))]));
+  // The same for the drawn properties (strings): the value seen most often.
+  const drawnProps = Object.fromEntries(parts.filter((p) => run.live[0]?.drawn?.[p]).map((p) => [p, Object.keys(run.live[0].drawn[p])]));
+  const drawnStatics = Object.fromEntries(Object.entries(drawnProps).map(([part, props]) => [
+    part, Object.fromEntries(props.map((prop) => [prop, mode(run.live.map((s) => s.drawn?.[part]?.[prop]))])),
+  ]));
+  const sizes = Object.fromEntries(parts.map((p) => [p, run.css?.[p]?.width ? { width: run.css[p].width, height: run.css[p].height } : null]));
   const from = Math.min(run.readyAt, ...anims.map((a) => a.startTime));
   const grid = [];
   for (let T = from; T <= run.finishedAt; T += stepMs) grid.push(T);
   const liveTimes = run.live.map((s) => s.t).filter((t) => t >= from && t <= run.finishedAt);
-  const rows = await page.evaluate(replayInPage, { anims, times: [...grid, ...liveTimes], statics, parts });
+  const rows = await page.evaluate(replayInPage, { anims, times: [...grid, ...liveTimes], statics, parts, drawnProps, drawnStatics, sizes });
   const replayed = rows.slice(0, grid.length);
   const atLive = rows.slice(grid.length);
 
@@ -218,16 +257,26 @@ export async function collect(page, { stepMs = 4 } = {}) {
     }
   });
 
-  const toSample = (T, op, progress, src) => ({
+  // Each image's drawn properties, as wordmark-judge.mjs names them.
+  const px = (v) => (v == null ? undefined : Number.parseFloat(v));
+  const img = (op, d, k) => ({
+    own: r3(op[k]), pair: r3(op.pair), group: r3(op.group), vt: r3(op.vt),
+    ...(d?.[k] ? {
+      vis: d[k].visibility, filter: d[k].filter, blend: d[k].mixBlendMode, clip: d[k].clipPath, transform: d[k].transform,
+      w: px(d[k].width), h: px(d[k].height),
+    } : {}),
+  });
+  const toSample = (T, op, drawn, progress, src) => ({
     ms: Math.round((T - trigger) * 10) / 10,
     src,
     progress: r3(progress),
-    old: { own: r3(op.old), pair: r3(op.pair), group: r3(op.group), vt: r3(op.vt) },
-    new: { own: r3(op.new), pair: r3(op.pair), group: r3(op.group), vt: r3(op.vt) },
+    old: img(op, drawn, 'old'),
+    new: img(op, drawn, 'new'),
+    ...(drawn?.pair || drawn?.group ? { anc: { pairClip: drawn.pair?.clipPath, groupClip: drawn.group?.clipPath } } : {}),
   });
   const samples = [
-    ...replayed.map((r) => toSample(r.T, r.op, r.progress, 'replay')),
-    ...run.live.filter((s) => s.t >= from && s.t <= run.finishedAt).map((s) => toSample(s.t, s.op, s.progress, 'live')),
+    ...replayed.map((r) => toSample(r.T, r.op, r.drawn, r.progress, 'replay')),
+    ...run.live.filter((s) => s.t >= from && s.t <= run.finishedAt).map((s) => toSample(s.t, s.op, s.drawn, s.progress, 'live')),
   ].sort((a, b) => a.ms - b.ms);
 
   // What the browser resolved, per part: the CSS it computed and the
