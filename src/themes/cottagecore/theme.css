@@ -485,7 +485,30 @@
     animation-duration: 560ms;
     animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
   }
+  /* The wordmark default (README, "The wordmark"): each wordmark drawn at its
+     own size, left-anchored as it sits in both headers, on the group's timing
+     rather than Astro's 180 ms; from another school the old one is gone
+     before the new one shows. Fill both holds the old one hidden through the
+     page turn's last 80 ms. */
+  html[data-theme='cottagecore']::view-transition-old(wordmark),
+  html[data-theme='cottagecore']::view-transition-new(wordmark) {
+    height: 100%;
+    object-fit: none;
+    object-position: left center;
+    animation-duration: inherit;
+    animation-timing-function: inherit;
+    animation-delay: inherit;
+    animation-fill-mode: both;
+  }
+  html[data-theme='cottagecore']:not([data-from-theme='cottagecore'])::view-transition-old(wordmark) {
+    animation-name: cottagecore-wordmark-out;
+  }
+  html[data-theme='cottagecore']:not([data-from-theme='cottagecore'])::view-transition-new(wordmark) {
+    animation-name: cottagecore-wordmark-in;
+  }
 }
+@keyframes cottagecore-wordmark-out { 35%, 100% { opacity: 0; } }
+@keyframes cottagecore-wordmark-in { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='cottagecore']::view-transition-group(*),
   html[data-theme='cottagecore']::view-transition-old(*),

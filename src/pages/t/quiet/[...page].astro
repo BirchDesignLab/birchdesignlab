@@ -2,13 +2,15 @@
 /**
  * The quiet school inside the /t/ portal. One route file per school, importing
  * only that school's components and CSS (F016); getStaticPaths yields the five
- * business pages. Quiet's CSS is the root site's own.
+ * business pages. Quiet's CSS is the root site's own, plus portal.css (the
+ * wordmark default), which only this route imports.
  */
 import '@fontsource/marcellus/latin.css';
 import '@fontsource/spectral/latin-400.css';
 import '@fontsource/spectral/latin-600.css';
 import '../../../styles/tokens.css';
 import '../../../styles/base.css';
+import '../../../themes/quiet/portal.css';
 import PortalLayout from '../../../themes/portal/PortalLayout.astro';
 import Header from '../../../themes/quiet/Header.astro';
 import Footer from '../../../themes/quiet/Footer.astro';
