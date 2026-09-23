@@ -20,7 +20,7 @@
  *   BDL_GPU=1 node scripts/themes/motion.mjs --base http://127.0.0.1:8787 \
  *     --schools vaporwave,swiss [--scenarios arrive,page,fx] \
  *     [--viewports desktop,mobile] [--schemes dark] [--label motion] \
- *     [--crop switcher|header]
+ *     [--crop switcher|header] [--show-prompt]
  * Output: scripts/themes/.out/<label>/<school>__<scenario>__<scheme>__<viewport>.png
  * plus manifest.json.
  *
@@ -38,6 +38,9 @@
  * fails. The verdict and the worst frame go in the manifest (`holdStill`) and
  * the console, and a failure is a problem. The pixel rule is
  * lib/hold-still.mjs, proven by lib/hold-still.selftest.mjs.
+ *
+ * The switcher's first-load prompt is marked dismissed before any page script
+ * runs, so it never sits in a strip; --show-prompt keeps it.
  *
  * manifest.json merges with the one already in the --label folder: a strip
  * filmed again replaces its old entry (and that entry's problems), and every
@@ -65,6 +68,7 @@ const scenarios = list('scenarios', 'arrive,page,fx');
 const viewports = list('viewports', 'desktop,mobile');
 const schemes = list('schemes', 'dark');
 const label = arg('label', 'motion');
+const showPrompt = process.argv.includes('--show-prompt');
 /* The switcher's width follows its label ("Quiet" to "Grandmillennial"), so its
    crop is padded sideways enough to keep a longer label in frame. */
 const CROPS = {
@@ -247,6 +251,11 @@ for (const scheme of schemes) {
     await context.addInitScript((s) => {
       try { localStorage.setItem('scheme', s); } catch {}
     }, scheme);
+    if (!showPrompt) {
+      await context.addInitScript(() => {
+        try { sessionStorage.setItem('bdl-portal-prompt', 'dismissed'); } catch {}
+      });
+    }
     await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
     const page = await context.newPage();
     page.on('pageerror', (e) => problem(`${page.url()} pageerror: ${e.message}`));

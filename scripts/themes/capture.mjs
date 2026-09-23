@@ -26,6 +26,9 @@
  *   --wait 600             (ms to settle after fonts, default 500)
  *   --hide-switcher        (leave the portal's fixed switcher out: in a
  *                          full-page shot it lands mid-page over the design)
+ *   --show-prompt          (keep the switcher's first-load prompt; by default
+ *                          it is marked dismissed so every fresh context
+ *                          renders the same bar, added 09-23-26)
  *
  * Git Bash mangles leading-slash args into Windows paths; prefix the command
  * with MSYS_NO_PATHCONV=1 when passing --routes from it.
@@ -76,6 +79,7 @@ async function main() {
   const fullPage = flag('full-page');
   const motion = flag('motion');
   const hideSwitcher = flag('hide-switcher');
+  const showPrompt = flag('show-prompt');
 
   const routes = [];
   for (const name of (arg('set', '') || '').split(',').filter(Boolean)) {
@@ -116,6 +120,11 @@ async function main() {
       await context.addInitScript((s) => {
         try { localStorage.setItem('scheme', s); localStorage.setItem('theme', s); } catch {}
       }, scheme);
+      if (!showPrompt) {
+        await context.addInitScript(() => {
+          try { sessionStorage.setItem('bdl-portal-prompt', 'dismissed'); } catch {}
+        });
+      }
       if (hideSwitcher) {
         await context.addInitScript(() => {
           document.addEventListener('DOMContentLoaded', () => {
