@@ -47,5 +47,5 @@ export const meta: ThemeMeta = {
     { fg: '#ffffff', bg: ['--icon-peach'], min: 4.5, note: 'app icon numeral, peach' },
     { fg: '#ffffff', bg: ['--icon-pink'], min: 4.5, note: 'app icon numeral, pink' },
   ],
-  order: 3,
+  order: 6,
 };

@@ -49,5 +49,5 @@ export const meta: ThemeMeta = {
     { fg: '--inscription', bg: ['--marble-tint-cyan', '--marble'], min: 4.5, note: 'inscription over the plinth cyan-lit corner' },
   ],
   assets: { provenance: 'original-vector', note: 'Palms, columns, the beorc rune and the meander are drawn here; the marble is SVG turbulence.' },
-  order: 1,
+  order: 3,
 };

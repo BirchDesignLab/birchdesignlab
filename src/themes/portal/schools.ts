@@ -11,6 +11,8 @@ export interface SchoolSummary {
   name: string;
   era: string;
   signature: string;
+  /** The room's wall label: what the school teaches. The switcher's placard shows it. */
+  lesson: string;
   nativeScheme: Scheme;
   preload: string[];
 }

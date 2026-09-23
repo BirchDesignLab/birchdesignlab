@@ -12,12 +12,52 @@
  * shuffles), light/dark, and Leave (the same page on the root site, full
  * load). Links inside a shadow root are invisible to the router, so every
  * plain link here is a real navigation; school changes go through navigate().
+ *
+ * The dialog opens on a placard for the school the visitor is in (its era,
+ * signature and lesson, set like a museum wall label), then lists every
+ * school in the order of its era. On the first portal page of a browser
+ * session, a one-line prompt sits above the bar until the visitor answers it,
+ * dismisses it, uses the switcher or navigates. It never opens the dialog by
+ * itself.
+ *
+ * Speed (P4): opening the dialog warms every other school's same page, and
+ * pointing at or focusing Shuffle picks its school and warms that page, so
+ * the click finds the page in memory. The control that started a school
+ * change shows a busy state until the new page has loaded (or the navigation
+ * is abandoned), inside its own box, so the bar never changes size while it
+ * holds still through the swap.
  */
-import { navigate } from 'astro:transitions/client';
+import { navigate, type TransitionBeforePreparationEvent } from 'astro:transitions/client';
 import { currentScheme, setScheme } from '../../lib/scheme';
 import { pagePath, pageFromPath, rootPathFor, type PageId } from '../paths';
 import { readPortalData, type SchoolSummary } from './schools';
-import { SWITCHER_INFO } from './runtime';
+import { SWITCHER_INFO, warmPages } from './runtime';
+
+/**
+ * The first-load prompt's words. A placeholder: the founder picks the final
+ * wording from drafted alternatives at the Stage 1 stop (stage0-decisions.md,
+ * "Stage 1 decisions"). Visitor-facing, so no em dashes.
+ */
+const FIRST_LOAD_PROMPT = 'The Portal: this site in seven design schools. Pick one to step through.';
+
+/** sessionStorage key, set to 'dismissed' once the visitor has answered or dismissed the prompt. */
+const PROMPT_KEY = 'bdl-portal-prompt';
+
+function promptDismissed(): boolean {
+  try {
+    return window.sessionStorage.getItem(PROMPT_KEY) === 'dismissed';
+  } catch {
+    return false; // no storage: the prompt shows once per hard load instead
+  }
+}
+
+function rememberPromptDismissed(): void {
+  try {
+    window.sessionStorage.setItem(PROMPT_KEY, 'dismissed');
+  } catch {
+    /* storage can throw (private windows, blocked site data); the prompt is still gone for this load */
+  }
+}
 
 const STYLE = `
 :host {
@@ -47,26 +87,110 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .current { color: var(--ink); font-weight: 600; }
 .icon { width: 16px; height: 16px; flex: none; }
 .caret { width: 10px; height: 10px; flex: none; opacity: 0.7; }
+/* Busy: the control that started a school change, until the new page has
+   loaded. A moss line runs along its foot, inside its own box, so the bar
+   never changes size (it holds still through every swap). */
+button[aria-busy='true'] { position: relative; background: var(--raised); cursor: progress; }
+button[aria-busy='true']::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent) no-repeat;
+  background-size: 40% 100%;
+  animation: bdl-busy 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+/* 40% wide, so -70% and 170% put it just off either end. */
+@keyframes bdl-busy {
+  from { background-position: -70% 0; }
+  to { background-position: 170% 0; }
+}
 /* Desktop: out of the way in the corner, clear of centred hero content (the
    quiet home pins its bark credit bottom-centre). Phones: centred, thumb reach. */
 @media (min-width: 700px) {
   :host { left: auto; right: 16px; transform: none; }
 }
+/* The first-load prompt: one line above the bar (two on a phone), never over its buttons.
+   Absolutely placed, so showing or dropping it never resizes the bar (which
+   holds still through every swap). Centred on phones, flush right with the
+   bar from 700px, where the bar moves to the corner. */
+.prompt {
+  position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0;
+  display: flex; align-items: stretch; gap: 1px;
+  width: max-content; max-width: calc(100vw - 24px);
+  background: var(--line); border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
+  /* It rises out of the bar a beat after the page lands. backwards, not both:
+     once it has arrived, the clip is gone and the shadow shows. */
+  animation: bdl-prompt-in 560ms cubic-bezier(0.2, 0.8, 0.2, 1) 650ms backwards;
+}
+.prompt[hidden] { display: none; }
+.prompt .go { gap: 12px; padding: 10px 16px 10px 14px; white-space: normal; line-height: 1.35; }
+.prompt .go .text { text-wrap: balance; }
+.prompt .dismiss { justify-content: center; width: 44px; padding: 0; color: var(--muted); }
+.prompt .dismiss:hover { color: var(--ink); }
+.beacon { width: 8px; height: 8px; flex: none; background: var(--accent); animation: bdl-beacon 1.8s ease-out 1.3s 3; }
+@keyframes bdl-prompt-in {
+  from { opacity: 0; transform: translateY(12px); clip-path: inset(100% -40px -40px -40px); }
+  to { opacity: 1; transform: none; clip-path: inset(-40px); }
+}
+@keyframes bdl-beacon {
+  from { box-shadow: 0 0 0 0 rgba(163, 189, 143, 0.55); }
+  to { box-shadow: 0 0 0 9px rgba(163, 189, 143, 0); }
+}
+@media (min-width: 700px) {
+  .prompt { left: auto; right: 0; translate: none; max-width: calc(100vw - 32px); }
+}
 @media (max-width: 560px) {
   .wide { display: none; }
   button, a.btn { padding: 0 12px; }
 }
+/* A column: the head, the placard and the foot keep their height and the
+   list scrolls between them. */
 dialog {
   width: min(560px, calc(100vw - 24px)); max-height: min(78vh, 720px);
   margin: auto auto max(72px, calc(env(safe-area-inset-bottom) + 72px));
   padding: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
+dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
 dialog::backdrop { background: rgba(10, 9, 8, 0.55); }
-.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
 .head h2 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
 .head button { min-height: 36px; padding: 0 10px; }
-ul { list-style: none; margin: 0; padding: 6px 0; overflow: auto; max-height: calc(min(78vh, 720px) - 120px); }
+/* The placard: the current room's wall label. Name, then era, then a short
+   moss rule, then what you see and what it teaches. It gives way to the list
+   only when the list is down to two rows (a small phone): the
+   list's shrink factor dwarfs the placard's, so the list shrinks first, and
+   the placard scrolls only past that. (The factors are 1000 and 1, not 1 and
+   0.001: a set of factors summing under 1 shrinks by only that fraction.) */
+.placard { flex: 0 1 auto; min-height: 0; overflow: auto; padding: 18px 18px 20px; border-bottom: 1px solid var(--line); }
+.placard[hidden] { display: none; }
+.placard h3, .placard p { margin: 0; }
+.placard .here { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
+.placard h3 { margin-top: 8px; font-size: 22px; line-height: 1.15; font-weight: 600; letter-spacing: 0; }
+.placard .p-era { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+.placard .p-sig, .placard .p-lesson { font-weight: 400; letter-spacing: 0; text-wrap: pretty; }
+.placard .p-sig { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.placard .p-sig::before { content: ''; display: block; width: 24px; height: 2px; margin: 14px 0 12px; background: var(--accent); }
+.placard .p-lesson { margin-top: 10px; font-size: 14px; line-height: 1.5; }
+.placard .tag { margin-right: 6px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
+@media (max-width: 560px) {
+  .placard { padding: 16px 16px 18px; }
+  .placard h3 { font-size: 20px; }
+}
+/* Short screens (a small phone, a landscape one, a 768px laptop) keep the
+   lesson and drop the signature, which the list repeats under the school's
+   name, so the list keeps about three rows. */
+@media (max-height: 700px) {
+  .placard .p-sig { display: none; }
+  .placard .p-lesson { margin-top: 12px; }
+}
+/* A landscape phone has no room for two scrolling panes: the whole dialog
+   scrolls as one, under a head that stays put. */
+@media (max-height: 480px) {
+  dialog[open] { overflow: auto; overscroll-behavior: contain; }
+  .head { position: sticky; top: 0; z-index: 1; background: var(--bg); }
+  dialog .placard, dialog ul { flex: none; min-height: 0; overflow: visible; }
+}
+ul { flex: 0 1000 auto; min-height: 132px; list-style: none; margin: 0; padding: 6px 0; overflow: auto; overscroll-behavior: contain; }
 li a {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 18px;
   color: var(--ink); text-decoration: none; border-left: 2px solid transparent;
@@ -76,7 +200,7 @@ li a[aria-current='page'] { border-left-color: var(--accent); background: var(--
 li .name { font-size: 15px; font-weight: 600; }
 li .era { color: var(--muted); font-size: 12px; text-align: right; align-self: center; }
 li .sig { grid-column: 1 / -1; color: var(--muted); font-size: 13px; line-height: 1.4; font-weight: 400; letter-spacing: 0; }
-.foot { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 14px 18px; border-top: 1px solid var(--line); }
+.foot { flex: none; display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 14px 18px; border-top: 1px solid var(--line); }
 .foot a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { button, a.btn { transition: none; } }
 `;
@@ -88,6 +212,8 @@ const ICON = {
     '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
   leave:
     '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/></svg>',
+  dismiss:
+    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   caret:
     '<svg class="caret" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M1 3h8L5 8z"/></svg>',
 };
@@ -96,11 +222,25 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
 
+/** The switcher the visitor sees: the first one connected, carried across every swap. */
+let live: BdlSwitcher | null = null;
+
 class BdlSwitcher extends HTMLElement {
   private built = false;
   private root!: ShadowRoot;
+  /** Drops the prompt's listeners once it has been answered or dismissed. */
+  private promptOff: AbortController | null = null;
+  /** The control showing the busy state, while a school change it started is under way. */
+  private busy: { control: HTMLElement } | null = null;
+  /** Shuffle's next school, picked when the visitor points at it, so the page it warms is the one they get. */
+  private shufflePick: string | null = null;
 
   connectedCallback() {
+    // Each swap briefly connects the incoming page's own <bdl-switcher>
+    // before the router puts the persisted one in its place. Leave that copy
+    // inert: building it would add listeners and an observer that outlive it.
+    if (live && live !== this && live.isConnected) return;
+    live = this;
     if (!this.built) this.build();
     this.update();
   }
@@ -118,6 +258,10 @@ class BdlSwitcher extends HTMLElement {
 
     this.root.innerHTML = `
       <style>${STYLE}</style>
+      <div class="prompt" hidden>
+        <button type="button" class="go" aria-haspopup="dialog"><span class="beacon" aria-hidden="true"></span><span class="text">${escapeHtml(FIRST_LOAD_PROMPT)}</span></button>
+        <button type="button" class="dismiss" aria-label="Dismiss">${ICON.dismiss}</button>
+      </div>
       <div class="bar">
         <button type="button" class="open" aria-haspopup="dialog">
           <span class="label wide">School</span><span class="current"></span>${ICON.caret}
@@ -131,7 +275,14 @@ class BdlSwitcher extends HTMLElement {
           <h2 id="bdl-schools-title">Design schools</h2>
           <button type="button" class="close" aria-label="Close">Close</button>
         </div>
-        <ul>
+        <div class="placard" hidden>
+          <p class="here">You are here</p>
+          <h3 class="p-name"></h3>
+          <p class="p-era"></p>
+          <p class="p-sig"></p>
+          <p class="p-lesson"><span class="tag">Lesson</span> <span class="p-lesson-text"></span></p>
+        </div>
+        <ul aria-label="All design schools">
           ${schools
             .map(
               (s: SchoolSummary) => `
@@ -151,11 +302,8 @@ class BdlSwitcher extends HTMLElement {
     `;
 
     const dialog = this.root.querySelector('dialog')!;
-    this.root.querySelector('.open')!.addEventListener('click', () => {
-      this.update();
-      dialog.showModal();
-      (dialog.querySelector('a[aria-current="page"]') as HTMLElement | null)?.focus();
-    });
+    const open = this.root.querySelector<HTMLButtonElement>('.open')!;
+    open.addEventListener('click', () => this.openDialog());
     this.root.querySelector('.close')!.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.close(); // backdrop click
@@ -167,16 +315,26 @@ class BdlSwitcher extends HTMLElement {
         e.preventDefault();
         dialog.close();
         if (a.getAttribute('aria-current') === 'page') return;
+        this.markBusy(open); // the dialog is gone; the bar's school button stands for it
         navigate(a.href, { info: SWITCHER_INFO });
       });
     }
 
-    this.root.querySelector('.shuffle')!.addEventListener('click', () => {
+    const shuffle = this.root.querySelector<HTMLButtonElement>('.shuffle')!;
+    const primeShuffle = () => {
       const here = this.here();
-      const others = schools.filter((s) => s.id !== here?.theme);
-      if (!here || others.length === 0) return;
-      const pick = others[Math.floor(Math.random() * others.length)];
-      navigate(pagePath(here.page, pick.id), { history: 'replace', info: SWITCHER_INFO });
+      const pick = this.pickShuffle();
+      if (here && pick) warmPages([pagePath(here.page, pick)]);
+    };
+    shuffle.addEventListener('pointerenter', primeShuffle);
+    shuffle.addEventListener('focus', primeShuffle);
+    shuffle.addEventListener('click', () => {
+      const here = this.here();
+      const pick = this.pickShuffle();
+      if (!here || !pick) return;
+      this.shufflePick = null;
+      this.markBusy(shuffle);
+      navigate(pagePath(here.page, pick), { history: 'replace', info: SWITCHER_INFO });
     });
 
     this.root.querySelector('.scheme')!.addEventListener('click', () => {
@@ -184,12 +342,114 @@ class BdlSwitcher extends HTMLElement {
       this.update();
     });
 
-    document.addEventListener('astro:page-load', () => this.update());
+    document.addEventListener('astro:page-load', () => {
+      this.clearBusy();
+      this.shufflePick = null; // picked against the page just left
+      this.update();
+      // A visitor shuffling again and again stays on the button: pick and warm the next one now.
+      if (shuffle.matches(':hover') || this.root.activeElement === shuffle) primeShuffle();
+    });
+    // A school change can be abandoned: another navigation takes over (its
+    // signal aborts), or the page is left by a full load and later restored
+    // from the back/forward cache.
+    document.addEventListener('astro:before-preparation', (event) => {
+      const e = event as TransitionBeforePreparationEvent;
+      const mark = this.busy;
+      if (mark && e.info === SWITCHER_INFO) e.signal.addEventListener('abort', () => this.clearBusy(mark), { once: true });
+    });
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) this.clearBusy();
+    });
     // The quiet school has its own header toggle; stay in step with it.
     new MutationObserver(() => this.update()).observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['data-scheme'],
     });
+
+    this.root.querySelector('.prompt .go')!.addEventListener('click', () => {
+      this.dismissPrompt();
+      // Open from the bar's own button, so closing the dialog hands focus back
+      // to it rather than to a prompt that is gone (Safari never focuses a
+      // clicked button, so this cannot rely on the prompt having had focus).
+      open.focus({ preventScroll: true });
+      this.openDialog();
+    });
+    this.root.querySelector('.prompt .dismiss')!.addEventListener('click', () => this.dismissPrompt());
+    if (!promptDismissed()) this.showPrompt();
+  }
+
+  private openDialog() {
+    const dialog = this.root.querySelector('dialog')!;
+    this.update();
+    if (!dialog.open) dialog.showModal();
+    const here = dialog.querySelector<HTMLElement>('a[aria-current="page"]');
+    // Scroll only as far as the link needs, so the placard above it stays in
+    // view wherever it can (focus() alone may centre the link).
+    here?.focus({ preventScroll: true });
+    here?.scrollIntoView({ block: 'nearest' });
+    this.warmOthers();
+  }
+
+  /** Every other school's same page, the next rooms along the walk first. */
+  private warmOthers() {
+    const here = this.here();
+    if (!here) return;
+    const { schools } = readPortalData();
+    const at = schools.findIndex((s) => s.id === here.theme);
+    const next = [...schools.slice(at + 1), ...schools.slice(0, Math.max(at, 0))].filter((s) => s.id !== here.theme);
+    warmPages(next.map((s) => pagePath(here.page, s.id)));
+  }
+
+  /** Shuffle's school: the one already picked for this page, or a new random other school. */
+  private pickShuffle(): string | null {
+    const here = this.here();
+    if (!here) return null;
+    if (this.shufflePick && this.shufflePick !== here.theme) return this.shufflePick;
+    const others = readPortalData().schools.filter((s) => s.id !== here.theme);
+    if (others.length === 0) return null;
+    this.shufflePick = others[Math.floor(Math.random() * others.length)].id;
+    return this.shufflePick;
+  }
+
+  /** Painted at the click, so the visitor has an answer before the page starts to change. */
+  private markBusy(control: HTMLElement) {
+    this.clearBusy();
+    this.busy = { control };
+    control.setAttribute('aria-busy', 'true');
+  }
+
+  /** Clears the busy state; given a mark, only if that mark is still the current one. */
+  private clearBusy(mark: { control: HTMLElement } | null = this.busy) {
+    if (!mark || this.busy !== mark) return;
+    mark.control.removeAttribute('aria-busy');
+    this.busy = null;
+  }
+
+  /** Once per hard load at most, and only until the visitor's first move. */
+  private showPrompt() {
+    this.promptOff = new AbortController();
+    const { signal } = this.promptOff;
+    const dismiss = () => this.dismissPrompt();
+    // Any switcher control counts as the first move. Capture, so the prompt
+    // is gone before the control's own handler runs.
+    this.root.querySelector('.bar')!.addEventListener('click', dismiss, { capture: true, signal });
+    // So does navigating: gone before the router captures the old page, so
+    // it never rides a transition, and remembered when the page is left by a
+    // full load (a reload included).
+    document.addEventListener('astro:before-preparation', dismiss, { signal });
+    window.addEventListener('pagehide', dismiss, { signal });
+    this.root.querySelector<HTMLElement>('.prompt')!.hidden = false;
+  }
+
+  private dismissPrompt() {
+    if (!this.promptOff) return;
+    this.promptOff.abort();
+    this.promptOff = null;
+    rememberPromptDismissed();
+    const prompt = this.root.querySelector<HTMLElement>('.prompt')!;
+    const hadFocus = prompt.contains(this.root.activeElement);
+    prompt.hidden = true;
+    if (hadFocus) this.root.querySelector<HTMLElement>('.open')!.focus({ preventScroll: true });
   }
 
   /** Sync every label and href to the page the visitor is on now. */
@@ -208,6 +468,16 @@ class BdlSwitcher extends HTMLElement {
     this.root.querySelector('.scheme-text')!.textContent = light ? 'Light' : 'Dark';
 
     const rootHref = here ? rootPathFor(here.page) : '/';
+    // The placard follows the visitor: it names the room they are in now.
+    const placard = this.root.querySelector<HTMLElement>('.placard')!;
+    placard.hidden = !current;
+    if (current) {
+      placard.querySelector('.p-name')!.textContent = current.name;
+      placard.querySelector('.p-era')!.textContent = current.era;
+      placard.querySelector('.p-sig')!.textContent = current.signature;
+      placard.querySelector('.p-lesson-text')!.textContent = current.lesson;
+    }
+
     for (const a of this.root.querySelectorAll<HTMLAnchorElement>('.leave, .leave-foot')) a.href = rootHref;
     this.root.querySelector('.leave')!.setAttribute('aria-label', 'Leave the portal for this page on the regular site');
 

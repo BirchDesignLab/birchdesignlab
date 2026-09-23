@@ -26,5 +26,5 @@ export const meta: ThemeMeta = {
     { fg: '--ink-muted', bg: ['--mark'], min: 4.5, note: 'secondary type on the ink block' },
     { fg: '--red-on-ink', bg: ['--mark'], min: 4.5, note: 'the kicker, kept red on the ink block' },
   ],
-  order: 6,
+  order: 2,
 };

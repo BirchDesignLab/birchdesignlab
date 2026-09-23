@@ -40,5 +40,5 @@ export const meta: ThemeMeta = {
     provenance: 'original-vector',
     note: 'All drawn for this school in SVG and CSS: a chintz repeat (cabbage roses, buds, forget-me-not sprigs), a trellis lattice, a birch-branch botanical, blue-and-white plates, a ribbon bow, gilt corner scrolls, a wax seal and a scalloped striped awning.',
   },
-  order: 2,
+  order: 5,
 };

@@ -27,5 +27,5 @@ export const meta: ThemeMeta = {
     { fg: '--on-poster', bg: ['--poster'], min: 4.5, note: 'text on the inverse band' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a raised panel' },
   ],
-  order: 5,
+  order: 1,
 };

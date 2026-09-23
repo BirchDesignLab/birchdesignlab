@@ -27,6 +27,13 @@ describe('theme registry', () => {
     expect(new Set(THEMES.map((t) => t.order)).size).toBe(THEMES.length);
   });
 
+  it('walks the exhibit by era after quiet (S7)', () => {
+    // The first seven, oldest school first. A new school takes its place by
+    // era; this pins only the relative order of these.
+    const byEra = ['quiet', 'bauhaus', 'swiss', 'vaporwave', 'cottagecore', 'grandmillennial', 'glassmorphism'];
+    expect(THEMES.map((t) => t.id).filter((id) => byEra.includes(id))).toEqual(byEra);
+  });
+
   for (const t of ALL_THEMES) {
     describe(t.id, () => {
       it('has a URL-safe id', () => {
