@@ -218,10 +218,6 @@
   margin-inline: auto;
 }
 
-/* Every section owns its orbs' bleed and nothing outside it, so pausing one
-   section's motion or repainting its glass never touches its neighbours. */
-:where([data-theme='glassmorphism']) section { contain: paint; }
-
 /* ---------- glass ---------- */
 
 :where([data-theme='glassmorphism']) .glass {
@@ -247,8 +243,10 @@
     var(--shadow);
 }
 
-/* Kicker chip: a small frosted pill in the label face. */
+/* Kicker chip: a small frosted pill in the label face. Lifted over its
+   section's orbs (z-index 0), which would otherwise paint across it. */
 :where([data-theme='glassmorphism']) .chip {
+  position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.55em;
   padding: 0.42em 0.95em 0.42em 0.75em;
   border-radius: 999px;
