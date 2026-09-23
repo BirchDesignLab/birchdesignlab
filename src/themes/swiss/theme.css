@@ -48,6 +48,18 @@
   --frame: min(100% - 2 * var(--margin), 1760px);
   /* One baseline unit; every vertical space is a multiple of it. */
   --u: 8px;
+
+  /* The swap's panels (see Arrival): --div of them, each a whole number of
+     columns, their edges on real column lines. --edge is where the frame
+     starts, including on sheets wider than the frame's 1760px cap. The
+     three --sw-p steps say how many panels the swap has laid after each of
+     its first three beats; the fourth beat lays the rest. */
+  --div: 4;
+  --edge: max(var(--margin), (100% - 1760px) / 2);
+  --pitch: calc((var(--frame) + var(--gutter)) / var(--div));
+  --sw-p1: 1;
+  --sw-p2: 2;
+  --sw-p3: 3;
 }
 
 :root[data-theme='swiss'][data-scheme='dark'] {
@@ -69,7 +81,9 @@
 }
 
 @media (min-width: 640px) {
-  :root[data-theme='swiss'] { --cols: 6; }
+  /* Six panels in the same four beats, so they are laid unevenly: one, two,
+     one, two. */
+  :root[data-theme='swiss'] { --cols: 6; --div: 6; --sw-p1: 1; --sw-p2: 3; --sw-p3: 4; }
 }
 @media (min-width: 1024px) {
   :root[data-theme='swiss'] { --cols: 12; }
@@ -292,35 +306,81 @@
 
 /* ---- Arrival ------------------------------------------------------- */
 
-/* A column wipe: the new sheet is laid down left to right in six hard steps,
-   like panels pasted up on a board, over the old one held still. The blend
-   is reset so the two layers never add into a wash. */
+/* A paste-up in column panels, on one 640ms clock, so the two sheets'
+   type never shares a frame:
+     0 to 285ms    the old sheet is cleared to the bare field, panel by
+                   panel from the left, the first panel on the very first
+                   frame;
+     285 to 345ms  the bare sheet holds;
+     345 to 640ms  the new sheet is laid down, panel by panel, the last
+                   panel landing as the swap ends.
+   Every beat holds 90 to 110ms (six frames), spaced unevenly, and every
+   change is a hard step: no ease, no fade. The field under both snapshots
+   is the root group's own background, so a cleared panel shows the paper
+   (or the black sheet), never the live page beneath. The blend is reset so
+   the two layers never add into a wash. Panel edges come from --edge and
+   --pitch (see the tokens); view-transition pseudos inherit custom
+   properties from :root, and a percentage in an inset is of the sheet's
+   width, as it is in --frame. */
+html[data-theme='swiss']::view-transition-group(root) {
+  background: var(--field);
+}
 html[data-theme='swiss']::view-transition-old(root),
 html[data-theme='swiss']::view-transition-new(root) {
   mix-blend-mode: normal;
 }
-html[data-theme='swiss']::view-transition-old(root) { animation: none; }
+html[data-theme='swiss']::view-transition-old(root) {
+  animation: sw-clear 640ms step-end both;
+}
 html[data-theme='swiss']::view-transition-new(root) {
-  animation: sw-wipe 240ms step-end both;
+  animation: sw-lay 640ms step-end both;
 }
+@keyframes sw-clear {
+  0% { clip-path: inset(0 0 0 calc(var(--edge) + var(--sw-p1) * var(--pitch))); }
+  15.6% { clip-path: inset(0 0 0 calc(var(--edge) + var(--sw-p2) * var(--pitch))); }
+  29.7% { clip-path: inset(0 0 0 calc(var(--edge) + var(--sw-p3) * var(--pitch))); }
+  44.5%, 100% { clip-path: inset(0 0 0 100%); }
+}
+@keyframes sw-lay {
+  0% { clip-path: inset(0 100% 0 0); }
+  53.9% { clip-path: inset(0 calc(100% - var(--edge) - var(--sw-p1) * var(--pitch)) 0 0); }
+  70.3% { clip-path: inset(0 calc(100% - var(--edge) - var(--sw-p2) * var(--pitch)) 0 0); }
+  84.4% { clip-path: inset(0 calc(100% - var(--edge) - var(--sw-p3) * var(--pitch)) 0 0); }
+  100% { clip-path: inset(0); }
+}
+
+/* The wordmark keeps station-clock time: it travels at constant speed for
+   the 280ms the old sheet takes to clear, stands still (the flat tail), and
+   at 345ms, the beat the first new panel lands, the old wordmark gives way
+   to the new one in a single step. Both images switch on the same keyframe
+   of the same clock, so the two are never seen together and the header is
+   never empty; that holds between two swiss pages too, where the swap is
+   invisible, so there is no crossfade anywhere. The images take the
+   group's duration and delay but not its curve: a step needs no easing.
+   They hang from the top of the box: an old wordmark taller than swiss's
+   (quiet's two lines) then runs down into the header while it waits for
+   the step, instead of past the top of the viewport. */
 html[data-theme='swiss']::view-transition-group(wordmark) {
-  animation-duration: 240ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-duration: 560ms;
+  animation-timing-function: linear(0, 1 50%, 1);
 }
-/* Six hard steps, but landing on the real column lines (sixths of the
-   twelve-column frame) rather than sixths of the bare viewport, so the
-   wipe reads as panels of the visible grid being pasted up. View
-   transition pseudos inherit custom properties from :root. */
-@keyframes sw-wipe {
-  0% { clip-path: inset(0 calc(100% - var(--margin) - 0 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  16.6% { clip-path: inset(0 calc(100% - var(--margin) - 1 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  33.3% { clip-path: inset(0 calc(100% - var(--margin) - 2 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  50% { clip-path: inset(0 calc(100% - var(--margin) - 3 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  66.6% { clip-path: inset(0 calc(100% - var(--margin) - 4 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  83.3% { clip-path: inset(0 calc(100% - var(--margin) - 5 * (var(--frame) + var(--gutter)) / 6) 0 0); }
-  100% { clip-path: inset(0 calc(100% - var(--margin) - 6 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+html[data-theme='swiss']::view-transition-old(wordmark),
+html[data-theme='swiss']::view-transition-new(wordmark) {
+  height: 100%;
+  object-fit: none;
+  object-position: left top;
+  animation-duration: inherit;
+  animation-timing-function: step-end;
+  animation-delay: inherit;
+  animation-fill-mode: both;
 }
+html[data-theme='swiss']::view-transition-old(wordmark) { animation-name: sw-wordmark-out; }
+html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wordmark-in; }
+/* 61.6% of 560ms is 345ms. */
+@keyframes sw-wordmark-out { 0% { opacity: 1; } 61.6%, 100% { opacity: 0; } }
+@keyframes sw-wordmark-in { 0% { opacity: 0; } 61.6%, 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
+  html[data-theme='swiss']::view-transition-old(root),
   html[data-theme='swiss']::view-transition-new(root),
   html[data-theme='swiss']::view-transition-group(wordmark) { animation: none; }
 }
