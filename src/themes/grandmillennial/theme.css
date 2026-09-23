@@ -1,29 +1,150 @@
 /* Grandmillennial: tokens for both schemes, globals, arrival choreography.
    Imported by src/pages/t/grandmillennial/[...page].astro only. Every rule is scoped
-   under [data-theme='grandmillennial']. See src/themes/README.md. */
+   under [data-theme='grandmillennial']. See src/themes/README.md.
+
+   One disciplined palette holds the pattern-on-pattern together: cream, hunter
+   green, oxblood, porcelain blue, and gold that is only ever a rule or an
+   ornament (gold text fails on cream). The light scheme is the parlour by day;
+   dark is a lacquered room, where a lighter gold may finally carry kickers. */
 
 :root[data-theme='grandmillennial'] {
   color-scheme: light;
-  --field: #ffffff;
-  --field-raised: #f2f2f2;
-  --mark: #111111;
-  --mark-muted: #555555;
-  --accent: #1a4fd6;
-  --link: #1a4fd6;
-  --on-accent: #ffffff;
-  --font-body: system-ui, sans-serif;
-  --font-display: system-ui, sans-serif;
+
+  /* Primitives. */
+  --cream: #f7f0e1;
+  --hunter: #1f4a33;
+  --hunter-ink: #1f3327;
+  --oxblood: #7d1f2b;
+  --porcelain: #1f4a8a;
+  --porcelain-deep: #1d3e75;
+  --porcelain-pale: #dfe7f2;
+  --gold: #b8933f;
+  --gold-light: #e2c983;
+  --gold-deep: #8a6a26;
+
+  /* Semantic tokens (native scheme). */
+  --field: var(--cream);
+  --field-raised: #fdf9f0;
+  --mark: var(--hunter-ink);
+  --mark-muted: #5a5242;
+  --accent: var(--oxblood);
+  --link: var(--porcelain);
+  --on-accent: #fbf5e8;
+
+  /* Surfaces that carry text (meta.contrast). */
+  --paper: #f3f0ea;
+  --oval: #fbf6ea;
+  --band: var(--porcelain-deep);
+  --band-mark: #f7f0e1;
+  --band-accent: #e6cd87;
+  --band-link: #f7f0e1;
+  --foot: #1c3a2a;
+  --foot-mark: #f3ead6;
+  --foot-muted: #cfc4a4;
+  --foot-link: #f3ead6;
+
+  /* Ornament only: never text. */
+  --rule: var(--gold);
+  --ornament: var(--gold);
+  --ornament-deep: var(--gold-deep);
+  --lattice: rgb(31 74 138 / 0.13);
+  --band-lattice: rgb(223 231 242 / 0.14);
+  --piping: var(--hunter);
+  --btn-rule: var(--gold-light);
+  --porcelain-ground: var(--porcelain-pale);
+  --porcelain-ink: #2b58a0;
+  --stripe-a: var(--hunter);
+  --stripe-b: #f4ecd9;
+  --ticking: rgb(31 74 138 / 0.09);
+  --bow: #a3283a;
+  --bow-deep: #6e1623;
+  --plate: #fbf8f1;
+  --plate-ink: #2b58a0;
+  --seal: #8e2433;
+  --seal-deep: #5f121d;
+  --stitch: #a8394a;
+  --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
+  /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
+  --bark-edge: #cfc6b4;
+  --catkin: #8f7a4a;
+  /* The envelope's flap, distinct from the writing paper it lies beside. */
+  --flap: var(--paper);
+
+  /* The chintz repeat's inks (parts/Defs.astro). */
+  --c-ground: #f5e5dc;
+  --c-rose: #c9576b;
+  --c-rose-lt: #f0c0b8;
+  --c-rose-dk: #7d1f2b;
+  --c-leaf: #2f5e41;
+  --c-leaf-lt: #8aa981;
+  --c-blue: #3a64a8;
+  --c-dot: #b8933f;
+
+  --font-display: 'Playfair Display Variable', 'Playfair Display Variable fallback', Georgia, serif;
+  --font-body: 'Cormorant Garamond Variable', 'Cormorant Garamond Variable fallback', Georgia, serif;
+  --font-script: 'Pinyon Script', 'Pinyon Script fallback', Georgia, cursive;
+
+  --measure: 36em;
+  --wrap: 72rem;
+  --gutter: clamp(1.1rem, 4vw, 2.5rem);
 }
 
 :root[data-theme='grandmillennial'][data-scheme='dark'] {
   color-scheme: dark;
-  --field: #111111;
-  --field-raised: #1d1d1d;
-  --mark: #f2f2f2;
-  --mark-muted: #b5b5b5;
-  --accent: #8fb0ff;
-  --link: #8fb0ff;
-  --on-accent: #111111;
+
+  --field: #10271c;
+  --field-raised: #183426;
+  --mark: #f2e8d2;
+  --mark-muted: #cbbd98;
+  --accent: #dcbf78;
+  --link: #afc8ec;
+  --on-accent: #10271c;
+
+  --paper: #132d21;
+  --oval: #0d2118;
+  --band: #4a111b;
+  --band-mark: #f5ead3;
+  --band-accent: #e2c67f;
+  --band-link: #f5ead3;
+  /* A lacquer, not a shadow: the oxblood the awning opened with, so the room
+     is bracketed top and bottom. */
+  --foot: #3b0d16;
+  --foot-mark: #f2e8d2;
+  --foot-muted: #d9b896;
+  --foot-link: #e2c67f;
+
+  --rule: #c9a95c;
+  --ornament: #c9a95c;
+  --ornament-deep: #8a6a26;
+  --lattice: rgb(220 191 120 / 0.09);
+  --band-lattice: rgb(226 198 127 / 0.1);
+  --piping: #c9a95c;
+  --btn-rule: #8a6a26;
+  --porcelain-ground: #2a4a7e;
+  --porcelain-ink: #8fb0e0;
+  --stripe-a: #5b1520;
+  --stripe-b: #d8c7a0;
+  --ticking: rgb(220 191 120 / 0.06);
+  --bow: #b8394c;
+  --bow-deep: #6e1623;
+  /* An aged glaze, not a glow: the plates sit in lamplight, not brighter than the h1. */
+  --plate: #d9d0bd;
+  --plate-ink: #2b58a0;
+  --seal: #9a2a3a;
+  --seal-deep: #5f121d;
+  --stitch: #c9a95c;
+  --bark-edge: #4a4130;
+  --catkin: #a68f5c;
+  --flap: #0f251b;
+
+  --c-ground: #1b3a2a;
+  --c-rose: #b04458;
+  --c-rose-lt: #d99a9c;
+  --c-rose-dk: #5d1422;
+  --c-leaf: #4b7d59;
+  --c-leaf-lt: #7f9c73;
+  --c-blue: #86a6d8;
+  --c-dot: #c9a95c;
 }
 
 :where([data-theme='grandmillennial']) *,
@@ -35,13 +156,198 @@
   background: var(--field);
   color: var(--mark);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.55;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
-[data-theme='grandmillennial'] a { color: var(--link); }
+/* The lacquered room: a slow sheen across the green, as if lit from one lamp. */
+[data-theme='grandmillennial'][data-scheme='dark'] body {
+  background:
+    radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%),
+    var(--field);
+}
+[data-theme='grandmillennial'] :is(h1, h2, h3, p, ul, ol, figure, blockquote) { margin: 0; }
+[data-theme='grandmillennial'] :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+[data-theme='grandmillennial'] p { text-wrap: pretty; }
+[data-theme='grandmillennial'] a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+[data-theme='grandmillennial'] a:hover { text-decoration-thickness: 2px; }
 [data-theme='grandmillennial'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 [data-theme='grandmillennial'] main:focus { outline: none; }
 [data-theme='grandmillennial'] .skip { position: absolute; left: -100vw; top: 0; }
-[data-theme='grandmillennial'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='grandmillennial'] .skip:focus {
+  left: 1rem; top: 1rem; z-index: 10;
+  background: var(--field-raised); color: var(--mark);
+  padding: 0.5rem 1rem; border: 1px solid var(--rule);
+}
 [data-theme='grandmillennial'] img,
 [data-theme='grandmillennial'] svg,
 [data-theme='grandmillennial'] canvas { max-width: 100%; display: block; }
+[data-theme='grandmillennial'] em { font-style: italic; }
+[data-theme='grandmillennial'] strong { font-weight: 700; }
+
+/* ---------- Shared furniture ---------- */
+
+[data-theme='grandmillennial'] .gm-wrap {
+  width: min(100% - 2 * var(--gutter), var(--wrap));
+  margin-inline: auto;
+}
+
+/* Kicker: letterspaced capitals in oxblood (gold in the lacquered room). */
+[data-theme='grandmillennial'] .gm-kicker {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+/* A kicker set between two gold rules, each ending in a bead. */
+[data-theme='grandmillennial'] .gm-kicker.ruled {
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+  text-align: center;
+  white-space: nowrap;
+}
+[data-theme='grandmillennial'] .gm-kicker.ruled::before,
+[data-theme='grandmillennial'] .gm-kicker.ruled::after {
+  content: '';
+  flex: 0 1 5rem; min-width: 1.5rem; height: 7px;
+  background:
+    linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat,
+    radial-gradient(circle, var(--rule) 2.6px, transparent 3.2px) left center / 7px 7px no-repeat;
+}
+[data-theme='grandmillennial'] .gm-kicker.ruled::after {
+  background:
+    linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat,
+    radial-gradient(circle, var(--rule) 2.6px, transparent 3.2px) right center / 7px 7px no-repeat;
+}
+
+/* The CTA: an oxblood cushion with a gold inset rule, like a piped seat. */
+[data-theme='grandmillennial'] .gm-btn {
+  display: inline-flex; align-items: center; gap: 0.7em;
+  padding: 0.85rem 2.1rem 0.9rem;
+  border: 0; border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 2px 0 var(--ornament-deep);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+[data-theme='grandmillennial'] .gm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 3px 0 var(--ornament-deep);
+}
+[data-theme='grandmillennial'] .gm-btn:focus-visible { outline-offset: 4px; }
+[data-theme='grandmillennial'] .gm-btn .fleuron { font-style: normal; font-size: 0.9em; }
+
+/* A text link that ends in a small curl: the more-links. */
+[data-theme='grandmillennial'] .gm-more {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.2rem;
+}
+[data-theme='grandmillennial'] .gm-more .curl { display: inline-block; margin-left: 0.35em; text-decoration: none; }
+
+/* Trellis wallpaper: the lattice drawn once in assets/trellis.svg and inked
+   per scheme through a mask, so the same vector serves the day parlour and
+   the lacquered room. */
+[data-theme='grandmillennial'] .gm-trellis { position: relative; isolation: isolate; }
+[data-theme='grandmillennial'] .gm-trellis::before {
+  content: '';
+  position: absolute; inset: 0; z-index: -1;
+  background: var(--lattice);
+  -webkit-mask: url('./assets/trellis.svg') center top / 56px 56px repeat;
+  mask: url('./assets/trellis.svg') center top / 56px 56px repeat;
+  pointer-events: none;
+}
+
+/* Scalloped edges, cut with a mask: a half-circle per stripe width. */
+[data-theme='grandmillennial'] .gm-scallop-b {
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 0, #000 calc(100% - 0.5px), #0000 100%) left bottom / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 0, #000 calc(100% - 0.5px), #0000 100%) left bottom / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+}
+[data-theme='grandmillennial'] .gm-scallop-t {
+  -webkit-mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 100%, #000 calc(100% - 0.5px), #0000 100%) left top / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 100%, #000 calc(100% - 0.5px), #0000 100%) left top / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+}
+[data-theme='grandmillennial'] .gm-scallop-t.gm-scallop-b {
+  -webkit-mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 100%, #000 calc(100% - 0.5px), #0000 100%) left top / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x,
+    radial-gradient(circle var(--r, 14px) at 50% 0, #000 calc(100% - 0.5px), #0000 100%) left bottom / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--r, 14px)) no-repeat,
+    radial-gradient(circle var(--r, 14px) at 50% 100%, #000 calc(100% - 0.5px), #0000 100%) left top / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x,
+    radial-gradient(circle var(--r, 14px) at 50% 0, #000 calc(100% - 0.5px), #0000 100%) left bottom / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
+}
+
+/* The portal's switcher spacer follows the footer; carry the footer's green
+   down under it so the page ends on the skirted table, not a stripe of field. */
+[data-theme='grandmillennial'] .site-footer + div { background: var(--foot); }
+
+/* Sent's room runs straight into the valance: no leftover strip of plain
+   field between its gold double rule and the skirted table. */
+[data-theme='grandmillennial'] body:has(.sent) .site-footer { margin-top: 0; }
+
+/* ---------- Arrival: the drapes part ---------- */
+
+/* Coming in from another school (or the Lab), the new room is revealed from
+   the centre outwards, two drapes drawn back. Moving between rooms of this
+   school is only a short crossfade: the drapes are for arriving. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-old(root) {
+    animation: gm-hold 640ms linear both;
+  }
+  html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-new(root) {
+    animation: gm-drapes 640ms cubic-bezier(0.62, 0, 0.22, 1) both;
+  }
+  html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(root),
+  html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-new(root) {
+    animation-duration: 260ms;
+  }
+  html[data-theme='grandmillennial']::view-transition-group(wordmark) {
+    animation-duration: 560ms;
+    animation-timing-function: cubic-bezier(0.62, 0, 0.22, 1);
+  }
+}
+/* The new room bares itself from the centre outward, like two drapes drawn
+   back at once. No filter: a brightness pass over the full-page snapshot
+   cost a repaint every frame for a flicker nobody could see under 640ms. */
+@keyframes gm-drapes {
+  from { clip-path: inset(0 50% 0 50%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes gm-hold {
+  from, to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='grandmillennial']::view-transition-group(*),
+  html[data-theme='grandmillennial']::view-transition-old(*),
+  html[data-theme='grandmillennial']::view-transition-new(*) { animation: none; }
+}

@@ -1,0 +1,13 @@
+---
+/** A panel of the chinoiserie toile repeat (parts/Defs.astro): scattered
+    blue sprays, no lattice line, for the porcelain sample-book swatch. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<svg class:list={['gm-toile', cls]} aria-hidden="true" focusable="false">
+  <rect width="100%" height="100%" fill="url(#gm-porcelaine)" />
+</svg>
+
+<style>
+  .gm-toile { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>

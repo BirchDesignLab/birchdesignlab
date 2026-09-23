@@ -1,4 +1,8 @@
 ---
+/** Grandmillennial footer: a skirted table. A scalloped, gilt-piped valance
+    over box pleats, then hunter green (a deeper lacquer after dark) with the
+    script monogram in its oval cartouche and the studio's particulars set
+    centred like a calling card. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
@@ -7,12 +11,85 @@ const { chrome, theme } = Astro.props;
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
-  <p>{chrome.name}</p>
-  <p>{chrome.location}</p>
-  <nav aria-label="Footer">
-    {chrome.nav.map(({ to, label }) => (
-      <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
-    ))}
-  </nav>
-  <p>&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+  <div class="valance-hang" aria-hidden="true"><div class="valance gm-scallop-t"></div></div>
+  <div class="foot">
+    <div class="gm-wrap inner">
+      <span class="cartouche" aria-hidden="true"><span class="mono">B</span></span>
+      <p class="name">{chrome.name}</p>
+      <p class="loc">{chrome.location}</p>
+      <nav aria-label="Footer">
+        {chrome.nav.map(({ to, label }, i) => (
+          <>{i > 0 && <span class="sep" aria-hidden="true">&#10086;</span>}<a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a></>
+        ))}
+      </nav>
+      <p class="fine">&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+    </div>
+  </div>
 </footer>
+
+<style>
+  .site-footer { margin-top: clamp(4rem, 9vw, 7rem); }
+  .valance-hang { filter: drop-shadow(0 -2px 0 var(--rule)); }
+  /* Box pleats: a lit face, a shadowed fold, a crease, every 26px. */
+  .valance.gm-scallop-t {
+    --r: 13px;
+    height: 46px;
+    background:
+      linear-gradient(to bottom, transparent 40%, rgb(0 0 0 / 0.18)),
+      repeating-linear-gradient(90deg,
+        var(--foot) 0 9px,
+        color-mix(in srgb, var(--foot), #fff 14%) 9px 17px,
+        color-mix(in srgb, var(--foot), #000 28%) 17px 19px,
+        var(--foot) 19px 26px);
+  }
+  .foot {
+    background: var(--foot);
+    color: var(--foot-mark);
+    padding-block: 2.5rem 3rem;
+    border-top: 1px solid color-mix(in srgb, var(--rule), transparent 50%);
+  }
+  .inner { display: grid; justify-items: center; text-align: center; gap: 0.35rem; }
+  .cartouche {
+    display: grid; place-items: center;
+    width: 4.2rem; height: 5.2rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    outline: 1px solid var(--rule);
+    outline-offset: 4px;
+    margin-bottom: 1rem;
+  }
+  .mono {
+    font-family: var(--font-script);
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--rule);
+    translate: -0.06em 0.12em;
+  }
+  .name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    padding-left: 0.32em;
+  }
+  .loc { font-style: italic; color: var(--foot-muted); }
+  nav {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 0.4rem 1rem;
+    margin-block: 1.25rem 0.75rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  nav a { display: inline-block; padding-block: 0.7rem; color: var(--foot-link); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .sep { color: var(--rule); font-size: 0.9rem; letter-spacing: 0; }
+  .fine { font-size: 1rem; color: var(--foot-muted); }
+  .fine a { display: inline-block; padding-block: 0.6rem; color: var(--foot-link); }
+  .foot :focus-visible { outline-color: var(--foot-link); }
+  @media (max-width: 480px) {
+    nav { gap: 0.5rem 1.2rem; letter-spacing: 0.14em; }
+    .sep { display: none; }
+  }
+</style>

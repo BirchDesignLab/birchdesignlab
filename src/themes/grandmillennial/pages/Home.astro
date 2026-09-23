@@ -1,39 +1,347 @@
 ---
+/** Grandmillennial home. The name hangs as a portrait: an oval cartouche in
+    a chintz mat, a gilt frame, hung from a ribbon bow on trellis wallpaper
+    between two columns of blue-and-white plates. Then two upholstered doors,
+    the Lab on a scalloped porcelain-blue band between ginger jars, and the
+    ask in a framed card. */
 import { featuredSpecimens, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Bow from '../parts/Bow.astro';
+import Chintz from '../parts/Chintz.astro';
+import Framed from '../parts/Framed.astro';
+import Jar from '../parts/Jar.astro';
+import Plate from '../parts/Plate.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
 const featured = await featuredSpecimens();
+const [first, ...rest] = chrome.name.split(' ');
 ---
-<section class="hero">
-  <h1>{chrome.name}</h1>
+<section class="hero gm-trellis">
+  <div class="plates left" aria-hidden="true"><Plate class="p-lg" turn={20} /><Plate class="p-sm" turn={140} /></div>
+  <div class="portrait">
+    <span class="ribbon" aria-hidden="true"></span>
+    <Bow class="bow" />
+    <div class="gilt">
+      <div class="mat">
+        <Chintz />
+        <div class="oval">
+          <svg class="crest" viewBox="0 0 80 24" aria-hidden="true" focusable="false"><path d="M40 2C36 8 30 12 22 12 14 12 8 16 2 22M40 2C44 8 50 12 58 12 66 12 72 16 78 22" /><path class="drop" d="M40 2C38 8 38 14 40 20 42 14 42 8 40 2Z" /><circle cx="22" cy="12" r="1.8" /><circle cx="58" cy="12" r="1.8" /></svg>
+          <h1 class="billboard"><span class="b-first">{first}</span> <span class="b-rest">{rest.join(' ')}</span></h1>
+          <svg class="crest under" viewBox="0 0 120 14" aria-hidden="true" focusable="false"><path d="M2 7C24 7 34 2 48 2S58 12 60 7 64 2 72 2 96 7 118 7" /><circle cx="60" cy="7" r="2.2" /></svg>
+        </div>
+      </div>
+    </div>
+    <p class="plaque"><span class="screw" aria-hidden="true"></span>{copy.opener.lead}<span class="screw" aria-hidden="true"></span></p>
+  </div>
+  <div class="plates right" aria-hidden="true"><Plate class="p-lg" turn={200} /><Plate class="p-sm" turn={320} /></div>
 </section>
-<section class="opener">
-  <p class="lead">{copy.opener.lead}</p>
-  <p>{copy.opener.subline}</p>
+
+<section class="opener gm-wrap">
+  <svg class="flourish" viewBox="0 0 200 24" aria-hidden="true" focusable="false"><path d="M4 12H70C80 12 84 4 92 4S100 16 100 12 96 4 104 4 120 12 130 12H196M100 12C96 18 92 22 86 20M100 12C104 18 108 22 114 20" /><circle cx="100" cy="12" r="2.4" /></svg>
+  <p class="subline">{copy.opener.subline}</p>
 </section>
-<section class="doors">
-  <h2>{copy.doors.kicker}</h2>
-  {copy.doors.items.map((door) => (
-    <article>
-      <h3>{door.title}</h3>
-      <p>{door.body}</p>
-    </article>
-  ))}
-  <a href={hrefFor('services', theme)}>{copy.doors.more}</a>
+
+<section class="doors gm-wrap">
+  <h2 class="gm-kicker ruled">{copy.doors.kicker}</h2>
+  <div class="door-row">
+    {copy.doors.items.map((door, i) => (
+      <article class="door">
+        <div class="valance-hang" aria-hidden="true">
+          <div class:list={['valance', 'gm-scallop-b', i % 2 ? 'ticking' : 'floral']}>
+            {i % 2 === 0 && <Chintz />}
+          </div>
+        </div>
+        <div class="door-body">
+          <h3>{door.title}</h3>
+          <p>{door.body}</p>
+        </div>
+      </article>
+    ))}
+  </div>
+  <p class="more"><a class="gm-more" href={hrefFor('services', theme)}>{copy.doors.more}<span class="curl" aria-hidden="true">&#10087;</span></a></p>
 </section>
+
 {featured.length > 0 && (
   <section class="lab">
-    <p>{copy.lab.kicker}</p>
-    <p>{copy.lab.pull}</p>
-    <ul data-parity-skip>
-      {featured.map((entry) => <li>{entry.data.designation} {entry.data.summary}</li>)}
-    </ul>
-    <a href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
+    <div class="band gm-trellis gm-scallop-t gm-scallop-b">
+      <div class="gm-wrap band-inner">
+        <Jar class="jar" />
+        <div class="band-copy">
+          <p class="gm-kicker ruled">{copy.lab.kicker}</p>
+          <p class="pull">{copy.lab.pull}</p>
+          <ul class="specimens" role="list" data-parity-skip>
+            {featured.map((entry) => (
+              <li>
+                <span class="designation">{entry.data.designation}</span>
+                <span class="summary">{entry.data.summary}</span>
+              </li>
+            ))}
+          </ul>
+          <a class="gm-more" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}<span class="curl" aria-hidden="true">&#10087;</span></a>
+        </div>
+        <Jar class="jar" />
+      </div>
+    </div>
   </section>
 )}
-<section class="closer">
-  <p>{copy.closer.lead}</p>
-  <a href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+
+<section class="closer gm-wrap">
+  <Framed tone="field" class="closer-card">
+    <p class="closer-lead">{copy.closer.lead}</p>
+    <a class="gm-btn" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+  </Framed>
 </section>
+
+<style>
+  /* ---------- The portrait ---------- */
+  /* Trellis paper between a picture rail and a chair rail. */
+  .hero {
+    display: grid; justify-items: center; align-items: center;
+    grid-template-columns: 1fr auto 1fr;
+    column-gap: clamp(2rem, 6vw, 6rem);
+    border-top: 1px solid var(--rule);
+    border-bottom: 5px double var(--rule);
+    padding: clamp(3.25rem, 6vw, 4rem) var(--gutter) clamp(3rem, 6vw, 4.5rem);
+    overflow: hidden;
+  }
+  .portrait { grid-column: 2; position: relative; width: clamp(15rem, 28vw, 22rem); }
+  .plates { display: grid; justify-items: center; gap: 2.75rem; }
+  .plates.left { justify-self: end; }
+  .plates.right { justify-self: start; }
+  .plates :global(.p-lg) { width: 10.5rem; }
+  .plates :global(.p-sm) { width: 6.5rem; }
+  /* The ribbon the portrait hangs from runs up out of sight under the awning. */
+  .ribbon {
+    position: absolute; left: 50%; bottom: 100%;
+    width: 16px; height: 40vh;
+    translate: -50% 14px;
+    background:
+      linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 30% 70%, rgb(0 0 0 / 0.18)),
+      var(--bow);
+  }
+  .portrait :global(.bow) {
+    position: absolute; left: 50%; top: 0;
+    width: 8.5rem;
+    translate: -50% -62%;
+    z-index: 2;
+    filter: drop-shadow(0 3px 3px rgb(40 10 10 / 0.25));
+  }
+  .gilt {
+    position: relative;
+    padding: 15px;
+    background: var(--gilt);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 245 210 / 0.6),
+      inset 0 0 0 4px rgb(122 90 28 / 0.35),
+      0 22px 38px -16px rgb(40 22 8 / 0.55);
+  }
+  /* The sight edge: a beaded gold lip where the frame meets the mat. */
+  .gilt::after {
+    content: '';
+    position: absolute; inset: 9px;
+    border: 3px dotted rgb(255 240 200 / 0.75);
+    pointer-events: none;
+  }
+  .mat {
+    position: relative;
+    display: grid; place-items: center;
+    padding: clamp(1.6rem, 3.4vw, 2.4rem);
+    aspect-ratio: 4 / 5;
+    box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.35);
+    overflow: hidden;
+  }
+  .oval {
+    position: relative;
+    display: grid; place-content: center; justify-items: center; gap: 0.9rem;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: var(--oval);
+    box-shadow:
+      0 0 0 3px var(--ornament),
+      0 0 0 5px var(--oval),
+      0 0 0 6px var(--ornament),
+      0 4px 14px 5px rgb(0 0 0 / 0.25),
+      inset 0 0 0 7px var(--oval),
+      inset 0 0 0 8px var(--ornament);
+  }
+  .crest { width: 4.5rem; overflow: visible; }
+  .crest.under { width: 7rem; }
+  .crest path { fill: none; stroke: var(--ornament); stroke-width: 1.3; stroke-linecap: round; }
+  .crest .drop { fill: var(--ornament); }
+  .crest circle { fill: var(--ornament); }
+  .billboard {
+    display: grid; justify-items: center; gap: 0.2em;
+    text-align: center;
+    font-weight: 400;
+  }
+  .b-first {
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(2.6rem, 5.5vw, 4rem);
+    line-height: 0.95;
+    color: var(--mark);
+  }
+  .b-rest {
+    font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+    letter-spacing: 0.38em;
+    padding-left: 0.38em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  /* A brass nameplate hung under the frame, like a museum label: it says
+     something the wordmark above doesn't. */
+  .plaque {
+    position: relative;
+    margin: 1.5rem auto 0;
+    padding: 0.6rem 2.25rem;
+    max-width: 22rem;
+    background: var(--field-raised);
+    border: 1px solid var(--ornament-deep);
+    box-shadow: inset 0 0 0 1px rgb(255 245 210 / 0.5), 0 3px 8px -4px rgb(40 22 8 / 0.4);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    line-height: 1.3;
+    text-align: center;
+    color: var(--mark);
+  }
+  .screw {
+    position: absolute; top: 50%; translate: 0 -50%;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ornament-deep);
+    box-shadow: inset 0 0 0 1px rgb(255 245 210 / 0.6);
+  }
+  .screw:first-child { left: 0.55rem; }
+  .screw:last-child { right: 0.55rem; }
+
+  /* ---------- Opener ---------- */
+  .opener {
+    display: grid; justify-items: center; text-align: center;
+    padding-block: 1rem clamp(4rem, 8vw, 6rem);
+  }
+  .flourish { width: 12rem; overflow: visible; margin-bottom: 1.75rem; }
+  .flourish path { fill: none; stroke: var(--rule); stroke-width: 1.3; stroke-linecap: round; }
+  .flourish circle { fill: var(--rule); }
+  .subline {
+    margin-top: 1.25rem;
+    max-width: 34em;
+    font-size: 1.35rem;
+    color: var(--mark-muted);
+  }
+
+  /* ---------- Doors ---------- */
+  .doors { padding-bottom: clamp(4rem, 8vw, 6rem); }
+  .door-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: clamp(2rem, 4vw, 3.5rem);
+    margin-top: 2.5rem;
+  }
+  /* Upholstered: a piped edge and a patterned valance across the top. */
+  .door {
+    position: relative;
+    background: var(--field-raised);
+    border: 3px solid var(--piping);
+    border-radius: 1.6rem 1.6rem 0.4rem 0.4rem;
+    box-shadow: inset 0 0 0 5px var(--field-raised), inset 0 0 0 6px var(--rule);
+    overflow: hidden;
+  }
+  .valance-hang { filter: drop-shadow(0 2px 0 var(--rule)); }
+  .valance { position: relative; height: 5.5rem; --r: 14px; }
+  .valance.ticking {
+    background:
+      repeating-linear-gradient(90deg, transparent 0 11px, var(--porcelain-ink) 11px 13px, transparent 13px 16px, var(--porcelain-ink) 16px 17px, transparent 17px 28px),
+      var(--porcelain-ground);
+  }
+  .door-body { padding: 1.75rem clamp(1.5rem, 3vw, 2.5rem) 2.5rem; }
+  .door h3 {
+    font-size: clamp(1.8rem, 3vw, 2.3rem);
+    font-style: italic;
+    color: var(--mark);
+  }
+  .door h3::after {
+    content: '';
+    display: block;
+    width: 3rem; height: 1px;
+    margin-block: 1rem 1.1rem;
+    background: var(--rule);
+  }
+  .door p { color: var(--mark); }
+  .more { margin-top: 2.25rem; text-align: center; }
+
+  /* ---------- The Lab: a plate wall ---------- */
+  .lab { margin-block: 1rem clamp(4rem, 8vw, 6rem); }
+  .band {
+    --r: 16px;
+    --lattice: var(--band-lattice);
+    --mark: var(--band-mark);
+    --accent: var(--band-accent);
+    --link: var(--band-link);
+    --rule: var(--band-accent);
+    background: var(--band);
+    color: var(--mark);
+    padding-block: calc(var(--r) + clamp(3.5rem, 7vw, 5rem));
+  }
+  .band-inner {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 40rem) 1fr;
+    align-items: center;
+    gap: 2rem;
+  }
+  .band :global(.jar) { width: min(100%, 9.5rem); justify-self: center; }
+  .band-copy { display: grid; justify-items: center; text-align: center; }
+  .pull {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    line-height: 1.15;
+    margin-top: 1.25rem;
+    text-wrap: balance;
+  }
+  .specimens {
+    list-style: none; padding: 0;
+    display: grid; gap: 1.1rem;
+    margin-block: 2rem 2.25rem;
+    max-width: 34em;
+  }
+  .designation {
+    display: block;
+    font-variant-numeric: lining-nums;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.24em;
+    color: var(--accent);
+  }
+  .summary { font-size: 1.2rem; }
+
+  /* ---------- Closer ---------- */
+  .closer { display: grid; justify-items: center; }
+  .closer :global(.closer-card) {
+    display: grid; justify-items: center; gap: 1.5rem;
+    width: min(100%, 38rem);
+    text-align: center;
+    padding-block: clamp(2.5rem, 6vw, 3.75rem);
+  }
+  .closer-lead {
+    font-family: var(--font-script);
+    font-size: clamp(2.8rem, 6vw, 3.8rem);
+    line-height: 1.1;
+    color: var(--mark);
+  }
+
+  @media (max-width: 1100px) {
+    .hero { grid-template-columns: 1fr; }
+    .portrait { grid-column: 1; }
+    .plates { display: none; }
+  }
+  @media (max-width: 860px) {
+    .band-inner { grid-template-columns: 1fr; }
+    .band :global(.jar) { width: 5.5rem; }
+    .band :global(.jar:last-child) { display: none; }
+  }
+  /* A single jar with nothing to balance it reads as an orphan; on phones
+     drop it and let the kicker open the band. */
+  @media (max-width: 480px) {
+    .band :global(.jar) { display: none; }
+  }
+</style>

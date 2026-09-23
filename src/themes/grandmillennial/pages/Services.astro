@@ -1,33 +1,186 @@
 ---
+/** Grandmillennial services, laid out like a sample book: each offering
+    beside a pinked fabric swatch (chintz, then porcelain trellis), the
+    process as four cameos on trellis wallpaper, and the ask tied with a bow. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Bow from '../parts/Bow.astro';
+import Chintz from '../parts/Chintz.astro';
+import Toile from '../parts/Toile.astro';
 
 interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
+const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 ---
-<section>
-  <p>{copy.kicker}</p>
+<section class="intro gm-wrap">
+  <p class="gm-kicker ruled">{copy.kicker}</p>
   <h1>{copy.heading}</h1>
-  {copy.sublines.map((line) => <p>{line}</p>)}
+  <div class="sublines">
+    {copy.sublines.map((line) => <p>{line}</p>)}
+  </div>
 </section>
-{copy.offerings.map((offering) => (
-  <section>
-    <h2>{offering.heading}</h2>
-    {offering.body.map((para) => <p>{para}</p>)}
+
+{copy.offerings.map((offering, i) => (
+  <section class:list={['offering', 'gm-wrap', { flip: i % 2 === 1 }]}>
+    <div class="swatch-hang" aria-hidden="true">
+      <div class:list={['swatch', i % 2 ? 'porcelain' : 'floral']}>
+        {i % 2 === 0 ? <Chintz swatch /> : <Toile />}
+      </div>
+      <span class="tag">No. {i + 1}</span>
+    </div>
+    <div class="offer-text">
+      <h2>{offering.heading}</h2>
+      {offering.body.map((para) => <p>{para}</p>)}
+    </div>
   </section>
 ))}
-<section>
-  <h2>{copy.process.heading}</h2>
-  <ol>
-    {copy.process.steps.map((step) => (
-      <li>
-        <h3>{step.title}</h3>
-        <p>{step.body}</p>
-      </li>
-    ))}
-  </ol>
+
+<section class="process gm-trellis">
+  <div class="gm-wrap">
+    <h2 class="gm-kicker ruled">{copy.process.heading}</h2>
+    <ol class="steps" role="list">
+      {copy.process.steps.map((step, i) => (
+        <li>
+          <span class="cameo" aria-hidden="true"><span>{roman[i]}</span></span>
+          <h3>{step.title}</h3>
+          <p>{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
 </section>
-<section>
-  <p>{copy.pull}</p>
-  <a href={hrefFor('contact', theme)}>{copy.cta}</a>
+
+<section class="ask gm-wrap">
+  <Bow class="ask-bow" />
+  <p class="pull">{copy.pull}</p>
+  <a class="gm-btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
 </section>
+
+<style>
+  .intro {
+    display: grid; justify-items: center; text-align: center;
+    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(3rem, 6vw, 4.5rem);
+  }
+  .intro h1 {
+    font-style: italic;
+    font-size: clamp(2.8rem, 7vw, 5.2rem);
+    margin-top: 1.25rem;
+    max-width: 12em;
+  }
+  .sublines {
+    display: grid; gap: 0.9rem;
+    margin-top: 1.75rem;
+    max-width: 36em;
+    font-size: 1.35rem;
+    color: var(--mark-muted);
+  }
+
+  /* ---------- Sample-book spreads ---------- */
+  .offering {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+    padding-block: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  .offering.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); }
+  .offering.flip .swatch-hang { order: 2; }
+  /* The shadow is a drop-shadow on the hanger so it follows the pinked cut. */
+  .swatch-hang {
+    position: relative;
+    width: min(100%, 22rem);
+    justify-self: center;
+    filter: drop-shadow(0 10px 12px rgb(40 22 8 / 0.28));
+  }
+  /* Pinking shears: both long edges zigzag, cut with two intersected
+     conic masks (one tooth every 18px). */
+  .swatch {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    -webkit-mask:
+      conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
+      conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
+    -webkit-mask-composite: source-in;
+    mask:
+      conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
+      conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
+    mask-composite: intersect;
+  }
+  .swatch.porcelain { background: var(--porcelain-ground); }
+  .tag {
+    position: absolute; left: 50%; bottom: -1.1rem;
+    translate: -50% 0;
+    padding: 0.2rem 1.1rem 0.35rem;
+    background: var(--field-raised);
+    border: 1px solid var(--rule);
+    font-family: var(--font-script);
+    font-size: 1.6rem;
+    line-height: 1.2;
+    color: var(--mark);
+    white-space: nowrap;
+  }
+  .offer-text h2 {
+    font-size: clamp(2.2rem, 4.4vw, 3.2rem);
+    font-style: italic;
+    color: var(--accent);
+    margin-bottom: 1.4rem;
+  }
+  .offer-text p { max-width: var(--measure); }
+  .offer-text p + p { margin-top: 1rem; }
+
+  /* ---------- Four cameos ---------- */
+  .process {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-block: clamp(3.5rem, 7vw, 5rem);
+    border-block: 1px solid var(--rule);
+  }
+  .steps {
+    list-style: none; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(1.75rem, 3vw, 2.75rem);
+    margin-top: 3rem;
+  }
+  .steps li { display: grid; justify-items: center; align-content: start; text-align: center; gap: 0.75rem; }
+  .cameo {
+    display: grid; place-items: center;
+    width: 4.6rem; height: 5.8rem;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--porcelain), var(--porcelain-deep));
+    box-shadow: 0 0 0 3px var(--plate), 0 0 0 4px var(--ornament), 0 0 0 8px var(--field), 0 0 0 9px var(--ornament), 0 8px 14px 6px rgb(0 0 0 / 0.12);
+    margin-bottom: 0.75rem;
+  }
+  .cameo span {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.7rem;
+    color: var(--plate);
+  }
+  .steps h3 { font-size: 1.6rem; font-style: italic; }
+  .steps p { text-align: left; hyphens: auto; max-width: 17em; margin-inline: auto; font-size: 1.2rem; }
+
+  /* ---------- The ask ---------- */
+  .ask {
+    display: grid; justify-items: center; gap: 1.75rem;
+    text-align: center;
+    padding-top: clamp(4rem, 8vw, 6rem);
+  }
+  .ask :global(.ask-bow) { width: 7rem; }
+  .pull {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.15;
+    max-width: 18em;
+    text-wrap: balance;
+  }
+
+  @media (max-width: 980px) {
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 3rem; }
+  }
+  @media (max-width: 720px) {
+    .offering, .offering.flip { grid-template-columns: 1fr; gap: 2.75rem; }
+    .offering.flip .swatch-hang { order: 0; }
+    .swatch { aspect-ratio: 16 / 9; }
+    .steps { grid-template-columns: 1fr; }
+  }
+</style>

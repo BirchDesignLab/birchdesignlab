@@ -1,0 +1,14 @@
+---
+/** A panel of the chintz repeat (parts/Defs.astro), filling its positioned
+    parent. `swatch` swaps in the half-scale tile: at sample-book size the
+    full tile only shows one flower and reads as a grid, not a fabric. */
+interface Props { class?: string; swatch?: boolean }
+const { class: cls, swatch = false } = Astro.props;
+---
+<svg class:list={['gm-chintz', cls]} aria-hidden="true" focusable="false">
+  <rect width="100%" height="100%" fill={swatch ? 'url(#gm-chintz-swatch)' : 'url(#gm-chintz)'} />
+</svg>
+
+<style>
+  .gm-chintz { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
