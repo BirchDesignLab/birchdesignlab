@@ -13,6 +13,7 @@ import {
   diffWords,
 } from './helpers';
 import { ROOT_PAGES } from '../../scripts/themes/lib/root-pages.mjs';
+import { THEMES } from '../../src/themes/registry';
 
 /**
  * The /t/ portal's promises, checked on the built site (spec §1, §5, §6).
@@ -46,6 +47,9 @@ function normalizeLink(href: string): string {
 describe('portal pages exist', () => {
   it('includes quiet', () => {
     expect(schools).toContain('quiet');
+  });
+  it('builds exactly the registered schools, no stale or unregistered ones', () => {
+    expect(schools).toEqual(THEMES.map((t) => t.id).sort());
   });
   for (const id of schools) {
     it(`${id} builds exactly the five business pages`, () => {

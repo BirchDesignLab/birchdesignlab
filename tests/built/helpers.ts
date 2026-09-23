@@ -57,9 +57,14 @@ export function stylesheetHrefs(html: string): string[] {
     .filter(Boolean);
 }
 
+/** Link targets a visitor can follow as content: anchors inside
+    aria-hidden decoration or a [data-parity-skip] zone (quiet's bark credit,
+    the lab-derived specimen lines) are left out, the same rule the word
+    parity uses. */
 export function anchorHrefs(html: string): string[] {
   return doc(html)
     .querySelectorAll('a[href]')
+    .filter((a) => !a.closest('[aria-hidden="true"]') && !a.closest('[data-parity-skip]'))
     .map((a) => a.getAttribute('href') ?? '');
 }
 

@@ -167,8 +167,24 @@ export default defineConfig({
       // custom properties, which fontaine's usage-rewriter does not touch.
       // resolvePath maps the @fontsource url back to the node_modules file so
       // the metrics can be read at build time.
+      //
+      // Fallbacks are per family since the theme-schools work (F022): the
+      // schools bring sans and mono faces, and a sans face measured against
+      // Georgia swaps in with a jolt. The serif families keep exactly the list
+      // they always had (Georgia first), so the root pages' fallback faces are
+      // byte-identical to before; anything unlisted falls to fontaine's
+      // category defaults (system sans), and the two monospace faces get
+      // Courier New.
       FontaineTransform.vite({
-        fallbacks: ['Georgia', 'Times New Roman', 'serif'],
+        fallbacks: Object.fromEntries([
+          ...[
+            'Marcellus', 'Spectral', 'Cormorant SC', 'Cormorant Variable', 'EB Garamond Variable',
+            'Fraunces Variable', 'Newsreader Variable', 'Source Serif 4 Variable',
+            'Libre Caslon Display', 'Playfair Display Variable', 'Cormorant Garamond Variable',
+            'Lora Variable', 'Pinyon Script',
+          ].map((family) => [family, ['Georgia', 'Times New Roman', 'serif']]),
+          ...['VT323', 'IBM Plex Mono'].map((family) => [family, ['Courier New']]),
+        ]),
         resolvePath: (id) => new URL(`.${id}`, import.meta.url),
       }),
     ],
