@@ -9,6 +9,7 @@ import JsonLd from '../../components/JsonLd.astro';
 import { buildBreadcrumb } from '../../lib/seo/jsonld';
 import { buildCreativeWork } from '../../lib/seo/organization';
 import { experimentComponents } from '../../experiments/registry';
+import { studyExtras } from '../../studies/registry';
 
 export async function getStaticPaths() {
   // Every live entry generates, except experiments with their own route (href).
@@ -25,6 +26,9 @@ const { Content } = await render(entry);
 const pageTitle = `${designation} ${title} · Birch Design Lab`;
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 const Experiment = entry.data.type === 'experiment' ? experimentComponents[designation] : undefined;
+// A study can carry an in-page piece after its narrative (BDL-011's school
+// index). Same lookup-by-designation shape as the experiment stages.
+const StudyExtra = entry.data.type === 'study' ? studyExtras[designation] : undefined;
 
 // Home > The Lab > <entry>. Trailing slashes match the page canonicals so the
 // breadcrumb item URLs and the <link rel=canonical> agree. Skipped for
@@ -67,7 +71,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
 
     <section class="plate wrap">
       <dl>
-        <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>
+        {entry.data.client && <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>}
         <div><dt class="smallcaps">Delivered</dt><dd>{dateLabel}</dd></div>
         <div><dt class="smallcaps">Built with</dt><dd class="chips">{tech.map((t) => <span class="tag">{t}</span>)}</dd></div>
         <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a><span class="tick" aria-hidden="true"></span></dd></div>
@@ -77,6 +81,8 @@ const creativeWork = buildCreativeWork(Astro.site!, {
     <article class="prose wrap">
       <Content />
     </article>
+
+    {StudyExtra && <StudyExtra />}
 
     {/* Static loud band: studies ship no JS, so no reveal here until the theme pass decides motion. */}
     <section class="loud">

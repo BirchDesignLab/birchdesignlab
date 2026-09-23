@@ -3,7 +3,8 @@ import { z } from 'astro/zod';
 /**
  * The Lab collection schema: a discriminated union on `type`.
  * - experiment: self-initiated work with an interactive stage (howto/href rule).
- * - study: client work; narrative page with a hero image and a live URL.
+ * - study: finished work shown as a narrative page with a hero image and a
+ *   live URL; client work, or a self-study (selfStudy: true, no client).
  *
  * Exported as a factory because the study branch needs Astro's image()
  * helper, which only exists inside content.config's schema context. Tests
@@ -45,7 +46,11 @@ export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
     .object({
       ...base,
       type: z.literal('study'),
-      client: z.string().min(1),
+      /** Who the work was for. A study of our own (BDL-011, the design
+          schools) has no client and says so with selfStudy instead, so a
+          missing client is always a decision, never an omission. */
+      client: z.string().min(1).optional(),
+      selfStudy: z.literal(true).optional(),
       liveUrl: z.url(),
       hero: z.object({ src: image(), alt: z.string().min(1) }),
     })
@@ -56,6 +61,12 @@ export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
       ctx.addIssue({
         code: 'custom',
         message: 'experiments need a howto wall label (or an href)',
+      });
+    }
+    if (d.type === 'study' && (d.client === undefined) === (d.selfStudy === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'studies name a client, or declare selfStudy: true, and not both',
       });
     }
   });
