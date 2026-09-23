@@ -159,8 +159,10 @@ async function main() {
           if (!route.includes('404')) problems.push(`${url} HTTP ${resp?.status()}`);
         }
         await page.evaluate(() => document.fonts.ready);
-        if (fullPage && !motion) {
+        if (fullPage) {
           // Walk the page so IntersectionObserver-gated content has fired.
+          // Under --motion this matters most: the reveal gate (base.css) only
+          // hides anything when motion is allowed.
           await page.evaluate(async () => {
             const step = innerHeight * 0.8;
             for (let y = 0; y < document.body.scrollHeight; y += step) {

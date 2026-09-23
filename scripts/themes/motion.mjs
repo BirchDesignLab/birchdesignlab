@@ -175,18 +175,24 @@ for (const scheme of schemes) {
           if (scenario === 'arrive') await followLink(page, `/t/${id}/`);
           else if (scenario === 'page') await followLink(page, `/t/${id}/about/`);
         });
+        // A strip whose navigation never landed would pass for a real
+        // transition, so it is written under a name that says it failed.
+        let failed = false;
         if (scenario !== 'fx') {
           const want = scenario === 'arrive' ? `/t/${id}/` : `/t/${id}/about/`;
-          if (new URL(page.url()).pathname !== want) problems.push(`${id} ${scenario}: ended on ${page.url()}, wanted ${want}`);
+          if (new URL(page.url()).pathname !== want) {
+            failed = true;
+            problems.push(`${id} ${scenario} ${vpName}: ended on ${page.url()}, wanted ${want}`);
+          }
         }
         if (frames.length < 2) {
           problems.push(`${id} ${scenario} ${vpName}: only ${frames.length} frame(s), nothing moved`);
           if (!frames.length) continue;
         }
-        const file = `${id}__${scenario}__${scheme}__${vpName}.png`;
+        const file = `${id}__${scenario}__${scheme}__${vpName}${failed ? '__FAILED' : ''}.png`;
         const mobile = !!vp.mobile;
         await sheet(pick(frames, plan.frames, plan.ms), join(outDir, file), mobile ? 8 : 4, mobile ? 220 : 480);
-        made.push({ school: id, scenario, scheme, viewport: vpName, file, framesFilmed: frames.length });
+        made.push({ school: id, scenario, scheme, viewport: vpName, file, framesFilmed: frames.length, failed });
         console.log(`${file}  (${frames.length} frames filmed)`);
       }
     }

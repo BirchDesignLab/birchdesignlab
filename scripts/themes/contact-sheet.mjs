@@ -9,7 +9,8 @@
  * Usage (after capture.mjs):
  *   node scripts/themes/contact-sheet.mjs --label mobile-review [--scale 0.5] [--quality 88]
  * Reads scripts/themes/.out/<label>/manifest.json, writes
- * scripts/themes/.out/<label>/sheets/<school>.jpg.
+ * scripts/themes/.out/<label>/sheets/<school>.jpg, or <school>__<viewport>.jpg
+ * when the run holds more than one viewport (never mixed on one sheet).
  */
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -37,19 +38,20 @@ const PAGE_ORDER = ['', 'about', 'services', 'contact', 'contact/sent'];
 const pageOf = (route) => route.split('/').slice(3).filter(Boolean).join('/');
 const schoolOf = (route) => route.split('/')[2];
 
-const bySchool = new Map();
+const viewports = new Set(shots.map((s) => s.vpName));
+const bySheet = new Map();
 for (const shot of shots) {
   if (!shot.route.startsWith('/t/')) continue;
-  const id = schoolOf(shot.route);
-  if (!bySchool.has(id)) bySchool.set(id, []);
-  bySchool.get(id).push(shot);
+  const key = viewports.size > 1 ? `${schoolOf(shot.route)}__${shot.vpName}` : schoolOf(shot.route);
+  if (!bySheet.has(key)) bySheet.set(key, []);
+  bySheet.get(key).push(shot);
 }
 
 const GUTTER = 24;
 const HEAD = 56;
 await mkdir(join(dir, 'sheets'), { recursive: true });
 
-for (const [id, list] of bySchool) {
+for (const [id, list] of bySheet) {
   // Page-major, dark before light: each page's two schemes sit together.
   list.sort(
     (a, b) =>
@@ -72,7 +74,7 @@ for (const [id, list] of bySchool) {
   let x = GUTTER;
   list.forEach((shot, i) => {
     const page = pageOf(shot.route) || 'home';
-    ctx.fillText(`${page} · ${shot.scheme}`, x, HEAD / 2);
+    ctx.fillText(`${page} · ${shot.scheme} · ${shot.vpName}`, x, HEAD / 2);
     ctx.drawImage(images[i], x, HEAD, cols[i].w, cols[i].h);
     x += cols[i].w + GUTTER;
   });
