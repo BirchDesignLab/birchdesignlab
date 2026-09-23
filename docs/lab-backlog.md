@@ -63,8 +63,22 @@ Branch `feat/theme-schools-tranche-1`. Current handoff:
 (Tier 1 and 2 done; the founder's Stage 0 decisions are in
 `tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
-cottagecore, bauhaus, swiss); one PR at the end, schools and BDL-010/011
-going live together.
+cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
+PR'd so the founder can test on mobile live (BDL-010 stays forthcoming in the
+Lab until the schools reach A+); Stage 2 onward continues on a new branch.
+
+**Parked from the Stage 1 stop (09-23-26):**
+- Vaporwave's pressed task button switches instantly on an in-school swap
+  (its group has no animation). The alternative is a 250 ms fade of only the
+  pressed button. Founder: "address later". Decide it at vaporwave's pair
+  stage.
+- Root business pages inline about 1 to 2 KB of Astro's view-transition
+  keyframes (`astroFadeInOut` and friends) that they never use. The router's
+  CSS was bundled with quiet's Header styles (predates Stage 1; already on
+  main). It is inert and invisible, and breaks only the letter of "the portal
+  work leaves the root pages untouched". The fix is a bundling change that
+  moves live CSS files, so it waits for a quiet moment with a before/after
+  pixel diff of the root pages (`scripts/themes/diff-captures.mjs`).
 
 **Founder read, 09-23-26, first pass at B.** "Very impressed." Vaporwave and
 Bauhaus are great (personal favourites). Grandmillennial and Cottagecore are

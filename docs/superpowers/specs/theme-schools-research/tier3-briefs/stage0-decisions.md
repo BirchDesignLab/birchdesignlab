@@ -171,6 +171,30 @@ it up front. but we can do it in the transitions phase."
   page is fetched into memory with its files (Save-Data and 2G skipped); on
   Shuffle hover or focus, the pick is warmed.
 
+**Answers at the Stage 1 stop (09-23-26).** To `tier3-stage1/stage1-report.md`,
+"Decisions for the founder":
+1. Prompt copy: draft B, reworded by the founder: "Welcome to the Portal.
+   Choose a design school and watch the page transform. Shuffle for a random
+   one, and swap between light and dark while you're there." It names no
+   count; when all the schools are built, revisit it.
+2. and 3. No repeats, and the list must not take over the phone. The placard
+   is removed from the dialog, and lessons are kept for the BDL-011 case
+   study. The school picker gets portal wording: its heading is "The Portal".
+4. The prompt lives until a tap or click (on the prompt, its dismiss control
+   or the switcher), across page changes and reloads in the session.
+5. The bar's fixed width: fine as is.
+6. The prompt arrives after 1000 ms, with a slower pulse.
+7. The busy cue: bolder.
+8. Vaporwave's pressed task button (instant or a fade): address later
+   (backlog).
+9. The dismiss label is "Dismiss the Portal prompt".
+10. "The whole bdl-010 thing should be the portal now": the BDL-010 summary
+    and how-to lines are rewritten around the Portal.
+11. The root pages' inlined router CSS: explained (inert, about 1 to 2 KB,
+    only the letter of "root untouched" is broken), and backlogged.
+The founder then asked for a PR so they can merge and test on mobile live.
+Stage 2 continues in a new session.
+
 **Cottagecore, founder note during Stage 1 (for pair stage 5).** Founder:
 "i do like the fireflies in dark mode. maybe we can do dandelion floaters for
 the day mode?" The dark-mode fireflies are liked: protect them (the brief's

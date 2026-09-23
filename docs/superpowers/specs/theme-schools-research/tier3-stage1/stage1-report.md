@@ -66,6 +66,13 @@ nothing pushed. Stage 2 (the defect sweep) waits for the founder.
 
 ## Decisions for the founder
 
+*Answered 09-23-26 and applied (see `tier3-briefs/stage0-decisions.md`,
+"Answers at the Stage 1 stop"): draft B reworded by the founder, the
+placard removed and lessons kept for the case study, the picker headed "The
+Portal", the prompt living until a tap or click, a 1000 ms arrival with a
+slower pulse, a bolder busy cue, the new dismiss label, and BDL-010's copy
+rewritten around the Portal. Items 8 and 11 are in the backlog.*
+
 Copy is the founder's; the recommendations are only a starting point.
 
 1. **The first-load prompt.** The placeholder is "The Portal: this site in
