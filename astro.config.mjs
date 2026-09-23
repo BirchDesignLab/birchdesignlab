@@ -62,8 +62,67 @@ function dropUnusedDracoDecoder() {
   };
 }
 
+/**
+ * Astro 7.3's CSS build plugin deletes CSS assets it believes the SSR pages
+ * already carry, then restores the ones a client chunk still needs by
+ * assigning back into the bundle object. Rolldown (Vite 8) ignores that
+ * assignment ("This plugin assigns to bundle variable ... will be ignored" in
+ * the build log), so the restore never happens. A dynamically imported
+ * component whose CSS was deleted is left preloading a file that does not
+ * exist, and Vite's preload helper throws: /?tune (BDL-006 mounting the
+ * Regulator over the home page) died with "Unable to preload CSS for
+ * /_astro/Regulator.*.css". Found by browser-passing the Astro 7 upgrade on
+ * 09-22-26.
+ *
+ * Two halves: snapshot every CSS asset before Astro's plugin runs (enforce
+ * 'pre'), then after it (enforce 'post') re-emit, under the same file name,
+ * any CSS that a chunk's importedCss still names but the bundle lost. Only
+ * files a chunk actually references come back, so nothing Astro correctly
+ * inlined is resurrected. Delete once Astro restores via emitFile; the build
+ * log line below says when it is doing work.
+ */
+function restoreReferencedCss() {
+  const snapshot = new Map();
+  return [
+    {
+      name: 'bdl-css-snapshot',
+      apply: 'build',
+      enforce: 'pre',
+      generateBundle(_options, bundle) {
+        snapshot.clear();
+        for (const [file, item] of Object.entries(bundle)) {
+          if (item.type === 'asset' && file.endsWith('.css')) snapshot.set(file, item.source);
+        }
+      },
+    },
+    {
+      name: 'bdl-css-restore',
+      apply: 'build',
+      enforce: 'post',
+      generateBundle(_options, bundle) {
+        const restored = [];
+        for (const item of Object.values(bundle)) {
+          if (item.type !== 'chunk' || !item.viteMetadata) continue;
+          for (const css of item.viteMetadata.importedCss) {
+            if (bundle[css] || !snapshot.has(css) || restored.includes(css)) continue;
+            this.emitFile({ type: 'asset', fileName: css, source: snapshot.get(css) });
+            restored.push(css);
+          }
+        }
+        if (restored.length) this.info(`restored ${restored.length} referenced CSS file(s): ${restored.join(', ')}`);
+      },
+    },
+  ];
+}
+
 export default defineConfig({
   site: 'https://birchdesignlab.com',
+  // Astro 7 changed the default to 'jsx', which drops whitespace that spans a
+  // line break between inline elements. The copy relies on the old rule in
+  // real places ("survives in\n<em>bright</em>" rendered as "inbright", and
+  // the specimen lines lost the gap around their tick), so keep Astro 6's
+  // collapse-to-one-space behaviour. Caught by pixel-diffing the upgrade.
+  compressHTML: true,
   integrations: [
     svelte(),
     sitemap({
@@ -85,6 +144,7 @@ export default defineConfig({
   vite: {
     plugins: [
       dropUnusedDracoDecoder(),
+      ...restoreReferencedCss(),
       // Metric-matched fallback faces for the self-hosted fonts, to kill the
       // FOUT/CLS the billboard (Marcellus, the LCP text) otherwise causes when
       // it swaps in over Georgia. fontaine reads each real font's metrics and

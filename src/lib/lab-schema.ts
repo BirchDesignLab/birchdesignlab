@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'astro/zod';
 
 /**
  * The Lab collection schema: a discriminated union on `type`.
@@ -13,7 +13,7 @@ import { z } from 'zod';
  * plain ZodObjects, so the experiment howto/href rule lives in a
  * superRefine on the union, not a .refine on the branch.
  */
-export function makeLabSchema(image: () => z.ZodTypeAny) {
+export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
   const base = {
     designation: z.string().regex(/^BDL-\d{3}$/),
     title: z.string().min(1),
@@ -46,7 +46,7 @@ export function makeLabSchema(image: () => z.ZodTypeAny) {
       ...base,
       type: z.literal('study'),
       client: z.string().min(1),
-      liveUrl: z.string().url(),
+      liveUrl: z.url(),
       hero: z.object({ src: image(), alt: z.string().min(1) }),
     })
     .strict();
@@ -54,7 +54,7 @@ export function makeLabSchema(image: () => z.ZodTypeAny) {
   return z.discriminatedUnion('type', [experiment, study]).superRefine((d, ctx) => {
     if (d.type === 'experiment' && d.href === undefined && d.howto === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'experiments need a howto wall label (or an href)',
       });
     }
