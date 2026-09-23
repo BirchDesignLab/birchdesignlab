@@ -4,11 +4,16 @@
  * rule). Each check prints ok or FAIL with what it saw:
  *   - the switcher bar keeps one width, and Shuffle one place, in every school
  *     and either scheme (phone and desktop);
- *   - on a landscape phone the dialog opens at its top, placard in view;
+ *   - on a landscape phone the dialog (headed "The Portal", no placard since
+ *     the founder's 09-23-26 decisions) opens with the current school's row
+ *     focused and in view between its head and foot;
  *   - at 320px each list row puts the era on its own line under the name;
  *   - Escape dismisses the first-load prompt;
- *   - where Element.moveBefore is missing, focus stays on Shuffle across the
- *     swap it starts;
+ *   - the prompt lives until a tap: it survives a router navigation and a
+ *     reload unrecorded, and only its dismiss control records the dismissal;
+ *   - where Element.moveBefore is missing, the prompt does not replay its
+ *     arrival after a swap, and focus stays on Shuffle across the swap it
+ *     starts;
  *   - a switch into vaporwave from a warmed dialog fetches none of its Latin
  *     body or mono faces after the click.
  *
@@ -70,19 +75,27 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['deskto
   await context.close();
 }
 
-// Landscape phone: the placard shows first.
+// Landscape phone: the current row, focused and in view. glassmorphism is
+// the last row, so the list has to scroll to it.
 {
   const { context, page } = await open({ width: 844, height: 390 });
   for (const id of ['glassmorphism', 'bauhaus']) {
     await page.goto(`${base}/t/${id}/about/`, { waitUntil: 'networkidle' });
     const r = await sr(page, (root) => {
       root.querySelector('.open').click();
-      const d = root.querySelector('dialog');
+      const d = root.querySelector('dialog').getBoundingClientRect();
       const head = root.querySelector('.head').getBoundingClientRect();
-      const placard = root.querySelector('.placard').getBoundingClientRect();
-      return { scrollTop: d.scrollTop, headBottom: head.bottom, placardTop: placard.top, focus: root.activeElement?.dataset.school };
+      const foot = root.querySelector('.foot').getBoundingClientRect();
+      const row = root.querySelector('a[aria-current="page"]').getBoundingClientRect();
+      return {
+        title: root.querySelector('#bdl-schools-title').textContent,
+        placard: !!root.querySelector('.placard'),
+        focus: root.activeElement?.dataset.school,
+        inView: row.top >= head.bottom - 1 && row.bottom <= foot.top + 1,
+        fits: d.top >= 0 && d.bottom <= innerHeight,
+      };
     });
-    check(r.scrollTop === 0 && r.placardTop >= r.headBottom - 1, `844x390 ${id}: dialog opens at its top, placard below the head`, JSON.stringify(r));
+    check(r.title === 'The Portal' && !r.placard && r.focus === id && r.inView && r.fits, `844x390 ${id}: dialog fits, current row focused and in view`, JSON.stringify(r));
   }
   await context.close();
 }
@@ -111,6 +124,63 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['deskto
   await page.keyboard.press('Escape');
   const r = await sr(page, (root) => ({ hidden: root.querySelector('.prompt').hidden, focus: root.activeElement?.className }));
   check(r.hidden && r.focus === 'open', 'Escape dismisses the prompt and hands focus to the school button', JSON.stringify(r));
+  await context.close();
+}
+
+// The prompt lives until a tap: a router navigation and a reload keep it,
+// unrecorded; its dismiss control records the dismissal.
+{
+  const { context, page } = await open({ width: 390, height: 844 }, { prompt: true, init: countLoads });
+  await page.goto(`${base}/t/swiss/`, { waitUntil: 'networkidle' });
+  const state = () => page.evaluate(() => {
+    const root = document.querySelector('bdl-switcher').shadowRoot;
+    let flag = null;
+    try { flag = sessionStorage.getItem('bdl-portal-prompt'); } catch {}
+    return { shown: !root.querySelector('.prompt').hidden, flag, label: root.querySelector('.prompt .dismiss').getAttribute('aria-label') };
+  });
+  const first = await state();
+  // A plain link in the page (not the switcher): the router takes it.
+  const n = await loads(page);
+  await page.evaluate(() => document.querySelector('main a[href^="/t/swiss/"]:not([href="/t/swiss/"]), header a[href^="/t/swiss/"]:not([href="/t/swiss/"])').click());
+  await swapped(page, n);
+  const afterNav = { ...(await state()), path: await page.evaluate(() => location.pathname) };
+  await page.reload({ waitUntil: 'networkidle' });
+  const afterReload = await state();
+  await sr(page, (root) => root.querySelector('.prompt .dismiss').click());
+  const afterDismiss = await state();
+  await page.reload({ waitUntil: 'networkidle' });
+  const afterDismissReload = await state();
+  check(
+    first.shown && first.flag === null && first.label === 'Dismiss the Portal prompt' &&
+      afterNav.shown && afterNav.flag === null && afterNav.path !== '/t/swiss/' &&
+      afterReload.shown && afterReload.flag === null &&
+      !afterDismiss.shown && afterDismiss.flag === 'dismissed' && !afterDismissReload.shown,
+    'the prompt survives a navigation and a reload, and goes on a tap of its dismiss control',
+    JSON.stringify({ first, afterNav, afterReload, afterDismiss, afterDismissReload }),
+  );
+  await context.close();
+}
+
+// No moveBefore: the router reinserts the switcher on every swap, which
+// would restart the prompt's arrival; once it has arrived it stays arrived.
+{
+  const { context, page } = await open({ width: 1280, height: 800 }, {
+    prompt: true,
+    init: () => {
+      delete Element.prototype.moveBefore;
+      document.addEventListener('astro:page-load', () => { window.__loads = (window.__loads || 0) + 1; });
+    },
+  });
+  await page.goto(`${base}/t/swiss/`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(2000); // 1000ms delay, 560ms arrival
+  const n = await loads(page);
+  await page.evaluate(() => document.querySelector('header a[href^="/t/swiss/"]:not([href="/t/swiss/"]), main a[href^="/t/swiss/"]:not([href="/t/swiss/"])').click());
+  await swapped(page, n);
+  const r = await sr(page, (root) => {
+    const p = root.querySelector('.prompt');
+    return { shown: !p.hidden, arrived: p.classList.contains('arrived'), running: p.getAnimations().map((x) => x.animationName), opacity: getComputedStyle(p).opacity };
+  });
+  check(r.shown && r.arrived && r.running.length === 0 && r.opacity === '1', 'without moveBefore, the prompt does not replay its arrival after a swap', JSON.stringify(r));
   await context.close();
 }
 

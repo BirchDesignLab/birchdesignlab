@@ -13,11 +13,11 @@
  * load). Links inside a shadow root are invisible to the router, so every
  * plain link here is a real navigation; school changes go through navigate().
  *
- * The dialog opens on a placard for the school the visitor is in (its era,
- * signature and lesson, set like a museum wall label), then lists every
- * school in the order of its era. On the first portal page of a browser
- * session, a one-line prompt sits above the bar until the visitor answers it,
- * dismisses it, uses the switcher or navigates. It never opens the dialog by
+ * The dialog lists every school in the order of its era, the visitor's own
+ * highlighted (the lessons wait for the BDL-011 case study). Until the
+ * visitor first taps it in a browser session, a short prompt sits above the
+ * bar: it survives navigations and reloads, and goes only when the visitor
+ * answers it, dismisses it or uses the switcher. It never opens the dialog by
  * itself.
  *
  * Speed (P4): opening the dialog warms every other school's same page, and
@@ -35,20 +35,20 @@ import { readPortalData, type SchoolSummary } from './schools';
 import { SWITCHER_INFO, warmPages } from './runtime';
 
 /**
- * The first-load prompt's words. A placeholder: the founder picks the final
- * wording from drafted alternatives at the Stage 1 stop (stage0-decisions.md,
- * "Stage 1 decisions"). Visitor-facing, so no em dashes.
+ * The first-load prompt's words, chosen by the founder 09-23-26. It names no
+ * school count, so it survives tranche 2. Visitor-facing, so no em dashes.
  */
-const FIRST_LOAD_PROMPT = 'The Portal: this site in seven design schools. Pick one to step through.';
+const FIRST_LOAD_PROMPT =
+  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there.";
 
-/** sessionStorage key, set to 'dismissed' once the visitor has answered or dismissed the prompt. */
+/** sessionStorage key, set to 'dismissed' once the visitor has tapped the prompt or the switcher. */
 const PROMPT_KEY = 'bdl-portal-prompt';
 
 function promptDismissed(): boolean {
   try {
     return window.sessionStorage.getItem(PROMPT_KEY) === 'dismissed';
   } catch {
-    return false; // no storage: the prompt shows once per hard load instead
+    return false; // no storage: a dismissal lasts until the next full load instead
   }
 }
 
@@ -56,7 +56,7 @@ function rememberPromptDismissed(): void {
   try {
     window.sessionStorage.setItem(PROMPT_KEY, 'dismissed');
   } catch {
-    /* storage can throw (private windows, blocked site data); the prompt is still gone for this load */
+    /* storage can throw (private windows, blocked site data); the prompt is still gone until a full load */
   }
 }
 
@@ -64,6 +64,8 @@ const STYLE = `
 :host {
   --bg: #1c1a17; --raised: #272319; --ink: #f4f0e6; --muted: #b3ab9b; --accent: #a3bd8f;
   --line: rgba(244, 240, 230, 0.2);
+  /* The busy state's lifted ground and bright moss. */
+  --busy: #3b3527; --accent-hi: #cde4b6;
   /* Centred by layout (auto margins), not a transform: a view transition
      draws a transformed element's snapshot a subpixel off the live one, so
      the bar would seem to jolt on every swap (K1). The placement is
@@ -102,27 +104,36 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .icon { width: 16px; height: 16px; flex: none; }
 .caret { width: 10px; height: 10px; flex: none; opacity: 0.7; }
 /* Busy: the control that started a school change, until the new page has
-   loaded. A moss line runs along its foot, inside its own box, so the bar
-   never changes size (it holds still through every swap). */
-button[aria-busy='true'] { position: relative; background: var(--raised); cursor: progress; }
+   loaded. It lifts to a brighter ground with a moss rim, and a thick bright
+   moss bar runs along its foot, all inside its own box (an inset shadow and
+   an absolutely placed bar), so the bar never changes size (it holds still
+   through every swap). Bold on purpose: it should read at a glance. */
+button[aria-busy='true'] {
+  position: relative; background: var(--busy); color: var(--ink); cursor: progress;
+  box-shadow: inset 0 0 0 1px rgba(163, 189, 143, 0.45);
+}
 button[aria-busy='true']::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent) no-repeat;
-  background-size: 40% 100%;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+  background:
+    linear-gradient(90deg, transparent, var(--accent-hi) 25%, var(--accent-hi) 75%, transparent) no-repeat,
+    rgba(163, 189, 143, 0.28);
+  background-size: 50% 100%, 100% 100%;
   animation: bdl-busy 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-/* 40% wide, so -70% and 170% put it just off either end. */
+/* The run is 50% wide, so -100% and 200% put it just off either end; the
+   faint moss track under it stays put. */
 @keyframes bdl-busy {
-  from { background-position: -70% 0; }
-  to { background-position: 170% 0; }
+  from { background-position: -100% 0, 0 0; }
+  to { background-position: 200% 0, 0 0; }
 }
 /* Desktop: out of the way in the corner, clear of centred hero content (the
    quiet home pins its bark credit bottom-centre). Phones: centred, thumb reach. */
 @media (min-width: 700px) {
   :host { left: auto !important; right: 16px !important; margin: 0 !important; }
 }
-/* The first-load prompt: one line above the bar (two on a phone), never over its buttons.
-   Absolutely placed, so showing or dropping it never resizes the bar (which
+/* The first-load prompt: a short paragraph above the bar, never over its
+   buttons, capped at a readable measure (440px) so it wraps rather than
+   running across a wide screen. Absolutely placed, so showing or dropping it never resizes the bar (which
    holds still through every swap). Centred on phones, flush right with the
    bar from 700px, where the bar moves to the corner. On phones its insets
    make a viewport-wide box around the bar's centre (the bar is centred), and
@@ -132,19 +143,24 @@ button[aria-busy='true']::after {
   position: absolute; bottom: calc(100% + 10px);
   left: calc(50% - 50vw); right: calc(50% - 50vw); margin-inline: auto;
   display: flex; align-items: stretch; gap: 1px;
-  width: max-content; max-width: calc(100vw - 24px);
+  width: max-content; max-width: min(440px, calc(100vw - 24px));
   background: var(--line); border: 1px solid var(--line);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
-  /* It rises out of the bar a beat after the page lands. backwards, not both:
-     once it has arrived, the clip is gone and the shadow shows. */
-  animation: bdl-prompt-in 560ms cubic-bezier(0.2, 0.8, 0.2, 1) 650ms backwards;
+  /* It rises out of the bar a second after the page lands. backwards, not
+     both: once it has arrived, the clip is gone and the shadow shows. */
+  animation: bdl-prompt-in 560ms cubic-bezier(0.2, 0.8, 0.2, 1) 1000ms backwards;
 }
 .prompt[hidden] { display: none; }
+/* It rides every swap until it is tapped. Where the router has no
+   moveBefore it reinserts the switcher, which would restart the arrival and
+   the pulse on every page; once each has run, it is switched off. */
+.prompt.arrived, .prompt .beacon.pulsed { animation: none; }
 .prompt .go { gap: 12px; padding: 10px 16px 10px 14px; white-space: normal; line-height: 1.35; }
 .prompt .go .text { text-wrap: balance; }
 .prompt .dismiss { justify-content: center; width: 44px; padding: 0; color: var(--muted); }
 .prompt .dismiss:hover { color: var(--ink); }
-.beacon { width: 8px; height: 8px; flex: none; background: var(--accent); animation: bdl-beacon 1.8s ease-out 1.3s 3; }
+/* Three slow pulses, starting once the prompt has arrived. */
+.beacon { width: 8px; height: 8px; flex: none; background: var(--accent); animation: bdl-beacon 3.6s ease-out 1.7s 3; }
 @keyframes bdl-prompt-in {
   from { opacity: 0; transform: translateY(12px); clip-path: inset(100% -40px -40px -40px); }
   to { opacity: 1; transform: none; clip-path: inset(-40px); }
@@ -154,14 +170,14 @@ button[aria-busy='true']::after {
   to { box-shadow: 0 0 0 9px rgba(163, 189, 143, 0); }
 }
 @media (min-width: 700px) {
-  .prompt { left: auto; right: 0; margin-inline: 0; max-width: calc(100vw - 32px); }
+  .prompt { left: auto; right: 0; margin-inline: 0; max-width: min(440px, calc(100vw - 32px)); }
 }
 @media (max-width: 560px) {
   .wide { display: none; }
   button, a.btn { padding: 0 12px; }
 }
-/* A column: the head, the placard and the foot keep their height and the
-   list scrolls between them. */
+/* A column: the head and the foot keep their height and the list scrolls
+   between them, on a landscape phone as on a tall one. */
 dialog {
   width: min(560px, calc(100vw - 24px)); max-height: min(78vh, 720px);
   margin: auto auto max(72px, calc(env(safe-area-inset-bottom) + 72px));
@@ -173,44 +189,7 @@ dialog::backdrop { background: rgba(10, 9, 8, 0.55); }
 .head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
 .head h2 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
 .head button { min-height: 36px; padding: 0 10px; }
-/* The placard: the current room's wall label. Name, then era, then a short
-   moss rule, then what you see and what it teaches. It gives way to the list
-   only when the list is down to two rows (a small phone): the
-   list's shrink factor dwarfs the placard's, so the list shrinks first, and
-   the placard scrolls only past that. (The factors are 1000 and 1, not 1 and
-   0.001: a set of factors summing under 1 shrinks by only that fraction.) */
-.placard { flex: 0 1 auto; min-height: 0; overflow: auto; padding: 18px 18px 20px; border-bottom: 1px solid var(--line); }
-.placard[hidden] { display: none; }
-.placard h3, .placard p { margin: 0; }
-.placard .here { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
-.placard h3 { margin-top: 8px; font-size: 22px; line-height: 1.15; font-weight: 600; letter-spacing: 0; }
-.placard .p-era { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
-.placard .p-sig, .placard .p-lesson { font-weight: 400; letter-spacing: 0; text-wrap: pretty; }
-.placard .p-sig { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.placard .p-sig::before { content: ''; display: block; width: 24px; height: 2px; margin: 14px 0 12px; background: var(--accent); }
-.placard .p-lesson { margin-top: 10px; font-size: 14px; line-height: 1.5; }
-.placard .tag { margin-right: 6px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; }
-@media (max-width: 560px) {
-  .placard { padding: 16px 16px 18px; }
-  .placard h3 { font-size: 20px; }
-}
-/* Short screens (a small phone, a landscape one, a 768px laptop) keep the
-   lesson and drop the signature, which the list repeats under the school's
-   name, so the list keeps about three rows. */
-@media (max-height: 700px) {
-  .placard .p-sig { display: none; }
-  .placard .p-lesson { margin-top: 12px; }
-}
-/* A landscape phone has no room for two scrolling panes: the whole dialog
-   scrolls as one, under a head that stays put. */
-@media (max-height: 480px) {
-  /* scroll-padding: focus scrolling (Shift+Tab back up the list) stops
-     below the sticky head (16px padding each side, a 36px button, a 1px rule). */
-  dialog[open] { overflow: auto; overscroll-behavior: contain; scroll-padding-top: 72px; }
-  .head { position: sticky; top: 0; z-index: 1; background: var(--bg); }
-  dialog .placard, dialog ul { flex: none; min-height: 0; overflow: visible; }
-}
-ul { flex: 0 1000 auto; min-height: 132px; list-style: none; margin: 0; padding: 6px 0; overflow: auto; overscroll-behavior: contain; }
+ul { flex: 0 1 auto; min-height: 0; list-style: none; margin: 0; padding: 6px 0; overflow: auto; overscroll-behavior: contain; }
 li a {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 18px;
   color: var(--ink); text-decoration: none; border-left: 2px solid transparent;
@@ -290,7 +269,7 @@ class BdlSwitcher extends HTMLElement {
       <style>${STYLE}</style>
       <div class="prompt" hidden>
         <button type="button" class="go" aria-haspopup="dialog"><span class="beacon" aria-hidden="true"></span><span class="text">${escapeHtml(FIRST_LOAD_PROMPT)}</span></button>
-        <button type="button" class="dismiss" aria-label="Dismiss">${ICON.dismiss}</button>
+        <button type="button" class="dismiss" aria-label="Dismiss the Portal prompt">${ICON.dismiss}</button>
       </div>
       <div class="bar">
         <button type="button" class="open" aria-haspopup="dialog">
@@ -302,15 +281,8 @@ class BdlSwitcher extends HTMLElement {
       </div>
       <dialog aria-labelledby="bdl-schools-title">
         <div class="head">
-          <h2 id="bdl-schools-title">Design schools</h2>
+          <h2 id="bdl-schools-title">The Portal</h2>
           <button type="button" class="close" aria-label="Close">Close</button>
-        </div>
-        <div class="placard" hidden>
-          <p class="here">You are here</p>
-          <h3 class="p-name"></h3>
-          <p class="p-era"></p>
-          <p class="p-sig"></p>
-          <p class="p-lesson"><span class="tag">Lesson</span> <span class="p-lesson-text"></span></p>
         </div>
         <ul aria-label="All design schools">
           ${schools
@@ -437,12 +409,9 @@ class BdlSwitcher extends HTMLElement {
     if (!dialog.open) dialog.showModal();
     const here = dialog.querySelector<HTMLElement>('a[aria-current="page"]');
     here?.focus({ preventScroll: true });
-    // A landscape phone scrolls the whole dialog as one (the max-height:
-    // 480px rules): start at the top, so the placard is what shows first.
-    // Elsewhere only the list scrolls, and only as far as the link needs, so
-    // the placard above it stays in view (focus() alone may centre the link).
-    if (matchMedia('(max-height: 480px)').matches) dialog.scrollTop = 0;
-    else here?.scrollIntoView({ block: 'nearest' });
+    // Only the list scrolls, and only as far as the visitor's row needs
+    // (focus() alone may centre it).
+    here?.scrollIntoView({ block: 'nearest' });
     this.warmOthers();
   }
 
@@ -481,20 +450,30 @@ class BdlSwitcher extends HTMLElement {
     this.busy = null;
   }
 
-  /** Once per hard load at most, and only until the visitor's first move. */
+  /**
+   * Until the visitor's first tap: on the prompt, its dismiss control or any
+   * switcher control (or Escape on the prompt). Navigating and reloading do
+   * not count; the prompt rides every swap inside the persisted switcher,
+   * which holds still, and comes back on a reload until it has been tapped.
+   */
   private showPrompt() {
     this.promptOff = new AbortController();
     const { signal } = this.promptOff;
-    const dismiss = () => this.dismissPrompt();
     // Any switcher control counts as the first move. Capture, so the prompt
     // is gone before the control's own handler runs.
-    this.root.querySelector('.bar')!.addEventListener('click', dismiss, { capture: true, signal });
-    // So does navigating: gone before the router captures the old page, so
-    // it never rides a transition, and remembered when the page is left by a
-    // full load (a reload included).
-    document.addEventListener('astro:before-preparation', dismiss, { signal });
-    window.addEventListener('pagehide', dismiss, { signal });
-    this.root.querySelector<HTMLElement>('.prompt')!.hidden = false;
+    this.root.querySelector('.bar')!.addEventListener('click', () => this.dismissPrompt(), { capture: true, signal });
+    const prompt = this.root.querySelector<HTMLElement>('.prompt')!;
+    // Once the arrival and the pulses have run, switch them off, so a
+    // reinsertion (see the .arrived rule) cannot replay them.
+    prompt.addEventListener(
+      'animationend',
+      (e) => {
+        if (e.target === prompt) prompt.classList.add('arrived');
+        else (e.target as HTMLElement).classList.add('pulsed');
+      },
+      { signal },
+    );
+    prompt.hidden = false;
   }
 
   private dismissPrompt() {
@@ -524,16 +503,6 @@ class BdlSwitcher extends HTMLElement {
     this.root.querySelector('.scheme-text')!.textContent = light ? 'Light' : 'Dark';
 
     const rootHref = here ? rootPathFor(here.page) : '/';
-    // The placard follows the visitor: it names the room they are in now.
-    const placard = this.root.querySelector<HTMLElement>('.placard')!;
-    placard.hidden = !current;
-    if (current) {
-      placard.querySelector('.p-name')!.textContent = current.name;
-      placard.querySelector('.p-era')!.textContent = current.era;
-      placard.querySelector('.p-sig')!.textContent = current.signature;
-      placard.querySelector('.p-lesson-text')!.textContent = current.lesson;
-    }
-
     for (const a of this.root.querySelectorAll<HTMLAnchorElement>('.leave, .leave-foot')) a.href = rootHref;
     this.root.querySelector('.leave')!.setAttribute('aria-label', 'Leave the portal for this page on the regular site');
 

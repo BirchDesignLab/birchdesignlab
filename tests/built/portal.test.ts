@@ -247,15 +247,16 @@ describe('every portal page', () => {
     expect(jsonBlobs.size).toBeLessThanOrEqual(1);
   });
 
-  it('the school data walks the exhibit in order and carries each wall label', () => {
-    // The switcher lists schools in this order (S7) and its placard shows
-    // the current school's era, signature and lesson (S6).
+  it('the school data walks the exhibit in order and carries each list row', () => {
+    // The switcher lists schools in this order (S7), each row with its era
+    // and signature. Lessons stay out: they wait for the BDL-011 case study.
     const data = doc(readPage(portalRoutes[0])).querySelector('script#bdl-schools')?.text ?? '';
-    const parsed = JSON.parse(data) as { schools: { id: string; era: string; signature: string; lesson: string }[] };
+    const parsed = JSON.parse(data) as { schools: { id: string; era: string; signature: string; lesson?: string }[] };
     expect(parsed.schools.map((s) => s.id)).toEqual(THEMES.map((t) => t.id));
     for (const t of THEMES) {
       const s = parsed.schools.find((x) => x.id === t.id)!;
-      expect({ era: s.era, signature: s.signature, lesson: s.lesson }, t.id).toEqual({ era: t.era, signature: t.signature, lesson: t.lesson });
+      expect({ era: s.era, signature: s.signature }, t.id).toEqual({ era: t.era, signature: t.signature });
+      expect(s.lesson, t.id).toBeUndefined();
     }
   });
 });

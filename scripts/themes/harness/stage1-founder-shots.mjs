@@ -1,8 +1,10 @@
 // Stage 1 founder shots (Tier 3, 09-23-26): the switcher's new pieces as a
 // visitor sees them on the running Worker. For each viewport it captures the
 // first-load prompt (a fresh session, so the prompt shows), the bar at rest in
-// quiet and in grandmillennial (the bar now keeps one width), and the dialog
-// open on its placard. Real build, real GPU when BDL_GPU=1.
+// quiet and in grandmillennial (the bar now keeps one width), the busy cue
+// on Shuffle (staged: the attribute set by hand, so the shot never races the
+// swap), and the dialog open on its list (no placard since the founder's
+// 09-23-26 decisions). Real build, real GPU when BDL_GPU=1.
 //
 // Usage: BDL_GPU=1 MSYS_NO_PATHCONV=1 node scripts/themes/harness/stage1-founder-shots.mjs \
 //          [--base http://127.0.0.1:8787] [--school vaporwave] [--schemes dark,light]
@@ -54,10 +56,11 @@ for (const scheme of schemes) {
     const shot = (name, clip) => page.screenshot({ path: join(OUT, `${name}__${scheme}__${vpName}.png`), clip });
     const band = bottomBand(vp, vpName === 'mobile' ? 190 : 170);
 
-    // 1. First portal load of the session: the prompt rises above the bar.
+    // 1. First portal load of the session: the prompt rises above the bar
+    //    (1000ms after the page lands, 560ms to arrive).
     await page.goto(`${base}/t/${school}/`, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(1800);
+    await page.waitForTimeout(2400);
     await shot('prompt', band);
 
     // 2. Dismiss it, then the bar at rest in two schools: the longest and the
@@ -69,7 +72,13 @@ for (const scheme of schemes) {
       await shot(`bar-${id}`, bottomBand(vp, 90));
     }
 
-    // 3. The dialog, open on its placard, from the school under review.
+    // 2b. The busy cue, staged on Shuffle.
+    await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.shuffle').setAttribute('aria-busy', 'true'));
+    await page.waitForTimeout(300);
+    await shot('busy', bottomBand(vp, 90));
+    await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.shuffle').removeAttribute('aria-busy'));
+
+    // 3. The dialog, open on its list, from the school under review.
     await page.goto(`${base}/t/${school}/`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(700);
     await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());

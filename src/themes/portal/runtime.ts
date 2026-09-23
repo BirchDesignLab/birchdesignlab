@@ -78,7 +78,7 @@ function preloadFonts(hrefs: string[]): Promise<void> {
 
 /**
  * How long warmed HTML may stand in for a fetch: long enough to read the
- * placards, short enough that a deploy never serves an old page for long.
+ * school list, short enough that a deploy never serves an old page for long.
  * (An old page stays whole: its own stylesheets and scripts were warmed
  * with it, and /_astro/ files are immutable in the HTTP cache.)
  */

@@ -1,3 +1,8 @@
+// HISTORICAL: the placard this shoots was removed by the founder's 09-23-26
+// decisions (the lessons wait for the BDL-011 case study), and the prompt now
+// lives until a tap. Kept as the record of how P6 was checked; its placard
+// shots no longer apply. stage1-founder-shots.mjs shows the current switcher.
+//
 // P6 switcher harness (Tier 3 stage 1, B2; kept in the repo 09-23-26 per the scripts rule): bundles switcher.ts with a stubbed router, serves it
 // through Playwright request interception (no server, no dist), and screenshots
 // the prompt and the placard at phone, desktop and landscape sizes.
