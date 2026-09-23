@@ -1,28 +1,151 @@
 ---
+/** Glassmorphism contact: the intro and the direct-email card stacked on
+    the left, the glass form floating to the right over its own orb. */
+import Orbs from '../Orbs.astro';
 import ContactHidden from '../../portal/ContactHidden.astro';
 import type { CopyData } from '../../../lib/copy';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section>
-  <p>{copy.kicker}</p>
-  <h1>{copy.heading}</h1>
-  <p>{copy.subline}</p>
-  <form method="post" action="/api/contact" data-astro-reload>
-    <label for="cf-name">{copy.labels.name}</label>
-    <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
-    <label for="cf-email">{copy.labels.email}</label>
-    <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
-    <label for="cf-message">{copy.labels.message}</label>
-    <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+<section class="contact wrap">
+  <Orbs orbs={[
+    { hue: 'violet', x: '66%', y: '18%', mx: '86%', my: '3%', size: 'clamp(200px, 26vw, 380px)', drift: 1 },
+    { hue: 'cyan', x: '98%', y: '76%', mx: '94%', my: '36%', size: 'clamp(140px, 18vw, 270px)', drift: 2 },
+    { hue: 'peach', x: '6%', y: '62%', mx: '6%', my: '30%', size: 'clamp(120px, 16vw, 240px)', drift: 3 },
+    { hue: 'pink', x: '44%', y: '98%', mx: '12%', my: '80%', size: 'clamp(80px, 9vw, 140px)', drift: 1 },
+  ]} />
+
+  <div class="intro glass">
+    <p class="chip">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    <p class="subline">{copy.subline}</p>
+    <div class="trust">
+      {copy.trust.map((part) => <span class="trust-chip">{part}</span>)}
+    </div>
+  </div>
+
+  <form class="form glass" method="post" action="/api/contact" data-astro-reload>
+    <div class="field">
+      <label for="cf-name">{copy.labels.name}</label>
+      <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+    </div>
+    <div class="field">
+      <label for="cf-email">{copy.labels.email}</label>
+      <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label for="cf-message">{copy.labels.message}</label>
+      <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+    </div>
     <ContactHidden theme={theme} label={copy.labels.honeypot} />
-    <button type="submit">{copy.submit}</button>
+    <button class="btn submit" type="submit">{copy.submit} <span class="arw" aria-hidden="true">&rarr;</span></button>
   </form>
-  <p>{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">&middot;</span> </>}{part}</>)}</p>
+
+  <div class="direct glass">
+    <p class="invite">{copy.invite}</p>
+    <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
+    <p class="fine">{copy.fine}</p>
+  </div>
 </section>
-<section>
-  <p>{copy.invite}</p>
-  <a href={`mailto:${copy.email}`}>{copy.email}</a>
-  <p>{copy.fine}</p>
-</section>
+
+<style>
+  .contact {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-areas: 'intro form' 'direct form';
+    gap: clamp(1rem, 2.5vw, 1.75rem) clamp(1.25rem, 3vw, 2.5rem);
+    align-items: start;
+    padding-block: clamp(3rem, 7vw, 5.5rem) clamp(1rem, 3vw, 2rem);
+  }
+
+  .intro {
+    grid-area: intro;
+    display: grid; justify-items: start; gap: 1.1rem;
+    padding: clamp(1.5rem, 4vw, 3rem);
+  }
+  .intro h1 {
+    font-size: clamp(2.5rem, 5.6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    word-spacing: 0.08em;
+    line-height: 0.95;
+  }
+  .subline { font-size: 1.125rem; color: var(--mark-muted); }
+  /* Two chips, not a bullet-joined sentence: each part wraps as a whole,
+     never mid-line on the separator. */
+  .trust { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .trust-chip {
+    padding: 0.35em 0.85em;
+    border-radius: 999px;
+    background: var(--well);
+    border: 1px solid var(--edge);
+    font-family: var(--font-label);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--mark-muted);
+  }
+
+  .form {
+    grid-area: form;
+    display: grid; gap: 1.2rem;
+    /* Lines up with the intro column's h1 baseline instead of a fixed
+       clamp that answers to nothing on that side. */
+    margin-top: clamp(2.5rem, 5vw, 3.25rem);
+    padding: clamp(1.25rem, 4vw, 2.75rem);
+    border-radius: 36px;
+  }
+  .field { display: grid; gap: 0.45rem; }
+  .field label {
+    padding-left: 0.35rem;
+    font-family: var(--font-label);
+    font-size: 0.8125rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--mark-muted);
+  }
+  .field input, .field textarea {
+    width: 100%;
+    font: inherit; color: var(--mark);
+    background: var(--well);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 0.85rem 1.1rem;
+    box-shadow: inset 0 1px 3px rgb(20 10 60 / 0.08);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .field textarea { resize: vertical; min-height: 10rem; border-radius: 22px; }
+  .field input:focus-visible, .field textarea:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: inset 0 1px 3px rgb(20 10 60 / 0.08), 0 0 0 4px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+  .submit { justify-self: start; margin-top: 0.3rem; min-width: 11rem; }
+
+  .direct {
+    grid-area: direct;
+    display: grid; justify-items: start; gap: 0.8rem;
+    padding: clamp(1.5rem, 3.5vw, 2.5rem);
+    border-radius: var(--r-lg);
+  }
+  .invite {
+    font-family: var(--font-head);
+    font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  .mail {
+    font-family: var(--font-head);
+    font-weight: 650;
+    font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+  .fine { font-size: 0.9375rem; color: var(--mark-muted); }
+
+  @media (max-width: 860px) {
+    .contact { grid-template-columns: 1fr; grid-template-areas: 'intro' 'form' 'direct'; }
+    .form { margin-top: 0; }
+  }
+</style>

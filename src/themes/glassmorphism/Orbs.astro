@@ -1,0 +1,18 @@
+---
+/** The colour behind a section's glass. Each page places its own orbs so the
+    edges fall where a panel can frost them: half under the glass, half out.
+    x/y are percentages of the parent (which must be positioned), size any CSS
+    length. On a phone the panels span the whole width, so an orb placed for
+    desktop vanishes behind them; mx/my move it into the gaps between panels.
+    Drift styles and colours live in theme.css (.orb). */
+type Hue = 'violet' | 'cyan' | 'peach' | 'pink';
+export interface Orb { hue: Hue; x: string; y: string; mx?: string; my?: string; size: string; drift?: 1 | 2 | 3 }
+
+interface Props { orbs: Orb[] }
+const { orbs } = Astro.props;
+---
+<div class="orbs" aria-hidden="true">
+  {orbs.map((o, i) => (
+    <span class={`orb ${o.hue} d${o.drift ?? (i % 3) + 1}`} style={`--x:${o.x};--y:${o.y};--mx:${o.mx ?? o.x};--my:${o.my ?? o.y};--s:${o.size}`}></span>
+  ))}
+</div>

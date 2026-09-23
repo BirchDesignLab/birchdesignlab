@@ -1,47 +1,408 @@
 /* Glassmorphism: tokens for both schemes, globals, arrival choreography.
-   Imported by src/pages/t/glassmorphism/[...page].astro only. Every rule is scoped
-   under [data-theme='glassmorphism']. See src/themes/README.md. */
+   Imported by src/pages/t/glassmorphism/[...page].astro only. Every rule is
+   scoped under [data-theme='glassmorphism']. See src/themes/README.md.
+
+   The school in one line: text never sits on the colour, it sits on frosted
+   glass over the colour. So every text token is measured (meta.contrast)
+   against a panel composited over the worst orb that can drift beneath it:
+   the darkest orb in light, the brightest in dark. Shared pieces (glass,
+   chips, pills, orbs, app icons) live here; layout lives in the components.
+   Globals use :where() so a component's scoped rule always wins. */
 
 :root[data-theme='glassmorphism'] {
   color-scheme: light;
-  --field: #ffffff;
-  --field-raised: #f2f2f2;
-  --mark: #111111;
-  --mark-muted: #555555;
-  --accent: #1a4fd6;
-  --link: #1a4fd6;
+
+  /* Field: pale lilac into sky, the page behind everything. */
+  --field: #eef0fb;
+  --field-top: #f4eefd;
+  --field-bottom: #e7f2fd;
+  /* Opaque panel, the no-backdrop-filter fallback and the required pair. */
+  --field-raised: #fbfbff;
+
+  --mark: #17143a;
+  --mark-muted: #474467;
+  --accent: #6526cf;
+  --accent-2: #9d1a8f;
+  --link: #4a24c4;
   --on-accent: #ffffff;
-  --font-body: system-ui, sans-serif;
-  --font-display: system-ui, sans-serif;
+
+  /* Orbs: a highlight and a body per hue. --blob-worst is the orb a panel's
+     text must survive: dark ink loses the most over the deepest body. */
+  --blob-violet-hi: #c4b1ff;
+  --blob-violet: #7c3aed;
+  --blob-cyan-hi: #a5f3fc;
+  --blob-cyan: #0ab4d6;
+  --blob-peach-hi: #ffe0c2;
+  --blob-peach: #fb8b4b;
+  --blob-pink-hi: #fbc6e3;
+  --blob-pink: #ec4899;
+  --blob-worst: var(--blob-violet);
+  --orb-glow: 0 0 0 transparent;
+
+  /* Glass. --sheen is the brightest point of a panel's diagonal highlight. */
+  --glass: rgb(255 255 255 / 0.56);
+  --glass-strong: rgb(255 255 255 / 0.7);
+  --glass-fallback: rgb(251 251 255 / 0.94);
+  --sheen: rgb(255 255 255 / 0.45);
+  --well: rgb(255 255 255 / 0.62);
+  --line: rgb(52 36 140 / 0.16);
+  --thumb: #ffffff;
+  --edge: rgb(255 255 255 / 0.75);
+  --edge-hi: rgb(255 255 255 / 0.95);
+  --shadow: 0 30px 60px -24px rgb(72 50 170 / 0.28), 0 2px 8px -2px rgb(72 50 170 / 0.08);
+  --shadow-sm: 0 10px 24px -12px rgb(72 50 170 / 0.3);
+  --blur: blur(24px) saturate(170%);
+
+  --font-head: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans Variable fallback', system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
+  --font-label: 'Space Grotesk Variable', 'Space Grotesk Variable fallback', system-ui, sans-serif;
+
+  --r-xl: 32px;
+  --r-lg: 24px;
+  --r-md: 16px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --measure: 62ch;
+  --ambient-opacity: 0.62;
+
+  /* Dark keeps its own saturated button so it reads as lit, not disabled. */
+  --btn-a: var(--accent);
+  --btn-b: var(--accent-2);
+  --btn-ink: var(--on-accent);
+  --btn-glow: color-mix(in srgb, var(--accent) 70%, transparent);
+
+  /* Darker than the orbs' own hue: white numerals need more ink under
+     them than --blob-cyan/peach/pink give at full light-scheme brightness. */
+  --icon-cyan-hi: #4fb0c9;
+  --icon-cyan: #076580;
+  --icon-peach-hi: #f0a868;
+  --icon-peach: #a8460a;
+  --icon-pink-hi: #e58ec0;
+  --icon-pink: #9c1160;
 }
 
 :root[data-theme='glassmorphism'][data-scheme='dark'] {
   color-scheme: dark;
-  --field: #111111;
-  --field-raised: #1d1d1d;
-  --mark: #f2f2f2;
-  --mark-muted: #b5b5b5;
-  --accent: #8fb0ff;
-  --link: #8fb0ff;
-  --on-accent: #111111;
+
+  /* Deep navy; the orbs glow instead of tint. */
+  --field: #0a0e24;
+  --field-top: #120c2e;
+  --field-bottom: #07162b;
+  --field-raised: #161a3a;
+
+  --mark: #f5f4ff;
+  --mark-muted: #d6d6f0;
+  --accent: #d6c8ff;
+  --accent-2: #9ee8f6;
+  --link: #d8ccff;
+  --on-accent: #120b2e;
+
+  --blob-violet-hi: #b69cff;
+  --blob-violet: #6d28d9;
+  --blob-cyan-hi: #3aa8b8;
+  --blob-cyan: #0e7fa8;
+  --blob-peach-hi: #ff9ec7;
+  --blob-peach: #c2227a;
+  --blob-pink-hi: #f18af5;
+  --blob-pink: #a21caf;
+  /* Light ink loses the most over the brightest highlight. */
+  --blob-worst: var(--blob-cyan-hi);
+  --orb-glow: 0 0 90px 10px rgb(120 90 255 / 0.28);
+
+  /* Lighter than light's own glass on purpose (was 0.7/0.78): at that
+     weight the panel hid the orbs it was meant to frost. Not as thin as a
+     first pass either, or panel text stops clearing 4.5 over the worst orb. */
+  --glass: rgb(20 24 56 / 0.68);
+  --glass-strong: rgb(20 24 56 / 0.76);
+  --glass-fallback: rgb(22 26 58 / 0.96);
+  --sheen: rgb(255 255 255 / 0.07);
+  /* A light tint, not a hole: form fields frost instead of recessing to black. */
+  --well: rgb(255 255 255 / 0.12);
+  --line: rgb(255 255 255 / 0.16);
+  --thumb: rgb(255 255 255 / 0.16);
+  --edge: rgb(255 255 255 / 0.13);
+  --edge-hi: rgb(255 255 255 / 0.22);
+  --shadow: 0 34px 70px -24px rgb(0 0 0 / 0.65), 0 2px 8px -2px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 12px 26px -12px rgb(0 0 0 / 0.6);
+  --ambient-opacity: 0.92;
+
+  /* Own saturated gradient: pastel light buttons go soft and disabled-looking
+     against luminous orbs, so dark gets colour that lights like they do. Dark
+     ink at this end, not white: the cyan stop is too light for white text. */
+  --btn-a: #8b5cf6;
+  --btn-b: #22d3ee;
+  --btn-ink: #0b0820;
+  --btn-glow: rgb(139 92 246 / 0.6);
+
+  --icon-cyan-hi: var(--blob-cyan-hi);
+  --icon-cyan: var(--blob-cyan);
+  --icon-peach-hi: var(--blob-peach-hi);
+  --icon-peach: var(--blob-peach);
+  --icon-pink-hi: var(--blob-pink-hi);
+  --icon-pink: var(--blob-pink);
+}
+
+/* Without backdrop-filter a translucent panel shows the orbs crisp behind
+   the words, so it goes nearly opaque instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-theme='glassmorphism'] {
+    --glass: var(--glass-fallback);
+    --glass-strong: var(--glass-fallback);
+  }
 }
 
 :where([data-theme='glassmorphism']) *,
 :where([data-theme='glassmorphism']) *::before,
 :where([data-theme='glassmorphism']) *::after { box-sizing: border-box; }
 
-[data-theme='glassmorphism'] body {
+:where([data-theme='glassmorphism']) body {
   margin: 0;
-  background: var(--field);
+  min-height: 100vh;
+  background: linear-gradient(172deg, var(--field-top), var(--field) 38%, var(--field-bottom)) var(--field);
   color: var(--mark);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  /* Inter's single-storey a and open digits: the 2021 app-UI voice. */
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-[data-theme='glassmorphism'] a { color: var(--link); }
-[data-theme='glassmorphism'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-[data-theme='glassmorphism'] main:focus { outline: none; }
-[data-theme='glassmorphism'] .skip { position: absolute; left: -100vw; top: 0; }
-[data-theme='glassmorphism'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
-[data-theme='glassmorphism'] img,
-[data-theme='glassmorphism'] svg,
-[data-theme='glassmorphism'] canvas { max-width: 100%; display: block; }
+:where([data-theme='glassmorphism']) :is(h1, h2, h3, p, ul, ol, figure) { margin: 0; }
+:where([data-theme='glassmorphism']) :is(h1, h2, h3) {
+  font-family: var(--font-head);
+  font-weight: 760;
+  letter-spacing: -0.03em;
+  /* Tight tracking on Plus Jakarta 800 shrinks the word gap along with the
+     letter gap; give it back so words stay words. */
+  word-spacing: 0.05em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+:where([data-theme='glassmorphism']) p { text-wrap: pretty; }
+:where([data-theme='glassmorphism']) a { color: var(--link); text-underline-offset: 0.2em; }
+:where([data-theme='glassmorphism']) :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:where([data-theme='glassmorphism']) main:focus { outline: none; }
+:where([data-theme='glassmorphism']) main { display: block; position: relative; z-index: 0; overflow-x: clip; }
+
+/* Ambient wash: soft colour behind the crisp foreground orbs, so the field
+   between panels reads as a Big Sur wallpaper instead of flat lilac or navy.
+   Fixed to the viewport (transform-only drift, one compositor layer) so it
+   never forces a repaint of the page under it. */
+:where([data-theme='glassmorphism']) main::before {
+  content: '';
+  position: fixed;
+  inset: -10vh -10vw;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--ambient-opacity);
+  background:
+    radial-gradient(42vw 42vw at 14% 20%, var(--blob-violet-hi), transparent 68%),
+    radial-gradient(46vw 46vw at 88% 10%, var(--blob-cyan-hi), transparent 68%),
+    radial-gradient(44vw 44vw at 80% 92%, var(--blob-peach-hi), transparent 68%),
+    radial-gradient(38vw 38vw at 10% 88%, var(--blob-pink-hi), transparent 68%);
+  filter: blur(100px);
+  animation: ambient-drift 80s ease-in-out infinite alternate;
+}
+@keyframes ambient-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-3vw, 3vh) scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where([data-theme='glassmorphism']) main::before { animation: none; }
+}
+:where([data-theme='glassmorphism']) :is(img, svg, canvas) { max-width: 100%; display: block; }
+:where([data-theme='glassmorphism']) ::selection { background: var(--blob-violet-hi); color: #17143a; }
+
+:where([data-theme='glassmorphism']) .wrap {
+  width: min(1180px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+/* Every section owns its orbs' bleed and nothing outside it, so pausing one
+   section's motion or repainting its glass never touches its neighbours. */
+:where([data-theme='glassmorphism']) section { contain: paint; }
+
+/* ---------- glass ---------- */
+
+:where([data-theme='glassmorphism']) .glass {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(140deg, var(--sheen), transparent 48%), var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-xl);
+  box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow);
+}
+:where([data-theme='glassmorphism']) .glass-strong {
+  background: linear-gradient(140deg, var(--sheen), transparent 48%), var(--glass-strong);
+}
+/* Dark panels have no light source to catch, so they get their own edge
+   light: a hairline plus a soft glow off the top, in place of a shadow. */
+:root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass) {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.06),
+    inset 0 20px 40px -20px rgb(255 255 255 / 0.05),
+    inset 0 1px 0 var(--edge-hi),
+    var(--shadow);
+}
+
+/* Kicker chip: a small frosted pill in the label face. */
+:where([data-theme='glassmorphism']) .chip {
+  display: inline-flex; align-items: center; gap: 0.55em;
+  padding: 0.42em 0.95em 0.42em 0.75em;
+  border-radius: 999px;
+  background: var(--well);
+  border: 1px solid var(--edge);
+  color: var(--accent);
+  font-family: var(--font-label);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+:where([data-theme='glassmorphism']) .chip::before {
+  content: '';
+  width: 0.55em; height: 0.55em; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blob-cyan), var(--blob-violet) 55%, var(--blob-pink));
+}
+
+/* ---------- pill buttons ---------- */
+
+:where([data-theme='glassmorphism']) .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6em;
+  min-height: 3.25rem;
+  padding: 0.8em 1.6em;
+  border: 0;
+  border-radius: 999px;
+  font: 650 1rem/1.2 var(--font-head);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--btn-ink);
+  background: linear-gradient(120deg, var(--btn-a), var(--btn-b));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 14px 30px -12px var(--btn-glow);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease;
+}
+:where([data-theme='glassmorphism']) .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 20px 36px -12px var(--btn-glow);
+}
+:where([data-theme='glassmorphism']) .btn:active { transform: translateY(0) scale(0.98); }
+:where([data-theme='glassmorphism']) .btn-glass {
+  color: var(--mark);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
+}
+:where([data-theme='glassmorphism']) .btn-glass:hover {
+  box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow);
+}
+:where([data-theme='glassmorphism']) .btn .arw { transition: translate 180ms ease; }
+:where([data-theme='glassmorphism']) .btn:hover .arw { translate: 3px 0; }
+
+/* App icon: the Big Sur squircle, gradient-filled, a numeral inside. */
+:where([data-theme='glassmorphism']) .app-icon {
+  display: grid; place-items: center;
+  width: 3.5rem; height: 3.5rem;
+  border-radius: 28%;
+  color: #ffffff;
+  font: 700 1.05rem/1 var(--font-label);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
+  background: linear-gradient(145deg, var(--i1, var(--blob-violet-hi)) -30%, var(--i2, var(--blob-violet)) 65%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -8px 16px -8px rgb(0 0 0 / 0.18), var(--shadow-sm);
+}
+/* Dedicated (usually darker) tokens, not the orb colours directly: the
+   white numeral needs more ink under it than an orb's own hue gives, most
+   of all in light, without dimming the orbs themselves. */
+:where([data-theme='glassmorphism']) .app-icon.cyan { --i1: var(--icon-cyan-hi); --i2: var(--icon-cyan); }
+:where([data-theme='glassmorphism']) .app-icon.peach { --i1: var(--icon-peach-hi); --i2: var(--icon-peach); }
+:where([data-theme='glassmorphism']) .app-icon.pink { --i1: var(--icon-pink-hi); --i2: var(--icon-pink); }
+
+/* ---------- orbs ---------- */
+
+/* The colour the glass is made of, placed by the page (Orbs.astro) relative
+   to its content column and free to bleed past it. main and the footer clip
+   sideways only (overflow-x: clip, no scroll container, so the sticky bar
+   still works): a phone never scrolls horizontally, and an orb can still
+   drift up or down into the next section. */
+:where([data-theme='glassmorphism']) .orbs {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+:where([data-theme='glassmorphism']) .orb {
+  position: absolute;
+  left: var(--x); top: var(--y);
+  width: var(--s); aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--hi) 0%, var(--lo) 68%);
+  box-shadow: var(--orb-glow);
+  filter: blur(1.5px);
+  animation: glass-drift var(--t) ease-in-out var(--delay) infinite alternate;
+}
+:where([data-theme='glassmorphism']) .orb.violet { --hi: var(--blob-violet-hi); --lo: var(--blob-violet); }
+:where([data-theme='glassmorphism']) .orb.cyan { --hi: var(--blob-cyan-hi); --lo: var(--blob-cyan); }
+:where([data-theme='glassmorphism']) .orb.peach { --hi: var(--blob-peach-hi); --lo: var(--blob-peach); }
+:where([data-theme='glassmorphism']) .orb.pink { --hi: var(--blob-pink-hi); --lo: var(--blob-pink); }
+:where([data-theme='glassmorphism']) .orb.d1 { --t: 19s; --delay: -4s; --dx: 5vw; --dy: -4vw; --ds: 1.08; }
+:where([data-theme='glassmorphism']) .orb.d2 { --t: 24s; --delay: -11s; --dx: -6vw; --dy: 3vw; --ds: 0.92; }
+:where([data-theme='glassmorphism']) .orb.d3 { --t: 29s; --delay: -7s; --dx: 3vw; --dy: 5vw; --ds: 1.12; }
+@media (max-width: 720px) {
+  :where([data-theme='glassmorphism']) .orb { left: var(--mx); top: var(--my); }
+  /* Cheaper glass on phones: saturate() and a wide blur are the priciest
+     parts of the filter, and small screens have the least GPU headroom. */
+  :root[data-theme='glassmorphism'] { --blur: blur(16px); }
+}
+/* fx.ts marks each .orbs group data-live only while its section is on
+   screen (plus a margin), so a reader scrolled past never keeps every
+   panel below re-blurring for orbs it cannot see. */
+:where([data-theme='glassmorphism']) .orbs:not([data-live]) .orb { animation-play-state: paused; }
+@keyframes glass-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(var(--dx), var(--dy)) scale(var(--ds)); }
+}
+
+/* Skip link: a glass pill that drops in on focus. */
+:where([data-theme='glassmorphism']) .skip {
+  position: absolute; left: -100vw; top: 0.75rem; z-index: 30;
+  padding: 0.6rem 1.1rem; border-radius: 999px;
+  background: var(--field-raised); color: var(--mark);
+  font-weight: 600; text-decoration: none;
+}
+:where([data-theme='glassmorphism']) .skip:focus { left: 0.75rem; }
+
+/* ---------- arrival: blur-in ---------- */
+
+/* The page arrives out of focus and a touch large, then settles, like a
+   window surfacing from behind frosted glass. */
+html[data-theme='glassmorphism']::view-transition-old(root) {
+  animation: 260ms cubic-bezier(0.4, 0, 1, 1) both glass-leave;
+}
+html[data-theme='glassmorphism']::view-transition-new(root) {
+  animation: 620ms cubic-bezier(0.16, 0.84, 0.24, 1) both glass-arrive;
+}
+html[data-theme='glassmorphism']::view-transition-group(wordmark) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+@keyframes glass-leave {
+  to { opacity: 0; filter: blur(12px); }
+}
+@keyframes glass-arrive {
+  from { opacity: 0; filter: blur(22px); transform: scale(1.035); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-theme='glassmorphism']) .orb { animation: none; }
+  :where([data-theme='glassmorphism']) :is(.btn, .btn .arw) { transition: none; }
+  html[data-theme='glassmorphism']::view-transition-old(root),
+  html[data-theme='glassmorphism']::view-transition-new(root),
+  html[data-theme='glassmorphism']::view-transition-group(wordmark) { animation: none; }
+}

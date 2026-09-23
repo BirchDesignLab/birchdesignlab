@@ -1,19 +1,143 @@
 ---
+/** Glassmorphism about: a title card and a reading pane overlapping one
+    orb, the founder in a card set to one side, the promise in a card of its own. */
+import Orbs from '../Orbs.astro';
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section>
-  <h1>{copy.heading}</h1>
-  {copy.etymology.map((para) => <p set:html={rich(para)} />)}
+<section class="intro wrap">
+  <Orbs orbs={[
+    { hue: 'cyan', x: '44%', y: '30%', mx: '84%', my: '5%', size: 'clamp(200px, 28vw, 400px)', drift: 1 },
+    { hue: 'peach', x: '10%', y: '82%', mx: '8%', my: '40%', size: 'clamp(110px, 14vw, 210px)', drift: 3 },
+    { hue: 'violet', x: '96%', y: '66%', mx: '94%', my: '97%', size: 'clamp(150px, 19vw, 280px)', drift: 2 },
+  ]} />
+  <div class="title-card glass">
+    <span class="app-icon cyan" aria-hidden="true">B</span>
+    <h1>{copy.heading}</h1>
+  </div>
+  <div class="reading glass">
+    {copy.etymology.map((para) => <p set:html={rich(para)} />)}
+  </div>
 </section>
-<section>
-  <h2>{copy.founder.heading}</h2>
-  {copy.founder.body.map((para) => <p>{para}</p>)}
+
+<section class="founder wrap">
+  <Orbs orbs={[
+    { hue: 'pink', x: '29%', y: '30%', mx: '10%', my: '2%', size: 'clamp(140px, 18vw, 260px)', drift: 2 },
+    { hue: 'cyan', x: '30%', y: '96%', mx: '88%', my: '99%', size: 'clamp(90px, 10vw, 150px)', drift: 1 },
+  ]} />
+  <article class="founder-card glass">
+    <h2>{copy.founder.heading}</h2>
+    <div class="founder-body">
+      {copy.founder.body.map((para, i) => <p class={i === 0 ? 'first' : undefined}>{para}</p>)}
+    </div>
+  </article>
 </section>
-<section>
-  <p>{copy.manifesto}</p>
-  <a href={hrefFor('contact', theme)}>{copy.cta}</a>
+
+{/* The promise drops the boxed CTA card the other pages end on: large ink
+    set directly over an orb cluster, framed only by a narrow glass strip
+    behind the words themselves. */}
+<section class="promise wrap">
+  <Orbs orbs={[
+    { hue: 'violet', x: '78%', y: '30%', mx: '88%', my: '10%', size: 'clamp(220px, 28vw, 400px)', drift: 3 },
+    { hue: 'peach', x: '18%', y: '80%', mx: '10%', my: '90%', size: 'clamp(200px, 26vw, 360px)', drift: 1 },
+    { hue: 'cyan', x: '50%', y: '54%', mx: '60%', my: '60%', size: 'clamp(120px, 15vw, 220px)', drift: 2 },
+  ]} />
+  <div class="promise-inner">
+    <p class="manifesto glass">{copy.manifesto}</p>
+    <a class="btn" href={hrefFor('contact', theme)}>{copy.cta} <span class="arw" aria-hidden="true">&rarr;</span></a>
+  </div>
 </section>
+
+<style>
+  section { position: relative; }
+
+  /* Title card and reading pane overlap across the cyan orb: two sheets of
+     glass at two depths, the lesson of the school in one move. The pane
+     rides up only into the title card's deep bottom padding, never its
+     words. */
+  .intro {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 4rem);
+  }
+  .title-card {
+    grid-column: 1 / span 7;
+    display: grid; gap: clamp(1.5rem, 4vw, 3rem);
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 4vw, 3rem) clamp(5rem, 9vw, 7.5rem);
+  }
+  .title-card h1 {
+    font-size: clamp(3rem, 7.4vw, 5.75rem);
+    font-weight: 800;
+    letter-spacing: -0.048em;
+    word-spacing: 0.09em;
+    line-height: 0.92;
+  }
+  .reading {
+    grid-column: 6 / -1;
+    z-index: 2;
+    margin-top: clamp(-5.5rem, -6vw, -3.5rem);
+    display: grid; gap: 1.1rem;
+    padding: clamp(1.5rem, 4vw, 3rem);
+  }
+  .reading p { font-size: 1.125rem; line-height: 1.7; }
+  .reading :global(em) { font-style: normal; font-weight: 650; color: var(--accent); }
+  .reading :global(strong) { font-weight: 750; }
+
+  .founder { padding-block: clamp(1rem, 3vw, 1.75rem) clamp(2rem, 5vw, 4rem); }
+  /* A narrower card set to the right, pulled up into the section's own
+     top padding so it tucks toward the reading pane's edge above rather
+     than leaving a flat, empty band between the two: panels float close,
+     they do not tile with a fixed gutter between every one. */
+  .founder-card {
+    display: grid; gap: 1.25rem;
+    width: min(100%, 860px);
+    margin-left: auto;
+    margin-top: -1rem;
+    padding: clamp(1.5rem, 4.5vw, 3.75rem);
+  }
+  .founder-card h2 { font-size: clamp(1.9rem, 3.6vw, 2.75rem); }
+  .founder-body { display: grid; gap: 1.1rem; max-width: var(--measure); }
+  .founder-body p { color: var(--mark-muted); }
+  .founder-body .first {
+    font-family: var(--font-head);
+    font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    color: var(--mark);
+  }
+
+  .promise {
+    padding-block: clamp(3rem, 7vw, 5rem) clamp(2rem, 5vw, 3.5rem);
+  }
+  .promise-inner {
+    position: relative; z-index: 1;
+    display: grid; justify-items: start; gap: 1.75rem;
+    max-width: 760px;
+  }
+  .manifesto {
+    font-family: var(--font-head);
+    font-size: clamp(1.9rem, 4vw, 3rem);
+    font-weight: 760;
+    letter-spacing: -0.035em;
+    word-spacing: 0.06em;
+    line-height: 1.2;
+    text-wrap: balance;
+    padding: clamp(1rem, 3vw, 1.75rem) clamp(1.25rem, 3.5vw, 2.25rem);
+    border-radius: var(--r-lg);
+  }
+
+  @media (max-width: 860px) {
+    .intro { grid-template-columns: 1fr; }
+    .title-card, .reading { grid-column: 1; }
+    .title-card { margin-right: 10%; }
+    .reading { margin-left: 6%; }
+  }
+  @media (max-width: 480px) {
+    .title-card { margin-right: 0; padding-bottom: 4.5rem; }
+    .reading { margin-left: 0; margin-top: -3rem; }
+  }
+</style>

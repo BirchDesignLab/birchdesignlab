@@ -1,33 +1,172 @@
 ---
+/** Glassmorphism services: a header card, the two offerings as app cards,
+    the process as four numbered tiles, and the ask. */
+import Orbs from '../Orbs.astro';
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
+const offerHues = ['violet', 'cyan'];
+const stepHues = ['violet', 'cyan', 'peach', 'pink'];
+const num = (i: number) => String(i + 1).padStart(2, '0');
 ---
-<section>
-  <p>{copy.kicker}</p>
-  <h1>{copy.heading}</h1>
-  {copy.sublines.map((line) => <p>{line}</p>)}
+<section class="head wrap">
+  <Orbs orbs={[
+    { hue: 'violet', x: '80%', y: '34%', mx: '90%', my: '6%', size: 'clamp(200px, 27vw, 400px)', drift: 1 },
+    { hue: 'peach', x: '12%', y: '12%', mx: '6%', my: '96%', size: 'clamp(100px, 13vw, 190px)', drift: 2 },
+  ]} />
+  <div class="head-card glass">
+    <p class="chip">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    <div class="sublines">
+      {copy.sublines.map((line) => <p>{line}</p>)}
+    </div>
+  </div>
 </section>
-{copy.offerings.map((offering) => (
-  <section>
-    <h2>{offering.heading}</h2>
-    {offering.body.map((para) => <p>{para}</p>)}
-  </section>
-))}
-<section>
-  <h2>{copy.process.heading}</h2>
-  <ol>
-    {copy.process.steps.map((step) => (
-      <li>
+
+<section class="offers wrap">
+  <Orbs orbs={[
+    { hue: 'cyan', x: '48%', y: '28%', mx: '92%', my: '48%', size: 'clamp(170px, 22vw, 330px)', drift: 2 },
+    { hue: 'pink', x: '6%', y: '88%', mx: '8%', my: '99%', size: 'clamp(120px, 15vw, 230px)', drift: 3 },
+  ]} />
+  {copy.offerings.map((offering, i) => (
+    <article class="offer glass">
+      <span class={`app-icon ${offerHues[i % offerHues.length]}`} aria-hidden="true">{num(i)}</span>
+      <h2>{offering.heading}</h2>
+      {offering.body.map((para) => <p>{para}</p>)}
+    </article>
+  ))}
+</section>
+
+<section class="process wrap">
+  <Orbs orbs={[
+    { hue: 'violet', x: '20%', y: '66%', mx: '90%', my: '4%', size: 'clamp(160px, 21vw, 310px)', drift: 1 },
+    { hue: 'peach', x: '88%', y: '44%', mx: '6%', my: '56%', size: 'clamp(140px, 18vw, 270px)', drift: 2 },
+  ]} />
+  <h2 class="process-head">{copy.process.heading}</h2>
+  <ol class="steps" role="list">
+    {copy.process.steps.map((step, i) => (
+      <li class="step glass">
+        <span class={`app-icon ${stepHues[i % stepHues.length]}`} aria-hidden="true">{num(i)}</span>
         <h3>{step.title}</h3>
         <p>{step.body}</p>
       </li>
     ))}
   </ol>
 </section>
-<section>
-  <p>{copy.pull}</p>
-  <a href={hrefFor('contact', theme)}>{copy.cta}</a>
+
+<section class="ask-row wrap">
+  <Orbs orbs={[
+    { hue: 'cyan', x: '26%', y: '50%', mx: '10%', my: '10%', size: 'clamp(130px, 17vw, 250px)', drift: 3 },
+    { hue: 'pink', x: '74%', y: '56%', mx: '90%', my: '90%', size: 'clamp(120px, 15vw, 220px)', drift: 1 },
+  ]} />
+  <div class="ask glass">
+    <p class="pull">{copy.pull}</p>
+    <a class="btn" href={hrefFor('contact', theme)}>{copy.cta} <span class="arw" aria-hidden="true">&rarr;</span></a>
+  </div>
 </section>
+
+<style>
+  section { position: relative; }
+
+  .head { padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 4vw, 3rem); }
+  .head-card {
+    display: grid; justify-items: start; gap: 1.25rem;
+    width: min(100%, 900px);
+    padding: clamp(1.5rem, 4.5vw, 3.75rem);
+  }
+  .head-card h1 {
+    font-size: clamp(2.6rem, 7vw, 5.5rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    word-spacing: 0.08em;
+    line-height: 0.95;
+  }
+  .sublines {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1rem 2rem;
+    margin-top: 0.5rem;
+  }
+  .sublines p { color: var(--mark-muted); font-size: 1.125rem; }
+
+  .offers {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+    align-items: start;
+    padding-block: clamp(1rem, 3vw, 2rem);
+  }
+  .offer {
+    display: grid; gap: 1rem;
+    padding: clamp(1.5rem, 4vw, 3rem);
+  }
+  /* The second card rides lower: floating panels, not a table. */
+  .offer + .offer { margin-top: clamp(2rem, 6vw, 5rem); }
+  .offer .app-icon { margin-bottom: 0.5rem; }
+  .offer h2 { font-size: clamp(1.8rem, 3.4vw, 2.5rem); }
+  .offer p { color: var(--mark-muted); }
+
+  .process { padding-block: clamp(3rem, 7vw, 5rem) clamp(1rem, 3vw, 2rem); }
+  .process-head {
+    position: relative; z-index: 1;
+    font-size: clamp(2rem, 4.2vw, 3.25rem);
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    margin-bottom: clamp(1.25rem, 3vw, 2rem);
+  }
+  .steps {
+    list-style: none; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  }
+  .step {
+    display: grid; align-content: start; gap: 0.75rem;
+    padding: clamp(1.25rem, 2.4vw, 1.75rem);
+    border-radius: var(--r-lg);
+  }
+  /* An intentional stagger, not a stray overlap: every other tile rides
+     a little lower, the same rhythm the offer cards use above. */
+  .step:nth-child(even) { margin-top: 1.5rem; }
+  .step .app-icon { width: 3rem; height: 3rem; font-size: 0.95rem; margin-bottom: 0.35rem; }
+  .step h3 { font-size: 1.45rem; }
+  .step p { font-size: 0.975rem; line-height: 1.6; color: var(--mark-muted); }
+
+  /* The ask rides up over the last step's corner instead of sitting
+     centred below a clean gap, so the ending is not identical to the
+     other pages' centred CTA-between-two-orbs. */
+  .ask-row {
+    display: grid; justify-items: end;
+    margin-top: clamp(-3.5rem, -6vw, -1.75rem);
+    padding-block: clamp(1rem, 3vw, 2rem) clamp(3rem, 7vw, 5rem);
+  }
+  .ask {
+    display: grid; justify-items: center; gap: 1.6rem;
+    width: min(100%, 680px);
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 3rem);
+    text-align: center;
+  }
+  .pull {
+    font-family: var(--font-head);
+    font-size: clamp(1.7rem, 3.6vw, 2.6rem);
+    font-weight: 780;
+    letter-spacing: -0.04em;
+    word-spacing: 0.07em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  @media (max-width: 860px) {
+    .offers { grid-template-columns: 1fr; }
+    .offer + .offer { margin-top: 0; }
+  }
+  @media (max-width: 1000px) {
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .step:nth-child(even) { margin-top: 0; }
+  }
+  @media (max-width: 720px) {
+    .ask-row { justify-items: center; margin-top: 0; }
+  }
+  @media (max-width: 600px) {
+    .steps { grid-template-columns: 1fr; }
+  }
+</style>
