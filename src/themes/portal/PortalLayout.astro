@@ -50,13 +50,24 @@ const preloads = theme.fonts.flatMap((f) => f.preload ?? []);
     {/* The switcher holds still through every swap (portal.md P1): it has its
         own view-transition name, and its group shows only the new snapshot,
         unanimated, so it is already the arriving page's bar when the
-        transition starts. !important inside a layer outranks any school's
-        rules, !important ones included (important layered declarations beat
-        unlayered ones, whatever their specificity), so no school's
-        wildcard choreography can tilt, fade or wipe it. Inline, so it joins
-        no school's stylesheet set; data-portal-vt marks it for the guard. */}
+        transition starts. The first rule sends every property of its four
+        pseudo-elements back to the browser's own view-transition styles
+        (which carry the group's live geometry), so no author rule reaches
+        them; the next two set the only values it needs. !important inside a
+        layer outranks every school rule, !important ones included (important
+        layered declarations beat unlayered ones, whatever their specificity),
+        so a school's wildcard choreography, (*) on any of the four, cannot
+        tilt, fade, blur or wipe it. What this cannot reach is a rule on the
+        shared ::view-transition pseudo, the parent of every group: the
+        README forbids those properties there, and the built guard checks.
+        Inline, so it joins no school's stylesheet set; data-portal-vt marks
+        it for the guard. */}
     <style is:inline data-portal-vt>
       @layer bdl-portal {
+        ::view-transition-group(bdl-switcher),
+        ::view-transition-image-pair(bdl-switcher),
+        ::view-transition-new(bdl-switcher),
+        ::view-transition-old(bdl-switcher) { all: revert !important; }
         ::view-transition-group(bdl-switcher),
         ::view-transition-image-pair(bdl-switcher),
         ::view-transition-new(bdl-switcher) { animation: none !important; }

@@ -166,10 +166,21 @@ Rules:
   one side only animates on its own.
 - Never use another school's prefix. `auto`, `match-element` and `var()`
   names are not allowed.
+- Wildcard choreography (`::view-transition-group(*)` and the rest) is
+  yours; the portal sends every property of the switcher's own
+  pseudo-elements back to the browser's defaults, so a wildcard never
+  reaches it. The shared `::view-transition` pseudo is different: it is the
+  parent of every group, the switcher's included, and nothing can undo what
+  it draws. A background there is fine (vaporwave has one); never set
+  `opacity`, `filter`, `backdrop-filter`, `clip-path`, `mask`, `transform`
+  (or `translate`, `rotate`, `scale`, `perspective`), `mix-blend-mode`,
+  `visibility`, `display` or `zoom` on it.
 - The guard (`tests/built/portal.test.ts`) enforces the shapes (`wordmark`,
-  `bdl-switcher`, your own `<id>-*`), one use of each name per page, and a
-  `bdl-switcher` that names only the switcher and appears in no school
-  stylesheet.
+  `bdl-switcher`, your own `<id>-*`), one use of each name per page, an
+  `<id>-*` name set only by a rule keyed on `data-to-theme` or
+  `data-from-theme`, a `bdl-switcher` that names only the switcher and
+  appears in no school stylesheet, and none of the properties above on
+  `::view-transition`.
 
 ## Components
 
@@ -253,13 +264,21 @@ background stack listed top to bottom, translucent layers included.
   `::view-transition-new(root)` and `::view-transition-group(wordmark)` in
   `theme.css`. Keep it under ~700 ms. The view-transition pseudo-elements
   are styled by the arriving page, so these rules are yours on arrival.
-- Two attributes say where a swap is going and where it came from. Use them
-  in view-transition selectors (and the naming recipe above) only:
+- Two attributes say where a swap is going and where it came from:
   - `html[data-to-theme='y']` is set on the departing page just before it is
-    captured, naming the destination school.
+    captured, naming the destination school. It decides only what the old
+    page's capture sees (which elements carry a view-transition name, as in
+    the naming recipe above). The swap removes it with the rest of the old
+    page's `<html>` attributes before any `::view-transition-*` pseudo-element
+    exists, so a pseudo-element selector keyed on it never matches.
   - `html[data-from-theme='y']` is set on the arriving page from the swap
     until the arrival transition finishes, naming the school the visitor
     came from. Use it for an entrance that depends on where they came from.
+  - Choreography for a pair of schools (both the old and the new snapshot)
+    is always styled by the arriving page: key it on
+    `html[data-theme='<destination>'][data-from-theme='<source>']::view-transition-*`
+    in the destination's `theme.css`. The departing school's stylesheet is
+    gone by then too.
 - Reduced motion is out of scope for the portal's schools. This is a Lab
   piece and the motion is part of the exhibit. Existing reduced-motion code
   in a school may stay but gets no further work, and reviewers do not flag

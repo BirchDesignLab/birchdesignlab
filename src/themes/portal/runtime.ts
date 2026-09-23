@@ -14,7 +14,7 @@
  *   first, so a failed or non-school one leaves none, and the swap drops it
  *   with the rest of the old page's <html> attributes. When the switcher
  *   warmed the destination (below), load it from memory instead of the
- *   network, and stop warming anything else.
+ *   network, and stop only the warming the navigation made useless.
  * - before-swap: carry the scheme, the .js marker and .reveal-on onto the
  *   incoming document. The router replaces every <html> attribute with the
  *   new document's, and the inline bootstrap never runs again (F001). Mark
@@ -30,8 +30,9 @@
  * Warming (P4, tier3-stage1/p4-trace.md): the switcher calls warmPages() for
  * the pages a visitor is about to choose from (every other school's same page
  * when the dialog opens, the Shuffle pick on hover or focus). Each page's HTML
- * is kept in memory and its stylesheets, font preloads and module scripts are
- * fetched into the HTTP cache, so the switch pays no round trip. A plain
+ * is kept in memory and its stylesheets (with the Latin fonts they load),
+ * font preloads and module scripts are fetched into the HTTP cache, so the
+ * switch pays no round trip. A plain
  * prefetch cannot do this: the site's HTML is max-age=0, must-revalidate, so
  * the router's own fetch would still go to the network.
  */
@@ -90,8 +91,9 @@ interface Warmed {
   html: Promise<string | null>;
   /** When the HTML arrived (when it was asked for, until then). */
   at: number;
-  /** Set once the HTML and its files are in; until then a navigation elsewhere aborts it. */
-  done: boolean;
+  /** Set once the HTML has arrived. From then on the entry is never dropped
+      by a navigation: its bytes are paid for, and its files finish loading. */
+  htmlIn: boolean;
   abort: AbortController;
 }
 
@@ -119,7 +121,23 @@ async function fetchPage(href: string, signal: AbortSignal): Promise<string | nu
   }
 }
 
-/** Fetch the files a page will ask for into the HTTP cache: stylesheets, font preloads, module scripts. */
+/**
+ * The Latin faces a stylesheet's @font-face rules load (Fontsource names its
+ * files <family>-latin-<axis>-<style>.<hash>.woff2; latin-ext, cyrillic and
+ * the rest stay for a page that needs them). A school preloads only its
+ * display faces, rightly for a first load, so without this the body and mono
+ * faces arrive a round trip after the page does.
+ */
+function latinFaces(css: string, cssUrl: string): string[] {
+  const faces = css.match(/@font-face\s*\{[^}]*\}/g) ?? [];
+  return faces
+    .flatMap((face) => [...face.matchAll(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g)].map((m) => m[1]))
+    .filter((src) => /-latin-(?!ext)[^/]*\.woff2$/.test(src))
+    .map((src) => keyOf(new URL(src, cssUrl)));
+}
+
+/** Fetch the files a page will ask for into the HTTP cache: stylesheets and
+    the Latin fonts they load, font preloads, module scripts. */
 async function warmFiles(html: string, signal: AbortSignal): Promise<void> {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const have = new Set(
@@ -127,26 +145,28 @@ async function warmFiles(html: string, signal: AbortSignal): Promise<void> {
       keyOf(el.getAttribute('href') ?? el.getAttribute('src') ?? ''),
     ),
   );
-  const urls = [
-    ...doc.querySelectorAll('head link[rel="stylesheet"][href], head link[rel="preload"][as="font"][href], script[type="module"][src]'),
-  ]
-    .map((el) => keyOf(el.getAttribute('href') ?? el.getAttribute('src') ?? ''))
-    .filter((url) => !have.has(url) && !warmedFiles.has(url));
-  await Promise.all(
-    urls.map(async (url) => {
-      warmedFiles.add(url);
-      try {
-        const res = await fetch(url, { signal });
-        await res.arrayBuffer(); // read to the end, so the cache entry is whole
-      } catch {
-        warmedFiles.delete(url);
-      }
-    }),
-  );
+  const fresh = (url: string) => !have.has(url) && !warmedFiles.has(url);
+  const warm = async (url: string, isCss: boolean): Promise<void> => {
+    warmedFiles.add(url);
+    try {
+      const res = await fetch(url, { signal });
+      // Read to the end, so the cache entry is whole.
+      if (!isCss || !res.ok) return void (await res.arrayBuffer());
+      const fonts = latinFaces(await res.text(), url).filter(fresh);
+      await Promise.all(fonts.map((font) => warm(font, false)));
+    } catch {
+      warmedFiles.delete(url);
+    }
+  };
+  const pick = (selector: string) =>
+    [...doc.querySelectorAll(selector)].map((el) => keyOf(el.getAttribute('href') ?? el.getAttribute('src') ?? '')).filter(fresh);
+  const sheets = pick('head link[rel="stylesheet"][href]');
+  const files = pick('head link[rel="preload"][as="font"][href], script[type="module"][src]');
+  await Promise.all([...sheets.map((url) => warm(url, true)), ...files.map((url) => warm(url, false))]);
 }
 
 function warmOne(key: string): Promise<void> {
-  const entry: Warmed = { html: Promise.resolve(null), at: performance.now(), done: false, abort: new AbortController() };
+  const entry: Warmed = { html: Promise.resolve(null), at: performance.now(), htmlIn: false, abort: new AbortController() };
   entry.html = fetchPage(key, entry.abort.signal);
   warmed.set(key, entry);
   return entry.html.then(async (html) => {
@@ -155,8 +175,8 @@ function warmOne(key: string): Promise<void> {
       return;
     }
     entry.at = performance.now();
+    entry.htmlIn = true;
     await warmFiles(html, entry.abort.signal);
-    entry.done = true;
   });
 }
 
@@ -181,26 +201,38 @@ async function drainWarmQueue(): Promise<void> {
 export function warmPages(paths: string[]): void {
   if (import.meta.env.DEV || frugal()) return;
   const now = performance.now();
-  for (const [key, entry] of warmed) if (entry.done && now - entry.at > WARM_MAX_AGE_MS) warmed.delete(key);
+  for (const [key, entry] of warmed) if (entry.htmlIn && now - entry.at > WARM_MAX_AGE_MS) warmed.delete(key);
   const fresh = paths.map(keyOf).filter((key) => !warmed.has(key));
   warmQueue = [...fresh, ...warmQueue.filter((key) => !fresh.includes(key))];
   void drainWarmQueue();
 }
 
-/** The destination's warmed HTML, if it is fresh; everything else still loading is dropped. */
+/**
+ * The destination's warmed HTML, if it is fresh. The founder's call is to
+ * pay for warming up front, so a navigation stops only warming that has
+ * become useless:
+ * - a school change keeps the visitor on the same page, and the next dialog
+ *   asks for that same page in every other school, so warming for it carries
+ *   on (queued and in flight alike);
+ * - any other navigation drops the queue, and stops the one page whose HTML
+ *   is still downloading, which frees the line for the new page;
+ * - a page whose HTML has arrived is always kept, and its files finish.
+ * The destination itself leaves the queue: the navigation fetches it.
+ */
 function takeWarmed(to: URL): Promise<string | null> | null {
   const dest = keyOf(to);
-  warmQueue = [];
+  const destPage = pageFromPath(to.pathname)?.page;
+  const useful = (key: string) => !!destPage && pageFromPath(new URL(key).pathname)?.page === destPage;
+  warmQueue = warmQueue.filter((key) => key !== dest && useful(key));
   for (const [key, entry] of warmed) {
-    if (key !== dest && !entry.done) {
-      entry.abort.abort();
-      warmed.delete(key);
-    }
+    if (key === dest || entry.htmlIn || useful(key)) continue;
+    entry.abort.abort();
+    warmed.delete(key);
   }
   const entry = warmed.get(dest);
   if (!entry) return null;
   if (performance.now() - entry.at > WARM_MAX_AGE_MS) {
-    entry.abort.abort();
+    if (!entry.htmlIn) entry.abort.abort(); // HTML still downloading after two minutes
     warmed.delete(dest);
     return null;
   }

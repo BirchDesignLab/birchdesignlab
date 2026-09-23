@@ -39,7 +39,34 @@ function cssOf(html: string): string {
   return [...linked, ...inline].join('\n');
 }
 
-const NAME_DECL = /view-transition-name:\s*([\w-]+)/g;
+/* The property is matched whatever its case and spacing (CSS property names
+   are case-insensitive, esbuild keeps case, and inline style="" attributes are
+   not minified), and not as the tail of a custom property such as
+   --x-view-transition-name. The name keeps its case: idents are
+   case-sensitive, so `Swiss-bar` is not swiss's. A var() or other function
+   value is captured as its function name and so reads as stray. */
+const NAME_DECL = /(?<![\w-])view-transition-name\s*:\s*([\w-]+)/gi;
+
+/** Every innermost rule in a stylesheet: its selector list and its
+    declarations (rules nested in @media, @supports or @layer included). */
+function rulesOf(css: string): { selector: string; decls: { prop: string; value: string }[] }[] {
+  return [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]*)\{([^{}]*)\}/g)].map((m) => ({
+    selector: m[1].trim(),
+    decls: m[2]
+      .split(';')
+      .map((d) => d.trim())
+      .filter(Boolean)
+      .map((d) => {
+        const at = d.indexOf(':');
+        return { prop: d.slice(0, at).trim().toLowerCase(), value: d.slice(at + 1).trim() };
+      }),
+  }));
+}
+
+/* Properties that change how the children of ::view-transition draw: set on
+   that shared pseudo, they reach the switcher's group, which nothing on the
+   switcher's side can undo (README, View-transition names). */
+const REACHES_EVERY_GROUP = /^(opacity|filter|backdrop-filter|clip-path|clip|mask(-[\w-]+)?|transform(-[\w-]+)?|translate|rotate|scale|perspective(-origin)?|mix-blend-mode|visibility|display|content-visibility|zoom)$/;
 
 /** Every view-transition name a page declares, wherever it is declared:
     linked stylesheets, inline <style> blocks (Astro writes transition:name
@@ -158,6 +185,21 @@ describe('every portal page', () => {
         .filter((n) => n !== 'wordmark' && n !== 'bdl-switcher' && nameOwner(n, schools) !== id);
       expect(stray).toEqual([]);
     });
+    it(`${route}: <id>-* names are named only when both sides of the swap are this school`, () => {
+      // The recipe (README): the rule that sets an <id>-* name is keyed on
+      // data-to-theme or data-from-theme. Named at rest, the chrome is a
+      // stacking context and a backdrop root; named on a swap to or from
+      // another school, it has no partner and animates apart from the arrival.
+      const html = readPage(route);
+      const ungated = rulesOf(schoolCssOf(html)).filter(
+        (r) =>
+          r.decls.some((d) => d.prop === 'view-transition-name' && nameOwner(d.value.split(/[\s!]/)[0], schools) === id) &&
+          !/data-(to|from)-theme/.test(r.selector),
+      );
+      expect(ungated.map((r) => r.selector)).toEqual([]);
+      const inAttributes = transitionNames(html).filter((n) => n.from === 'attribute' && nameOwner(n.name, schools) === id);
+      expect(inAttributes).toEqual([]);
+    });
     it(`${route}: bdl-switcher names the switcher and nothing else, and holds it still`, () => {
       const html = readPage(route);
       const named = transitionNames(html).filter((n) => n.name === 'bdl-switcher');
@@ -171,9 +213,27 @@ describe('every portal page', () => {
       // In a layer, so its !important outranks a school's !important
       // wildcards whatever their specificity.
       expect(vt).toMatch(/^@layer[\w-]+\{/);
-      expect(vt).toMatch(/::view-transition-group\(bdl-switcher\)[^{}]*\{animation:none!important;?\}/);
-      expect(vt).toMatch(/::view-transition-new\(bdl-switcher\)[^{}]*\{animation:none!important;?\}/);
-      expect(vt).toMatch(/::view-transition-old\(bdl-switcher\)\{display:none!important;?\}/);
+      // Every property of all four pseudo-elements goes back to the
+      // browser's own styles (so no school wildcard reaches them), then the
+      // group, the image pair and the new snapshot are unanimated and the
+      // old snapshot is not drawn. Each pseudo-element is checked on its
+      // own, so dropping one from a selector list fails.
+      const rules = rulesOf(vt);
+      const sets = (pseudo: string, prop: string, value: string) =>
+        rules.some(
+          (r) => r.selector.split(',').includes(`::view-transition-${pseudo}(bdl-switcher)`) && r.decls.some((d) => d.prop === prop && d.value === value),
+        );
+      for (const pseudo of ['group', 'image-pair', 'new', 'old']) expect(sets(pseudo, 'all', 'revert!important'), pseudo).toBe(true);
+      for (const pseudo of ['group', 'image-pair', 'new']) expect(sets(pseudo, 'animation', 'none!important'), pseudo).toBe(true);
+      expect(sets('old', 'display', 'none!important')).toBe(true);
+      // The resets must come after `all: revert`, or it would undo them.
+      const last = (prop: string) => rules.findLastIndex((r) => r.decls.some((d) => d.prop === prop));
+      expect(last('all')).toBeLessThan(Math.min(last('animation'), last('display')));
+    });
+    it(`${route}: no school draws on the shared ::view-transition pseudo in a way that reaches the switcher`, () => {
+      const onRoot = rulesOf(schoolCssOf(readPage(route))).filter((r) => /::view-transition(?![\w-])/.test(r.selector));
+      const reaching = onRoot.flatMap((r) => r.decls.filter((d) => REACHES_EVERY_GROUP.test(d.prop)).map((d) => `${r.selector} { ${d.prop} }`));
+      expect(reaching).toEqual([]);
     });
     it(`${route}: styles name no other school`, () => {
       const named = new Set([...cssOf(readPage(route)).matchAll(/data-theme=["']?([a-z][a-z0-9-]*)/g)].map((m) => m[1]));
@@ -273,4 +333,26 @@ describe('search', () => {
     expect(maps.length).toBeGreaterThan(0);
     for (const f of maps) expect(readFileSync(join(DIST, f), 'utf8')).not.toMatch(/\/t\//);
   });
+});
+
+describe("quiet's header lights the page it is on (root and portal alike)", () => {
+  /** The hrefs of the header nav links marked aria-current="page". */
+  const lit = (route: string) =>
+    doc(readPage(route))
+      .querySelectorAll('header nav a[aria-current="page"]')
+      .map((a) => a.getAttribute('href'));
+  const cases: [string, string[]][] = [
+    ['/contact/', ['/contact']],
+    ['/contact/sent/', []],
+    ['/t/quiet/contact/', ['/t/quiet/contact/']],
+    ['/t/quiet/contact/sent/', []],
+    ['/lab/', ['/lab']],
+    ['/lab/experiments/', ['/lab']],
+    ['/lab/studies/', ['/lab']],
+  ];
+  for (const [route, want] of cases) {
+    it(`${route} lights ${want.length ? want.join(', ') : 'nothing'}`, () => {
+      expect(lit(route)).toEqual(want);
+    });
+  }
 });

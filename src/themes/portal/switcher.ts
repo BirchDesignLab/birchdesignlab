@@ -24,8 +24,9 @@
  * pointing at or focusing Shuffle picks its school and warms that page, so
  * the click finds the page in memory. The control that started a school
  * change shows a busy state until the new page has loaded (or the navigation
- * is abandoned), inside its own box, so the bar never changes size while it
- * holds still through the swap.
+ * is abandoned), inside its own box, and its labels keep the width of the
+ * longest word they can show, so the bar never changes size while it holds
+ * still through the swap.
  */
 import { navigate, type TransitionBeforePreparationEvent } from 'astro:transitions/client';
 import { currentScheme, setScheme } from '../../lib/scheme';
@@ -63,8 +64,15 @@ const STYLE = `
 :host {
   --bg: #1c1a17; --raised: #272319; --ink: #f4f0e6; --muted: #b3ab9b; --accent: #a3bd8f;
   --line: rgba(244, 240, 230, 0.2);
-  position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
-  transform: translateX(-50%); z-index: 2147483000;
+  /* Centred by layout (auto margins), not a transform: a view transition
+     draws a transformed element's snapshot a subpixel off the live one, so
+     the bar would seem to jolt on every swap (K1). The placement is
+     !important because the host sits in the page, where a school's reset
+     reaches it (quiet's base.css sets margin: 0 on every element), and a
+     :host rule loses to any page rule unless both are important. */
+  position: fixed !important; left: 0 !important; right: 0 !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  width: max-content !important; margin: 0 auto !important; z-index: 2147483000;
   font: 500 13px/1.2 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   letter-spacing: 0.02em; color: var(--ink);
 }
@@ -84,7 +92,13 @@ button, a.btn {
 button:hover, a.btn:hover { background: var(--raised); }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; }
-.current { color: var(--ink); font-weight: 600; }
+.current, .open .stack { color: var(--ink); font-weight: 600; }
+/* A label that changes (the school's name, Light or Dark) sits in one grid
+   cell with every word it can show, the others hidden, so the widest sets
+   the width and the bar is one size in every school and either scheme. */
+.stack { display: inline-grid; }
+.stack > * { grid-area: 1 / 1; }
+.stack > .sizer { visibility: hidden; }
 .icon { width: 16px; height: 16px; flex: none; }
 .caret { width: 10px; height: 10px; flex: none; opacity: 0.7; }
 /* Busy: the control that started a school change, until the new page has
@@ -105,14 +119,18 @@ button[aria-busy='true']::after {
 /* Desktop: out of the way in the corner, clear of centred hero content (the
    quiet home pins its bark credit bottom-centre). Phones: centred, thumb reach. */
 @media (min-width: 700px) {
-  :host { left: auto; right: 16px; transform: none; }
+  :host { left: auto !important; right: 16px !important; margin: 0 !important; }
 }
 /* The first-load prompt: one line above the bar (two on a phone), never over its buttons.
    Absolutely placed, so showing or dropping it never resizes the bar (which
    holds still through every swap). Centred on phones, flush right with the
-   bar from 700px, where the bar moves to the corner. */
+   bar from 700px, where the bar moves to the corner. On phones its insets
+   make a viewport-wide box around the bar's centre (the bar is centred), and
+   auto margins centre it in that box: layout, not a translate, as for the
+   bar. */
 .prompt {
-  position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0;
+  position: absolute; bottom: calc(100% + 10px);
+  left: calc(50% - 50vw); right: calc(50% - 50vw); margin-inline: auto;
   display: flex; align-items: stretch; gap: 1px;
   width: max-content; max-width: calc(100vw - 24px);
   background: var(--line); border: 1px solid var(--line);
@@ -136,7 +154,7 @@ button[aria-busy='true']::after {
   to { box-shadow: 0 0 0 9px rgba(163, 189, 143, 0); }
 }
 @media (min-width: 700px) {
-  .prompt { left: auto; right: 0; translate: none; max-width: calc(100vw - 32px); }
+  .prompt { left: auto; right: 0; margin-inline: 0; max-width: calc(100vw - 32px); }
 }
 @media (max-width: 560px) {
   .wide { display: none; }
@@ -186,7 +204,9 @@ dialog::backdrop { background: rgba(10, 9, 8, 0.55); }
 /* A landscape phone has no room for two scrolling panes: the whole dialog
    scrolls as one, under a head that stays put. */
 @media (max-height: 480px) {
-  dialog[open] { overflow: auto; overscroll-behavior: contain; }
+  /* scroll-padding: focus scrolling (Shift+Tab back up the list) stops
+     below the sticky head (16px padding each side, a 36px button, a 1px rule). */
+  dialog[open] { overflow: auto; overscroll-behavior: contain; scroll-padding-top: 72px; }
   .head { position: sticky; top: 0; z-index: 1; background: var(--bg); }
   dialog .placard, dialog ul { flex: none; min-height: 0; overflow: visible; }
 }
@@ -200,6 +220,11 @@ li a[aria-current='page'] { border-left-color: var(--accent); background: var(--
 li .name { font-size: 15px; font-weight: 600; }
 li .era { color: var(--muted); font-size: 12px; text-align: right; align-self: center; }
 li .sig { grid-column: 1 / -1; color: var(--muted); font-size: 13px; line-height: 1.4; font-weight: 400; letter-spacing: 0; }
+/* A phone has no room for the era beside the name: it takes its own line under it. */
+@media (max-width: 560px) {
+  li a { grid-template-columns: 1fr; }
+  li .era { text-align: left; }
+}
 .foot { flex: none; display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 14px 18px; border-top: 1px solid var(--line); }
 .foot a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { button, a.btn { transition: none; } }
@@ -220,6 +245,11 @@ const ICON = {
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+}
+
+/** Hidden copies of every word a .stack label can show, so it keeps the widest one's width. */
+function sizers(words: string[]): string {
+  return words.map((w) => `<span class="sizer" aria-hidden="true">${escapeHtml(w)}</span>`).join('');
 }
 
 /** The switcher the visitor sees: the first one connected, carried across every swap. */
@@ -264,10 +294,10 @@ class BdlSwitcher extends HTMLElement {
       </div>
       <div class="bar">
         <button type="button" class="open" aria-haspopup="dialog">
-          <span class="label wide">School</span><span class="current"></span>${ICON.caret}
+          <span class="label wide">School</span><span class="stack"><span class="current"></span>${sizers(schools.map((s) => s.name))}</span>${ICON.caret}
         </button>
         <button type="button" class="shuffle" aria-label="Shuffle to a random school">${ICON.shuffle}<span class="wide">Shuffle</span></button>
-        <button type="button" class="scheme" aria-pressed="false">${ICON.scheme}<span class="wide scheme-text"></span></button>
+        <button type="button" class="scheme" aria-pressed="false">${ICON.scheme}<span class="wide stack"><span class="scheme-text"></span>${sizers(['Light', 'Dark'])}</span></button>
         <a class="btn leave" href="/">${ICON.leave}<span class="wide">Leave</span></a>
       </div>
       <dialog aria-labelledby="bdl-schools-title">
@@ -356,6 +386,25 @@ class BdlSwitcher extends HTMLElement {
       const e = event as TransitionBeforePreparationEvent;
       const mark = this.busy;
       if (mark && e.info === SWITCHER_INFO) e.signal.addEventListener('abort', () => this.clearBusy(mark), { once: true });
+      // A navigation the dialog did not start (Back, Forward, any other
+      // link) closes it before the old page is captured: the visitor did not
+      // choose the next page from it, and a modal left open would ride the
+      // swap in the old page's snapshot.
+      if (dialog.open) dialog.close();
+    });
+    // Where Element.moveBefore is missing (Safari, older Firefox), the router
+    // moves this element with appendChild, which drops focus from the control
+    // inside it, and Astro's focus restore then calls focus() on the host,
+    // which cannot take it. Put focus back on the control that had it.
+    let refocus: HTMLElement | null = null;
+    document.addEventListener('astro:before-swap', () => {
+      refocus = this.root.activeElement as HTMLElement | null;
+    });
+    document.addEventListener('astro:after-swap', () => {
+      const control = refocus;
+      refocus = null;
+      const lost = document.activeElement === null || document.activeElement === document.body;
+      if (control && lost && this.root.contains(control)) control.focus({ preventScroll: true });
     });
     window.addEventListener('pageshow', (e) => {
       if (e.persisted) this.clearBusy();
@@ -375,6 +424,10 @@ class BdlSwitcher extends HTMLElement {
       this.openDialog();
     });
     this.root.querySelector('.prompt .dismiss')!.addEventListener('click', () => this.dismissPrompt());
+    // Escape dismisses the prompt, as it closes the dialog.
+    this.root.querySelector('.prompt')!.addEventListener('keydown', (e) => {
+      if ((e as KeyboardEvent).key === 'Escape') this.dismissPrompt();
+    });
     if (!promptDismissed()) this.showPrompt();
   }
 
@@ -383,10 +436,13 @@ class BdlSwitcher extends HTMLElement {
     this.update();
     if (!dialog.open) dialog.showModal();
     const here = dialog.querySelector<HTMLElement>('a[aria-current="page"]');
-    // Scroll only as far as the link needs, so the placard above it stays in
-    // view wherever it can (focus() alone may centre the link).
     here?.focus({ preventScroll: true });
-    here?.scrollIntoView({ block: 'nearest' });
+    // A landscape phone scrolls the whole dialog as one (the max-height:
+    // 480px rules): start at the top, so the placard is what shows first.
+    // Elsewhere only the list scrolls, and only as far as the link needs, so
+    // the placard above it stays in view (focus() alone may centre the link).
+    if (matchMedia('(max-height: 480px)').matches) dialog.scrollTop = 0;
+    else here?.scrollIntoView({ block: 'nearest' });
     this.warmOthers();
   }
 
