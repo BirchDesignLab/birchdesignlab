@@ -379,6 +379,45 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
 /* 61.6% of 560ms is 345ms. */
 @keyframes sw-wordmark-out { 0% { opacity: 1; } 61.6%, 100% { opacity: 0; } }
 @keyframes sw-wordmark-in { 0% { opacity: 0; } 61.6%, 100% { opacity: 1; } }
+
+/* Between two swiss pages the header holds still: the bar (the wordmark row
+   and the nav, down to its ink rule) is named only when both sides of the
+   swap are swiss (README, "View-transition names"), so the panels clear and
+   lay beneath it. Arriving from another school it stays unnamed and rides
+   the panels with the rest of the sheet. The bar, not the header element:
+   the header also holds the skip link, parked a viewport off to the left,
+   which would only widen the snapshot. The group is pinned (no morph), and
+   with no duration its two pictures, the same but for the current page's
+   red link, trade in one step on the swap's first frame: the red moves to
+   the link just clicked as the old sheet starts to clear. Not later: once
+   the bar is named, its old picture comes out without the pointer's hover,
+   so holding it would turn the clicked link black before it turned red.
+   The old picture is hidden outright rather than left to the group: with
+   the group's animation gone, the browser's fade on the two pictures
+   inherits no fill either, so both would stay at full strength and add up
+   (plus-lighter) into bolder type. The new picture carries the field behind
+   it: the bar is transparent and not sticky, so on a swap clicked from low
+   down a page (a footer link) the header would otherwise sit at the top of
+   the viewport over the old page's scrolled body type until its panel
+   cleared. The field runs out to both sides of the viewport (a spread
+   shadow, clipped to the bar's height), so a bleed block's fill cannot show
+   in the margins either. The cost is the column guides in the header band,
+   gone for the swap. The wordmark keeps its own group above the bar's. */
+html[data-theme='swiss']:is([data-to-theme='swiss'], [data-from-theme='swiss']:not([data-to-theme])) .site-header > .bar {
+  view-transition-name: swiss-header;
+}
+html[data-theme='swiss']::view-transition-group(swiss-header),
+html[data-theme='swiss']::view-transition-new(swiss-header) { animation: none; }
+html[data-theme='swiss']::view-transition-new(swiss-header) {
+  background: var(--field);
+  box-shadow: 0 0 0 100vw var(--field);
+  clip-path: inset(0 -100vw);
+}
+html[data-theme='swiss']::view-transition-old(swiss-header) { animation: none; opacity: 0; }
+/* Naming the bar costs the clicked link its hover for the one frame the old
+   page is still drawn, which would blink it black between its hover red and
+   its current-page red. The click left it focused, so hold the red on that. */
+html[data-theme='swiss'][data-to-theme='swiss'] .site-header nav a:focus { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='swiss']::view-transition-old(root),
   html[data-theme='swiss']::view-transition-new(root),
