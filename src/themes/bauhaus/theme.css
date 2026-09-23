@@ -1,47 +1,339 @@
 /* Bauhaus: tokens for both schemes, globals, arrival choreography.
    Imported by src/pages/t/bauhaus/[...page].astro only. Every rule is scoped
-   under [data-theme='bauhaus']. See src/themes/README.md. */
+   under [data-theme='bauhaus']. See src/themes/README.md.
+
+   Doctrine: red, yellow and blue are poster blocks and shapes, never text on
+   the paper. Text is ink on paper, or sits on a block whose pair is declared
+   in meta.contrast. --accent is therefore ink, not a primary. */
 
 :root[data-theme='bauhaus'] {
   color-scheme: light;
-  --field: #ffffff;
-  --field-raised: #f2f2f2;
-  --mark: #111111;
-  --mark-muted: #555555;
-  --accent: #1a4fd6;
-  --link: #1a4fd6;
-  --on-accent: #ffffff;
-  --font-body: system-ui, sans-serif;
-  --font-display: system-ui, sans-serif;
+
+  /* Primitives. Kandinsky's 1923 questionnaire paired yellow with the
+     triangle, red with the square and blue with the circle; the shapes on
+     every page keep that pairing. */
+  --paper: #f3efe6;
+  --ink: #141414;
+  --red: #d42a1e;
+  --yellow: #f4c214;
+  --blue: #1e4aa8;
+  --on-red: #ffffff;
+  --on-yellow: #141414;
+  --on-blue: #ffffff;
+
+  --field: var(--paper);
+  --field-raised: #e6e1d6;
+  --mark: var(--ink);
+  --mark-muted: #474541;
+  --accent: var(--ink);
+  --link: var(--ink);
+  --on-accent: var(--paper);
+  --poster: var(--ink);
+  --on-poster: var(--paper);
+  /* The one part of the hero poster allowed to react to the wall it hangs
+     on; see the dark-scheme override below. */
+  --poster-mark: var(--mark);
+
+  --font-display: 'League Spartan Variable', 'League Spartan Variable fallback', system-ui, sans-serif;
+  --font-body: 'Jost Variable', 'Jost Variable fallback', system-ui, sans-serif;
+  --font-num: 'Unbounded Variable', 'Unbounded Variable fallback', system-ui, sans-serif;
+
+  --rule: 6px;
+  --rule-thin: 2px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --gap: clamp(16px, 2vw, 28px);
+  --ease-snap: cubic-bezier(0.7, 0, 0.2, 1);
+  --ease-land: cubic-bezier(0.2, 0.9, 0.25, 1.12);
 }
 
+/* Dark is the same poster pinned to a black wall: near-black field, paper
+   ink, and the primaries still as blocks. Blue lifts toward ultramarine so
+   it holds its own against black. Two deliberately dark-only decisions:
+   the inverse band stays ink-on-black instead of flipping to a bright
+   paper slab (so the page doesn't end on a jarring bright band), and the
+   hero poster's ring and beam swap from ink to red, since ink-on-black
+   would just vanish into the field. */
 :root[data-theme='bauhaus'][data-scheme='dark'] {
   color-scheme: dark;
-  --field: #111111;
-  --field-raised: #1d1d1d;
-  --mark: #f2f2f2;
-  --mark-muted: #b5b5b5;
-  --accent: #8fb0ff;
-  --link: #8fb0ff;
-  --on-accent: #111111;
+  --blue: #3a57d8;
+  --yellow: #f7c61a;
+  --field: #121212;
+  --field-raised: #1f1f1e;
+  --mark: var(--paper);
+  --mark-muted: #b9b4aa;
+  --accent: var(--paper);
+  --link: var(--paper);
+  --on-accent: var(--ink);
+  --poster: var(--field);
+  --on-poster: var(--paper);
+  --poster-mark: var(--red);
 }
 
 :where([data-theme='bauhaus']) *,
 :where([data-theme='bauhaus']) *::before,
 :where([data-theme='bauhaus']) *::after { box-sizing: border-box; }
 
+/* body carries --poster (the inverse-band colour), but the header and main
+   paint over it with --field. The only place --poster shows through is the
+   portal's spacer strip below the footer, which already uses --poster
+   itself, so the two colours stay continuous instead of clashing. */
 [data-theme='bauhaus'] body {
   margin: 0;
-  background: var(--field);
+  background: var(--poster);
   color: var(--mark);
   font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: 400;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
-[data-theme='bauhaus'] a { color: var(--link); }
-[data-theme='bauhaus'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme='bauhaus'] .site-header,
+[data-theme='bauhaus'] main { background: var(--field); }
+[data-theme='bauhaus'] :where(h1, h2, h3, p, ol, ul, figure) { margin: 0; }
+[data-theme='bauhaus'] :where(h1, h2, h3) {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-kerning: normal;
+}
+[data-theme='bauhaus'] a {
+  color: var(--link);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+[data-theme='bauhaus'] a:hover { text-decoration-thickness: 4px; }
+/* The ring is keyed to --mark, never to an element's own text colour: a
+   button's text can match its own background (paper .btn text on a paper
+   field in dark), which made the old currentColor ring disappear. Inside a
+   primary block --mark is already repointed to that block's on-colour, so
+   the ring keeps passing there too. */
+[data-theme='bauhaus'] :focus-visible { outline: 3px solid var(--mark); outline-offset: 4px; }
+/* .btn can sit on the field, a raised panel or a primary block. The field-
+   coloured moat guarantees the ring always lands on a colour it's built to
+   contrast with, instead of whatever slab the button happens to be on. */
+[data-theme='bauhaus'] .btn:focus-visible {
+  outline-color: var(--mark);
+  box-shadow: 0 0 0 7px var(--field);
+}
 [data-theme='bauhaus'] main:focus { outline: none; }
-[data-theme='bauhaus'] .skip { position: absolute; left: -100vw; top: 0; }
-[data-theme='bauhaus'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='bauhaus'] ::selection { background: var(--yellow); color: var(--on-yellow); }
 [data-theme='bauhaus'] img,
 [data-theme='bauhaus'] svg,
 [data-theme='bauhaus'] canvas { max-width: 100%; display: block; }
+
+/* ---------- the grid ---------- */
+
+/* Twelve columns everywhere; modules snap to it and nothing floats free. */
+[data-theme='bauhaus'] .wrap {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+[data-theme='bauhaus'] .grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+}
+
+/* ---------- poster blocks ---------- */
+
+/* A primary block is the same colour in both schemes, so the text on it is
+   pinned to that block's declared pair (meta.contrast) instead of following
+   the scheme. Buttons inside a block are always an ink slab. */
+[data-theme='bauhaus'] :is(.block-red, .block-yellow, .block-blue) {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--paper);
+  background: var(--block);
+  color: var(--mark);
+}
+[data-theme='bauhaus'] .block-red { --block: var(--red); --mark: var(--on-red); --accent: var(--on-red); --link: var(--on-red); }
+[data-theme='bauhaus'] .block-yellow { --block: var(--yellow); --mark: var(--on-yellow); --accent: var(--on-yellow); --link: var(--on-yellow); }
+[data-theme='bauhaus'] .block-blue { --block: var(--blue); --mark: var(--on-blue); --accent: var(--on-blue); --link: var(--on-blue); }
+
+/* ---------- shared pieces ---------- */
+
+/* No italics and no serif emphasis: weight carries it, and the strongest
+   word gets a yellow slab, the one place a highlight is a block of colour. */
+[data-theme='bauhaus'] em { font-style: normal; font-weight: 600; }
+[data-theme='bauhaus'] strong {
+  font-weight: 700;
+  background: var(--yellow);
+  color: var(--on-yellow);
+  padding: 0.02em 0.2em 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Kicker: small spaced capitals led by a solid primary shape. The colour is
+   carried by the shape; the words stay ink. */
+[data-theme='bauhaus'] .kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+[data-theme='bauhaus'] .kicker::before {
+  content: '';
+  flex: none;
+  width: 0.95em;
+  height: 0.95em;
+  background: var(--red);
+}
+[data-theme='bauhaus'] .kicker.is-circle::before { background: var(--blue); border-radius: 50%; }
+[data-theme='bauhaus'] .kicker.is-triangle::before {
+  background: var(--yellow);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/* The call to action: a black slab (paper in dark) with a red square that
+   slides across on hover. */
+[data-theme='bauhaus'] .btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.05rem 1.35rem 0.95rem 1.5rem;
+  background: var(--btn-bg, var(--accent));
+  color: var(--btn-fg, var(--on-accent));
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 180ms var(--ease-snap), color 180ms var(--ease-snap);
+}
+[data-theme='bauhaus'] .btn::after {
+  content: '';
+  width: 0.8em;
+  height: 0.8em;
+  background: var(--red);
+  transition: transform 260ms var(--ease-snap), border-radius 260ms var(--ease-snap);
+}
+[data-theme='bauhaus'] .btn:hover { background: var(--red); color: var(--on-red); }
+[data-theme='bauhaus'] .btn:hover::after { background: var(--on-red); border-radius: 50%; transform: translateX(4px); }
+/* On a red block the red hover would vanish, so the slab turns yellow. */
+[data-theme='bauhaus'] .block-red .btn:hover { background: var(--yellow); color: var(--on-yellow); }
+[data-theme='bauhaus'] .block-red .btn:hover::after { background: var(--on-yellow); }
+
+/* The quieter "more" links: capitals on a rule, led off by a triangle. */
+[data-theme='bauhaus'] .more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding-block: 0.4rem;
+  border-bottom: var(--rule-thin) solid currentColor;
+}
+[data-theme='bauhaus'] .more::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 0.6em solid currentColor;
+  border-top: 0.36em solid transparent;
+  border-bottom: 0.36em solid transparent;
+  transition: transform 200ms var(--ease-snap);
+}
+[data-theme='bauhaus'] .more:hover { text-decoration: none; }
+[data-theme='bauhaus'] .more:hover::after { transform: translateX(5px); }
+
+/* Big numerals: ornament, always aria-hidden in markup. */
+[data-theme='bauhaus'] .num {
+  font-family: var(--font-num);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vertical labels read bottom to top, the way they run up a poster's edge. */
+[data-theme='bauhaus'] .vlabel {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ---------- assembly on load ---------- */
+
+/* Poster shapes fly in from off their marks and land. Each shape sets its
+   own --from and --d; reduced motion gets the finished poster. */
+[data-theme='bauhaus'] .asm {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bh-assemble 820ms var(--ease-land) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes bh-assemble {
+  from { opacity: 0; transform: var(--from, scale(0)); }
+}
+/* Below the fold a composition waits, parked on its first frame, until the
+   shared reveal observer (src/lib/reveal.ts, run by the portal) settles it.
+   The gate is .reveal-on, which only script sets, so without JS every
+   poster simply assembles on load. */
+[data-theme='bauhaus'].reveal-on [data-reveal]:not(.is-settled) .asm { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='bauhaus'] .asm { animation: none; }
+  [data-theme='bauhaus'] .btn,
+  [data-theme='bauhaus'] .btn::after,
+  [data-theme='bauhaus'] .more::after { transition: none; }
+}
+
+/* ---------- arrival ---------- */
+
+/* Arriving from another school: the Bauhaus page opens as a circle from the
+   top-right corner. Moving between Bauhaus pages: a square wipe from the
+   left, quicker. The old page holds still underneath, with the default
+   plus-lighter blend turned off so the wipe edge stays hard. */
+html[data-theme='bauhaus']::view-transition-old(root),
+html[data-theme='bauhaus']::view-transition-new(root) { mix-blend-mode: normal; }
+html[data-theme='bauhaus']::view-transition-old(root) { animation: none; }
+html[data-theme='bauhaus']::view-transition-new(root) {
+  animation: bh-wipe-circle 640ms var(--ease-snap) both;
+}
+html[data-theme='bauhaus'][data-from-theme='bauhaus']::view-transition-new(root) {
+  animation: bh-wipe-square 420ms var(--ease-snap) both;
+}
+/* Synced to the circle wipe (640ms): the wordmark morph gets a matching
+   duration plus a short delay so the shape leads and the mark settles into
+   place as the circle finishes opening, instead of arriving first over a
+   page that hasn't wiped in yet. Bauhaus-to-bauhaus navigation uses the
+   quicker square wipe, so its wordmark group stays undelayed. */
+html[data-theme='bauhaus']::view-transition-group(wordmark) {
+  animation-duration: 640ms;
+  animation-timing-function: var(--ease-snap);
+  animation-delay: 120ms;
+}
+html[data-theme='bauhaus'][data-from-theme='bauhaus']::view-transition-group(wordmark) {
+  animation-duration: 420ms;
+  animation-delay: 0ms;
+}
+@keyframes bh-wipe-circle {
+  from { clip-path: circle(0% at 88% 10%); }
+  to { clip-path: circle(150% at 88% 10%); }
+}
+@keyframes bh-wipe-square {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='bauhaus']::view-transition-new(root),
+  html[data-theme='bauhaus']::view-transition-old(root),
+  html[data-theme='bauhaus']::view-transition-group(wordmark) { animation: none; }
+}
