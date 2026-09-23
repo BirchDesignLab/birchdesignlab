@@ -329,10 +329,10 @@ const semanticSwatches = [
     const block = (t: ThemeSet) =>
       Object.entries(t).map(([k, v]) => `  ${k}: ${v};`).join('\n');
     return (
-      // data-face, not data-theme: keyed to the face being painted, so this
-      // stays correct if /styleguide is ever moved into the Lab zone.
-      `:root, :root[data-face='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
-      `:root[data-face='light'] {\n${block(p.light)}\n  --billboard-color: ${bc.light};\n}\n` +
+      // Same selectors as tokens.css (data-scheme), so an exported block can be
+      // pasted straight over the live one.
+      `:root, :root[data-scheme='dark'] {\n${block(p.dark)}\n${fonts}}\n` +
+      `:root[data-scheme='light'] {\n${block(p.light)}\n  --billboard-color: ${bc.light};\n}\n` +
       // Base .smallcaps is now uppercase (Marcellus); Cormorant SC wants lowercase.
       (d.upper ? '' : `.smallcaps { text-transform: lowercase; font-size: 1em; }\n`) +
       // base.css's body transition doesn't retrigger when background-color only
@@ -457,7 +457,7 @@ const semanticSwatches = [
 
   [alphaMin, alphaMax, labDensity].forEach((el) => el.addEventListener('input', drawLab));
   new MutationObserver(apply).observe(document.documentElement, {
-    attributes: true, attributeFilter: ['data-theme'],
+    attributes: true, attributeFilter: ['data-scheme'],
   });
   window.addEventListener('resize', drawLab);
 

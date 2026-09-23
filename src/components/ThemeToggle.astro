@@ -17,28 +17,26 @@
     background: var(--mark);
     transition: left var(--dur-1) var(--ease-weighted);
   }
-  :global([data-theme='light']) .dot { left: calc(100% - 1.2rem); }
+  :global([data-scheme='light']) .dot { left: calc(100% - 1.2rem); }
 </style>
 
 <script>
+  import { currentScheme, setScheme } from '../lib/scheme';
+
   const btn = document.getElementById('theme-toggle');
 
   // Reflect the live theme to assistive tech: aria-pressed = "is light", and the
-  // label names the action the press performs. ThemeBootstrap sets data-theme in
-  // <head> before this runs, so the first sync reads the real theme.
+  // label names the action the press performs. ThemeBootstrap sets data-scheme
+  // in <head> before this runs, so the first sync reads the real scheme.
   const sync = () => {
-    const light = document.documentElement.dataset.theme === 'light';
+    const light = currentScheme() === 'light';
     btn?.setAttribute('aria-pressed', String(light));
     btn?.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
   };
   sync();
 
   btn?.addEventListener('click', () => {
-    const root = document.documentElement;
-    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-    root.dataset.theme = next;
-    root.dataset.face = next;
-    try { localStorage.setItem('theme', next); } catch { /* storage blocked: theme still switches, just not persisted */ }
+    setScheme(currentScheme() === 'light' ? 'dark' : 'light');
     sync();
   });
 </script>

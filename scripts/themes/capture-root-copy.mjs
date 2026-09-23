@@ -3,7 +3,7 @@
  *
  * Written 09-22-26. Run ONCE against the build from before the root pages'
  * bodies moved into src/themes/quiet/, then commit the fixtures. From then on
- * tests/dist/root-copy.test.ts holds every later build to the same visible
+ * tests/built/root-copy.test.ts holds every later build to the same visible
  * text, line for line. Re-run only for a deliberate copy change, and say so in
  * the commit.
  *

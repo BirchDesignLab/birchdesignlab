@@ -94,7 +94,7 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
         gl.setAlpha(...barkAlphas());
         if (reducedMotion.matches) gl.renderOnce();
       });
-      mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
+      mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-scheme'] });
 
       const handleReducedMotionChange = () => { sync(); };
       reducedMotion.addEventListener('change', handleReducedMotionChange);
@@ -138,7 +138,7 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
 
       const mutationObserver = new MutationObserver(paint2D);
       mutationObserver.observe(document.documentElement, {
-        attributes: true, attributeFilter: ['data-theme', 'data-face'],
+        attributes: true, attributeFilter: ['data-scheme'],
       });
 
       cleanups.push(() => {

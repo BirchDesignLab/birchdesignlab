@@ -114,6 +114,7 @@ import '@fontsource/cormorant-sc/500.css';
 <script>
   import { generateBark, hashString, createBarkRenderer, renderBark2D } from '../../lib/bark';
   import { contrast } from '../../lib/color';
+  import { currentScheme, setScheme } from '../../lib/scheme';
 
   type ThemeSet = Record<string, string>;
   const T = (
@@ -167,12 +168,10 @@ import '@fontsource/cormorant-sc/500.css';
     const f = faces[state.face];
     const c = colors[state.color];
     return (
-      // data-face, not data-theme: this room previews the face the page is
-      // PAINTING. On /lab/bdl-002 those differ, because the Lab answers the
-      // site with the opposite face, and keying on the visitor's stored choice
-      // would drop the dark palette onto a light page.
-      `:root, :root[data-face='dark'] {\n${block(p.dark)}\n}\n` +
-      `:root[data-face='light'] {\n${block(p.light)}\n}\n` +
+      // Same selectors as tokens.css, so this later stylesheet wins on source
+      // order for whichever scheme the page is painting.
+      `:root, :root[data-scheme='dark'] {\n${block(p.dark)}\n}\n` +
+      `:root[data-scheme='light'] {\n${block(p.light)}\n}\n` +
       // Font/billboard/smallcaps overrides are scoped to .room, not :root --
       // unscoped they leaked onto the persistent .hatch back-to-lab link and
       // any other chrome sharing the page, which isn't part of this preview.
@@ -269,14 +268,10 @@ import '@fontsource/cormorant-sc/500.css';
   [seedEl, densityEl, loEl, hiEl].forEach((el) => el.addEventListener('input', redraw));
 
   document.getElementById('room-theme')!.addEventListener('click', () => {
-    const root = document.documentElement;
-    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-    root.dataset.theme = next;
-    root.dataset.face = next;
-    try { localStorage.setItem('theme', next); } catch { /* fine */ }
+    setScheme(currentScheme() === 'light' ? 'dark' : 'light');
   });
   new MutationObserver(apply).observe(document.documentElement, {
-    attributes: true, attributeFilter: ['data-theme', 'data-face'],
+    attributes: true, attributeFilter: ['data-scheme'],
   });
 
   window.addEventListener('pagehide', (event) => {
