@@ -154,11 +154,17 @@ Rules:
   `html[data-theme='x']::view-transition-group(x-taskbar)` and its
   `-image-pair`, `-old` and `-new`. With no rule it gets the browser's
   default morph and crossfade, which suits chrome that sits in the same place
-  on every page. To pin it, give the group `animation: none`, as vaporwave's
-  taskbar does. That also ends the crossfade at once (the old and new images
-  of a name you set yourself inherit the group's animation timing; the
-  wordmark's do not, see "The wordmark"), so the new picture simply replaces
-  the old; `animation-name: none` pins it and keeps the crossfade.
+  on every page. To pin it, pick one of two ways:
+  - Keep the crossfade: `animation-name: none` on the group pins it, and the
+    old and new images still crossfade in place (glassmorphism's header).
+  - Swap in one step: `animation: none` on the group and on `-new`, plus
+    `::view-transition-old(x-header) { animation: none; opacity: 0; }`
+    (swiss's header).
+  `animation: none` on the group alone does not end the crossfade. The shorthand
+  also drops the group's fill, which the images inherit, so both can stay
+  at full strength for the whole swap and add up under `plus-lighter`. On
+  see-through chrome that draws the type visibly bolder (swiss, Tier 3
+  Stage 2). Vaporwave's opaque taskbar, pinned that way, films unchanged.
 - While named, an element is a stacking context and a backdrop root. The
   spec says so for any element whose name is not `none`, at any time, not
   only during a transition, and Chrome agrees. The recipe keeps your chrome
@@ -166,6 +172,22 @@ Rules:
   element that carries a `backdrop-filter` itself, never an ancestor of
   elements that blur what is behind them: their backdrop would stop at the
   named ancestor.
+- While named, move that `backdrop-filter` off the element too. A
+  backdrop-filter on a captured element, or anywhere in the
+  `::view-transition-*` pseudo-elements, makes Chrome draw every snapshot's
+  text without subpixel anti-aliasing for the whole swap, the switcher's
+  included. So the switcher fails hold-still on a 1x desktop (2x phones
+  pass). Glassmorphism puts the blur on an unnamed underlay while the bar
+  is named (its header's `::before`, same shape, same blur). The underlay is
+  baked into the page's snapshot, and the bar is captured as its tint and
+  ink alone.
+- A named element is drawn where it sits on each page. Chrome that is not
+  pinned to the viewport (not `sticky` or `fixed`) shows its new picture at
+  the top of the viewport. On a swap clicked from low down a page (a footer
+  link), that picture lands over the old page's scrolled content until your
+  root choreography covers it. Give `::view-transition-new(x-header)` a
+  background, as swiss does, or name only chrome that stays in view.
+  `scripts/themes/probe-scrolled-swap.mjs` films that case.
 - The element must be rendered on both pages of an in-school swap. A name on
   one side only animates on its own.
 - Never use another school's prefix. `auto`, `match-element` and `var()`
