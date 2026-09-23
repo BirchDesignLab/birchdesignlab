@@ -73,13 +73,9 @@
 :where([data-theme='bauhaus']) *::before,
 :where([data-theme='bauhaus']) *::after { box-sizing: border-box; }
 
-/* body carries --poster (the inverse-band colour), but the header and main
-   paint over it with --field. The only place --poster shows through is the
-   portal's spacer strip below the footer, which already uses --poster
-   itself, so the two colours stay continuous instead of clashing. */
 [data-theme='bauhaus'] body {
   margin: 0;
-  background: var(--poster);
+  background: var(--field);
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.0625rem;
@@ -89,8 +85,9 @@
   text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
-[data-theme='bauhaus'] .site-header,
-[data-theme='bauhaus'] main { background: var(--field); }
+/* The footer is a --poster band; the portal's switcher spacer below it
+   continues the band to the true bottom of the page. */
+[data-theme='bauhaus'] [data-portal-tail] { background: var(--poster); }
 [data-theme='bauhaus'] :where(h1, h2, h3, p, ol, ul, figure) { margin: 0; }
 [data-theme='bauhaus'] :where(h1, h2, h3) {
   font-family: var(--font-display);

@@ -307,9 +307,9 @@
     radial-gradient(circle var(--r, 14px) at 50% 0, #000 calc(100% - 0.5px), #0000 100%) left bottom / calc(2 * var(--r, 14px)) var(--r, 14px) repeat-x;
 }
 
-/* The portal's switcher spacer follows the footer; carry the footer's green
+/* The portal's switcher spacer follows the footer; carry the footer's colour
    down under it so the page ends on the skirted table, not a stripe of field. */
-[data-theme='grandmillennial'] .site-footer + div { background: var(--foot); }
+[data-theme='grandmillennial'] [data-portal-tail] { background: var(--foot); }
 
 /* Sent's room runs straight into the valance: no leftover strip of plain
    field between its gold double rule and the skirted table. */

@@ -55,8 +55,10 @@ const preloads = theme.fonts.flatMap((f) => f.preload ?? []);
     </main>
     <slot name="footer" />
     {/* Room for the fixed switcher, so it never sits on the footer's last line.
-        Inline so no school's CSS can remove it. */}
-    <div aria-hidden="true" style="height: 76px"></div>
+        The height is inline so no school's CSS can remove it. A school may
+        paint it (`[data-portal-tail] { background: ... }`) to carry its footer
+        to the true bottom of the page. */}
+    <div data-portal-tail aria-hidden="true" style="height: 76px"></div>
     <bdl-switcher transition:persist="switcher"></bdl-switcher>
     <script>
       import { initPortal } from './runtime';

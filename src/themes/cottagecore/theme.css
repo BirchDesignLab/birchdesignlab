@@ -193,13 +193,7 @@
    reserves 76px of empty space below every footer for its fixed switcher.
    Paint the same gingham there so the cloth runs to the true bottom of the
    page instead of ending on hem, then dead field. */
-[data-theme='cottagecore'] body::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 76px;
-  z-index: 0;
-  pointer-events: none;
+[data-theme='cottagecore'] [data-portal-tail] {
   background-color: var(--gingham-ground);
   background-image:
     var(--gingham-texture),
@@ -207,7 +201,7 @@
     linear-gradient(var(--gingham-thread) 50%, transparent 0);
   background-size: auto, 28px 28px, 28px 28px;
 }
-[data-theme='cottagecore'][data-scheme='dark'] body::after { background-size: 28px 28px, 28px 28px, 28px 28px; }
+[data-theme='cottagecore'][data-scheme='dark'] [data-portal-tail] { background-size: 28px 28px, 28px 28px, 28px 28px; }
 /* Dark only: the lamp hangs over the top of the table. */
 [data-theme='cottagecore'][data-scheme='dark'] body {
   background-image:
