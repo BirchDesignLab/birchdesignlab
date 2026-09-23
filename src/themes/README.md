@@ -35,7 +35,9 @@ src/pages/t/<id>/[...page].astro   the route; imports only this school
 Start from `node scripts/themes/new-theme.mjs <id> "<Name>"`, which stamps a
 working, unstyled school that already passes every guard. While a school is
 under construction its route file is `_[...page].astro` (Astro ignores it), so
-a half-built school never breaks anyone else's build;
+a half-built school never breaks anyone else's build and never appears in the
+switcher (`THEMES` in `registry.ts` lists only schools with an enabled route;
+`ALL_THEMES` includes drafts, for the contrast checker).
 `scripts/themes/render.mjs` enables it only for its own build.
 
 ## Copy (never hardcode page text)
