@@ -64,8 +64,8 @@ Branch `feat/theme-schools-tranche-1`. Current handoff:
 `tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
 cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
-PR'd so the founder can test on mobile live (BDL-010 stays forthcoming in the
-Lab until the schools reach A+); Stage 2 onward continues on a new branch.
+PR'd so the founder can test on mobile live (BDL-010 is a working specimen
+in the Lab from PR #88); Stage 2 onward continues on a new branch.
 
 **Parked from the Stage 1 stop (09-23-26):**
 - Vaporwave's pressed task button switches instantly on an in-school swap
@@ -105,11 +105,16 @@ technique are in `theme-schools-research/tier3-stage1/p4-trace.md`.
 **Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
 original ranking live in `theme-schools-research/`.
 
-### BDL-009 · Bayou Kitchen · FORTHCOMING, blocked
+### BDL-009 · Bayou Kitchen · LIVE as a menu-honesty study (09-23-26), order half blocked
 
-Stood up as `status: forthcoming` in PR #85, which generates no page: the
-catalog row renders and nothing else, so a half-argued study cannot reach a
-reader. Hero captured from the deployed specimen at
+**Published 09-23-26 (founder call, PR #88)** as a working specimen arguing
+the menu alone, the "menu-honesty study" branch of the decision below. The
+order-taking section is still unwritten and still blocked on the Stripe
+test-mode decision; the never-claim list below still binds the page.
+
+Stood up as `status: forthcoming` in PR #85, which generated no page: the
+catalog row rendered and nothing else, so a half-argued study could not reach
+a reader. Hero captured from the deployed specimen at
 `https://demo-bayou-kitchen.birchdesignlab.workers.dev`.
 
 **The menu half is written and verified. The order-taking half is
