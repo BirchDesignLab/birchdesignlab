@@ -15,5 +15,14 @@ export const meta: ThemeMeta = {
     { family: 'Marcellus', role: 'heading', preload: [marcellus] },
     { family: 'Spectral', role: 'body', preload: [spectral] },
   ],
+  /* The loud band (.loud in src/styles/base.css) paints --green-field and
+     remaps --mark, --link, --accent and --on-accent onto the --gf-* tokens,
+     so its text is measured against that field directly. */
+  contrast: [
+    { fg: '--gf-mark', bg: ['--green-field'], min: 4.5, note: 'loud band text' },
+    { fg: '--gf-link', bg: ['--green-field'], min: 4.5, note: 'loud band links' },
+    { fg: '--gf-accent', bg: ['--green-field'], min: 4.5, note: 'loud band kickers' },
+    { fg: '--gf-on-accent', bg: ['--gf-accent'], min: 4.5, note: 'text on an accent fill inside the loud band' },
+  ],
   order: 0,
 };
