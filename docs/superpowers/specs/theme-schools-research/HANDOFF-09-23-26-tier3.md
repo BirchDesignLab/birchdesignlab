@@ -59,7 +59,15 @@ The founder approved the plan in `portal.md` section 6, as amended by
    - P5: the README recipe that stops the wordmark ghosting.
    - P6: room placards in the switcher dialog, chronological order (S6, S7).
    - README: S1, S2, and the "more interactable details" principle (S3).
+   - Quiet's current-page highlight on `/contact/sent/`, root and portal
+     together (end of `stage0-decisions.md`), only if the founder says yes;
+     ask at the start of the session.
    - Afterwards, re-film every arrival strip as the new baseline.
+   - Show the founder S2 working, not described: before-and-after motion
+     strips of the switcher holding still, and of one school's chrome holding
+     still on an in-school page change. Founder: "i might have to see it to
+     understand fully." The parked billboard-carries-`wordmark` idea needs a
+     discussion and an example before anything is built.
 2. **Defect sweep**, all six in parallel (`portal.md` section 6, stage 2,
    minus the reduced-motion items).
 3. **Pair: glassmorphism + vaporwave.** Study the Supyrb references first
