@@ -1,0 +1,19 @@
+---
+import { rich, type CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section>
+  <h1>{copy.heading}</h1>
+  {copy.etymology.map((para) => <p set:html={rich(para)} />)}
+</section>
+<section>
+  <h2>{copy.founder.heading}</h2>
+  {copy.founder.body.map((para) => <p>{para}</p>)}
+</section>
+<section>
+  <p>{copy.manifesto}</p>
+  <a href={hrefFor('contact', theme)}>{copy.cta}</a>
+</section>

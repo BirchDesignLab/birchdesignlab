@@ -1,0 +1,47 @@
+/* __NAME__: tokens for both schemes, globals, arrival choreography.
+   Imported by src/pages/t/__ID__/[...page].astro only. Every rule is scoped
+   under [data-theme='__ID__']. See src/themes/README.md. */
+
+:root[data-theme='__ID__'] {
+  color-scheme: light;
+  --field: #ffffff;
+  --field-raised: #f2f2f2;
+  --mark: #111111;
+  --mark-muted: #555555;
+  --accent: #1a4fd6;
+  --link: #1a4fd6;
+  --on-accent: #ffffff;
+  --font-body: system-ui, sans-serif;
+  --font-display: system-ui, sans-serif;
+}
+
+:root[data-theme='__ID__'][data-scheme='dark'] {
+  color-scheme: dark;
+  --field: #111111;
+  --field-raised: #1d1d1d;
+  --mark: #f2f2f2;
+  --mark-muted: #b5b5b5;
+  --accent: #8fb0ff;
+  --link: #8fb0ff;
+  --on-accent: #111111;
+}
+
+:where([data-theme='__ID__']) *,
+:where([data-theme='__ID__']) *::before,
+:where([data-theme='__ID__']) *::after { box-sizing: border-box; }
+
+[data-theme='__ID__'] body {
+  margin: 0;
+  background: var(--field);
+  color: var(--mark);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+[data-theme='__ID__'] a { color: var(--link); }
+[data-theme='__ID__'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme='__ID__'] main:focus { outline: none; }
+[data-theme='__ID__'] .skip { position: absolute; left: -100vw; top: 0; }
+[data-theme='__ID__'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='__ID__'] img,
+[data-theme='__ID__'] svg,
+[data-theme='__ID__'] canvas { max-width: 100%; display: block; }

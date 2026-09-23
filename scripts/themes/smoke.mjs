@@ -22,6 +22,7 @@
  *
  * Usage (serve a build, e.g. the "preview" launch config on :4400):
  *   BDL_GPU=1 node scripts/themes/smoke.mjs --base http://localhost:4400 [--schools quiet,swiss] [--headed]
+ *   add --contact against `npm run dev:worker` (http://localhost:8787) to submit every school's form
  */
 import { chromium } from 'playwright';
 
@@ -195,6 +196,7 @@ if (schools.length > 1) {
   await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.shuffle').click());
   await waitForSwap(s.loads);
   s = await state();
+  const shuffled = s.theme;
   check(s.theme !== b && s.path.endsWith('/services/'), 'shuffle lands on another school, same page', s.path);
   check(s.histLen === hist, 'shuffle replaces history rather than pushing', `${hist} -> ${s.histLen}`);
 
@@ -205,9 +207,11 @@ if (schools.length > 1) {
   await page.goForward();
   await page.waitForTimeout(900);
   s = await state();
-  check(s.theme !== a && s.js && !!s.scheme, 'Forward returns to the shuffled school', s.theme);
+  check(s.theme === shuffled && s.js && !!s.scheme, 'Forward returns to the shuffled school', s.theme);
 
-  // Churn: rapid school changes, then count live WebGL contexts.
+  // Churn: rapid school changes on the home page (where the backgrounds live),
+  // then count live WebGL contexts.
+  await hardLoad(`/t/${a}/`);
   for (let i = 0; i < 24; i++) {
     const n = (await state()).loads;
     await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.shuffle').click());
@@ -217,6 +221,32 @@ if (schools.length > 1) {
   s = await state();
   const live = s.gl.made - s.gl.released;
   check(live <= s.canvases, 'no leaked WebGL contexts after 24 school changes', `made ${s.gl.made}, released ${s.gl.released}, canvases now ${s.canvases}`);
+}
+
+// Contact: with --contact (serve through `npm run dev:worker`, so /api/contact
+// exists), submit each school's form as a bot would, honeypot filled, so the
+// Worker takes its no-email path. It must be a real navigation (the form opts
+// out of the router) that lands on that school's own sent page.
+if (process.argv.includes('--contact')) {
+  for (const id of targets) {
+    await hardLoad(`/t/${id}/contact/`);
+    const marker = (await state()).hardLoadMarker;
+    await page.evaluate(() => {
+      const form = document.querySelector('form[action="/api/contact"]');
+      form.querySelector('[name="name"]').value = 'Smoke Test';
+      form.querySelector('[name="email"]').value = 'smoke@example.com';
+      form.querySelector('[name="message"]').value = 'Portal smoke test.';
+      form.querySelector('[name="company"]').value = 'honeypot';
+    });
+    await Promise.all([
+      page.waitForURL(`**/t/${id}/contact/sent/`, { timeout: 15000 }).catch(() => {}),
+      page.evaluate(() => document.querySelector('form[action="/api/contact"] [type="submit"]').click()),
+    ]);
+    await page.waitForLoadState('networkidle');
+    const s = await state();
+    check(s.path === `/t/${id}/contact/sent/` && s.theme === id, `${id}: contact form lands on its own sent page`, s.path);
+    check(s.hardLoadMarker !== marker, `${id}: contact submit was a real navigation, not a router swap`);
+  }
 }
 
 // Leaving: the switcher's Leave goes to the same page on the root site, full load.
