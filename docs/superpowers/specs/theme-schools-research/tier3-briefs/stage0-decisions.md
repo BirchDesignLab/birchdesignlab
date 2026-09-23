@@ -232,6 +232,13 @@ launch") are taken as written:
 9. Bauhaus's 12ch process heading is not widened (it tunes to today's copy).
 The per-school defaults in `stage2-plan.md` apply as listed.
 
+**At the P5 checkpoint (09-23-26).** The proof passed
+(`tier3-stage2/p5-proof.md`). Asked about the empty header between the old
+wordmark leaving and the new one arriving, the founder chose (b): each school
+tunes its wordmark fade offsets in the sweep so the blank (both images under
+10% opacity) stays at or under 80 ms, while the overlap judge still passes.
+The judge gains a blank measurement first. Then: "let's kick off wave a".
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
