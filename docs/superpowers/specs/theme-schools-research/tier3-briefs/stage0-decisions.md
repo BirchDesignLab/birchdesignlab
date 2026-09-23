@@ -118,6 +118,63 @@ a design choice. The words are copy: draft them and get the founder's
 approval before they ship. **D3 = yes:** garden twine replaces the satin
 bow.
 
+## Stage 1 decisions (09-23-26, start of the Tier 3 session)
+
+**The name is the Portal, not Period Rooms.** Founder: "The idea was 'the
+portal' not period rooms. i'd like it to ship as the portal. similar concept
+as the lab, experiments, studies, it's a thematic thing more so than just the
+word. with the whole animated transition between themes it's like going
+through a portal between them. was the original idea."
+- BDL-010's visible title becomes "The Portal", and BDL-011's hero alt text
+  follows. "Period Rooms" in older docs is history; new writing says the
+  Portal.
+- The theme matters more than the word: the animated transition between
+  schools is the passage through the portal. Visitor-facing copy should carry
+  that idea the way the Lab carries experiments and studies.
+- The first-load prompt (S6) is copy: build with a placeholder, and bring
+  drafted alternatives to the Stage 1 stop for the founder to pick from.
+- Internal names that visitors never see ("room placards" in these briefs)
+  can stay as they are.
+
+**Quiet's current-page highlight: yes, root and portal together.** The
+recommended fix below ships in Stage 1.
+
+**S2 demo school: vaporwave's taskbar**, named `vaporwave-taskbar`, kept and
+committed. Only the naming ships in Stage 1; the rest of vaporwave E9 waits
+for the pair stage.
+
+**Billboard carries `wordmark`: parked** until the transitions phase. No
+prototype in Stage 1.
+
+**Loading and the transitions phase (founder, after the P4 trace).** The
+trace (`tier3-stage1/p4-trace.md`) found the wait is mostly the browser's
+first draw of the destination page, which only an invisible draw ahead of
+time removes. Asked whether a slower, game-style passage could mask the
+loading, the founder said: "i don't want to literally go through a portal or
+passage. i'd like individual transitions from one theme to any other given
+theme. the slowed transition to cover the loading was just a thought. we need
+the transitions to not get hung up on loading. if the only sensible way to do
+that is preload everything, then maybe that's what we need to do and just eat
+it up front. but we can do it in the transitions phase."
+- No literal portal or passage gesture.
+- The transitions phase builds individual transitions for each pair of
+  schools (from any school to any other), keyed on `data-from-theme` and
+  `data-to-theme`.
+- Transitions must never stall on loading. Preloading and drawing
+  destinations ahead of time, even everything up front, is acceptable. The
+  off-screen draw is built in the transitions phase, not Stage 1.
+- B4's warm-up stays as built: on dialog open, every other school's same
+  page is fetched into memory with its files (Save-Data and 2G skipped); on
+  Shuffle hover or focus, the pick is warmed.
+
+**Cottagecore, founder note during Stage 1 (for pair stage 5).** Founder:
+"i do like the fireflies in dark mode. maybe we can do dandelion floaters for
+the day mode?" The dark-mode fireflies are liked: protect them (the brief's
+items 12 and 14 and D7 only refine them). Light mode gains a daytime
+counterpart: dandelion seeds (pappus floaters) drifting across the page, in
+the same spirit (independent clocks, never over body text, per D7's
+placement rule). Design and bring it to the founder at the pair stage.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
