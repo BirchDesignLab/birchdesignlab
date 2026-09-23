@@ -1,0 +1,97 @@
+---
+/** Glassmorphism footer: one last glass card resting on its own two orbs.
+    Each page passes its own pair (route file) so the ending is not the same
+    two orbs five times over; home's original pair is the default. */
+import Orbs, { type Orb } from './Orbs.astro';
+import { hrefFor } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string; orbs?: Orb[] }
+const { chrome, theme, orbs } = Astro.props;
+const DEFAULT_ORBS: Orb[] = [
+  { hue: 'cyan', x: '8%', y: '38%', size: 'clamp(120px, 16vw, 220px)', drift: 2 },
+  { hue: 'pink', x: '92%', y: '72%', size: 'clamp(100px, 12vw, 180px)', drift: 3 },
+];
+const year = new Date().getFullYear();
+const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefined);
+---
+<footer class="site-footer">
+  <Orbs orbs={orbs ?? DEFAULT_ORBS} />
+  <div class="card glass wrap">
+    <div class="ident">
+      <p class="name">{chrome.name}</p>
+      <p class="loc">{chrome.location}</p>
+    </div>
+    <nav class="pills" aria-label="Footer">
+      {chrome.nav.map(({ to, label }) => (
+        <a href={hrefFor(to, theme)} data-astro-reload={leaves(to)}>{label}</a>
+      ))}
+    </nav>
+    <p class="fine">&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload={leaves('privacy')}>{chrome.privacy}</a></p>
+  </div>
+</footer>
+
+<script>
+  import { onMount } from '../../lib/lifecycle';
+  import { mountOrbs } from './fx';
+
+  onMount(mountOrbs);
+</script>
+
+<style>
+  .site-footer {
+    position: relative;
+    overflow-x: clip;
+    padding-block: clamp(3rem, 7vw, 5rem) 1.5rem;
+  }
+  .card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1.5rem 2rem;
+    align-items: center;
+    padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .name {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.375rem;
+    letter-spacing: -0.03em;
+  }
+  .loc {
+    font-family: var(--font-label);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    color: var(--mark-muted);
+    margin-top: 0.15rem;
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .pills a {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 1.05rem;
+    border-radius: 999px;
+    background: var(--well);
+    border: 1px solid var(--edge);
+    color: var(--mark);
+    font-size: 0.9375rem;
+    font-weight: 550;
+    text-decoration: none;
+    transition: background-color 160ms ease;
+  }
+  .pills a:hover { background: var(--thumb); }
+  .fine {
+    grid-column: 1 / -1;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--edge);
+    font-size: 0.875rem;
+    color: var(--mark-muted);
+  }
+  .fine a { color: var(--mark-muted); }
+  .fine a:hover { color: var(--mark); }
+
+  @media (max-width: 720px) {
+    .card { grid-template-columns: 1fr; }
+    .pills { display: grid; grid-template-columns: 1fr 1fr; }
+    .pills a { text-align: center; }
+  }
+</style>

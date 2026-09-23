@@ -1,0 +1,54 @@
+---
+/** Grandmillennial sent: the letter is sealed. A framed card on trellis
+    wallpaper, tied with a bow, the wax seal pressed above the word. */
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+import Bow from '../parts/Bow.astro';
+import Framed from '../parts/Framed.astro';
+import Seal from '../parts/Seal.astro';
+
+interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="sent gm-trellis">
+  <div class="card-hang">
+    <Bow class="bow" />
+    <Framed tone="raised" class="card">
+      <Seal class="seal" />
+      <h1>{copy.heading}</h1>
+      <p>{copy.body}</p>
+      <a class="gm-more" href={hrefFor('home', theme)}>{copy.back}<span class="curl" aria-hidden="true">&#10087;</span></a>
+    </Framed>
+  </div>
+</section>
+
+<style>
+  /* The same papered wall as the home portrait, between its two rails. */
+  .sent {
+    display: grid; justify-items: center;
+    border-top: 1px solid var(--rule);
+    border-bottom: 5px double var(--rule);
+    padding: clamp(5rem, 10vw, 7rem) var(--gutter) clamp(3rem, 6vw, 4rem);
+  }
+  .card-hang { position: relative; width: min(100%, 36rem); }
+  .card-hang :global(.bow) {
+    position: absolute; left: 50%; top: 0; z-index: 2;
+    width: 7.5rem;
+    translate: -50% -60%;
+  }
+  .card-hang :global(.card) {
+    display: grid; justify-items: center; gap: 1.25rem;
+    text-align: center;
+    padding-top: 3.5rem;
+  }
+  .card-hang :global(.seal) { width: 4.4rem; }
+  h1 {
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: clamp(4rem, 10vw, 5.5rem);
+    line-height: 1;
+    color: var(--accent);
+    padding-inline: 0.2em;
+  }
+  p { max-width: 26em; font-size: 1.3rem; }
+</style>

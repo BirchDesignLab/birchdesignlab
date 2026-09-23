@@ -21,9 +21,14 @@
  *   BDL_GPU=1 node scripts/themes/capture.mjs --base http://localhost:4400 \
  *     --set root,lab --label astro5
  *   node scripts/themes/capture.mjs --routes /t/quiet/,/t/quiet/about/ --label quiet
- *   --schemes dark,light   --viewports desktop,phone   --full-page
+ *   --schemes dark,light   --viewports desktop,phone,mobile,tablet   --full-page
  *   --motion               (do NOT emulate reduced motion; for looking at fx)
  *   --wait 600             (ms to settle after fonts, default 500)
+ *   --hide-switcher        (leave the portal's fixed switcher out: in a
+ *                          full-page shot it lands mid-page over the design)
+ *   --show-prompt          (keep the switcher's first-load prompt; by default
+ *                          it is marked dismissed so every fresh context
+ *                          renders the same bar, added 09-23-26)
  *
  * Git Bash mangles leading-slash args into Windows paths; prefix the command
  * with MSYS_NO_PATHCONV=1 when passing --routes from it.
@@ -35,6 +40,7 @@ import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { suppressPrompt } from './lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -49,9 +55,15 @@ export const SETS = {
   lab: ['/lab/', '/lab/bdl-001/', '/lab/bdl-002/', '/lab/bdl-005/', '/lab/bdl-006/', '/lab/bdl-007/', '/lab/bdl-008/', '/styleguide/', '/hello/'],
 };
 
+/* `phone` is a narrow desktop window (1x, mouse), kept as it was so older
+   captures still diff cleanly. `mobile` and `tablet` are the devices as a
+   visitor has them: 2x pixels, a mobile viewport and touch, so
+   `pointer: coarse` styles apply. */
 export const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
   phone: { width: 390, height: 844 },
+  mobile: { width: 390, height: 844, mobile: true },
+  tablet: { width: 820, height: 1180, mobile: true },
 };
 
 export function slugFor(route) {
@@ -67,6 +79,8 @@ async function main() {
   const wait = Number(arg('wait', 500));
   const fullPage = flag('full-page');
   const motion = flag('motion');
+  const hideSwitcher = flag('hide-switcher');
+  const showPrompt = flag('show-prompt');
 
   const routes = [];
   for (const name of (arg('set', '') || '').split(',').filter(Boolean)) {
@@ -97,14 +111,26 @@ async function main() {
       const viewport = VIEWPORTS[vpName];
       if (!viewport) throw new Error(`unknown viewport ${vpName}`);
       const context = await browser.newContext({
-        viewport,
-        deviceScaleFactor: 1,
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: viewport.mobile ? 2 : 1,
+        isMobile: !!viewport.mobile,
+        hasTouch: !!viewport.mobile,
         colorScheme: scheme,
         reducedMotion: motion ? 'no-preference' : 'reduce',
       });
       await context.addInitScript((s) => {
         try { localStorage.setItem('scheme', s); localStorage.setItem('theme', s); } catch {}
       }, scheme);
+      if (!showPrompt) await suppressPrompt(context);
+      if (hideSwitcher) {
+        await context.addInitScript(() => {
+          document.addEventListener('DOMContentLoaded', () => {
+            const style = document.createElement('style');
+            style.textContent = 'bdl-switcher { display: none !important; }';
+            document.head.append(style);
+          });
+        });
+      }
       // Production injects Zaraz at the edge; its consent modal would sit in
       // every shot. Blocking the loader keeps prod captures comparable to
       // local ones (the modal is not ours to diff).
@@ -139,8 +165,10 @@ async function main() {
           if (!route.includes('404')) problems.push(`${url} HTTP ${resp?.status()}`);
         }
         await page.evaluate(() => document.fonts.ready);
-        if (fullPage && !motion) {
+        if (fullPage) {
           // Walk the page so IntersectionObserver-gated content has fired.
+          // Under --motion this matters most: the reveal gate (base.css) only
+          // hides anything when motion is allowed.
           await page.evaluate(async () => {
             const step = innerHeight * 0.8;
             for (let y = 0; y < document.body.scrollHeight; y += step) {

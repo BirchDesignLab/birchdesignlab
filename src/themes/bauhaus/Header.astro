@@ -1,0 +1,90 @@
+---
+/** Bauhaus header: the three primary shapes as a maker's mark, the name set
+    lowercase (the Dessau school wrote everything small from 1925), and a nav
+    whose current page is a solid red block. A heavy rule closes it. */
+import { hrefFor, isCurrent } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string }
+const { chrome, theme } = Astro.props;
+---
+<header class="site-header">
+  <a class="skip" href="#main">{chrome.skip}</a>
+  <div class="wrap bar">
+    <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
+      <svg class="trio" viewBox="0 0 66 20" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="10" fill="var(--blue)" />
+        <rect x="23" y="0" width="20" height="20" fill="var(--red)" />
+        <polygon points="56,0 66,20 46,20" fill="var(--yellow)" />
+      </svg>
+      <span class="wm-text">{chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</span>
+    </a>
+    <nav aria-label="Main">
+      {chrome.nav.map(({ to, label }) => (
+        <a
+          href={hrefFor(to, theme)}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
+          data-astro-reload={to === 'lab' ? '' : undefined}
+        >{label}</a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header { border-bottom: var(--rule) solid var(--mark); }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    flex-wrap: wrap;
+    min-height: 84px;
+    padding-block: 1rem;
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: var(--mark);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  .trio { width: 66px; height: 20px; flex: none; }
+  /* Baseline sits a hair low in League Spartan; nudge so the x-height centres
+     on the shapes. */
+  .wm-text { padding-top: 0.12em; }
+  nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+  nav a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    line-height: 1;
+    text-transform: lowercase;
+    text-decoration: none;
+    color: var(--mark);
+    padding: 0.7rem 0.85rem 0.55rem;
+  }
+  nav a:hover { box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--mark); }
+  nav a[aria-current='page'] { background: var(--red); color: var(--on-red); box-shadow: none; }
+  .skip {
+    position: absolute; left: -100vw; top: 0;
+    background: var(--yellow); color: var(--on-yellow);
+    padding: 0.6rem 1rem; font-weight: 600;
+  }
+  .skip:focus { left: 0; z-index: 10; }
+  @media (max-width: 640px) {
+    .bar { min-height: 0; padding-block: 0.9rem 0.6rem; gap: 0.6rem; }
+    .wordmark { font-size: 1.3rem; }
+    /* Nav spans the full width under the wordmark; the negative margin lets
+       the first and last labels sit on the text edge, not their padding. */
+    nav { justify-content: space-between; margin-inline: -0.6rem; width: calc(100% + 1.2rem); }
+    /* 44px minimum touch target on the first thing a phone visitor touches. */
+    nav a { padding: 0.8rem 0.6rem 0.7rem; min-height: 44px; display: inline-flex; align-items: center; }
+  }
+</style>

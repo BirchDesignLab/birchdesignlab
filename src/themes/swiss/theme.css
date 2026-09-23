@@ -1,0 +1,326 @@
+/* Swiss: tokens for both schemes, globals, arrival choreography.
+   Imported by src/pages/t/swiss/[...page].astro only. Every rule is scoped
+   under [data-theme='swiss']. See src/themes/README.md.
+
+   The school is a 1960s Zurich poster: one grotesk voice, a modular grid you
+   can see, flush-left type at extreme scale contrast, and a single red. No
+   ornament, no gradients, no shadows, no rounded corners. Dark is a straight
+   negative print of the same sheet: ink field, paper type, the red lifted
+   just enough to hold on black. */
+
+:root[data-theme='swiss'] {
+  color-scheme: light;
+
+  /* Primitives. */
+  --paper: #fafaf7;
+  --paper-white: #ffffff;
+  --ink: #0b0b0b;
+  --red: #da0016;
+  --grey: #5a5a58;
+  --grey-on-ink: #a6a6a2;
+  --hairline: #e8e7e1;
+  /* The kicker stays red everywhere, including on the ink block; this is
+     the dark scheme's red, lifted so it still passes on black. */
+  --red-on-ink: #ff3b2e;
+
+  /* Semantic tokens (light is native, and what a no-JS visitor sees). */
+  --field: var(--paper);
+  --field-raised: var(--paper-white);
+  --mark: var(--ink);
+  --mark-muted: var(--grey);
+  --accent: var(--red);
+  --link: var(--ink);
+  --on-accent: var(--paper-white);
+  /* Secondary type on the ink block (the sheet printed in negative). */
+  --ink-muted: var(--grey-on-ink);
+  /* The visible column grid: present, never louder than the type. */
+  --guide: var(--hairline);
+
+  --font-display: 'Archivo Variable', 'Archivo Variable fallback', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Public Sans Variable', 'Public Sans Variable fallback', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'IBM Plex Mono fallback', 'Courier New', monospace;
+
+  /* The grid. Margins and gutters scale with the sheet; the column count
+     steps 4 / 6 / 12 (see the media queries below). */
+  --cols: 4;
+  --margin: clamp(16px, 4vw, 72px);
+  --gutter: clamp(12px, 1.4vw, 24px);
+  --frame: min(100% - 2 * var(--margin), 1760px);
+  /* One baseline unit; every vertical space is a multiple of it. */
+  --u: 8px;
+}
+
+:root[data-theme='swiss'][data-scheme='dark'] {
+  color-scheme: dark;
+  --paper: #0b0b0b;
+  --paper-white: #161616;
+  --ink: #f4f4ef;
+  --red: #ff3b2e;
+  --grey: #a3a3a0;
+  --grey-on-ink: #55554f;
+  /* Lifted from #1f1f1d (1.15:1, nearly invisible) to keep the negative
+     print's grid as legible as the light sheet's. */
+  --hairline: #2a2a27;
+  --on-accent: #0b0b0b;
+  /* The ink block (--mark) is itself a double negative here: paper-toned,
+     since the whole sheet is already printed dark. The light scheme's red
+     is what holds against it. */
+  --red-on-ink: #da0016;
+}
+
+@media (min-width: 640px) {
+  :root[data-theme='swiss'] { --cols: 6; }
+}
+@media (min-width: 1024px) {
+  :root[data-theme='swiss'] { --cols: 12; }
+}
+
+/* ---- Base ---------------------------------------------------------- */
+
+:where([data-theme='swiss']) *,
+:where([data-theme='swiss']) *::before,
+:where([data-theme='swiss']) *::after { box-sizing: border-box; }
+
+[data-theme='swiss'] body {
+  margin: 0;
+  background: var(--field);
+  color: var(--mark);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  /* A missing face should fail visibly during development, not draw a
+     synthesized oblique or bold the school never approved. */
+  font-synthesis: none;
+  /* Anchors the column guides to the whole sheet, not just the viewport. */
+  position: relative;
+  text-rendering: optimizeLegibility;
+  /* Wide display type is sized to the frame, never past it; this is the
+     guarantee against a stray pixel of sideways scroll on a phone. */
+  overflow-x: clip;
+}
+[data-theme='swiss'] :is(h1, h2, h3, h4, p, ul, ol, figure, blockquote) { margin: 0; }
+[data-theme='swiss'] :is(ul, ol) { padding: 0; list-style: none; }
+[data-theme='swiss'] :is(h1, h2, h3, h4) { font-family: var(--font-display); font-weight: 700; }
+/* Ragged right, never justified, never hyphenated: the rag is part of the
+   composition, so it is left to break on words. */
+[data-theme='swiss'] p { text-wrap: pretty; hyphens: manual; }
+[data-theme='swiss'] em { font-style: italic; }
+[data-theme='swiss'] strong { font-weight: 700; }
+
+[data-theme='swiss'] a {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+}
+[data-theme='swiss'] a:hover { color: var(--accent); }
+[data-theme='swiss'] ::selection { background: var(--accent); color: var(--on-accent); }
+[data-theme='swiss'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme='swiss'] main:focus { outline: none; }
+[data-theme='swiss'] .skip { position: absolute; left: -100vw; top: 0; }
+[data-theme='swiss'] .skip:focus {
+  left: var(--margin); z-index: 10;
+  background: var(--mark); color: var(--field);
+  padding: var(--u) calc(var(--u) * 2);
+  font-family: var(--font-display); font-weight: 700; text-decoration: none;
+}
+[data-theme='swiss'] img,
+[data-theme='swiss'] svg,
+[data-theme='swiss'] canvas { max-width: 100%; display: block; }
+
+/* ---- The grid ------------------------------------------------------ */
+
+/* Every composed band is one row of the same column grid; children place
+   themselves by column line, and default to the full measure. */
+[data-theme='swiss'] .sw-row {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gutter);
+  width: var(--frame);
+  margin-inline: auto;
+}
+/* Zero specificity, so a component's own placement always wins. */
+:where([data-theme='swiss'] .sw-row) > * { grid-column: 1 / -1; min-width: 0; }
+
+/* The column guides, drawn behind the page as hairlines: the grid is not
+   hidden scaffolding here, it is the picture. They run the full height of
+   the sheet; blocks with their own fill simply cover them. */
+[data-theme='swiss'] .sw-guides {
+  position: absolute; inset: 0; z-index: -1;
+  pointer-events: none;
+}
+[data-theme='swiss'] .sw-guides .sw-row { height: 100%; border-right: 1px solid var(--guide); }
+[data-theme='swiss'] .sw-guides .sw-row > span { grid-column: auto; border-left: 1px solid var(--guide); }
+[data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: none; }
+/* Below 640px the guides would otherwise run straight through the single
+   reading column; keep only the frame edges and the col-2 line the hero
+   block and subline hang from. */
+@media (max-width: 639px) {
+  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(3),
+  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(4) { display: none; }
+}
+@media (min-width: 640px) {
+  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: block; }
+  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: none; }
+}
+@media (min-width: 1024px) {
+  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: block; }
+}
+
+/* ---- Type roles ---------------------------------------------------- */
+
+/* Display: one grotesk, set tight. Sizes are per use, in vw against the
+   frame, so the longest word of each headline always fits its measure. */
+[data-theme='swiss'] .sw-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+}
+/* One word per line where a headline is set as a stack. */
+[data-theme='swiss'] .sw-display > .ln { display: block; }
+
+/* A section's opening: an ink rule across the frame, the mono index on it. */
+[data-theme='swiss'] .sw-sec {
+  border-top: 1px solid var(--mark);
+  padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
+  row-gap: calc(var(--u) * 4);
+}
+[data-theme='swiss'] .sw-idx {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mark);
+}
+[data-theme='swiss'] .sw-kicker {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  color: var(--accent);
+}
+/* Section labels run up the first column on wide sheets, the way a spine
+   label runs up a poster's edge; on narrow ones they sit level. */
+@media (min-width: 1024px) {
+  [data-theme='swiss'] .sw-vert {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    justify-self: start;
+    align-self: start;
+  }
+}
+[data-theme='swiss'] .sw-lead {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.375rem, 2.2vw, 2.125rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+[data-theme='swiss'] .sw-body { max-width: 34em; }
+[data-theme='swiss'] .sw-body > p + p { margin-top: 0.9em; }
+[data-theme='swiss'] .sw-muted { color: var(--mark-muted); }
+
+/* ---- Fills --------------------------------------------------------- */
+
+/* The one red, as a block. Type on it is --on-accent, links included. */
+[data-theme='swiss'] .sw-red {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+[data-theme='swiss'] .sw-red a,
+[data-theme='swiss'] .sw-red .sw-idx { color: var(--on-accent); }
+[data-theme='swiss'] .sw-red a:hover { color: var(--on-accent); text-decoration-thickness: 0.16em; }
+[data-theme='swiss'] .sw-red :focus-visible { outline-color: var(--on-accent); }
+
+/* The ink block: the sheet printed in negative. */
+[data-theme='swiss'] .sw-ink {
+  background: var(--mark);
+  color: var(--field);
+  --mark-muted: var(--ink-muted);
+}
+[data-theme='swiss'] .sw-ink a,
+[data-theme='swiss'] .sw-ink .sw-idx { color: var(--field); }
+/* The kicker is the school's one signal colour everywhere else; it stays
+   red here too, lifted to a value that still passes on the ink field. */
+[data-theme='swiss'] .sw-ink .sw-kicker { color: var(--red-on-ink); }
+[data-theme='swiss'] .sw-ink a:hover { color: var(--accent); }
+
+/* A fill block whose colour bleeds past the frame while its content stays
+   exactly on the guide lines drawn behind it: pull the box out by the
+   local inset, then pad it back the same amount so children never move. */
+[data-theme='swiss'] .sw-bleed {
+  margin-inline: calc(-1 * var(--margin));
+  padding-inline: var(--margin);
+}
+@media (min-width: 1024px) {
+  [data-theme='swiss'] .sw-bleed {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+  }
+}
+
+/* The button: a rectangle on the grid with its label flush left, the way a
+   poster sets a block of colour with type in its corner. Red on paper; ink
+   when it sits inside the red. */
+[data-theme='swiss'] .sw-btn {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(var(--u) * 9);
+  padding: calc(var(--u) * 1.5) calc(var(--u) * 2) calc(var(--u) * 1.75);
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+[data-theme='swiss'] .sw-btn:hover { background: var(--mark); color: var(--field); }
+[data-theme='swiss'] .sw-red .sw-btn { background: var(--mark); color: var(--field); }
+[data-theme='swiss'] .sw-red .sw-btn:hover { background: var(--field); color: var(--mark); }
+[data-theme='swiss'] .sw-ink .sw-btn:hover { background: var(--field); color: var(--mark); }
+
+/* ---- Arrival ------------------------------------------------------- */
+
+/* A column wipe: the new sheet is laid down left to right in six hard steps,
+   like panels pasted up on a board, over the old one held still. The blend
+   is reset so the two layers never add into a wash. */
+html[data-theme='swiss']::view-transition-old(root),
+html[data-theme='swiss']::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+html[data-theme='swiss']::view-transition-old(root) { animation: none; }
+html[data-theme='swiss']::view-transition-new(root) {
+  animation: sw-wipe 240ms step-end both;
+}
+html[data-theme='swiss']::view-transition-group(wordmark) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+/* Six hard steps, but landing on the real column lines (sixths of the
+   twelve-column frame) rather than sixths of the bare viewport, so the
+   wipe reads as panels of the visible grid being pasted up. View
+   transition pseudos inherit custom properties from :root. */
+@keyframes sw-wipe {
+  0% { clip-path: inset(0 calc(100% - var(--margin) - 0 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  16.6% { clip-path: inset(0 calc(100% - var(--margin) - 1 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  33.3% { clip-path: inset(0 calc(100% - var(--margin) - 2 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  50% { clip-path: inset(0 calc(100% - var(--margin) - 3 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  66.6% { clip-path: inset(0 calc(100% - var(--margin) - 4 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  83.3% { clip-path: inset(0 calc(100% - var(--margin) - 5 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+  100% { clip-path: inset(0 calc(100% - var(--margin) - 6 * (var(--frame) + var(--gutter)) / 6) 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='swiss']::view-transition-new(root),
+  html[data-theme='swiss']::view-transition-group(wordmark) { animation: none; }
+}

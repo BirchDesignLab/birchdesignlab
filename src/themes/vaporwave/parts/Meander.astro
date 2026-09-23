@@ -1,0 +1,24 @@
+---
+/** A Greek key frieze, the border of every plaster bust's plinth, drawn as a
+    neon line. Decoration only. */
+interface Props { id: string; class?: string }
+const { id, class: className } = Astro.props;
+---
+<svg class:list={['vw-meander', className]} aria-hidden="true" focusable="false" height="28">
+  <defs>
+    <pattern id={id} width="36" height="28" patternUnits="userSpaceOnUse">
+      <path
+        d="M0 25H36M0 3H36M26 25V7H8V20H20V13H14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="square"
+      />
+    </pattern>
+  </defs>
+  <rect width="100%" height="28" fill={`url(#${id})`} />
+</svg>
+
+<style>
+  .vw-meander { width: 100%; height: 28px; max-width: none; color: var(--accent); }
+</style>

@@ -1,16 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { THEMES, getTheme } from '../src/themes/registry';
-import { PAGE_IDS, SCHOOL_ID, pagePath, pageFromPath, rootPathFor, hrefFor, schoolStaticPaths } from '../src/themes/paths';
+import { ALL_THEMES, THEMES, getTheme } from '../src/themes/registry';
+import { PAGE_IDS, SCHOOL_ID, pagePath, pageFromPath, rootPathFor, hrefFor, isCurrent, schoolStaticPaths } from '../src/themes/paths';
 
 const THEMES_DIR = new URL('../src/themes/', import.meta.url);
 const schoolDirs = readdirSync(THEMES_DIR).filter(
   (d) => statSync(new URL(d, THEMES_DIR)).isDirectory() && existsSync(new URL(`${d}/meta.ts`, THEMES_DIR)),
 );
+const routeEnabled = (id: string) => existsSync(new URL(`../src/pages/t/${id}/[...page].astro`, import.meta.url));
 
 describe('theme registry', () => {
-  it('registers every src/themes/<id>/meta.ts, and nothing else', () => {
-    expect(THEMES.map((t) => t.id).sort()).toEqual([...schoolDirs].sort());
+  it('knows every src/themes/<id>/meta.ts, and nothing else', () => {
+    expect(ALL_THEMES.map((t) => t.id).sort()).toEqual([...schoolDirs].sort());
+  });
+
+  it('serves exactly the schools whose route is enabled', () => {
+    expect(THEMES.map((t) => t.id).sort()).toEqual(schoolDirs.filter(routeEnabled).sort());
   });
 
   it('includes quiet, the house style, first', () => {
@@ -22,7 +27,14 @@ describe('theme registry', () => {
     expect(new Set(THEMES.map((t) => t.order)).size).toBe(THEMES.length);
   });
 
-  for (const t of THEMES) {
+  it('walks the exhibit by era after quiet (S7)', () => {
+    // The first seven, oldest school first. A new school takes its place by
+    // era; this pins only the relative order of these.
+    const byEra = ['quiet', 'bauhaus', 'swiss', 'vaporwave', 'cottagecore', 'grandmillennial', 'glassmorphism'];
+    expect(THEMES.map((t) => t.id).filter((id) => byEra.includes(id))).toEqual(byEra);
+  });
+
+  for (const t of ALL_THEMES) {
     describe(t.id, () => {
       it('has a URL-safe id', () => {
         expect(t.id).toMatch(SCHOOL_ID);
@@ -40,8 +52,8 @@ describe('theme registry', () => {
         expect(preloads.length).toBeLessThanOrEqual(2);
         for (const p of preloads) expect(p).toMatch(/\.woff2$/);
       });
-      it('has a route file', () => {
-        expect(existsSync(new URL(`../src/pages/t/${t.id}/[...page].astro`, import.meta.url))).toBe(true);
+      it('has a route file, enabled or still under construction', () => {
+        expect(routeEnabled(t.id) || existsSync(new URL(`../src/pages/t/${t.id}/_[...page].astro`, import.meta.url))).toBe(true);
       });
       it('writes no em dash in its descriptive text', () => {
         const text = [t.name, t.era, t.lesson, t.signature, ...t.forbids].join(' ');
@@ -81,6 +93,15 @@ describe('paths', () => {
     for (const p of ['/', '/about/', '/t/', '/t/x/nope/', '/t/X/', '/t/../etc/', '/lab/bdl-001/']) {
       expect(pageFromPath(p), p).toBeNull();
     }
+  });
+
+  it('marks a nav link current only on its own page', () => {
+    expect(isCurrent('contact', '/t/swiss/contact/')).toBe(true);
+    expect(isCurrent('contact', '/t/swiss/contact/sent/')).toBe(false);
+    expect(isCurrent('home', '/t/swiss/')).toBe(true);
+    expect(isCurrent('home', '/t/swiss/about/')).toBe(false);
+    expect(isCurrent('lab', '/t/swiss/')).toBe(false);
+    expect(isCurrent('about', '/about/')).toBe(false);
   });
 
   it('maps a school page to its canonical root page', () => {

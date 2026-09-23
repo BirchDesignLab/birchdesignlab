@@ -1,0 +1,160 @@
+---
+/** The school's pattern book, rendered once per page (from Header) so every
+    inline SVG can paint with url(#gm-chintz). Original vector work: a chintz
+    repeat of cabbage roses, buds, forget-me-not sprigs and loose leaves, packed
+    onto a 200px tile at three sizes and as many angles, so no row or column
+    ever lines up into a visible grid. Inked through the --c-* tokens, which is
+    how one drawing serves both the day parlour and the lacquered room. Not
+    display:none: a pattern in an undisplayed SVG does not paint. */
+---
+<svg class="gm-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="gm-floret">
+      <circle class="k-blue" cx="0" cy="-3" r="2.6" />
+      <circle class="k-blue" cx="2.85" cy="-0.93" r="2.6" />
+      <circle class="k-blue" cx="1.76" cy="2.43" r="2.6" />
+      <circle class="k-blue" cx="-1.76" cy="2.43" r="2.6" />
+      <circle class="k-blue" cx="-2.85" cy="-0.93" r="2.6" />
+      <circle class="k-dot" r="1.2" />
+    </g>
+    <g id="gm-leafpair">
+      <path class="k-leaf" d="M0 0C4-10 14-16 26-16C22-6 12 0 0 0Z" />
+      <path class="k-vein" d="M1-1C8-7 15-12 25-15" />
+      <path class="k-leaf-lt" d="M0 0C8 4 14 12 14 22C6 18 1 10 0 0Z" />
+      <path class="k-vein" d="M1 1C6 7 10 13 13 21" />
+    </g>
+    <g id="gm-rose">
+      <path class="k-leaf" d="M8 6C18 2 30 6 36 16C26 20 14 18 8 6Z" />
+      <path class="k-vein" d="M9 7C18 9 27 12 35 16" />
+      <path class="k-leaf-lt" d="M-6-10C-10-22-22-30-34-28C-30-16-18-8-6-10Z" />
+      <path class="k-vein" d="M-7-11C-15-17-24-23-33-27" />
+      <path class="k-leaf" d="M-10 8C-20 12-26 22-24 32C-14 28-8 18-10 8Z" />
+      <path class="k-vein" d="M-10 9C-16 16-20 23-23 31" />
+      <circle class="k-rose-lt" cx="11.5" cy="0" r="7.5" />
+      <circle class="k-rose-lt" cx="8.13" cy="8.13" r="7.5" />
+      <circle class="k-rose-lt" cx="0" cy="11.5" r="7.5" />
+      <circle class="k-rose-lt" cx="-8.13" cy="8.13" r="7.5" />
+      <circle class="k-rose-lt" cx="-11.5" cy="0" r="7.5" />
+      <circle class="k-rose-lt" cx="-8.13" cy="-8.13" r="7.5" />
+      <circle class="k-rose-lt" cx="0" cy="-11.5" r="7.5" />
+      <circle class="k-rose-lt" cx="8.13" cy="-8.13" r="7.5" />
+      <circle class="k-rose" r="11.5" />
+      <path class="k-rose-lt" d="M-10-3C-9-8-4-11 2-11-3-9-7-6-10-3Z" />
+      <path class="k-line" d="M-8 3A8.5 8.5 0 0 1 6-6.5" />
+      <path class="k-line" d="M8 0A8 8 0 0 1-2 8" />
+      <path class="k-line" d="M-5-2A5 5 0 0 1 4.5-1" />
+      <path class="k-line" d="M4 2.5A4 4 0 0 1-3.5 2.5" />
+      <circle class="k-rose-dk" r="1.8" />
+    </g>
+    <g id="gm-bud">
+      <path class="k-stem" d="M0 10C0 18-3 24-8 30" />
+      <path class="k-leaf-lt" d="M-2 20C-10 18-16 22-18 28C-10 30-4 26-2 20Z" />
+      <path class="k-rose" d="M0-9C6-9 7 0 4 5C2 8-2 8-4 5C-7 0-6-9 0-9Z" />
+      <path class="k-rose-lt" d="M-4 5C-6-1-3-6 1-8C-1-3-1 2 2 7C0 8-2 7-4 5Z" />
+      <path class="k-leaf" d="M-5 4C-8 8-6 11 0 11C6 11 8 8 5 4C3 7-3 7-5 4Z" />
+    </g>
+    <g id="gm-sprig">
+      <path class="k-stem" d="M0 0C6-10 16-16 28-18" />
+      <path class="k-stem" d="M12-12C14-20 12-26 8-32" />
+      <path class="k-stem" d="M15-13C17-9 19-7 21-5" />
+      <path class="k-leaf-lt" d="M4-4C2-12 6-18 12-20C12-12 9-6 4-4Z" />
+      <path class="k-leaf" d="M20-15C24-22 30-26 36-26C33-20 27-16 20-15Z" />
+      <use href="#gm-floret" x="28" y="-18" />
+      <use href="#gm-floret" x="8" y="-32" />
+      <use href="#gm-floret" x="21" y="-5" />
+    </g>
+    <pattern id="gm-chintz" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect class="k-ground" width="200" height="200" />
+      <use href="#gm-leafpair" transform="translate(96 84) rotate(20)" />
+      <use href="#gm-leafpair" transform="translate(12 118) rotate(-70) scale(0.9)" />
+      <use href="#gm-leafpair" transform="translate(176 118) rotate(160) scale(0.85)" />
+      <use href="#gm-rose" transform="translate(54 56) scale(1.2)" />
+      <use href="#gm-rose" transform="translate(146 150) rotate(140)" />
+      <use href="#gm-rose" transform="translate(152 42) rotate(70) scale(0.66)" />
+      <use href="#gm-rose" transform="translate(56 160) rotate(-110) scale(0.6)" />
+      <use href="#gm-sprig" transform="translate(94 124) rotate(-24)" />
+      <use href="#gm-sprig" transform="translate(166 96) rotate(-150) scale(0.85)" />
+      <use href="#gm-sprig" transform="translate(8 50) rotate(60) scale(0.8)" />
+      <use href="#gm-bud" transform="translate(106 26) rotate(28) scale(0.9)" />
+      <use href="#gm-bud" transform="translate(118 158) rotate(-35) scale(0.8)" />
+      <use href="#gm-bud" transform="translate(186 176) rotate(15) scale(0.6)" />
+      <use href="#gm-bud" transform="translate(22 104) rotate(-160) scale(0.7)" />
+      <circle class="k-dot" cx="94" cy="108" r="1.6" />
+      <circle class="k-dot" cx="190" cy="10" r="1.6" />
+      <circle class="k-dot" cx="12" cy="192" r="1.6" />
+      <circle class="k-dot" cx="120" cy="60" r="1.3" />
+      <circle class="k-dot" cx="100" cy="190" r="1.3" />
+      <circle class="k-dot" cx="192" cy="60" r="1.3" />
+      <circle class="k-dot" cx="30" cy="10" r="1.3" />
+    </pattern>
+    <!-- The same repeat at half scale for small swatches (Services), where a
+         200px tile only shows one flower and reads as a grid rather than a
+         fabric. -->
+    <pattern id="gm-chintz-swatch" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect class="k-ground" width="100" height="100" />
+      <g transform="scale(0.5)">
+        <use href="#gm-leafpair" transform="translate(96 84) rotate(20)" />
+        <use href="#gm-leafpair" transform="translate(12 118) rotate(-70) scale(0.9)" />
+        <use href="#gm-leafpair" transform="translate(176 118) rotate(160) scale(0.85)" />
+        <use href="#gm-rose" transform="translate(54 56) scale(1.2)" />
+        <use href="#gm-rose" transform="translate(146 150) rotate(140)" />
+        <use href="#gm-rose" transform="translate(152 42) rotate(70) scale(0.66)" />
+        <use href="#gm-rose" transform="translate(56 160) rotate(-110) scale(0.6)" />
+        <use href="#gm-sprig" transform="translate(94 124) rotate(-24)" />
+        <use href="#gm-sprig" transform="translate(166 96) rotate(-150) scale(0.85)" />
+        <use href="#gm-sprig" transform="translate(8 50) rotate(60) scale(0.8)" />
+        <use href="#gm-bud" transform="translate(106 26) rotate(28) scale(0.9)" />
+        <use href="#gm-bud" transform="translate(118 158) rotate(-35) scale(0.8)" />
+        <use href="#gm-bud" transform="translate(186 176) rotate(15) scale(0.6)" />
+        <use href="#gm-bud" transform="translate(22 104) rotate(-160) scale(0.7)" />
+        <circle class="k-dot" cx="94" cy="108" r="1.6" />
+        <circle class="k-dot" cx="190" cy="10" r="1.6" />
+        <circle class="k-dot" cx="12" cy="192" r="1.6" />
+        <circle class="k-dot" cx="120" cy="60" r="1.3" />
+        <circle class="k-dot" cx="100" cy="190" r="1.3" />
+        <circle class="k-dot" cx="192" cy="60" r="1.3" />
+        <circle class="k-dot" cx="30" cy="10" r="1.3" />
+      </g>
+    </pattern>
+    <!-- A chinoiserie toile spray for the porcelain swatch: scattered sprigs
+         in two blue tints, no straight lattice line in sight. -->
+    <g id="gm-toile-spray">
+      <path class="k-porc" d="M0 0C-4-8-3-16 3-20 7-14 6-6 0 0Z" />
+      <path class="k-porc-lt" d="M0 0C4 6 4 13 0 18-4 13-3 7 0 0Z" />
+      <path class="k-porc-lt" d="M0 0C-7-3-12 1-13 8-6 8-2 4 0 0Z" />
+      <path class="k-porc" d="M0 0C7-3 12 1 13 8 6 8 2 4 0 0Z" />
+      <circle class="k-porc" cx="0" cy="-2" r="1.6" />
+    </g>
+    <pattern id="gm-porcelaine" width="130" height="130" patternUnits="userSpaceOnUse">
+      <rect class="k-porc-ground" width="130" height="130" />
+      <use href="#gm-toile-spray" transform="translate(22 28) rotate(15) scale(1.15)" />
+      <use href="#gm-toile-spray" transform="translate(98 16) rotate(-40) scale(0.8)" />
+      <use href="#gm-toile-spray" transform="translate(62 70) rotate(120) scale(1.3)" />
+      <use href="#gm-toile-spray" transform="translate(12 104) rotate(200) scale(0.75)" />
+      <use href="#gm-toile-spray" transform="translate(112 112) rotate(80) scale(0.95)" />
+      <circle class="k-porc-dot" cx="76" cy="24" r="1.4" />
+      <circle class="k-porc-dot" cx="40" cy="90" r="1.4" />
+      <circle class="k-porc-dot" cx="106 " cy="62" r="1.2" />
+      <circle class="k-porc-dot" cx="16" cy="16" r="1.2" />
+    </pattern>
+  </defs>
+</svg>
+
+<style>
+  .gm-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+  .k-ground { fill: var(--c-ground); }
+  .k-rose { fill: var(--c-rose); }
+  .k-rose-lt { fill: var(--c-rose-lt); }
+  .k-rose-dk { fill: var(--c-rose-dk); }
+  .k-leaf { fill: var(--c-leaf); }
+  .k-leaf-lt { fill: var(--c-leaf-lt); }
+  .k-blue { fill: var(--c-blue); }
+  .k-dot { fill: var(--c-dot); }
+  .k-line { fill: none; stroke: var(--c-rose-dk); stroke-width: 1.3; stroke-linecap: round; }
+  .k-vein { fill: none; stroke: var(--c-ground); stroke-width: 0.9; stroke-linecap: round; opacity: 0.7; }
+  .k-stem { fill: none; stroke: var(--c-leaf); stroke-width: 1.4; stroke-linecap: round; }
+  .k-porc-ground { fill: var(--porcelain-ground); }
+  .k-porc { fill: var(--porcelain-ink); }
+  .k-porc-lt { fill: var(--porcelain-ink); opacity: 0.55; }
+  .k-porc-dot { fill: var(--porcelain-ink); opacity: 0.7; }
+</style>

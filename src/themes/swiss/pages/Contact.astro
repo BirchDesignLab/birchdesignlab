@@ -1,0 +1,132 @@
+---
+/** Swiss contact: the invitation at poster scale, the form as a ruled table
+    on the left columns, the direct address in the red on the right. */
+import ContactHidden from '../../portal/ContactHidden.astro';
+import type { CopyData } from '../../../lib/copy';
+
+interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="sw-row hero">
+  <p class="sw-idx" aria-hidden="true">01</p>
+  <p class="sw-kicker hero-kicker">{copy.kicker}</p>
+  <h1 class="sw-display title">{copy.heading}</h1>
+  <p class="sw-lead subline">{copy.subline}</p>
+</section>
+
+<section class="sw-row sw-sec body">
+  <p class="sw-idx" aria-hidden="true">02</p>
+  <div class="form-col">
+    <form method="post" action="/api/contact" data-astro-reload>
+      <div class="field">
+        <label for="cf-name">{copy.labels.name}</label>
+        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="cf-email">{copy.labels.email}</label>
+        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="cf-message">{copy.labels.message}</label>
+        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+      </div>
+      <ContactHidden theme={theme} label={copy.labels.honeypot} />
+      <button class="sw-btn submit" type="submit">{copy.submit}</button>
+    </form>
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">/</span> </>}{part}</>)}</p>
+  </div>
+  <aside class="sw-red direct sw-bleed">
+    <p class="invite">{copy.invite}</p>
+    <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
+    <p class="fine">{copy.fine}</p>
+  </aside>
+</section>
+
+<style>
+  .hero {
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
+    row-gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+  .hero-kicker { margin-top: calc(var(--u) * 8); }
+  /* Sized so "conversation" holds one line of the frame at every width. */
+  .title {
+    font-size: min(15.5vw, 12.5rem);
+    margin-bottom: calc(var(--u) * 3);
+    max-width: 7em;
+  }
+  .subline { max-width: 18em; }
+  @media (min-width: 640px) {
+    .subline { grid-column: 3 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .title { font-size: min(14vw, 12.5rem); }
+    .subline { grid-column: 7 / -1; }
+  }
+
+  .body { align-items: start; }
+  form { display: grid; row-gap: calc(var(--u) * 3); }
+  .field { display: grid; row-gap: calc(var(--u) * 0.75); }
+  label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: -0.005em;
+  }
+  input, textarea {
+    font: inherit;
+    color: var(--mark);
+    background: var(--field-raised);
+    border: 1px solid var(--mark);
+    border-radius: 0;
+    padding: calc(var(--u) * 1.25) calc(var(--u) * 1.5);
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: calc(var(--u) * 22); }
+  input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    border-color: var(--accent);
+  }
+  .submit { justify-self: start; min-width: 50%; margin-top: calc(var(--u) * 1); }
+  .trust {
+    margin-top: calc(var(--u) * 3);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.01em;
+    color: var(--mark-muted);
+  }
+
+  .direct {
+    display: grid;
+    align-content: start;
+    row-gap: calc(var(--u) * 3);
+    padding-block: calc(var(--u) * 2) calc(var(--u) * 3);
+    margin-top: calc(var(--u) * 5);
+  }
+  .invite {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.625rem, 2.4vw, 2.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+  .mail {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.125rem;
+    overflow-wrap: anywhere;
+    justify-self: start;
+  }
+  .fine { font-size: 0.9375rem; line-height: 1.4; max-width: 22em; }
+
+  @media (min-width: 640px) {
+    .form-col { grid-column: 1 / 5; }
+    .direct { grid-column: 3 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .form-col { grid-column: 3 / 9; grid-row: 1 / 3; }
+    .direct { grid-column: 10 / -1; grid-row: 1 / 3; margin-top: 0; }
+    .body > .sw-idx { grid-column: 1 / 2; grid-row: 1; }
+  }
+</style>

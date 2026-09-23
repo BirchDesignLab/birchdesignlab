@@ -1,0 +1,86 @@
+---
+/** Cottagecore sent: the letter went off in an envelope tied with twine, a
+    daisy and a sprig of lavender tucked in the pocket. */
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+import Pressed from '../assets/Pressed.astro';
+import Arrow from '../assets/Arrow.astro';
+
+interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="sent cc-wrap">
+  <div class="envelope cc-lamp" aria-hidden="true">
+    <svg class="env-back" viewBox="0 0 300 260" focusable="false">
+      <path class="flap" d="M4 84L150 8c4-2 8-2 12 0L296 84Z" />
+      <rect class="inside" x="0" y="80" width="300" height="180" rx="4" />
+    </svg>
+    <Pressed kind="lavender" seed={121} class="env-lav" />
+    <Pressed kind="daisy" seed={122} class="env-daisy" />
+    <svg class="env-front" viewBox="0 0 300 260" focusable="false">
+      <path class="pocket" d="M0 112L150 194L300 112V256c0 2-2 4-4 4H4c-2 0-4-2-4-4Z" />
+      <path class="fold" d="M2 258L128 178M298 258L172 178" />
+      <path class="twine" d="M214 80C212 140 216 200 212 262M198 190c8-10 26-10 30 2-10 8-26 8-30-2Z" />
+    </svg>
+  </div>
+  <div class="words">
+    <h1>{copy.heading}</h1>
+    <div class="note-card cc-paper">
+      <span class="cc-tape cc-tape--butter" aria-hidden="true"></span>
+      <p>{copy.body}</p>
+    </div>
+    <a class="cc-note-link back" href={hrefFor('home', theme)}><Arrow back /> {copy.back}</a>
+  </div>
+</section>
+
+<style>
+  .sent {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 3rem clamp(2rem, 6vw, 5rem);
+    align-items: center;
+    padding-block: clamp(2.5rem, 7vw, 5.5rem) 0;
+  }
+  .envelope { position: relative; width: min(100%, 24rem); aspect-ratio: 300 / 260; justify-self: center; rotate: -4deg; --lamp-inset: -25%; }
+  .envelope svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .env-back { filter: drop-shadow(0 16px 20px rgba(var(--shadow), 0.22)); }
+  .flap { fill: var(--kraft-deep); }
+  .inside { fill: var(--kraft-inside); }
+  .pocket { fill: var(--kraft); stroke: var(--kraft-deep); stroke-width: 1; }
+  .fold { fill: none; stroke: var(--kraft-deep); stroke-width: 1.2; opacity: 0.6; }
+  .twine { fill: none; stroke: var(--cc-rose-edge); stroke-width: 2.4; stroke-linecap: round; }
+  .envelope :global(.env-lav) { position: absolute; width: 30%; left: 20%; top: -34%; rotate: -16deg; }
+  .envelope :global(.env-daisy) { position: absolute; width: 34%; left: 40%; top: -40%; rotate: 12deg; }
+  .envelope {
+    --kraft: #e8d3ad;
+    --kraft-deep: #cdb080;
+    --kraft-inside: #dcc295;
+  }
+  :global([data-theme='cottagecore'][data-scheme='dark']) .envelope {
+    --kraft: #6d5538;
+    --kraft-deep: #4f3c26;
+    --kraft-inside: #5c472e;
+  }
+
+  h1 {
+    font-size: clamp(5rem, 13vw, 9.5rem);
+    font-weight: 600;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+  }
+  .note-card {
+    --tilt: 1deg;
+    margin-top: 1.6rem;
+    padding: 2rem clamp(1.4rem, 3vw, 2.2rem) 1.8rem;
+    max-width: 34rem;
+  }
+  .note-card .cc-tape { top: -0.85rem; left: 1.5rem; --tape-tilt: -6deg; }
+  .note-card p { font-size: 1.16rem; line-height: 1.7; }
+  .back { margin-top: 2rem; }
+  .back :global(.cc-arrow) { order: -1; }
+
+  @media (max-width: 820px) {
+    .sent { grid-template-columns: 1fr; }
+    .envelope { width: min(76%, 18rem); margin-top: 3.5rem; }
+  }
+</style>

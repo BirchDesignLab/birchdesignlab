@@ -1,10 +1,10 @@
 ---
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 ---
 <section class="hero">
   <h1>{chrome.name}</h1>
@@ -28,7 +28,12 @@ const featured = await featuredSpecimens();
     <p>{copy.lab.kicker}</p>
     <p>{copy.lab.pull}</p>
     <ul data-parity-skip>
-      {featured.map((entry) => <li>{entry.data.designation} {entry.data.summary}</li>)}
+      {featured.map(({ entry, link }) => (
+        <li>
+          <a href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
+          {entry.data.summary}
+        </li>
+      ))}
     </ul>
     <a href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
   </section>

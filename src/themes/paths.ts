@@ -57,6 +57,13 @@ export function pageFromPath(pathname: string): { theme: string; page: PageId } 
   return page ? { theme: m[1], page } : null;
 }
 
+/** Whether a school nav link names the page being shown (for aria-current).
+    An exact page match, not a path prefix: /t/<id>/contact/sent/ is its own
+    page, and Contact is not current there. */
+export function isCurrent(target: PageId | 'lab' | 'privacy', pathname: string): boolean {
+  return pageFromPath(pathname)?.page === target;
+}
+
 /** getStaticPaths entries for one school's `[...page].astro` route. */
 export function schoolStaticPaths(): { params: { page: string | undefined }; props: { page: PageId } }[] {
   return PAGE_IDS.map((page) => ({ params: { page: SEGMENT[page] || undefined }, props: { page } }));

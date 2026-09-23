@@ -1,0 +1,113 @@
+---
+/** Vaporwave contact: a mail client. The form is a new-message window with
+    sunken fields; the plain email address waits in a second window. The form
+    contract is fixed (src/themes/README.md, Contact). */
+import ContactHidden from '../../portal/ContactHidden.astro';
+import type { CopyData } from '../../../lib/copy';
+import Win from '../parts/Win.astro';
+import Horizon from '../parts/Horizon.astro';
+
+interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="intro vw-wrap">
+  <p class="vw-kicker">{copy.kicker}</p>
+  <h1>{copy.heading}</h1>
+  <p class="subline">{copy.subline}</p>
+</section>
+
+<section class="desk vw-wrap">
+  <Win title="new_message.eml" menu={['File', 'Edit', 'Insert', 'Format']} class="compose">
+    <form method="post" action="/api/contact" data-astro-reload>
+      <div class="field">
+        <label for="cf-name">{copy.labels.name}</label>
+        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="cf-email">{copy.labels.email}</label>
+        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="cf-message">{copy.labels.message}</label>
+        <textarea id="cf-message" name="message" required maxlength="5000" rows="8"></textarea>
+      </div>
+      <ContactHidden theme={theme} label={copy.labels.honeypot} />
+      <button class="vw-btn" type="submit">{copy.submit}</button>
+    </form>
+  </Win>
+
+  <div class="side">
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <span class="sep" aria-hidden="true">&#9670;</span>}<span class="trust-part">{part}</span></>)}</p>
+    <Win title="mail.txt" class="mail">
+      <p class="invite">{copy.invite}</p>
+      <a class="address" href={`mailto:${copy.email}`}>{copy.email}</a>
+      <p class="fine">{copy.fine}</p>
+    </Win>
+    <div class="side-scene"><Horizon class="side-horizon" /></div>
+  </div>
+</section>
+
+<style>
+  .intro { padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
+  h1 {
+    margin-top: 1.2rem; max-width: 14ch;
+    font-family: var(--font-display); font-size: clamp(3rem, 8vw, 6.2rem); line-height: 0.98;
+    text-shadow: -3px 0 0 color-mix(in srgb, var(--neon-cyan) 55%, transparent), 3px 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent);
+  }
+  .subline { margin-top: 1.6rem; max-width: 48ch; font-size: 1.15rem; color: var(--mark-muted); }
+
+  .desk {
+    display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4rem);
+    align-items: start; padding-bottom: 2rem;
+  }
+
+  form { display: grid; gap: 1.3rem; }
+  .field { display: grid; gap: 0.4rem; }
+  label {
+    font-family: var(--font-mono); font-size: 1.35rem; line-height: 1; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  input, textarea {
+    width: 100%; font: inherit; font-size: 1.05rem; color: var(--mark);
+    padding: 0.7rem 0.8rem;
+    background: var(--field-sunk);
+    border: 2px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+    border-radius: 0;
+  }
+  textarea { resize: vertical; min-height: 10rem; }
+  input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--link); outline-offset: 2px;
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--neon-pink) 35%, transparent);
+  }
+  button { justify-self: start; margin-top: 0.4rem; }
+
+  .side { display: grid; gap: 2rem; }
+  .trust {
+    font-family: var(--font-mono); font-size: 1.4rem; line-height: 1.3; color: var(--mark);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.9rem 1rem;
+    border: 2px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .sep { color: var(--accent); font-size: 0.7em; margin-inline: 0.3em; vertical-align: 0.15em; }
+  .trust-part { white-space: nowrap; }
+  .invite { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 1.8rem); line-height: 1.2; }
+  .address {
+    display: inline-block; margin-block: 1.1rem;
+    font-weight: 600; font-size: clamp(1rem, 1.9vw, 1.2rem); letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
+  }
+  .fine { color: var(--mark-muted); font-size: 0.98rem; }
+  .side-scene { position: relative; height: 230px; }
+  .side-scene :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 200px; }
+
+  @media (max-width: 860px) {
+    .desk { grid-template-columns: 1fr; }
+    .side-scene { display: none; }
+  }
+  @media (max-width: 520px) {
+    /* Two terminal lines instead of one wrapping line with an orphaned word. */
+    .trust { display: grid; gap: 0.3rem; }
+    .trust .sep { display: none; }
+    .trust-part { white-space: normal; }
+  }
+</style>

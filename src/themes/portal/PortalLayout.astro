@@ -4,7 +4,8 @@
  * header, page body and footer into these slots. What this owns, and no
  * school may: the head (noindex, self canonical, the lab-experiment OG card,
  * no JSON-LD), the ClientRouter, the school's font preloads, the school list
- * for client code, the persisted switcher, and the portal runtime.
+ * for client code, the persisted switcher (and the view-transition rule that
+ * holds it still through every swap), and the portal runtime.
  *
  * It imports no stylesheet. Each school's route imports its own CSS, so a
  * page ships its school's styles and nothing else (F016).
@@ -45,6 +46,33 @@ const preloads = theme.fonts.flatMap((f) => f.preload ?? []);
     <HeadCommon title={`${theme.name} · ${title}`} description={description} noindex ogImage="lab-experiment" />
     {preloads.map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
     <ClientRouter fallback="none" />
+    {/* The switcher holds still through every swap (portal.md P1): it has its
+        own view-transition name, and its group shows only the new snapshot,
+        unanimated, so it is already the arriving page's bar when the
+        transition starts. The first rule sends every property of its four
+        pseudo-elements back to the browser's own view-transition styles
+        (which carry the group's live geometry), so no author rule reaches
+        them; the next two set the only values it needs. !important inside a
+        layer outranks every school rule, !important ones included (important
+        layered declarations beat unlayered ones, whatever their specificity),
+        so a school's wildcard choreography, (*) on any of the four, cannot
+        tilt, fade, blur or wipe it. What this cannot reach is a rule on the
+        shared ::view-transition pseudo, the parent of every group: the
+        README forbids those properties there, and the built guard checks.
+        Inline, so it joins no school's stylesheet set; data-portal-vt marks
+        it for the guard. */}
+    <style is:inline data-portal-vt>
+      @layer bdl-portal {
+        ::view-transition-group(bdl-switcher),
+        ::view-transition-image-pair(bdl-switcher),
+        ::view-transition-new(bdl-switcher),
+        ::view-transition-old(bdl-switcher) { all: revert !important; }
+        ::view-transition-group(bdl-switcher),
+        ::view-transition-image-pair(bdl-switcher),
+        ::view-transition-new(bdl-switcher) { animation: none !important; }
+        ::view-transition-old(bdl-switcher) { display: none !important; }
+      }
+    </style>
     <script is:inline type="application/json" id={PORTAL_DATA_ID} set:html={serializePortalData(data)} />
     <slot name="head" />
   </head>
@@ -55,9 +83,11 @@ const preloads = theme.fonts.flatMap((f) => f.preload ?? []);
     </main>
     <slot name="footer" />
     {/* Room for the fixed switcher, so it never sits on the footer's last line.
-        Inline so no school's CSS can remove it. */}
-    <div aria-hidden="true" style="height: 76px"></div>
-    <bdl-switcher transition:persist="switcher"></bdl-switcher>
+        The height is inline so no school's CSS can remove it. A school may
+        paint it (`[data-portal-tail] { background: ... }`) to carry its footer
+        to the true bottom of the page. */}
+    <div data-portal-tail aria-hidden="true" style="height: 76px"></div>
+    <bdl-switcher transition:persist="switcher" style="view-transition-name: bdl-switcher"></bdl-switcher>
     <script>
       import { initPortal } from './runtime';
       import './switcher';

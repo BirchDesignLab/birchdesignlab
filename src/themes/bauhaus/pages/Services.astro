@@ -1,0 +1,198 @@
+---
+/** Bauhaus services: "two things" drawn as two shapes, each offering a
+    numbered module on the grid, the process as four columns under four
+    coloured bars, and the closing ask on a blue slab. */
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+const offeringShape = ['circle', 'square'] as const;
+const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
+---
+<section class="wrap grid12 intro">
+  <p class="kicker">{copy.kicker}</p>
+  <h1>{copy.heading}</h1>
+  <svg class="two" viewBox="0 0 440 220" aria-hidden="true" focusable="false">
+    <circle class="asm" cx="104" cy="112" r="104" fill="var(--blue)" style="--from: translateX(-60%) scale(0.3); --d: 0ms" />
+    <rect class="asm" x="226" y="8" width="208" height="208" fill="var(--red)" style="--from: translateX(60%) rotate(90deg) scale(0.3); --d: 160ms" />
+    <rect class="asm" x="0" y="212" width="440" height="8" fill="var(--mark)" style="--from: scaleX(0); --d: 320ms" />
+  </svg>
+  <div class="sublines">
+    {copy.sublines.map((line) => <p>{line}</p>)}
+  </div>
+</section>
+
+{copy.offerings.map((offering, i) => (
+  <section class="offering">
+    <div class="wrap grid12 offering-grid">
+      <div class="offering-head">
+        <span class="num" aria-hidden="true">{pad(i + 1)}</span>
+        <span class={`shape ${offeringShape[i % 2]}`} aria-hidden="true"></span>
+        <h2>{offering.heading}</h2>
+      </div>
+      <div class="offering-body">
+        {offering.body.map((para) => <p>{para}</p>)}
+      </div>
+    </div>
+  </section>
+))}
+
+<section class="process">
+  <div class="wrap">
+    <h2 class="process-heading">{copy.process.heading}</h2>
+    <ol class="grid12 steps">
+      {copy.process.steps.map((step, i) => (
+        <li class={`step step-${i}`}>
+          <div class="step-top" aria-hidden="true">
+            <span class="num">{pad(i + 1)}</span>
+            <span class={`mini ${stepShape[i % 4]}`}></span>
+          </div>
+          <h3>{step.title}</h3>
+          <p>{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<section class="ask block-blue">
+  <svg class="ask-shapes" viewBox="0 0 360 360" aria-hidden="true" focusable="false" data-reveal>
+    <polygon class="asm" points="180,20 350,340 10,340" fill="var(--yellow)" style="--from: translateY(60%); --d: 0ms" />
+    <circle class="asm" cx="180" cy="238" r="62" fill="var(--ink)" style="--from: translateY(-320%); --d: 260ms" />
+  </svg>
+  <div class="wrap grid12 ask-grid">
+    <p class="pull">{copy.pull}</p>
+    <a class="btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
+  </div>
+</section>
+
+<style>
+  .intro { padding-block: clamp(3rem, 6vw, 5.5rem) clamp(4rem, 8vw, 7rem); row-gap: 2rem; align-items: end; }
+  .intro .kicker { grid-column: 1 / -1; }
+  h1 {
+    grid-column: 1 / span 7;
+    font-weight: 800;
+    font-size: clamp(3.5rem, 9vw, 8.5rem);
+    line-height: 0.84;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  .two { grid-column: 8 / span 5; width: 100%; height: auto; }
+  .sublines {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: var(--rule) solid var(--mark);
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+  .sublines p:first-child { grid-column: 1 / span 5; }
+  .sublines p:last-child { grid-column: 7 / span 5; }
+
+  .offering { border-top: var(--rule) solid var(--mark); padding-block: clamp(3rem, 6vw, 5.5rem); }
+  .offering-grid { row-gap: 2rem; }
+  .offering-head {
+    grid-column: 1 / span 6;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+    gap: 2rem 1.25rem;
+    align-content: start;
+  }
+  .offering-head .num { font-size: clamp(3.5rem, 6vw, 5.5rem); }
+  .shape { width: clamp(44px, 4.4vw, 68px); aspect-ratio: 1; }
+  .shape.circle { background: var(--blue); border-radius: 50%; }
+  .shape.square { background: var(--red); }
+  .offering-head h2 {
+    grid-column: 1 / -1;
+    font-weight: 800;
+    font-size: clamp(2.75rem, 5.6vw, 5.25rem);
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  /* A heavy vertical rule marks the grid line the body hangs from. */
+  .offering-body {
+    grid-column: 7 / span 6;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding-left: var(--gap);
+    border-left: var(--rule) solid var(--mark);
+    font-size: 1.1875rem;
+  }
+  .offering-body p:first-child {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.4rem, 2.1vw, 1.75rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .process { background: var(--field-raised); border-top: var(--rule) solid var(--mark); padding-block: clamp(4rem, 8vw, 7rem); }
+  .process-heading {
+    font-weight: 800;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 0.88;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    max-width: 12ch;
+  }
+  .steps { list-style: none; padding: 0; margin-top: clamp(2.5rem, 5vw, 4rem); row-gap: 3rem; }
+  .step { grid-column: span 3; display: flex; flex-direction: column; gap: 1rem; padding-top: 1.25rem; border-top: 14px solid var(--bar); }
+  .step-0 { --bar: var(--blue); }
+  .step-1 { --bar: var(--red); }
+  .step-2 { --bar: var(--yellow); }
+  .step-3 { --bar: var(--mark); }
+  .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+  .step .num { font-size: 2.75rem; }
+  .mini { width: 34px; height: 34px; flex: none; }
+  .mini.circle { background: var(--blue); border-radius: 50%; }
+  .mini.square { background: var(--red); }
+  .mini.triangle { background: var(--yellow); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .mini.ring { border: 8px solid var(--mark); border-radius: 50%; }
+  .step h3 { font-size: 2rem; text-transform: lowercase; letter-spacing: -0.03em; }
+  .step p { color: var(--mark-muted); font-size: 1.0625rem; }
+
+  .ask { position: relative; overflow: hidden; padding-block: clamp(4.5rem, 9vw, 8rem); }
+  .ask-shapes {
+    position: absolute;
+    right: clamp(16px, 6vw, 110px);
+    bottom: 0;
+    width: clamp(220px, 26vw, 380px);
+    height: auto;
+  }
+  .ask-grid { position: relative; row-gap: 2.5rem; justify-items: start; }
+  .pull {
+    grid-column: 1 / span 7;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5.4vw, 5rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    text-transform: lowercase;
+  }
+  .ask .btn { grid-column: 1 / span 7; }
+
+  @media (max-width: 1000px) {
+    .step { grid-column: span 6; }
+  }
+  @media (max-width: 900px) {
+    .ask { padding-bottom: 0; display: flex; flex-direction: column; }
+    .ask-shapes { order: 2; position: static; align-self: flex-end; width: 220px; margin: 3rem var(--gutter) 0 0; }
+    .pull, .ask .btn { grid-column: 1 / -1; }
+  }
+  @media (max-width: 760px) {
+    h1, .two { grid-column: 1 / -1; }
+    .two { max-width: 320px; }
+    .sublines p:first-child, .sublines p:last-child { grid-column: 1 / -1; }
+    .sublines { row-gap: 1.25rem; }
+    .offering-head, .offering-body { grid-column: 1 / -1; }
+    .offering-body { border-left: 0; padding-left: 0; }
+    .step { grid-column: 1 / -1; }
+  }
+</style>

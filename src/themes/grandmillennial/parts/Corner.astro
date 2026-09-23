@@ -1,0 +1,18 @@
+---
+/** One gilt corner scroll, drawn top-left; Framed mirrors it to the others. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<svg class:list={['gm-corner', cls]} viewBox="0 0 44 44" aria-hidden="true" focusable="false">
+  <path class="scroll" d="M5 5C16 5 23 11 21 20C19 27 11 25 12 19C13 15 17 16 16 19" />
+  <path class="scroll" d="M5 5C5 16 11 23 20 21" />
+  <path class="leaf" d="M16 4C24 1 32 2 41 6C32 9 24 8 16 4Z" />
+  <path class="leaf" d="M4 16C1 24 2 32 6 41C9 32 8 24 4 16Z" />
+  <circle class="leaf" cx="5" cy="5" r="3.6" />
+</svg>
+
+<style>
+  .gm-corner { width: 58px; height: 58px; overflow: visible; }
+  .scroll { fill: none; stroke: var(--ornament); stroke-width: 1.6; stroke-linecap: round; }
+  .leaf { fill: var(--ornament); }
+</style>

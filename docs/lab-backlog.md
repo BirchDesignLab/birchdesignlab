@@ -56,11 +56,84 @@ name appears nowhere else in it.)
 
 ## In flight
 
-### BDL-009 · Bayou Kitchen · FORTHCOMING, blocked
+### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Stood up as `status: forthcoming` in PR #85, which generates no page: the
-catalog row renders and nothing else, so a half-argued study cannot reach a
-reader. Hero captured from the deployed specimen at
+Branch `feat/theme-schools-tranche-1`. Current handoff:
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-tier3.md`
+(Tier 1 and 2 done; the founder's Stage 0 decisions are in
+`tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
+tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
+cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
+PR'd so the founder can test on mobile live (BDL-010 is a working specimen
+in the Lab from PR #88); Stage 2 onward continues on a new branch.
+
+**Parked from the Stage 1 stop (09-23-26):**
+- Vaporwave's pressed task button switches instantly on an in-school swap
+  (its group has no animation). The alternative is a 250 ms fade of only the
+  pressed button. Founder: "address later". Decide it at vaporwave's pair
+  stage.
+- Root business pages inline about 1 to 2 KB of Astro's view-transition
+  keyframes (`astroFadeInOut` and friends) that they never use. The router's
+  CSS was bundled with quiet's Header styles (predates Stage 1; already on
+  main). It is inert and invisible, and breaks only the letter of "the portal
+  work leaves the root pages untouched". The fix is a bundling change that
+  moves live CSS files, so it waits for a quiet moment with a before/after
+  pixel diff of the root pages (`scripts/themes/diff-captures.mjs`).
+
+**Founder read, 09-23-26, first pass at B.** "Very impressed." Vaporwave and
+Bauhaus are great (personal favourites). Grandmillennial and Cottagecore are
+"absolutely selling what we can do." Glassmorphism is the most lackluster,
+Swiss right behind it. Mobile screenshots look good.
+
+**Path to A+ (founder go 09-23-26).** Tier 1 fixes and tooling, Tier 2
+primary-source research dossiers per school plus a critique panel, Tier 3
+revisions fed by the dossiers, then a founder round. Research must come from
+trusted, reliable primary sources.
+
+**Sidenote, 09-23-26: transitions are the next push after A+.** Crank up the
+transitions between schools and the motion within them. The model is the
+wordmark morph: it transforms and moves while the page changes under it.
+Purposefully built, possibly a distinct transition for each pair of schools
+("this is a crown jewel for a while"). Scope it after A+; the research
+dossiers record each school's motion vocabulary for it.
+Founder, 09-23-26 (Stage 1): individual transitions from any school to any
+other, no literal portal or passage gesture, and transitions must never stall
+on loading; preloading and drawing destinations ahead of time, even
+everything up front, is acceptable. The measurements and the off-screen draw
+technique are in `theme-schools-research/tier3-stage1/p4-trace.md`.
+
+**Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
+original ranking live in `theme-schools-research/`.
+
+**Sidenote, 09-23-26: the order after the schools.** The founder's plan:
+1. Ship the themes and the transitions.
+2. Run the big site copy pass. It has been planned and audited twice but
+   never executed; see the "Copy pass on the business pages (redo)" item
+   further down.
+3. Come back and sew up any weirdness between the Portal and the site in one
+   go.
+
+Consequences for the work before then:
+- Every school renders quiet's words verbatim (word parity), so the copy pass
+  lands in all seven schools at once. Expect it to reflow layouts built
+  around today's copy lengths: billboard splits, "From the lab" summaries,
+  the process row.
+- Keep Portal-specific copy (the first-load prompt, the picker heading,
+  BDL-010's lines) easy to find, so the reconciliation pass can sweep it
+  together with the site.
+- Don't polish copy-dependent layout details to the pixel before the copy
+  pass. Fix structure, not line breaks.
+
+### BDL-009 · Bayou Kitchen · LIVE as a menu-honesty study (09-23-26), order half blocked
+
+**Published 09-23-26 (founder call, PR #88)** as a working specimen arguing
+the menu alone, the "menu-honesty study" branch of the decision below. The
+order-taking section is still unwritten and still blocked on the Stripe
+test-mode decision; the never-claim list below still binds the page.
+
+Stood up as `status: forthcoming` in PR #85, which generated no page: the
+catalog row rendered and nothing else, so a half-argued study could not reach
+a reader. Hero captured from the deployed specimen at
 `https://demo-bayou-kitchen.birchdesignlab.workers.dev`.
 
 **The menu half is written and verified. The order-taking half is

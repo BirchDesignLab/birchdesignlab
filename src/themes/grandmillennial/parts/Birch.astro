@@ -1,0 +1,86 @@
+---
+/** A botanical plate of a birch, drawn for this school: a white trunk with
+    its dark lenticels and the black "eyes" under each limb, four boughs in
+    full leaf and hanging catkins. It sits for the About page's portrait; the
+    trunk runs past the viewBox so the oval, not the drawing, ends it. */
+type P = [number, number];
+type Bough = { from: P; c1: P; c2: P; to: P };
+
+const boughs: Bough[] = [
+  { from: [112, 176], c1: [88, 156], c2: [58, 132], to: [22, 126] },
+  { from: [117, 116], c1: [146, 96], c2: [182, 74], to: [220, 70] },
+  { from: [115, 226], c1: [142, 210], c2: [176, 200], to: [214, 206] },
+  { from: [119, 74], c1: [104, 58], c2: [80, 38], to: [48, 30] },
+];
+
+const at = (b: Bough, t: number): P => {
+  const u = 1 - t;
+  const f = (i: 0 | 1) => u ** 3 * b.from[i] + 3 * u * u * t * b.c1[i] + 3 * u * t * t * b.c2[i] + t ** 3 * b.to[i];
+  return [f(0), f(1)];
+};
+const angle = (b: Bough, t: number) => {
+  const [x0, y0] = at(b, Math.max(0, t - 0.01));
+  const [x1, y1] = at(b, Math.min(1, t + 0.01));
+  return (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
+};
+
+/* Leaves alternate sides along each bough and grow toward the tip. */
+const leaves = boughs.flatMap((b, bi) =>
+  [0.3, 0.42, 0.54, 0.66, 0.77, 0.87, 0.96].map((t, i) => {
+    const [x, y] = at(b, t);
+    const side = (i + bi) % 2 ? 1 : -1;
+    return { x, y, r: angle(b, t) + side * 48, s: 0.85 + t * 0.45, lt: (i + bi) % 3 === 0 };
+  }),
+);
+const catkins = boughs.map((b) => at(b, 1));
+const path = (b: Bough) => `M${b.from.join(' ')}C${b.c1.join(' ')} ${b.c2.join(' ')} ${b.to.join(' ')}`;
+
+/* The trunk: a tapered S-curve, wide at the base and narrow at the crown,
+   built as two edges around a wandering centreline rather than one straight
+   strip. */
+const BARK = 'M95 380C99 340 106 320 102 300C97 270 87 230 91 200C95 170 108 130 104 100C100 70 93 30 97 0C100-20 108-60 106-80'
+  + 'L118-80C120-60 112-20 111 0C110 30 124 70 120 100C116 130 105 170 109 200C113 230 127 270 122 300C118 320 121 340 117 380Z';
+
+/* Lenticels spread across the full trunk width, not bunched on one edge. */
+const lenticels: [number, number, number][] = [
+  [97, 350, 14], [110, 328, 8], [100, 308, 11], [113, 280, 7], [95, 258, 13],
+  [106, 232, 9], [98, 204, 6], [111, 178, 12], [101, 150, 8], [114, 122, 10],
+  [103, 92, 7], [109, 56, 9], [100, 22, 6], [108, -38, 8],
+];
+/* Three dark diamond eyes where a bough joins the trunk. */
+const eyes: [number, number][] = [[104, 116], [99, 226], [102, 74]];
+---
+<svg class="gm-birch" viewBox="0 0 240 300" aria-hidden="true" focusable="false">
+  {boughs.map((b) => <path class="twig" d={path(b)} />)}
+  {catkins.map(([x, y]) => (
+    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
+      <path class="catkin" d="M0 0C1 6 1 13-0.5 18" />
+      <path class="catkin" d="M0 0C-3 5-4 11-4.5 16" />
+    </g>
+  ))}
+  {leaves.map(({ x, y, r, s, lt }) => (
+    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r.toFixed(1)}) scale(${s.toFixed(2)})`}>
+      <path class={lt ? 'leaf lt' : 'leaf'} d="M0 0C7-9 22-11 34 0 22 11 7 9 0 0Z" />
+      <path class="vein" d="M2 0H31M11 0l5-5M11 0l5 5M19 0l5-4M19 0l5 4" />
+    </g>
+  ))}
+  <path class="bark" d={BARK} />
+  <g class="eye">
+    {eyes.map(([x, y]) => <path d={`M${x} ${y - 4}L${x + 4} ${y}L${x} ${y + 4}L${x - 4} ${y}Z`} />)}
+  </g>
+  <g class="lenticel">
+    {lenticels.map(([x, y, len]) => <path d={`M${x} ${y}c${(len / 2).toFixed(1)}-1 ${len}-1 ${len + 2} 0`} />)}
+  </g>
+</svg>
+
+<style>
+  .gm-birch { overflow: visible; }
+  .twig { fill: none; stroke: #6b4a2e; stroke-width: 2.6; stroke-linecap: round; }
+  .leaf { fill: var(--c-leaf); }
+  .leaf.lt { fill: var(--c-leaf-lt); }
+  .vein { fill: none; stroke: var(--c-ground); stroke-width: 0.8; stroke-linecap: round; opacity: 0.55; }
+  .catkin { fill: none; stroke: var(--catkin); stroke-width: 2.2; stroke-linecap: round; }
+  .bark { fill: #f7f3ea; stroke: var(--bark-edge); stroke-width: 1.6; }
+  .eye path { fill: #26251f; }
+  .lenticel path { fill: none; stroke: #2b2a26; stroke-width: 2.2; stroke-linecap: round; }
+</style>

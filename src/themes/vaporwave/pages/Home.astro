@@ -1,0 +1,277 @@
+---
+/** Vaporwave home. The hero is the screensaver: a WebGL sunset over a neon
+    grid (../fx.ts) between two palms, a chrome billboard in the sky. Below it
+    the studio pitches from retro OS windows and a CRT. Every word comes from
+    the copy collection. */
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+import Win from '../parts/Win.astro';
+import Palm from '../parts/Palm.astro';
+import Horizon from '../parts/Horizon.astro';
+
+interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, chrome, theme } = Astro.props;
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
+const [first, ...rest] = chrome.name.split(' ');
+const doorFiles = ['software.exe', 'web_design.htm'];
+---
+<section class="hero">
+  <canvas class="hero-canvas" data-vw-horizon aria-hidden="true"></canvas>
+  <Palm class="palm palm-l" />
+  <Palm class="palm palm-r" flip />
+  <div class="vw-scan" aria-hidden="true"></div>
+  <p class="osd osd-l" aria-hidden="true"><span class="play"></span>PLAY</p>
+  <p class="osd osd-r" aria-hidden="true">SP 0:19:85</p>
+  <div class="hero-title">
+    <p class="vw-kana kana" aria-hidden="true">バーチ・デザイン・ラボ</p>
+    <h1 class="billboard">
+      <span class="bb-first">{first}</span>
+      {' '}
+      <span class="bb-rest">{rest.join(' ')}</span>
+    </h1>
+  </div>
+</section>
+
+<section class="opener vw-wrap">
+  <p class="lead">{copy.opener.lead}</p>
+  <p class="subline">{copy.opener.subline}</p>
+  <p class="opener-kana" aria-hidden="true">デザイン</p>
+</section>
+
+<section class="doors vw-wrap">
+  <h2 class="vw-kicker">{copy.doors.kicker}</h2>
+  <div class="door-grid">
+    {copy.doors.items.map((door, i) => (
+      <Win tag="article" title={doorFiles[i] ?? 'untitled.txt'} class={`door door-${i}`}>
+        <h3>{door.title}</h3>
+        <p>{door.body}</p>
+      </Win>
+    ))}
+  </div>
+  <a class="vw-more" href={hrefFor('services', theme)}>{copy.doors.more}</a>
+</section>
+
+{featured.length > 0 && (
+  <section class="lab vw-wrap">
+    <div class="crt">
+      <div class="screen">
+        <p class="crt-kicker">{copy.lab.kicker}</p>
+        <p class="pull">{copy.lab.pull}</p>
+        <ul class="specimens" role="list" data-parity-skip>
+          {featured.map(({ entry, link }) => (
+            <li>
+              <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
+              <span class="summary">{entry.data.summary}</span>
+            </li>
+          ))}
+        </ul>
+        <a class="crt-more" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
+        <div class="vw-scan" aria-hidden="true"></div>
+      </div>
+      <div class="crt-chin" aria-hidden="true">
+        <span class="badge">VW-1985</span>
+        <span class="knobs"><span></span><span></span></span>
+        <span class="led"></span>
+      </div>
+    </div>
+  </section>
+)}
+
+<section class="closer">
+  <div class="closer-inner vw-wrap">
+    <p class="closer-lead">{copy.closer.lead}</p>
+    <a class="vw-btn" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+  </div>
+  <div class="closer-band"><Horizon class="closer-horizon" /></div>
+</section>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { mountHorizon } from '../fx';
+
+  onMount(mountHorizon);
+</script>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden;
+    height: clamp(560px, calc(100svh - 64px), 980px);
+    /* The same sky in CSS, so the hero reads before (or without) WebGL. */
+    background: linear-gradient(180deg, var(--hz-sky-top) 0, var(--hz-sky-mid) 50%, var(--hz-horizon) 68%, var(--hz-ground) 68.2%, var(--hz-ground));
+  }
+  .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+  .hero :global(.palm) { position: absolute; bottom: -2%; height: 66%; width: auto; max-width: none; z-index: 1; }
+  .hero :global(.palm-l) { left: max(-4%, calc(50% - 780px)); }
+  .hero :global(.palm-r) { right: max(-8%, calc(50% - 820px)); height: 78%; }
+  .hero .vw-scan { z-index: 2; opacity: var(--scan-alpha); }
+  .hero::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, var(--vignette));
+  }
+
+  .osd {
+    position: absolute; z-index: 3; top: 1.1rem;
+    font-family: var(--font-mono); font-size: 1.7rem; line-height: 1; letter-spacing: 0.06em;
+    color: #ffffff; text-shadow: 2px 0 0 var(--neon-pink), -2px 0 0 var(--neon-cyan);
+  }
+  :global([data-scheme='light']) .osd { color: var(--bb-plain); text-shadow: 2px 0 0 #ffffff; }
+  .osd-l { left: 1.4rem; display: flex; align-items: center; gap: 0.4em; }
+  .osd-r { right: 1.4rem; }
+  .play { width: 0; height: 0; border-left: 0.55em solid currentColor; border-block: 0.34em solid transparent; }
+
+  .hero-title {
+    position: absolute; z-index: 3; left: 0; right: 0; top: clamp(3.5rem, 8vh, 5.5rem);
+    text-align: center; padding-inline: var(--gutter);
+  }
+  .kana { font-size: clamp(0.75rem, 1.4vw, 0.95rem); letter-spacing: 0.9em; margin-right: -0.9em; color: var(--neon-pink); }
+  :global([data-scheme='light']) .kana { color: var(--accent); }
+  .billboard { display: flex; flex-direction: column; align-items: center; margin-top: 0.6rem; }
+  /* Chrome: a cheap 80s logo gradient with a hard horizon line through the
+     middle, extruded by a dark drop and split by chromatic aberration. */
+  .bb-first {
+    font-family: var(--font-chunk); text-transform: uppercase;
+    font-size: clamp(4.2rem, 13vw, 9.25rem); line-height: 0.95; letter-spacing: 0.03em;
+    background: var(--bb-chrome);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent; -webkit-text-fill-color: transparent;
+    filter:
+      drop-shadow(0 0.06em 0 var(--bb-depth))
+      drop-shadow(-0.035em 0 0 color-mix(in srgb, var(--neon-cyan) 85%, transparent))
+      drop-shadow(0.035em 0 0 color-mix(in srgb, var(--neon-pink) 85%, transparent));
+  }
+  .bb-rest {
+    margin-top: 0.9rem; margin-right: -0.62em;
+    font-family: var(--font-display); text-transform: uppercase;
+    font-size: clamp(1.05rem, 2.6vw, 2rem); line-height: 1; letter-spacing: 0.62em;
+    color: var(--bb-plain);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--neon-pink) 70%, transparent);
+  }
+
+  /* ---------- opener ---------- */
+  .opener {
+    position: relative;
+    display: grid; gap: 1.6rem;
+    padding-block: clamp(4rem, 9vw, 7.5rem) clamp(3rem, 7vw, 5rem);
+  }
+  .lead {
+    max-width: 13ch;
+    font-family: var(--font-display); font-size: clamp(2.8rem, 7vw, 5.6rem); line-height: 1.02;
+    background: linear-gradient(100deg, var(--mark) 55%, var(--accent));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subline { max-width: 52ch; font-size: 1.15rem; color: var(--mark-muted); }
+  .opener-kana {
+    position: absolute; right: var(--gutter); top: 50%; translate: 0 -50%;
+    writing-mode: vertical-rl;
+    font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Meiryo', sans-serif; font-weight: 900;
+    font-size: clamp(3rem, 8vw, 6.5rem); line-height: 1; letter-spacing: 0.08em;
+    color: transparent; -webkit-text-stroke: 1.5px var(--accent);
+    opacity: 0.8;
+  }
+
+  /* ---------- doors ---------- */
+  .doors { padding-block: 0 clamp(2.5rem, 5vw, 3.5rem); }
+  .door-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem;
+    margin-top: 1.8rem; margin-bottom: 3rem; align-items: start;
+  }
+  /* Scattered on a desktop, the second window a little lower, as if dragged. */
+  .door-grid :global(.door-1) { margin-top: 3.5rem; }
+  .door-grid h3 {
+    font-family: var(--font-display); font-size: clamp(2rem, 3.6vw, 2.8rem); line-height: 1.05;
+    margin-bottom: 0.9rem;
+  }
+  .door-grid p { color: var(--mark-muted); max-width: 44ch; }
+
+  /* ---------- lab: a CRT ---------- */
+  .lab { padding-block: 0 clamp(4rem, 8vw, 6rem); }
+  .crt {
+    max-width: 980px; margin-inline: auto;
+    padding: clamp(0.9rem, 2.5vw, 1.8rem) clamp(0.9rem, 2.5vw, 1.8rem) 0;
+    border-radius: 26px 26px 18px 18px;
+    background: linear-gradient(160deg, var(--crt-case-a), var(--crt-case-b));
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    box-shadow: 16px 16px 0 var(--win-drop);
+  }
+  .screen {
+    position: relative; overflow: hidden;
+    padding: clamp(1.5rem, 5vw, 3.5rem);
+    border-radius: 22px / 30px;
+    background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--crt-bg) 80%, #2c0b58), var(--crt-bg) 75%);
+    box-shadow: inset 0 0 0 3px #000, inset 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 120px color-mix(in srgb, var(--neon-lav) 25%, transparent);
+    color: var(--crt-ink);
+  }
+  .screen .vw-scan { opacity: 1; mix-blend-mode: normal; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 3px); }
+  .crt-kicker {
+    font-family: var(--font-mono); font-size: 1.55rem; line-height: 1; color: var(--crt-kick);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--crt-kick) 70%, transparent);
+  }
+  .pull {
+    margin-top: 1.2rem; max-width: 22ch;
+    font-family: var(--font-display); font-size: clamp(2rem, 4.6vw, 3.4rem); line-height: 1.08;
+    text-shadow: -2px 0 0 color-mix(in srgb, var(--neon-cyan) 55%, transparent), 2px 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent);
+  }
+  .specimens { list-style: none; padding: 0; margin-top: 2rem; display: grid; gap: 0.7rem; }
+  .specimens li {
+    display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 1rem; align-items: baseline;
+    padding-top: 0.7rem; border-top: 1px dashed color-mix(in srgb, var(--crt-phos) 35%, transparent);
+  }
+  .designation {
+    font-family: var(--font-mono); font-size: 1.45rem; line-height: 1; color: var(--crt-phos);
+    text-shadow: 0 0 8px color-mix(in srgb, var(--crt-phos) 60%, transparent);
+  }
+  .designation::before { content: '>' / ''; margin-right: 0.4em; }
+  /* The designation is a link to its entry. On the CRT a live line answers in
+     inverse video, the terminal's own highlight, on hover and on focus. */
+  .designation { justify-self: start; padding-inline: 0.15em; margin-inline: -0.15em; text-decoration: none; }
+  .designation:hover, .designation:focus-visible {
+    color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+  }
+  .designation:focus-visible { outline-color: var(--crt-phos); }
+  .summary { color: var(--crt-ink); font-size: 1rem; }
+  .crt-more {
+    display: inline-block; margin-top: 2rem;
+    font-family: var(--font-mono); font-size: 1.5rem; line-height: 1; color: var(--crt-link);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .crt-more::before { content: '[ ' / ''; }
+  .crt-more::after { content: ' ]' / ''; }
+  .crt-chin {
+    display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0.4rem 0.9rem;
+    font-family: var(--font-mono); font-size: 1.1rem; line-height: 1; color: var(--mark-muted);
+  }
+  .badge { letter-spacing: 0.3em; margin-right: auto; }
+  .knobs { display: flex; gap: 0.5rem; }
+  .knobs span { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--bevel-hi), var(--bevel-lo)); }
+  .led { width: 9px; height: 9px; border-radius: 50%; background: var(--neon-mint); box-shadow: 0 0 8px var(--neon-mint); }
+
+  /* ---------- closer ---------- */
+  .closer { position: relative; overflow: hidden; }
+  .closer-inner {
+    position: relative; z-index: 1;
+    display: grid; justify-items: center; gap: 2rem; text-align: center;
+    padding-top: clamp(2rem, 5vw, 4rem);
+  }
+  /* The sunset sits under the ask, never behind its words. */
+  .closer-band { position: relative; height: clamp(260px, 30vw, 400px); margin-top: 1.5rem; }
+  .closer-band :global(.closer-horizon) { --hz-line: 62%; --hz-sun-w: min(56vw, 330px); }
+  .closer-lead {
+    font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1.05;
+  }
+
+  @media (max-width: 760px) {
+    .opener-kana { display: none; }
+    .door-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .door-grid :global(.door-1) { margin-top: 0; }
+    .specimens li { grid-template-columns: 1fr; gap: 0.2rem; }
+    .osd { font-size: 1.3rem; top: 0.8rem; }
+    .osd-l { left: 0.9rem; }
+    .osd-r { right: 0.9rem; }
+    .hero-title { top: 16%; }
+    .hero :global(.palm) { height: 44%; }
+    .hero :global(.palm-l) { left: -18%; }
+    .hero :global(.palm-r) { right: -22%; height: 52%; }
+  }
+</style>

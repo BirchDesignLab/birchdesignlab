@@ -1,0 +1,42 @@
+---
+/** A cross-stitch motif, worked stitch by stitch from a chart: a sprig of
+    three little flowers between two leaves. Decorative. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+
+/* r = rose, b = butter, g = sage, . = bare cloth */
+const CHART = [
+  '..r.....r.....r..',
+  '.rbr...rbr...rbr.',
+  '..r.....r.....r..',
+  '..g.....g.....g..',
+  '...g....g....g...',
+  'gg..g...g...g..gg',
+  '.ggg.g..g..g.ggg.',
+  '......g.g.g......',
+  '........g........',
+];
+const CELL = 6;
+const stitches: Record<string, string> = { r: '', b: '', g: '' };
+CHART.forEach((row, y) => {
+  [...row].forEach((c, x) => {
+    if (c === '.') return;
+    const x0 = x * CELL + 1;
+    const y0 = y * CELL + 1;
+    const s = CELL - 2;
+    stitches[c] += `M${x0} ${y0}l${s} ${s}M${x0 + s} ${y0}l${-s} ${s}`;
+  });
+});
+---
+<svg class:list={['cc-sampler', cls]} viewBox={`0 0 ${CHART[0].length * CELL} ${CHART.length * CELL}`} aria-hidden="true" focusable="false">
+  <path class="x-g" d={stitches.g} />
+  <path class="x-r" d={stitches.r} />
+  <path class="x-b" d={stitches.b} />
+</svg>
+
+<style>
+  path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
+  .x-r { stroke: var(--cc-rose-edge); }
+  .x-b { stroke: var(--cc-heart); }
+  .x-g { stroke: var(--cc-stem); }
+</style>

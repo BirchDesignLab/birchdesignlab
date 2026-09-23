@@ -1,0 +1,25 @@
+---
+/** A ribbon bow, drawn for this school: two loops, two notched tails, a knot. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<svg class:list={['gm-bow', cls]} viewBox="0 0 120 84" aria-hidden="true" focusable="false">
+  <path class="tail" d="M56 40C50 54 40 66 28 80L39 77 44 83C51 68 57 55 61 43Z" />
+  <path class="tail" d="M64 40C70 54 80 66 92 80L81 77 76 83C69 68 63 55 59 43Z" />
+  <path class="loop" d="M60 36C45 14 16 4 8 18 1 31 24 46 60 41Z" />
+  <path class="loop" d="M60 36C75 14 104 4 112 18 119 31 96 46 60 41Z" />
+  <path class="fold" d="M58 38C46 28 28 20 16 22" />
+  <path class="fold" d="M62 38C74 28 92 20 104 22" />
+  <path class="fold" d="M57 40C44 40 28 38 18 32" />
+  <path class="fold" d="M63 40C76 40 92 38 102 32" />
+  <rect class="knot" x="52" y="30" width="16" height="16" rx="6" />
+  <path class="fold" d="M56 34C58 37 58 40 56 43" />
+</svg>
+
+<style>
+  .gm-bow { overflow: visible; }
+  .loop, .tail { fill: var(--bow); }
+  .tail { fill: var(--bow-deep); }
+  .knot { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1.5; }
+  .fold { fill: none; stroke: var(--bow-deep); stroke-width: 1.6; stroke-linecap: round; opacity: 0.75; }
+</style>

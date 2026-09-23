@@ -1,0 +1,111 @@
+---
+/** Vaporwave's header: a taskbar. The wordmark is the start button, the nav
+    is a row of task buttons with the current page pressed in, and the tray
+    (katakana and a VCR clock stuck at 12:00) is decoration. */
+import { hrefFor, isCurrent } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string }
+const { chrome, theme } = Astro.props;
+---
+<header class="taskbar">
+  <a class="skip" href="#main">{chrome.skip}</a>
+  <div class="bar vw-wrap">
+    <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
+      <span class="wm-sun" aria-hidden="true"></span>
+      {chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class={i === 0 ? 'wm-first' : 'wm-rest'}>{part}</span></>)}
+    </a>
+    <nav aria-label="Main">
+      {chrome.nav.map(({ to, label }) => (
+        <a
+          class="task"
+          href={hrefFor(to, theme)}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
+          data-astro-reload={to === 'lab' ? '' : undefined}
+        >{label}</a>
+      ))}
+    </nav>
+    <span class="tray" aria-hidden="true">
+      <span class="tray-kana">バーチ</span>
+      <span class="clock">12<span class="colon">:</span>00</span>
+    </span>
+  </div>
+</header>
+
+<style>
+  .taskbar {
+    position: relative; z-index: 5;
+    background: var(--task);
+    border-top: 2px solid var(--bevel-hi);
+    border-bottom: 2px solid var(--bevel-lo);
+  }
+  /* The neon rule under the bar: pink into cyan, the school in one line. */
+  .taskbar::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -5px; height: 3px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-lav), var(--neon-cyan));
+  }
+  .bar { display: flex; align-items: center; gap: 0.75rem; padding-block: 0.5rem; }
+
+  .wordmark, .task {
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    color: var(--task-ink); text-decoration: none;
+  }
+  .wordmark {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.5rem; margin-right: auto;
+    white-space: nowrap;
+  }
+  .wm-sun {
+    width: 1.35rem; height: 1.35rem; border-radius: 50%; flex: none;
+    background: linear-gradient(180deg, var(--sun-yellow) 0 40%, var(--neon-pink) 40% 56%, transparent 56% 63%, var(--neon-pink) 63% 74%, transparent 74% 82%, var(--neon-lav) 82%);
+  }
+  .wm-first {
+    font-family: var(--font-chunk); font-size: 1.1rem; line-height: 1; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .wm-rest {
+    font-family: var(--font-display); font-size: 0.8rem; line-height: 1;
+    text-transform: uppercase; letter-spacing: 0.32em;
+  }
+
+  nav { display: flex; gap: 0.4rem; }
+  .task {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 6.5rem; padding: 0.45rem 0.9rem;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .task:hover { background: color-mix(in srgb, var(--task) 70%, var(--neon-lav)); }
+  .task[aria-current='page'] {
+    border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+    background: var(--task-pressed); color: var(--task-current);
+    background-image: repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--task-current) 12%, transparent) 3px 4px);
+  }
+
+  .tray {
+    display: inline-flex; align-items: center; gap: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+    font-family: var(--font-mono); font-size: 1.35rem; line-height: 1; color: var(--task-ink);
+  }
+  .tray-kana { font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Meiryo', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--task-current); letter-spacing: 0.2em; }
+  /* WCAG 2.2.2: blinking that starts on its own stops after a few seconds. */
+  .colon { animation: vw-blink 1s steps(1) 5; }
+
+  @media (max-width: 860px) {
+    /* Row one keeps reading as a taskbar: the wordmark fills the width, the
+       clock stays at the right. Row two is the nav, a full-width 4-up grid
+       with a real tap target on each button. */
+    .bar { flex-wrap: wrap; min-height: 44px; }
+    .wordmark { flex: 1 1 auto; min-height: 44px; order: 1; }
+    .tray { padding: 0.3rem 0.6rem; min-height: 44px; order: 2; }
+    .tray-kana { display: none; }
+    /* Row two: DOM order puts the tray before nav, but the tray belongs on
+       row one beside the wordmark, so nav is reordered after it. */
+    nav { flex: 1 1 100%; order: 3; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .task { min-width: 0; min-height: 44px; padding-inline: 0.2rem; letter-spacing: 0.12em; font-size: 0.72rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .colon { animation: none; }
+  }
+</style>

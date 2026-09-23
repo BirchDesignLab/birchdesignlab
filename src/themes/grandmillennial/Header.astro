@@ -1,0 +1,136 @@
+---
+/** Grandmillennial header: a striped awning with a scalloped, gilt-piped
+    edge, and under it a symmetrical masthead, the wordmark centred like a
+    monogram with the nav split two and two either side (stacked on phones). */
+import { hrefFor, isCurrent } from '../paths';
+import type { CopyData } from '../../lib/copy';
+import Defs from './parts/Defs.astro';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string }
+const { chrome, theme } = Astro.props;
+---
+<header class="site-header">
+  <a class="skip" href="#main">{chrome.skip}</a>
+  <Defs />
+  <div class="awning-hang" aria-hidden="true"><div class="awning gm-scallop-b"></div></div>
+  <div class="masthead gm-wrap">
+    <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
+      {chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class={i === 0 ? 'wm-first' : 'wm-rest'}>{part}</span></>)}
+      <svg class="swash" viewBox="0 0 120 12" aria-hidden="true" focusable="false"><path d="M2 6C22 6 30 1 44 1S56 11 60 6 70 1 76 1 98 6 118 6" /><circle cx="60" cy="6" r="2" /></svg>
+    </a>
+    <nav aria-label="Main">
+      {chrome.nav.map(({ to, label }) => (
+        <a
+          href={hrefFor(to, theme)}
+          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
+          data-astro-reload={to === 'lab' ? '' : undefined}
+        >{label}</a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header { position: relative; }
+
+  /* The awning: one stripe per scallop, the scallops cut by .gm-scallop-b,
+     and the gilt piping is a drop-shadow on the hanger, so it follows the
+     cut edge exactly. */
+  .awning-hang {
+    filter: drop-shadow(0 2px 0 var(--rule)) drop-shadow(0 6px 5px rgb(40 20 10 / 0.18));
+    border-top: 5px solid var(--rule);
+  }
+  /* Each stripe is shaded at its edges, so the canvas reads as fabric
+     rounding over the scallops rather than flat paint. */
+  .awning.gm-scallop-b {
+    --r: 14px;
+    height: 60px;
+    background:
+      linear-gradient(to bottom, rgb(0 0 0 / 0.16), transparent 35%),
+      repeating-linear-gradient(90deg, rgb(0 0 0 / 0.14) 0, transparent 7px 21px, rgb(0 0 0 / 0.14) 28px),
+      repeating-linear-gradient(90deg, var(--stripe-a) 0 28px, var(--stripe-b) 28px 56px);
+  }
+
+  .masthead {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 7.5rem;
+    padding-block: 1.25rem 1.5rem;
+    --wm: 15rem;
+  }
+  .wordmark {
+    position: absolute;
+    left: 50%; top: 50%;
+    translate: -50% -50%;
+    display: grid; justify-items: center;
+    width: var(--wm);
+    color: var(--mark);
+    text-decoration: none;
+    line-height: 1;
+    text-align: center;
+  }
+  .wm-first {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 2.6rem;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+  }
+  .wm-rest {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    margin-top: 0.45rem;
+    padding-left: 0.42em;
+  }
+  .swash { width: 7.5rem; margin-top: 0.4rem; overflow: visible; }
+  .swash path { fill: none; stroke: var(--rule); stroke-width: 1.2; stroke-linecap: round; }
+  .swash circle { fill: var(--rule); }
+
+  nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 2.5rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  nav a:nth-child(2) { margin-right: calc(var(--wm) / 2 + 1.5rem); }
+  nav a:nth-child(3) { margin-left: calc(var(--wm) / 2 + 1.5rem); }
+  nav a {
+    position: relative;
+    display: inline-block;
+    color: var(--mark);
+    text-decoration: none;
+    padding-block: 0.75rem;
+  }
+  nav a::after {
+    content: '';
+    position: absolute; left: 50%; bottom: -0.35rem;
+    width: 7px; height: 7px;
+    translate: -50% 0; rotate: 45deg;
+    background: var(--rule);
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  nav a:hover::after, nav a[aria-current='page']::after { opacity: 1; }
+  nav a[aria-current='page'] { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .awning.gm-scallop-b { --r: 10px; height: 40px; background:
+      linear-gradient(to bottom, rgb(0 0 0 / 0.16), transparent 35%),
+      repeating-linear-gradient(90deg, rgb(0 0 0 / 0.14) 0, transparent 5px 15px, rgb(0 0 0 / 0.14) 20px),
+      repeating-linear-gradient(90deg, var(--stripe-a) 0 20px, var(--stripe-b) 20px 40px); }
+    .masthead { display: flex; flex-direction: column; gap: 1rem; min-height: 0; padding-block: 1.1rem 1.25rem; }
+    .wordmark { position: static; translate: none; width: auto; }
+    .wm-first { font-size: 2.3rem; }
+    nav { gap: 0.9rem; font-size: 0.8rem; letter-spacing: 0.14em; }
+    nav a:nth-child(2), nav a:nth-child(3) { margin: 0; }
+    nav a { padding: 0.75rem 0.4rem; }
+  }
+</style>

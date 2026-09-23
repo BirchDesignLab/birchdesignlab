@@ -1,0 +1,145 @@
+---
+/** Bauhaus contact: the heading and two circles meeting on a line (a
+    conversation, drawn), the form as a ruled panel with square fields, and
+    the email route on a yellow slab. */
+import ContactHidden from '../../portal/ContactHidden.astro';
+import type { CopyData } from '../../../lib/copy';
+
+interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="wrap grid12 contact">
+  <div class="lede">
+    <p class="kicker is-circle">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    <p class="subline">{copy.subline}</p>
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="dot" aria-hidden="true"></span> </>}<span>{part}</span></>)}</p>
+    <svg class="talk" viewBox="0 0 420 200" aria-hidden="true" focusable="false">
+      <rect class="asm" x="0" y="192" width="420" height="8" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms" />
+      <circle class="asm" cx="96" cy="96" r="96" fill="var(--blue)" style="--from: translateX(-80%); --d: 160ms" />
+      <circle class="asm" cx="288" cy="96" r="96" fill="var(--red)" style="--from: translateX(80%); --d: 160ms" />
+      <polygon class="asm" points="192,40 238,112 146,112" fill="var(--yellow)" style="--from: translateY(-160%) scale(0); --d: 420ms" />
+    </svg>
+  </div>
+  <div class="panel">
+    <form method="post" action="/api/contact" data-astro-reload>
+      <div class="field">
+        <label for="cf-name">{copy.labels.name}</label>
+        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="cf-email">{copy.labels.email}</label>
+        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="cf-message">{copy.labels.message}</label>
+        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+      </div>
+      <ContactHidden theme={theme} label={copy.labels.honeypot} />
+      <button class="btn" type="submit">{copy.submit}</button>
+    </form>
+  </div>
+</section>
+
+<section class="direct block-yellow">
+  <div class="wrap grid12 direct-grid">
+    <span class="direct-mark" aria-hidden="true"></span>
+    <div class="direct-body">
+      <p class="invite">{copy.invite}</p>
+      <a class="email" href={`mailto:${copy.email}`}>{copy.email}</a>
+      <p class="fine">{copy.fine}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact { padding-block: clamp(3rem, 6vw, 5.5rem) clamp(4rem, 8vw, 7rem); row-gap: 3.5rem; }
+  .lede { grid-column: 1 / span 6; display: flex; flex-direction: column; align-items: flex-start; gap: 1.75rem; }
+  h1 {
+    font-weight: 800;
+    font-size: clamp(3.25rem, 7.4vw, 7rem);
+    line-height: 0.84;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  .subline { font-size: 1.25rem; line-height: 1.5; max-width: 34ch; }
+  .talk { width: 100%; max-width: 420px; height: auto; padding-top: 0.5rem; }
+
+  .panel { grid-column: 8 / span 5; align-self: start; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border: var(--rule) solid var(--mark);
+    background: var(--field-raised);
+  }
+  .field { display: flex; flex-direction: column; gap: 0.5rem; }
+  label {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  input, textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 1.0625rem;
+    color: var(--mark);
+    background: var(--field);
+    border: var(--rule-thin) solid var(--mark);
+    border-radius: 0;
+    padding: 0.8rem 0.9rem;
+  }
+  textarea { resize: vertical; min-height: 10rem; }
+  /* Focus is a thicker black frame plus a blue square in the corner: shape
+     and weight, so it does not rely on colour alone. */
+  input:focus-visible, textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--mark), 8px 8px 0 2px var(--blue);
+  }
+  form .btn { align-self: flex-start; margin-top: 0.5rem; }
+  /* Now in .lede, under the subline: fills the gap above the illustration
+     and stays clear of the fixed switcher, which sits over the panel. */
+  .trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.9rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+  .dot { width: 0.6rem; height: 0.6rem; background: var(--red); }
+
+  .direct { padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .direct-grid { align-items: start; row-gap: 2rem; }
+  .direct-mark {
+    grid-column: 1 / span 2;
+    width: clamp(64px, 8vw, 120px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .direct-body { grid-column: 3 / span 9; display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .invite { font-size: 1.25rem; font-weight: 500; }
+  .email {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4.6vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-decoration-thickness: 5px;
+    text-underline-offset: 0.14em;
+    overflow-wrap: anywhere;
+  }
+  .fine { font-size: 1rem; max-width: 48ch; }
+
+  @media (max-width: 900px) {
+    .lede, .panel { grid-column: 1 / -1; }
+    .talk { max-width: 300px; }
+  }
+  @media (max-width: 640px) {
+    .direct-mark { grid-column: 1 / -1; width: 56px; }
+    .direct-body { grid-column: 1 / -1; }
+  }
+</style>

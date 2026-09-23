@@ -1,7 +1,7 @@
 /**
  * Token contrast report for every design school (spec §6.3).
  *
- *   npx tsx scripts/themes/check-contrast.ts               every registered school
+ *   npx tsx scripts/themes/check-contrast.ts               every school, drafts included
  *   npx tsx scripts/themes/check-contrast.ts --theme quiet one school
  *
  * Prints theme / scheme / pair / ratio / ok and exits 1 on any failure.
@@ -12,8 +12,9 @@
  * throwaway Vite dev server's ssrLoadModule, not imported directly. The
  * registry uses import.meta.glob and each meta.ts imports its fonts with
  * '?url', and only Vite understands either; going through Vite means the CLI
- * sees exactly the THEMES the site and the tests see, meta.contrast included,
- * with no second list to keep in sync.
+ * sees exactly the schools the site and the tests see, meta.contrast included,
+ * with no second list to keep in sync. It reads ALL_THEMES, so a school still
+ * under construction (route disabled) can be checked too.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -38,8 +39,8 @@ async function loadThemes(): Promise<readonly ThemeMeta[]> {
     optimizeDeps: { noDiscovery: true, include: [] },
   });
   try {
-    const mod = (await server.ssrLoadModule('/src/themes/registry.ts')) as { THEMES: readonly ThemeMeta[] };
-    return mod.THEMES;
+    const mod = (await server.ssrLoadModule('/src/themes/registry.ts')) as { ALL_THEMES: readonly ThemeMeta[] };
+    return mod.ALL_THEMES;
   } finally {
     await server.close();
   }
@@ -62,7 +63,7 @@ function table(rows: ContrastRow[]): string {
 const only = argValue('--theme');
 const themes = (await loadThemes()).filter((t) => !only || t.id === only);
 if (themes.length === 0) {
-  console.error(only ? `no school "${only}" in src/themes/` : 'no schools registered');
+  console.error(only ? `no school "${only}" in src/themes/` : 'no schools in src/themes/');
   process.exit(1);
 }
 

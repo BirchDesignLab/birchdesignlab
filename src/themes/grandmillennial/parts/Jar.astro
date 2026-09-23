@@ -1,0 +1,44 @@
+---
+/** A lidded ginger jar in blue and white, drawn for this school: shoulder
+    and foot bands, and a peony spray on the belly. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const PETAL = 'M0 0C-6-5-7-14 0-17 7-14 6-5 0 0Z';
+const petals = Array.from({ length: 8 }, (_, i) => i * 45);
+---
+<svg class:list={['gm-jar', cls]} viewBox="0 0 100 132" aria-hidden="true" focusable="false">
+  <circle class="body" cx="50" cy="9" r="5.5" />
+  <path class="body" d="M28 27C28 15 72 15 72 27Z" />
+  <rect class="body" x="26" y="25" width="48" height="6" rx="2" />
+  <path class="body" d="M33 31C12 38 5 62 9 84 13 104 27 118 36 122H64C73 118 87 104 91 84 95 62 88 38 67 31Z" />
+  <rect class="body" x="35" y="121" width="30" height="6" rx="1.5" />
+  <g class="ink-line">
+    <circle cx="50" cy="9" r="5.5" />
+    <path d="M28 27C28 15 72 15 72 27" />
+    <rect x="26" y="25" width="48" height="6" rx="2" />
+    <path d="M33 31C12 38 5 62 9 84 13 104 27 118 36 122H64C73 118 87 104 91 84 95 62 88 38 67 31Z" />
+    <rect x="35" y="121" width="30" height="6" rx="1.5" />
+  </g>
+  <path class="band" d="M20 42C38 35 62 35 80 42" />
+  <path class="band" d="M24 111C40 116 60 116 76 111" />
+  <path class="ink" d="M36 20C42 17 58 17 64 20 58 22 42 22 36 20Z" />
+  <g transform="translate(50 76)">
+    <path class="ink" d="M-6 8C-18 14-28 12-32 4-22 2-12 4-6 8Z" />
+    <path class="ink" d="M6-8C18-16 28-14 32-6 22-4 12-4 6-8Z" />
+    <path class="ink-line" d="M-30 18C-18 14-6 10 0 0M0 0C8-10 18-14 30-20" />
+    {petals.map((a) => <path class="ink" transform={`rotate(${a})`} d={PETAL} />)}
+    {petals.map((a) => <path class="petal-in" transform={`rotate(${a + 22.5}) scale(0.6)`} d={PETAL} />)}
+    <circle class="ink" r="3.4" />
+  </g>
+  <circle class="ink" cx="24" cy="58" r="2.6" /><circle class="ink" cx="78" cy="96" r="2.6" />
+  <circle class="ink" cx="76" cy="54" r="1.8" /><circle class="ink" cx="22" cy="96" r="1.8" />
+</svg>
+
+<style>
+  .gm-jar { overflow: visible; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.25)); }
+  .body { fill: var(--plate); }
+  .ink { fill: var(--plate-ink); }
+  .petal-in { fill: var(--plate); stroke: var(--plate-ink); stroke-width: 1.2; }
+  .ink-line, .ink-line * { fill: none; stroke: var(--plate-ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+  .band { fill: none; stroke: var(--plate-ink); stroke-width: 4; stroke-dasharray: 2 2.2; }
+</style>

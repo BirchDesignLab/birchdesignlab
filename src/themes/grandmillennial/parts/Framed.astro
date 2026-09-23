@@ -1,0 +1,41 @@
+---
+/** Double gilt rule with a scroll at each corner: the frame every framed
+    thing in this school hangs in. `tag` keeps the semantics with the caller. */
+import Corner from './Corner.astro';
+
+interface Props { tag?: 'div' | 'section' | 'article' | 'aside' | 'figure'; class?: string; tone?: 'field' | 'raised' | 'paper' }
+const { tag: Tag = 'div', class: cls, tone = 'raised' } = Astro.props;
+---
+<Tag class:list={['gm-framed', `tone-${tone}`, cls]}>
+  <span class="corners" aria-hidden="true">
+    <Corner class="c tl" /><Corner class="c tr" /><Corner class="c bl" /><Corner class="c br" />
+  </span>
+  <slot />
+</Tag>
+
+<style>
+  .gm-framed {
+    position: relative;
+    margin: 7px;
+    padding: clamp(1.75rem, 4.5vw, 3.25rem);
+    border: 1px solid var(--rule);
+    outline: 1px solid var(--rule);
+    outline-offset: 6px;
+  }
+  .tone-raised { background: var(--field-raised); }
+  .tone-field { background: var(--field); }
+  .tone-paper { background: var(--paper); }
+  .corners { position: absolute; inset: -11px; pointer-events: none; }
+  .corners :global(.c) { position: absolute; }
+  .corners :global(.tl) { top: 0; left: 0; }
+  .corners :global(.tr) { top: 0; right: 0; transform: scaleX(-1); }
+  .corners :global(.bl) { bottom: 0; left: 0; transform: scaleY(-1); }
+  .corners :global(.br) { bottom: 0; right: 0; transform: scale(-1, -1); }
+
+  /* On a phone the outline offset and corner inset otherwise put gold scrolls
+     within a thumb's width of the glass. */
+  @media (max-width: 480px) {
+    .gm-framed { outline-offset: 4px; }
+    .corners { inset: -8px; }
+  }
+</style>

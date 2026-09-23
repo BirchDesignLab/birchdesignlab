@@ -1,0 +1,503 @@
+/* Cottagecore: tokens for both schemes, globals, the shared craft pieces
+   (paper, tape, gingham, stitching, the sewn label button, pressed-flower
+   colours) and the arrival page-turn. Imported by
+   src/pages/t/cottagecore/[...page].astro only. Every rule is scoped under
+   [data-theme='cottagecore']. See src/themes/README.md.
+
+   Light is native: a linen tablecloth in June daylight. Dark is the same
+   table by lamplight, designed rather than inverted: ink-brown ground, cream
+   ink, pools of amber light, and the gingham reduced to a faint running
+   stitch. */
+
+:root[data-theme='cottagecore'] {
+  color-scheme: light;
+
+  /* primitives */
+  --cc-linen: #f5eddd;
+  --cc-paper: #fffaf0;
+  --cc-butter-note: #fbefc4;
+  --cc-ink: #3a2a1f;
+  --cc-ink-soft: #6b5242;
+  --cc-sage: #7a966e;
+  --cc-sage-deep: #4e6a45;
+  --cc-rose: #dca29e;
+  --cc-rose-deep: #9b4652;
+  --cc-butter: #efd27f;
+
+  /* semantic tokens */
+  --field: var(--cc-linen);
+  --field-raised: var(--cc-paper);
+  --mark: var(--cc-ink);
+  --mark-muted: var(--cc-ink-soft);
+  --accent: var(--cc-rose-deep);
+  --link: var(--cc-sage-deep);
+  --on-accent: var(--cc-paper);
+
+  /* surfaces text sits on (meta.contrast holds them) */
+  --paper: var(--cc-paper);
+  --note: var(--cc-butter-note);
+  --hoop-cloth: #fbf6ea;
+  --glow: rgba(255, 214, 150, 0);
+
+  /* craft */
+  --rule: rgba(122, 150, 110, 0.34);
+  --margin-line: rgba(155, 70, 82, 0.42);
+  --stitch: rgba(122, 150, 110, 0.9);
+  --stitch-rose: rgba(155, 70, 82, 0.75);
+  /* The written boundary of a form field: darker than --stitch's decorative
+     seams so it clears 3:1 as a control outline. */
+  --field-line: #5f7a54;
+  --scribble: #d98e8b;
+  /* The gummed paper strip holding a pressed twig to its mount. */
+  --cc-gum-strip: #fdf3df;
+  --shadow: 58, 42, 31;
+  --lift: 0 1px 1px rgba(var(--shadow), 0.08), 0 14px 26px -16px rgba(var(--shadow), 0.42);
+  --gingham-ground: #f8f1e2;
+  --gingham-thread: rgba(122, 150, 110, 0.4);
+  --gingham-texture: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.14) 0 1px, transparent 1px 4px);
+  --tape-sage: rgba(170, 192, 158, 0.78);
+  --tape-sage-thread: rgba(98, 128, 88, 0.36);
+  --tape-rose: rgba(236, 196, 190, 0.82);
+  --tape-rose-dot: rgba(155, 70, 82, 0.34);
+  --tape-butter: rgba(244, 222, 150, 0.8);
+  --tape-butter-stripe: rgba(214, 170, 70, 0.3);
+  --wood: #c49a6c;
+  --wood-dark: #9a7148;
+  /* The postage stamp: a rose-cream stock distinct from --paper so its
+     perforated edge stays visible against the postcard beneath it. */
+  --cc-stamp-stock: #f7e6df;
+  --cc-stamp-face: #efd27f;
+  --field-texture:
+    repeating-linear-gradient(0deg, rgba(58, 42, 31, 0.022) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(58, 42, 31, 0.026) 0 1px, transparent 1px 4px);
+  --lamp: none;
+
+  /* pressed-flower colours */
+  --cc-petal: #fffdf7;
+  --cc-petal-back: #f1e7d2;
+  --cc-petal-edge: rgba(107, 82, 66, 0.5);
+  --cc-heart: #eec35a;
+  --cc-heart-deep: #b98a2a;
+  --cc-stem: #7f9870;
+  --cc-leaf: #a9bb96;
+  --cc-leaf-edge: #6c8460;
+  --cc-lav: #a493cc;
+  --cc-lav-edge: #6f5f98;
+  --cc-fern: #95ae86;
+  --cc-twig: #6d5140;
+  --cc-lenticel: #f7efdf;
+  --cc-catkin: #c9a672;
+  --cc-rose-petal: #e8aeaa;
+  --cc-rose-edge: #b8747a;
+  --cc-blush: #fff4e4;
+  --press-shadow: drop-shadow(0 1px 1px rgba(58, 42, 31, 0.2));
+
+  --font-display: 'Fraunces Variable', 'Fraunces Variable fallback', Georgia, serif;
+  --font-body: 'Lora Variable', 'Lora Variable fallback', Georgia, serif;
+  --font-hand: 'Caveat Variable', 'Caveat Variable fallback', 'Segoe Print', cursive;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --measure: 36rem;
+}
+
+:root[data-theme='cottagecore'][data-scheme='dark'] {
+  color-scheme: dark;
+
+  --cc-ground: #1f1813;
+  --cc-lamp-paper: #2c221a;
+  --cc-cream: #f2e5cc;
+  --cc-cream-soft: #d3c2a3;
+  --cc-amber: #eab86a;
+  --cc-sage-light: #a9c294;
+
+  --field: var(--cc-ground);
+  --field-raised: var(--cc-lamp-paper);
+  --mark: var(--cc-cream);
+  --mark-muted: var(--cc-cream-soft);
+  --accent: var(--cc-amber);
+  --link: var(--cc-sage-light);
+  --on-accent: var(--cc-ground);
+
+  --paper: var(--cc-lamp-paper);
+  /* A distinctly warm, ochre-lit paper by lamplight: the butter note must
+     still read as butter, not as the same brown as everything else. */
+  --note: #4a3818;
+  --hoop-cloth: #2e241b;
+  /* The brightest point of a lamp pool, laid over the field. */
+  --glow: rgba(240, 165, 80, 0.26);
+
+  --rule: rgba(242, 229, 204, 0.09);
+  --margin-line: rgba(234, 184, 106, 0.3);
+  --stitch: rgba(169, 194, 148, 0.55);
+  --stitch-rose: rgba(234, 184, 106, 0.6);
+  /* Lit sage on dark cloth, strong enough to read as a field's edge. */
+  --field-line: #b9d1a3;
+  --scribble: #c98a62;
+  --cc-gum-strip: #4a3b2c;
+  --shadow: 0, 0, 0;
+  --lift: 0 1px 0 rgba(255, 214, 150, 0.05) inset, 0 18px 34px -16px rgba(0, 0, 0, 0.75);
+  /* Gingham by lamplight is only a running stitch in the dark cloth. */
+  --gingham-ground: #1c251d;
+  --gingham-thread: transparent;
+  --gingham-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 .75h5M9 .75h5M18 .75h5M.75 0v5M.75 9v5M.75 18v5' stroke='%23a9c294' stroke-opacity='.2' stroke-width='1.5'/%3E%3C/svg%3E");
+  --tape-sage: rgba(110, 134, 98, 0.5);
+  --tape-sage-thread: rgba(20, 30, 18, 0.3);
+  --tape-rose: rgba(160, 104, 100, 0.5);
+  --tape-rose-dot: rgba(40, 18, 18, 0.3);
+  --tape-butter: rgba(190, 150, 76, 0.5);
+  --tape-butter-stripe: rgba(40, 28, 10, 0.25);
+  --wood: #8a6440;
+  --wood-dark: #5e4127;
+  --cc-stamp-stock: #e8d8c6;
+  --cc-stamp-face: #c9a15a;
+  --field-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 .75h5M9 .75h5M18 .75h5M.75 0v5M.75 9v5M.75 18v5' stroke='%23f2e5cc' stroke-opacity='.03' stroke-width='1.5'/%3E%3C/svg%3E");
+  --lamp: radial-gradient(closest-side, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.14) 55%, transparent);
+
+  --cc-petal: #eee2ca;
+  --cc-petal-back: #c7b596;
+  --cc-petal-edge: rgba(20, 12, 6, 0.55);
+  --cc-heart: #e2b04c;
+  --cc-heart-deep: #8f6620;
+  --cc-stem: #7a946c;
+  --cc-leaf: #738d66;
+  --cc-leaf-edge: #45593c;
+  --cc-lav: #9d8ccc;
+  --cc-lav-edge: #574a7e;
+  --cc-fern: #7c9870;
+  --cc-twig: #a88a70;
+  --cc-lenticel: #2a2019;
+  --cc-catkin: #b89260;
+  --cc-rose-petal: #cf928f;
+  --cc-rose-edge: #8a4d53;
+  --cc-blush: #f0dcc0;
+  --press-shadow: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+/* ---------- globals ---------- */
+
+:where([data-theme='cottagecore']) *,
+:where([data-theme='cottagecore']) *::before,
+:where([data-theme='cottagecore']) *::after { box-sizing: border-box; }
+
+[data-theme='cottagecore'] body {
+  position: relative;
+  margin: 0;
+  color: var(--mark);
+  background-color: var(--field);
+  background-image: var(--field-texture);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+/* The tablecloth's hem (Footer.astro .hem) closes the page, but the portal
+   reserves 76px of empty space below every footer for its fixed switcher.
+   Paint the same gingham there so the cloth runs to the true bottom of the
+   page instead of ending on hem, then dead field. */
+[data-theme='cottagecore'] [data-portal-tail] {
+  background-color: var(--gingham-ground);
+  background-image:
+    var(--gingham-texture),
+    linear-gradient(90deg, var(--gingham-thread) 50%, transparent 0),
+    linear-gradient(var(--gingham-thread) 50%, transparent 0);
+  background-size: auto, 28px 28px, 28px 28px;
+}
+[data-theme='cottagecore'][data-scheme='dark'] [data-portal-tail] { background-size: 28px 28px, 28px 28px, 28px 28px; }
+/* Dark only: the lamp hangs over the top of the table. */
+[data-theme='cottagecore'][data-scheme='dark'] body {
+  background-image:
+    radial-gradient(ellipse 60rem 38rem at 20% -6rem, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.1) 55%, transparent 75%),
+    var(--field-texture);
+}
+[data-theme='cottagecore'] :is(h1, h2, h3, p, ul, ol, figure, blockquote) { margin: 0; }
+[data-theme='cottagecore'] :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  line-height: 1.06;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+[data-theme='cottagecore'] p { text-wrap: pretty; }
+[data-theme='cottagecore'] em { font-style: italic; }
+[data-theme='cottagecore'] strong { font-weight: 650; }
+[data-theme='cottagecore'] a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+[data-theme='cottagecore'] a:hover { text-decoration-style: wavy; text-decoration-color: var(--accent); }
+[data-theme='cottagecore'] ::selection { background: var(--cc-butter); color: var(--cc-ink); }
+[data-theme='cottagecore'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+[data-theme='cottagecore'] main:focus { outline: none; }
+/* Tilted paper and stray sprigs hang past the gutters on purpose; main clips
+   them sideways (never vertically) so a phone never scrolls horizontally.
+   On main, not body: body's overflow would propagate to the viewport. */
+[data-theme='cottagecore'] main { position: relative; z-index: 1; display: block; overflow-x: clip; }
+[data-theme='cottagecore'] .skip { position: absolute; left: -100vw; top: 0; }
+[data-theme='cottagecore'] .skip:focus {
+  left: 1rem; top: 1rem; z-index: 20;
+  background: var(--paper); color: var(--mark);
+  padding: 0.5rem 1rem; box-shadow: var(--lift);
+}
+[data-theme='cottagecore'] img,
+[data-theme='cottagecore'] svg,
+[data-theme='cottagecore'] canvas { max-width: 100%; display: block; }
+
+[data-theme='cottagecore'] .cc-wrap {
+  width: min(100% - 2 * var(--gutter), 74rem);
+  margin-inline: auto;
+}
+
+/* ---------- type voices ---------- */
+
+/* Handwriting: kickers, notes in the margin. */
+[data-theme='cottagecore'] .cc-hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  line-height: 1.05;
+  color: var(--accent);
+  letter-spacing: 0;
+}
+/* The hand-drawn underline, painted through a mask so it takes any colour. */
+[data-theme='cottagecore'] .cc-scribble { position: relative; display: inline-block; padding-bottom: 0.3em; }
+[data-theme='cottagecore'] .cc-scribble::after {
+  content: '';
+  position: absolute; left: -4%; right: -6%; bottom: 0; height: 0.42em;
+  background: var(--scribble);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C32 4 64 11.5 98 6.5S160 3.5 197 7.5M24 12.5C66 8.5 116 13 176 9.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C32 4 64 11.5 98 6.5S160 3.5 197 7.5M24 12.5C66 8.5 116 13 176 9.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* ---------- paper ---------- */
+
+[data-theme='cottagecore'] .cc-paper {
+  position: relative;
+  background-color: var(--paper);
+  box-shadow: var(--lift);
+  rotate: var(--tilt, 0deg);
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-paper {
+  background-image: linear-gradient(165deg, rgba(255, 200, 120, 0.14), transparent 60%);
+}
+/* Ruled like a recipe card: the rule sits under each line of text. */
+[data-theme='cottagecore'] .cc-ruled {
+  --lh: 1.8rem;
+  line-height: var(--lh);
+  background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
+  background-size: 100% var(--lh);
+  background-position: 0 -0.28rem;
+}
+/* Torn edges: an irregular tile repeated along the top or bottom as a mask.
+   Shadows are clipped by a mask, so a torn sheet takes its shadow from a
+   drop-shadow filter on its wrapper (.cc-torn-lift). */
+[data-theme='cottagecore'] .cc-torn {
+  --torn-top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14H240V9L228 8L223 5.8L220 4.6L216 2L213 7.9L208 8.5L201 8.2L194 3.4L190 6.7L186 4.9L182 4L178 2.4L172 5.5L167 4.6L161 3L156 2.7L152 4.7L147 6.7L142 6.4L138 6.2L135 5.4L128 4.3L124 6.4L121 2.6L118 6L113 5.1L109 8.6L102 3.9L97 2.4L93 6L89 7.9L85 3.1L81 6.4L74 2.6L69 4.5L63 2.5L58 8.1L51 2.5L46 4.2L43 4.1L37 6.4L33 3.3L27 4.2L22 3.7L16 6.7L11 3.9L7 7L0 9Z'/%3E%3C/svg%3E");
+  --torn-bottom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0H240V5L228 6L223 8.2L220 9.4L216 12L213 6.1L208 5.5L201 5.8L194 10.6L190 7.3L186 9.1L182 10L178 11.6L172 8.5L167 9.4L161 11L156 11.3L152 9.3L147 7.3L142 7.6L138 7.8L135 8.6L128 9.7L124 7.6L121 11.4L118 8L113 8.9L109 5.4L102 10.1L97 11.6L93 8L89 6.1L85 10.9L81 7.6L74 11.4L69 9.5L63 11.5L58 5.9L51 11.5L46 9.8L43 9.9L37 7.6L33 10.7L27 9.8L22 10.3L16 7.3L11 10.1L7 7L0 5Z'/%3E%3C/svg%3E");
+  box-shadow: none;
+  -webkit-mask:
+    var(--torn-top) top left / 240px 14px repeat-x,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 26px) no-repeat,
+    var(--torn-bottom) bottom left / 240px 14px repeat-x;
+  mask:
+    var(--torn-top) top left / 240px 14px repeat-x,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 26px) no-repeat,
+    var(--torn-bottom) bottom left / 240px 14px repeat-x;
+}
+[data-theme='cottagecore'] .cc-torn-lift {
+  filter: drop-shadow(0 10px 14px rgba(var(--shadow), 0.2)) drop-shadow(0 1px 1px rgba(var(--shadow), 0.12));
+  rotate: var(--tilt, 0deg);
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-torn-lift {
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.6));
+}
+
+/* ---------- washi tape ---------- */
+
+[data-theme='cottagecore'] .cc-tape {
+  position: absolute;
+  z-index: 2;
+  width: var(--tape-w, 7.5rem);
+  height: 1.9rem;
+  rotate: var(--tape-tilt, -4deg);
+  background-color: var(--tape-sage);
+  background-image:
+    linear-gradient(90deg, var(--tape-sage-thread) 50%, transparent 0),
+    linear-gradient(var(--tape-sage-thread) 50%, transparent 0);
+  background-size: 10px 10px;
+  /* Torn little zigzags at both ends. */
+  clip-path: polygon(
+    3% 0, 97% 0, 100% 12%, 97% 25%, 100% 38%, 97% 50%, 100% 62%, 97% 75%, 100% 88%, 97% 100%,
+    3% 100%, 0 88%, 3% 75%, 0 62%, 3% 50%, 0 38%, 3% 25%, 0 12%
+  );
+  pointer-events: none;
+}
+[data-theme='cottagecore'] .cc-tape--rose {
+  background-color: var(--tape-rose);
+  background-image: radial-gradient(circle, var(--tape-rose-dot) 2px, transparent 2.5px);
+  background-size: 12px 12px;
+}
+[data-theme='cottagecore'] .cc-tape--butter {
+  background-color: var(--tape-butter);
+  background-image: repeating-linear-gradient(-45deg, var(--tape-butter-stripe) 0 5px, transparent 5px 11px);
+  background-size: auto;
+}
+
+/* ---------- gingham ---------- */
+
+[data-theme='cottagecore'] .cc-gingham {
+  background-color: var(--gingham-ground);
+  background-image:
+    var(--gingham-texture),
+    linear-gradient(90deg, var(--gingham-thread) 50%, transparent 0),
+    linear-gradient(var(--gingham-thread) 50%, transparent 0);
+  background-size: auto, 28px 28px, 28px 28px;
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-gingham { background-size: 28px 28px, 28px 28px, 28px 28px; }
+
+/* ---------- stitching ---------- */
+
+[data-theme='cottagecore'] .cc-stitch-rule {
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background: repeating-linear-gradient(90deg, var(--stitch) 0 9px, transparent 9px 15px);
+  border-radius: 2px;
+}
+
+/* ---------- the sewn label (primary action) ---------- */
+
+[data-theme='cottagecore'] .cc-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.95em 1.6em 0.9em;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--accent);
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px);
+  color: var(--on-accent);
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(var(--shadow), 0.1), 0 10px 18px -10px rgba(var(--shadow), 0.55);
+  transition: rotate 220ms ease, translate 220ms ease;
+}
+/* The running stitch that sews the label on. */
+[data-theme='cottagecore'] .cc-label::before {
+  content: '';
+  position: absolute; inset: 5px;
+  border: 1.5px dashed color-mix(in srgb, var(--on-accent) 62%, transparent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+[data-theme='cottagecore'] .cc-label:hover {
+  rotate: -1.2deg; translate: 0 -1px;
+  text-decoration: none;
+}
+[data-theme='cottagecore'] .cc-label:focus-visible { outline: 2px solid var(--mark); outline-offset: 4px; }
+
+/* Handwritten link with a drawn arrow. */
+[data-theme='cottagecore'] .cc-note-link {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  font-family: var(--font-hand);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--link);
+  text-decoration: none;
+}
+[data-theme='cottagecore'] .cc-note-link:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.18em; }
+[data-theme='cottagecore'] .cc-note-link svg {
+  width: 2.4em; height: auto;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  transition: translate 220ms ease;
+}
+[data-theme='cottagecore'] .cc-note-link:hover svg { translate: 4px 0; }
+
+/* ---------- pressed flowers ---------- */
+
+[data-theme='cottagecore'] .pressed { overflow: visible; filter: var(--press-shadow); }
+[data-theme='cottagecore'] .pressed path { stroke-linejoin: round; stroke-linecap: round; }
+[data-theme='cottagecore'] .pressed .stem { fill: none; stroke: var(--cc-stem); stroke-width: 2.4; }
+[data-theme='cottagecore'] .pressed .stem--thin { stroke-width: 1.6; }
+[data-theme='cottagecore'] .pressed .leaf { fill: var(--cc-leaf); stroke: var(--cc-leaf-edge); stroke-width: 0.7; }
+[data-theme='cottagecore'] .pressed .frond { fill: var(--cc-fern); stroke: var(--cc-leaf-edge); stroke-width: 0.5; }
+[data-theme='cottagecore'] .pressed .vein { fill: none; stroke: var(--cc-leaf-edge); stroke-width: 0.6; opacity: 0.7; }
+[data-theme='cottagecore'] .pressed .petal { fill: var(--cc-petal); stroke: var(--cc-petal-edge); stroke-width: 0.6; }
+[data-theme='cottagecore'] .pressed .petal--back { fill: var(--cc-petal-back); }
+[data-theme='cottagecore'] .pressed .petal-vein { fill: none; stroke: var(--cc-petal-edge); stroke-width: 0.35; opacity: 0.6; }
+[data-theme='cottagecore'] .pressed .petal--rose { fill: var(--cc-rose-petal); stroke: var(--cc-rose-edge); }
+[data-theme='cottagecore'] .pressed .sepal { fill: none; stroke: var(--cc-stem); stroke-width: 1.4; }
+[data-theme='cottagecore'] .pressed .blush { fill: var(--cc-blush); opacity: 0.55; }
+[data-theme='cottagecore'] .pressed .heart { fill: var(--cc-heart); stroke: var(--cc-heart-deep); stroke-width: 0.6; }
+[data-theme='cottagecore'] .pressed .floret { fill: var(--cc-heart-deep); }
+[data-theme='cottagecore'] .pressed .stamen { fill: none; stroke: var(--cc-heart-deep); stroke-width: 0.6; }
+[data-theme='cottagecore'] .pressed .pistil { fill: var(--cc-stem); }
+[data-theme='cottagecore'] .pressed .bud { fill: var(--cc-lav); stroke: var(--cc-lav-edge); stroke-width: 0.5; }
+[data-theme='cottagecore'] .pressed .twig { fill: none; stroke: var(--cc-twig); stroke-width: 3.2; }
+[data-theme='cottagecore'] .pressed .twig--thin { stroke-width: 1.4; }
+[data-theme='cottagecore'] .pressed .lenticel { fill: none; stroke: var(--cc-lenticel); stroke-width: 1; }
+[data-theme='cottagecore'] .pressed .leaf--birch { fill: var(--cc-leaf); }
+[data-theme='cottagecore'] .pressed .catkin { fill: var(--cc-catkin); stroke: var(--cc-twig); stroke-width: 0.5; }
+[data-theme='cottagecore'] .pressed .gum-strip { fill: var(--cc-gum-strip); stroke: rgba(var(--shadow), 0.18); stroke-width: 0.6; }
+
+/* ---------- lamplight pools (dark only) ---------- */
+
+[data-theme='cottagecore'] .cc-lamp { position: relative; isolation: isolate; }
+[data-theme='cottagecore'] .cc-lamp::before {
+  content: '';
+  position: absolute;
+  inset: var(--lamp-inset, -10% -8%);
+  z-index: -1;
+  background: var(--lamp);
+  pointer-events: none;
+}
+
+/* ---------- fireflies (fx.ts, dark only) ---------- */
+
+[data-theme='cottagecore'] .cc-motes {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-motes { display: block; }
+
+/* ---------- arrival: a soft page turn ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme='cottagecore']::view-transition-old(root) {
+    animation: cc-set-down 360ms ease-in both;
+  }
+  html[data-theme='cottagecore']::view-transition-new(root) {
+    transform-origin: 0 40%;
+    animation: cc-page-turn 640ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
+  }
+  html[data-theme='cottagecore']::view-transition-group(wordmark) {
+    animation-duration: 560ms;
+    animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='cottagecore']::view-transition-group(*),
+  html[data-theme='cottagecore']::view-transition-old(*),
+  html[data-theme='cottagecore']::view-transition-new(*) { animation-duration: 1ms; }
+}
+@keyframes cc-page-turn {
+  /* Compositor-only properties (opacity, transform): no filter on the
+     full-viewport snapshot, which was the costly part on low-end phones. */
+  from { opacity: 0; transform: perspective(2200px) rotateY(-16deg) translateX(-1.5%); }
+  55% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cc-set-down {
+  to { opacity: 0; transform: scale(0.985) translateY(6px); }
+}

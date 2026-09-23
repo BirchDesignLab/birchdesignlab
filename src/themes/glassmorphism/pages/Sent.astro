@@ -1,0 +1,60 @@
+---
+/** Glassmorphism sent: one card, a confirmation badge, the way home. */
+import Orbs from '../Orbs.astro';
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section class="sent wrap">
+  {/* The cyan highlight sat under the card's own text column; moved off it
+      so the card's frost stays behind the words, not competing with them. */}
+  <Orbs orbs={[
+    { hue: 'cyan', x: '22%', y: '30%', mx: '14%', my: '16%', size: 'clamp(200px, 28vw, 400px)', drift: 1 },
+    { hue: 'pink', x: '72%', y: '74%', mx: '86%', my: '86%', size: 'clamp(170px, 22vw, 320px)', drift: 2 },
+    { hue: 'peach', x: '84%', y: '16%', size: 'clamp(90px, 10vw, 150px)', drift: 3 },
+  ]} />
+  <div class="card glass">
+    <span class="badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+    </span>
+    <h1>{copy.heading}</h1>
+    <p>{copy.body}</p>
+    <a class="btn btn-glass" href={hrefFor('home', theme)}><span class="arw back" aria-hidden="true">&larr;</span> {copy.back}</a>
+  </div>
+</section>
+
+<style>
+  .sent {
+    position: relative;
+    display: grid; place-items: center;
+    min-height: min(78vh, 760px);
+    padding-block: clamp(3rem, 8vw, 6rem);
+  }
+  .card {
+    display: grid; justify-items: center; gap: 1.25rem;
+    width: min(100%, 600px);
+    padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 5vw, 3.5rem);
+    text-align: center;
+    border-radius: 40px;
+  }
+  .badge {
+    display: grid; place-items: center;
+    width: 4.5rem; height: 4.5rem;
+    border-radius: 50%;
+    color: #ffffff;
+    background: linear-gradient(145deg, var(--blob-cyan-hi), var(--blob-cyan) 55%, var(--blob-violet));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), var(--shadow-sm);
+  }
+  h1 {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.048em;
+    word-spacing: 0.09em;
+    line-height: 0.95;
+  }
+  p { max-width: 44ch; color: var(--mark-muted); font-size: 1.125rem; }
+  .btn { margin-top: 0.5rem; }
+  .btn:hover .back { translate: -3px 0; }
+</style>

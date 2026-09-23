@@ -1,0 +1,24 @@
+---
+/** A wax seal pressed with the school's script B. Decoration only. */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const bumps = Array.from({ length: 14 }, (_, i) => {
+  const a = (i / 14) * Math.PI * 2;
+  const r = i % 2 ? 44 : 47;
+  return `${(Math.cos(a) * r).toFixed(1)} ${(Math.sin(a) * r).toFixed(1)}`;
+});
+---
+<svg class:list={['gm-seal', cls]} viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
+  <path class="wax" d={`M${bumps.join(' L')}Z`} stroke-linejoin="round" />
+  <circle class="press" r="34" />
+  <circle class="ring" r="30" />
+  <text class="b" x="-2" y="15" text-anchor="middle">B</text>
+</svg>
+
+<style>
+  .gm-seal { overflow: visible; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.25)); }
+  .wax { fill: var(--seal); stroke: var(--seal); stroke-width: 6; }
+  .press { fill: var(--seal-deep); opacity: 0.35; }
+  .ring { fill: none; stroke: var(--seal-deep); stroke-width: 1.4; }
+  .b { font-family: var(--font-script); font-size: 46px; fill: #f1d2c8; opacity: 0.9; }
+</style>

@@ -1,0 +1,26 @@
+---
+/** An original palm silhouette (see assets/palm.ts). Decoration only. */
+import { palmFronds, palmRings, palmTrunk } from '../assets/palm';
+
+interface Props { class?: string; flip?: boolean }
+const { class: className, flip = false } = Astro.props;
+---
+<svg
+  class:list={['vw-palm', className]}
+  viewBox="0 0 260 420"
+  preserveAspectRatio="xMidYMax meet"
+  aria-hidden="true"
+  focusable="false"
+  style={flip ? 'transform: scaleX(-1)' : undefined}
+>
+  <g fill="var(--palm)">
+    <path d={palmTrunk} />
+    {palmFronds.map((d) => <path d={d} />)}
+    <circle cx="132" cy="112" r="6" />
+    <circle cx="143" cy="114" r="6" />
+    <circle cx="137" cy="120" r="6" />
+  </g>
+  <g stroke="var(--palm-ring)" stroke-width="1.6" fill="none" stroke-linecap="round">
+    {palmRings.map((d) => <path d={d} />)}
+  </g>
+</svg>

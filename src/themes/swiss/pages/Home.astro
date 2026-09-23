@@ -1,0 +1,225 @@
+---
+/** Swiss home: the name as a poster, set flush left at the full width of the
+    sheet with one red block in the free corner, then numbered sections on
+    the same twelve columns. */
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, chrome, theme } = Astro.props;
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
+---
+<section class="sw-row hero">
+  <p class="sw-idx hero-idx" aria-hidden="true">01</p>
+  <h1 class="sw-display billboard">
+    {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class="ln">{word}</span></>)}
+  </h1>
+  <div class="sw-red block">
+    <p class="lead">{copy.opener.lead}</p>
+  </div>
+  <p class="subline">{copy.opener.subline}</p>
+</section>
+
+<section class="sw-row sw-sec doors">
+  <p class="sw-idx" aria-hidden="true">02</p>
+  <h2 class="sw-kicker sw-vert kicker">{copy.doors.kicker}</h2>
+  <div class="door-list">
+    {copy.doors.items.map((door, i) => (
+      <article class="door">
+        <p class="sw-idx door-n" aria-hidden="true">{`2.${i + 1}`}</p>
+        <h3 class="sw-display door-title">{door.title}</h3>
+        <p class="door-body">{door.body}</p>
+      </article>
+    ))}
+  </div>
+  <a class="more" href={hrefFor('services', theme)}>{copy.doors.more}</a>
+</section>
+
+{featured.length > 0 && (
+  <section class="sw-row lab-wrap">
+    <div class="sw-ink lab sw-bleed">
+      <p class="sw-idx" aria-hidden="true">03</p>
+      <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
+      <p class="sw-display pull">{copy.lab.pull}</p>
+      <ul class="specimens" data-parity-skip>
+        {featured.map(({ entry, link }) => (
+          <li>
+            <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
+            <span class="summary">{entry.data.summary}</span>
+          </li>
+        ))}
+      </ul>
+      <a class="sw-btn lab-more" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
+    </div>
+  </section>
+)}
+
+<section class="sw-row sw-sec closer">
+  <p class="sw-idx" aria-hidden="true">04</p>
+  <p class="sw-display closer-lead">{copy.closer.lead}</p>
+  <a class="sw-btn closer-cta" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+</section>
+
+<style>
+  /* The poster. The billboard size is one variable so the red block can be
+     cut to exactly two lines of it. */
+  .hero {
+    --bb: min(27vw, 17.5rem);
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 10);
+    row-gap: calc(var(--u) * 3);
+    align-items: start;
+  }
+  .hero-idx { grid-row: 1; }
+  .billboard {
+    grid-row: 2;
+    font-size: var(--bb);
+    margin-top: calc(var(--u) * 6);
+  }
+  .block {
+    grid-row: 3;
+    grid-column: 2 / -1;
+    display: flex;
+    align-items: flex-end;
+    min-height: calc(var(--u) * 22);
+    padding: calc(var(--u) * 1.5) var(--gutter) calc(var(--u) * 2);
+  }
+  .lead {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.625rem, 2.6vw, 2.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    max-width: 11em;
+  }
+  .subline { grid-row: 4; grid-column: 2 / -1; max-width: 30em; }
+
+  @media (min-width: 640px) {
+    .hero { --bb: min(19vw, 17.5rem); }
+    .block { grid-column: 4 / -1; }
+    .subline { grid-column: 4 / -1; }
+  }
+  @media (min-width: 1024px) {
+    /* Name bottom left, red block top right, the reading text tucked beside
+       the short last line: one asymmetric sheet, nothing centred. */
+    .hero { --bb: min(15.5vw, 17.5rem); padding-bottom: calc(var(--u) * 14); }
+    .billboard { grid-row: 2 / 4; margin-top: calc(var(--u) * 8); }
+    /* Aligned to the billboard's own cap height and baseline, not just two
+       line boxes of it: the half-leading plus ascender gap pushed down,
+       one line plus a cap height tall. */
+    .block {
+      grid-row: 2;
+      grid-column: 9 / -1;
+      height: calc(var(--bb) * (0.86 + 0.72));
+      margin-top: calc(var(--u) * 8 + var(--bb) * 0.12);
+    }
+    .subline { grid-row: 3; grid-column: 7 / 11; align-self: end; }
+  }
+
+  /* 02: the two doors as rows of a table, title against text. */
+  .kicker { grid-column: 1 / -1; }
+  .door-list { display: grid; grid-template-columns: subgrid; }
+  .door {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    row-gap: calc(var(--u) * 2);
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 5);
+  }
+  /* The section rule opens the first door; the rest are ruled between. */
+  .door + .door { border-top: 1px solid var(--mark); }
+  .door:first-child { padding-top: 0; }
+  .door-n { grid-column: 1 / -1; }
+  .door-title {
+    grid-column: 1 / -1;
+    font-size: clamp(2.75rem, 6.4vw, 7rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .door-body { grid-column: 1 / -1; max-width: 32em; }
+  .more { grid-column: 1 / -1; font-family: var(--font-display); font-weight: 700; font-size: 1.125rem; justify-self: start; }
+
+  @media (min-width: 640px) {
+    .door-n { grid-column: 1 / 2; }
+    .door-title { grid-column: 2 / -1; }
+    .door-body { grid-column: 3 / -1; }
+    .more { grid-column: 3 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .doors > .sw-idx { grid-row: 1; }
+    .kicker { grid-column: 1 / 2; grid-row: 2 / 4; }
+    .door-list { grid-column: 2 / -1; grid-row: 1 / 3; }
+    .door-n { grid-column: 1 / 2; }
+    .door-title { grid-column: 2 / 7; }
+    .door-body { grid-column: 8 / -1; padding-top: 0.35em; }
+    .more { grid-column: 8 / -1; grid-row: 3; }
+  }
+
+  /* 03: the lab, printed in negative as a block inside the frame. */
+  .lab-wrap { padding-bottom: calc(var(--u) * 12); }
+  .lab {
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: calc(var(--u) * 3);
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 4);
+  }
+  :where(.lab) > * { grid-column: 1 / -1; min-width: 0; }
+  .pull {
+    font-size: clamp(2.25rem, 6vw, 6.75rem);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin-top: calc(var(--u) * 5);
+    max-width: 12em;
+  }
+  .specimens { margin-top: calc(var(--u) * 3); display: grid; grid-template-columns: subgrid; }
+  .specimens li {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: calc(var(--u) * 0.5);
+    border-top: 1px solid var(--ink-muted);
+    padding-block: calc(var(--u) * 1.25) calc(var(--u) * 1.75);
+  }
+  .designation {
+    grid-column: 1 / -1;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    justify-self: start;
+    align-self: start;
+    text-decoration-line: none;
+  }
+  /* The designation links to its entry: bare mono at rest, the theme's rule
+     underline on hover and focus, in the red lifted to pass on the ink. */
+  .specimens .designation:hover, .specimens .designation:focus-visible { text-decoration-line: underline; color: var(--red-on-ink); }
+  .specimens .designation:focus-visible { outline-color: var(--red-on-ink); }
+  .summary { grid-column: 1 / -1; color: var(--mark-muted); }
+  .lab-more { justify-self: start; padding-inline: calc(var(--u) * 2); min-width: 50%; }
+
+  @media (min-width: 640px) {
+    .designation { grid-column: 1 / 3; }
+    .summary { grid-column: 3 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .lab > .sw-idx { grid-row: 1; grid-column: 1 / 3; }
+    .lab-kicker { grid-row: 1; grid-column: 3 / 7; }
+    .designation { grid-column: 1 / 3; }
+    .summary { grid-column: 3 / 9; }
+    .lab-more { grid-column: 10 / -1; min-width: 0; justify-self: stretch; }
+  }
+
+  /* 04: the ask, as large as the name. */
+  .closer-lead {
+    font-size: min(15vw, 12rem);
+    letter-spacing: -0.05em;
+    max-width: 7em;
+    margin-top: calc(var(--u) * 4);
+  }
+  .closer-cta { justify-self: stretch; }
+  @media (min-width: 640px) {
+    .closer-cta { grid-column: 4 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .closer-lead { grid-row: 2; grid-column: 1 / 10; font-size: min(11vw, 12rem); }
+    .closer-cta { grid-row: 2; grid-column: 10 / -1; align-self: end; }
+  }
+</style>
