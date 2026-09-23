@@ -58,8 +58,10 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · Period Rooms (theme schools) · IN FLIGHT
 
-Branch `feat/theme-schools-tranche-1`. Handoff:
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26.md`. Six
+Branch `feat/theme-schools-tranche-1`. Current handoff:
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-tier3.md`
+(Tier 1 and 2 done; the founder's Stage 0 decisions are in
+`tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
 cottagecore, bauhaus, swiss); one PR at the end, schools and BDL-010/011
 going live together.
