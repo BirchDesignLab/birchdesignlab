@@ -2,7 +2,7 @@
 
 Each school is the whole business site (home, about, services, contact, contact
 sent) rebuilt in one design language, served at `/t/<id>/` and entered from the
-Lab (BDL-010 Period Rooms). The design spec is
+Lab (BDL-010, the Portal). The design spec is
 `docs/superpowers/specs/09-22-26-theme-schools-design.md`; this is the working
 contract for building one.
 
@@ -16,6 +16,26 @@ it), the switcher.
 background, the header and footer's form, section order on screen, the
 wordmark's styling. A school should be recognisable from its `signature`
 sentence in five seconds, by someone who is not a designer.
+
+**More interactable details, not fewer**, even if they do nothing. Switches,
+sliders, segmented controls, steppers, draggable panes: the portal is a Lab
+piece, and things to touch are part of the exhibit. Where it is cheap, let a
+control do something small and playful; it may also do nothing.
+
+- A control that does something is a real control (a `<button>`, an
+  `<input>`) with an `aria-label`.
+- A control that does nothing is `aria-hidden="true"` and not focusable.
+  Draw it with plain elements, or give any `<button>` or `<input>` inside it
+  `tabindex="-1"` (focusable content under `aria-hidden` is an
+  accessibility fault).
+- Visible label text on a control counts as copy for word parity, unless it
+  sits under `aria-hidden`. Parity counts every word, so any extra visible
+  label fails it. The walker skips every `aria-hidden` subtree, SVG `<text>`
+  included, and never reads `aria-label`
+  (`scripts/themes/lib/visible-text.mjs`). So letter a live control's
+  visible label inside an `aria-hidden` span and name the control with
+  `aria-label`, starting with the words the visitor sees (so voice control
+  can find it).
 
 ## Files
 
@@ -66,8 +86,8 @@ switcher (`THEMES` in `registry.ts` lists only schools with an enabled route;
 - Links that leave the school (Lab, Privacy, the BDL-001 credit if you have
   one) carry `data-astro-reload`.
 - The header wordmark links home and carries `transition:name="wordmark"`.
-  No other element may use `transition:name` (duplicates abort the
-  transition). The guard checks.
+  It is the only `transition:name`; any other view-transition name follows
+  the contract below. The guard checks.
 - Header: a skip link to `#main` (`chrome.skip`), the wordmark
   (`chrome.wordmark` parts), the nav from `chrome.nav`, with
   `aria-current="page"` on the current page's link:
@@ -79,6 +99,77 @@ switcher (`THEMES` in `registry.ts` lists only schools with an enabled route;
   covers your last line. It is `[data-portal-tail]`; paint its background if
   your footer should run to the true bottom of the page. Never target the
   portal's DOM any other way.
+
+### View-transition names
+
+A page may declare three kinds of view-transition name, each once:
+
+- `wordmark`: the header wordmark, via `transition:name="wordmark"`. The one
+  name that pairs across schools, so the wordmark morphs from one school's
+  header into the next.
+- `bdl-switcher`: the portal's switcher, which holds still above every swap.
+  It belongs to the portal. Never name it or style it; no school stylesheet
+  may mention it.
+- `<id>-<part>`: your own persistent chrome (a taskbar, a header bar), for
+  example `vaporwave-taskbar`, used once per page. Name it only when both
+  sides of the swap are your school, so it holds still on an in-school page
+  change and rides your arrival and departure otherwise:
+
+```css
+html[data-theme='x']:is([data-to-theme='x'], [data-from-theme='x']:not([data-to-theme])) .taskbar {
+  view-transition-name: x-taskbar;
+}
+```
+
+Why each part is there:
+
+- `html[data-theme='x']`: scopes the rule to your school, like every global
+  rule here.
+- `[data-to-theme='x']`: names the chrome on the old side of an in-school
+  swap. Just before the old page is captured, the portal sets
+  `data-to-theme=<destination school>` on it.
+- `[data-from-theme='x']`: names it on the new side. From the swap until the
+  arrival transition finishes, the arriving page carries
+  `data-from-theme=<school it came from>`.
+- `:not([data-to-theme])`: the stale `data-from-theme` trap. A visitor who
+  clicks again before an arrival has finished leaves the page carrying
+  `data-from-theme='x'` while it departs for another school; without this,
+  the old side would be named and the chrome would animate apart from your
+  departure.
+- At rest neither attribute is set, so the chrome is unnamed.
+
+Rules:
+
+- One rule per name. The guard counts `view-transition-name` declarations
+  on each page, so put both sides in one `:is()`, as above, and declare the
+  name once.
+- A named element becomes its own group for the swap. It is lifted out of
+  the root snapshot and drawn above it for the whole transition (groups stack
+  in paint order), so your root choreography passes beneath it and never
+  moves it.
+- Style the group in `theme.css` if you want to, with
+  `html[data-theme='x']::view-transition-group(x-taskbar)` and its
+  `-image-pair`, `-old` and `-new`. With no rule it gets the browser's
+  default morph and crossfade, which suits chrome that sits in the same place
+  on every page. To pin it, give the group `animation: none`, as vaporwave's
+  taskbar does. That also ends the crossfade at once (the old and new images
+  inherit the group's animation timing), so the new picture simply replaces
+  the old; `animation-name: none` pins it and keeps the crossfade.
+- While named, an element is a stacking context and a backdrop root. The
+  spec says so for any element whose name is not `none`, at any time, not
+  only during a transition, and Chrome agrees. The recipe keeps your chrome
+  unnamed at rest, so this bites only during an in-school swap. Name the
+  element that carries a `backdrop-filter` itself, never an ancestor of
+  elements that blur what is behind them: their backdrop would stop at the
+  named ancestor.
+- The element must be rendered on both pages of an in-school swap. A name on
+  one side only animates on its own.
+- Never use another school's prefix. `auto`, `match-element` and `var()`
+  names are not allowed.
+- The guard (`tests/built/portal.test.ts`) enforces the shapes (`wordmark`,
+  `bdl-switcher`, your own `<id>-*`), one use of each name per page, and a
+  `bdl-switcher` that names only the switcher and appears in no school
+  stylesheet.
 
 ## Components
 
@@ -156,13 +247,68 @@ background stack listed top to bottom, translucent layers included.
   At most one WebGL canvas per page; cap `devicePixelRatio` at 1.5; pause when
   the tab is hidden or the canvas is off-screen; handle
   `webglcontextlost`/`restored` (see `src/components/BarkField.astro`); release
-  the context in the teardown (`WEBGL_lose_context`); under
-  `prefers-reduced-motion: reduce` draw one still frame. The page must read
+  the context in the teardown (`WEBGL_lose_context`). The page must read
   fine with the canvas blank.
 - Arrival choreography: `html[data-theme='x']::view-transition-old(root)` /
   `::view-transition-new(root)` and `::view-transition-group(wordmark)` in
-  `theme.css`. Keep it under ~700 ms. `html[data-from-theme='y']` is set on
-  arrival if you want an entrance that depends on where the visitor came from.
+  `theme.css`. Keep it under ~700 ms. The view-transition pseudo-elements
+  are styled by the arriving page, so these rules are yours on arrival.
+- Two attributes say where a swap is going and where it came from. Use them
+  in view-transition selectors (and the naming recipe above) only:
+  - `html[data-to-theme='y']` is set on the departing page just before it is
+    captured, naming the destination school.
+  - `html[data-from-theme='y']` is set on the arriving page from the swap
+    until the arrival transition finishes, naming the school the visitor
+    came from. Use it for an entrance that depends on where they came from.
+- Reduced motion is out of scope for the portal's schools. This is a Lab
+  piece and the motion is part of the exhibit. Existing reduced-motion code
+  in a school may stay but gets no further work, and reviewers do not flag
+  its absence. The root business pages quiet renders (`/`, `/about/` and the
+  rest) keep their behaviour exactly. One tooling catch: `capture.mjs`
+  emulates reduced motion for deterministic stills (unless `--motion`), so a
+  school that stops honouring it is caught mid-animation in its stills. That
+  is fine for review, not for pixel diffs.
+
+### The wordmark
+
+The browser's default crossfade shows two differently shaped wordmarks at
+once, each scaled to the morphing box, so one smears across the other (item
+2 of `docs/superpowers/specs/theme-schools-research/tier3-briefs/cottagecore.md`).
+This is the default every school adopts in Tier 3, Stage 2, and may then
+tune:
+
+```css
+html[data-theme='x']::view-transition-old(wordmark),
+html[data-theme='x']::view-transition-new(wordmark) {
+  height: 100%;
+  object-fit: none;
+  object-position: left center; /* where your wordmark sits in its box */
+  animation-fill-mode: both;
+}
+html[data-theme='x']:not([data-from-theme='x'])::view-transition-old(wordmark) {
+  animation-name: x-wordmark-out;
+}
+html[data-theme='x']:not([data-from-theme='x'])::view-transition-new(wordmark) {
+  animation-name: x-wordmark-in;
+}
+@keyframes x-wordmark-out { 35%, 100% { opacity: 0; } }
+@keyframes x-wordmark-in { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
+```
+
+- The old wordmark fades out over the first 35% of the group's duration and
+  the new one fades in from 40%, so the two are never legible together. Both
+  images inherit the group's duration, so set it on
+  `::view-transition-group(wordmark)` as you do now.
+- `height: 100%; object-fit: none` draws each wordmark at its own size inside
+  the morphing box instead of stretching it; `object-position` anchors it
+  where your wordmark sits.
+- `animation-fill-mode: both` holds the old one hidden after its fade. The
+  images inherit the group's fill mode, and an `animation` shorthand on the
+  group resets it to `none`; then, if your root runs longer than the group,
+  the old wordmark would come back for the rest of the transition.
+- The fades apply only when arriving from another school. Between two of
+  your own pages the two wordmarks are identical, and fading one out and the
+  other in would make a still wordmark blink.
 
 ## Dark and light
 
@@ -185,6 +331,6 @@ strips (serve a build first; usage in its header).
 school.
 
 Hard requirements: word and link parity with quiet, the contact contract,
-no JSON-LD, no em dash, contrast in both schemes, one `transition:name`, no
-horizontal scroll at 390 px, no console errors, no network requests outside
-the site.
+no JSON-LD, no em dash, contrast in both schemes, view-transition names only
+in the three shapes and each used once, no horizontal scroll at 390 px, no
+console errors, no network requests outside the site.

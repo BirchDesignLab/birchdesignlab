@@ -433,3 +433,19 @@ html[data-theme='vaporwave']::view-transition-group(wordmark) {
   html[data-theme='vaporwave']::view-transition-old(*),
   html[data-theme='vaporwave']::view-transition-new(*) { animation: none !important; }
 }
+
+/* ---------- the taskbar holds still ----------
+
+   The taskbar is this school's persistent chrome, so it gets its own
+   view-transition name, but only when both sides of the swap are vaporwave
+   (the naming contract: src/themes/README.md, "View-transition names").
+   Between two vaporwave pages it sits above the tracking wobble and does not
+   move; only the pressed task button changes, at once, since `animation:
+   none` on the group also ends the crossfade. Arriving from or leaving for
+   another school it is unnamed, so it stays in the root and rides the CRT.
+   Declared once: the guard counts names per page. */
+
+html[data-theme='vaporwave']:is([data-to-theme='vaporwave'], [data-from-theme='vaporwave']:not([data-to-theme])) header.taskbar {
+  view-transition-name: vaporwave-taskbar;
+}
+html[data-theme='vaporwave']::view-transition-group(vaporwave-taskbar) { animation: none; }
