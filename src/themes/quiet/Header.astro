@@ -3,13 +3,25 @@
     copy. `theme` is set only inside the /t/ portal, where links stay in the
     school and the Lab link leaves it with a full page load. */
 import ThemeToggle from '../../components/ThemeToggle.astro';
-import { hrefFor } from '../paths';
+import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme?: string }
 const { chrome, theme } = Astro.props;
 const path = Astro.url.pathname;
 const links = chrome.nav.map(({ to, label }) => ({ to, label, href: hrefFor(to, theme) }));
+
+/* aria-current: a page link lights only on its own page, so Contact is dark
+   on the sent page. The Lab link lights across the whole Lab section on the
+   root (/lab/, /lab/experiments/, /lab/studies/). Root hrefs have no trailing
+   slash and built pathnames may, so both sides drop it before comparing. */
+const bare = (p: string) => p.replace(/\/+$/, '') || '/';
+const here = bare(path);
+const current = (to: (typeof links)[number]['to'], href: string) => {
+  if (theme) return isCurrent(to, path);
+  const target = bare(href);
+  return to === 'lab' ? here === target || here.startsWith(`${target}/`) : here === target;
+};
 ---
 <header>
   <a class="skip" href="#main">{chrome.skip}</a>
@@ -26,7 +38,7 @@ const links = chrome.nav.map(({ to, label }) => ({ to, label, href: hrefFor(to, 
       {links.map(({ to, label, href }) => (
         <a
           href={href}
-          aria-current={path.startsWith(href) ? 'page' : undefined}
+          aria-current={current(to, href) ? 'page' : undefined}
           data-astro-reload={theme && to === 'lab' ? '' : undefined}
         >{label}</a>
       ))}
