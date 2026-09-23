@@ -11,14 +11,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "verify": "npm run test && npm run check && npm run build",
+    "verify": "npm run test && npm run check && npm run build && npm run test:dist",
     "test": "vitest run",
     "trace": "node scripts/trace-to-strokes.mjs",
     "types": "wrangler types",
     "deploy": "npm run build && wrangler deploy",
     "dev:worker": "npm run build && wrangler dev",
     "og": "tsx scripts/og/generate.ts",
-    "prebuild": "npm run og"
+    "prebuild": "npm run og",
+    "test:dist": "vitest run --config vitest.dist.config.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
@@ -41,6 +42,7 @@
     "@napi-rs/canvas": "^1.0.9",
     "@types/three": "^0.186.0",
     "fontaine": "^1.0.0",
+    "node-html-parser": "^9.0.4",
     "opentype.js": "^2.0.0",
     "playwright": "^1.63.0",
     "tsx": "^4.23.15",
