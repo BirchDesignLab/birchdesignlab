@@ -239,6 +239,20 @@ tunes its wordmark fade offsets in the sweep so the blank (both images under
 10% opacity) stays at or under 80 ms, while the overlap judge still passes.
 The judge gains a blank measurement first. Then: "let's kick off wave a".
 
+**At the wave A stop (09-23-26).** To `tier3-stage2/wave-a.md`, "Open for the
+founder": "your recommendation for all 3 calls sounds good. your two small
+fixes sound fine in theory."
+1. Swiss and glassmorphism name their headers `swiss-header` and
+   `glassmorphism-header`, in-school only (the S2 recipe), so the nav holds
+   still on in-school swaps.
+2. Vaporwave's light scheme gets a gentler `vw-crt-on` (lower brightness
+   through the opening, same beam line and timing); dark is untouched.
+3. Swiss's six-panel desktop sheets keep four uneven beats (1, 2, 1, 2)
+   under the ~700 ms cap; phones stay one panel per beat.
+Also approved: vaporwave's view-transition background follows the scheme
+(no dark band in light), and `preserveDrawingBuffer` goes if the strips hold
+without it. Then a wave A follow-up, and a stop to assess before wave B.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
