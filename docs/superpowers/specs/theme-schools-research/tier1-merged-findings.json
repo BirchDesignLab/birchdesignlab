@@ -1,0 +1,941 @@
+[
+ {
+  "id": "F001",
+  "title": "ClientRouter's swap wipes every <html> attribute and the inline theme bootstrap never re-runs, so light/dark and the .js marker are lost on the first client-side navigation",
+  "claim": "`swapRootAttributes` removes EVERY attribute on the live `<html>` (class, data-theme, data-face — only `data-astro-transition` and `data-astro-transition-fallback` survive) and replaces them with the incoming static document's attributes, which are just `lang` and `data-zone`. ThemeBootstrap cannot restore them: `deselectScripts`/`detectScriptExecuted` key inline scripts on `textContent`, the router seeds that set from every script in the initial document, and the byte-identical bootstrap on the next page is stamped `data-astro-exec` and skipped by `runScripts`. After the first swap the root has no `data-face`, no `data-theme` and no `class=\"js\"`, so `:root` (dark) wins and the `html:not(.js)` no-JS `prefers-color-scheme` fallback becomes live — a visitor who chose light on a dark system flips to dark the instant they press randomize. `.reveal-on` is lost the same way.",
+  "evidence": "node_modules/astro/dist/transitions/swap-functions.js:21-29 `swapRootAttributes` — `[...currentRoot.attributes].filter(({name}) => (currentRoot.removeAttribute(name), NON_OVERRIDABLE_ASTRO_ATTRS.includes(name)))` then applies `newDoc.documentElement.attributes`; :2 NON_OVERRIDABLE list; :4-9 `detectScriptExecuted` key `script.src ? new URL(...).href : script.textContent`; :10-19 `deselectScripts` sets `s2.dataset.astroExec = ''` unless `data-astro-rerun`. router.js:441-444 seeds scriptsAlreadyRan from the initial document; router.js:91 `if (script.dataset.astroExec === '') continue;`. src/components/ThemeBootstrap.astro:6-18 is `is:inline` and sets `root.classList.add('js')`, `root.dataset.theme`, `root.dataset.face` at runtime only. src/layouts/BaseLayout.astro:29 emits `<html lang=\"en\" data-zone={zone}>` with no scheme attribute. src/styles/tokens.css:80 `:root, :root[data-face='dark']`, :106 `:root[data-face='light']`, :133-141 the `html:not(.js)` light fallback; src/styles/base.css:116-125 `.reveal-on`.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "PR 0 must add an `astro:after-swap` listener (fires at router.js:216, inside the startViewTransition update callback, before the new frame is captured — `data-astro-rerun` runs too late at router.js:354-358) registered once from a module script that re-applies the scheme attribute and `class=\"js\"`/`.reveal-on` from localStorage, and/or an `astro:before-swap` handler that stamps them onto `event.newDocument.documentElement`. Do not rely on the inline bootstrap re-executing. Write the full root-attribute contract into the spec: `<html>` is router-owned state, no runtime attribute or class on it may be assumed to survive a swap; the school attribute may come from the incoming static document, the scheme and `.js` must be re-applied by JS on every swap. Add a Playwright assertion that the scheme attribute and `.js` survive a / → /t/<theme>/ navigation in both directions — nothing in vitest or Lighthouse can see this.",
+  "sources": [
+   "router",
+   "contract-maintenance",
+   "guards",
+   "process-scope",
+   "content-contact",
+   "main-thread",
+   "brand-founder"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/src/components/ThemeBootstrap.astro",
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
+   "C:/git/birchdesignlab/src/styles/tokens.css",
+   "C:/git/birchdesignlab/src/styles/base.css",
+   "C:/git/birchdesignlab/src/components/BarkField.astro"
+  ]
+ },
+ {
+  "id": "F002",
+  "title": "\"Default load unchanged\" is false: ClientRouter, prefetch-all, the switcher island and the WebGL stage all ship to the Lighthouse-100 business pages, with no budget, no flag and no baseline",
+  "claim": "The plan relaxes Lighthouse only on /t/<theme>/ routes but every new runtime cost lands on /, /about, /services, /contact. The home page currently ships ~10.7 KB of minified JS; ClientRouter plus a Svelte-island switcher takes it to roughly 55-60 KB. ClientRouter unconditionally calls `init({ prefetchAll: true })`, so the quiet home page begins hover-prefetching every link — including whichever theme routes the switcher exposes as anchors, i.e. heavy theme documents pulled from the viewport. There is no feature flag and no CI, merge-to-main deploys production, so the only rollback is a revert PR. And no Lighthouse baseline is recorded anywhere in this repo, so \"kept its current scores\" is unfalsifiable.",
+  "evidence": "dist/index.html references two entry scripts whose closure is BarkField 2,525 B + index.astro 534 B + pattern 619 B + renderer 7,051 B = 10,729 B; a Svelte island adds render.Cibgvqob.js 31,308 B + client.svelte 1,131 B (measured on dist/lab/bdl-006/); ClientRouter's client is router.js 18,127 B + events.js 4,245 B + swap-functions.js 4,628 B + prefetch/index.js 6,427 B unminified. node_modules/astro/components/ClientRouter.astro:156-157 `if (!__PREFETCH_DISABLED__) { init({ prefetchAll: true }); }`; prefetch/index.js:16 defaults strategy to `hover`. plan-prompt.md:5 \"Lighthouse may drop to 0.90 perf on theme routes\", :12 persistent WebGL stage, :15 floating switcher, :21 \"stricter on root\". docs/lab-backlog.md:500 \"quiet luxury now names the business pages (home, services, about, contact — Lighthouse 100s, restrained, no heavy motion)\". context-pointers.md:3 \"no CI, no Lighthouse config in this repo\"; CLAUDE.md merge-to-main deploys prod. docs/handoff-8-23-26.md still lists a Lighthouse home run under unfinished verification.",
+  "severity": "blocker",
+  "kind": "decision",
+  "recommendation": "Restate the promise as \"visual first impression unchanged, JS budget explicitly re-set\", and put a number on it in the spec. Build the switcher as a no-framework inline control that dynamic-imports the drawer (or `client:idle`) so the Svelte runtime stays off root pages; set `prefetch: { prefetchAll: false }` in astro.config.mjs with `data-astro-prefetch` on theme links only; do not mount the WebGL stage until the first theme jump. Gate the whole feature behind a build-time flag (the parked note already models this) so PR 0 merges dark and the rollback unit is a flag flip, not a revert. Capture a real-Chrome Lighthouse baseline for /, /about, /services, /contact before ClientRouter lands.",
+  "sources": [
+   "webgl-perf",
+   "brand-founder",
+   "process-scope",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/dist/index.html",
+   "C:/git/birchdesignlab/node_modules/astro/components/ClientRouter.astro",
+   "C:/git/birchdesignlab/node_modules/astro/dist/prefetch/index.js",
+   "C:/git/birchdesignlab/astro.config.mjs",
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
+   "C:/git/birchdesignlab/docs/lab-backlog.md",
+   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+  ]
+ },
+ {
+  "id": "F003",
+  "title": "The migration target is data-face, not data-theme — it is a three-attribute migration across 9 files / 16 call sites with zero test coverage",
+  "claim": "The plan says \"ThemeBootstrap/ThemeToggle use data-theme for light/dark; migrate to data-scheme.\" Not one CSS rule in the repo is keyed on `data-theme`. Every semantic token block is keyed on `data-face`; `data-theme` is only the record of what the visitor chose, read by JS and one scoped style, and tokens.css deliberately keeps the two separable because BDL-002's room preview and /styleguide override `data-face` locally. So the real work is `data-face` -> `data-scheme` in CSS, `data-theme` -> `data-scheme` in JS, and `data-theme` re-minted with a new meaning (the school) — 9 files, 16 call sites, plus the localStorage key values, and nothing in tests/ asserts any of it.",
+  "evidence": "src/styles/tokens.css:74-80 \"Keyed on data-face, not data-theme: data-theme is what the visitor chose, data-face is what this page paints\", `:root, :root[data-face='dark']`, :106 `:root[data-face='light']`, :133-140 the no-JS duplicate marked \"KEEP IN SYNC\". Call sites: ThemeBootstrap.astro:13,17; ThemeToggle.astro:20 (`:global([data-theme='light']) .dot`),30,38-40; BarkField.astro:97,141; bdl-001/BarkEngine.svelte:98,114; bdl-002/Experiment.astro:170-175,273-275,279 (generates `:root[data-face=...]` blocks as runtime strings); bdl-003/DigCanvas.svelte:230; bdl-006/Regulator.svelte:101; styleguide.astro:332-335,460 (:460 filters `['data-theme']` only, so it breaks silently if the CSS key moves). No theme/scheme/localStorage assertion exists in any test file.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Rewrite the attribute-contract section as a three-attribute table and enumerate all 16 call sites as a spec checklist: `data-theme` = school; `data-scheme` = the visitor's light/dark choice; and decide explicitly whether `data-face` (what this page paints) is kept — BDL-002 and /styleguide depend on being able to diverge it from the visitor's choice, so collapsing it is a behaviour change, not a rename. Note BDL-002 builds its selectors as strings, so a global find/replace misses them unless the templates are included. The no-JS `prefers-color-scheme` block in tokens.css needs a per-theme answer. Land the rename as its own PR before any theme work, with the missing regression test written first.",
+  "sources": [
+   "contract-maintenance",
+   "brand-founder",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/styles/tokens.css",
+   "C:/git/birchdesignlab/src/components/ThemeBootstrap.astro",
+   "C:/git/birchdesignlab/src/components/ThemeToggle.astro",
+   "C:/git/birchdesignlab/src/experiments/bdl-002/Experiment.astro",
+   "C:/git/birchdesignlab/src/pages/styleguide.astro",
+   "C:/git/birchdesignlab/src/components/BarkField.astro"
+  ]
+ },
+ {
+  "id": "F004",
+  "title": "Every existing business-page script runs exactly once per hard load — the theme toggle goes dead, reveal animations stop, BarkField never initialises on swapped-in pages and leaks a WebGL context per navigation",
+  "claim": "Astro re-executes a script after a swap only if its `src`/`textContent` key was never seen, and every script on the business pages is byte-identical across routes (BarkField compiles to one shared hashed chunk used by index, about, contact, 404, /contact/sent and bdl-006). After the first navigation none of them re-run, while `swapBodyElement` destroys the DOM nodes they captured: ThemeToggle's listener is bound to a replaced `#theme-toggle` so the toggle stops working; BaseLayout's reveal script never re-adds `.reveal-on` so `[data-reveal]` content stays hidden for the rest of the session; index.astro's `?tune` check never re-evaluates; and BarkField never initialises the new page's `[data-bark]` canvases while its only teardown is bound to `pagehide`, which does not fire on a same-document swap — so `gl.destroy()` is never called and every navigation leaks a WebGL2 context plus a MutationObserver, an IntersectionObserver, a ResizeObserver and a passive scroll listener. A randomize button is designed to be pressed repeatedly; browsers cap live contexts and then force context loss.",
+  "evidence": "swap-functions.js:4-20 `detectScriptExecuted`/`deselectScripts`; router.js:80-108 `runScripts` skips `data-astro-exec`; router.js:388-391/441-444 registers every initial script; swap-functions.js:41-42 `oldElement.replaceWith(newElement)`. src/components/ThemeToggle.astro:24,36; src/components/BarkField.astro:39 `for (const canvas of document.querySelectorAll('[data-bark]'))`, :123-137,:144-147 cleanups, :151-156 `window.addEventListener('pagehide', ...)`; src/layouts/BaseLayout.astro:42-66; src/pages/index.astro:93-101. dist/index.html references `_astro/BarkField.astro_astro_type_script_index_0_lang.BSYZ7Lmy.js`, one chunk shared across pages.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "PR 0 is not \"add ClientRouter\": it must convert every client script on the business pages to an init/teardown pair — idempotent init on `astro:page-load`, teardown on `astro:before-swap` (BarkField draining its `cleanups` array and calling `gl.destroy()`), keeping `pagehide` only for hard navigations. Make \"no page script may assume a full document load\" a spec rule with Playwright assertions: after a client-side nav the toggle still toggles, `[data-reveal]` still reveals, and the new page's `[data-bark]` canvas has a live WebGL2 context; and after 20 randomize presses the live-context and observer counts are flat.",
+  "sources": [
+   "router",
+   "webgl-perf",
+   "main-thread",
+   "process-scope",
+   "contract-maintenance"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/BarkField.astro",
+   "C:/git/birchdesignlab/src/components/ThemeToggle.astro",
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js"
+  ]
+ },
+ {
+  "id": "F005",
+  "title": "transition:persist does not exempt the WebGL stage from the root snapshot — the persistent background is double-drawn, cross-faded against itself with plus-lighter, and the shader crossfade is invisible during the morph",
+  "claim": "`transition:persist` is purely DOM-node reuse; nothing in the persist path assigns a `view-transition-name`. A full-viewport persisted canvas is therefore captured inside `::view-transition-old(root)` / `::view-transition-new(root)` like any other content and renders twice, cross-fading with itself for the whole transition — the exact artefact a persistent stage exists to prevent. Astro's default fade keyframes set `mix-blend-mode: plus-lighter`, so a bright bark/vaporwave/dark-native field visibly blows out mid-morph. Worse, for the duration of the transition the outgoing side is a static snapshot, so a JS/shader-driven crossfade plays behind a frozen bitmap and is not what the visitor sees at the one moment it was designed for.",
+  "evidence": "swap-functions.js:1 `const PERSIST_ATTR = 'data-astro-transition-persist'` is the only attribute persist applies; :41-55 `swapBodyElement` — `newEl.replaceWith(el)` plus the astro-island props copy, no view-transition-name handling anywhere in swap-functions.js or router.js. node_modules/astro/components/viewtransitions.css:10-30 `astroFadeIn`/`astroFadeOut` both set `mix-blend-mode: plus-lighter`; dist/transitions/index.js:44-65 `fade()` uses them. router.js:327-330 `document.startViewTransition(async () => await updateDOM(...))` wraps the whole swap. src/components/BarkField.astro:5-12 renders a positioned `inset: 0` full-bleed canvas. src/lib/bark/renderer.ts is 268 lines with one hardcoded instanced-dash program — no second program, no render target, no mix uniform, i.e. no crossfade primitive.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Spec the stage as its own named group that is explicitly not animated: `transition:persist` plus a dedicated `view-transition-name: stage` and a global `::view-transition-group(stage), ::view-transition-old(stage), ::view-transition-new(stage) { animation: none; mix-blend-mode: normal; }`. Then decide which surface owns the morph and say so — either the `::view-transition` pseudo-elements own it and the canvas simply resolves to the new background after the transition settles, or the canvas owns it and the DOM swap is deliberately boring. Do not spec both. If the shader owns it, kick the crossfade off in `astro:before-preparation` so it is already in flight when the snapshot is taken. Prototype this before committing further themes to the architecture; it is the single riskiest assumption in the plan.",
+  "sources": [
+   "router",
+   "webgl-perf",
+   "design-schools"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/node_modules/astro/components/viewtransitions.css",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/index.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/src/components/BarkField.astro",
+   "C:/git/birchdesignlab/src/lib/bark/renderer.ts"
+  ]
+ },
+ {
+  "id": "F006",
+  "title": "ClientRouter swaps the Worker's hand-rolled contact error page into the live document and parks the URL on /api/contact",
+  "claim": "ClientRouter intercepts same-origin form submits and re-issues them as fetch. The happy path survives the 303, but the failure paths do not: the Worker's `errorPage()` returns 400/429/502 as `text/html` with no `astro-view-transitions-enabled` meta, and the router's guard that would normally bail on such a document is explicitly skipped when `formData` is present. The bare error page is swapped over head and body (wiping the root theme attributes per F001), `moveToLocation` leaves the address bar on `/api/contact`, and a reload or back/forward from there is a GET the Worker answers `405 Method not allowed`. The swapped document carries no ClientRouter, so it is a dead end. PR 0 ships this to the production contact page — the only revenue path on the site, already broken once by nav interception — before a single theme exists.",
+  "evidence": "node_modules/astro/components/ClientRouter.astro:110-160 submit listener sets `options.formData` and calls `navigate(action, options)`. router.js:51-72 `fetchHTML` reads only `content-type`, never `res.status`; router.js:293-296 `if (!preparationEvent.newDocument.querySelector('[name=\"astro-view-transitions-enabled\"]') && !preparationEvent.formData) { preventDefault(); return; }` — the `&& !formData` is what lets the error page through; router.js:280-289 handles the redirect case. swap-functions.js:30-40 `swapHeadElements`. worker/index.ts:169-202 `errorPage()` returns `'Content-Type': 'text/html; charset=utf-8'` with 400/429/502; :54-57 GET /api/contact → 405. src/pages/contact.astro:22-25 \"No-JS-first: a plain POST the Worker answers with a redirect\".",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Decide explicitly in the spec. Cheapest correct move: put `data-astro-reload` on every theme's contact form (ClientRouter.astro:35-37 `isReloadEl`) so submission stays a real browser navigation — the form is already no-JS-first and the 303 already works. Otherwise the Worker must stop returning hand-rolled HTML and 303 to a real themed error route (e.g. `<prefix>/contact/?error=rate`) so the swapped document is always an Astro page carrying the ClientRouter meta and the root-attribute contract. Either way tests/contact-worker must grow a case for it before ClientRouter merges.",
+  "sources": [
+   "router",
+   "content-contact",
+   "process-scope"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/components/ClientRouter.astro",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/worker/index.ts",
+   "C:/git/birchdesignlab/src/pages/contact.astro"
+  ]
+ },
+ {
+  "id": "F007",
+  "title": "The Worker hardcodes /contact/sent/ and /contact, so submitting from any theme drops the visitor back into quiet luxury mid-flow",
+  "claim": "The plan says every theme's contact form posts to the same Worker endpoint, but the Worker builds absolute, theme-less return URLs. Submitting from /t/vaporwave/contact lands on the quiet-lux /contact/sent/ (the router follows the fetch redirect and rewrites the address bar to it), and the error page's back link points at the quiet /contact — a theme change the visitor did not ask for, at the one moment the site is trying to look deliberate. `run_worker_first` is scoped to `/api/*`, so the Worker cannot infer the theme from the path.",
+  "evidence": "worker/index.ts:159-167 `sentRedirect` builds `new URL('/contact/sent/', url.origin)` with status 303; :173 `errorPage` builds `const back = new URL('/contact', url.origin)`. src/pages/contact.astro:25 posts to a bare `action=\"/api/contact\"`. node_modules/astro/dist/transitions/router.js:280-288 sets `preparationEvent.to = redirectedTo` on a redirected fetch. wrangler.jsonc `\"run_worker_first\": [\"/api/*\"]`. tests/contact-worker.test.ts:51 pins `expect(res.headers.get('location')).toBe('https://birchdesignlab.com/contact/sent/')`.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Spec a return-path contract now: a hidden `<input type=\"hidden\" name=\"return\">` (or `theme`) carrying the theme prefix, empty for quiet, validated in the Worker against an allowlist derived from src/themes/registry.ts and never echoed raw into a Location header, with `sentRedirect`/`errorPage` composing `<prefix>/contact/sent/` and `<prefix>/contact`. Add /t/<theme>/contact/sent/ to the theme getStaticPaths so the target exists, or have Contact render a sent state in place. Extend tests/contact-worker.test.ts over theme prefixes plus a rejected-prefix case.",
+  "sources": [
+   "content-contact",
+   "contract-maintenance",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/worker/index.ts",
+   "C:/git/birchdesignlab/src/pages/contact.astro",
+   "C:/git/birchdesignlab/src/pages/contact/sent.astro",
+   "C:/git/birchdesignlab/wrangler.jsonc",
+   "C:/git/birchdesignlab/tests/contact-worker.test.ts"
+  ]
+ },
+ {
+  "id": "F008",
+  "title": "\"Persistent WebGL stage\" and \"default quiet load unchanged\" cannot both hold: persist requires the element in BOTH documents, so the stage must ship in PR 0 or leak a context per hop",
+  "claim": "`transition:persist` preserves an element only when the incoming document contains a node with the same persist id; otherwise the old node is discarded with the detached body and the new one renders fresh, with no teardown hook. The quiet-lux route is one endpoint of every randomize swap, so if quiet routes omit the stage to keep the default load unchanged, every quiet→theme hop creates a fresh WebGL2 context and every theme→quiet hop abandons one un-disposed — a randomize session walks straight into the browser's live-context cap. This also makes \"build the stage inside theme 1\" impossible: the persist contract has to exist in the quiet layout first. Quiet lux additionally composes BarkField per section (88vh home hero, 44vh about band, contact rail, nothing on services), not as a page-wide backdrop, so a persistent full-page stage is a second context on the Lighthouse-100 pages.",
+  "evidence": "swap-functions.js:41-53 `swapBodyElement`: `oldElement.replaceWith(newElement)` first, then `const newEl = newElement.querySelector('[data-astro-transition-persist=\"id\"]'); if (newEl) { newEl.replaceWith(el); }` — no match, no persistence, no teardown. plan-prompt.md:12 persistent stage, :17 unchanged quiet default load, :27 theme 1 after PR 0. src/pages/index.astro, about.astro, contact.astro BarkField placements.",
+  "severity": "blocker",
+  "kind": "decision",
+  "recommendation": "Founder must pick one and the spec must carry the stage's lifetime explicitly: (a) render the stage on root routes too and re-baseline Lighthouse; (b) SSR a zero-cost persisted placeholder with the same persist id on quiet routes and mount the renderer lazily on first theme entry — recommended, quiet keeps its section fields untouched; or (c) accept per-entry context creation with a mandatory `gl.destroy()` in `astro:before-swap`. Whichever wins, the persist element, its id and a no-op renderer ship in PR 0 with quiet-as-theme; theme 1 only adds a shader.",
+  "sources": [
+   "webgl-perf",
+   "main-thread",
+   "process-scope"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/src/pages/about.astro",
+   "C:/git/birchdesignlab/src/pages/contact.astro",
+   "C:/git/birchdesignlab/src/components/BarkField.astro"
+  ]
+ },
+ {
+  "id": "F009",
+  "title": "The contrast checker named in the plan cannot be ported — every part of it that reads colors is wrong for this repo, and it throws on values already in tokens.css",
+  "claim": "scripts/check-contrast.mjs is hardcoded to a token vocabulary and a two-file cascade that do not exist here: none of its ten `--color-*` TOKEN_PAIRS names are declared in this repo (which uses `--mark`, `--field`, `--accent`, `--link`, `--on-accent`, seven `--gf-*`), its SOURCES is a literal two-entry array matched by naive `css.indexOf(selector)`, and its parser throws on anything that is not a flat hex — including the `color-mix()` this repo already uses. Under the plan's structure (~13 schools x 2 schemes = ~26 blocks) it will throw on theme 1 or silently PASS a pair that never renders. It also structurally cannot evaluate the schools that most need checking: Glassmorphism's readable surface is `rgba()` plus `backdrop-filter: blur()` composited over the live WebGL stage, and Y2K/Vaporwave grounds are gradients — values no CSS-token reader can resolve.",
+  "evidence": "C:/git/bdlBase/scripts/check-contrast.mjs parseHex `if (!/^[0-9a-f]{6}$/i.test(full)) throw new Error('not a hex color')` — verified live, `node scripts/check-contrast.mjs \"rgba(255,255,255,0.12)\" \"#ffffff\"` exits 1; `resolveToken` throws \"is not declared in tokens.css or theme.css\"; SOURCES fixed to `:root` and `:root[data-theme=\"default\"]`. C:/git/birchdesignlab/src/styles/tokens.css:70,99 `color-mix(in srgb, var(--bark-warm) 18%, transparent)`; :80-130 the actual token names. Existing house math: src/lib/color.ts (`luminance`, `contrast`, tested in tests/color.test.ts) and src/lib/oklch.ts (ratio-targeting ramp solver).",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Spec it as a new checker, not a port: enumerate blocks by regex over the theme CSS rather than a fixed SOURCES list; define the birchdesignlab pair table (mark/field, mark-muted/field, mark/field-raised, link/field, on-accent/accent, the seven gf-* pairs) and require every theme to declare the full set; add rgb()/rgba()/hsl()/oklch()/color-mix() resolution with alpha compositing, or exempt decorative tokens by name; reuse src/lib/color.ts and src/lib/oklch.ts instead of shipping a second copy of WCAG math. Make the authoritative check a rendered-pixel one in the per-theme Playwright smoke — sample painted pixels under each text run and its background — since that is the only instrument that can judge Glassmorphism over a live canvas or a theme component that hardcodes a colour outside the token blocks.",
+  "sources": [
+   "guards",
+   "design-schools",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/bdlBase/scripts/check-contrast.mjs",
+   "C:/git/birchdesignlab/src/styles/tokens.css",
+   "C:/git/birchdesignlab/src/lib/color.ts",
+   "C:/git/birchdesignlab/src/lib/oklch.ts"
+  ]
+ },
+ {
+  "id": "F010",
+  "title": "Per-theme ::view-transition choreography resolves against the DESTINATION document's CSS only, cannot live in a component's scoped <style>, and a duplicate transition:name silently aborts the whole transition",
+  "claim": "`swapHeadElements` removes the old head and appends the incoming document's head inside the `startViewTransition` update callback, so by the time the browser resolves `::view-transition-*` rules only the destination theme's stylesheets are live. A theme can never author its own exit animation in its own pack; choreography is an arrival property, owned by the destination. `persistedHeadElement` keeps a stylesheet only when its `href` is identical, so a per-theme CSS file is always torn out. Separately the `::view-transition` pseudo tree hangs off the document root, which carries no Astro scope class, so any `::view-transition-*` rule in an `.astro` scoped `<style>` will not match. And a `view-transition-name` appearing twice in one document aborts the transition entirely, degrading the morph to an instant cut with no error — a when-not-if failure across 13 hand-authored DOMs.",
+  "evidence": "swap-functions.js:30-40 `swapHeadElements` removes non-persisted head children then `document.head.append(...doc.head.children)`; :94-105 `persistedHeadElement`; :86 `this.swap = () => swap(this.newDocument)`; :120-127. events.js:118-126 `doSwap` calls `event.swap()`; router.js:210-214 inside `updateDOM`, which is the callback passed to `document.startViewTransition` at router.js:327-330.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Spec choreography as destination-owned and index the choreography table by destination only: each theme pack ships one global stylesheet (is:global or a plain imported .css, never a component scoped block) with the whole `::view-transition-*` script for arriving at that theme. For directional effects, key on `html[data-astro-transition=\"forward\"|\"back\"]` (preserved through the swap by NON_OVERRIDABLE_ASTRO_ATTRS) plus a `data-from-theme` attribute the switcher writes in `astro:before-preparation`. A true exit effect must be driven from `astro:before-swap` before `event.swap()` runs, or via GSAP Flip — document that as the escape hatch. Add a build-time lint that fails on any duplicate `transition:name` in a theme template, and a Playwright assertion that the transition's `finished` promise resolves rather than the transition being skipped.",
+  "sources": [
+   "router",
+   "contract-maintenance"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/events.js"
+  ]
+ },
+ {
+  "id": "F011",
+  "title": "noindex plus a cross-canonical to the quiet route is a conflicting pair that can drag the real business pages out of the index",
+  "claim": "The plan specifies both a noindex robots meta and a rel=canonical pointing at a different URL on the same page, on pages that are word-identical to their quiet-lux originals. Google is told simultaneously \"drop this URL\" and \"this URL and /services are the same document\"; the documented failure mode is that the noindex consolidates onto the canonical target — i.e. /, /about, /services, /contact, the only pages that earn money. The repo already established the opposite rule and follows it: every existing noindex page (/styleguide, /contact/sent, /404, the card landings) emits a self-canonical, never a cross-canonical.",
+  "evidence": "scratchpad/plan-prompt.md:16 \"Theme routes: noindex, canonical to quiet route, excluded from sitemap\"; src/components/Seo.astro:6 `const canonical = new URL(Astro.url.pathname, Astro.site);`; src/components/HeadCommon.astro:27 `{noindex && <meta name=\"robots\" content=\"noindex, nofollow\" />}`; src/pages/contact/sent.astro:3,11; src/pages/styleguide.astro:29. tests/robots.test.ts forbids Disallow lines, so /t/ cannot be robots-blocked either.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Pick one signal, not both. Ship theme routes with `noindex, nofollow` and a SELF-canonical (Seo.astro's current behaviour, unchanged) — duplicate content is a non-issue once the URL is deindexed, so the cross-canonical buys nothing and carries real downside. Write the reasoning into the spec, because \"canonical to the quiet route\" reads intuitively correct and will be re-proposed otherwise.",
+  "sources": [
+   "seo-analytics",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/Seo.astro",
+   "C:/git/birchdesignlab/src/components/HeadCommon.astro",
+   "C:/git/birchdesignlab/src/pages/contact/sent.astro",
+   "C:/git/birchdesignlab/tests/robots.test.ts"
+  ]
+ },
+ {
+  "id": "F012",
+  "title": "Adding ClientRouter silently kills GA4 pageview tracking site-wide, not just on theme routes",
+  "claim": "Zaraz's GA4 tag is configured with a load-scoped pageview trigger, and ClientRouter never produces a page load — the router swaps the document in place and dispatches only its own synthetic `astro:*` events. The moment ClientRouter lands in BaseLayout, every navigation after the first — /, /about, /services, /contact, /lab and every theme swap — stops reporting to GA4. The failure is silent: the landing pageview still fires, so the property never looks dead, it just under-reports depth. Blast radius is the whole marketing site.",
+  "evidence": "docs/analytics.md:13 \"**Trigger:** Pageview, page scope (fires on every page load)\"; node_modules/astro/dist/transitions/events.js:7-9 `const triggerEvent = (name) => document.dispatchEvent(new Event(name)); const onPageLoad = () => triggerEvent(TRANSITION_PAGE_LOAD);`; router.js has no load event anywhere; src/experiments/bdl-007/Experiment.astro:130 \"this repo has no ClientRouter\" confirms today's baseline.",
+  "severity": "blocker",
+  "kind": "gap",
+  "recommendation": "Spec an SPA-pageview bridge before ClientRouter lands: either enable Zaraz SPA/History Change pageviews or add a `document.addEventListener('astro:page-load', ...)` hook calling `zaraz.track('Pageview', {...})` for navigations only, with a first-load guard so the edge-fired landing pageview is not double-counted (the double-fire trap docs/analytics.md:34-39 warns about, in a new shape). Decide whether theme swaps count as pageviews or events — 13 schools x 4 pages will otherwise wreck the page-report distribution. Update docs/analytics.md in the same PR; it is the config of record and this changes its \"fires on every page load\" premise.",
+  "sources": [
+   "seo-analytics",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/analytics.md",
+   "C:/git/birchdesignlab/src/components/Analytics.astro",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/events.js"
+  ]
+ },
+ {
+  "id": "F013",
+  "title": "The seed renderer has no context-loss recovery, and the plan promotes it to a long-lived stage where loss becomes likely",
+  "claim": "src/lib/bark/renderer.ts never listens for `webglcontextlost`/`webglcontextrestored` — it only calls `loseContext()` on teardown — so a stage built on it goes permanently black on any context loss (GPU reset, mobile backgrounding, exceeding the context cap that F004/F008 make reachable), with no repaint path and no visible fallback.",
+  "evidence": "Repo-wide grep for `webglcontextlost` hits only src/experiments/bdl-007/stage.ts:686 and vendored three; src/lib/bark/renderer.ts:247 is the sole `WEBGL_lose_context` use and it is inside `destroy()`. docs/handoff-8-23-26.md \"Deferred, tracked\": \"BarkField WebGL context-loss recovery (only if post-return lag persists)\" — explicitly deferred, with context-loss named as the next suspect for post-return lag.",
+  "severity": "blocker",
+  "kind": "gap",
+  "recommendation": "Make context-loss handling a stated deliverable of the stage work, not a follow-up: `addEventListener('webglcontextlost', e => e.preventDefault())`, full rebuild on `webglcontextrestored`, and a CSS-gradient fallback background so a lost context degrades to the theme's flat colour rather than transparent. Port the pattern already proven in src/experiments/bdl-007/stage.ts:686-729.",
+  "sources": [
+   "webgl-perf",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/lib/bark/renderer.ts",
+   "C:/git/birchdesignlab/src/experiments/bdl-007/stage.ts",
+   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+  ]
+ },
+ {
+  "id": "F014",
+  "title": "Porting bdlBase's lighthouserc.cjs excludes every noindex page from the URL list, so the 0.90 theme-route gate would audit nothing",
+  "claim": "The spine's Lighthouse config drops any built page whose HTML contains a noindex robots meta from the URL list entirely — not just from the SEO category — and the plan makes every /t/<theme>/ route noindex. A straight port audits zero theme routes and the promised 0.90 gate asserts nothing. Its single global assertions block also cannot express two thresholds (stricter on root, 0.90 on themes).",
+  "evidence": "C:/git/bdlBase/lighthouserc.cjs:32 `if (NOINDEX_META.test(fs.readFileSync(absolutePath, 'utf8'))) continue;` inside `findHtmlUrls`, whose return is the sole source of :62 `url: findHtmlUrls(distClientDir).map(...)`, with the comment \"They are still built, served and covered by the security suite; they are simply not SEO-audited.\" plan-prompt.md:16.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Split the skip from the URL list: keep noindex pages in `url` but drop `seo` from their assertions, using LHCI `assert.assertMatrix` with two entries — `matchingUrlPattern: '^(?!.*\\\\/t\\\\/).*$'` for root (perf/a11y/best-practices at the measured baseline, seo 1.0) and `matchingUrlPattern: '/t/'` for theme routes (perf 0.90, a11y 0.95, seo dropped). The spec must say assertMatrix explicitly. Also state that LHCI only ever measures a cold direct load of /t/<theme>/ — the path no visitor takes — so the expensive moment (client-side morph: stylesheet fetch, font fetch, shader crossfade) is unmeasured and needs a separate real-Chrome timing capture.",
+  "sources": [
+   "guards",
+   "webgl-perf"
+  ],
+  "files": [
+   "C:/git/bdlBase/lighthouserc.cjs",
+   "C:/git/birchdesignlab/scripts/lab/capture-study-hero.mjs"
+  ]
+ },
+ {
+  "id": "F015",
+  "title": "The \"engineer learning design\" writeup framing breaks both the voice lock and the identity constraint",
+  "claim": "The plan's stated frame — touching on the fact the founder is an engineer learning proper high-standards design — is first-person singular and discloses the founder's occupation, and the repo has an explicit decision against both while the day-job noncompete is unresolved.",
+  "evidence": "plan-prompt.md:17. Against it: docs/lab-backlog.md:832-838 \"identity must stay obfuscated while a day-job noncompete is unresolved (founder is a 10-year engineer)… pick one register and hold it, leaning to an unnamed studio 'we'\" and the note about reviewing About's biographical specifics as identity breadcrumbs; the live breadcrumbs remain at src/pages/about.astro:32,38. docs/lab-backlog.md:720-726 logs \"Unify the voice to one register (HIGH)\" as open. Existing Lab copy holds the studio register: src/content/lab/bdl-001.md, src/pages/lab/index.astro:20.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Drop the autobiographical frame from the spec. The specimen argues the design schools, not the author's learning curve: \"a studio teaching itself twelve design languages in public\" carries the same honesty in the unnamed-studio \"we\" and names no occupation. If the founder wants the personal frame anyway, that is a deliberate reversal of the 08-18-26 constraint, must be written down as one, and needs a legal read of the noncompete first — not slipped in as writeup tone. Copy stays founder territory either way.",
+  "sources": [
+   "brand-founder",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/lab-backlog.md",
+   "C:/git/birchdesignlab/src/pages/about.astro",
+   "C:/git/birchdesignlab/src/pages/lab/index.astro"
+  ]
+ },
+ {
+  "id": "F016",
+  "title": "One /t/[theme]/[page] route over a static-import registry ships all twelve themes' CSS to every theme route — already proven by the existing lab route",
+  "claim": "The plan says to mirror src/experiments/registry.ts, which statically imports every component into one module, so Vite/Astro emit a single route-level CSS bundle served on every path of that route. This is measurably true in the shipped build: all sampled /lab/<slug> pages load the identical four stylesheets, and dist/_astro/_slug_.C0kTu0tB.css contains both BDL-006's and BDL-003's scoped selectors even on /lab/bdl-008, which renders no experiment — and that same chunk is linked from dist/index.html, so the quiet home page already downloads two unrelated experiments' CSS. Applied to twelve themes, /t/bauhaus/ would carry Cyberpunk's, Memphis's and Art Nouveau's CSS, contradicting both the perf target and the isolation premise.",
+  "evidence": "src/experiments/registry.ts:6-20 (five static imports into one Record); src/pages/lab/[slug].astro:11 imports it. `grep -o 'href=\"/_astro/[^\"]*\\.css\"' dist/lab/bdl-001/index.html` and dist/lab/bdl-008/index.html return the same four hrefs; `grep -o '\\.regulator[^{,]*' dist/_astro/_slug_.C0kTu0tB.css` → `.regulator.svelte-p12uu9`; `grep -o '\\.dig[a-z-]*'` → `.dig`; dist/index.html links `_slug_.C0kTu0tB.css`.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Do not reuse the experiments-registry shape for themes. Pin one of: (a) a physical page dir per theme importing only its own pack, generated by a scaffold script under scripts/themes/ so the 12x cost is mechanical; or (b) keep /t/[theme]/[page].astro but resolve the pack via `import.meta.glob('../themes/*/index.ts')` per path at build time. State the acceptance check as a build assertion: the stylesheet set linked from /t/<theme>/ contains no selector from any other theme. Note the transition side effect — option (a) gives each theme a distinct stylesheet href so `persistedHeadElement` swaps it correctly; option (b) risks one shared href that persists forever.",
+  "sources": [
+   "contract-maintenance"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/experiments/registry.ts",
+   "C:/git/birchdesignlab/src/pages/lab/[slug].astro",
+   "C:/git/birchdesignlab/dist/index.html"
+  ]
+ },
+ {
+  "id": "F017",
+  "title": "\"PR 0\" is five independent PRs bundled together, and is silent on four changes it cannot ship without",
+  "claim": "The listed PR 0 (copy extraction + ClientRouter + registry + switcher + quiet-as-theme) bundles a content-collection migration, a router adoption that changes every navigation and the contact form, a route-generation layer, a new persistent UI widget and a package restructure — none of which share a rollback unit. It is also missing: the script-lifecycle migration (F004), the attribute migration across 9 files (F003), a canonical override that does not exist in Seo.astro (F021), and any captured pre-change baseline.",
+  "evidence": "plan-prompt.md:27 \"Build order: 0 copy extraction + ClientRouter + registry + switcher + quiet-as-theme.\" src/layouts/BaseLayout.astro:42-66 reveal script; `grep -rln data-theme src/` returns 9 files; src/components/Seo.astro:4-6 has no canonical prop; no baseline artifact named anywhere; no .github and no lighthouserc in the repo.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Split into PR 0a copy extraction (no behaviour change, verifiable by diffing rendered HTML); 0b attribute-contract migration including data-face; 0c ClientRouter + script lifecycle + contact-form decision + after-swap handlers; 0d registry/getStaticPaths + Seo canonical prop + sitemap filter + noindex; 0e switcher. Capture the baseline (Lighthouse plus screenshots of all four business pages in both schemes) as the first commit of 0a.",
+  "sources": [
+   "process-scope"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
+   "C:/git/birchdesignlab/src/components/Seo.astro",
+   "C:/git/birchdesignlab/src/components/ThemeToggle.astro"
+  ]
+ },
+ {
+  "id": "F018",
+  "title": "The Lab schema cannot express \"catalog row links to the live switcher AND a /lab page carries the school writeups\"",
+  "claim": "The plan wants the specimen both to live on the business pages and to host per-school principle writeups, but src/pages/lab/[slug].astro generates no page for an experiment that has an `href`, so choosing the href form silently deletes the writeup surface. The href-less form has its own constraints: the schema's superRefine requires `howto`, capped at four lines, and an entry with no registry component renders the \"no interactive stage yet\" fallback.",
+  "evidence": "src/lib/lab-schema.ts `href: z.string().startsWith('/').optional()` with the comment that href entries link from the catalog instead of getting a /lab/<id> page; src/pages/lab/[slug].astro getStaticPaths filters `({data}) => data.status === 'live' && !(data.type === 'experiment' && data.href)`; the schema's `howto` is `.min(1).max(4)` with the comment \"a piece that needs five lines is too confusing, and that is the bug\"; `experimentComponents[designation]` undefined renders the empty-stage fallback.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Pick the no-href form: a normal /lab/bdl-0xx experiment page whose body is the school essays, with a four-line howto wall label pointing the reader at the live site (\"Press the randomize control on any main page\" / \"Open the drawer to pick a school\" / \"Every school has a light and a dark face\"), plus an entry in src/experiments/registry.ts rendering an in-page stage so the page is not the empty-stage fallback. If the founder instead wants the catalog to deep-link to the live thing, the writeups need a different home and the spec must say where.",
+  "sources": [
+   "brand-founder"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/lib/lab-schema.ts",
+   "C:/git/birchdesignlab/src/pages/lab/[slug].astro"
+  ]
+ },
+ {
+  "id": "F019",
+  "title": "The font research the plan says exists for build #1 does not exist",
+  "claim": "The plan states the parked note holds partial verdicts for Art Deco, Y2K/Vaporwave, Glassmorphism and Memphis. It holds none — those words appear once, in a sentence excluding them from demo scope — and the plan's font-research subagent scope also omits Y2K/Vaporwave, the first theme to be built. Under the plan as written, build 1 has zero verified typeface and nothing in the pipeline will produce one. The plan's parenthetical \"Poiret One + heavy CSS ornament\" is not sourced from the note it cites.",
+  "evidence": "C:/git/demo-magnolia-mane-salon/docs/superpowers/specs/09-13-26-theme-packs-approach-b-note.md has font tables for exactly five schools (Bauhaus, Grandmillennial, Swiss-modern, Neo-brutalist, Cottagecore); grep for Art Deco|Y2K|Vaporwave|Glassmorphism|Memphis returns one line each, all line 24, all in the exclusion sentence; grep for \"Poiret\" returns nothing. plan-prompt.md:23,25.",
+  "severity": "blocker",
+  "kind": "flaw",
+  "recommendation": "Correct the plan line to say the note covers five schools only, and widen the font-research scope to eight (Art Deco, Y2K, Vaporwave, Glassmorphism, Memphis, Art Nouveau, Mid-century/atomic, Cyberpunk) with the build-1 school first in the queue. Separately drop the vi+latin-ext requirement for this repo: the site is English-only, and the note's vi rule already bans Marcellus, which this repo self-hosts and uses today — the current quiet-luxury theme violates the rule the plan wants to impose on twelve new ones. Ship on latin-ext-only picks (which reinstates Jost, Cinzel, Italiana, Bodoni Moda, Bebas Neue) and record vi status per face as metadata so the spine can re-pick later; porting a pack is a font substitution, not a rebuild.",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md",
+   "C:/git/demo-magnolia-mane-salon/docs/superpowers/specs/09-13-26-theme-packs-approach-b-note.md"
+  ]
+ },
+ {
+  "id": "F020",
+  "title": "Y2K and Vaporwave are two different schools sharing one slot, and that slot is the first build and the quality gate",
+  "claim": "The plan lists \"Y2K/Vaporwave\" as one registry entry and makes it build 1 followed by a review stop. They are distinct aesthetics overlapping only in a magenta/cyan palette: Y2K (1999-2003) is chrome bevels, inflatable 3D, lens flare, squarish techno type, optimistic light-on-white; Vaporwave is an ironic 1980s collage — grid horizon, katakana, VHS scanlines, serif type, dark. Type, ornament and ground colour all point opposite ways. One component set built to be both reads as unplaceable \"retro\" — the five-second failure the switcher exists to avoid — on the theme that sets the bar for every review after it. The plan's own descriptor \"dark-native\" is true of Vaporwave and false of Y2K.",
+  "evidence": "plan-prompt.md:7 lists \"Y2K/Vaporwave\" as a single entry among thirteen; :27 \"1 Y2K/Vaporwave first (founder favorite, dark-native, proves the WebGL stage). Then we STOP FOR REVIEW AND TWEAKS.\"",
+  "severity": "blocker",
+  "kind": "decision",
+  "recommendation": "Founder picks one before the spec is written. Recommend Vaporwave for build 1: genuinely dark-native, it is the one that actually wants a WebGL horizon behind it, and its ornament is procedural (scanlines, grid, chromatic offset) rather than asset-bound. Park Y2K as its own later registry entry — cheap once Vaporwave exists, and the fact that they share a palette and nothing else is precisely what makes them read as separate schools. If both are wanted they take two of the twelve slots, not one.",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+  ]
+ },
+ {
+  "id": "F021",
+  "title": "Seo.astro has no canonical override and the sitemap filter has no /t/ entry, so the plan's routing signals are not implementable as written",
+  "claim": "Even setting aside whether the cross-canonical is wise (F011), the plan assumes a capability the codebase lacks: Seo.astro declares `Props { title; description; ogImage? }` with no canonical prop and derives canonical from `Astro.url.pathname` with no escape hatch. The same component does expose an `ogImage` override with a comment explaining why one was needed for /lab/<slug>, so the precedent exists but was never applied to canonical. Implementing the plan requires threading a prop through Seo.astro → HeadCommon.astro → the theme layout, and nothing in tests/ covers canonical output, so a wrong implementation ships unnoticed. The sitemap filter in astro.config.mjs is an unanchored substring blocklist with no `/t/` entry.",
+  "evidence": "src/components/Seo.astro:4 `interface Props { title: string; description: string; ogImage?: string }`; :6 `const canonical = new URL(Astro.url.pathname, Astro.site);`; :10 ogImage override with the comment at :7-9; src/components/HeadCommon.astro:16-17 props passthrough; astro.config.mjs:76-82 sitemap filter, six substrings, none `/t/`.",
+  "severity": "major",
+  "kind": "flaw",
+  "recommendation": "If F011 is accepted, the spec states \"canonical stays self-derived; no Seo.astro change needed\" and the work disappears — but the sitemap filter still needs an anchored `/t/` exclusion plus a vitest asserting no /t/ path appears in the built sitemap. If the founder overrides F011, the spec must name the three-file prop chain (Seo.astro, HeadCommon.astro, the theme layout) and add a vitest asserting the emitted canonical for a /t/ route, since canonical has zero test coverage today.",
+  "sources": [
+   "seo-analytics",
+   "content-contact",
+   "contract-maintenance",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/Seo.astro",
+   "C:/git/birchdesignlab/src/components/HeadCommon.astro",
+   "C:/git/birchdesignlab/astro.config.mjs"
+  ]
+ },
+ {
+  "id": "F022",
+  "title": "Theme fonts are guaranteed to FOUT after the morph, and fontaine is wired with one global serif fallback list plus hand-written fallback names",
+  "claim": "Astro's router awaits only `link[rel=stylesheet]` from the incoming document before swapping; the new theme's font preloads and `@font-face` files are inserted at swap time and start downloading after the DOM has already changed, so the showpiece transition lands on fallback type and re-lays-out mid-animation. Compounding it: `FontaineTransform.vite` is given one global `fallbacks: ['Georgia','Times New Roman','serif']`, so a Bauhaus geometric sans or Swiss grotesque gets metric-matched fallbacks computed from a serif — measurable CLS on exactly the LCP element; the generated `\"<Family> fallback\"` names are inserted into the `--font-*` stacks by hand, so every pack must declare them; and BaseLayout hardcodes two preloads for Marcellus and Spectral, so every theme route preloads the quiet-luxury faces and never its own.",
+  "evidence": "node_modules/astro/dist/transitions/router.js:163-183 `preloadStyleLinks` iterates `newDocument.querySelectorAll('head link[rel=stylesheet]')` only; swap-functions.js:30-40. src/layouts/BaseLayout.astro:5-16 explains the preloads exist because \"the largest type on the site FOUT-swaps\"; :17-18,:32-33 the two hardcoded links. astro.config.mjs:92-101 the global fallbacks array and the by-hand comment; node_modules/fontaine/dist/index.d.mts:73-84 `fallbacks: string[] | Record<string,string[]>` plus `categoryFallbacks`. src/styles/tokens.css:28-35 the hand-inserted \"Marcellus fallback\"/\"Spectral fallback\"; docs/handoff-8-23-26.md trap #5.",
+  "severity": "major",
+  "kind": "flaw",
+  "recommendation": "Spec a `fonts` block in each pack's meta.ts (imports, preload hrefs capped at two faces, stacks including the fontaine fallback name), emit preloads from it rather than from literals, and change astro.config.mjs to the per-family `fallbacks` record / `categoryFallbacks` form so sans and mono packs get sans and mono metrics. Add a font-readiness step to the transition: on drawer open or in `astro:before-preparation`, inject `<link rel=preload as=font crossorigin>` for the target theme's woff2 and await `document.fonts.load()` before starting the view transition. Add a build assertion that no theme token stack is missing its fallback name.",
+  "sources": [
+   "webgl-perf",
+   "contract-maintenance",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
+   "C:/git/birchdesignlab/src/styles/tokens.css",
+   "C:/git/birchdesignlab/astro.config.mjs"
+  ]
+ },
+ {
+  "id": "F023",
+  "title": "Scroll is force-reset to top before any restore hook runs, scroll-behavior:smooth will animate the restore, focus drops to <body>, and randomize pollutes history",
+  "claim": "Four consequences the plan's one line about best-effort scroll restoration does not cover. (a) `moveToLocation` calls `scrollTo({left:0,top:0,behavior:'instant'})` for any navigation whose pathname differs — every / to /t/<theme>/ morph — and `astro:after-swap` fires only after that, so a restore is always a second visible jump and an after-swap handler is overwritten. (b) base.css sets `html { scroll-behavior: smooth }`, so a restore using the two-argument `scrollTo(x,y)` form smooth-animates the page back down mid-transition. (c) `saveFocus` preserves focus only when the active element is inside a `[data-astro-transition-persist]` subtree; otherwise focus resets to `<body>`, so a keyboard user pressing randomize loses their place and `#main[tabindex=\"-1\"]` is never focused. (d) each randomize pushes a history entry, so Back walks through themes.",
+  "evidence": "router.js:7 `history.scrollRestoration = 'manual'`; :13 `samePage` compares pathname+search; :136-141 `if (!intraPage) { scrollTo({left:0,top:0,behavior:'instant'}); scrolledToTop = true; }`; :156-158 the same again with no hash; :215-216 `moveToLocation(...); triggerEvent(TRANSITION_AFTER_SWAP);`. src/styles/base.css:4. swap-functions.js:72-93 `saveFocus`/`restoreFocus`. src/layouts/BaseLayout.astro:38 `<main id=\"main\" tabindex=\"-1\">`. router.js:19-35 `announce()` reads `document.title`.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Spec the mechanism: capture scrollY in `astro:before-preparation`, restore in `astro:page-load` (after moveToLocation has run) with `scrollTo({top,left,behavior:'instant'})`, never the two-arg form. State the acceptance criterion — themes have different section heights, so same-pixel is wrong; anchor on a shared `transition:name`d landmark or shared section ids (#doors, #process) with a proportional fallback. Use `navigate(url,{history:'replace'})` for randomize so Back does not walk themes. Require the randomize button and drawer to live inside the persist subtree so `saveFocus` keeps focus, and move focus to `#main` on `astro:page-load` for link navigations only. Require a distinct, meaningful `<title>` per theme route for the route announcer.",
+  "sources": [
+   "router",
+   "process-scope",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js",
+   "C:/git/birchdesignlab/src/styles/base.css",
+   "C:/git/birchdesignlab/src/layouts/BaseLayout.astro"
+  ]
+ },
+ {
+  "id": "F024",
+  "title": "ogImageFor silently serves the home card for every theme route, and the fallback is enshrined in a test rather than raised as an error",
+  "claim": "src/lib/og/manifest.ts resolves a card by exact route match and ends `?? 'home'`, so `/t/bauhaus/services` returns the home card — no warning, no build failure — and tests/og-manifest.test.ts explicitly locks that behaviour in. scripts/og/generate.ts writes only `[...OG_PAGES, ...OG_LAB_CARDS]`, so no theme card exists to serve even if one were requested. This matters more than the noindex suggests: the point of the feature is pasting theme-route links to prospects, and those surfaces (Slack, iMessage, LinkedIn DM) are exactly the ones that scrape OG.",
+  "evidence": "src/lib/og/manifest.ts:30-34 `return OG_PAGES.find((p) => p.route === clean)?.name ?? 'home';` with OG_PAGES (:9-15) listing only '/', '/services', '/about', '/contact', '/lab'; tests/og-manifest.test.ts:33-36 `expect(ogImageFor('/definitely-404')).toBe('home')`; scripts/og/generate.ts `for (const card of [...OG_PAGES, ...OG_LAB_CARDS])`. plan-prompt.md:16 only says \"Check scripts/og prebuild handles or skips theme routes\".",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Founder decides between (a) strip the leading `/t/<theme>` segment in ogImageFor so a theme route inherits its base page's card — cheapest, one regex, one test; (b) one card per theme generated in scripts/og/generate.ts from the theme registry, the showy option that actually sells the feature when a link is pasted; or (c) explicitly accept the home card. The spec must state it, because (c) is what happens by default and by accident.",
+  "sources": [
+   "seo-analytics",
+   "content-contact"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/lib/og/manifest.ts",
+   "C:/git/birchdesignlab/scripts/og/generate.ts",
+   "C:/git/birchdesignlab/tests/og-manifest.test.ts"
+  ]
+ },
+ {
+  "id": "F025",
+  "title": "Theme routes cover four pages, so the nav's Lab link, /contact/sent and /404 all drop the visitor out of the theme mid-journey, and theme stickiness is undecided",
+  "claim": "The plan scopes /t/<theme>/ to /, /about, /services, /contact, but the header nav includes Lab on every business page, the contact form's success target is a fifth page, and 404 exists. A visitor in vaporwave who clicks \"Visit the lab\" then \"Contact\" lands in quiet luxury; Lab pages carry no ClientRouter at all. Whether the theme is URL-only or sticky via localStorage is undecided and conflicts with \"default load stays quiet\". The Lab's own visual identity is a logged open thread this work partly pre-empts.",
+  "evidence": "src/components/SiteHeader.astro links ['/services','/lab','/about','/contact']; src/pages/contact/sent.astro is the 303 target and uses BaseLayout + BarkField; src/pages/404.astro exists as a root-only route; docs/lab-backlog.md:500 \"the Lab is unbound\"; :552 \"Lab visual identity… Nothing decided… Worth deciding before the Lab has many live pieces\".",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Decide and record: (1) /contact/sent/ (and 404) get themed routes, or the theme is explicitly dropped on submit and the switcher says so; (2) clicking Lab from a theme route either exits the theme deliberately with a visible \"back to the house style\" beat — defensible, the Lab is the unbound register and should not wear a costume — or the Lab shell inherits tokens only; (3) the switcher does not render on /lab/*, since it is the specimen's subject; (4) URL-only session (recommended) versus sticky with link rewriting. Update the Lab-visual-identity backlog thread rather than leaving it implying nothing is decided.",
+  "sources": [
+   "brand-founder",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/SiteHeader.astro",
+   "C:/git/birchdesignlab/src/pages/contact/sent.astro",
+   "C:/git/birchdesignlab/src/pages/404.astro",
+   "C:/git/birchdesignlab/docs/lab-backlog.md"
+  ]
+ },
+ {
+  "id": "F026",
+  "title": "The queued Astro 5 → 7 upgrade targets exactly the router/transitions surface this plan builds on, and is sequenced after it",
+  "claim": "The backlog's two-major Astro upgrade pulls astro, esbuild, sharp and @astrojs/svelte, touching the transitions layer the whole plan depends on, and the backlog itself records that the test suite does not catch the failure mode (rendering and CSS drift), requiring a manual browser pass. Doing it after a dozen themes multiplies that pass from ~8 routes to ~56 routes across two schemes, plus per-theme view-transition choreography. The plan never mentions the upgrade.",
+  "evidence": "docs/lab-backlog.md:634 \"Astro 5 to 7.1.6 (two majors) pulls astro, esbuild, sharp, and @astrojs/svelte 7 to 9\"; :640 \"The 123 tests plus astro check catch structural breakage; they do not catch rendering and CSS drift, so it needs a real browser pass… Fully reversible: revert the commit, redeploy.\" package.json pins `\"astro\": \"^5.7.0\"`.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "The spec must state the dependency order. Recommended: land Wrangler 4.35 and Astro 7 before PR 0, while the browser-pass surface is still four business pages plus the Lab — the upgrade's reversibility argument only holds while the revert is small. If the founder declines, the spec must record that every theme is being built against a router version scheduled for replacement.",
+  "sources": [
+   "process-scope",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/lab-backlog.md",
+   "C:/git/birchdesignlab/package.json"
+  ]
+ },
+ {
+  "id": "F027",
+  "title": "Copy-extraction loader choice is undecided and the two options are mutually exclusive for this copy",
+  "claim": "The copy is simultaneously structured (doors, four process steps with h3+p, CTA label+href pairs, kicker/h1/subline triples) and carries inline emphasis markup, and Astro 5 cannot serve both from one loader: file()/YAML entries have no `rendered` and cannot be render()ed, while a glob() markdown body yields one HTML blob instead of the named fields per-theme components must address.",
+  "evidence": "Structured shapes: src/pages/services.astro:50-78 (ol.steps, four li each h3+p), src/pages/index.astro:44-61 (two door articles), :86-89 / about.astro:48-51 / services.astro:85-88 (three different CTA labels). Inline markup: about.astro:18-20 `<em>Birch</em>`, `<strong>to shine</strong>`, `<em>bright</em>`; :23 `<em>beorc</em>`; index.astro:29 three `<span>`s; contact.astro:46 `&middot;`. node_modules/astro/dist/content/runtime.js:549 `entry?.rendered?.html`. Existing precedent is glob() markdown only (src/content.config.ts:7-10, `collections = { lab }`).",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Founder chooses before the spec: (A) a `file()`/glob YAML-JSON loader with a Zod schema of named fields, emphasis carried as a small allowlisted inline syntax or `set:html` on the two or three fields that actually need it, listed explicitly; or (B) glob() markdown with one file per copy block so render() works per block. Note the billboard's three `<span>`s in index.astro:29 are layout, not copy, and stay in the theme component as `words: ['Birch','Design','Lab']`.",
+  "sources": [
+   "content-contact",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/content.config.ts",
+   "C:/git/birchdesignlab/src/pages/about.astro",
+   "C:/git/birchdesignlab/src/pages/services.astro",
+   "C:/git/birchdesignlab/src/pages/index.astro"
+  ]
+ },
+ {
+  "id": "F028",
+  "title": "Copy parity is the cheapest strong guard but cannot be a naive page-text diff while the home page's loud block is lab-collection-derived and conditional",
+  "claim": "A test asserting every theme page's visible text equals the quiet page's text proves copy extraction worked and catches drift — but the featured-specimens block is not page copy: its words come from the lab collection at build time, sorted, sliced to two, and the whole section is conditionally rendered. A naive comparison will either be unstable as the lab collection changes or silently pass while the block is absent from both sides.",
+  "evidence": "src/pages/index.astro:16-19 `getCollection('lab', ({data}) => data.status === 'live' && !data.noindex)` sorted by designation descending and `.slice(0,2)`; :65 `{featured.length > 0 && (` gates the whole `<section class=\"loud\">`; :73-75 renders `entry.data.designation` and `entry.data.summary`; fixed copy at :68-69,:79; arrow glyphs `&rarr;` at :62,79 are aria-hidden decoration.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Spec the guard concretely: after `npm run build`, extract normalized visible text from each dist/t/<theme>/<page>/index.html and compare against the quiet counterpart, with every theme calling one shared `featuredSpecimens()` helper (one getCollection call, one sort, one slice) rather than reimplementing the query. Assert `featured.length === 2` so the conditional cannot make the comparison vacuous, and strip aria-hidden decoration in the normalizer.",
+  "sources": [
+   "content-contact",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/tests/specimen-count.test.ts"
+  ]
+ },
+ {
+  "id": "F029",
+  "title": "LHCI scope explodes to ~168-288 runs (~35 minutes on the founder's own machine) and the plan never says when it runs",
+  "claim": "13 schools x 4 pages + 4 root pages = 56 URLs; at the source config's numberOfRuns:3 that is 168 Lighthouse runs, and double that if both schemes are covered. bdlBase's own CI measures 670 seconds for 18 URLs x 3 runs (~12.4 s/run), so a full pass here is roughly 35 minutes — with no CI runner to absorb it, and the plan does not say whether this sits in `npm run verify`.",
+  "evidence": "C:/git/bdlBase/lighthouserc.cjs `numberOfRuns: 3` with the comment that numberOfRuns:1 produced \"a DIFFERENT 1-2 pages each time (0.92-0.94 against a 0.95 performance threshold)\"; C:/git/bdlBase/.github/workflows/ci.yml lhci comment \"audit:lh is 670 of this job's 690 seconds\"; C:/git/birchdesignlab/package.json `\"verify\": \"npm run test && npm run check && npm run build\"`; no .github in this repo.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Founder picks the trigger and scope and the spec names both. Recommended split: check:contrast joins `verify` (pure Node over CSS, milliseconds); the Playwright smoke joins `verify` only if it stays under ~60s, otherwise `npm run test:e2e` on demand; LHCI is on-demand only (`npm run audit:lh`) defaulting to the 4 root pages plus one page per theme (~16 URLs, ~10 min), with full coverage behind a flag. Do not lower numberOfRuns to 1 — bdlBase already reproduced that flake.",
+  "sources": [
+   "guards",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/bdlBase/lighthouserc.cjs",
+   "C:/git/bdlBase/.github/workflows/ci.yml",
+   "C:/git/birchdesignlab/package.json"
+  ]
+ },
+ {
+  "id": "F030",
+  "title": "Astro kills all view-transition animation under prefers-reduced-motion with !important, the no-VT fallback path ignores ::view-transition CSS entirely, and the shader crossfade and keyboard shortcut are ungated",
+  "claim": "Three degraded paths the plan is silent on. (a) Astro's compiler-injected viewtransitions.css contains a `@media (prefers-reduced-motion)` block setting `animation: none !important` on `::view-transition-group/old/new(*)`, so every per-theme choreography is nuked for reduced-motion visitors and the founder cannot author even a gentle opacity crossfade without overriding Astro's own stylesheet; the runtime warning about this exists only in DEV. (b) In browsers without `document.startViewTransition` the router runs a simulation that sets `data-astro-transition-fallback` and awaits only newly-appearing entries in `document.getAnimations()` — `::view-transition-*` rules are inert there and a rAF/GSAP ticker produces no Web Animations entries, so nothing is awaited and the morph is a bare cut. (c) That same reduced-motion media block does not touch a rAF-driven shader crossfade or GSAP Flip, and the randomize keyboard shortcut must not fire inside editable targets.",
+  "evidence": "node_modules/astro/components/viewtransitions.css:56-66; injection at node_modules/astro/dist/core/compile/compile.js:28 `transitionsAnimationURL: \"astro/components/viewtransitions.css\"`; ClientRouter.astro:61-66 `if (import.meta.env.DEV && window.matchMedia('(prefers-reduced-motion)').matches) console.warn(...)`; :67 `if (supportsViewTransitions || getFallback() !== 'none')`; router.js:331-353 the fallback shim and :186-200 `animate(phase)`.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Spec all three as first-class. Reduced motion: state plainly that theme changes become an instant cut, and if that is unacceptable define one global higher-specificity override re-enabling a single short opacity fade — in the spec, so it is not rediscovered per theme; explicitly gate the shader crossfade and any GSAP timeline to cut under reduced motion. No-VT browsers: pick `fallback` deliberately — `fallback=\"none\"` turns off link/form interception entirely there, giving a clean full-page load with correct theme bootstrap and zero per-theme fallback authoring, likely the right call for a 13-theme site; if `animate` is wanted, budget a second `[data-astro-transition-fallback]` authoring per theme and note GSAP timelines will not be awaited. The randomize shortcut ignores editable targets.",
+  "sources": [
+   "router",
+   "main-thread",
+   "contract-maintenance"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/components/viewtransitions.css",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/router.js",
+   "C:/git/birchdesignlab/node_modules/astro/components/ClientRouter.astro"
+  ]
+ },
+ {
+  "id": "F031",
+  "title": "The proposed theme-pack section list is inconsistent, incomplete, encodes quiet-luxury IA into every school, and has no typed contract",
+  "claim": "The pack list (Header/Footer/Hero/Opener/Doors/Loud/About/Services/Contact) mixes two granularities — Hero/Opener/Doors are home-page sections while About/Services/Contact are whole pages — and gets the current structure wrong three ways: the home page has five sections, not four (`closer` is missing); `loud` is not a home section, it appears on services too; and Opener/Doors are quiet-luxury naming a Bauhaus or Swiss pack is then obliged to instantiate, constraining schools that want a different skeleton. It also misses routes a theme must own (/contact/sent, 404), and \"copy extraction to a pages collection\" does not cover the home page's getCollection('lab') specimen query or the BarkCredit pin, which are data, not copy.",
+  "evidence": "src/pages/index.astro:26 hero, :34 opener, :42 doors, :66 loud, :84 closer; src/pages/services.astro:83 `<section class=\"loud\" data-reveal>`; src/pages/index.astro:16-19 the lab query, :31 `<BarkCredit href=\"/lab/bdl-001\" .../>`; src/content.config.ts:12 `export const collections = { lab }` (no pages collection exists); src/pages/contact/sent.astro and src/pages/404.astro are root-only.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Make the contract route-shaped, not section-shaped: a pack exports one component per route (home, about, services, contact, sent, notFound) plus Header/Footer chrome, and sections are private to each pack. Pin a typed ThemeMeta/ThemePack interface in the spec (id, name, era, one-line lesson, schemes, defaultScheme, fonts {import, preload, stacks}, optional transition class, optional lazy fx returning a teardown, hidden flag for quiet). State the 12x cost explicitly: a copy change is one collection edit and zero pack edits, but a structural change — a nav item, a new section, a new page — is 12 pack edits plus 12 contrast runs plus 12 smokes. That asymmetry is the argument for keeping every pack's markup driven by the same props object.",
+  "sources": [
+   "contract-maintenance",
+   "main-thread"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/src/pages/services.astro",
+   "C:/git/birchdesignlab/src/content.config.ts",
+   "C:/git/birchdesignlab/src/pages/contact/sent.astro"
+  ]
+ },
+ {
+  "id": "F032",
+  "title": "Zaraz's consent banner is destroyed by the body swap and its loader is never re-executed — or its inline config re-runs and double-inits",
+  "claim": "Two mechanics collide with the Zaraz setup and the plan addresses neither. (1) The body swap preserves only persisted subtrees, and Zaraz's consent UI renders in a shadow root inside `.cf_modal_container` in body — so a first-time visitor who presses randomize before answering the banner loses it mid-decision, and GA4 stays denied with no further prompt. (2) The loader cannot rebuild it: the edge-injected `/cdn-cgi/zaraz/s.js` arrives in the swapped-in head already stamped `data-astro-exec` and inert. Conversely, inline scripts are keyed on `textContent`, so if Cloudflare's inline Zaraz config differs per URL it is not deduped and re-executes on every swap — the double-fire condition docs/analytics.md exists to prevent. Both branches are bad and which one occurs is an empirical fact about the live edge nobody has checked.",
+  "evidence": "swap-functions.js:41-42 `oldElement.replaceWith(newElement)`; :4-8 `const key = script.src ? new URL(script.src, location.href).href : script.textContent;`; router.js runScripts `if (script.dataset.astroExec === '') continue;`. docs/analytics.md:80-81 the shadow-root modal, :50-52 Analytics purpose false until Accept, :34-39 the double-fire trap.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Before the spec is approved, run one manual check on a deployed preview with ClientRouter enabled and record (a) whether `.cf_modal_container` survives a swap, (b) whether the inline Zaraz config re-executes. Then spec the fix — most likely re-show consent via the Zaraz consent Web API on `astro:page-load` when `zaraz.consent.getAll()` is still undecided — and mark nothing Zaraz-owned as persist (you do not control its markup). Update docs/analytics.md in the same PR.",
+  "sources": [
+   "seo-analytics"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/analytics.md",
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js"
+  ]
+ },
+ {
+  "id": "F033",
+  "title": "A full-page fixed stage defeats the off-screen pause that was added specifically to fix the reported scroll lag",
+  "claim": "BarkField's only power guard besides tab visibility is an IntersectionObserver that pauses the rAF loop when the canvas scrolls out of view. A stage sitting behind everything for the whole page is always intersecting, so the loop runs continuously for the entire session — reintroducing exactly the full-viewport-canvas-vs-scroll-compositing problem PR #60 fixed, and on mobile turning it into a session-long battery draw.",
+  "evidence": "src/components/BarkField.astro:63-83 `let inView = true; const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches;` driven by the IntersectionObserver; the in-file comment at :51-58 states the reason (\"repainting it behind content the visitor has scrolled past competes with the browser's scroll compositing (the 'scroll lags' report)\"); docs/handoff-8-23-26.md Performance/GPU section records the founder-reported lag and #60 as its fix; renderer.ts:179,216 caps at BARK_FPS via FRAME_INTERVAL.",
+  "severity": "major",
+  "kind": "flaw",
+  "recommendation": "Spec an explicit power budget for the persistent stage that does not depend on intersection: cap devicePixelRatio (bdl-007 landed on 1.5), render at a low steady fps or go fully idle once the crossfade settles (render-on-demand rather than a permanent loop), keep the visibilitychange pause, and add a coarse-pointer/low-memory branch that drops to a static gradient. Verify on a real phone via scripts/lab/, not the preview pane.",
+  "sources": [
+   "webgl-perf"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/BarkField.astro",
+   "C:/git/birchdesignlab/src/lib/bark/renderer.ts",
+   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+  ]
+ },
+ {
+  "id": "F034",
+  "title": "Lighthouse cannot select a color scheme, so half of every theme's palette is un-audited",
+  "claim": "Lighthouse has no prefers-color-scheme setting and the ported config passes only `--headless=new --no-sandbox`. Here the painted scheme is decided at runtime by a localStorage-reading inline script that, in a fresh Lighthouse profile, falls through to `matchMedia('(prefers-color-scheme: light)')` — so LHCI audits whichever single face headless Chrome's default media value produces, and the other face of all ~13 themes never gets an accessibility or performance score.",
+  "evidence": "C:/git/bdlBase/lighthouserc.cjs `settings: { chromeFlags: ['--headless=new','--no-sandbox'], onlyCategories, skipAudits }` — no scheme knob. src/components/ThemeBootstrap.astro `const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; const site = stored || system;`. tokens.css:80 the bare dark default, :106 the light inverse.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Stop trying to make Lighthouse cover dark. Assign scheme coverage to Playwright, which has a first-class `colorScheme` context option: run the per-theme smoke twice per theme with axe-core injected, and let LHCI cover one scheme per route for perf/SEO only. The spec must state which scheme LHCI audits rather than leaving it to a Chrome default that can change between versions.",
+  "sources": [
+   "guards"
+  ],
+  "files": [
+   "C:/git/bdlBase/lighthouserc.cjs",
+   "C:/git/birchdesignlab/src/components/ThemeBootstrap.astro",
+   "C:/git/birchdesignlab/src/styles/tokens.css"
+  ]
+ },
+ {
+  "id": "F035",
+  "title": "There is no Playwright test runner in this repo, and the plan's smoke assertion list omits the paths ClientRouter takes over",
+  "claim": "\"One Playwright smoke test per theme route\" is not an addition to existing tooling: `@playwright/test` is not installed, there is no playwright.config.ts and no test:e2e script — the bare `playwright` dependency is imported only by ad-hoc scripts. Separately, ClientRouter intercepts form submits and routes the contact POST through its own fetch, a behaviour change across all twelve themes that the current vitest suite structurally cannot see.",
+  "evidence": "C:/git/birchdesignlab/package.json devDependencies lists `\"playwright\": \"^1.62.1\"` only; node_modules/@playwright does not exist; imported solely by scripts/docs/build-pdf.mjs:23, scripts/docs/check-pages.mjs:18, scripts/lab/capture-study-hero.mjs:29. node_modules/astro/components/ClientRouter.astro:110-153 the submit listener. tests/contact-worker.test.ts and tests/contact-validate.test.ts exercise the worker and validator directly, not a browser.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Spec the runner as a deliverable: add @playwright/test, a playwright.config.ts with a webServer running astro preview, and a test:e2e script (bdlBase's e2e/ has nothing worth porting). Per-theme assertions in priority order: (1) the scheme attribute and .js survive the swap; (2) zero console errors and zero failed requests during and after the swap; (3) copy parity against the quiet route; (4) the contact form POST on at least one theme route lands correctly under ClientRouter, given the prior 405 Static-Assets interception trap; (5) computed contrast sampled from the live DOM, the only check that catches a theme component hardcoding a colour outside the token blocks.",
+  "sources": [
+   "guards"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/package.json",
+   "C:/git/birchdesignlab/node_modules/astro/components/ClientRouter.astro",
+   "C:/git/birchdesignlab/tests"
+  ]
+ },
+ {
+  "id": "F036",
+  "title": "\"STOP FOR REVIEW\" has no defined artifact, and the repo has no pipeline that can produce one",
+  "claim": "The plan makes review-between-themes the central quality gate but never says what is reviewed. There is no multi-route, multi-scheme capture script, no Lighthouse config, and the preview pane cannot composite WebGL — so a review of a WebGL-backed theme would be conducted on prose.",
+  "evidence": "package.json has playwright as a devDependency but no config and no shots/test:e2e script; `ls scripts/screenshots` contains only redact-region.py; scripts/lab/capture-study-hero.mjs is single-purpose. context-pointers.md:3 \"no CI, no Lighthouse config in this repo\". plan-prompt.md:21 defers all guards to an unscheduled bucket; :27 \"We STOP FOR REVIEW AND TWEAKS between each theme buildout.\"",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Make the review artifact a deliverable of PR 0, not of the deferred guards bucket: scripts/themes/capture.mjs producing 4 routes x 2 schemes x 2 viewports per theme via GPU-flagged headless Chromium, plus a recorded transition clip and a named real-device pass (the mobile framing rework is still pending device validation). Define the review checklist once so every theme is judged on the same evidence.",
+  "sources": [
+   "process-scope"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/package.json",
+   "C:/git/birchdesignlab/scripts/screenshots",
+   "C:/git/birchdesignlab/scripts/lab/capture-study-hero.mjs"
+  ]
+ },
+ {
+  "id": "F037",
+  "title": "Both browser guards will run on software rasterisation, and the planned \"assert WebGL init\" cannot detect it",
+  "claim": "Headless Chromium silently falls back to SwiftShader unless given GPU flags — a trap this repo has documented and worked around once — and the ported LHCI config passes no such flags, so the 0.90 perf gate on WebGL-backed theme routes would measure software rendering. The plan's stated smoke assertion \"WebGL init\" is vacuous because `getContext('webgl2')` succeeds under SwiftShader too.",
+  "evidence": "C:/git/birchdesignlab/scripts/lab/capture-study-hero.mjs:49-56 \"Headless Chromium falls back to SwiftShader (software GL) unless told otherwise, which both pegs every core and renders this site's bark fields differently from a real browser\" with `args: ['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist']`; C:/git/bdlBase/lighthouserc.cjs `chromeFlags: ['--headless=new','--no-sandbox']`; src/lib/bark/renderer.ts:120 `canvas.getContext('webgl2', {...})`.",
+  "severity": "major",
+  "kind": "flaw",
+  "recommendation": "Add `--use-angle=d3d11 --enable-gpu --ignore-gpu-blocklist` to both the LHCI chromeFlags and the Playwright launch args, and state in the spec that a perf number taken without them is not comparable to one taken with them (house rule: never mix software and GPU results in one delivery). Replace the WebGL-init assertion with an UNMASKED_RENDERER_WEBGL read via WEBGL_debug_renderer_info that fails on /SwiftShader|llvmpipe/, plus an assertion that the persisted canvas is the same element instance before and after the swap — the claim the persistent stage actually makes.",
+  "sources": [
+   "guards"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/scripts/lab/capture-study-hero.mjs",
+   "C:/git/bdlBase/lighthouserc.cjs",
+   "C:/git/birchdesignlab/src/lib/bark/renderer.ts"
+  ]
+ },
+ {
+  "id": "F038",
+  "title": "There is no recorded Lighthouse baseline for the root pages, so \"stricter on root\" has no number behind it",
+  "claim": "The only evidence for the business pages' scores is prose in handoff documents, the most recent dated 08-19-26 — before the 09-01-26 Zaraz/GA4 edge cutover and before BDL-008 shipped. The repo contains no lighthouserc, no .lighthouseci output and no recorded run, so the first LHCI run will likely red on pre-existing drift and the threshold will get loosened for the wrong reason.",
+  "evidence": "docs/handoff-8-19-26.md:136 \"Lighthouse held at 100/100/100/100 on all four business pages\"; docs/handoff-2026-07-16.md:38 \"Mobile Lighthouse scored 100/100/100/100 on four pages and 99 performance on /about at core-site launch\"; no lighthouserc.* and no .github in the repo; docs/lab-backlog.md:184 already records \"Lighthouse was not run against the deployed specimen\".",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Make measuring the baseline a step of the guards PR, before any theme exists: land lighthouserc.cjs, run it against current main, and commit the four root scores — with the form factor and throttling used, since the source config sets neither and Lighthouse defaults to mobile emulation with CPU throttling — into the spec. Set the root threshold to the measured value, not the remembered 100; a measured shortfall is a pre-existing regression to triage in its own PR, not something to discover mid-theme-build.",
+  "sources": [
+   "guards"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/handoff-8-19-26.md",
+   "C:/git/birchdesignlab/docs/lab-backlog.md",
+   "C:/git/bdlBase/lighthouserc.cjs"
+  ]
+ },
+ {
+  "id": "F039",
+  "title": "transition:persist on the Svelte switcher copies props and re-renders the island by DEFAULT, and only works if the directive is on the astro-island itself",
+  "claim": "`shouldCopyProps` returns true when `data-astro-transition-persist-props` is absent, so the default for a persisted island is to copy the incoming page's props onto the surviving node and set `ssr=\"\"`, re-rendering it — the DOM node persists, the component state does not. The plan says the switcher \"persists across swaps\" without saying which; if it takes a `currentTheme` prop (which it must, to show what is active) props differ on every theme route and it re-renders on every swap, dropping drawer-open state and any in-flight animation. The props-copy branch is also gated on `newEl.localName === 'astro-island'`, so wrapping the island in a persisted `<div>` silently gets node reuse with no props update, and any route that omits the switcher drops the old node entirely.",
+  "evidence": "swap-functions.js:106-112 `const shouldCopyProps = (el) => { const persistProps = el.dataset.astroTransitionPersistProps; return persistProps == null || persistProps === 'false'; }` and :43-53 `if (newEl) { newEl.replaceWith(el); if (newEl.localName === 'astro-island' && shouldCopyProps(el) && !isSameProps(el, newEl)) { el.setAttribute('ssr',''); el.setAttribute('props', newEl.getAttribute('props')); } }`.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Decide and write it down: either (a) `transition:persist-props` on the switcher island and have it read the active theme from the root dataset on `astro:after-swap` rather than from a prop — state survives, no re-render, and this matches \"floating, persists across swaps, drawer listing schools\"; or (b) accept the re-render and keep no state worth losing (stateless button plus a `<dialog>` outside the island). Either way require the directive on the island element itself, and require every theme route — plus /lab, /privacy, /404, /contact/sent if reachable without a hard load — to render the switcher with the identical persist id.",
+  "sources": [
+   "router"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js"
+  ]
+ },
+ {
+  "id": "F040",
+  "title": "A persisted element keeps its outgoing scoped class after the stylesheet that defined it has been deleted",
+  "claim": "`swapBodyElement` moves the OLD DOM node into the new document, so a persisted element keeps whatever Astro/Svelte scoped class it was rendered with (`astro-XXXX` / `svelte-XXXX`), while `swapHeadElements` has just removed the stylesheet that defined that class — a persisted element styled by a per-theme scoped style loses its styling mid-transition and keeps it lost.",
+  "evidence": "swap-functions.js:30-40 `swapHeadElements` removes old head children, keeping only elements matched by `persistedHeadElement` (:94-105: same persist id, or an identical `link[rel=stylesheet][href]`); :41-53 `swapBodyElement` then does `newEl.replaceWith(el)` with the old node.",
+  "severity": "major",
+  "kind": "flaw",
+  "recommendation": "State in the spec that any element carrying `transition:persist` is styled only by CSS whose `<link href>` is byte-identical across every theme (so `persistedHeadElement` keeps it) — never by an Astro or Svelte scoped style in a theme pack. That covers the stage, the switcher and anything else persisted.",
+  "sources": [
+   "contract-maintenance"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/node_modules/astro/dist/transitions/swap-functions.js"
+  ]
+ },
+ {
+  "id": "F041",
+  "title": "The plan never says what happens to JSON-LD on theme routes; the default is 13 pages each declaring itself the business entity",
+  "claim": "Structured data lives inside page components, not a shared layer: index.astro renders StructuredData (ProfessionalService + WebSite, both with `url` hardcoded to `/`) and services.astro renders the Service node. The plan assigns each theme its own page components while listing \"SEO head\" as shared, so whether those nodes ride along on /t/<theme>/ is undefined. The default is 13 distinct noindexed URLs each asserting a ProfessionalService node whose url is `/`. The repo already established and wrote down the opposite rule.",
+  "evidence": "src/lib/seo/organization.ts:148 \"Callers must skip this for noindexed entries, the same as the breadcrumb\"; :60 `url: new URL('/', base).href`; src/pages/lab/[slug].astro:53-54,:91-92 `{!entry.data.noindex && <JsonLd slot=\"head\" data={breadcrumb} />}`; src/pages/index.astro:25; src/pages/services.astro:12; plan-prompt.md:13.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Add a one-line rule to the spec: theme components must not render StructuredData.astro or JsonLd.astro — structured data is emitted on the canonical quiet routes only, consistent with organization.ts:148. Enforce with a vitest or build-time assertion over the emitted /t/ HTML, because 13 copies of a Services page make a copy-paste leak near-certain.",
+  "sources": [
+   "seo-analytics"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/lib/seo/organization.ts",
+   "C:/git/birchdesignlab/src/pages/lab/[slug].astro",
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/src/pages/services.astro"
+  ]
+ },
+ {
+  "id": "F042",
+  "title": "docs/brand-brief.md is a closed record; the plan directs an edit to it rather than a new document",
+  "claim": "The plan says to update docs/brand-brief.md because it says business-page visuals are not up for redesign, but that file is explicitly frozen as a failure record, and the sentence being cited is about type/palette/material feel in the context of drawing a mark — scoped to what the mark designer must not reopen — not about page design.",
+  "evidence": "docs/brand-brief.md header block: \"ANSWERED 08-13-26. The mark is locked. … The rest of the brief is kept as written, because the failure record is what made the round work.\" The cited sentence sits in \"The short version\"; the brief's own scope line: \"This brief deliberately does not recommend a direction.\"",
+  "severity": "major",
+  "kind": "tweak",
+  "recommendation": "Leave the brief's body untouched. Add a dated note under Outcome / \"Still open\" saying the business pages now render in twelve design schools as a Lab specimen and naming what stays invariant (default load, wordmark, mark, quiet-school palette), and carry the substantive decisions in docs/lab-backlog.md plus the new spec. A one-line pointer preserves the record the brief exists to be.",
+  "sources": [
+   "brand-founder"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/docs/brand-brief.md"
+  ]
+ },
+ {
+  "id": "F043",
+  "title": "What stays constant across schools — wordmark, locked mark, mark colour — is undecided, and the locked mark is tuned to exactly two backgrounds",
+  "claim": "The plan says each theme owns all visuals including header and footer, and puts a transition:name on the logo, but the identity is a Marcellus smallcaps text wordmark plus a locked mark whose colour depends on mix-blend-mode against two specific fields. Twelve schools x two schemes is up to 24 grounds; screen-on-charcoal and multiply-on-paper are defined for two of them. A Bauhaus League Spartan wordmark is a different identity, not a styled one, and a theme author short on options will reach for the one-colour flattening the founder declined on merit.",
+  "evidence": "src/components/SiteHeader.astro renders `<a class=\"wordmark smallcaps\" href=\"/\">` as live text, inheriting whatever face a theme sets. docs/brand-brief.md Outcome: \"On the night face the neutral is warm stone #a89f8f, blended screen on charcoal; on the day face it is leather #4a3a2c, blended multiply on paper. Geometry is identical across both faces and every lockup\" and the one-colour artwork entry \"Declined on merit (founder, 08-13-26)… The two overlapping strokes are the idea… flattening them removes the mark.\" docs/lab-backlog.md:510-513 forbids reopening it as an oversight.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Add an \"identity invariants\" section to the spec stating per element: the wordmark stays Marcellus smallcaps in every school — the constant the visitor tracks through the morph, which is also what makes transition:name on it legible rather than a costume change; themes may set its size and colour but not its face. If a school shows the locked mark, its pack must declare a field colour from the approved pair or omit the mark. Flattening the mark to one colour for a school is off the table.",
+  "sources": [
+   "brand-founder"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/components/SiteHeader.astro",
+   "C:/git/birchdesignlab/docs/brand-brief.md",
+   "C:/git/birchdesignlab/docs/lab-backlog.md"
+  ]
+ },
+ {
+  "id": "F044",
+  "title": "The specimen's designation is unassigned; the next free number is BDL-010 and the entry fits neither existing type cleanly",
+  "claim": "The plan never assigns a number, and the numbering state makes it non-obvious: 004 was retired, 009 was taken a week ago. The entry is also not a `study` — that schema branch is `.strict()` and requires client, liveUrl and hero, and the genre-studies convention is about fictional businesses, which this is not.",
+  "evidence": "src/content/lab/ holds bdl-001, 002, 003, 005, 006, 007, 008, 009 — no 004; docs/lab-backlog.md:17 records 004's reassignment to the Loom (since retired to the attic); src/content/lab/bdl-009.md is `designation: BDL-009 … status: forthcoming` stood up 09-06-26; src/lib/lab-schema.ts study branch requirements; docs/lab-backlog.md:22-27 on genre studies.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Fix it in the spec: BDL-010, `type: experiment`, `device: universal`, `status: forthcoming` until the first two schools ship (forthcoming generates no page, the same discipline used on BDL-009). Note the catalog sorts by designation.localeCompare descending, so 010 leads the Lab.",
+  "sources": [
+   "brand-founder"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/content/lab/",
+   "C:/git/birchdesignlab/docs/lab-backlog.md",
+   "C:/git/birchdesignlab/src/lib/lab-schema.ts"
+  ]
+ },
+ {
+  "id": "F045",
+  "title": "The contrast-hard list is inverted: the named neon schools pass WCAG trivially and unnamed Bauhaus fails at its defining palette",
+  "claim": "Cyberpunk and Vaporwave neon on dark are not contrast-hard: #00ffff on #0a0a12 is 15.72:1 and #ff71ce on #01012b is 8.17:1, both far past AA. Bauhaus, which the plan never flags, fails: #0000ff on black is 2.44:1 (below even the 3:1 non-text floor), #ffff00 on white 1.07:1, #e3000b on black 4.27:1 (below AA for normal text). So a dark Bauhaus cannot use blue for anything and a light Bauhaus cannot use yellow for anything — removing two thirds of the only palette that makes it Bauhaus. Cyberpunk's real failure is halation, not ratio: saturated neon on near-black passes the number while being painful at body size, which the checker cannot express.",
+  "evidence": "Computed with the very script the plan proposes to port, C:/git/bdlBase/scripts/check-contrast.mjs: `\"#0000ff\" \"#000000\"` → 2.44:1; `\"#ffff00\" \"#ffffff\"` → 1.07:1; `\"#e3000b\" \"#000000\"` → 4.27:1; `\"#00ffff\" \"#0a0a12\"` → 15.72:1; `\"#ff71ce\" \"#01012b\"` → 8.17:1. plan-prompt.md:7 lists Bauhaus with no contrast caveat; :5 gives no dark-variant guidance beyond \"Every school has light + dark\".",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "The spec needs a per-school dark-variant doctrine decided up front, not improvised per build. Bauhaus dark: primaries become poster blocks and never text or links; body is white on near-black, blue lifts toward ultramarine/cyan only inside large filled shapes. Swiss dark: a straight negative print, correct and cheap because there is no ornament to relight. Cottagecore dark: there is no historical dark cottagecore — the honest variant is lamplight (deep forest or ink-brown ground, cream ink, warm low key), not inverted gingham, and saying so is the interesting part. Grandmillennial is miscast as light-native: lacquered hunter-green and oxblood rooms with gold make its dark variant the easiest. Cyberpunk: gate on a rule the checker cannot express — neon reserved for display sizes, rules and glows; body copy at a desaturated off-white.",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/git/bdlBase/scripts/check-contrast.mjs",
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+  ]
+ },
+ {
+  "id": "F046",
+  "title": "Distinctness is required only for Bauhaus vs Swiss, but the registry contains four collision clusters and no mechanism enforces separation",
+  "claim": "The plan names exactly one adjacency to defend. The confirmed list contains at least four clusters that will collapse without an explicit rule: Bauhaus/Memphis/Y2K (bright geometry on light — Memphis is literally the 1981 inversion of Bauhaus); Glassmorphism/Cyberpunk/Vaporwave (dark + blur + magenta-cyan glow); Art Nouveau/Art Deco/Grandmillennial (all three collapse to gold serif on dark green inside a frame); Mid-century/Bauhaus (geometric abstraction separated only by warmth and wood). The theme package carries no field in which a separation rule could live, and no guard can see a style collision. The plan also miscategorises Glassmorphism, which is the light-native school of the set.",
+  "evidence": "plan-prompt.md:7 (thirteen schools, one defended pair); :13 the pack contents with no signature or forbids field; :21 guards limited to contrast, Lighthouse and one smoke per route.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Give meta.ts two required fields — a one-sentence `signature` (what a non-designer names in five seconds) and a `forbids` list of tokens/motifs owned by a neighbour — and lint that forbidden values do not appear in that pack's CSS. Proposed separations: Bauhaus = primary red/yellow/blue plus black on white, hard-edged, grid-aligned, forbids pastel/pattern fills/squiggles/brown/texture. Memphis = pastel plus black, off-grid, squiggle/terrazzo/dot fills, forbids the primary triad. Swiss = monochrome, one grotesk, flush-left, enormous whitespace, forbids colour beyond one accent and all ornament. Mid-century = warm mustard/teal/burnt orange on walnut, starburst and boomerang, wood grain, forbids the primary triad and pure white grounds. Art Nouveau = asymmetric whiplash plant curves, muted olive/aubergine/mustard, lettering bending with the frame, forbids straight rules, symmetry and gold. Art Deco = bilateral symmetry, sunburst and ziggurat, chevron rules, black + gold + jade, forbids florals and asymmetric curves. Grandmillennial = printed repeating textile (toile, chintz), scallops, skirts, chinoiserie, forbids metallic gradients and geometric sunbursts. Glassmorphism = frosted light translucency with hairline borders over a colourful blurred field, stays light-dominant, forbids neon and scanlines. Cyberpunk = neon on near-black with signage density and glow, forbids frosted panels. Vaporwave = grid horizon, scanlines, katakana, chromatic offset, forbids chrome bevels (Y2K's).",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+  ]
+ },
+ {
+  "id": "F047",
+  "title": "Three schools cannot be built from CSS, and the theme package has no slot for the assets they need",
+  "claim": "Art Nouveau (Mucha-style whiplash floral frames), Art Deco (fan, sunburst, ziggurat corners, chevron rules) and Grandmillennial chinoiserie/toile are drawn-artwork schools. Border-radius, gradients and clip-path produce a passable Deco sunburst at a stretch and produce nothing that reads as Art Nouveau or toile. The theme package as defined has no assets directory, no SVG slot and no provenance field, and the plan's only stated fallback is sourced from a note that does not contain it.",
+  "evidence": "plan-prompt.md:13 pack contents verbatim, no asset slot; :23 attributes the Poiret One fallback to the parked note, and grep for \"Poiret\" in that note returns nothing; :17 frames the build as a Lab specimen discussing the principles of each school, making provenance part of the deliverable's content.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "Add `assets/` and an `ornament.provenance` field to the theme package contract, and decide the sourcing rule before the spec: original vector drawing, public-domain source (Mucha died 1939; period Deco and toile pattern books likewise), or generated. Whichever it is, the Lab writeup states it — a portfolio piece claiming design authorship while shipping traced public-domain Mucha needs to say so, and saying so is more interesting than hiding it. These three schools are also the ones that will move page weight, so fix an ornament budget per theme now and settle the OG-route question (F024) before the ornament-heavy build, not after.",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md",
+   "C:/git/demo-magnolia-mane-salon/docs/superpowers/specs/09-13-26-theme-packs-approach-b-note.md"
+  ]
+ },
+ {
+  "id": "F048",
+  "title": "Thirteen schools, not a dozen, and the portfolio is judged on the weakest one",
+  "claim": "The plan lists thirteen confirmed schools plus two under consideration while describing the target as \"roughly a dozen\". Under per-theme components that is 117 bespoke components, 26 contrast blocks, 13 smoke specs and ~13 font pairs. The stated purpose is a crowning portfolio piece; a visitor who hits randomize four times and lands on two costume-shop approximations has judged the set, not its best member. The plan already concedes \"we may build a few then pick up others on later sessions\" — a six-theme plan described as a thirteen-theme plan.",
+  "evidence": "plan-prompt.md:7 thirteen names; :13 nine components per pack; :21 three guards per theme; :27 the concession.",
+  "severity": "major",
+  "kind": "decision",
+  "recommendation": "Spec a first tranche of six chosen to span the axes, with the registry left open so later schools land without a refactor: Vaporwave (loud retro, dark-native, stage proof), Grandmillennial (ornate historical, asset proof, its dark variant is the good one), Swiss-modern (restrained typographic, cheapest, best contrast story), Bauhaus (geometric primary, hardest dark variant, tests the distinctness lint against Swiss and Memphis), Cottagecore (organic soft, the honest-lamplight dark essay), Glassmorphism (the only legibility-coupled school, proves the pixel-sampling guard). Leave Memphis, Deco, Nouveau, Mid-century, Neo-brutalist and Cyberpunk as a second tranche. Say in the spec that the switcher ships at six: randomize over six excellent schools reads as confidence, over thirteen uneven ones as a demo reel. Related sequencing note: build 2 should be a light-native ornament-heavy school and build 3 Glassmorphism, since those prove stage handoff and stage-plus-contrast coupling; Swiss belongs last because it proves nothing.",
+  "sources": [
+   "design-schools"
+  ],
+  "files": [
+   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+  ]
+ },
+ {
+  "id": "F049",
+  "title": "The home opener copy is SITE_DESCRIPTION verbatim; extracting it to a collection re-creates the drift site.ts was written to kill",
+  "claim": "index.astro's opener subline is not independent copy — it is SITE_TAGLINE plus the hook, byte-identical to SITE_DESCRIPTION, which also feeds the home meta description, the ProfessionalService/WebSite/Service JSON-LD and public/site.webmanifest. Moving it into a pages collection without deriving it from site.ts gives that one sentence two owners.",
+  "evidence": "src/pages/index.astro:37-38 renders the concatenation of src/lib/seo/site.ts:18-19 (SITE_TAGLINE) and :26-27 (SITE_DESCRIPTION); index.astro:13 `const description = SITE_DESCRIPTION;`; consumers at src/lib/seo/organization.ts:62,:95,:201; site.ts:1-10 states the constants exist precisely because these had already drifted.",
+  "severity": "major",
+  "kind": "gap",
+  "recommendation": "State in the spec which direction the dependency runs. Cleanest: the collection entry for the home opener references the constant (a resolved-at-build marker, or site.ts becomes the collection's source for that field) and a vitest asserts `openerSubline === SITE_DESCRIPTION`. Do not let the YAML carry a copy of that sentence.",
+  "sources": [
+   "content-contact"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/pages/index.astro",
+   "C:/git/birchdesignlab/src/lib/seo/site.ts",
+   "C:/git/birchdesignlab/src/lib/seo/organization.ts"
+  ]
+ },
+ {
+  "id": "F050",
+  "title": "/api/contact does not exist under astro dev, so the planned per-theme Playwright smoke cannot cover the submit path, and the existing worker test pins the literal redirect",
+  "claim": "The per-theme smoke will not exercise the contact form end to end: /api/contact is Worker-only and absent from astro dev/preview, and the existing vitest asserts the exact quiet-lux redirect URL, so any theme-aware return path fails it.",
+  "evidence": "package.json:10 `\"dev\": \"astro dev\"` versus :19 `\"dev:worker\": \"npm run build && wrangler dev\"`; worker/index.ts:1-6 \"Static pages are served by the assets layer before this code runs; the only requests that reach it are ones that match no file\"; tests/contact-worker.test.ts:51 `expect(res.headers.get('location')).toBe('https://birchdesignlab.com/contact/sent/')`.",
+  "severity": "minor",
+  "kind": "gap",
+  "recommendation": "Spec that the per-theme contact smoke runs against `wrangler dev`, not `astro dev` — or that the theme smoke asserts only the no-JS markup contract (method=post, action=/api/contact, honeypot field named `company`, the return-path hidden input) with redirect behaviour covered by an extended tests/contact-worker.test.ts parameterised over theme prefixes plus a rejected-prefix case.",
+  "sources": [
+   "content-contact"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/package.json",
+   "C:/git/birchdesignlab/tests/contact-worker.test.ts",
+   "C:/git/birchdesignlab/worker/index.ts"
+  ]
+ },
+ {
+  "id": "F051",
+  "title": "robots.txt cannot be used to keep the ~48 duplicate theme URLs out of crawl, by deliberate test policy",
+  "claim": "The obvious reflex — `Disallow: /t/` — is barred by an existing test with the reasoning in its name. So the spec must accept that Googlebot will crawl 12-13 schools x 4 pages of word-identical copy, discovered through switcher links sitting on the indexed business pages themselves. The plan's only containment is the sitemap filter, which controls submission, not discovery or crawl, and the plan does not say whether the switcher's links are real crawlable anchors or JS-driven.",
+  "evidence": "tests/robots.test.ts:16-18 `it('disallows nothing, because Disallow would hide the noindex tag', () => { expect(robots).not.toMatch(/^Disallow:\\s*\\S/m); });`; public/robots.txt is four lines, Allow: / only; plan-prompt.md:15-16; astro.config.mjs:76-82 the unanchored substring filter.",
+  "severity": "minor",
+  "kind": "decision",
+  "recommendation": "State in the spec that robots.txt is not touched, and why (cite the test), and decide the switcher's link semantics: crawlable `<a href>` plus noindex (clean, costs crawl budget on ~48 dupes) versus `rel=\"nofollow\"` on switcher links to damp discovery. Make the sitemap filter anchored rather than a bare `page.includes('/t/')`, since a future route containing `/t/` would be silently dropped.",
+  "sources": [
+   "seo-analytics"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/tests/robots.test.ts",
+   "C:/git/birchdesignlab/public/robots.txt",
+   "C:/git/birchdesignlab/astro.config.mjs"
+  ]
+ },
+ {
+  "id": "F052",
+  "title": "Whether /t/quiet/* is emitted is undecided, and the default emits a fourth-wall duplicate of the four money pages",
+  "claim": "The plan says quiet lux stays at /, /about, /services, /contact AND is registered as theme 'quiet' so randomize can return to it. If getStaticPaths iterates the registry unfiltered, registering quiet produces /t/quiet/, /t/quiet/about/, /t/quiet/services/, /t/quiet/contact/ — four URLs byte-identical to the four highest-value pages on the domain, differing only in path. That is the worst duplicate pair in the set and it exists purely as a registry side effect rather than a decision.",
+  "evidence": "plan-prompt.md:10 \"quiet lux stays at /, /about, /services, /contact. Others at /t/<theme>/... via getStaticPaths over src/themes/registry.ts ... Quiet lux also registered as theme 'quiet' so randomize can return to it.\"; src/experiments/registry.ts is the cited pattern to mirror.",
+  "severity": "minor",
+  "kind": "decision",
+  "recommendation": "Spec it explicitly: the registry entry for `quiet` carries a flag (e.g. `route: '/'` or `hidden`) that excludes it from getStaticPaths, and the switcher maps theme 'quiet' to the bare business-page URLs. Add a test asserting no /t/quiet/* page is emitted, since the registry-driven build makes this a one-line regression.",
+  "sources": [
+   "seo-analytics"
+  ],
+  "files": [
+   "C:/git/birchdesignlab/src/experiments/registry.ts"
+  ]
+ }
+]

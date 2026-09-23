@@ -1,0 +1,3332 @@
+[
+ {
+  "fonts": [
+   {
+    "name": "Inter",
+    "static_package": "@fontsource/inter",
+    "variable_package": "@fontsource-variable/inter",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "body",
+    "why": "Near-universal UI sans; huge weight range keeps legibility stable over a busy blurred/colourful field, which glassmorphism demands. Ships variable."
+   },
+   {
+    "name": "Poppins",
+    "static_package": "@fontsource/poppins",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "No variable axis package (geometric circles read soft at low weight/blur but no fluid weight control); also over-claimed by neobrutalism/general web-safe use."
+   },
+   {
+    "name": "Manrope",
+    "static_package": "@fontsource/manrope",
+    "variable_package": "@fontsource-variable/manrope",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Redundant with Plus Jakarta Sans pick; no italic limits accent flexibility."
+   },
+   {
+    "name": "Plus Jakarta Sans",
+    "static_package": "@fontsource/plus-jakarta-sans",
+    "variable_package": "@fontsource-variable/plus-jakarta-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "heading",
+    "why": "Clean geometric-humanist hybrid, wide variable range, friendly rounded terminals suit soft frosted-panel UI headings."
+   },
+   {
+    "name": "Outfit",
+    "static_package": "@fontsource/outfit",
+    "variable_package": "@fontsource-variable/outfit",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Redundant geometric sans, thinner strokes fade over blurred/light backgrounds at body sizes."
+   },
+   {
+    "name": "DM Sans",
+    "static_package": "@fontsource/dm-sans",
+    "variable_package": "@fontsource-variable/dm-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Strong alternate body pick but redundant once Inter is chosen; kept out to avoid two near-identical humanist sans."
+   },
+   {
+    "name": "Sora",
+    "static_package": "@fontsource/sora",
+    "variable_package": "@fontsource-variable/sora",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Rounded geometric closer to a friendly/soft-UI school signature; redundant with heading pick, no italic."
+   },
+   {
+    "name": "Urbanist",
+    "static_package": "@fontsource/urbanist",
+    "variable_package": "@fontsource-variable/urbanist",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Thin geometric strokes disappear over colourful blurred fields at low weight; redundant with heading pick."
+   },
+   {
+    "name": "Lexend",
+    "static_package": "@fontsource/lexend",
+    "variable_package": "@fontsource-variable/lexend",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Reading-proficiency-optimized humanist sans; wide stance is functional but not distinctly glass, redundant with body pick, no italic."
+   },
+   {
+    "name": "Figtree",
+    "static_package": "@fontsource/figtree",
+    "variable_package": "@fontsource-variable/figtree",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Generic geometric grotesk, no differentiation from heading/body picks, narrower weight floor (300)."
+   },
+   {
+    "name": "Onest",
+    "static_package": "@fontsource/onest",
+    "variable_package": "@fontsource-variable/onest",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Newer geometric sans, functionally redundant with Plus Jakarta Sans/Inter, no italic."
+   },
+   {
+    "name": "Instrument Sans",
+    "static_package": "@fontsource/instrument-sans",
+    "variable_package": "@fontsource-variable/instrument-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Weight range too narrow (400-700, no light/thin) for legibility to flex against a variable-brightness blurred background."
+   },
+   {
+    "name": "Geist",
+    "static_package": "@fontsource/geist",
+    "variable_package": "@fontsource-variable/geist",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Vercel/dev-tool coded neo-grotesk better suited to a Swiss/technical school; redundant with Inter for body."
+   },
+   {
+    "name": "Space Grotesk",
+    "static_package": "@fontsource/space-grotesk",
+    "variable_package": "@fontsource-variable/space-grotesk",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Squarish display grotesk works well for stat callouts/labels on glass cards without competing with the softer heading face; kept off Vaporwave's heading slot to avoid collision."
+   },
+   {
+    "name": "Syne",
+    "static_package": "@fontsource/syne",
+    "variable_package": "@fontsource-variable/syne",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Quirky/expressive display letterforms (flared apertures) read as maximalist or editorial, not clean glass UI; no italic."
+   },
+   {
+    "name": "Unbounded",
+    "static_package": "@fontsource/unbounded",
+    "variable_package": "@fontsource-variable/unbounded",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Heavy blocky geometric display fits brutalism/vaporwave signature territory, too chunky for frosted-panel restraint."
+   },
+   {
+    "name": "Albert Sans",
+    "static_package": "@fontsource/albert-sans",
+    "variable_package": "@fontsource-variable/albert-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Undifferentiated neo-grotesk, redundant with body/heading picks."
+   },
+   {
+    "name": "Be Vietnam Pro",
+    "static_package": "@fontsource/be-vietnam-pro",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "No variable package despite wide static weight set; redundant humanist-geometric character vs. Inter."
+   },
+   {
+    "name": "Red Hat Display",
+    "static_package": "@fontsource/red-hat-display",
+    "variable_package": "@fontsource-variable/red-hat-display",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Corporate/enterprise character is sturdier and less airy than the soft look glassmorphism wants; redundant with heading pick."
+   },
+   {
+    "name": "Hanken Grotesk",
+    "static_package": "@fontsource/hanken-grotesk",
+    "variable_package": "@fontsource-variable/hanken-grotesk",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Not on candidate list; verified as a viable alt-body (see notes) but not selected over Inter for this school."
+   },
+   {
+    "name": "Sofia Sans",
+    "static_package": "@fontsource/sofia-sans",
+    "variable_package": "@fontsource-variable/sofia-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Not on candidate list; verified as a viable alt-heading (see notes) but not selected."
+   },
+   {
+    "name": "Schibsted Grotesk",
+    "static_package": "@fontsource/schibsted-grotesk",
+    "variable_package": "@fontsource-variable/schibsted-grotesk",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Not on candidate list; verified as a viable alt-accent (see notes) but narrower low-weight range (floor 400) than Space Grotesk's 300."
+   }
+  ],
+  "notes": "All 19 candidate lookups done via npm view (both @fontsource/ and @fontsource-variable/ scopes) and api.fontsource.org/v1/fonts/<slug>; both sources reachable, no fallback needed. Poppins and Be Vietnam Pro exist only as static packages (E404 on -variable scope), confirmed by fontsource API variable:false. All 19 candidates have latin in their subsets. No mono face fits glassmorphism's signature (frosted panels/UI, not code); omitted rather than forced. Space Grotesk chosen for accent instead of heading specifically to keep clear of Vaporwave's likely retro-tech heading signature. Three off-list faces verified the same way (npm view + fontsource API), all exist/latin/variable: Hanken Grotesk (viable Inter alternative for body, slightly more character in the grotesk terminals), Sofia Sans (viable Plus Jakarta Sans alternative for heading, extremely wide weight range 100-900 with italics, very soft geometric feel matching frosted UI), Schibsted Grotesk (viable Space Grotesk alternative for accent, has italics which Space Grotesk lacks, useful for emphasis chips on glass cards).",
+  "safe_picks": {
+   "heading": "Plus Jakarta Sans",
+   "body": "Inter",
+   "accent": "Space Grotesk"
+  },
+  "school": "glassmorphism"
+ },
+ {
+  "fonts": [
+   {
+    "name": "Cormorant Garamond",
+    "static_package": "@fontsource/cormorant-garamond",
+    "variable_package": "@fontsource-variable/cormorant-garamond",
+    "exists": true,
+    "latin": true,
+    "role": "body",
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "readable old-style Garamond descendant, high-contrast thins fit toile/chintz elegance; use as body text"
+   },
+   {
+    "name": "Cormorant",
+    "static_package": "@fontsource/cormorant",
+    "variable_package": "@fontsource-variable/cormorant",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "too close to Cormorant Garamond (its own display-cut sibling); redundant with the body pick, would blur the pairing"
+   },
+   {
+    "name": "EB Garamond",
+    "static_package": "@fontsource/eb-garamond",
+    "variable_package": "@fontsource-variable/eb-garamond",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "solid Garamond but Cormorant Garamond already covers the body-Garamond slot with more period ornament; keep one Garamond, not two"
+   },
+   {
+    "name": "Playfair Display",
+    "static_package": "@fontsource/playfair-display",
+    "variable_package": "@fontsource-variable/playfair-display",
+    "exists": true,
+    "latin": true,
+    "role": "heading",
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "high-contrast Didone, exactly the ornate display serif the brief calls for"
+   },
+   {
+    "name": "Playfair Display SC",
+    "static_package": "@fontsource/playfair-display-sc",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     700,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "why": "small-caps variant of the heading pick; redundant, no variable package, adds a second file for marginal use"
+   },
+   {
+    "name": "Yeseva One",
+    "static_package": "@fontsource/yeseva-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "chunky rounded display reads more modern-boho than ornate historical revival; single weight, no italic"
+   },
+   {
+    "name": "Prata",
+    "static_package": "@fontsource/prata",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "decent old-style display but single weight/no italic and weaker character than Playfair for this school's gilt drama"
+   },
+   {
+    "name": "Bodoni Moda",
+    "static_package": "@fontsource/bodoni-moda",
+    "variable_package": "@fontsource-variable/bodoni-moda",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght",
+     "opsz"
+    ],
+    "why": "excellent Didone but would duplicate Playfair's high-contrast heading role; picking both risks two schools converging on the same look, so keep as a documented alternate not the pick"
+   },
+   {
+    "name": "Cinzel",
+    "static_package": "@fontsource/cinzel",
+    "variable_package": "@fontsource-variable/cinzel",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Roman-inscriptional capitals-only face reads classical/neoclassical, not chintz-and-chinoiserie; no lowercase italic, wrong register for this school"
+   },
+   {
+    "name": "Cinzel Decorative",
+    "static_package": "@fontsource/cinzel-decorative",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     700,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "same neoclassical-Roman register problem as Cinzel, plus no variable package"
+   },
+   {
+    "name": "Marcellus",
+    "static_package": "@fontsource/marcellus",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "already the signature heading face documented elsewhere in this project (AR card); reserve it there, keep grandmillennial distinct"
+   },
+   {
+    "name": "Italiana",
+    "static_package": "@fontsource/italiana",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "thin high-contrast caps-forward serif is closer to quiet-luxury/minimalist than ornate revival; single weight"
+   },
+   {
+    "name": "Libre Caslon Text",
+    "static_package": "@fontsource/libre-caslon-text",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "why": "good old-style body text but Cormorant Garamond already fills the body slot with more period flavor for this ornate school"
+   },
+   {
+    "name": "Libre Caslon Display",
+    "static_package": "@fontsource/libre-caslon-display",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "restrained modern Caslon display, not high-contrast/ornate enough to read as Didone-era revival; single weight, no italic"
+   },
+   {
+    "name": "Libre Baskerville",
+    "static_package": "@fontsource/libre-baskerville",
+    "variable_package": "@fontsource-variable/libre-baskerville",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "solid transitional serif but lower contrast/less ornate than Cormorant Garamond; would flatten the body texture this school wants"
+   },
+   {
+    "name": "Gilda Display",
+    "static_package": "@fontsource/gilda-display",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "plain old-style display, too quiet/generic for gold-on-hunter-green ornament; single weight, no italic"
+   },
+   {
+    "name": "Bellefair",
+    "static_package": "@fontsource/bellefair",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "soft rounded old-style serif reads more coastal/relaxed than ornate-historical; single weight"
+   },
+   {
+    "name": "Pinyon Script",
+    "static_package": "@fontsource/pinyon-script",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "accent",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "formal copperplate-style script, reads as engraved invitation calligraphy - fits the gilt/formal script accent brief well"
+   },
+   {
+    "name": "Great Vibes",
+    "static_package": "@fontsource/great-vibes",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "casual brush-script, too informal/modern-wedding for a formal historical-revival accent; Pinyon Script is the more period-formal choice"
+   },
+   {
+    "name": "Parisienne",
+    "static_package": "@fontsource/parisienne",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "rounded casual script, softer/less formal than the brief's engraved-invitation register; redundant with Pinyon Script pick"
+   },
+   {
+    "name": "Mrs Saint Delafield",
+    "static_package": "@fontsource/mrs-saint-delafield",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "loose handwritten script reads personal-note casual, not formal engraved-invitation; wrong register for the accent slot"
+   },
+   {
+    "name": "Alex Brush",
+    "static_package": "@fontsource/alex-brush",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "brush-pen script, informal and closer to a wedding-invite/boho signature than a formal 18th-century flourish"
+   },
+   {
+    "name": "Tangerine",
+    "static_package": "@fontsource/tangerine",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "delicate calligraphic script is lovely but thinner/lighter than Pinyon Script's formal weight; keep one script accent, not two"
+   }
+  ],
+  "notes": "All npm lookups done live 09-13-26; \"\" recorded for every @fontsource-variable/* that returned npm E404 (confirmed one log: real 404, not a transient error). Fontsource API (api.fontsource.org/v1/fonts/<slug>) reachable for all 23 candidates; latin=true for every one (defSubset:\"latin\" and \"latin\" present in subsets array in each response). Variable axes not exposed directly in the /v1/fonts payload (no \"axes\" key in the JSON); axes listed above (wght, plus opsz for Bodoni Moda) are from known Google Fonts variable-axis registrations for these families, not the API response itself - flag if the pipeline needs axis data to be API-verified rather than general-knowledge-verified.\n\nNon-candidate faces that would suit grandmillennial better than several list entries, verified via the same two lookups:\n1. Cormorant Upright (Cormorant sub-family with an upright-italic-like decorative cut) - does NOT exist as its own @fontsource slug; Cormorant covers it via style, so no separate faces gained. Skip.\n2. Fraunces (@fontsource/fraunces + @fontsource-variable/fraunces, both exist, latin=true, variable axes wght/opsz/SOFT/WONK) - a wet-ink old-style serif with dramatic optical-size swing that reads even more \"ornate historical printed page\" than Cormorant Garamond at display sizes; strong alternate heading or body-display pairing partner.\n3. Petit Formal Script (@fontsource/petit-formal-script exists, no variable package, latin=true, weight 400) - an actual formal copperplate/calligraphy-class script (Google Fonts \"handwriting\" formal subtype), arguably a tighter fit for \"formal script accent\" than the more casual scripts on the list; worth a side-by-side against Pinyon Script.\n4. Cormorant Infant is not a separate slug (folded into Cormorant), so not counted as a third alternate; instead: Italiana's sibling \"Prata\" already covered - no third addition needed beyond Fraunces and Petit Formal Script above.\n\nSafe picks all verified exists=true, latin=true; heading and body both use a variable package (Playfair Display, Cormorant Garamond). Accent (Pinyon Script) has no variable package because none is published for it - static-only is correct here.",
+  "safe_picks": {
+   "heading": "Playfair Display",
+   "body": "Cormorant Garamond",
+   "accent": "Pinyon Script"
+  },
+  "school": "grandmillennial"
+ },
+ {
+  "school": "bauhaus",
+  "fonts": [
+   {
+    "name": "League Spartan",
+    "static_package": "@fontsource/league-spartan",
+    "variable_package": "@fontsource-variable/league-spartan",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "heading",
+    "why": "Geometric circles-and-lines construction, Futura-class, full weight range to 900 for poster impact; not shared with Swiss."
+   },
+   {
+    "name": "Jost",
+    "static_package": "@fontsource/jost",
+    "variable_package": "@fontsource-variable/jost",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "body",
+    "why": "Direct Futura homage, geometric but reads cleanly at text sizes, has italic; sits comfortably under the heading without duplicating it."
+   },
+   {
+    "name": "Unbounded",
+    "static_package": "@fontsource/unbounded",
+    "variable_package": "@fontsource-variable/unbounded",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Blocky, hard-edged, modular geometric display with a distinctly Bauhaus/constructivist poster feel; distinct signature from the heading face."
+   },
+   {
+    "name": "Josefin Sans",
+    "static_package": "@fontsource/josefin-sans",
+    "variable_package": "@fontsource-variable/josefin-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Delicate art-deco proportions read as vintage/elegant, not poster-weight Bauhaus."
+   },
+   {
+    "name": "Outfit",
+    "static_package": "@fontsource/outfit",
+    "variable_package": "@fontsource-variable/outfit",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Generic contemporary geometric sans, too close to neutral Swiss/UI grotesk territory."
+   },
+   {
+    "name": "Poppins",
+    "static_package": "@fontsource/poppins",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Overused generic geometric sans, no variable package, rounded soft terminals undercut hard-edged Bauhaus geometry."
+   },
+   {
+    "name": "Montserrat",
+    "static_package": "@fontsource/montserrat",
+    "variable_package": "@fontsource-variable/montserrat",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Bauhaus-adjacent heritage but now a ubiquitous default across nearly every style; League Spartan carries the geometric-heading signature instead."
+   },
+   {
+    "name": "Archivo",
+    "static_package": "@fontsource/archivo",
+    "variable_package": "@fontsource-variable/archivo",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Neutral workhorse grotesque, the expected Swiss-school heading face; using it here would blur the two schools apart."
+   },
+   {
+    "name": "Archivo Black",
+    "static_package": "@fontsource/archivo-black",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Shares the Archivo family stem reserved for Swiss; single weight also limits poster flexibility versus Unbounded."
+   },
+   {
+    "name": "Big Shoulders Display",
+    "static_package": "@fontsource/big-shoulders-display",
+    "variable_package": "@fontsource-variable/big-shoulders-display",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Condensed industrial signage character reads Chicago/Memphis-industrial, not Bauhaus geometric circles-and-lines."
+   },
+   {
+    "name": "Bricolage Grotesque",
+    "static_package": "@fontsource/bricolage-grotesque",
+    "variable_package": "@fontsource-variable/bricolage-grotesque",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght",
+     "opsz"
+    ],
+    "role": "reject",
+    "why": "Quirky contemporary grotesque with irregular details fits an eclectic/postmodern school better than hard-edged Bauhaus geometry."
+   },
+   {
+    "name": "Anton",
+    "static_package": "@fontsource/anton",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Ultra-condensed impact font is a generic all-purpose poster face, not geometric circles-and-lines construction."
+   },
+   {
+    "name": "Oswald",
+    "static_package": "@fontsource/oswald",
+    "variable_package": "@fontsource-variable/oswald",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Condensed Alternate-Gothic descendant reads editorial/Swiss-condensed, not geometric Bauhaus."
+   },
+   {
+    "name": "Syne",
+    "static_package": "@fontsource/syne",
+    "variable_package": "@fontsource-variable/syne",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Quirky geometric display is a good accent candidate but redundant with Unbounded already covering that role; better saved for a different eclectic school."
+   },
+   {
+    "name": "Kanit",
+    "static_package": "@fontsource/kanit",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Loop-tail geometric sans overlaps the body role already filled by Jost, no variable package."
+   },
+   {
+    "name": "Dela Gothic One",
+    "static_package": "@fontsource/dela-gothic-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Ultra-bold Japanese-pop gothic character skews neon/Memphis-pop, not Bauhaus poster restraint."
+   },
+   {
+    "name": "Bungee",
+    "static_package": "@fontsource/bungee",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Urban/stencil signage energy belongs to a graffiti or pop school, not Bauhaus."
+   },
+   {
+    "name": "Paytone One",
+    "static_package": "@fontsource/paytone-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Rounded cartoonish bubble letterforms contradict Bauhaus hard edges."
+   },
+   {
+    "name": "Rubik Mono One",
+    "static_package": "@fontsource/rubik-mono-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Fixed-width blocky novelty face is a fun near-miss but too gimmicky/single-weight for a working accent role; Unbounded covers the blocky-geometric need with more range."
+   },
+   {
+    "name": "Bayon",
+    "static_package": "@fontsource/bayon",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Khmer-derived humanist sans has no particular Bauhaus character; single weight, generic."
+   },
+   {
+    "name": "Sansita",
+    "static_package": "@fontsource/sansita",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Rounded slab-humanist display with swash italic reads vintage/circus, not Bauhaus geometric."
+   }
+  ],
+  "safe_picks": {
+   "heading": "League Spartan",
+   "body": "Jost",
+   "accent": "Unbounded"
+  },
+  "notes": "No mono role: Bauhaus doesn't use one. All npm/fontsource lookups live as of 2026-09-13 (npmVersion 5.3.0 across the board); variable-package 404s recorded as \"\" for Poppins, Archivo Black, Anton, Kanit, Dela Gothic One, Bungee, Paytone One, Rubik Mono One, Bayon, Sansita. Variable axes limited to what fontsource's `variable` flag implies (wght, plus opsz for Bricolage Grotesque); full axis lists weren't in the truncated API payload so treat as best-effort. Off-candidate-list alternatives verified the same way (npm view + fontsource API), all exist/latin=true: Urbanist (@fontsource/urbanist + variable, weights 100-900, italic, wght axis) — cleaner geometric-heading alternative to League Spartan if more restraint is wanted; Space Grotesk (@fontsource/space-grotesk + variable, weights 300-700, wght axis) — grotesk with geometric quirks, viable accent/body alternative; Red Hat Display (@fontsource/red-hat-display + variable, weights 300-900, italic, wght axis) — sturdy geometric display, an alternative to Unbounded for the poster-heavy accent role."
+ },
+ {
+  "school": "cottagecore",
+  "fonts": [
+   {
+    "name": "Fraunces",
+    "static_package": "@fontsource/fraunces",
+    "variable_package": "@fontsource-variable/fraunces",
+    "exists": true,
+    "latin": true,
+    "role": "heading",
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "opsz",
+     "SOFT",
+     "WONK",
+     "wght"
+    ],
+    "why": "Already self-hosted per brief; soft organic wonky serif with opsz/SOFT/WONK axes is the cottagecore display signature."
+   },
+   {
+    "name": "Lora",
+    "static_package": "@fontsource/lora",
+    "variable_package": "@fontsource-variable/lora",
+    "exists": true,
+    "latin": true,
+    "role": "body",
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Warm, calligraphic-brackets book serif reads storybook-cozy at text size; safe pick over Merriweather/Crimson Pro."
+   },
+   {
+    "name": "Merriweather",
+    "static_package": "@fontsource/merriweather",
+    "variable_package": "@fontsource-variable/merriweather",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Solid body alternate to Lora but sturdier/more editorial; not doubling up bookish serifs."
+   },
+   {
+    "name": "Crimson Pro",
+    "static_package": "@fontsource/crimson-pro",
+    "variable_package": "@fontsource-variable/crimson-pro",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Classical/academic serif, cooler and less storybook-warm than Lora; not selected."
+   },
+   {
+    "name": "Libre Baskerville",
+    "static_package": "@fontsource/libre-baskerville",
+    "variable_package": "@fontsource-variable/libre-baskerville",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Historically only regular/bold+italic cuts existed; reads formal/web-classic rather than cottage-warm."
+   },
+   {
+    "name": "Gelasio",
+    "static_package": "@fontsource/gelasio",
+    "variable_package": "@fontsource-variable/gelasio",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Georgia-metric workhorse serif; too utilitarian/plain for cottagecore's storybook character."
+   },
+   {
+    "name": "Pacifico",
+    "static_package": "@fontsource/pacifico",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Polished mid-century script reads retro soda-shop, not the loose hand-drawn cottage feel."
+   },
+   {
+    "name": "Patrick Hand",
+    "static_package": "@fontsource/patrick-hand",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Good print-style hand but more schoolbook than flowing script; Caveat's weight range wins as accent."
+   },
+   {
+    "name": "Lobster",
+    "static_package": "@fontsource/lobster",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Bold retro-diner script; wrong character for a delicate cottage aesthetic."
+   },
+   {
+    "name": "Caveat",
+    "static_package": "@fontsource/caveat",
+    "variable_package": "@fontsource-variable/caveat",
+    "exists": true,
+    "latin": true,
+    "role": "accent",
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Casual notebook script with a variable weight range; best fit for hand-drawn dividers/captions."
+   },
+   {
+    "name": "Amatic SC",
+    "static_package": "@fontsource/amatic-sc",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Thin condensed all-caps hand-lettering reads Scandi-craft/industrial-label, too close to a minimalist school's signature."
+   },
+   {
+    "name": "Homemade Apple",
+    "static_package": "@fontsource/homemade-apple",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Charming genuine-handwriting alternate to Caveat; latin-only subset and single weight limit it as primary pick."
+   },
+   {
+    "name": "Kalam",
+    "static_package": "@fontsource/kalam",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Generic marker-style handwriting reads edu/tech-notes rather than cottage."
+   },
+   {
+    "name": "Gaegu",
+    "static_package": "@fontsource/gaegu",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Cute Korean-designed casual face; generically cute rather than cottage-signature."
+   },
+   {
+    "name": "Shadows Into Light",
+    "static_package": "@fontsource/shadows-into-light",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Light quick scrawl works as an alt accent but thinner and less charming than Caveat for headers."
+   },
+   {
+    "name": "Sniglet",
+    "static_package": "@fontsource/sniglet",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Bubble/rounded display; wrong character (kid-bubbly, not organic-hand)."
+   },
+   {
+    "name": "Nunito",
+    "static_package": "@fontsource/nunito",
+    "variable_package": "@fontsource-variable/nunito",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Rounded sans with no serif/script character; wrong family for this brief's three specified roles."
+   },
+   {
+    "name": "Quicksand",
+    "static_package": "@fontsource/quicksand",
+    "variable_package": "@fontsource-variable/quicksand",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Geometric rounded sans reads too modern/minimal for cottage warmth."
+   },
+   {
+    "name": "Baloo 2",
+    "static_package": "@fontsource/baloo-2",
+    "variable_package": "@fontsource-variable/baloo-2",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Playful rounded display claimed by kids/playful-school signature look; wrong character here."
+   },
+   {
+    "name": "Comfortaa",
+    "static_package": "@fontsource/comfortaa",
+    "variable_package": "@fontsource-variable/comfortaa",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "why": "Geometric rounded display reads retro-futurist/vaporwave-adjacent; wrong character for cottagecore."
+   },
+   {
+    "name": "Bevan",
+    "static_package": "@fontsource/bevan",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "why": "Heavy slab serif reads rustic-Americana/Wild-West rather than soft cottage."
+   },
+   {
+    "name": "Cherry Cream Soda",
+    "static_package": "@fontsource/cherry-cream-soda",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Bubbly 70s soda-shop display; wrong character, latin-only subset."
+   },
+   {
+    "name": "Yeseva One",
+    "static_package": "@fontsource/yeseva-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "role": "reject",
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "why": "Elegant high-contrast display serif suits a farmhouse-wedding-invite school better; redundant with Fraunces heading role."
+   }
+  ],
+  "safe_picks": {
+   "heading": "Fraunces",
+   "body": "Lora",
+   "accent": "Caveat"
+  },
+  "notes": "All 23 candidates exist on npm as @fontsource/<slug> (v5.3.0) and all report latin in the Fontsource API subsets list (defSubset=latin for every one); only the \"no variable package\" fonts (pacifico, patrick-hand, lobster, amatic-sc, homemade-apple, kalam, gaegu, shadows-into-light, sniglet, bevan, cherry-cream-soda, yeseva-one) return E404 for @fontsource-variable and show \"variable\":false in the API. Fraunces variable axes (opsz, SOFT, WONK, wght) taken from known Fraunces VF spec, not itemized in the truncated API payload captured here. Three off-list faces that fit cottagecore better than some candidates, verified the same way: Alice (@fontsource/alice, v5.3.0, static only, latin=true, weight 400 only — old-style warm serif, popular cottagecore-branding body/accent face); Cormorant Garamond (@fontsource/cormorant-garamond + @fontsource-variable, v5.3.0, latin=true, weights 300-700 incl. italic — delicate display serif, elegant alt/companion to Fraunces for pull-quotes); Dancing Script (@fontsource/dancing-script + @fontsource-variable, v5.3.0, latin=true, weights 400-700 — graceful flowing script, a more romantic accent alternative to Caveat's casual notebook feel). Method note: npm view failures for @fontsource-variable/<slug> surface as \"npm error ... debug log\" (E404) rather than clean JSON, consistent with package absence; treated as \"\" per instructions."
+ },
+ {
+  "fonts": [
+   {
+    "name": "Inter",
+    "static_package": "@fontsource/inter",
+    "variable_package": "@fontsource-variable/inter",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "opsz",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "solid Swiss-adjacent grotesk but its ubiquity as the default UI font makes it read as generic-product rather than deliberately International Typographic Style; picking Archivo/Public Sans keeps the school visibly distinct from every other Inter-based site"
+   },
+   {
+    "name": "Inter Tight",
+    "static_package": "@fontsource/inter-tight",
+    "variable_package": "@fontsource-variable/inter-tight",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "same over-familiarity problem as Inter, tighter tracking doesn't change the association"
+   },
+   {
+    "name": "Space Grotesk",
+    "static_package": "@fontsource/space-grotesk",
+    "variable_package": "@fontsource-variable/space-grotesk",
+    "exists": true,
+    "latin": true,
+    "italic": false,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "quirky monospace-derived proportions (single-story a, wide apertures) read as tech/startup-quirky, too characterful for strict ITS neutrality; also risks overlap with Vaporwave/tech-adjacent schools"
+   },
+   {
+    "name": "Manrope",
+    "static_package": "@fontsource/manrope",
+    "variable_package": "@fontsource-variable/manrope",
+    "exists": true,
+    "latin": true,
+    "italic": false,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "reject",
+    "why": "rounded terminals and semi-geometric warmth push it toward friendly/approachable rather than the cool, mechanical neutrality Swiss needs; no italic further limits use"
+   },
+   {
+    "name": "Work Sans",
+    "static_package": "@fontsource/work-sans",
+    "variable_package": "@fontsource-variable/work-sans",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "grotesk skeleton is fine but proportions lean humanist/optimized-for-screen-reading rather than the tighter, industrial Akzidenz/Helvetica character the brief wants"
+   },
+   {
+    "name": "Plus Jakarta Sans",
+    "static_package": "@fontsource/plus-jakarta-sans",
+    "variable_package": "@fontsource-variable/plus-jakarta-sans",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "geometric-humanist hybrid with soft, rounded joints reads as contemporary SaaS branding, not ITS"
+   },
+   {
+    "name": "Archivo",
+    "static_package": "@fontsource/archivo",
+    "variable_package": "@fontsource-variable/archivo",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wdth",
+     "wght"
+    ],
+    "role": "heading",
+    "why": "closest available Akzidenz/Helvetica-class grotesk on the list: high x-height, near-square counters, industrial and neutral, with a variable width axis that gives real Swiss-style headline compression without switching families"
+   },
+   {
+    "name": "Public Sans",
+    "static_package": "@fontsource/public-sans",
+    "variable_package": "@fontsource-variable/public-sans",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "body",
+    "why": "USWDS's civic grotesk: plain, restrained, built for long-form legibility at small sizes with none of the personality that would undercut the grid-first neutrality; pairs cleanly under Archivo headlines"
+   },
+   {
+    "name": "Hanken Grotesk",
+    "static_package": "@fontsource/hanken-grotesk",
+    "variable_package": "@fontsource-variable/hanken-grotesk",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "capable neutral grotesk but redundant once Archivo/Public Sans are chosen; slightly narrower and cooler, worth keeping as a fallback note only"
+   },
+   {
+    "name": "Schibsted Grotesk",
+    "static_package": "@fontsource/schibsted-grotesk",
+    "variable_package": "@fontsource-variable/schibsted-grotesk",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "solid newsroom grotesk, no weights below 400 hurts the enormous-whitespace/light-weight display moves ITS often uses; secondary alternative only"
+   },
+   {
+    "name": "Instrument Sans",
+    "static_package": "@fontsource/instrument-sans",
+    "variable_package": "@fontsource-variable/instrument-sans",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "variable_axes": [
+     "ital",
+     "wdth",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "narrow weight range (no light/thin) and slightly quirky details make it a weaker heading choice than Archivo for a strict grid system"
+   },
+   {
+    "name": "Geist",
+    "static_package": "@fontsource/geist",
+    "variable_package": "@fontsource-variable/geist",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Vercel's clean neutral grotesk is very close in spirit to Swiss but is already the signature face of a tech/dev-tool aesthetic; using it here risks brand confusion more than Archivo does"
+   },
+   {
+    "name": "Geist Mono",
+    "static_package": "@fontsource/geist-mono",
+    "variable_package": "@fontsource-variable/geist-mono",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "good mono but same over-association with the Geist/Vercel dev-tool look; IBM Plex Mono has cleaner Swiss-lab pedigree"
+   },
+   {
+    "name": "IBM Plex Sans",
+    "static_package": "@fontsource/ibm-plex-sans",
+    "variable_package": "@fontsource-variable/ibm-plex-sans",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "variable_axes": [
+     "ital",
+     "wdth",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "strong grotesk with real Swiss/corporate-modernist lineage (designed to evoke Helvetica for IBM) but its slightly quirky details (cut corners, engineered warmth) are better saved for a distinct corporate-modern school; Archivo stays cleaner/more neutral for pure ITS"
+   },
+   {
+    "name": "IBM Plex Mono",
+    "static_package": "@fontsource/ibm-plex-mono",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "variable_axes": [],
+    "role": "mono",
+    "why": "engineered, technical, and neutral-cool in tone, exactly the register Swiss grid labels/captions/specs call for; static-only package but full weight range covers label/caption/micro-copy needs"
+   },
+   {
+    "name": "JetBrains Mono",
+    "static_package": "@fontsource/jetbrains-mono",
+    "variable_package": "@fontsource-variable/jetbrains-mono",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "variable_axes": [
+     "ital",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "code-editor-coded ligature-bearing mono reads as developer-tool rather than Swiss-lab signage; IBM Plex Mono is the better-pedigreed pick"
+   },
+   {
+    "name": "Space Mono",
+    "static_package": "@fontsource/space-mono",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     400,
+     700
+    ],
+    "variable_axes": [],
+    "role": "reject",
+    "why": "quirky retro-futurist mono with only two weights, too characterful and too close to Space Grotesk's tech-quirky family identity for strict ITS neutrality"
+   },
+   {
+    "name": "Newsreader",
+    "static_package": "@fontsource/newsreader",
+    "variable_package": "@fontsource-variable/newsreader",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800
+    ],
+    "variable_axes": [
+     "ital",
+     "opsz",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "a fine neutral serif for long text but its editorial/magazine warmth is better matched to a literary school; Literata's more restrained, book-like register suits Swiss long-form text slightly better if a serif is used at all"
+   },
+   {
+    "name": "Literata",
+    "static_package": "@fontsource/literata",
+    "variable_package": "@fontsource-variable/literata",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "variable_axes": [
+     "ital",
+     "opsz",
+     "wght"
+    ],
+    "role": "accent",
+    "why": "used sparingly as the optional neutral serif for long-form reading blocks (case studies, essays) inside an otherwise all-grotesk system; its restrained, low-contrast book design stays quiet enough not to compete with the grid, functioning as the one permitted 'accent' register rather than any script/decorative face (which the brief explicitly excludes)"
+   },
+   {
+    "name": "Instrument Serif",
+    "static_package": "@fontsource/instrument-serif",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     400
+    ],
+    "variable_axes": [],
+    "role": "reject",
+    "why": "a display serif with calligraphic flourish and only one weight, decorative in a way the no-ornament brief explicitly rules out"
+   },
+   {
+    "name": "Atkinson Hyperlegible",
+    "static_package": "@fontsource/atkinson-hyperlegible",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "italic": true,
+    "weights": [
+     400,
+     700
+    ],
+    "variable_axes": [],
+    "role": "reject",
+    "why": "accessibility-optimized letterforms have distinctive disambiguation quirks (e.g. exaggerated counters) that read as a specialized accessibility face rather than neutral Swiss grotesk; only two weights also limits grid-scale headline work"
+   }
+  ],
+  "safe_picks": {
+   "heading": "@fontsource-variable/archivo",
+   "body": "@fontsource-variable/public-sans",
+   "accent": "@fontsource-variable/literata"
+  },
+  "school": "swiss",
+  "notes": "Mono pick: @fontsource/ibm-plex-mono (static only, weights 100-700, latin=true, italic=true) for labels/specs/captions — technical and neutral, keeps grid annotations legible without borrowing a dev-tool mono's connotation.\\n\\nThree off-list candidates verified the same way (npm view + api.fontsource.org), all latin=true, all with @fontsource-variable packages at 5.3.0:\\n1. Roboto Flex — @fontsource-variable/roboto-flex, styles=[normal] only (no italic), a genuinely neutral engineered grotesk built for wide axis control (width/weight/optical size/slant registered in Google's own axis reg, though this API instance only reports the base font, not full axis list); best alternate heading if Archivo's proportions feel too American/geometric and something closer to Helvetica's tighter apertures is wanted.\\n2. Barlow — @fontsource/barlow only (no variable package on npm), weights 100-900 + italic, latin=true; a condensed-adjacent grotesk descended from California highway signage, gives Swiss-style tight tracking and a genuine 9-weight range for a strict type scale.\\n3. Overpass — @fontsource-variable/overpass, weights 100-900 + italic, latin=true; also highway-gothic derived (Interstate-class), slightly more geometric than Barlow, solid alternate body/heading pairing partner if Public Sans feels too civic/American-government in tone.\\n\\nAll npm lookups used `npm view @fontsource[-variable]/<slug> version`; a 404 (E404) was confirmed by inspecting the full npm error output, not just tail -1, for ibm-plex-mono, space-mono, instrument-serif, and atkinson-hyperlegible variable packages (none exist). Fontsource metadata came from https://api.fontsource.org/v1/fonts/<slug> (subsets/weights/styles) plus https://api.fontsource.org/v1/variable/<slug> (axis keys) since the /fonts endpoint's `variable` field is a boolean, not an axis object.\\n\\nDidn't touch any repo files; read-only survey per instructions."
+ },
+ {
+  "school": "artdeco",
+  "fonts": [
+   {
+    "name": "Poiret One",
+    "static_package": "@fontsource/poiret-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "heading",
+    "why": "canonical Art Deco high-waisted geometric display (Poiret-class); thin weight only, needs a bolder companion for emphasis but is the signature deco letterform"
+   },
+   {
+    "name": "Limelight",
+    "static_package": "@fontsource/limelight",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "1920s marquee/signage face, close cousin to Poiret One's role; redundant heading candidate, drop to avoid two competing display picks"
+   },
+   {
+    "name": "Monoton",
+    "static_package": "@fontsource/monoton",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "neon-tube retro-futurist outline face, reads Vegas/70s not 1920s-30s deco"
+   },
+   {
+    "name": "Josefin Sans",
+    "static_package": "@fontsource/josefin-sans",
+    "variable_package": "@fontsource-variable/josefin-sans",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "geometric sans in the deco-adjacent family but is Bauhaus/Vaporwave/Swiss-school territory as a workhorse UI sans; too neutral to serve as the ornate deco display"
+   },
+   {
+    "name": "Marcellus",
+    "static_package": "@fontsource/marcellus",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "already the signature body/accent face on this site's AR card branding (restyled #73); reserve elsewhere to avoid brand collision, and it's a soft Roman rather than an engraved Didone"
+   },
+   {
+    "name": "Cinzel",
+    "static_package": "@fontsource/cinzel",
+    "variable_package": "@fontsource-variable/cinzel",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "body",
+    "why": "engraved Roman capitals-derived face with a full weight range via variable package, reads as chiseled/monumental deco lettering; used for body/subhead text at moderate size"
+   },
+   {
+    "name": "Cinzel Decorative",
+    "static_package": "@fontsource/cinzel-decorative",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     700,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "swash-decorative sibling of Cinzel, good for ornamental initials/accent lines distinct from the plain Cinzel body use"
+   },
+   {
+    "name": "Playfair Display SC",
+    "static_package": "@fontsource/playfair-display-sc",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     700,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "small-caps Didone is strong but overlaps Bodoni Moda's engraved-Didone role for this school; keep one Didone pick to avoid redundancy"
+   },
+   {
+    "name": "Bodoni Moda",
+    "static_package": "@fontsource/bodoni-moda",
+    "variable_package": "@fontsource-variable/bodoni-moda",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "body",
+    "why": "high-contrast Didone with variable optical-size axis, reads as engraved 1920s-30s poster type; alternate/co-body candidate to Cinzel"
+   },
+   {
+    "name": "Italiana",
+    "static_package": "@fontsource/italiana",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "elegant thin Roman but too close to Cinzel's engraved-capitals niche; single weight limits body use"
+   },
+   {
+    "name": "Yeseva One",
+    "static_package": "@fontsource/yeseva-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "quirky serif display, reads more storybook/boutique than deco geometric"
+   },
+   {
+    "name": "Six Caps",
+    "static_package": "@fontsource/six-caps",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "ultra-condensed grotesk, no deco character; belongs to a modernist/editorial school not this one"
+   },
+   {
+    "name": "Rozha One",
+    "static_package": "@fontsource/rozha-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Devanagari-derived serif display, wrong character reference for Western Art Deco"
+   },
+   {
+    "name": "Abril Fatface",
+    "static_package": "@fontsource/abril-fatface",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "fat Didone poster face, closer to Victorian/circus than stepped-geometry deco; overlaps Bodoni Moda's slot without the engraved refinement"
+   },
+   {
+    "name": "Federo",
+    "static_package": "@fontsource/federo",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "generic rounded-geometric sans, no deco signature detail"
+   },
+   {
+    "name": "Fascinate",
+    "static_package": "@fontsource/fascinate",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "interlocking puzzle-piece novelty face, gimmicky rather than authentic deco geometry"
+   },
+   {
+    "name": "Fascinate Inline",
+    "static_package": "@fontsource/fascinate-inline",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "inline variant of Fascinate works as an occasional shaded/inline accent glyph for headline initials, used sparingly given its novelty character"
+   },
+   {
+    "name": "Ultra",
+    "static_package": "@fontsource/ultra",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "heavy slab-serif, reads Wild West/circus poster rather than deco"
+   },
+   {
+    "name": "Rye",
+    "static_package": "@fontsource/rye",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Western wanted-poster slab, wrong era/genre entirely"
+   },
+   {
+    "name": "Mr Dafoe",
+    "static_package": "@fontsource/mr-dafoe",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "casual brush script, no deco signage quality"
+   },
+   {
+    "name": "Big Shoulders Display",
+    "static_package": "@fontsource/big-shoulders-display",
+    "variable_package": "@fontsource-variable/big-shoulders-display",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "industrial condensed grotesk (Chicago civic branding), belongs to a modernist/industrial school rather than ornamental deco"
+   },
+   {
+    "name": "Oswald",
+    "static_package": "@fontsource/oswald",
+    "variable_package": "@fontsource-variable/oswald",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "ubiquitous condensed grotesk workhorse, reserved for Swiss/Bauhaus-class schools as their signature face; no deco character"
+   },
+   {
+    "name": "Bungee Shade",
+    "static_package": "@fontsource/bungee-shade",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "drop-shadow layered face reads street/urban signage (Bungee family = vaporwave/graffiti school), not 1920s-30s deco"
+   },
+   {
+    "name": "Cormorant Unicase",
+    "static_package": "@fontsource/cormorant-unicase",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "delicate unicase garalde, too soft/humanist for stepped deco geometry"
+   },
+   {
+    "name": "Gilda Display",
+    "static_package": "@fontsource/gilda-display",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "plain condensed serif display, lacks distinctive deco ornament"
+   },
+   {
+    "name": "Bellefair",
+    "static_package": "@fontsource/bellefair",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "generic serif, no engraved or geometric deco signature"
+   },
+   {
+    "name": "Della Respira",
+    "static_package": "@fontsource/della-respira",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "art-nouveau-leaning flared serif with decorative flourish, usable as a secondary accent/inline for ornamental headline words"
+   },
+   {
+    "name": "Amarante",
+    "static_package": "@fontsource/amarante",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "bold ornamental face reads more circus/carnival than deco geometric"
+   },
+   {
+    "name": "Miltonian",
+    "static_package": "@fontsource/miltonian",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "engraved shaded serif capitals with genuine deco-era signage quality, strong shaded-accent candidate"
+   },
+   {
+    "name": "Miltonian Tattoo",
+    "static_package": "@fontsource/miltonian-tattoo",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "heavier shaded/inline variant of Miltonian, alternate accent choice for bolder shaded-letter treatment"
+   },
+   {
+    "name": "Trocchi",
+    "static_package": "@fontsource/trocchi",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "old-style book serif, no deco character, single weight"
+   },
+   {
+    "name": "Tulpen One",
+    "static_package": "@fontsource/tulpen-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "quirky geometric sans with organic curves, reads mod/60s rather than deco"
+   },
+   {
+    "name": "Kumar One",
+    "static_package": "@fontsource/kumar-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "chunky rounded display designed for Gujarati/Latin pairing, no deco signage quality"
+   },
+   {
+    "name": "Prosto One",
+    "static_package": "@fontsource/prosto-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "rounded comic-adjacent display, wrong tone for deco elegance"
+   },
+   {
+    "name": "Metamorphous",
+    "static_package": "@fontsource/metamorphous",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "medieval/gothic-fantasy display, wrong era entirely"
+   },
+   {
+    "name": "Cormorant Garamond",
+    "static_package": "@fontsource/cormorant-garamond",
+    "variable_package": "@fontsource-variable/cormorant-garamond",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "fine-detail garalde belongs to a Victorian/romantic school; too delicate and un-engraved for this deco body slot next to Cinzel"
+   },
+   {
+    "name": "Libre Bodoni",
+    "static_package": "@fontsource/libre-bodoni",
+    "variable_package": "@fontsource-variable/libre-bodoni",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "solid open-source Didone but redundant with Bodoni Moda's variable package which offers a wider weight range and optical-size axis for the same role"
+   },
+   {
+    "name": "Bebas Neue",
+    "static_package": "@fontsource/bebas-neue",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "heading",
+    "why": "NOT ON CANDIDATE LIST: tall geometric condensed caps with genuine 1930s poster-lettering lineage, strong alternate/co-heading pick to Poiret One when a bolder single-weight display is needed"
+   }
+  ],
+  "safe_picks": {
+   "heading": "Poiret One",
+   "body": "Cinzel",
+   "accent": "Miltonian"
+  },
+  "notes": "All 37 candidates exist on npm and report latin=true via the Fontsource API; no rejects were for existence/latin, only stylistic fit or cross-school collision. Heading: Poiret One is the canonical Poiret/geometric high-waisted deco display (single 400 weight, so pair sparingly with a heavier companion like Bebas Neue for contrast). Body: Cinzel (variable package, weights 400-900) chosen over Bodoni Moda/Playfair Display SC/Libre Bodoni to avoid three overlapping Didones — Cinzel's engraved-capitals character is more distinctly deco than a generic high-contrast serif, and it has full latin + variable weight support for real typographic range. Accent: Miltonian is the strongest shaded/engraved accent found (with Miltonian Tattoo and Fascinate Inline as backups; Cinzel Decorative also viable for ornamental swash headlines). Rejected Marcellus deliberately — it is already this codebase's signature AR-card/showcase face (docs/ar-card/HANDOFF.md, #73), so reusing it here would blur brand identity across schools. Rejected Josefin Sans, Oswald, and Big Shoulders Display as reserved workhorse sans faces likely claimed by Bauhaus/Swiss-class schools elsewhere in the survey; rejected Bungee Shade and Monoton as belonging to a Vaporwave/neon school instead. Three faces NOT on the candidate list verified via the same two lookups (npm + Fontsource API, all latin=true, all @fontsource-only, no variable package): (1) Bebas Neue — tall geometric condensed caps, genuine 1930s American poster-lettering pedigree, a strong second heading option; (2) Spectral SC — small-caps serif with an engraved quality, a possible body alternate; (3) Alegreya SC — small-caps humanist serif, weaker deco signal than Spectral SC but latin-verified as a fallback. Caveat: Fontsource API 'variable' field returns an empty array (not axis names) for every family here that does have a variable package (Cinzel, Bodoni Moda, Oswald, etc.) — the presence of a resolvable @fontsource-variable/* npm package was used as the source of truth for variable_package/exists rather than the API's variable field, and axis names are not exposed by this endpoint (recorded as empty arrays throughout)."
+ },
+ {
+  "fonts": [
+   {
+    "name": "Playfair Display",
+    "static_package": "@fontsource/playfair-display",
+    "variable_package": "@fontsource-variable/playfair-display",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght",
+     "opsz"
+    ],
+    "role": "heading",
+    "why": "Classical Times-like serif italic/caps, textbook vaporwave headline face; alt to Bodoni Moda"
+   },
+   {
+    "name": "Cormorant Garamond",
+    "static_package": "@fontsource/cormorant-garamond",
+    "variable_package": "@fontsource-variable/cormorant-garamond",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Delicate classical serif, works as an italic pull-quote/subhead accent alongside a heavier heading serif"
+   },
+   {
+    "name": "Libre Caslon Display",
+    "static_package": "@fontsource/libre-caslon-display",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "heading",
+    "why": "Bold all-caps-friendly classical display serif (Times-adjacent), single weight, no variable pkg"
+   },
+   {
+    "name": "Bodoni Moda",
+    "static_package": "@fontsource/bodoni-moda",
+    "variable_package": "@fontsource-variable/bodoni-moda",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght",
+     "opsz"
+    ],
+    "role": "heading",
+    "why": "High-contrast Didone serif in bold italic is the canonical 'aesthetic'/vaporwave statement face; safe-pick heading"
+   },
+   {
+    "name": "VT323",
+    "static_package": "@fontsource/vt323",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "mono",
+    "why": "CRT terminal pixel face, single weight; safe-pick mono for scanline/terminal chrome text"
+   },
+   {
+    "name": "Press Start 2P",
+    "static_package": "@fontsource/press-start-2p",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "mono",
+    "why": "8-bit arcade pixel face, alt mono for very short labels/badges only (unreadable at body sizes)"
+   },
+   {
+    "name": "Share Tech Mono",
+    "static_package": "@fontsource/share-tech-mono",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "mono",
+    "why": "Cleaner sci-fi terminal mono, more usable than VT323/Press Start 2P for longer mono runs"
+   },
+   {
+    "name": "Space Mono",
+    "static_package": "@fontsource/space-mono",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "mono",
+    "why": "Generic-ish but has italic and two weights; usable alt mono, less distinctly Y2K"
+   },
+   {
+    "name": "Major Mono Display",
+    "static_package": "@fontsource/major-mono-display",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Lowercase-only stylized mono, too decorative for running mono text; better as a display accent"
+   },
+   {
+    "name": "Orbitron",
+    "static_package": "@fontsource/orbitron",
+    "variable_package": "@fontsource-variable/orbitron",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Wide techno display, variable axis; strong Windows-95-tech-chrome accent/headline alt"
+   },
+   {
+    "name": "Audiowide",
+    "static_package": "@fontsource/audiowide",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Wide rounded techno display, single weight; solid accent alt to Orbitron"
+   },
+   {
+    "name": "Michroma",
+    "static_package": "@fontsource/michroma",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Squared-off techno sans, good UI-chrome label accent"
+   },
+   {
+    "name": "Syncopate",
+    "static_package": "@fontsource/syncopate",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Wide spaced-out techno display, good for tiny caps nav labels"
+   },
+   {
+    "name": "Monoton",
+    "static_package": "@fontsource/monoton",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Neon-tube outline face, quintessential synthwave/vaporwave signage accent"
+   },
+   {
+    "name": "Righteous",
+    "static_package": "@fontsource/righteous",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Rounded retro-futura display, usable but generic; alt accent only"
+   },
+   {
+    "name": "Bungee",
+    "static_package": "@fontsource/bungee",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Bold urban-signage slab, off-genre (more Americana than Y2K) but usable sparingly as accent"
+   },
+   {
+    "name": "Bungee Shade",
+    "static_package": "@fontsource/bungee-shade",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "3D drop-shadow signage variant, fits retro-arcade signage accent use"
+   },
+   {
+    "name": "Bungee Outline",
+    "static_package": "@fontsource/bungee-outline",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Outline signage variant, same family as Bungee/Bungee Shade; accent alt"
+   },
+   {
+    "name": "Zen Dots",
+    "static_package": "@fontsource/zen-dots",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Rounded techno display with dotted terminals, good small-caps UI accent"
+   },
+   {
+    "name": "Iceland",
+    "static_package": "@fontsource/iceland",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Condensed techno display, works for nav/chrome labels"
+   },
+   {
+    "name": "Wallpoet",
+    "static_package": "@fontsource/wallpoet",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Stencil/military techno display, distinct accent option"
+   },
+   {
+    "name": "Exo 2",
+    "static_package": "@fontsource/exo-2",
+    "variable_package": "@fontsource-variable/exo-2",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "body",
+    "why": "Geometric techno sans that stays legible at body sizes with italic and variable weight; safe-pick body"
+   },
+   {
+    "name": "Rajdhani",
+    "static_package": "@fontsource/rajdhani",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     500,
+     600,
+     700
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "body",
+    "why": "Condensed techno sans, decent alt body/UI-label face, no italic or variable pkg"
+   },
+   {
+    "name": "Noto Sans JP",
+    "static_package": "@fontsource/noto-sans-jp",
+    "variable_package": "@fontsource-variable/noto-sans-jp",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Clean katakana/kanji sans, variable weight; best choice when Japanese copy needs to stay legible, not just decorative"
+   },
+   {
+    "name": "Noto Serif JP",
+    "static_package": "@fontsource/noto-serif-jp",
+    "variable_package": "@fontsource-variable/noto-serif-jp",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [
+     "wght"
+    ],
+    "role": "accent",
+    "why": "Serif Japanese alt, pairs with classical-serif heading for a more formal Japanese accent"
+   },
+   {
+    "name": "M PLUS 1p",
+    "static_package": "@fontsource/m-plus-1p",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     300,
+     400,
+     500,
+     700,
+     800,
+     900
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Rounded Japanese UI sans, good Windows-95-chrome-meets-katakana accent"
+   },
+   {
+    "name": "Sawarabi Mincho",
+    "static_package": "@fontsource/sawarabi-mincho",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Traditional Japanese mincho serif, single weight; classical-Japanese-flavored accent alt"
+   },
+   {
+    "name": "Dela Gothic One",
+    "static_package": "@fontsource/dela-gothic-one",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Bold Japanese display gothic, reads great oversized for katakana headline accents; safe-pick accent"
+   },
+   {
+    "name": "Zen Tokyo Zoo",
+    "static_package": "@fontsource/zen-tokyo-zoo",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     400
+    ],
+    "italic": false,
+    "variable_axes": [],
+    "role": "accent",
+    "why": "Glitchy/distorted Japanese display face, strong match for chromatic-offset/glitch vaporwave motifs"
+   },
+   {
+    "name": "Comic Neue",
+    "static_package": "@fontsource/comic-neue",
+    "variable_package": "",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     300,
+     400,
+     700
+    ],
+    "italic": true,
+    "variable_axes": [],
+    "role": "reject",
+    "why": "Casual handwriting-adjacent face reads as friendly/kids, wrong character for Y2K retro-future chrome aesthetic"
+   },
+   {
+    "name": "Inter",
+    "static_package": "@fontsource/inter",
+    "variable_package": "@fontsource-variable/inter",
+    "exists": true,
+    "latin": true,
+    "weights": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600,
+     700,
+     800,
+     900
+    ],
+    "italic": true,
+    "variable_axes": [
+     "opsz",
+     "wght"
+    ],
+    "role": "reject",
+    "why": "Neutral contemporary grotesk with no period character; too close to the plain-UI signature of Glassmorphism/Swiss-leaning schools"
+   }
+  ],
+  "notes": "All 31 candidates resolved on npm and the Fontsource API; every one carries a 'latin' subset. npm view: base @fontsource/<slug> exists for all 31 (v5.3.0); @fontsource-variable/<slug> exists only for playfair-display, cormorant-garamond, bodoni-moda, orbitron, exo-2, noto-sans-jp, noto-serif-jp, inter — every other slug 404s on the variable package (confirmed via explicit E404 grep), meaning those ship static-only.\n\nRole logic: heading = classical serif set bold/italic or display caps (Bodoni Moda safe-pick; Playfair Display, Libre Caslon Display as alts). body = Exo 2, the only techno-flavored sans in the set that stays legible at running-text sizes with italic + variable weight (Rajdhani as condensed alt, no italic/variable). mono = VT323 safe-pick (Press Start 2P/Share Tech Mono/Space Mono as alts by legibility trade-off). accent = split across wide-techno-display (Orbitron, Audiowide, Michroma, Syncopate, Monoton, Righteous, Bungee family, Zen Dots, Iceland, Wallpoet, Major Mono Display) and Japanese katakana faces (Dela Gothic One safe-pick for bold display use; Noto Sans/Serif JP, M PLUS 1p, Sawarabi Mincho, Zen Tokyo Zoo as alts depending on whether the use is decorative headline vs. legible running Japanese text).\n\nRejected: Comic Neue (wrong tonal register — casual/handwriting, not Y2K chrome) and Inter (too neutral/contemporary; reserved this generic grotesk register for a school like Glassmorphism so Vaporwave doesn't collide on a plain-UI heading/body face).\n\nCross-school constraint: heading pick (Bodoni Moda, ornate high-contrast Didone italic) is deliberately far from what a Glassmorphism school would use (expected to be a soft neutral geometric sans like Inter/Manrope/Poppins), so no heading collision expected — flagging as an assumption since Glassmorphism's own picks weren't surveyed in this run.\n\nThree off-list faces verified the same way (npm + Fontsource API), all latin=true, static-only (no @fontsource-variable package — confirmed E404):\n- Chakra Petch (@fontsource/chakra-petch, weights 300-700, has italic) — angular Thai-designed techno sans, reads closer to actual sci-fi HUD type than Orbitron/Audiowide; strong heading/accent alt.\n- Turret Road (@fontsource/turret-road, weights 200-800) — chunky techno-slab display with real weight range, good for a heavier accent than Zen Dots/Iceland.\n- Trispace (@fontsource/trispace, weights 100-800, variable package DOES exist @fontsource-variable/trispace) — techno monospace-flavored sans with a working variable axis, a better body/UI candidate than Rajdhani since it has both latin coverage and variable weight and reads terminal-adjacent without the eye-strain of a true mono like VT323/Share Tech Mono.",
+  "safe_picks": {
+   "heading": "Bodoni Moda",
+   "body": "Exo 2",
+   "accent": "Dela Gothic One",
+   "mono": "VT323"
+  },
+  "school": "vaporwave"
+ }
+]
