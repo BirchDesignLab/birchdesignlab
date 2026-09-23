@@ -102,6 +102,8 @@ Items marked **(gated)** depend on a founder decision in section 4. Do them afte
 
 ### E9. Keep the taskbar still during swaps; clean up the arrival
 
+**Superseded by Stage 1 (09-23-26):** the naming contract is in `src/themes/README.md` ("View-transition names"): school names are `<id>-*` (so `vaporwave-taskbar`), one `:is()` rule per name, and the guard is the one in `tests/built/portal.test.ts`. Vaporwave's taskbar is already named `vaporwave-taskbar` (Stage 1 demo).
+
 - **Where**: `Header.astro` scoped style (`.taskbar`); `theme.css:397-422` (arrival and wordmark group); header CSS load order.
 - **Change**:
   - Give `.taskbar` a CSS `view-transition-name: vw-taskbar`, with `::view-transition-group(vw-taskbar)` set to `animation: none` for in-school swaps, so only page content tracks. Contract check: the README bans extra `transition:name` *directives*; the built guard (`tests/built/portal.test.ts:111`) only fails on duplicate CSS `view-transition-name`s, and none exist in this school today, so a unique CSS name passes. Catch: on arrival from another school, `vw-taskbar` exists only on the new page, so it would animate apart from the CRT power-on. Either give `::view-transition-new(vw-taskbar)` the same `vw-crt-on` on arrival, or scope the name to in-school swaps. If neither is clean, fall back to starting `vw-track`'s clip-path below the taskbar and removing the skew.

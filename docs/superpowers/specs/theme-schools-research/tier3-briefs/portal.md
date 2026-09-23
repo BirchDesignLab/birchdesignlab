@@ -208,6 +208,8 @@ These go in one portal PR before any school's Tier 3 work, because several schoo
 
 **P2. Chrome groups only for swaps within a school (the contract amendment behind S2).**
 
+*Built in Stage 1 (09-23-26). The shipped recipe is one `:is()` rule per name, and `data-to-theme` only affects the old capture; `src/themes/README.md` ("View-transition names") is the contract of record, not the two-rule sketch below.*
+
 The problem: a school-named group such as `vw-taskbar` or `cc-header` only pairs within its own school. On a cross-school swap, the old page's named element is styled by the *new* school's CSS, which cannot name it (the guard forbids naming another school). So it falls back to the browser's default fade and "animates apart from the arrival". Vaporwave raised this; it applies to cottagecore, glassmorphism and grandmillennial too.
 
 - **Change:**

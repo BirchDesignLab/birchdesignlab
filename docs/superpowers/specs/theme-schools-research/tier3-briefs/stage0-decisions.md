@@ -158,8 +158,12 @@ that is preload everything, then maybe that's what we need to do and just eat
 it up front. but we can do it in the transitions phase."
 - No literal portal or passage gesture.
 - The transitions phase builds individual transitions for each pair of
-  schools (from any school to any other), keyed on `data-from-theme` and
-  `data-to-theme`.
+  schools (from any school to any other). The choreography is keyed on the
+  arriving page, `html[data-theme='<dest>'][data-from-theme='<src>']`, in the
+  destination's theme.css. `data-to-theme` only exists for the old capture
+  (the swap removes it before any `::view-transition-*` pseudo exists), so it
+  can name the departing page's chrome but cannot style the animation (the
+  review panel proved this live; src/themes/README.md has the rule).
 - Transitions must never stall on loading. Preloading and drawing
   destinations ahead of time, even everything up front, is acceptable. The
   off-screen draw is built in the transitions phase, not Stage 1.

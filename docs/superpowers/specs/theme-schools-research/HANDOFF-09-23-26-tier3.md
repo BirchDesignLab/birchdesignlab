@@ -44,6 +44,30 @@ unless they start with `src/`.
 - `npm run verify` and the portal smoke test (`--contact`) were clean after
   Tier 1.
 
+## Stage 1 status (09-23-26, later the same day)
+
+Stage 1 is built, reviewed, fixed and committed (4ee4a55 to the Stage 1
+report commit), and stopped for the founder. Start from
+`tier3-stage1/stage1-report.md`: what shipped, the evidence, 11 open founder
+decisions (prompt copy with three drafts, placard labels and layout, prompt
+behaviour, bar width, cues, the dismiss label, BDL-010 copy, and a
+pre-existing root-page CSS leak), and what carries into Stage 2 (the P5
+wordmark proof comes first). The founder's Stage 1 answers are in
+`tier3-briefs/stage0-decisions.md` ("Stage 1 decisions"): the exhibit ships
+as **the Portal**, the transitions phase builds a transition for each pair
+of schools that never stalls on loading, and cottagecore gains dandelions in
+the light scheme.
+
+New tooling since this handoff was written:
+- `scripts/themes/motion.mjs --crop switcher|header`, with a hold-still
+  verdict and `--unname-switcher` as the negative control;
+- `scripts/themes/trace-arrival.mjs` (P4 timing);
+- `scripts/themes/compare-strips.mjs` (before over after);
+- `scripts/themes/harness/*` (live probes, founder shots);
+- `smoke.mjs`, which now checks the runtime end to end.
+
+Capture tools hide the first-load prompt unless you pass `--show-prompt`.
+
 ## Tier 3, in stages (stop for the founder after each)
 
 The founder approved the plan in `portal.md` section 6, as amended by

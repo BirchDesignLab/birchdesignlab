@@ -726,3 +726,28 @@ not on portal.md's list, so it was left out of Stage 1.
   and the new page starts at opacity 0.
 - **swiss:** already the fastest. The `step-end` wipe shows its first column
   only at 40 ms, a style choice worth a look.
+
+## Measured on the Stage 1 build (after the review fixes, 09-23-26)
+
+`trace-arrival.mjs --conditions cold,switcher-warm,warm` on the final Stage 1
+build, desktop dark, localhost with no added latency, 3 runs each. The
+`switcher-warm` condition opens the dialog, lets the warm-up finish, closes
+it, then switches. Median first visible frame, ms:
+
+| school | cold | switcher-warm | warm (repeat visit) |
+|---|---|---|---|
+| swiss | 138 | 141 | 95 |
+| glassmorphism | 210 | 174 | 94 |
+| grandmillennial | 226 | 207 | 132 |
+| vaporwave | 262 | 252 | 88 |
+| cottagecore | 304 | 257 | 94 |
+| bauhaus | 328 | 310 | 247 |
+
+As predicted, the shipped warm-up saves little locally (the load phase is
+only 18 to 48 ms here); its value is on a real network, where it removes the
+HTML and stylesheet round trips (see the latency table above). The 160 ms
+target is not met in Stage 1. The founder moved the rest to the transitions
+phase (stage0-decisions.md, "Loading and the transitions phase"): the
+off-screen draw of the destination, which the trace shows reaching 75 to 107
+ms, is built there, and each school's slow first frames are its Stage 2 item
+above. Raw output: `scripts/themes/.out/stage1-fix-trace/`.
