@@ -212,6 +212,26 @@ the phone. I am still impressed." Some transitions are "a little stuttery or
 buggy, but i know that is coming down the road": transitions phase, not Stage
 2. The plan is `tier3-stage2/stage2-plan.md`.
 
+**Stage 2 decisions (09-23-26).** Founder: "do you trust your judgement on all
+that stuff? if so let's go with exactly what you think we should do." All
+nine recommendations in `stage2-plan.md` ("Decisions for the founder before
+launch") are taken as written:
+1. The P5 proof is filmed on cottagecore.
+2. Stop after the proof, before the sweep adopts the recipe.
+3. Quiet as a destination is fixed in Stage 2, by a stylesheet imported only
+   by the `/t/quiet/` route (the root pages stay untouched).
+4. The font-preload cap rises to four, for faces that paint above the fold;
+   vaporwave adds Exo 2 and VT323. The first-load cost is shown at the stop.
+5. The sweep runs in two waves of three (A: vaporwave, glassmorphism, swiss;
+   B: cottagecore, grandmillennial, bauhaus).
+6. Safari/WebKit filming is parked for the transitions phase (backlog).
+7. Swiss's wordmark swaps in one step (the brief's station clock), never a
+   crossfade.
+8. Grandmillennial's awning is named `grandmillennial-header` if it blinks
+   mid-swap.
+9. Bauhaus's 12ch process heading is not widened (it tunes to today's copy).
+The per-school defaults in `stage2-plan.md` apply as listed.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

@@ -58,14 +58,22 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Branch `feat/theme-schools-tranche-1`. Current handoff:
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-tier3.md`
-(Tier 1 and 2 done; the founder's Stage 0 decisions are in
-`tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
+Branch `feat/theme-schools-tier3-stage2`. Current handoff:
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-stage2.md`,
+plan `tier3-stage2/stage2-plan.md` (Tier 1 and 2 done; the founder's
+decisions are in `tier3-briefs/stage0-decisions.md`). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
 cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
-PR'd so the founder can test on mobile live (BDL-010 is a working specimen
-in the Lab from PR #88); Stage 2 onward continues on a new branch.
+merged in PR #88 (BDL-010 is a working specimen in the Lab); Stage 2 (the
+defect sweep) under way.
+
+**Parked from the Stage 2 start (09-23-26):**
+- Safari. The founder's iPhone 17 Pro Max test (Safari, private) found some
+  transitions "a little stuttery or buggy". Every film and trace so far is
+  Chromium. For the transitions phase: film in WebKit too (Playwright's
+  WebKit is a download, and its Windows build is not iOS Safari, so a real
+  device pass stays the final word), and check Safari's view-transition
+  support for each school's choreography.
 
 **Parked from the Stage 1 stop (09-23-26):**
 - Vaporwave's pressed task button switches instantly on an in-school swap
