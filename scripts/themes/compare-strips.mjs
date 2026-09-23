@@ -9,6 +9,10 @@
  * Usage:
  *   node scripts/themes/compare-strips.mjs --before <png> --after <png> \
  *     --out <png> [--title "..."] [--before-label "..."] [--after-label "..."]
+ *
+ * An --out ending in .jpg writes a JPEG (quality 86) instead of a PNG. Added
+ * 09-23-26 (Tier 3 stage 2): tall phone sheets run past 5 MB as PNG, too big
+ * to reach the founder's phone.
  */
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -63,5 +67,5 @@ block(before, beforeLabel, '#c0504d');
 block(after, afterLabel, '#a3bd8f');
 
 await mkdir(dirname(out), { recursive: true });
-await writeFile(out, await canvas.encode('png'));
+await writeFile(out, /\.jpe?g$/i.test(out) ? await canvas.encode('jpeg', 86) : await canvas.encode('png'));
 console.log(out);
