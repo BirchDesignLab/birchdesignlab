@@ -424,6 +424,41 @@
     animation-name: glassmorphism-wordmark-in;
   }
 }
+/* The header bar holds still on an in-school swap (founder, wave A stop):
+   named only when both sides are glass (README recipe), so from another
+   school it stays in the root snapshot and rides the fade. The name goes on
+   the bar itself, never the header: a named element is a backdrop root, so
+   a named ancestor would stop the frost below it.
+   While named, the frost moves off the bar to an underlay just behind it.
+   A captured element that carries a backdrop-filter, or a backdrop-filter
+   anywhere in the transition's pseudo-elements, costs Chrome's snapshots
+   their subpixel text: the switcher's labels thin for the whole swap and it
+   fails hold-still. Dropping the frost outright shows the orbs crisp
+   through the bar. So the bar is captured as its tint and ink alone, and
+   the header's own ::before (same pill, same blur, unnamed) is baked into
+   the page's snapshot under it, fading with the page as the live bar's
+   backdrop would. At rest neither rule matches and the bar blurs itself. */
+html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header > .bar {
+  view-transition-name: glassmorphism-header;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 999px;
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  pointer-events: none;
+}
+/* Pinned in place, crossfade kept (animation-name: none, not animation:
+   none): the current-page thumb hands over across the page's own fade
+   instead of jumping to the new page before the old one has left. The bar's
+   pixels are the same in both images, so under the pair's plus-lighter the
+   glass itself never dims. */
+html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
+  animation-name: none;
+}
 @keyframes glass-out {
   to { opacity: 0; }
 }
