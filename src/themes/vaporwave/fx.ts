@@ -176,16 +176,14 @@ interface Scene {
 }
 
 function createScene(canvas: HTMLCanvasElement): Scene | null {
-  // preserveDrawingBuffer keeps the last frame in the canvas after it is
-  // shown. Without it, the snapshot an in-school page swap takes of the
-  // outgoing page caught a cleared canvas, and the hero flashed a grey-white
-  // field behind the palms (Tier 3 brief E1a).
+  // No preserveDrawingBuffer: the swap's snapshot of the hero holds because
+  // the teardown keeps the context until the transition finishes (below),
+  // so the buffer copy it costs every frame buys nothing (Tier 3 brief E1a).
   const gl = canvas.getContext('webgl', {
     antialias: false,
     depth: false,
     stencil: false,
     powerPreference: 'low-power',
-    preserveDrawingBuffer: true,
   });
   if (!gl) return null;
 
