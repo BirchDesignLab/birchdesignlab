@@ -25,6 +25,9 @@
  *   --motion               (do NOT emulate reduced motion; for looking at fx)
  *   --wait 600             (ms to settle after fonts, default 500)
  *
+ * Git Bash mangles leading-slash args into Windows paths; prefix the command
+ * with MSYS_NO_PATHCONV=1 when passing --routes from it.
+ *
  * Output: scripts/themes/.out/<label>/<slug>__<scheme>__<viewport>.png plus an
  * index.html contact sheet. .out/ is gitignored; captures are regenerable.
  */
