@@ -70,9 +70,21 @@ switcher (`THEMES` in `registry.ts` lists only schools with an enabled route;
   transition). The guard checks.
 - Header: a skip link to `#main` (`chrome.skip`), the wordmark
   (`chrome.wordmark` parts), the nav from `chrome.nav`, with
-  `aria-current="page"` on the current page's link.
+  `aria-current="page"` on the current page's link:
+  `isCurrent(to, Astro.url.pathname)` from `paths.ts` (an exact page match;
+  a path prefix would mark Contact current on the sent page).
 - Footer: `chrome.name`, `chrome.location`, the nav, `©` year + name, and the
   privacy link (`chrome.privacy`).
+- The portal adds a 76px strip below your footer so its fixed switcher never
+  covers your last line. It is `[data-portal-tail]`; paint its background if
+  your footer should run to the true bottom of the page. Never target the
+  portal's DOM any other way.
+
+## Components
+
+- Never name a component prop `as`. Astro reserves it for polymorphic
+  components and silently drops the whole `Props` type, so every caller fails
+  `astro check` (use `tag`).
 
 ## Contact
 
@@ -161,9 +173,16 @@ lamplight, not inverted gingham).
 ## Guards you must pass
 
 `node scripts/themes/render.mjs --theme <id>` builds with your route enabled,
-captures every page in both schemes at desktop and phone width, runs the
-contrast check and the built-site tests for your school, and prints where the
-PNGs are. Read the PNGs. Iterate until the page is good, not just passing.
+captures every page in both schemes at desktop and mobile width (a 2x touch
+phone; add `--viewports desktop,mobile,tablet` for tablet), runs the contrast
+check and the built-site tests for your school, and prints where the PNGs are.
+Read the PNGs. Iterate until the page is good, not just passing.
+
+Stills cannot show motion. `scripts/themes/motion.mjs` films the arrival
+transition, an in-school page swap and the background fx as timestamped frame
+strips (serve a build first; usage in its header).
+`scripts/themes/contact-sheet.mjs` composes a capture run into one sheet per
+school.
 
 Hard requirements: word and link parity with quiet, the contact contract,
 no JSON-LD, no em dash, contrast in both schemes, one `transition:name`, no

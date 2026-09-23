@@ -14,15 +14,17 @@
  *   2. astro build;
  *   3. serve dist/ on its own port (a small static server: Astro 7 allows one
  *      `astro preview` per project, and the author may already have one);
- *   4. capture every requested page, both schemes, desktop and phone, on the
- *      GPU (scripts/themes/capture.mjs), full page;
+ *   4. capture every requested page, both schemes, desktop and mobile (a 2x
+ *      touch phone; add tablet with --viewports), on the GPU
+ *      (scripts/themes/capture.mjs), full page, the portal switcher hidden
+ *      so it never lands mid-page over the design;
  *   5. contrast check for the school (scripts/themes/check-contrast.ts);
  *   6. the built-site tests whose names mention the school;
  *   7. stop the server, restore the route name, release the lock.
  *
  * Usage:
  *   node scripts/themes/render.mjs --theme vaporwave [--pages home,about] [--schemes dark]
- *     [--viewports desktop] [--motion] [--label vaporwave-r3] [--no-tests]
+ *     [--viewports desktop,mobile,tablet] [--motion] [--label vaporwave-r3] [--no-tests]
  * Output: scripts/themes/.out/<label>/ (PNGs + index.html contact sheet).
  */
 import { spawn, spawnSync } from 'node:child_process';
@@ -195,8 +197,9 @@ try {
     '--routes', routes.join(','),
     '--label', label,
     '--schemes', arg('schemes', 'dark,light'),
-    '--viewports', arg('viewports', 'desktop,phone'),
+    '--viewports', arg('viewports', 'desktop,mobile'),
     '--full-page',
+    '--hide-switcher',
     ...(flag('motion') ? ['--motion', '--wait', '2500'] : []),
   ];
   const capture = await runAsync(process.execPath, captureArgs, { env: { ...process.env, BDL_GPU: '1', MSYS_NO_PATHCONV: '1' } });
