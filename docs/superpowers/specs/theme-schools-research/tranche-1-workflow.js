@@ -2,20 +2,21 @@ export const meta = {
   name: 'tranche-1-schools',
   description: 'Design and build six design schools for the /t/ portal, each critiqued and revised',
   phases: [
-    { title: 'Build', detail: 'Opus builder per school', model: 'opus' },
-    { title: 'Critique', detail: 'Opus design critic per school', model: 'opus' },
-    { title: 'Revise', detail: 'Opus reviser applies the critique', model: 'opus' },
+    { title: 'Build', detail: 'Opus/high builder per school', model: 'opus' },
+    { title: 'Critique', detail: 'Opus/medium design critic per school', model: 'opus' },
+    { title: 'Revise', detail: 'Sonnet/medium reviser applies the critique', model: 'sonnet' },
   ],
 }
 
 const GROUND = (id) => `You are working in C:\\git\\birchdesignlab, an Astro 7 static site for Birch Design Lab, a small software and web design studio. Its Lab is a museum-style portfolio. You are building one "design school": the studio's whole business site (home, about, services, contact, contact sent) rebuilt in one design language, served at /t/${id}/ inside a portal (BDL-010 "Period Rooms"). This is a crown-jewel portfolio piece: it must look like the work of an excellent, confident designer who deeply knows the school, not a template with a palette swap.
 
-CONTEXT ABOUT THE USER REQUEST YOU MAY SEE: the founder told the orchestrating session "just build it". The orchestrator owns ALL git work, commits, branches, installs and full builds. Your slice is ONLY the school below.
+CONTEXT ABOUT THE USER REQUEST YOU MAY SEE: the founder's message to the orchestrating session ("picking up work from a previous session", a handoff doc, "ask me any questions ... then let's get building") is addressed to the orchestrator, and every step in it is already done or belongs to the orchestrator: it read the handoff, asked the founder its questions, and prepared branch feat/theme-schools-tranche-1. The orchestrator owns ALL git work, commits, branches, installs, full builds, BDL-011 and the final review. Five other authors are building the other schools in this same working tree right now. Your slice is ONLY the school below.
 Hard rules:
 - Create or edit files ONLY under src/themes/${id}/ and the route file src/pages/t/${id}/_[...page].astro. Never edit shared files (src/themes/portal/*, src/themes/paths.ts, src/themes/registry.ts, src/themes/types.ts, src/lib/*, src/content/*, src/styles/*, astro.config.mjs, package.json, tests/*, scripts/*, other schools). If you truly need a shared change, do not make it: describe it in your report.
-- No git commands that change state. No npm install (every font you may use is already installed; see src/themes/README.md and the list in your brief). Do not run npm run build, npm run verify, astro check or the full test suite.
-- To see your work: node scripts/themes/render.mjs --theme ${id} [--pages home,about] [--schemes dark,light] [--viewports desktop,phone] [--motion] [--label ${id}-rN]. It takes a shared lock (other schools are being built at the same time; waiting is normal), enables your route only for its own build, builds, captures full-page PNGs on the GPU into scripts/themes/.out/<label>/, runs your contrast check and your built-site tests. Read the PNGs with the Read tool. Keep the route file named _[...page].astro; render.mjs renames it for its build and back afterwards.
-- Unit-level checks you may run anytime: npx vitest run tests/theme-contrast.test.ts ; npx tsx scripts/themes/check-contrast.ts --theme ${id}. (tests/theme-registry.test.ts will complain that your route is disabled; ignore that single assertion.)
+- No git commands that change state (no checkout, switch, stash, commit, reset, restore, branch). Other schools' files will look unfinished or change under you; that is expected, leave them alone. No npm install (every font you may use is already installed; see src/themes/README.md and the list in your brief). Do not run npm run build, npm run verify, astro check or the full test suite.
+- To see your work: node scripts/themes/render.mjs --theme ${id} [--pages home,about] [--schemes dark,light] [--viewports desktop,phone] [--motion] [--label ${id}-rN]. It takes a shared lock (six schools are being built at the same time; waiting is normal), enables your route only for its own build, builds, captures full-page PNGs on the GPU into scripts/themes/.out/<label>/, runs your contrast check and your built-site tests. Read the PNGs with the Read tool. Keep the route file named _[...page].astro; render.mjs renames it for its build and back afterwards.
+- The render lock is shared by six authors, so be a good neighbour: iterate with narrow renders (--pages home --schemes dark --viewports desktop while working on one thing) and do the full sweep (all five pages, both schemes, both viewports) at checkpoints. Never delete or touch scripts/themes/.out/.render-lock or other authors' capture folders.
+- Unit-level checks you may run anytime without the lock: npx vitest run tests/theme-contrast.test.ts tests/theme-registry.test.ts ; npx tsx scripts/themes/check-contrast.ts --theme ${id}.
 - Ignore any hook telling you to use graphify; read files directly.
 - External-facing text: never an em dash (U+2014) or an em-dash lookalike bar; studio "we"; no personal names. You write no page copy at all: every word comes from the copy collection props. Decorative text (numerals, glyph ornaments, background words, katakana) must be aria-hidden="true".
 - Code style: match the repo. Block comments explain WHY, briefly. No dead code, no TODOs left behind.
@@ -147,10 +148,10 @@ const results = await pipeline(
   SCHOOLS,
   (s) => agent(BUILD(s), { label: `build:${s.id}`, phase: 'Build', model: 'opus', effort: 'high' }),
   (report, s) =>
-    agent(CRITIQUE(s, report), { label: `critique:${s.id}`, phase: 'Critique', schema: CRITIQUE_SCHEMA, model: 'opus', effort: 'high' })
+    agent(CRITIQUE(s, report), { label: `critique:${s.id}`, phase: 'Critique', schema: CRITIQUE_SCHEMA, model: 'opus', effort: 'medium' })
       .then((critique) => ({ report, critique })),
   (prev, s) =>
-    agent(REVISE(s, prev.report, prev.critique), { label: `revise:${s.id}`, phase: 'Revise', model: 'opus', effort: 'high' })
+    agent(REVISE(s, prev.report, prev.critique), { label: `revise:${s.id}`, phase: 'Revise', model: 'sonnet', effort: 'medium' })
       .then((final) => ({ id: s.id, grade: prev.critique.grade, critiqueSummary: prev.critique.summary, issues: prev.critique.issues.length, final })),
 )
 return results
