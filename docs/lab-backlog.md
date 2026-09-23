@@ -639,6 +639,11 @@ Kept here because it is the kind of clearance that gets lost in a merged PR body
 
   What the Astro jump actually touches: content collections (`content.config.ts`, the glob loader, `lab-schema.ts`, and zod if it majors too), `@astrojs/sitemap` compatibility, the three Svelte 5 islands, and `astro:assets` image optimization used by the BDL-005 hero. The 123 tests plus `astro check` catch structural breakage; they do **not** catch rendering and CSS drift, so it needs a real browser pass like the CSP gate got. Fully reversible: revert the commit, redeploy.
 
+  **Done 09-22-26 on the theme-schools branch stack** (`chore/deps-minors`, `chore/astro-7`, then one branch per remaining major). Astro 7.3.4 + @astrojs/svelte 9 + zod 4 landed together; every root and Lab page was pixel-diffed against the Astro 5 build (`scripts/themes/capture.mjs` + `diff-captures.mjs`, GPU). Two regressions surfaced and are fixed in `astro.config.mjs`: `compressHTML` pinned to `true` (the new `'jsx'` default ate whitespace in the copy) and a CSS restore plugin (Astro's CSS plugin cannot restore deleted CSS under Rolldown, which broke `/?tune`). Delete that plugin when Astro restores via `emitFile`.
+
+  **Held back, with reasons:**
+  - **TypeScript 7.0** ships no classic compiler API (its package exports only `version.cjs` plus `unstable/*` native bindings), and `@astrojs/check` 0.9.10 peers on `typescript ^5 || ^6`. On TS 7 the typecheck gate would not run, which is the failure mode `npm run verify` exists to prevent. Pinned to **TypeScript 6.0.x**, the newest version the gate supports; `astro check` proven live on it with a planted error. Revisit when `@astrojs/check` / `@astrojs/language-server` add TS 7 support.
+
 ## SEO + site-quality pass — 08-18-26
 
 Full pre-launch audit of the whole site across six dimensions (head / metadata /

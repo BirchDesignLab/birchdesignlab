@@ -75,6 +75,18 @@ describe('study branch', () => {
   it('requires hero alt text', () => {
     expect(() => labSchema.parse({ ...study, hero: { src: './x.png', alt: '' } })).toThrow();
   });
+  it('accepts a self-study with no client', () => {
+    const { client: _c, ...own } = study;
+    const parsed = labSchema.parse({ ...own, selfStudy: true });
+    expect(parsed.type === 'study' && parsed.client).toBeUndefined();
+  });
+  it('rejects a study with both a client and selfStudy', () => {
+    expect(() => labSchema.parse({ ...study, selfStudy: true })).toThrow();
+  });
+  it('rejects selfStudy: false (declare it or leave it out)', () => {
+    const { client: _c, ...own } = study;
+    expect(() => labSchema.parse({ ...own, selfStudy: false })).toThrow();
+  });
   it('rejects experiment fields on a study', () => {
     expect(() => labSchema.parse({ ...study, device: 'universal' })).toThrow();
     expect(() => labSchema.parse({ ...study, howto: ['Look at it.'] })).toThrow();

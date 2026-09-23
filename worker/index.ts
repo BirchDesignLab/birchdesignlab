@@ -7,6 +7,10 @@
  * POST /api/contact: honeypot -> rate limit -> validate -> email the owner,
  * then a 303 redirect so the no-JS form lands on /contact/sent. Errors return
  * plain pages rather than JSON because the form works without JavaScript.
+ * School forms under /t/<id>/ also send a hidden `return` field holding the
+ * school id; when it names a school whose sent page really exists, every exit
+ * (the redirect and the error pages' back link) stays inside that school.
+ * No `return` field means the root form, which behaves exactly as before.
  *
  * POST /api/beacon: scan counter for the card landings (src/components/
  * CardLanding.astro, context in docs/ar-card/HANDOFF.md). Writes one Analytics
@@ -15,6 +19,11 @@
  * empty 204.
  */
 import { parseContactSubmission } from '../src/lib/contact/validate';
+// The shape of a school id, shared with the site's own routing. Checked before
+// the value goes anywhere near a URL, so raw form input is never echoed into
+// Location or a link. Imported, not exported from here: workerd reads a main
+// module's named exports as entrypoints.
+import { SCHOOL_ID as THEME_ID } from '../src/themes/paths';
 
 // Notification recipient. Must be a VERIFIED Email Routing destination: sending
 // to a verified destination is free on all plans (Cloudflare Email Service),
@@ -77,6 +86,7 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
   try {
     form = await request.formData();
   } catch {
+    // No form, so no `return` field to read: this one always goes to root.
     return errorPage(url, 400, 'That submission was not a form post.');
   }
 
@@ -84,6 +94,10 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
     const v = form.get(name);
     return typeof v === 'string' ? v : undefined;
   };
+
+  // Resolved once, up front, so every exit below (honeypot, 429, 400, 502,
+  // success) lands in the same place.
+  const theme = await resolveReturnTheme(field('return'), env, url.origin);
 
   const parsed = parseContactSubmission({
     name: field('name'),
@@ -93,16 +107,16 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
   });
 
   // Bots that fill the honeypot get a cheerful success and no email.
-  if (!parsed.ok && parsed.honeypot) return sentRedirect(url);
+  if (!parsed.ok && parsed.honeypot) return sentRedirect(url, theme);
 
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
   const { success } = await env.CONTACT_RATE_LIMITER.limit({ key: ip });
   if (!success) {
-    return errorPage(url, 429, 'Too many messages in a row. Give it a minute and try again.');
+    return errorPage(url, 429, 'Too many messages in a row. Give it a minute and try again.', theme);
   }
 
   if (!parsed.ok) {
-    return errorPage(url, 400, parsed.errors.join(' '));
+    return errorPage(url, 400, parsed.errors.join(' '), theme);
   }
 
   const { name, email, message } = parsed.data;
@@ -119,11 +133,36 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
     return errorPage(
       url,
       502,
-      `The message did not go through. Email ${CONTACT_PUBLIC} directly and it will reach the same person.`
+      `The message did not go through. Email ${CONTACT_PUBLIC} directly and it will reach the same person.`,
+      theme,
     );
   }
 
-  return sentRedirect(url);
+  return sentRedirect(url, theme);
+}
+
+/** The school a submission should return to, or undefined for root.
+ *  Two gates: the raw value must match THEME_ID, and /t/<id>/contact/sent/
+ *  must actually exist in the built assets. Existence is asked of the assets
+ *  binding rather than a list in this file because the school registry is
+ *  build-time (src/themes); a hardcoded copy here would drift the first time
+ *  a school is added or retired, and the built pages are the one source that
+ *  cannot. Anything else (no field, bad shape, non-200, a throwing fetch)
+ *  quietly falls back to root: a visitor should never be stranded by this. */
+async function resolveReturnTheme(
+  raw: string | undefined,
+  env: Env,
+  origin: string,
+): Promise<string | undefined> {
+  if (raw === undefined || !THEME_ID.test(raw)) return undefined;
+  try {
+    const res = await env.ASSETS.fetch(new Request(new URL(`/t/${raw}/contact/sent/`, origin)));
+    // Only the status matters; release the body rather than leave it pending.
+    await res.body?.cancel();
+    return res.status === 200 ? raw : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Record one card scan in Analytics Engine. Body is the landing page's
@@ -156,21 +195,23 @@ async function handleBeacon(request: Request, env: Env): Promise<Response> {
 /** 303 so the browser GETs the confirmation page and refresh cannot resubmit.
  *  Trailing slash matches Astro's directory-format output and saves the
  *  assets layer's 307 canonicalization hop. */
-function sentRedirect(url: URL): Response {
+function sentRedirect(url: URL, theme?: string): Response {
+  const path = theme ? `/t/${theme}/contact/sent/` : '/contact/sent/';
   // Built by hand rather than Response.redirect so secure() can add headers:
   // a response from Response.redirect() has an immutable headers guard.
   return secure(
     new Response(null, {
       status: 303,
-      headers: { Location: new URL('/contact/sent/', url.origin).toString() },
+      headers: { Location: new URL(path, url.origin).toString() },
     }),
   );
 }
 
 /** Minimal self-contained error page; the form itself is no-JS, so errors have
  *  to be pages, not JSON. Styled just enough to not feel like a crash. */
-function errorPage(url: URL, status: number, detail: string): Response {
-  const back = new URL('/contact', url.origin).toString();
+function errorPage(url: URL, status: number, detail: string, theme?: string): Response {
+  // `theme` has already passed resolveReturnTheme, so it is safe in a URL.
+  const back = new URL(theme ? `/t/${theme}/contact/` : '/contact', url.origin).toString();
   const html = `<!doctype html>
 <html lang="en">
 <head>

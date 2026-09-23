@@ -1,18 +1,30 @@
 ---
-// Shared pre-paint theme bootstrap (single source of truth for the theme
-// contract: `data-theme` (what the visitor chose) and `data-face` (what this
-// page paints) on <html>, localStorage key 'theme', `.js` marker).
+// Shared pre-paint scheme bootstrap. Sets `data-scheme` (light|dark) on <html>
+// from the stored choice or the system preference, plus the `.js` marker.
+// Repeats src/lib/scheme.ts readStoredScheme by hand (an inline script cannot
+// import): current key 'scheme', then the pre-09-22-26 key 'theme', migrated
+// on first read. It never touches `data-theme`, which names a design school on
+// /t/ routes and is set statically by the route.
+//
+// Under ClientRouter (/t/ routes) this runs on the first load only; the portal
+// runtime re-stamps these onto every incoming document (src/themes/portal).
 ---
 <script is:inline>
-  const root = document.documentElement;
-  root.classList.add('js');
-  let stored = null;
-  try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
-  const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  const site = stored || system;
-  root.dataset.theme = site;
-  // data-face used to invert in the Lab (chiaroscuro), but that made every
-  // site<->lab crossing flip the theme underfoot while navigating. Dropped
-  // 08-18-26; data-face now just mirrors data-theme.
-  root.dataset.face = site;
+  (function () {
+    var root = document.documentElement;
+    root.classList.add('js');
+    var stored = null;
+    try {
+      stored = localStorage.getItem('scheme');
+      if (stored !== 'light' && stored !== 'dark') {
+        var legacy = localStorage.getItem('theme');
+        stored = legacy === 'light' || legacy === 'dark' ? legacy : null;
+        if (stored) {
+          localStorage.setItem('scheme', stored);
+          localStorage.removeItem('theme');
+        }
+      }
+    } catch (e) { /* storage blocked */ }
+    root.setAttribute('data-scheme', stored || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+  })();
 </script>

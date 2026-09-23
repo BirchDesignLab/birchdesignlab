@@ -1,0 +1,68 @@
+---
+/**
+ * The /t/ portal's document (spec §1, §4). Every school's route renders its
+ * header, page body and footer into these slots. What this owns, and no
+ * school may: the head (noindex, self canonical, the lab-experiment OG card,
+ * no JSON-LD), the ClientRouter, the school's font preloads, the school list
+ * for client code, the persisted switcher, and the portal runtime.
+ *
+ * It imports no stylesheet. Each school's route imports its own CSS, so a
+ * page ships its school's styles and nothing else (F016).
+ */
+import { ClientRouter } from 'astro:transitions';
+import { getEntry } from 'astro:content';
+import HeadCommon from '../../components/HeadCommon.astro';
+import { THEMES } from '../registry';
+import type { ThemeMeta, PageId } from '../types';
+import { serializePortalData, PORTAL_DATA_ID, type PortalData } from './schools';
+
+interface Props {
+  theme: ThemeMeta;
+  page: PageId;
+  /** The page's own title from the copy collection; the school's name is prefixed. */
+  title: string;
+  description: string;
+}
+const { theme, title, description } = Astro.props;
+
+const bdl011 = await getEntry('lab', 'bdl-011');
+const data: PortalData = {
+  schools: THEMES.map((t) => ({
+    id: t.id,
+    name: t.name,
+    era: t.era,
+    signature: t.signature,
+    nativeScheme: t.nativeScheme,
+    preload: t.fonts.flatMap((f) => f.preload ?? []),
+  })),
+  aboutHref: bdl011 && bdl011.data.status === 'live' ? '/lab/bdl-011/' : null,
+};
+const preloads = theme.fonts.flatMap((f) => f.preload ?? []);
+---
+<!doctype html>
+<html lang="en" data-theme={theme.id}>
+  <head>
+    <HeadCommon title={`${theme.name} · ${title}`} description={description} noindex ogImage="lab-experiment" />
+    {preloads.map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
+    <ClientRouter fallback="none" />
+    <script is:inline type="application/json" id={PORTAL_DATA_ID} set:html={serializePortalData(data)} />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot name="header" />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <slot name="footer" />
+    {/* Room for the fixed switcher, so it never sits on the footer's last line.
+        Inline so no school's CSS can remove it. */}
+    <div aria-hidden="true" style="height: 76px"></div>
+    <bdl-switcher transition:persist="switcher"></bdl-switcher>
+    <script>
+      import { initPortal } from './runtime';
+      import './switcher';
+
+      initPortal();
+    </script>
+  </body>
+</html>

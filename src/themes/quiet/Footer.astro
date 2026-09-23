@@ -1,0 +1,42 @@
+---
+/** The quiet school's footer: the root site's footer, driven by the chrome
+    copy. Inside the portal the Lab and Privacy links leave the school. */
+import { hrefFor } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme?: string }
+const { chrome, theme } = Astro.props;
+const year = new Date().getFullYear();
+const leaves = (to: string) => (theme && (to === 'lab' || to === 'privacy') ? '' : undefined);
+---
+<footer>
+  <div class="wrap grid">
+    <div class="ident">
+      <p class="smallcaps">{chrome.name}</p>
+      <p class="fine loc">{chrome.location}</p>
+    </div>
+    <nav aria-label="Footer">
+      {chrome.nav.map(({ to, label }, i) => (
+        <>{i > 0 && ' '}<a href={hrefFor(to, theme)} data-astro-reload={leaves(to)}>{label}</a></>
+      ))}
+      <!-- Reserved room (spec §8): social handles, once registered (see sameAs). -->
+    </nav>
+    <p class="fine">&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload={leaves('privacy')}>{chrome.privacy}</a></p>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--line); }
+  .grid {
+    display: flex; flex-wrap: wrap; gap: var(--space-4);
+    align-items: baseline; justify-content: space-between;
+    padding-block: var(--space-5);
+  }
+  nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  nav a { color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm); }
+  nav a:hover { color: var(--mark); }
+  .fine { color: var(--mark-muted); font-size: var(--text-sm); }
+  .loc { margin-top: var(--space-1); }
+  .fine a { color: var(--mark-muted); text-decoration: none; }
+  .fine a:hover { color: var(--mark); }
+</style>

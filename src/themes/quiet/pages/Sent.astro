@@ -1,0 +1,50 @@
+---
+/** Quiet contact-confirmation body. Rendered by /contact/sent/ and
+    /t/quiet/contact/sent/ (the Worker's 303 targets). */
+import BarkField from '../../../components/BarkField.astro';
+import BarkCredit from '../../../components/BarkCredit.astro';
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme?: string }
+const { copy, chrome, theme } = Astro.props;
+---
+<header class="hero">
+  <BarkField density={170} lockAspect />
+  <h1>{copy.heading}</h1>
+  <span class="bark-credit-pin" data-parity-skip><BarkCredit href="/lab/bdl-001" label={chrome.barkCredit} reload={!!theme} /></span>
+</header>
+<section class="wrap prose">
+  <p class="subline">{copy.body}</p>
+  <p class="back"><a class="more-link" href={hrefFor('home', theme)}>{copy.back}</a></p>
+</section>
+
+<style>
+  /* About's shining-tree hero grammar: a full-bleed bark field with the word
+     overlaid. lockAspect keeps the lenticels from smearing at this short band
+     height (see About). */
+  .hero {
+    position: relative; min-height: 44vh;
+    display: grid; place-items: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding-inline: var(--space-4);
+  }
+  .hero h1 {
+    position: relative;
+    font-size: var(--text-3xl);
+    text-align: center;
+    /* billboard color so the word holds contrast over the brightest lenticels */
+    color: var(--billboard-color);
+  }
+  .bark-credit-pin {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-4);
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .prose { padding-block: var(--space-6) var(--space-7); max-width: var(--measure); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); }
+  .back { margin-top: var(--space-5); }
+</style>

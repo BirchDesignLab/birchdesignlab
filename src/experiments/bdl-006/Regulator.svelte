@@ -98,7 +98,7 @@
     if (Number.isFinite(seeded) && seeded > 0) grain = seeded;
 
     const observer = new MutationObserver(readFace);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-scheme'] });
     return () => observer.disconnect();
   });
 </script>

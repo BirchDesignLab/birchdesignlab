@@ -1,35 +1,9 @@
 ---
-const year = new Date().getFullYear();
----
-<footer>
-  <div class="wrap grid">
-    <div class="ident">
-      <p class="smallcaps">Birch Design Lab</p>
-      <p class="fine loc">Mississippi Gulf Coast</p>
-    </div>
-    <nav aria-label="Footer">
-      <a href="/services">Services</a>
-      <a href="/lab">Lab</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
-      <!-- Reserved room (spec §8): social handles, once registered (see sameAs). -->
-    </nav>
-    <p class="fine">&copy; {year} Birch Design Lab <span aria-hidden="true">&middot;</span> <a href="/privacy">Privacy</a></p>
-  </div>
-</footer>
+/** The site footer on every non-portal page: the quiet school's footer with
+    the shared chrome copy (src/themes/quiet/Footer.astro). */
+import Footer from '../themes/quiet/Footer.astro';
+import { getCopy } from '../lib/copy';
 
-<style>
-  footer { border-top: 1px solid var(--line); }
-  .grid {
-    display: flex; flex-wrap: wrap; gap: var(--space-4);
-    align-items: baseline; justify-content: space-between;
-    padding-block: var(--space-5);
-  }
-  nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
-  nav a { color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm); }
-  nav a:hover { color: var(--mark); }
-  .fine { color: var(--mark-muted); font-size: var(--text-sm); }
-  .loc { margin-top: var(--space-1); }
-  .fine a { color: var(--mark-muted); text-decoration: none; }
-  .fine a:hover { color: var(--mark); }
-</style>
+const chrome = await getCopy('chrome');
+---
+<Footer chrome={chrome} />

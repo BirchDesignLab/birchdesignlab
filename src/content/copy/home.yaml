@@ -1,0 +1,29 @@
+# Home page copy. Rendered by the root site and every school on /t/.
+# The meta description and the opener's second paragraph are both
+# SITE_DESCRIPTION (src/lib/seo/site.ts), injected by getCopy('home'); edit
+# that sentence there, not here.
+page: home
+title: Custom software and web design · Mississippi Gulf Coast
+opener:
+  lead: A design lab, not an agency.
+doors:
+  kicker: What we build
+  items:
+    - title: Software
+      body: >-
+        The tool your business has been hoping for. The spreadsheet that has
+        grown into a monster, the process that you dread every week that eats
+        into your weekends? We can design, build, and maintain what fixes it.
+    - title: Web design
+      body: >-
+        A site that loads instantly, reads clearly, and presents your business
+        as the only one to even consider calling. No templates, no builders,
+        no bloat. Every site designed and constructed by hand.
+  more: How we build
+lab:
+  kicker: From the lab
+  pull: Everything we sell, we practice in the open.
+  more: Visit the lab
+closer:
+  lead: Ready when you are.
+  cta: Let's start your project

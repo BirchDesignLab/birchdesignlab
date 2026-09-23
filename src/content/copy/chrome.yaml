@@ -1,0 +1,19 @@
+# Words in the header and footer, shared by every page and every school.
+page: chrome
+name: Birch Design Lab
+wordmark:
+  - Birch
+  - Design Lab
+skip: Skip to content
+nav:
+  - to: services
+    label: Services
+  - to: lab
+    label: Lab
+  - to: about
+    label: About
+  - to: contact
+    label: Contact
+location: Mississippi Gulf Coast
+privacy: Privacy
+barkCredit: BDL-001 · The Bark Engine, live

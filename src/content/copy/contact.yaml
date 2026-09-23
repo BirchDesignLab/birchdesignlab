@@ -1,0 +1,21 @@
+# Contact page copy. The trust line is founder-provisional (reply promise).
+page: contact
+title: Contact · Birch Design Lab
+description: Start a conversation with Birch Design Lab about your software or website project.
+kicker: Contact
+heading: Start a conversation
+subline: >-
+  Tell us what you're trying to build, fix, or grow. Plain English is the
+  house language.
+labels:
+  name: Name
+  email: Email
+  message: What are you working on?
+  honeypot: Leave this field empty
+submit: Send it
+trust:
+  - Mississippi Gulf Coast
+  - A reply within one business day.
+invite: Prefer to skip the form? Email works the same.
+email: hello@birchdesignlab.com
+fine: Either way, one person reads it. The same one who builds the tools.

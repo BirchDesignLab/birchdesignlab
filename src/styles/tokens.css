@@ -70,14 +70,14 @@
   --line-accent: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* --- semantic: dark (the default face) ---
-   Keyed on data-face, not data-theme: data-theme is what the visitor chose,
-   data-face is what this page paints -- normally the same value, but the
-   BDL-002 room preview overrides data-face-scoped vars locally to demo a
-   palette without touching the visitor's actual choice. Before JS runs
-   neither attribute exists and bare :root gives the dark default, exactly
-   as before. */
-:root, :root[data-face='dark'] {
+/* --- semantic: dark (the default scheme) ---
+   Keyed on data-scheme, the visitor's light/dark choice (src/lib/scheme.ts).
+   It replaced data-face on 09-22-26; data-theme now names a design school on
+   /t/ routes and must never key these blocks. The BDL-002 room and the
+   styleguide preview palettes by injecting a later stylesheet with the same
+   selectors, which wins on source order. Before JS runs the attribute does
+   not exist and bare :root gives the dark default. */
+:root, :root[data-scheme='dark'] {
   color-scheme: dark;
   --field: var(--charcoal);
   --field-raised: var(--charcoal-raised);
@@ -103,7 +103,7 @@
 }
 
 /* --- semantic: light (the true inverse) --- */
-:root[data-face='light'] {
+:root[data-scheme='light'] {
   color-scheme: light;
   --field: var(--bark-white);
   --field-raised: var(--bark-white-dim);
@@ -130,14 +130,14 @@
 }
 
 /* --- no-JS fallback: honor a light system preference ---
-   Without JS the bootstrap never sets data-face, so the :root dark
+   Without JS the bootstrap never sets data-scheme, so the :root dark
    default would win. html:not(.js) (0,1,1) outranks :root (0,1,0);
    with JS the .js class makes this rule inert.
    This is also why a no-JS visitor gets an UNINVERTED Lab: the inversion
    needs the bootstrap to compute a face, and this block only knows the
    system preference. Accepted deliberately; the alternative is a second
    copy of both palettes.
-   KEEP IN SYNC with :root[data-face='light'] above. */
+   KEEP IN SYNC with :root[data-scheme='light'] above. */
 @media (prefers-color-scheme: light) {
   html:not(.js) {
     color-scheme: light;

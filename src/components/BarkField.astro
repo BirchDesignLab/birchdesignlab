@@ -23,6 +23,8 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
 
 <script>
   import { generateBark, resolveSeed, createBarkRenderer, renderBark2D } from '../lib/bark';
+  import type { BarkRenderer } from '../lib/bark/renderer';
+  import { onMount } from '../lib/lifecycle';
 
   const markColor = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--mark').trim();
@@ -34,124 +36,164 @@ const { seed, density = 140, class: className, live = false, lockAspect = false 
   };
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-  const cleanups: Array<() => void> = [];
+  // onMount, not module scope: under the /t/ portal's ClientRouter this module
+  // runs once per hard load while bodies are swapped in and out, so every
+  // field is set up per body and released before the next swap (see
+  // src/lib/lifecycle.ts). On plain pages it is the old run-once behaviour.
+  onMount(() => {
+    const cleanups: Array<() => void> = [];
 
-  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-bark]')) {
-    const seed = canvas.dataset.seed
-      ? Number(canvas.dataset.seed)
-      : resolveSeed(undefined, location.pathname);
-    const dashes = generateBark(seed, { density: Number(canvas.dataset.density) || 140 });
+    for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-bark]')) {
+      const seed = canvas.dataset.seed
+        ? Number(canvas.dataset.seed)
+        : resolveSeed(undefined, location.pathname);
+      let dashes = generateBark(seed, { density: Number(canvas.dataset.density) || 140 });
 
-    // short-wide fields opt in so lenticels keep their shape instead of streaking
-    const lockAspect = 'lockAspect' in canvas.dataset;
-    const gl = createBarkRenderer(canvas, dashes, lockAspect);
-    const paint2D = () => renderBark2D(canvas, dashes, markColor(), ...barkAlphas(), lockAspect);
-
-    if (gl) {
-      gl.setColors(markColor());
-      gl.setAlpha(...barkAlphas());
+      // short-wide fields opt in so lenticels keep their shape instead of streaking
+      const lockAspect = 'lockAspect' in canvas.dataset;
       // live fields (home) get weather and the daily grow-in; quiet fields don't
       const live = 'live' in canvas.dataset;
-      if (live) gl.setGust(true);
+      const paint2D = () => renderBark2D(canvas, dashes, markColor(), ...barkAlphas(), lockAspect);
 
-      // Pause the loop when the field is off-screen or the tab is hidden. This
-      // is a full-viewport WebGL canvas; repainting it behind content the
-      // visitor has scrolled past competes with the browser's scroll
-      // compositing (the "scroll lags" report) and burns GPU for nothing.
-      // Only animate while the field is actually visible. bdl-007 already does
-      // this; the bark field did not.
-      let inView = true;
-      let pageVisible = !document.hidden;
-      const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches;
-      const sync = () => {
-        if (shouldAnimate()) gl.start();
-        else { gl.stop(); if (reducedMotion.matches) gl.renderOnce(); }
-      };
+      let gl: BarkRenderer | null = createBarkRenderer(canvas, dashes, lockAspect);
 
-      if (reducedMotion.matches) gl.renderOnce();
-      else {
-        gl.start();
-        if (live) gl.growTree();
+      if (gl) {
+        let inView = true;
+        let pageVisible = !document.hidden;
+        let lost = false;
+        const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches;
+
+        // Pause the loop when the field is off-screen or the tab is hidden. This
+        // is a full-viewport WebGL canvas; repainting it behind content the
+        // visitor has scrolled past competes with the browser's scroll
+        // compositing (the "scroll lags" report) and burns GPU for nothing.
+        const sync = () => {
+          if (!gl || lost) return;
+          if (shouldAnimate()) gl.start();
+          else { gl.stop(); if (reducedMotion.matches) gl.renderOnce(); }
+        };
+
+        // Everything a renderer needs, so one built on a restored context comes
+        // back in exactly the state the lost one had. The grow-in only plays on
+        // first mount, never again after a restore.
+        const configure = (renderer: BarkRenderer, firstMount: boolean) => {
+          renderer.setColors(markColor());
+          renderer.setAlpha(...barkAlphas());
+          if (live) renderer.setGust(true);
+          if (reducedMotion.matches) renderer.renderOnce();
+          else if (firstMount) {
+            renderer.start();
+            if (live) renderer.growTree();
+          } else if (shouldAnimate()) renderer.start();
+          else renderer.renderOnce();
+        };
+        configure(gl, true);
+
+        // WebGL context loss (GPU reset, driver update, a laptop waking up).
+        // preventDefault tells the browser we will handle a restore, and the
+        // loop stops so it never calls into a dead context. On restore the old
+        // renderer's programs and buffers are gone, so a new one is built on
+        // the same canvas. Same approach as src/experiments/bdl-007/stage.ts.
+        // Until then the canvas is blank and the page's field colour shows.
+        const onContextLost = (event: Event) => {
+          event.preventDefault();
+          lost = true;
+          gl?.stop();
+        };
+        const onContextRestored = () => {
+          lost = false;
+          gl = createBarkRenderer(canvas, dashes, lockAspect);
+          if (gl) configure(gl, false);
+          else paint2D();
+        };
+        canvas.addEventListener('webglcontextlost', onContextLost, false);
+        canvas.addEventListener('webglcontextrestored', onContextRestored, false);
+
+        const intersectionObserver = new IntersectionObserver((entries) => {
+          inView = entries[0].isIntersecting;
+          sync();
+        });
+        intersectionObserver.observe(canvas);
+
+        const handleVisibility = () => { pageVisible = !document.hidden; sync(); };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        const resizeObserver = new ResizeObserver(() => {
+          if (!gl || lost) return;
+          gl.resize();
+          if (reducedMotion.matches) gl.renderOnce();
+        });
+        resizeObserver.observe(canvas);
+
+        const mutationObserver = new MutationObserver(() => {
+          if (!gl || lost) return;
+          gl.setColors(markColor());
+          gl.setAlpha(...barkAlphas());
+          if (reducedMotion.matches) gl.renderOnce();
+        });
+        mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-scheme'] });
+
+        const handleReducedMotionChange = () => { sync(); };
+        reducedMotion.addEventListener('change', handleReducedMotionChange);
+
+        // Retune: BDL-006 regenerates the field at a new grain without a remount.
+        // Same seed, so it stays the same tree; only the dash count moves.
+        // WebGL only; the 2D fallback has no incremental path and ignores this.
+        const handleRetune = (event: Event) => {
+          const next = Number((event as CustomEvent<{ density?: number }>).detail?.density);
+          if (!Number.isFinite(next) || next <= 0) return;
+          dashes = generateBark(seed, { density: next });
+          if (!gl || lost) return;
+          gl.setDashes(dashes);
+          if (reducedMotion.matches) gl.renderOnce();
+        };
+        document.addEventListener('bark:retune', handleRetune);
+
+        // Depth parallax: deeper dashes lag the scroll (uniform read per frame).
+        const handleScroll = () => {
+          if (!gl || lost || reducedMotion.matches) return;
+          const rect = canvas.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > innerHeight) return;
+          gl.setScroll((-rect.top / innerHeight) * 0.06);
+        };
+        addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+
+        cleanups.push(() => {
+          // Loss listeners first: destroy() forces a context loss on purpose,
+          // which must not be mistaken for a real one.
+          canvas.removeEventListener('webglcontextlost', onContextLost, false);
+          canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
+          intersectionObserver.disconnect();
+          resizeObserver.disconnect();
+          mutationObserver.disconnect();
+          document.removeEventListener('visibilitychange', handleVisibility);
+          reducedMotion.removeEventListener('change', handleReducedMotionChange);
+          document.removeEventListener('bark:retune', handleRetune);
+          removeEventListener('scroll', handleScroll);
+          gl?.destroy();
+          gl = null;
+        });
+      } else {
+        paint2D();
+
+        const resizeObserver = new ResizeObserver(paint2D);
+        resizeObserver.observe(canvas);
+
+        const mutationObserver = new MutationObserver(paint2D);
+        mutationObserver.observe(document.documentElement, {
+          attributes: true, attributeFilter: ['data-scheme'],
+        });
+
+        cleanups.push(() => {
+          resizeObserver.disconnect();
+          mutationObserver.disconnect();
+        });
       }
-
-      const intersectionObserver = new IntersectionObserver((entries) => {
-        inView = entries[0].isIntersecting;
-        sync();
-      });
-      intersectionObserver.observe(canvas);
-
-      const handleVisibility = () => { pageVisible = !document.hidden; sync(); };
-      document.addEventListener('visibilitychange', handleVisibility);
-
-      const resizeObserver = new ResizeObserver(() => {
-        gl.resize();
-        if (reducedMotion.matches) gl.renderOnce();
-      });
-      resizeObserver.observe(canvas);
-
-      const mutationObserver = new MutationObserver(() => {
-        gl.setColors(markColor());
-        gl.setAlpha(...barkAlphas());
-        if (reducedMotion.matches) gl.renderOnce();
-      });
-      mutationObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-face'] });
-
-      const handleReducedMotionChange = () => { sync(); };
-      reducedMotion.addEventListener('change', handleReducedMotionChange);
-
-      // Retune: BDL-006 regenerates the field at a new grain without a remount.
-      // Same seed, so it stays the same tree — only the dash count moves.
-      // WebGL only; the 2D fallback has no incremental path and ignores this.
-      const handleRetune = (event: Event) => {
-        const next = Number((event as CustomEvent<{ density?: number }>).detail?.density);
-        if (!Number.isFinite(next) || next <= 0) return;
-        gl.setDashes(generateBark(seed, { density: next }));
-        if (reducedMotion.matches) gl.renderOnce();
-      };
-      document.addEventListener('bark:retune', handleRetune);
-
-      // Depth parallax: deeper dashes lag the scroll (uniform read per frame).
-      const handleScroll = () => {
-        if (reducedMotion.matches) return;
-        const rect = canvas.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top > innerHeight) return;
-        gl.setScroll((-rect.top / innerHeight) * 0.06);
-      };
-      addEventListener('scroll', handleScroll, { passive: true });
-      handleScroll();
-
-      cleanups.push(() => {
-        gl.destroy();
-        intersectionObserver.disconnect();
-        resizeObserver.disconnect();
-        mutationObserver.disconnect();
-        document.removeEventListener('visibilitychange', handleVisibility);
-        reducedMotion.removeEventListener('change', handleReducedMotionChange);
-        document.removeEventListener('bark:retune', handleRetune);
-        removeEventListener('scroll', handleScroll);
-      });
-    } else {
-      paint2D();
-
-      const resizeObserver = new ResizeObserver(paint2D);
-      resizeObserver.observe(canvas);
-
-      const mutationObserver = new MutationObserver(paint2D);
-      mutationObserver.observe(document.documentElement, {
-        attributes: true, attributeFilter: ['data-theme', 'data-face'],
-      });
-
-      cleanups.push(() => {
-        resizeObserver.disconnect();
-        mutationObserver.disconnect();
-      });
     }
-  }
 
-  window.addEventListener('pagehide', (event) => {
-    if (event.persisted) return;
-    for (const cleanup of cleanups) {
-      cleanup();
-    }
+    return () => {
+      for (const cleanup of cleanups) cleanup();
+    };
   });
 </script>

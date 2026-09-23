@@ -1,0 +1,135 @@
+---
+/** Quiet contact body. Rendered by /contact/ and /t/quiet/contact/.
+    Inside the portal the form also carries the school (so the Worker sends
+    the visitor to this school's sent page) and opts out of the router, so a
+    submit is a real browser navigation (F006). The root form is unchanged. */
+import BarkField from '../../../components/BarkField.astro';
+import ContactHidden from '../../portal/ContactHidden.astro';
+import type { CopyData } from '../../../lib/copy';
+
+interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme?: string }
+const { copy, theme } = Astro.props;
+---
+<section class="contact wrap">
+  <div class="bark-rail">
+    <BarkField live lockAspect density={300} />
+  </div>
+  <div class="form-col">
+    <header class="intro">
+      <p class="smallcaps kicker">{copy.kicker}</p>
+      <h1>{copy.heading}</h1>
+      <p class="subline">{copy.subline}</p>
+    </header>
+
+    <!-- No-JS-first: a plain POST the Worker answers with a redirect to
+         /contact/sent. The `company` field is the honeypot; humans never see
+         it, bots autofill it and get silently dropped (worker/index.ts). -->
+    <form class="contact-form" method="post" action="/api/contact" data-astro-reload={theme ? '' : undefined}>
+      <div class="field">
+        <label for="cf-name">{copy.labels.name}</label>
+        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="cf-email">{copy.labels.email}</label>
+        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="cf-message">{copy.labels.message}</label>
+        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+      </div>
+      <div class="field hp" aria-hidden="true">
+        <label for="cf-company">{copy.labels.honeypot}</label>
+        <input id="cf-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+      {theme && <ContactHidden theme={theme} label={copy.labels.honeypot} honeypot={false} />}
+      <button class="cta-engraved" type="submit"
+        ><span class="fill" aria-hidden="true"></span><span class="lbl">{copy.submit}</span></button>
+    </form>
+
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">&middot;</span> </>}{part}</>)}</p>
+  </div>
+</section>
+
+<section class="loud" data-reveal>
+  <div class="wrap loud-inner">
+    <p class="invite">{copy.invite}</p>
+    <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
+    <p class="fine">{copy.fine}</p>
+  </div>
+</section>
+
+<style>
+  /* Two columns on desktop: form left, living bark rail anchored right. Source
+     order is bark-first so mobile reads bark band -> form; `order` swaps them on
+     desktop. Quiet luxury: the form keeps its comfortable measure and is not
+     stretched to fill its column. */
+  .contact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding-block: var(--space-6) var(--space-6);
+  }
+  .bark-rail { order: 1; position: relative; min-height: 34vh; overflow: hidden; }
+  .form-col { order: 2; }
+  @media (min-width: 720px) {
+    .contact { grid-template-columns: 60% 40%; gap: var(--space-6); align-items: stretch; }
+    .form-col { order: 1; }
+    .bark-rail { order: 2; min-height: 0; }   /* stretch to the form column's height */
+  }
+
+  .trust {
+    margin-top: var(--space-4);
+    color: var(--mark-muted); font-size: var(--text-sm);
+  }
+
+  .intro { padding-block: 0 var(--space-5); max-width: var(--measure-wide); }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+
+  .contact-form {
+    display: grid; gap: var(--space-4);
+    max-width: 44rem;
+  }
+  .field { display: grid; gap: var(--space-1); }
+  .field label { color: var(--mark-muted); font-size: var(--text-sm); }
+  .field input, .field textarea {
+    font: inherit; color: var(--mark);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 0.6em 0.75em;
+    /* square corners, house geometry (wall-label tags, theme toggle) */
+    border-radius: 0;
+  }
+  .field textarea { resize: vertical; min-height: 9rem; }
+  .field input:focus-visible, .field textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 0;
+    border-color: var(--accent);
+  }
+  /* .cta-engraved was authored for <a>; neutralize the button UA styles. */
+  .contact-form .cta-engraved {
+    justify-self: start;
+    background: transparent; cursor: pointer;
+  }
+
+  /* Honeypot: removed from sight and tab order, still in the form payload. */
+  .hp {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Loud moment — the direct-email alternative (.loud primitive in base.css). */
+  .invite {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    line-height: 1.2; max-width: 24ch;
+  }
+  .mail {
+    display: inline-block; margin-top: var(--space-4);
+    font-family: var(--font-display);
+    /* long address must survive narrow phones */
+    font-size: clamp(1.3rem, 5.5vw, var(--text-2xl));
+    overflow-wrap: anywhere;
+  }
+  .fine { color: var(--accent); font-size: var(--text-sm); margin-top: var(--space-4); }
+</style>

@@ -1,0 +1,18 @@
+---
+import { hrefFor } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string }
+const { chrome, theme } = Astro.props;
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <p>{chrome.name}</p>
+  <p>{chrome.location}</p>
+  <nav aria-label="Footer">
+    {chrome.nav.map(({ to, label }) => (
+      <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
+    ))}
+  </nav>
+  <p>&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+</footer>
