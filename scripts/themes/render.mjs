@@ -28,16 +28,14 @@
  * Output: scripts/themes/.out/<label>/ (PNGs + index.html contact sheet).
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { createServer } from 'node:http';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname, extname, normalize } from 'node:path';
+import { existsSync, renameSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { serveDist, waitForServer } from './lib/serve-dist.mjs';
+import { acquireLock as takeLock, releaseLock } from './lib/render-lock.mjs';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const OUT = join(REPO, 'scripts', 'themes', '.out');
-const LOCK = join(OUT, '.render-lock');
 const PORT = 4455;
-const STALE_MS = 15 * 60 * 1000;
 const ASTRO = join(REPO, 'node_modules', 'astro', 'bin', 'astro.mjs');
 
 function arg(name, fallback) {
@@ -59,36 +57,9 @@ const routes = pages.map((p) => {
 });
 const label = arg('label', `${theme}-${new Date().toISOString().slice(11, 19).replace(/:/g, '')}`);
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function acquireLock() {
-  mkdirSync(OUT, { recursive: true });
-  let waited = 0;
-  for (;;) {
-    try {
-      mkdirSync(LOCK);
-      writeFileSync(join(LOCK, 'owner.json'), JSON.stringify({ theme, pid: process.pid, at: Date.now() }));
-      return;
-    } catch {
-      let owner = null;
-      try {
-        owner = JSON.parse(readFileSync(join(LOCK, 'owner.json'), 'utf8'));
-      } catch {}
-      if (owner && Date.now() - owner.at > STALE_MS) {
-        console.log(`render: breaking a stale lock held by ${owner.theme} (pid ${owner.pid})`);
-        rmSync(LOCK, { recursive: true, force: true });
-        continue;
-      }
-      if (waited % 30000 === 0) console.log(`render: waiting for the build lock (held by ${owner?.theme ?? 'someone'})...`);
-      await sleep(3000);
-      waited += 3000;
-    }
-  }
-}
-
-function releaseLock() {
-  rmSync(LOCK, { recursive: true, force: true });
-}
+/* The build lock (scripts/themes/.out/.render-lock) and the static server
+   live in lib/, shared with snap.mjs. */
+const acquireLock = () => takeLock(theme);
 
 function run(cmd, args, opts = {}) {
   const res = spawnSync(cmd, args, { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts });
@@ -107,43 +78,6 @@ function runAsync(cmd, args, opts = {}) {
     child.stderr?.on('data', (d) => (out += d));
     child.on('close', (code) => resolve({ code: code ?? 1, out }));
   });
-}
-
-const TYPES = {
-  '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript',
-  '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2', '.woff': 'font/woff',
-  '.glb': 'model/gltf-binary', '.wasm': 'application/wasm', '.xml': 'application/xml', '.txt': 'text/plain',
-  '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json',
-};
-
-/** Serve dist/ the way Workers Static Assets does for our purposes:
-    directories resolve to index.html, anything missing is the 404 page. */
-function serveDist(port) {
-  const dist = join(REPO, 'dist');
-  const server = createServer((req, res) => {
-    const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    let file = normalize(join(dist, path));
-    if (!file.startsWith(dist)) { res.writeHead(403).end(); return; }
-    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
-    let status = 200;
-    if (!existsSync(file)) { file = join(dist, '404.html'); status = 404; }
-    res.writeHead(status, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
-    res.end(readFileSync(file));
-  });
-  return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)));
-}
-
-async function waitForServer(url, ms) {
-  const until = Date.now() + ms;
-  while (Date.now() < until) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return true;
-    } catch {}
-    await sleep(500);
-  }
-  return false;
 }
 
 const routeDir = join(REPO, 'src', 'pages', 't', theme);

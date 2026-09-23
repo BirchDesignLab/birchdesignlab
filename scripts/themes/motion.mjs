@@ -20,8 +20,9 @@
  *   BDL_GPU=1 node scripts/themes/motion.mjs --base http://127.0.0.1:8787 \
  *     --schools vaporwave,swiss [--scenarios arrive,page,fx] \
  *     [--viewports desktop,mobile] [--schemes dark] [--label motion] \
- *     [--crop switcher|header] [--show-prompt] [--unname-switcher]
- * Output: scripts/themes/.out/<label>/<school>__<scenario>__<scheme>__<viewport>.png
+ *     [--crop switcher|header|wordmark] [--dense] [--from <school>] \
+ *     [--show-prompt] [--unname-switcher]
+ * Output: scripts/themes/.out/<label>/<school>__<scenario>[__from-<school>]__<scheme>__<viewport>[__crop-<name>].png
  * plus manifest.json.
  *
  * --crop (added 09-23-26 for Tier 3 stage 1): film the same scenario but lay
@@ -52,6 +53,50 @@
  * manifest.json merges with the one already in the --label folder: a strip
  * filmed again replaces its old entry (and that entry's problems), and every
  * other entry stays, so a run can be topped up one school at a time.
+ *
+ * Added 09-23-26 for Tier 3 stage 2 (the P5 wordmark proof):
+ *
+ * --from <school>: the arrive scenario starts on /t/<school>/ instead of
+ * /t/quiet/, and its file name gains `__from-<school>` after the scenario
+ * (without --from, names are exactly as before). The target may be quiet
+ * (`--schools quiet --from cottagecore` films arriving at quiet). A school
+ * never arrives from itself. page and fx ignore it.
+ *
+ * --crop wordmark: the crop is the union of the old wordmark's box (the
+ * element whose computed view-transition-name is `wordmark`, measured on the
+ * departing page before the trigger) and the new one's (measured on the
+ * arriving page once the film settles), padded by the difference in their
+ * sizes so a morph between them, or an image drawn at its own size inside
+ * the morphing box, stays in frame. For page, Home's wordmark and About's.
+ *
+ * Dense frames (always with --crop wordmark; --dense for any crop or full
+ * frame): the sheet shows every screencast frame from the trigger until the
+ * transition's `finished` resolves plus 100 ms, not 16 evenly spaced picks,
+ * each labelled with its time since the trigger, in as many rows as it
+ * takes. Nothing is dropped. The screencast itself only sends a frame when
+ * the page repaints and waits for each acknowledgement, so the manifest
+ * records the longest gap between frames. Dense films are encoded at JPEG
+ * 92 so a small wordmark stays legible; everything else stays at 82 (the
+ * hold-still thresholds are measured at 82).
+ *
+ * The wordmark judge (with --crop wordmark or --dense, for arrive and page):
+ * lib/wordmark-sampler.mjs watches the wordmark's view-transition images
+ * from `ready` to `finished` and lib/wordmark-judge.mjs gives the verdict,
+ * stored per strip in the manifest and printed:
+ *   wordmarkOverlap  arrive (two schools' wordmarks): fails when both images
+ *                    are above 0.10 effective opacity at once;
+ *   wordmarkBlink    page (one school's wordmark on both sides): fails when
+ *                    the two images sum below 0.90.
+ * The manifest also records what the browser resolved for each image's and
+ * the group's animation (name, duration, delay, timing function, fill), and
+ * whether the group animates. A strip the judge could not sample (no
+ * transition, no wordmark on one side) is a problem, never a pass.
+ *
+ * Every 4xx or 5xx response and every failed request (other than the
+ * blocked analytics) is a problem too, so a missing font or model shows up
+ * beside the strip it spoiled instead of as a silent 404.
+ *
+ * --base defaults to $SNAP_BASE when set (snap.mjs sets it), else :8787.
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -61,6 +106,8 @@ import { fileURLToPath } from 'node:url';
 import { VIEWPORTS } from './capture.mjs';
 import { toPixels, judgeHoldStill, barMismatch, HOLD_STILL } from './lib/hold-still.mjs';
 import { suppressPrompt } from './lib/portal-prompt.mjs';
+import { PSEUDOS, samplerInit, markTrigger, collect } from './lib/wordmark-sampler.mjs';
+import { judgeWordmark } from './lib/wordmark-judge.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -70,7 +117,7 @@ function arg(name, fallback) {
 }
 const list = (name, fallback) => (arg(name, fallback) || '').split(',').filter(Boolean);
 
-const base = arg('base', 'http://127.0.0.1:8787').replace(/\/$/, '');
+const base = arg('base', process.env.SNAP_BASE || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const schools = list('schools', '');
 const scenarios = list('scenarios', 'arrive,page,fx');
 const viewports = list('viewports', 'desktop,mobile');
@@ -83,6 +130,9 @@ const unnameSwitcher = process.argv.includes('--unname-switcher');
 const CROPS = {
   switcher: { sel: 'bdl-switcher', padX: 90, padY: 10 },
   header: { sel: 'header', padX: 0, padY: 8 },
+  // No selector: the wordmark is found by its computed view-transition-name,
+  // and its crop is the union of the old and new boxes (see wordmarkCrop).
+  wordmark: { sel: null, padX: 24, padY: 10 },
 };
 const crop = arg('crop', '');
 if (crop && !CROPS[crop]) {
@@ -93,6 +143,19 @@ if (!schools.length) {
   console.error('usage: node scripts/themes/motion.mjs --schools <id,...> [--base ...] [--scenarios arrive,page,fx]');
   process.exit(1);
 }
+const from = arg('from', '');
+if (from && !/^[a-z][a-z0-9-]{0,31}$/.test(from)) {
+  console.error(`bad --from ${from}`);
+  process.exit(1);
+}
+if (from && schools.includes(from) && scenarios.includes('arrive')) {
+  console.error(`--from ${from}: a school never arrives from itself; drop ${from} from --schools`);
+  process.exit(1);
+}
+const dense = crop === 'wordmark' || process.argv.includes('--dense');
+/** The arrive file-name tag: only when --from was given, so every name
+    filmed before it existed stays the same. */
+const fromTag = (scenario) => (from && scenario === 'arrive' ? `__from-${from}` : '');
 
 /* How long to film after the trigger, and how many moments the sheet shows.
    A school's arrival is held to about 700 ms (README), so 1.2 s covers the
@@ -122,7 +185,7 @@ function problem(message) {
 /** Film `ms` of the page after `trigger()`, returning frames with their time
     since the trigger. The screencast only emits a frame when the page
     repaints, so a still page yields few frames and a moving one many. */
-async function film(page, ms, trigger, settle = false) {
+async function film(page, ms, trigger, settle = false, quality = 82) {
   const cdp = await page.context().newCDPSession(page);
   const frames = [];
   let t0 = null;
@@ -130,10 +193,21 @@ async function film(page, ms, trigger, settle = false) {
     frames.push({ data, at: metadata.timestamp });
     try { await cdp.send('Page.screencastFrameAck', { sessionId }); } catch {}
   });
-  await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 82, everyNthFrame: 1 });
+  await cdp.send('Page.startScreencast', { format: 'jpeg', quality, everyNthFrame: 1 });
   await page.waitForTimeout(250);
+  // A page with nothing to repaint may send no frame before the trigger, and
+  // then the strip has no "before" picture. A screenshot stands in (the same
+  // size as a screencast frame: both are CSS px, even at a device scale of
+  // 2), marked so the manifest can say so.
+  if (!frames.length) {
+    const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality });
+    frames.push({ data, at: Date.now() / 1000, screenshot: true });
+  }
   t0 = Date.now() / 1000;
-  await trigger();
+  // A trigger may return the page's own clock at the moment it fired (epoch
+  // ms, from markTrigger), so frames share a zero with the wordmark samples.
+  const marked = await trigger();
+  if (typeof marked === 'number') t0 = marked / 1000;
   await page.waitForTimeout(ms);
   if (settle) {
     // Keep filming until the router's transition has finished (it drops
@@ -141,6 +215,16 @@ async function film(page, ms, trigger, settle = false) {
     // page. Frames past `ms` never reach the sheet; pick() stops at `ms`.
     await page
       .waitForFunction(() => !document.documentElement.hasAttribute('data-astro-transition'), null, { timeout: 3000 })
+      .catch(() => {});
+    // With the wordmark sampler in the page, also wait for the transition
+    // that followed the trigger to report `finished`.
+    await page
+      .waitForFunction(() => {
+        const s = window.__bdlWm;
+        if (!s || s.trigger == null) return true;
+        const run = s.runs.find((r) => r.calledAt >= s.trigger);
+        return !run || run.finishedAt != null || run.error != null;
+      }, null, { timeout: 3000 })
       .catch(() => {});
     await page.waitForTimeout(150);
   }
@@ -168,7 +252,7 @@ function pick(frames, n, ms) {
 
 /** `box` (CSS px, optional) crops every frame to one element; `vpWidth` maps
     CSS px onto the screencast's frame pixels, which need not match. */
-async function sheet(frames, file, cols, cellW, box = null, vpWidth = 0) {
+async function sheet(frames, file, cols, cellW, box = null, vpWidth = 0, title = null) {
   const images = await Promise.all(frames.map((f) => loadImage(Buffer.from(f.data, 'base64'))));
   const k = box ? images[0].width / vpWidth : 1;
   const src = box
@@ -177,16 +261,29 @@ async function sheet(frames, file, cols, cellW, box = null, vpWidth = 0) {
   const cellH = Math.round((src.h / src.w) * cellW);
   const PAD = 12;
   const CAP = 26;
+  // A title band (dense films only) says what the strip is and what the
+  // judge found, so a sheet read on its own is not misread.
+  const HEAD = title ? CAP + PAD : 0;
   const rows = Math.ceil(images.length / cols);
-  const canvas = createCanvas(PAD + cols * (cellW + PAD), PAD + rows * (cellH + CAP + PAD));
+  let width = PAD + cols * (cellW + PAD);
+  if (title) {
+    const m = createCanvas(1, 1).getContext('2d');
+    m.font = '600 15px sans-serif';
+    width = Math.max(width, Math.ceil(m.measureText(title).width) + 2 * PAD);
+  }
+  const canvas = createCanvas(width, HEAD + PAD + rows * (cellH + CAP + PAD));
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#1b1b1d';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.font = '600 15px sans-serif';
   ctx.textBaseline = 'middle';
+  if (title) {
+    ctx.fillStyle = '#e8e6e1';
+    ctx.fillText(title, PAD, PAD + CAP / 2);
+  }
   images.forEach((img, i) => {
     const x = PAD + (i % cols) * (cellW + PAD);
-    const y = PAD + Math.floor(i / cols) * (cellH + CAP + PAD);
+    const y = HEAD + PAD + Math.floor(i / cols) * (cellH + CAP + PAD);
     ctx.drawImage(img, src.x, src.y, src.w, src.h, x, y, cellW, cellH);
     ctx.fillStyle = '#e8e6e1';
     const ms = frames[i].ms;
@@ -220,6 +317,34 @@ function measureSwitcher(page) {
     }
     return { bar: box(bar), buttons: [...bar.children].map(box).filter((b) => b.w && b.h), drawn };
   });
+}
+
+/** The wordmark's box in CSS px: the element whose computed
+    view-transition-name is `wordmark` (Astro names it through a
+    data-astro-transition-scope rule, so no selector is assumed). `count`
+    above 1 would abort every transition, so it is reported. */
+function measureWordmark(page) {
+  return page.evaluate(() => {
+    const named = [...document.querySelectorAll('*')].filter((el) => getComputedStyle(el).viewTransitionName === 'wordmark');
+    const r = named[0]?.getBoundingClientRect();
+    if (!r || !r.width || !r.height) return null;
+    return { x: r.left, y: r.top, w: r.width, h: r.height, count: named.length, tag: named[0].tagName.toLowerCase() };
+  });
+}
+
+/** The union of the two wordmark boxes, padded by at least the difference in
+    their sizes: an image drawn at its own size (object-fit: none) inside a
+    box morphing from one to the other can overhang the box by that much.
+    Clamped to the viewport. */
+function wordmarkCrop(a, b, vw, vh) {
+  const { padX, padY } = CROPS.wordmark;
+  const px = Math.max(padX, Math.abs(a.w - b.w));
+  const py = Math.max(padY, Math.abs(a.h - b.h));
+  const x = Math.max(0, Math.min(a.x, b.x) - px);
+  const y = Math.max(0, Math.min(a.y, b.y) - py);
+  const right = Math.min(vw, Math.max(a.x + a.w, b.x + b.w) + px);
+  const bottom = Math.min(vh, Math.max(a.y + a.h, b.y + b.h) + py);
+  return { x, y, w: right - x, h: bottom - y };
 }
 
 async function decode(frame) {
@@ -271,8 +396,52 @@ async function followLink(page, href) {
     replaces (and is replaced by) that strip's entry like any other, and its
     problems travel with it rather than being carried forward loose. */
 function stub(id, scenario, scheme, vpName) {
-  const file = `${id}__${scenario}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}__FAILED.png`;
-  return { school: id, scenario, scheme, viewport: vpName, crop: crop || null, file, framesFilmed: 0, failed: true, noImage: true, problems: strip.problems };
+  const file = `${id}__${scenario}${fromTag(scenario)}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}__FAILED.png`;
+  return {
+    school: id, scenario, ...(fromTag(scenario) ? { from } : {}), scheme, viewport: vpName, crop: crop || null, file,
+    framesFilmed: 0, failed: true, noImage: true, problems: strip.problems,
+  };
+}
+
+/** Judge the wordmark through the transition that followed the trigger.
+    Arrivals are judged for overlap (two schools' wordmarks), in-school swaps
+    for blink (one wordmark on both sides). Returns the manifest entry's
+    `wordmark` block, and raises a problem for a failure or anything the
+    judge could not see. */
+async function judgeStrip(page, where, scenario, before, after) {
+  const kind = scenario === 'page' ? 'blink' : 'overlap';
+  const key = kind === 'blink' ? 'wordmarkBlink' : 'wordmarkOverlap';
+  const got = await collect(page);
+  const images = { old: !!before, new: !!after };
+  const verdict = judgeWordmark(got.ok ? got.samples : [], { kind, images });
+  // With both wordmarks there, an empty series means the sampler saw no
+  // transition; say why.
+  if (!got.ok && images.old && images.new) verdict.reason = got.reason;
+  if (verdict.unsampled) problem(`${where}: ${key} could not be judged (${verdict.reason})`);
+  else if (!verdict.pass) {
+    const w = verdict.worst;
+    problem(`${where}: ${key} FAILED at +${w.ms} ms (old ${w.old}, new ${w.new}${kind === 'blink' ? `, sum ${w.score}` : ''})`);
+  }
+  if (before?.count > 1 || after?.count > 1) problem(`${where}: ${Math.max(before?.count ?? 0, after?.count ?? 0)} elements named wordmark on one page`);
+  // A live-frame sample the replay disagrees with means the replay is not
+  // what the browser drew, so the verdict cannot be trusted either way.
+  if (got.ok && got.replayVsLive.worst.diff > 0.05) {
+    const d = got.replayVsLive.worst;
+    problem(`${where}: wordmark replay disagrees with a live sample (${d.part} at +${d.ms} ms: live ${d.live}, replay ${d.replay})`);
+  }
+  const { samples, ...rest } = got;
+  return {
+    entry: {
+      [key]: { pass: verdict.pass, unsampled: verdict.unsampled, worst: verdict.worst, threshold: verdict.threshold ?? null, reason: verdict.reason ?? null },
+      judge: { ...rest, samplesJudged: verdict.samples },
+      boxes: { before, after },
+    },
+    key,
+    verdict,
+    samples: samples ?? [],
+    finishedMs: got.finishedMs ?? null,
+    readyMs: got.readyMs ?? null,
+  };
 }
 
 for (const scheme of schemes) {
@@ -299,24 +468,39 @@ for (const scheme of schemes) {
         });
       });
     }
+    if (dense) await context.addInitScript(samplerInit, PSEUDOS);
     await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
     const page = await context.newPage();
     page.on('pageerror', (e) => problem(`${page.url()} pageerror: ${e.message}`));
     page.on('console', (m) => { if (m.type() === 'error') problem(`${page.url()} console: ${m.text()}`); });
+    page.on('response', (r) => { if (r.status() >= 400) problem(`${page.url()} ${r.status()} for ${r.url()}`); });
+    page.on('requestfailed', (r) => {
+      if (!r.url().includes('/cdn-cgi/zaraz/')) problem(`${page.url()} request failed: ${r.url()} (${r.failure()?.errorText})`);
+    });
 
     for (const id of schools) {
       for (const scenario of scenarios) {
         const plan = PLAN[scenario];
         if (!plan) throw new Error(`unknown scenario ${scenario}`);
-        const start = scenario === 'arrive' ? '/t/quiet/' : `/t/${id}/`;
+        const start = scenario === 'arrive' ? `/t/${from || 'quiet'}/` : `/t/${id}/`;
+        const judged = dense && scenario !== 'fx';
         strip = { problems: [] };
         await page.goto(base + start, { waitUntil: 'networkidle' });
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(600);
         // The crop box is measured on the page before the trigger, padded,
-        // and clamped to the viewport.
+        // and clamped to the viewport. The wordmark's is widened to take in
+        // the arriving page's wordmark once the film has settled.
         let box = null;
-        if (crop) {
+        const mark0 = judged || crop === 'wordmark' ? await measureWordmark(page) : null;
+        if (crop === 'wordmark') {
+          box = mark0 && wordmarkCrop(mark0, mark0, vp.width, vp.height);
+          if (!box) {
+            problem(`${id} ${scenario} ${vpName}: no element named wordmark on ${start} to crop to`);
+            made.push(stub(id, scenario, scheme, vpName));
+            continue;
+          }
+        } else if (crop) {
           box = await page.evaluate(
             ([{ sel, padX, padY }, w, h]) => {
               const r = document.querySelector(sel)?.getBoundingClientRect();
@@ -335,10 +519,17 @@ for (const scheme of schemes) {
         }
         const still0 = crop === 'switcher' ? await measureSwitcher(page) : null;
         const frames = await film(page, plan.ms, async () => {
+          // The mark goes in just before the click is dispatched.
+          const marked = dense ? await markTrigger(page) : undefined;
           if (scenario === 'arrive') await followLink(page, `/t/${id}/`);
           else if (scenario === 'page') await followLink(page, `/t/${id}/about/`);
-        }, crop === 'switcher');
+          return marked;
+        }, crop === 'switcher' || dense, dense ? 92 : 82);
         const still1 = crop === 'switcher' ? await measureSwitcher(page) : null;
+        const where = `${id} ${scenario}${from && scenario === 'arrive' ? ` from ${from}` : ''} ${scheme} ${vpName}`;
+        const mark1 = judged || crop === 'wordmark' ? await measureWordmark(page) : null;
+        if (crop === 'wordmark' && mark1) box = wordmarkCrop(mark0, mark1, vp.width, vp.height);
+        const wm = judged ? await judgeStrip(page, where, scenario, mark0, mark1) : null;
         // A strip whose navigation never landed would pass for a real
         // transition, so it is written under a name that says it failed.
         let failed = false;
@@ -359,11 +550,67 @@ for (const scheme of schemes) {
         // Without a frame from before the trigger, the first frame (a later
         // one) stands in as the "before" picture and hides any change.
         if (frames[0].ms >= 0) problem(`${id} ${scenario} ${scheme} ${vpName}: no frame from before the trigger`);
-        const file = `${id}__${scenario}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}${failed ? '__FAILED' : ''}.png`;
+        const file = `${id}__${scenario}${fromTag(scenario)}__${scheme}__${vpName}${crop ? `__crop-${crop}` : ''}${failed ? '__FAILED' : ''}.png`;
         const mobile = !!vp.mobile;
-        const picked = pick(frames, plan.frames, plan.ms);
-        if (box) await sheet(picked, join(outDir, file), 2, Math.min(720, Math.round(box.w * (mobile ? 2 : 1))), box, vp.width);
-        else await sheet(picked, join(outDir, file), mobile ? 8 : 4, mobile ? 220 : 480);
+        let denseInfo = null;
+        if (dense && scenario !== 'fx') {
+          // Every frame from the trigger to `finished` + 100 ms, plus the one
+          // before. Without a `finished` there is no end to be dense up to,
+          // so the plan's span stands in and the strip says so.
+          const end = wm?.finishedMs != null ? wm.finishedMs + 100 : plan.ms;
+          if (wm?.finishedMs == null) problem(`${where}: no transition finish to film up to; dense frames cover the plan's ${plan.ms} ms`);
+          const shown = frames.filter((f) => f.ms < 0 || f.ms <= end);
+          const after = shown.filter((f) => f.ms >= 0);
+          const gaps = after.slice(1).map((f, i) => f.ms - after[i].ms);
+          // Which filmed frames fall where the judge saw both wordmarks above
+          // the overlap threshold. The judge reads the animation timeline;
+          // the screencast shows what was presented, and a busy compositor
+          // can present nothing at all through the fade (seen on desktop
+          // cottagecore arrivals at HEAD: no frame for 300+ ms). A strip
+          // with a failing verdict and no frame in its window cannot be
+          // checked by eye, and says so.
+          const hot = (wm?.samples ?? []).filter((s) => {
+            const [o, n] = [s.old, s.new].map((i) => (i.own ?? 1) * (i.pair ?? 1) * (i.group ?? 1) * (i.vt ?? 1));
+            return Math.min(o, n) > 0.1;
+          });
+          const hotSpan = hot.length ? { fromMs: hot[0].ms, toMs: hot[hot.length - 1].ms } : null;
+          denseInfo = {
+            untilMs: end,
+            frames: shown.length,
+            framesAfterEnd: frames.length - shown.length,
+            firstMs: after[0]?.ms ?? null,
+            maxGapMs: gaps.length ? Math.max(...gaps) : null,
+            ...(frames[0]?.screenshot ? { beforeFromScreenshot: true } : {}),
+            overlapWindow: hotSpan,
+            framesInOverlapWindow: hotSpan ? after.filter((f) => f.ms >= hotSpan.fromMs && f.ms <= hotSpan.toMs).length : 0,
+            frameMs: shown.map((f) => f.ms),
+          };
+          const cellW = box ? Math.min(720, Math.round(box.w * (mobile ? 2 : 1))) : mobile ? 220 : 480;
+          // As many columns as fit about 2000 px, and more if the sheet
+          // would outgrow a canvas; never fewer frames.
+          let cols = Math.max(2, Math.min(box ? 6 : mobile ? 8 : 4, Math.floor(2000 / (cellW + 12))));
+          const cellH = box ? (box.h / box.w) * cellW : (vp.height / vp.width) * cellW;
+          while (Math.ceil(shown.length / cols) * (cellH + 50) > 30000) cols++;
+          const v = wm?.verdict;
+          const title = [
+            `${id} ${scenario}${from && scenario === 'arrive' ? ` from ${from}` : ''} ${scheme} ${vpName}`,
+            `${shown.length} frames`,
+            wm?.readyMs != null ? `ready +${wm.readyMs} ms` : null,
+            wm?.finishedMs != null ? `finished +${wm.finishedMs} ms` : null,
+            v ? `${wm.key} ${v.unsampled ? 'UNSAMPLED' : v.pass ? 'pass' : 'FAIL'}${v.worst ? ` (worst ${v.worst.score} at +${v.worst.ms} ms)` : ''}` : null,
+          ].filter(Boolean).join('   ');
+          await sheet(shown, join(outDir, file), cols, cellW, box, vp.width, title);
+        } else {
+          const picked = pick(frames, plan.frames, plan.ms);
+          if (box) await sheet(picked, join(outDir, file), 2, Math.min(720, Math.round(box.w * (mobile ? 2 : 1))), box, vp.width);
+          else await sheet(picked, join(outDir, file), mobile ? 8 : 4, mobile ? 220 : 480);
+        }
+        // The full sample series goes beside the strip, not in the manifest.
+        let samplesFile = null;
+        if (wm) {
+          samplesFile = file.replace(/\.png$/, '.wordmark.json');
+          await writeFile(join(outDir, samplesFile), JSON.stringify({ where, ...wm.entry, samples: wm.samples }, null, 1));
+        }
         let still = null;
         if (crop === 'switcher') {
           if (!still0?.buttons.length || !still1?.buttons.length) {
@@ -384,14 +631,24 @@ for (const scheme of schemes) {
           }
         }
         made.push({
-          school: id, scenario, scheme, viewport: vpName, crop: crop || null, file, framesFilmed: frames.length, failed,
+          school: id, scenario, ...(fromTag(scenario) ? { from } : {}), scheme, viewport: vpName, crop: crop || null, file,
+          framesFilmed: frames.length, failed,
           ...(still ? { holdStill: still } : {}),
+          ...(denseInfo ? { dense: denseInfo } : {}),
+          ...(wm ? { ...wm.entry, samplesFile } : {}),
           problems: strip.problems,
         });
-        const verdict = still
+        let verdict = still
           ? `  switcher ${still.stable ? 'held still' : `MOVED at +${still.worst.ms} ms`} (worst ${(still.worst.score * 100).toFixed(1)}%)`
           : '';
-        console.log(`${file}  (${frames.length} frames filmed)${verdict}`);
+        if (wm) {
+          const v = wm.verdict;
+          const g = wm.entry.judge;
+          verdict += `  ${wm.key} ${v.unsampled ? `UNSAMPLED (${v.reason})` : v.pass ? 'pass' : 'FAIL'}`;
+          if (v.worst) verdict += ` worst ${v.worst.score} at +${v.worst.ms} ms (old ${v.worst.old}, new ${v.worst.new})`;
+          if (g.ok) verdict += `; group ${g.groupAnimates ? (g.groupMoves ? 'moves' : 'animates in place') : 'does not animate'}`;
+        }
+        console.log(`${file}  (${frames.length} frames filmed${denseInfo ? `, ${denseInfo.frames} on the sheet` : ''})${verdict}`);
       }
     }
     await context.close();
