@@ -1,0 +1,21 @@
+---
+import { hrefFor } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme: string }
+const { chrome, theme } = Astro.props;
+const path = Astro.url.pathname;
+---
+<header class="site-header">
+  <a class="skip" href="#main">{chrome.skip}</a>
+  <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">{chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</a>
+  <nav aria-label="Main">
+    {chrome.nav.map(({ to, label }) => (
+      <a
+        href={hrefFor(to, theme)}
+        aria-current={path.startsWith(hrefFor(to, theme)) ? 'page' : undefined}
+        data-astro-reload={to === 'lab' ? '' : undefined}
+      >{label}</a>
+    ))}
+  </nav>
+</header>

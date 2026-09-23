@@ -1,0 +1,28 @@
+---
+import ContactHidden from '../../portal/ContactHidden.astro';
+import type { CopyData } from '../../../lib/copy';
+
+interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section>
+  <p>{copy.kicker}</p>
+  <h1>{copy.heading}</h1>
+  <p>{copy.subline}</p>
+  <form method="post" action="/api/contact" data-astro-reload>
+    <label for="cf-name">{copy.labels.name}</label>
+    <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+    <label for="cf-email">{copy.labels.email}</label>
+    <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+    <label for="cf-message">{copy.labels.message}</label>
+    <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+    <ContactHidden theme={theme} label={copy.labels.honeypot} />
+    <button type="submit">{copy.submit}</button>
+  </form>
+  <p>{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">&middot;</span> </>}{part}</>)}</p>
+</section>
+<section>
+  <p>{copy.invite}</p>
+  <a href={`mailto:${copy.email}`}>{copy.email}</a>
+  <p>{copy.fine}</p>
+</section>

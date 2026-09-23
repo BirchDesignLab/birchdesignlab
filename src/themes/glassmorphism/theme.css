@@ -1,0 +1,47 @@
+/* Glassmorphism: tokens for both schemes, globals, arrival choreography.
+   Imported by src/pages/t/glassmorphism/[...page].astro only. Every rule is scoped
+   under [data-theme='glassmorphism']. See src/themes/README.md. */
+
+:root[data-theme='glassmorphism'] {
+  color-scheme: light;
+  --field: #ffffff;
+  --field-raised: #f2f2f2;
+  --mark: #111111;
+  --mark-muted: #555555;
+  --accent: #1a4fd6;
+  --link: #1a4fd6;
+  --on-accent: #ffffff;
+  --font-body: system-ui, sans-serif;
+  --font-display: system-ui, sans-serif;
+}
+
+:root[data-theme='glassmorphism'][data-scheme='dark'] {
+  color-scheme: dark;
+  --field: #111111;
+  --field-raised: #1d1d1d;
+  --mark: #f2f2f2;
+  --mark-muted: #b5b5b5;
+  --accent: #8fb0ff;
+  --link: #8fb0ff;
+  --on-accent: #111111;
+}
+
+:where([data-theme='glassmorphism']) *,
+:where([data-theme='glassmorphism']) *::before,
+:where([data-theme='glassmorphism']) *::after { box-sizing: border-box; }
+
+[data-theme='glassmorphism'] body {
+  margin: 0;
+  background: var(--field);
+  color: var(--mark);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+[data-theme='glassmorphism'] a { color: var(--link); }
+[data-theme='glassmorphism'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme='glassmorphism'] main:focus { outline: none; }
+[data-theme='glassmorphism'] .skip { position: absolute; left: -100vw; top: 0; }
+[data-theme='glassmorphism'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='glassmorphism'] img,
+[data-theme='glassmorphism'] svg,
+[data-theme='glassmorphism'] canvas { max-width: 100%; display: block; }

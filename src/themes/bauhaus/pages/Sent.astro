@@ -1,0 +1,12 @@
+---
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section>
+  <h1>{copy.heading}</h1>
+  <p>{copy.body}</p>
+  <a href={hrefFor('home', theme)}>{copy.back}</a>
+</section>

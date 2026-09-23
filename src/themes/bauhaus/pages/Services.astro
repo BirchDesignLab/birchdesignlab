@@ -1,0 +1,33 @@
+---
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, theme } = Astro.props;
+---
+<section>
+  <p>{copy.kicker}</p>
+  <h1>{copy.heading}</h1>
+  {copy.sublines.map((line) => <p>{line}</p>)}
+</section>
+{copy.offerings.map((offering) => (
+  <section>
+    <h2>{offering.heading}</h2>
+    {offering.body.map((para) => <p>{para}</p>)}
+  </section>
+))}
+<section>
+  <h2>{copy.process.heading}</h2>
+  <ol>
+    {copy.process.steps.map((step) => (
+      <li>
+        <h3>{step.title}</h3>
+        <p>{step.body}</p>
+      </li>
+    ))}
+  </ol>
+</section>
+<section>
+  <p>{copy.pull}</p>
+  <a href={hrefFor('contact', theme)}>{copy.cta}</a>
+</section>

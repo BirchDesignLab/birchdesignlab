@@ -1,0 +1,47 @@
+/* Cottagecore: tokens for both schemes, globals, arrival choreography.
+   Imported by src/pages/t/cottagecore/[...page].astro only. Every rule is scoped
+   under [data-theme='cottagecore']. See src/themes/README.md. */
+
+:root[data-theme='cottagecore'] {
+  color-scheme: light;
+  --field: #ffffff;
+  --field-raised: #f2f2f2;
+  --mark: #111111;
+  --mark-muted: #555555;
+  --accent: #1a4fd6;
+  --link: #1a4fd6;
+  --on-accent: #ffffff;
+  --font-body: system-ui, sans-serif;
+  --font-display: system-ui, sans-serif;
+}
+
+:root[data-theme='cottagecore'][data-scheme='dark'] {
+  color-scheme: dark;
+  --field: #111111;
+  --field-raised: #1d1d1d;
+  --mark: #f2f2f2;
+  --mark-muted: #b5b5b5;
+  --accent: #8fb0ff;
+  --link: #8fb0ff;
+  --on-accent: #111111;
+}
+
+:where([data-theme='cottagecore']) *,
+:where([data-theme='cottagecore']) *::before,
+:where([data-theme='cottagecore']) *::after { box-sizing: border-box; }
+
+[data-theme='cottagecore'] body {
+  margin: 0;
+  background: var(--field);
+  color: var(--mark);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+[data-theme='cottagecore'] a { color: var(--link); }
+[data-theme='cottagecore'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme='cottagecore'] main:focus { outline: none; }
+[data-theme='cottagecore'] .skip { position: absolute; left: -100vw; top: 0; }
+[data-theme='cottagecore'] .skip:focus { left: 0; z-index: 10; background: var(--field-raised); padding: 0.5rem 1rem; }
+[data-theme='cottagecore'] img,
+[data-theme='cottagecore'] svg,
+[data-theme='cottagecore'] canvas { max-width: 100%; display: block; }

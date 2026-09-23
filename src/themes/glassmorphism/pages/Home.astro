@@ -1,0 +1,39 @@
+---
+import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
+const { copy, chrome, theme } = Astro.props;
+const featured = await featuredSpecimens();
+---
+<section class="hero">
+  <h1>{chrome.name}</h1>
+</section>
+<section class="opener">
+  <p class="lead">{copy.opener.lead}</p>
+  <p>{copy.opener.subline}</p>
+</section>
+<section class="doors">
+  <h2>{copy.doors.kicker}</h2>
+  {copy.doors.items.map((door) => (
+    <article>
+      <h3>{door.title}</h3>
+      <p>{door.body}</p>
+    </article>
+  ))}
+  <a href={hrefFor('services', theme)}>{copy.doors.more}</a>
+</section>
+{featured.length > 0 && (
+  <section class="lab">
+    <p>{copy.lab.kicker}</p>
+    <p>{copy.lab.pull}</p>
+    <ul data-parity-skip>
+      {featured.map((entry) => <li>{entry.data.designation} {entry.data.summary}</li>)}
+    </ul>
+    <a href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
+  </section>
+)}
+<section class="closer">
+  <p>{copy.closer.lead}</p>
+  <a href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+</section>
