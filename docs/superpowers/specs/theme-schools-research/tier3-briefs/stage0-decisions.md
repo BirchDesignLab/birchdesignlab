@@ -203,6 +203,15 @@ counterpart: dandelion seeds (pappus floaters) drifting across the page, in
 the same spirit (independent clocks, never over body text, per D7's
 placement rule). Design and bring it to the founder at the pair stage.
 
+## Stage 2 start (09-23-26)
+
+**The founder's mobile test of #88** (iPhone 17 Pro Max, Safari, private
+mode): the switcher and prompt are good, entering and leaving the Portal
+works, nothing individually looked broken. "Everything looked pretty good on
+the phone. I am still impressed." Some transitions are "a little stuttery or
+buggy, but i know that is coming down the road": transitions phase, not Stage
+2. The plan is `tier3-stage2/stage2-plan.md`.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
