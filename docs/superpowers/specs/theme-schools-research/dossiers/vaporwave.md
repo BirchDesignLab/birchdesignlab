@@ -106,7 +106,7 @@ For the later transitions phase. Ordered from best sourced to most inferred.
 
 ## 8. Priorities for Tier 3
 
-Most important first. Items 2 and 4 carry founder decisions; bring them to him rather than resolving them.
+Most important first. Items 2 and 4 carry founder decisions; bring them to the founder rather than resolving them.
 
 1. **Build the plaza.** Add the corporate-leisure layer the canon is built on [4][6]: turn the Lab CRT into an information-desk kiosk (the 情報デスクVIRTUAL alias [1]), reframe the checkerboard as lobby tile, and let decorative labels speak in a welcome-to-the-facility register. Decoration only; copy is fixed.
 2. **Decide the hero's family (founder call).** Present options (a) own the synthwave inflection, (b) reframe sun and palms as resort imagery [6], (c) demote the grid. Whatever he picks, align `meta.ts` `era` and `signature` with it.

@@ -164,22 +164,22 @@ Bring these to the founder before, or at a checkpoint during, Tier 3. Each chang
 
 ### F1. How far the sunset travels (the hero's family)
 
-The striped sun appears on all five pages, twice on Home, with a grid on four. That repetition is what makes the school read as outrun [15], and it turns his favourite hero into wallpaper. Dossier trap 2: a sunset framed as resort imagery (brochure, lobby mural, travel-agency screensaver) is vaporwave [6]; seen over a grid running to the horizon, it is outrun.
+The striped sun appears on all five pages, twice on Home, with a grid on four. That repetition is what makes the school read as outrun [15], and it turns the founder's favourite hero into wallpaper. Dossier trap 2: a sunset framed as resort imagery (brochure, lobby mural, travel-agency screensaver) is vaporwave [6]; seen over a grid running to the horizon, it is outrun.
 
 - **(a) Own it.** Keep every sun and grid, and name the synthwave inflection in `meta.ts`. Cheapest, least authentic.
 - **(b) One hero, then resort framing.** Keep the Home hero exactly. Home closer and Services closer become a lobby or atrium (checker floor from E3, potted palm, skylight). Contact's side scene becomes a framed `screensaver.scr` window playing a small "Neo Sunsetters"-style resort loop, so the sun lives inside an OS frame [6]. Sent sits on a Win95 teal desktop or a tiled bitmap wallpaper. About gets the found head (F3), with or without a small sun behind it.
 - **(c) Demote the grid.** Keep suns but drop the grids outside Home.
 
-**Recommendation: (b).** It keeps the hero he loves as the one sunset, and makes it rarer and stronger. It also supplies the missing plaza (dossier priority 1) using space the extra suns take now. If he wants a middle step, Contact's screensaver window is the cheapest single conversion to show him first. E6 and E7 apply to whichever suns remain.
+**Recommendation: (b).** It keeps the hero the founder loves as the one sunset, and makes it rarer and stronger. It also supplies the missing plaza (dossier priority 1) using space the extra suns take now. If the founder wants a middle step, Contact's screensaver window is the cheapest single conversion to show the founder first. E6 and E7 apply to whichever suns remain.
 
 ### F2. The wall label (`meta.ts` era, signature, lesson)
 
 The current strings lead with the synthwave picture ("dreaming of 1985", "a neon grid running to the horizon") and state the palette as the genre's lesson (trap 6). The dossier also bars unsourced lore on the placard (trap 7).
 
 - If F1 is (a): keep the picture but add a clause naming the synthwave inflection, and rewrite `lesson` off palette-as-canon.
-- If F1 is (b) or (c), a suggested signature: "Windows 95 chrome, file names for titles, Japanese for headlines, a mall lobby and a broken marble head, with one sunset screensaver on the front page." A suggested era: "The internet, 2010 to 2013, dreaming of mid-90s software and shopping malls." A suggested lesson: nostalgia sold back as corporate leisure, so the comfort is the product [8], phrased in his voice.
+- If F1 is (b) or (c), a suggested signature: "Windows 95 chrome, file names for titles, Japanese for headlines, a mall lobby and a broken marble head, with one sunset screensaver on the front page." A suggested era: "The internet, 2010 to 2013, dreaming of mid-90s software and shopping malls." A suggested lesson: nostalgia sold back as corporate leisure, so the comfort is the product [8], phrased in the founder's voice.
 
-**Recommendation:** decide together with F1. The wording is his, with no em dashes and the studio "we".
+**Recommendation:** decide together with F1. The wording is the founder's, with no em dashes and the studio "we".
 
 ### F3. A found classical head, and whether the columns break
 
@@ -199,7 +199,7 @@ The steady `linear infinite` forward scroll (`fx.ts` `uScroll = time*0.55`, `.vw
 - **(b)** Same speed, a 4 to 8 second cycle that visibly restarts with a one- or two-frame tracking hiccup at the seam.
 - **(c)** Slow to about 0.3 cells per second, a drift.
 
-**Recommendation: (b).** At a glance the hero looks the same. On a second look it reads as a screensaver loop, not a road. Show him a side-by-side before committing. The reduced-motion still does not change.
+**Recommendation: (b).** At a glance the hero looks the same. On a second look it reads as a screensaver loop, not a road. Show the founder a side-by-side before committing. The reduced-motion still does not change.
 
 ### F5. How much the captions quiet down
 
@@ -208,7 +208,7 @@ E4 makes back windows inactive where two windows overlap.
 - **Scope:** stop there, or add focus-follows (the window under the pointer, focus or viewport centre goes active and the others inactive).
 - **Gradient:** keep the three-stop pink/lavender/cyan active bar or move to Win95's two-stop [14].
 
-**Recommendation:** stop at the static back windows for Tier 3 and bank focus-follows for the transitions phase. Keep the three-stop active bar he likes, and make only the inactive bar two-stop, so the pair still reads as a system palette. Show a before and after of Services.
+**Recommendation:** stop at the static back windows for Tier 3 and bank focus-follows for the transitions phase. Keep the three-stop active bar the founder likes, and make only the inactive bar two-stop, so the pair still reads as a system palette. Show a before and after of Services.
 
 ### F6. A bottom taskbar echo
 
