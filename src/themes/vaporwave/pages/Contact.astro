@@ -81,15 +81,22 @@ const { copy, theme } = Astro.props;
   }
   button { justify-self: start; margin-top: 0.4rem; }
 
-  .side { display: grid; gap: 2rem; }
+  /* min-width 0 and a minmax track: nothing inside the side column may widen
+     it past its share of the desk (the trust line once pushed mail.txt 31px
+     past a 1440 viewport). */
+  .side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; min-width: 0; }
+  /* The trust parts are terminal lines at every width, one part per line,
+     each free to wrap inside itself: no width where a part runs out of the
+     box, and no separator to strand. */
   .trust {
+    display: grid; gap: 0.3rem;
     font-family: var(--font-mono); font-size: 1.4rem; line-height: 1.3; color: var(--mark);
     text-transform: uppercase; letter-spacing: 0.06em;
     padding: 0.9rem 1rem;
     border: 2px dashed color-mix(in srgb, var(--accent) 60%, transparent);
   }
-  .sep { color: var(--accent); font-size: 0.7em; margin-inline: 0.3em; vertical-align: 0.15em; }
-  .trust-part { white-space: nowrap; }
+  .trust .sep { display: none; }
+  .trust-part { min-width: 0; overflow-wrap: anywhere; text-wrap: pretty; }
   .invite { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 1.8rem); line-height: 1.2; }
   .address {
     display: inline-block; margin-block: 1.1rem;
@@ -103,11 +110,5 @@ const { copy, theme } = Astro.props;
   @media (max-width: 860px) {
     .desk { grid-template-columns: 1fr; }
     .side-scene { display: none; }
-  }
-  @media (max-width: 520px) {
-    /* Two terminal lines instead of one wrapping line with an orphaned word. */
-    .trust { display: grid; gap: 0.3rem; }
-    .trust .sep { display: none; }
-    .trust-part { white-space: normal; }
   }
 </style>

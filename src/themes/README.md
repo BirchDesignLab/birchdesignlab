@@ -248,8 +248,9 @@ background stack listed top to bottom, translucent layers included.
   CSS in the route file (`@fontsource-variable/<x>/wght.css` or
   `@fontsource/<x>/latin-400.css`). Ask the orchestrator for anything not
   installed; do not run npm.
-- `meta.fonts[].preload`: at most two woff2 files, imported with `?url` from
-  the package's `files/` (latin subset), for the faces above the fold.
+- `meta.fonts[].preload`: at most four woff2 files, for the faces that paint
+  above the fold, imported with `?url` from the package's `files/` (latin
+  subset).
 - Font stacks name the fontaine fallback: `'Exo 2 Variable', 'Exo 2 Variable fallback', system-ui, sans-serif`.
 
 ## Motion and backgrounds
