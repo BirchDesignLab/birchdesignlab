@@ -19,6 +19,11 @@ still applies; this file supersedes it as the starting point.
   3. Ask what the founder saw on mobile live. That feedback comes before
      Stage 2's plan.
 - **The exhibit is "the Portal"**, never "Period Rooms" in new writing.
+- **Order after the schools (founder, 09-23-26):** first themes and
+  transitions, then the big site copy pass (planned and audited twice, not
+  yet executed), then one pass to sew the Portal and the site together.
+  Word parity means the copy pass reflows all seven schools at once, so fix
+  structure, not copy-dependent line breaks (`docs/lab-backlog.md`, BDL-010).
 
 ## Read first, in this order
 

@@ -105,6 +105,25 @@ technique are in `theme-schools-research/tier3-stage1/p4-trace.md`.
 **Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
 original ranking live in `theme-schools-research/`.
 
+**Sidenote, 09-23-26: the order after the schools.** The founder's plan:
+1. Ship the themes and the transitions.
+2. Run the big site copy pass. It has been planned and audited twice but
+   never executed; see the "Copy pass on the business pages (redo)" item
+   further down.
+3. Come back and sew up any weirdness between the Portal and the site in one
+   go.
+
+Consequences for the work before then:
+- Every school renders quiet's words verbatim (word parity), so the copy pass
+  lands in all seven schools at once. Expect it to reflow layouts built
+  around today's copy lengths: billboard splits, "From the lab" summaries,
+  the process row.
+- Keep Portal-specific copy (the first-load prompt, the picker heading,
+  BDL-010's lines) easy to find, so the reconciliation pass can sweep it
+  together with the site.
+- Don't polish copy-dependent layout details to the pixel before the copy
+  pass. Fix structure, not line breaks.
+
 ### BDL-009 · Bayou Kitchen · LIVE as a menu-honesty study (09-23-26), order half blocked
 
 **Published 09-23-26 (founder call, PR #88)** as a working specimen arguing

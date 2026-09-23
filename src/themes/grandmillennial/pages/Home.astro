@@ -4,7 +4,7 @@
     between two columns of blue-and-white plates. Then two upholstered doors,
     the Lab on a scalloped porcelain-blue band between ginger jars, and the
     ask in a framed card. */
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Bow from '../parts/Bow.astro';
 import Chintz from '../parts/Chintz.astro';
@@ -14,7 +14,7 @@ import Plate from '../parts/Plate.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 const [first, ...rest] = chrome.name.split(' ');
 ---
 <section class="hero gm-trellis">
@@ -71,9 +71,9 @@ const [first, ...rest] = chrome.name.split(' ');
           <p class="gm-kicker ruled">{copy.lab.kicker}</p>
           <p class="pull">{copy.lab.pull}</p>
           <ul class="specimens" role="list" data-parity-skip>
-            {featured.map((entry) => (
+            {featured.map(({ entry, link }) => (
               <li>
-                <span class="designation">{entry.data.designation}</span>
+                <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
                 <span class="summary">{entry.data.summary}</span>
               </li>
             ))}
@@ -311,6 +311,19 @@ const [first, ...rest] = chrome.name.split(' ');
     font-size: 0.85rem;
     letter-spacing: 0.24em;
     color: var(--accent);
+    /* A link now: shrink to the word, still centred over its summary. */
+    width: fit-content;
+    margin-inline: auto;
+    /* Matches the tracking the last letter trails, so the word and its focus
+       ring sit truly centred. */
+    padding-inline-start: 0.24em;
+    text-decoration: none;
+  }
+  /* A fine ribbon underline on hover and on focus, the theme's link weight. */
+  .designation:hover, .designation:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
   }
   .summary { font-size: 1.2rem; }
 

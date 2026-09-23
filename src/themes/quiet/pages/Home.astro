@@ -3,16 +3,17 @@
     PortalLayout). Every word comes from the copy collection. */
 import BarkField from '../../../components/BarkField.astro';
 import BarkCredit from '../../../components/BarkCredit.astro';
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme?: string }
 const { copy, chrome, theme } = Astro.props;
 const leaves = theme ? '' : undefined;
 
-// Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
-// specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
-const featured = await featuredSpecimens();
+// Keep the 3a6a0d1 auto-feature logic; the loud moment renders the THREE newest
+// live specimens as lightweight lines (not SpecimenCard — that's gallery
+// furniture). The designation links to the entry; the summary stays text.
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 ---
 <section class="hero">
   <BarkField density={170} live />
@@ -46,9 +47,9 @@ const featured = await featuredSpecimens();
       <p class="smallcaps kicker">{copy.lab.kicker}</p>
       <p class="pull">{copy.lab.pull}</p>
       <ul class="specimens" role="list" data-parity-skip>
-        {featured.map((entry) => (
+        {featured.map(({ entry, link }) => (
           <li class="specimen">
-            <span class="designation smallcaps">{entry.data.designation}</span>
+            <a class="designation smallcaps" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
             <span class="tick" aria-hidden="true"></span>
             <span class="spec-summary">{entry.data.summary}</span>
           </li>
@@ -145,7 +146,11 @@ const featured = await featuredSpecimens();
     list-style: none; padding: 0; margin-top: var(--space-5);
     display: flex; flex-direction: column; gap: var(--space-2);
   }
-  .designation { color: var(--accent); }
+  /* The designation is the line's link: accent and bare at rest, like the
+     catalog's classification, underlined on hover and focus in base.css's
+     loud hover tone. The outline is the global :focus-visible. */
+  .designation { color: var(--accent); text-decoration: none; }
+  .designation:hover, .designation:focus-visible { color: var(--gf-link-hover); text-decoration: underline; }
   /* Same working-specimen tick as the Lab catalog. --accent, not --gf-accent:
      .loud remaps --accent to the loud value precisely so children do not have
      to know they sit on green, and the .designation beside it relies on that. */

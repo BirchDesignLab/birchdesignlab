@@ -3,14 +3,14 @@
     under it beside a sheet of pressed flowers; the two things we build as
     recipe cards taped to the linen; the Lab on a butter note laid over a
     gingham cloth; and a sewn label to start a project. */
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Pressed from '../assets/Pressed.astro';
 import Arrow from '../assets/Arrow.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 const [nameFirst, ...nameRest] = chrome.name.split(' ');
 ---
 <section class="hero cc-wrap">
@@ -66,10 +66,10 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
           <p class="cc-hand">{copy.lab.kicker}</p>
           <p class="pull">{copy.lab.pull}</p>
           <ul class="specimens" role="list" data-parity-skip>
-            {featured.map((entry, i) => (
+            {featured.map(({ entry, link }, i) => (
               <li>
                 <Pressed kind="leaf" seed={40 + i} class="bullet" />
-                <span class="des">{entry.data.designation}</span>
+                <a class="des" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
                 <span class="sum">{entry.data.summary}</span>
               </li>
             ))}
@@ -231,6 +231,13 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
   .des {
     font-weight: 650; letter-spacing: 0.06em; font-size: 0.92rem;
     color: var(--accent);
+    text-decoration: none;
+  }
+  /* The designation links to its entry: plain ink at rest, the theme's wavy
+     hand-drawn underline on hover and on focus. */
+  .des:hover, .des:focus-visible {
+    text-decoration: underline wavy var(--accent);
+    text-decoration-thickness: 1px;
   }
   .sum { color: var(--mark-muted); }
   .lab-tape { top: -0.9rem; left: calc(50% - 3.75rem); --tape-tilt: -2deg; }

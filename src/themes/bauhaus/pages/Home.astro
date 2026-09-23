@@ -2,12 +2,12 @@
 /** Bauhaus home: a poster first (the name stacked flush left beside a
     composition that assembles on load), then numbered modules on the grid,
     a red lab band, and a see-saw that balances the closing ask. */
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 const doorShape = ['circle', 'square'] as const;
 ---
 <section class="hero">
@@ -60,9 +60,9 @@ const doorShape = ['circle', 'square'] as const;
       <div class="lab-body">
         <p class="pull">{copy.lab.pull}</p>
         <ul class="specimens" role="list" data-parity-skip>
-          {featured.map((entry) => (
+          {featured.map(({ entry, link }) => (
             <li>
-              <span class="designation">{entry.data.designation}</span>
+              <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
               <span class="summary">{entry.data.summary}</span>
             </li>
           ))}
@@ -216,7 +216,13 @@ const doorShape = ['circle', 'square'] as const;
     font-size: 0.875rem;
     letter-spacing: 0.02em;
     padding-top: 0.25rem;
+    justify-self: start;
+    align-self: start;
+    text-decoration: none;
   }
+  /* The link shows itself the Bauhaus way: the theme's hover weight of
+     underline, on hover and on focus (the ring is the theme's --mark ring). */
+  .designation:hover, .designation:focus-visible { text-decoration: underline; text-decoration-thickness: 4px; }
   .summary { font-size: 1.0625rem; line-height: 1.5; }
   .lab .more { margin-top: 2.5rem; }
 

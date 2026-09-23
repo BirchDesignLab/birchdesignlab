@@ -2,12 +2,12 @@
 /** Glassmorphism home: a Big Sur window over three orbs, two app cards, a
     grouped list from the lab, and a last card that asks. */
 import Orbs from '../Orbs.astro';
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 const [first, ...rest] = chrome.name.split(' ');
 const icons = ['violet', 'cyan'];
 ---
@@ -71,9 +71,9 @@ const icons = ['violet', 'cyan'];
         <a class="btn" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more} <span class="arw" aria-hidden="true">&rarr;</span></a>
       </div>
       <ul class="cells" role="list" data-parity-skip>
-        {featured.map((entry) => (
+        {featured.map(({ entry, link }) => (
           <li class="cell">
-            <span class="designation">{entry.data.designation}</span>
+            <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
             <span class="summary">{entry.data.summary}</span>
           </li>
         ))}
@@ -226,6 +226,16 @@ const icons = ['violet', 'cyan'];
     font-size: 0.8125rem; font-weight: 650;
     letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--accent);
+    justify-self: start;
+    text-decoration: none;
+    border-radius: 6px;
+  }
+  /* The designation links to its entry: a clean underline on hover and on
+     focus, the theme's ring rounded to match the soft glass corners. */
+  .designation:hover, .designation:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.25em;
   }
   .summary { font-size: 0.975rem; line-height: 1.5; }
 

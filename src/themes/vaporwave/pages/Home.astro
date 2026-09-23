@@ -3,7 +3,7 @@
     grid (../fx.ts) between two palms, a chrome billboard in the sky. Below it
     the studio pitches from retro OS windows and a CRT. Every word comes from
     the copy collection. */
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Win from '../parts/Win.astro';
 import Palm from '../parts/Palm.astro';
@@ -11,7 +11,7 @@ import Horizon from '../parts/Horizon.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 const [first, ...rest] = chrome.name.split(' ');
 const doorFiles = ['software.exe', 'web_design.htm'];
 ---
@@ -58,9 +58,9 @@ const doorFiles = ['software.exe', 'web_design.htm'];
         <p class="crt-kicker">{copy.lab.kicker}</p>
         <p class="pull">{copy.lab.pull}</p>
         <ul class="specimens" role="list" data-parity-skip>
-          {featured.map((entry) => (
+          {featured.map(({ entry, link }) => (
             <li>
-              <span class="designation">{entry.data.designation}</span>
+              <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
               <span class="summary">{entry.data.summary}</span>
             </li>
           ))}
@@ -223,6 +223,13 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     text-shadow: 0 0 8px color-mix(in srgb, var(--crt-phos) 60%, transparent);
   }
   .designation::before { content: '>' / ''; margin-right: 0.4em; }
+  /* The designation is a link to its entry. On the CRT a live line answers in
+     inverse video, the terminal's own highlight, on hover and on focus. */
+  .designation { justify-self: start; padding-inline: 0.15em; margin-inline: -0.15em; text-decoration: none; }
+  .designation:hover, .designation:focus-visible {
+    color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+  }
+  .designation:focus-visible { outline-color: var(--crt-phos); }
   .summary { color: var(--crt-ink); font-size: 1rem; }
   .crt-more {
     display: inline-block; margin-top: 2rem;

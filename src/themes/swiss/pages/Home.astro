@@ -2,12 +2,12 @@
 /** Swiss home: the name as a poster, set flush left at the full width of the
     sheet with one red block in the free corner, then numbered sections on
     the same twelve columns. */
-import { featuredSpecimens, type CopyData } from '../../../lib/copy';
+import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
-const featured = await featuredSpecimens();
+const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 ---
 <section class="sw-row hero">
   <p class="sw-idx hero-idx" aria-hidden="true">01</p>
@@ -42,9 +42,9 @@ const featured = await featuredSpecimens();
       <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
       <p class="sw-display pull">{copy.lab.pull}</p>
       <ul class="specimens" data-parity-skip>
-        {featured.map((entry) => (
+        {featured.map(({ entry, link }) => (
           <li>
-            <span class="designation">{entry.data.designation}</span>
+            <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
             <span class="summary">{entry.data.summary}</span>
           </li>
         ))}
@@ -184,7 +184,14 @@ const featured = await featuredSpecimens();
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     letter-spacing: 0.02em;
+    justify-self: start;
+    align-self: start;
+    text-decoration-line: none;
   }
+  /* The designation links to its entry: bare mono at rest, the theme's rule
+     underline on hover and focus, in the red lifted to pass on the ink. */
+  .specimens .designation:hover, .specimens .designation:focus-visible { text-decoration-line: underline; color: var(--red-on-ink); }
+  .specimens .designation:focus-visible { outline-color: var(--red-on-ink); }
   .summary { grid-column: 1 / -1; color: var(--mark-muted); }
   .lab-more { justify-self: start; padding-inline: calc(var(--u) * 2); min-width: 50%; }
 

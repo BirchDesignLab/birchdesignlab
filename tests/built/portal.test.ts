@@ -357,3 +357,55 @@ describe("quiet's header lights the page it is on (root and portal alike)", () =
     });
   }
 });
+
+describe('"From the lab" lines link to their entries', () => {
+  /** The home page's specimen lines: designation text, its link and attributes. */
+  const lines = (route: string) =>
+    doc(readPage(route))
+      .querySelectorAll('ul[data-parity-skip] > li')
+      .map((li) => {
+        const links = li.querySelectorAll('a[href]');
+        const a = links[0];
+        return {
+          count: links.length,
+          text: a?.text.trim() ?? '',
+          href: a?.getAttribute('href') ?? '',
+          label: a?.getAttribute('aria-label') ?? '',
+          reload: a?.hasAttribute('data-astro-reload') ?? false,
+        };
+      });
+  const root = lines('/');
+
+  it('the root home shows the three newest, each designation one link', () => {
+    expect(root).toHaveLength(3);
+    for (const l of root) {
+      expect(l.count).toBe(1);
+      expect(l.text).toMatch(/^BDL-\d{3}$/);
+      expect(l.label.startsWith(`${l.text}, `), l.label).toBe(true);
+    }
+  });
+
+  it('root links keep the root convention and land on built pages', () => {
+    for (const { href, reload } of root) {
+      expect(reload).toBe(false);
+      if (href.startsWith('/lab/')) expect(href).toMatch(/^\/lab\/[a-z0-9-]+$/);
+      expect(() => readPage(href.endsWith('/') ? href : `${href}/`)).not.toThrow();
+    }
+  });
+
+  for (const id of schools) {
+    it(`/t/${id}/ links the same three, leaving the school only for the Lab`, () => {
+      const here = lines(`/t/${id}/`);
+      expect(here.map((l) => [l.count, l.text, l.label])).toEqual(root.map((l) => [l.count, l.text, l.label]));
+      for (const { href, reload } of here) {
+        if (href.startsWith('/t/')) {
+          expect(reload, href).toBe(false);
+        } else {
+          expect(href, href).toMatch(/^\/lab\/[a-z0-9-]+\/$/);
+          expect(reload, href).toBe(true);
+        }
+        expect(() => readPage(href)).not.toThrow();
+      }
+    });
+  }
+});
