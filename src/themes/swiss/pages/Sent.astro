@@ -1,12 +1,44 @@
 ---
+/** Swiss sent: one word at the full width of the sheet, its full stop in the
+    red, and the reading text hung from a column line beneath it. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
 interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
+const stop = copy.heading.endsWith('.');
+const word = stop ? copy.heading.slice(0, -1) : copy.heading;
 ---
-<section>
-  <h1>{copy.heading}</h1>
-  <p>{copy.body}</p>
-  <a href={hrefFor('home', theme)}>{copy.back}</a>
+<section class="sw-row sent">
+  <p class="sw-idx" aria-hidden="true">01</p>
+  <h1 class="sw-display title">{word}{stop && <span class="stop">.</span>}</h1>
+  <p class="sw-lead body">{copy.body}</p>
+  <a class="back" href={hrefFor('home', theme)}>{copy.back}</a>
 </section>
+
+<style>
+  .sent {
+    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 16);
+    row-gap: calc(var(--u) * 4);
+    align-items: start;
+  }
+  /* Sized so the word fills the frame without ever passing it. */
+  .title {
+    font-size: min(38vw, 36rem);
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+    margin-top: calc(var(--u) * 6);
+    margin-bottom: calc(var(--u) * 4);
+    margin-left: -0.04em;
+  }
+  .stop { color: var(--accent); }
+  .body { max-width: 20em; }
+  .back { font-family: var(--font-display); font-weight: 700; font-size: 1.125rem; justify-self: start; }
+  @media (min-width: 640px) {
+    .body, .back { grid-column: 3 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .body { grid-column: 8 / -1; }
+    .back { grid-column: 8 / -1; }
+  }
+</style>
