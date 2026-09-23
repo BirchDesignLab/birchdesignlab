@@ -1,55 +1,14 @@
 ---
 // Confirmation target for the contact form's 303 redirect. Static page so it
 // works without JavaScript; noindexed because it is meaningless as an entry.
+// The body is the quiet school's, shared with /t/quiet/contact/sent/.
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BarkField from '../../components/BarkField.astro';
-import BarkCredit from '../../components/BarkCredit.astro';
----
-<BaseLayout
-  title="Message sent · Birch Design Lab"
-  description="Your message is on its way to Birch Design Lab."
-  noindex
->
-  <header class="hero">
-    <BarkField density={170} lockAspect />
-    <h1>Sent.</h1>
-    <span class="bark-credit-pin"><BarkCredit href="/lab/bdl-001" label="BDL-001 · The Bark Engine, live" /></span>
-  </header>
-  <section class="wrap prose">
-    <p class="subline">
-      Your message landed in the right inbox. A person reads it, the same one
-      who would build your project, and you'll hear back soon.
-    </p>
-    <p class="back"><a class="more-link" href="/">Back to the front page</a></p>
-  </section>
-</BaseLayout>
+import Sent from '../../themes/quiet/pages/Sent.astro';
+import { getCopy } from '../../lib/copy';
 
-<style>
-  /* About's shining-tree hero grammar: a full-bleed bark field with the word
-     overlaid. lockAspect keeps the lenticels from smearing at this short band
-     height (see About). */
-  .hero {
-    position: relative; min-height: 44vh;
-    display: grid; place-items: center;
-    border-bottom: 1px solid var(--line);
-    overflow: hidden;
-    padding-inline: var(--space-4);
-  }
-  .hero h1 {
-    position: relative;
-    font-size: var(--text-3xl);
-    text-align: center;
-    /* billboard color so the word holds contrast over the brightest lenticels */
-    color: var(--billboard-color);
-  }
-  .bark-credit-pin {
-    position: absolute;
-    left: 50%;
-    bottom: var(--space-4);
-    transform: translateX(-50%);
-    z-index: 1;
-  }
-  .prose { padding-block: var(--space-6) var(--space-7); max-width: var(--measure); }
-  .subline { font-size: var(--text-lg); color: var(--mark-muted); }
-  .back { margin-top: var(--space-5); }
-</style>
+const copy = await getCopy('sent');
+const chrome = await getCopy('chrome');
+---
+<BaseLayout title={copy.title} description={copy.description} noindex>
+  <Sent copy={copy} chrome={chrome} />
+</BaseLayout>

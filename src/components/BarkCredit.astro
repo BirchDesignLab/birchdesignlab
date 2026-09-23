@@ -3,10 +3,16 @@
  *  hairline smallcaps type + muted->accent hover only; each consumer positions
  *  it (the field's hero/rail differs per page) by wrapping it in its own
  *  positioned element. Lifted from the home hero's original inline `.bark-credit`. */
-interface Props { href: string; label: string; class?: string }
-const { href, label, class: className } = Astro.props;
+interface Props {
+  href: string;
+  label: string;
+  class?: string;
+  /** Inside the /t/ portal the credit leaves the school for the Lab: full load. */
+  reload?: boolean;
+}
+const { href, label, class: className, reload = false } = Astro.props;
 ---
-<a class:list={['bark-credit', 'smallcaps', className]} href={href}>{label}</a>
+<a class:list={['bark-credit', 'smallcaps', className]} href={href} data-astro-reload={reload ? '' : undefined}>{label}</a>
 
 <style>
   .bark-credit {

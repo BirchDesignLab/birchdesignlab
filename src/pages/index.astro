@@ -1,93 +1,18 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BarkField from '../components/BarkField.astro';
-import BarkCredit from '../components/BarkCredit.astro';
 import StructuredData from '../components/StructuredData.astro';
-import { SITE_DESCRIPTION } from '../lib/seo/site';
+import Home from '../themes/quiet/pages/Home.astro';
+import { getCopy } from '../lib/copy';
 
-// Home meta is the shared brand blurb verbatim, matching both the opener copy
-// below and the ProfessionalService schema. It used to append "Quiet, fast,
-// built to last."; the blurb now runs to 187 characters on its own, and a
-// third sentence would only add weight past what a search result renders.
-const description = SITE_DESCRIPTION;
-
-// Keep the 3a6a0d1 auto-feature logic; the loud moment renders TWO newest live
-// specimens as lightweight lines (not SpecimenCard — that's gallery furniture).
-const featured = (await getCollection('lab', ({ data }) => data.status === 'live' && !data.noindex))
-  .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
-  .slice(0, 2);
+// The body is the quiet school's (src/themes/quiet/), shared with /t/quiet/.
+// Home meta is the shared brand blurb verbatim (SITE_DESCRIPTION, injected by
+// getCopy), matching both the opener copy and the ProfessionalService schema.
+const copy = await getCopy('home');
+const chrome = await getCopy('chrome');
 ---
-<BaseLayout
-  title="Custom software and web design · Mississippi Gulf Coast"
-  description={description}
->
+<BaseLayout title={copy.title} description={copy.description}>
   <StructuredData slot="head" />
-  <section class="hero">
-    <BarkField density={170} live />
-    <h1 class="billboard">
-      <span>Birch</span> <span>Design</span> <span>Lab</span>
-    </h1>
-    <span class="bark-credit-pin"><BarkCredit href="/lab/bdl-001" label="BDL-001 · The Bark Engine, live" /></span>
-  </section>
-
-  <section class="wrap opener">
-    <p class="opener-lead">A design lab, not an agency.</p>
-    <p class="subline">
-      Custom software and web design for businesses across the Mississippi Gulf Coast that want to grow and thrive.
-      Concocted in a lab where the same hands that build your site answer your email.
-    </p>
-  </section>
-
-  <section class="wrap doors">
-    <h2 class="doors-kicker">What we build</h2>
-    <div class="door-grid">
-      <article class="door">
-        <h3>Software</h3>
-        <p>
-          The tool your business has been hoping for. The spreadsheet that has grown into
-          a monster, the process that you dread every week that eats into your weekends?
-          We can design, build, and maintain what fixes it.
-        </p>
-      </article>
-      <article class="door">
-        <h3>Web design</h3>
-        <p>
-          A site that loads instantly, reads clearly, and presents your business
-          as the only one to even consider calling. No templates, no builders, no bloat.
-          Every site designed and constructed by hand.
-        </p>
-      </article>
-    </div>
-    <a class="more-link doors-more" href="/services">How we build <span class="arw" aria-hidden="true">&rarr;</span></a>
-  </section>
-
-  {featured.length > 0 && (
-    <section class="loud" data-reveal>
-      <div class="wrap loud-inner">
-        <p class="smallcaps kicker">From the lab</p>
-        <p class="pull">Everything we sell, we practice in the open.</p>
-        <ul class="specimens" role="list">
-          {featured.map((entry) => (
-            <li class="specimen">
-              <span class="designation smallcaps">{entry.data.designation}</span>
-              <span class="tick" aria-hidden="true"></span>
-              <span class="spec-summary">{entry.data.summary}</span>
-            </li>
-          ))}
-        </ul>
-        <a class="more-link" href="/lab">Visit the lab <span class="arw" aria-hidden="true">&rarr;</span></a>
-      </div>
-    </section>
-  )}
-
-  <section class="wrap closer">
-    <p class="closer-lead">Ready when you are.</p>
-    <a class="cta-engraved" href="/contact">
-      <span class="fill" aria-hidden="true"></span>
-      <span class="lbl">Let's start your project</span>
-    </a>
-  </section>
+  <Home copy={copy} chrome={chrome} />
 </BaseLayout>
 
 <script>
@@ -99,105 +24,3 @@ const featured = (await getCollection('lab', ({ data }) => data.status === 'live
     mountRegulator('overlay');
   }
 </script>
-
-<style>
-  .hero {
-    position: relative; min-height: 88vh;
-    display: grid; place-items: center;
-    border-bottom: 1px solid var(--line);
-    overflow: hidden;
-    padding-inline: var(--space-4);
-  }
-  .billboard {
-    position: relative;
-    color: var(--billboard-color);
-    font-family: var(--font-billboard);
-    /* Home renders Marcellus, which ships 400 only; --billboard-weight (500)
-       stays for styleguide/bdl-002 faces that really have a 500. Override here
-       so the largest type on the site isn't faux-bolded. */
-    font-weight: 400;
-    font-size: clamp(2.8rem, 9vw, 6.5rem);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    text-align: center;
-    line-height: 1.1;
-  }
-  @media (max-width: 640px) {
-    .billboard span { display: block; }
-  }
-  /* Quiet signature: the hero bark is BDL-001 rendered live, credited by the
-     shared BarkCredit component. This only pins the credit low-centre over the
-     hero; the type + hover treatment live in BarkCredit.astro. */
-  .bark-credit-pin {
-    position: absolute;
-    left: 50%;
-    bottom: var(--space-4);
-    transform: translateX(-50%);
-    z-index: 1;
-  }
-
-  /* Opener — the interior display moment. */
-  .opener { padding-block: var(--space-7); }
-  .opener-lead {
-    font-family: var(--font-display); font-size: var(--text-3xl);
-    line-height: 1.15;
-  }
-  .subline {
-    margin-top: var(--space-4); font-size: var(--text-lg);
-    color: var(--mark-muted); max-width: var(--measure-wide);
-  }
-
-  /* Two doors. */
-  .doors { padding-block: 0 var(--space-7); }
-  /* Section label, not a second headline -- same eyebrow treatment as the
-     "Services"/"FROM THE LAB" kickers elsewhere, so the door titles below
-     are the only thing at headline weight. */
-  .doors-kicker {
-    font-family: var(--font-smallcaps); font-size: var(--text-sm);
-    letter-spacing: var(--tracking-wide); text-transform: uppercase;
-    color: var(--accent);
-  }
-  .door-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-6); margin-top: var(--space-4);
-  }
-  .door { display: flex; flex-direction: column; gap: var(--space-2); }
-  .door h3 { font-size: var(--text-xl); }
-  .door p { color: var(--mark-muted); max-width: var(--measure); }
-  /* Single services link below the grid, left-aligned in the flow (the two
-     per-door links read as redundant; a lone centered one floated oddly). */
-  .doors-more { display: inline-block; margin-top: var(--space-5); }
-
-  /* Loud moment — green Lab preview (.loud primitive in base.css). */
-  .kicker { color: var(--accent); }
-  .pull {
-    font-family: var(--font-display); font-size: var(--text-2xl);
-    line-height: 1.2; max-width: 34ch; margin-top: var(--space-3);
-  }
-  .specimens {
-    list-style: none; padding: 0; margin-top: var(--space-5);
-    display: flex; flex-direction: column; gap: var(--space-2);
-  }
-  .designation { color: var(--accent); }
-  /* Same working-specimen tick as the Lab catalog. --accent, not --gf-accent:
-     .loud remaps --accent to the loud value precisely so children do not have
-     to know they sit on green, and the .designation beside it relies on that. */
-  .specimen .tick {
-    display: inline-block; width: 2px; height: 0.9em;
-    background: var(--accent); margin-inline: var(--space-2) var(--space-2);
-    vertical-align: middle;
-  }
-  .loud .more-link { display: inline-block; margin-top: var(--space-5); }
-
-  /* Closing contact CTA — a quiet finish (not the green .loud band), so the Lab
-     preview above stays the flex. Every page ends on the ask. */
-  .closer {
-    padding-block: var(--space-7);
-    border-top: 1px solid var(--line);
-    display: grid; justify-items: center; text-align: center;
-  }
-  .closer-lead {
-    font-family: var(--font-display); font-size: var(--text-2xl);
-    line-height: 1.2; margin-bottom: var(--space-5);
-  }
-</style>

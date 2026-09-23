@@ -1,0 +1,76 @@
+---
+/** The quiet school's header: the root site's header, driven by the chrome
+    copy. `theme` is set only inside the /t/ portal, where links stay in the
+    school and the Lab link leaves it with a full page load. */
+import ThemeToggle from '../../components/ThemeToggle.astro';
+import { hrefFor } from '../paths';
+import type { CopyData } from '../../lib/copy';
+
+interface Props { chrome: CopyData<'chrome'>; theme?: string }
+const { chrome, theme } = Astro.props;
+const path = Astro.url.pathname;
+const links = chrome.nav.map(({ to, label }) => ({ to, label, href: hrefFor(to, theme) }));
+---
+<header>
+  <a class="skip" href="#main">{chrome.skip}</a>
+  <div class="wrap bar">
+    {/* The wordmark is the one element every school names for the morph
+        (spec §4). Root pages have no router, so they get no transition name
+        and their markup stays exactly as it was. */}
+    {theme ? (
+      <a class="wordmark smallcaps" href={hrefFor('home', theme)} transition:name="wordmark">{chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class="wm-line">{part}</span></>)}</a>
+    ) : (
+      <a class="wordmark smallcaps" href={hrefFor('home')}>{chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class="wm-line">{part}</span></>)}</a>
+    )}
+    <nav aria-label="Main">
+      {links.map(({ to, label, href }) => (
+        <a
+          href={href}
+          aria-current={path.startsWith(href) ? 'page' : undefined}
+          data-astro-reload={theme && to === 'lab' ? '' : undefined}
+        >{label}</a>
+      ))}
+    </nav>
+    <ThemeToggle />
+  </div>
+</header>
+
+<style>
+  header { border-bottom: 1px solid var(--line); }
+  .bar {
+    display: flex; align-items: center; gap: var(--space-4);
+    padding-block: var(--space-3);
+  }
+  .wordmark {
+    font-size: var(--text-lg); color: var(--mark); text-decoration: none;
+    margin-right: auto;
+  }
+  /* Name-boundary pieces: one line on desktop; on mobile the first drops to its
+     own line and "Design Lab" is kept whole (see the breakpoint block). */
+  .wm-line { white-space: nowrap; }
+  nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  nav a {
+    color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm);
+    transition: color var(--dur-1) var(--ease-weighted);
+  }
+  nav a:hover, nav a[aria-current='page'] { color: var(--mark); }
+  .skip {
+    position: absolute; left: -100vw; top: 0; background: var(--field-raised);
+    color: var(--mark); padding: var(--space-2) var(--space-3);
+  }
+  .skip:focus { left: 0; z-index: 10; }
+  @media (max-width: 640px) {
+    /* Kit treatment: wordmark alone on the left, nav as two columns of two on
+       the right, toggle top right. Bar stays one row, top-aligned. */
+    .bar { align-items: flex-start; }
+    nav {
+      display: grid; grid-template-columns: repeat(2, max-content);
+      /* column gap tightened from --space-4 to --space-2: frees ~16px so the
+         wordmark has room to keep "Design Lab" whole on its second line */
+      gap: var(--space-2);
+    }
+    /* Deterministic 2-line wordmark, split at the name boundary:
+       "Birch" / "Design Lab" (never mid-phrase, never 3 lines). */
+    .wordmark .wm-line:first-child { display: block; }
+  }
+</style>

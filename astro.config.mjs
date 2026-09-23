@@ -2,6 +2,8 @@ import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
 import sitemap from '@astrojs/sitemap';
 import { FontaineTransform } from 'fontaine';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 /**
  * three's DRACOLoader carries module-scope `new URL('../libs/draco/...',
@@ -65,21 +67,23 @@ function dropUnusedDracoDecoder() {
 /**
  * Astro 7.3's CSS build plugin deletes CSS assets it believes the SSR pages
  * already carry, then restores the ones a client chunk still needs by
- * assigning back into the bundle object. Rolldown (Vite 8) ignores that
- * assignment ("This plugin assigns to bundle variable ... will be ignored" in
- * the build log), so the restore never happens. A dynamically imported
- * component whose CSS was deleted is left preloading a file that does not
- * exist, and Vite's preload helper throws: /?tune (BDL-006 mounting the
- * Regulator over the home page) died with "Unable to preload CSS for
- * /_astro/Regulator.*.css". Found by browser-passing the Astro 7 upgrade on
- * 09-22-26.
+ * assigning back into the bundle object. Rolldown (Vite 8) does not honour
+ * that assignment reliably ("This plugin assigns to bundle variable ... will
+ * be ignored" in the build log), so a dynamically imported component whose
+ * CSS was deleted can be left preloading a file that does not exist, and
+ * Vite's preload helper throws: /?tune (BDL-006 mounting the Regulator over
+ * the home page) died with "Unable to preload CSS for /_astro/Regulator.*.css".
+ * Found by browser-passing the Astro 7 upgrade on 09-22-26.
  *
  * Two halves: snapshot every CSS asset before Astro's plugin runs (enforce
- * 'pre'), then after it (enforce 'post') re-emit, under the same file name,
- * any CSS that a chunk's importedCss still names but the bundle lost. Only
- * files a chunk actually references come back, so nothing Astro correctly
- * inlined is resurrected. Delete once Astro restores via emitFile; the build
- * log line below says when it is doing work.
+ * 'pre' generateBundle), then once the bundle is on disk (writeBundle) write
+ * any CSS file that a chunk's importedCss names but that never reached disk.
+ * Writing after the fact, rather than emitFile, cannot collide with the
+ * assignments Rolldown does honour (an emitFile here produced
+ * FILE_NAME_CONFLICT warnings when both landed). Only files a chunk actually
+ * references come back, so nothing Astro correctly inlined is resurrected.
+ * Delete once Astro restores via emitFile; the build log line below says when
+ * it is doing work.
  */
 function restoreReferencedCss() {
   const snapshot = new Map();
@@ -89,7 +93,6 @@ function restoreReferencedCss() {
       apply: 'build',
       enforce: 'pre',
       generateBundle(_options, bundle) {
-        snapshot.clear();
         for (const [file, item] of Object.entries(bundle)) {
           if (item.type === 'asset' && file.endsWith('.css')) snapshot.set(file, item.source);
         }
@@ -99,17 +102,20 @@ function restoreReferencedCss() {
       name: 'bdl-css-restore',
       apply: 'build',
       enforce: 'post',
-      generateBundle(_options, bundle) {
-        const restored = [];
+      writeBundle(options, bundle) {
+        if (!options.dir) return;
+        const restored = new Set();
         for (const item of Object.values(bundle)) {
           if (item.type !== 'chunk' || !item.viteMetadata) continue;
           for (const css of item.viteMetadata.importedCss) {
-            if (bundle[css] || !snapshot.has(css) || restored.includes(css)) continue;
-            this.emitFile({ type: 'asset', fileName: css, source: snapshot.get(css) });
-            restored.push(css);
+            const target = join(options.dir, css);
+            if (restored.has(css) || !snapshot.has(css) || existsSync(target)) continue;
+            mkdirSync(dirname(target), { recursive: true });
+            writeFileSync(target, snapshot.get(css));
+            restored.add(css);
           }
         }
-        if (restored.length) this.info(`restored ${restored.length} referenced CSS file(s): ${restored.join(', ')}`);
+        if (restored.size) this.info(`restored ${restored.size} referenced CSS file(s): ${[...restored].join(', ')}`);
       },
     },
   ];
@@ -132,7 +138,13 @@ export default defineConfig({
       // QR code rather than by search (they are noindex too). None belong in
       // the sitemap. A new card channel is a new page, so add it here when
       // you add it.
+      //
+      // /t/ is the theme-schools portal (BDL-010): every school renders the
+      // same five business pages, noindexed, so none of them belong either.
+      // Anchored on the pathname so an unrelated route that merely contains
+      // "/t/" is not dropped (F051).
       filter: (page) =>
+        !new URL(page).pathname.startsWith('/t/') &&
         !page.includes('/styleguide') &&
         !page.includes('/lab/bdl-006') &&
         !page.includes('/contact/sent') &&

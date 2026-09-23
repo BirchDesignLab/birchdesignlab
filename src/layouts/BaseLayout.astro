@@ -41,33 +41,9 @@ const { title, description, noindex = false, zone } = Astro.props;
     <SiteFooter />
     <script>
       import { onMount } from '../lib/lifecycle';
+      import { mountReveals } from '../lib/reveal';
 
-      // Quiet weighted reveals. Gate on .reveal-on so content is never hidden
-      // without JS; elements already in view at load settle instantly (no flash).
-      onMount(() => {
-        const els = document.querySelectorAll('[data-reveal]');
-        document.documentElement.classList.add('reveal-on');
-        const io = new IntersectionObserver(
-          (entries) => {
-            for (const e of entries) {
-              if (e.isIntersecting) {
-                e.target.classList.add('is-settled');
-                io.unobserve(e.target);
-              }
-            }
-          },
-          { rootMargin: '0px 0px -20% 0px' },
-        );
-        els.forEach((el) => {
-          const r = el.getBoundingClientRect();
-          if (r.top < window.innerHeight && r.bottom > 0) {
-            el.classList.add('is-settled'); // in view on load: show at once
-          } else {
-            io.observe(el);
-          }
-        });
-        return () => io.disconnect();
-      });
+      onMount(mountReveals);
     </script>
   </body>
 </html>

@@ -1,130 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import JsonLd from '../components/JsonLd.astro';
+import Services from '../themes/quiet/pages/Services.astro';
 import { buildService } from '../lib/seo/organization';
+import { getCopy } from '../lib/copy';
 
+// The body is the quiet school's (src/themes/quiet/), shared with
+// /t/quiet/services/. Structured data stays here: only root pages declare the
+// business (schools are noindexed copies, F041).
 const service = buildService(Astro.site!);
+const copy = await getCopy('services');
+const chrome = await getCopy('chrome');
 ---
-<BaseLayout
-  title="Custom software and web design for Gulf Coast businesses"
-  description="Custom software and web design for businesses across the Mississippi Gulf Coast, designed, constructed, and cared for by one accountable craftsman."
->
+<BaseLayout title={copy.title} description={copy.description}>
   <JsonLd slot="head" data={service} />
-  <section class="wrap">
-    <header class="intro">
-      <p class="smallcaps kicker">Services</p>
-      <h1>Two things, done properly.</h1>
-      <p class="subline">
-        A decade of skills honed at the enterprise level, now served to the businesses that keep the Gulf Coast running.
-      </p>
-      <p class="subline">
-        Same person designs it, builds it, and answers when you call. That's the whole model, twice.
-      </p>
-    </header>
-
-    <article class="service">
-      <h2>Custom software</h2>
-      <p>
-        Every business runs on a few things that never made it into any official system: the client list split across three phones, the schedule you're building from a paper calendar and a gut feeling, the order that gets tracked in a group text until someone loses it.
-      </p>
-      <p>
-        We build the small, sturdy tool that replaces whichever one is costing you the most time. We can stay around to keep it running as the business grows past it.
-      </p>
-    </article>
-
-    <article class="service">
-      <h2>Web design</h2>
-      <p>
-        Your website is the first impression most customers will ever get. Whether that's deciding where to eat tonight, booking a charter, or comparing venues.
-      </p>
-      <p>
-        Ours load fast, read clearly on any device, and are built around one question. What should they do next; call, book, order, walk in?
-      </p>
-      <p>
-        Menus that update in minutes, not PDFs. Booking that keeps the reservation with you instead of a third-party app. Every site is designed and constructed by the same two hands, for the business it belongs to.
-      </p>
-    </article>
-
-    <section class="process">
-      <h2>How a project runs</h2>
-      <ol class="steps" role="list">
-        <li class="row">
-          <p class="num" aria-hidden="true"></p>
-          <div class="step">
-            <h3>Discovery</h3>
-            <p>We have a conversation. No questionnaire, no intake form, no workshop with a slide deck. We leave with a project scope you can actually read, not a sales pitch.</p>
-          </div>
-        </li>
-        <li class="row">
-          <p class="num" aria-hidden="true"></p>
-          <div class="step">
-            <h3>Build</h3>
-            <p>You get a working link at the beginning of the project. Access to the real build you can click through, not a mockup. Watch it evolve and fold in feedback throughout. No surprise reveal at the end.</p>
-          </div>
-        </li>
-        <li class="row">
-          <p class="num" aria-hidden="true"></p>
-          <div class="step">
-            <h3>Launch</h3>
-            <p>Tested on multiple devices. Delivered with an owner's manual and a bow. Stay with us, or take the tools we built you anywhere you like afterwards.</p>
-          </div>
-        </li>
-        <li class="row">
-          <p class="num" aria-hidden="true"></p>
-          <div class="step">
-            <h3>Care</h3>
-            <p>Software is a living thing. We offer ongoing care so it stays fast, secure, and current as your business grows. It's yours either way.</p>
-          </div>
-        </li>
-      </ol>
-    </section>
-  </section>
-
-  <section class="loud" data-reveal>
-    <div class="wrap loud-inner">
-      <p class="pull">Every project starts with a normal conversation.</p>
-      <a class="cta-engraved" href="/contact">
-        <span class="fill" aria-hidden="true"></span>
-        <span class="lbl">Tell us about your project</span>
-      </a>
-    </div>
-  </section>
+  <Services copy={copy} chrome={chrome} />
 </BaseLayout>
-
-<style>
-  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
-  .kicker { color: var(--accent); }
-  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
-  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
-
-  .service { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: var(--measure-wide); }
-  .service p { color: var(--mark-muted); margin-top: var(--space-3); }
-
-  /* Process — display-serif numerals in a 7rem column. */
-  .process { padding-block: var(--space-5) 0; border-top: 1px solid var(--line); }
-  .steps { list-style: none; padding: 0; margin-top: var(--space-4); counter-reset: step; }
-  .row {
-    counter-increment: step;
-    display: grid; grid-template-columns: 7rem 1fr;
-    padding-block: var(--space-5);
-  }
-  .row + .row { border-top: 1px solid var(--line); }
-  .num {
-    font-family: var(--font-display); font-size: var(--text-2xl);
-    color: var(--accent); line-height: 1;
-  }
-  .num::before { content: counter(step, decimal-leading-zero); }
-  .step p { color: var(--mark-muted); margin-top: var(--space-2); }
-  /* Phone: collapse the 7rem numeral column to single column (authored fresh —
-     the kit's .process-row collapse rule was scaffolding, never ported). */
-  @media (max-width: 640px) {
-    .row { grid-template-columns: 1fr; gap: var(--space-2); }
-  }
-
-  /* Loud moment — closing CTA (.loud primitive in base.css). */
-  .pull {
-    font-family: var(--font-display); font-size: var(--text-2xl);
-    line-height: 1.2; max-width: 40ch;
-  }
-  .loud .cta-engraved { margin-top: var(--space-5); }
-</style>

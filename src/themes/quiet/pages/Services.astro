@@ -1,0 +1,85 @@
+---
+/** Quiet services body. Rendered by /services/ and /t/quiet/services/. */
+import type { CopyData } from '../../../lib/copy';
+import { hrefFor } from '../../paths';
+
+interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme?: string }
+const { copy, theme } = Astro.props;
+---
+<section class="wrap">
+  <header class="intro">
+    <p class="smallcaps kicker">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    {copy.sublines.map((line) => <p class="subline">{line}</p>)}
+  </header>
+
+  {copy.offerings.map((offering) => (
+    <article class="service">
+      <h2>{offering.heading}</h2>
+      {offering.body.map((para) => <p>{para}</p>)}
+    </article>
+  ))}
+
+  <section class="process">
+    <h2>{copy.process.heading}</h2>
+    <ol class="steps" role="list">
+      {copy.process.steps.map((step) => (
+        <li class="row">
+          <p class="num" aria-hidden="true"></p>
+          <div class="step">
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+</section>
+
+<section class="loud" data-reveal>
+  <div class="wrap loud-inner">
+    <p class="pull">{copy.pull}</p>
+    <a class="cta-engraved" href={hrefFor('contact', theme)}>
+      <span class="fill" aria-hidden="true"></span>
+      <span class="lbl">{copy.cta}</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure-wide); }
+  .kicker { color: var(--accent); }
+  .intro h1 { font-size: var(--text-3xl); margin-top: var(--space-2); }
+  .subline { font-size: var(--text-lg); color: var(--mark-muted); margin-top: var(--space-3); }
+
+  .service { padding-block: var(--space-5); border-top: 1px solid var(--line); max-width: var(--measure-wide); }
+  .service p { color: var(--mark-muted); margin-top: var(--space-3); }
+
+  /* Process — display-serif numerals in a 7rem column. */
+  .process { padding-block: var(--space-5) 0; border-top: 1px solid var(--line); }
+  .steps { list-style: none; padding: 0; margin-top: var(--space-4); counter-reset: step; }
+  .row {
+    counter-increment: step;
+    display: grid; grid-template-columns: 7rem 1fr;
+    padding-block: var(--space-5);
+  }
+  .row + .row { border-top: 1px solid var(--line); }
+  .num {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    color: var(--accent); line-height: 1;
+  }
+  .num::before { content: counter(step, decimal-leading-zero); }
+  .step p { color: var(--mark-muted); margin-top: var(--space-2); }
+  /* Phone: collapse the 7rem numeral column to single column (authored fresh —
+     the kit's .process-row collapse rule was scaffolding, never ported). */
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+
+  /* Loud moment — closing CTA (.loud primitive in base.css). */
+  .pull {
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    line-height: 1.2; max-width: 40ch;
+  }
+  .loud .cta-engraved { margin-top: var(--space-5); }
+</style>

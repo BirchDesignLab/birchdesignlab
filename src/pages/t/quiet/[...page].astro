@@ -1,0 +1,37 @@
+---
+/**
+ * The quiet school inside the /t/ portal. One route file per school, importing
+ * only that school's components and CSS (F016); getStaticPaths yields the five
+ * business pages. Quiet's CSS is the root site's own.
+ */
+import '@fontsource/marcellus/latin.css';
+import '@fontsource/spectral/latin-400.css';
+import '@fontsource/spectral/latin-600.css';
+import '../../../styles/tokens.css';
+import '../../../styles/base.css';
+import PortalLayout from '../../../themes/portal/PortalLayout.astro';
+import Header from '../../../themes/quiet/Header.astro';
+import Footer from '../../../themes/quiet/Footer.astro';
+import Home from '../../../themes/quiet/pages/Home.astro';
+import About from '../../../themes/quiet/pages/About.astro';
+import Services from '../../../themes/quiet/pages/Services.astro';
+import Contact from '../../../themes/quiet/pages/Contact.astro';
+import Sent from '../../../themes/quiet/pages/Sent.astro';
+import { meta } from '../../../themes/quiet/meta';
+import { schoolStaticPaths, type PageId } from '../../../themes/paths';
+import { getCopy } from '../../../lib/copy';
+
+export function getStaticPaths() {
+  return schoolStaticPaths();
+}
+
+const { page } = Astro.props as { page: PageId };
+const chrome = await getCopy('chrome');
+const copy = await getCopy(page);
+const Body = { home: Home, about: About, services: Services, contact: Contact, sent: Sent }[page];
+---
+<PortalLayout theme={meta} page={page} title={copy.title} description={copy.description}>
+  <Header slot="header" chrome={chrome} theme={meta.id} />
+  <Body copy={copy as never} chrome={chrome} theme={meta.id} />
+  <Footer slot="footer" chrome={chrome} theme={meta.id} />
+</PortalLayout>

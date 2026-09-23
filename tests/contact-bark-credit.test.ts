@@ -16,26 +16,30 @@ describe('BarkCredit extraction + home refactor', () => {
     expect(c).not.toMatch(/position:\s*absolute/);
   });
 
+  // Bodies live in src/themes/quiet/pages/ and words in src/content/copy/
+  // since the theme-schools work (09-22-26).
   it('home hero credits BDL-001 through BarkCredit, not an inline anchor', () => {
-    const home = read('pages/index.astro');
-    expect(home).toMatch(/import BarkCredit from '\.\.\/components\/BarkCredit\.astro'/);
+    const home = read('themes/quiet/pages/Home.astro');
+    expect(home).toMatch(/import BarkCredit from '\.\.\/\.\.\/\.\.\/components\/BarkCredit\.astro'/);
     expect(home).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
-    expect(home).toMatch(/BDL-001 · The Bark Engine, live/);
+    expect(read('content/copy/chrome.yaml')).toMatch(/^barkCredit: BDL-001 · The Bark Engine, live$/m);
     // the old inline credit anchor is gone
     expect(home).not.toMatch(/<a class="bark-credit smallcaps"/);
   });
 
   it('/contact/sent credits BDL-001 with a link', () => {
-    const sent = read('pages/contact/sent.astro');
-    expect(sent).toMatch(/import BarkCredit from '\.\.\/\.\.\/components\/BarkCredit\.astro'/);
+    const sent = read('themes/quiet/pages/Sent.astro');
+    expect(sent).toMatch(/import BarkCredit from '\.\.\/\.\.\/\.\.\/components\/BarkCredit\.astro'/);
     expect(sent).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
   });
 
   it('/contact has the living bark + trust line, but no BDL-001 credit link', () => {
-    const contact = read('pages/contact.astro');
+    const contact = read('themes/quiet/pages/Contact.astro');
+    const copy = read('content/copy/contact.yaml');
     expect(contact).toMatch(/<BarkField[^>]*lockAspect/);          // living bark present
-    expect(contact).toMatch(/Mississippi Gulf Coast/);            // trust line (provisional)
-    expect(contact).toMatch(/A reply within one business day/);
+    expect(contact).toMatch(/copy\.trust/);                       // trust line (provisional)
+    expect(copy).toMatch(/Mississippi Gulf Coast/);
+    expect(copy).toMatch(/A reply within one business day/);
     expect(contact).not.toMatch(/\/lab\/bdl-001/);                 // no credit off the form page
     expect(contact).not.toMatch(/BarkCredit/);
   });

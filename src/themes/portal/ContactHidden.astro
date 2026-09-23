@@ -1,0 +1,26 @@
+---
+/**
+ * The hidden half of the contact contract, identical in every school (spec §5):
+ * - `return`: the school id, so the Worker sends the visitor to
+ *   /t/<id>/contact/sent/ (validated there against a pattern and against the
+ *   built pages, never echoed raw).
+ * - `company`: the honeypot. Humans never see it; bots autofill it and get a
+ *   cheerful redirect and no email. Hidden with inline styles so no school's
+ *   CSS can accidentally reveal it. Quiet keeps its own honeypot markup (the
+ *   root form's, unchanged) and passes honeypot={false}.
+ *
+ * Every school's form must also be `method="post" action="/api/contact"`
+ * with `data-astro-reload`, and fields `name`, `email`, `message`.
+ * tests/built/portal.test.ts checks all of it on every school.
+ */
+/** `label` is the honeypot's label, from the contact copy (labels.honeypot). */
+interface Props { theme: string; label: string; honeypot?: boolean }
+const { theme, label, honeypot = true } = Astro.props;
+---
+<input type="hidden" name="return" value={theme} />
+{honeypot && (
+  <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;">
+    <label for={`cf-company-${theme}`}>{label}</label>
+    <input id={`cf-company-${theme}`} name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+)}

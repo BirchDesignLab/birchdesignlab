@@ -1,96 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BarkField from '../components/BarkField.astro';
-import BarkCredit from '../components/BarkCredit.astro';
+import About from '../themes/quiet/pages/About.astro';
+import { getCopy } from '../lib/copy';
+
+// The body is the quiet school's (src/themes/quiet/), shared with /t/quiet/about/.
+const copy = await getCopy('about');
+const chrome = await getCopy('chrome');
 ---
-<BaseLayout
-  title="About · Birch Design Lab"
-  description="The name, the oldest paper of the north, and the man behind Birch Design Lab."
->
-  <header class="hero">
-    <BarkField density={170} lockAspect />
-    <h1>The shining tree</h1>
-    <span class="bark-credit-pin"><BarkCredit href="/lab/bdl-001" label="BDL-001 · The Bark Engine, live" /></span>
-  </header>
-  <section class="wrap prose">
-    <article class="epic">
-      <p class="etym">
-        <em>Birch</em>: Old English <em>beorc</em>, from the root meaning <strong>to shine</strong>. The same syllable survives in
-        <em>bright</em>. The birch is literally "the shining tree,"
-        named for the way its white bark stands out amongst the dark woods. Visible from a distance.
-      </p>
-      <p>
-        The word is old enough to have kept its own letter. When English was still Olde and written in runes, the rune for B was <em>beorc</em>: the
-        birch rune. A tree so familiar it stood for a sound. Most business names
-        get invented in an afternoon. This one has been standing for a few thousand years.
-      </p>
-    </article>
-
-    <article class="founder">
-      <h2>The founder</h2>
-      <p>
-        Birch Design Lab is one man much like the birch tree. Tall, pale, and shining amongst the darkness.
-      </p>
-      <p>
-        That's not a placeholder for "growing into a team." It's the entire model. The same hands that scope your project write the code and test it on phones, tablets, and desktop. Then answer your email two months later when something needs to change. No account manager, no handoffs, no "let me loop in the team."
-      </p>
-      <p>
-        Over a decade spent designing and building things on the Gulf Coast, a stretch of country the birch has no business surviving in. What that decade taught him is the best work holds up when it's built with consideration for the people who will use it. Not to impress for a season and get left out in the weather.
-      </p>
-    </article>
-  </section>
-
-  <section class="loud" data-reveal>
-    <div class="wrap loud-inner">
-      <p class="manifesto">
-        Everything here is one person's work. That is not a limitation, it is the guarantee.
-      </p>
-      <a class="cta-engraved" href="/contact">
-        <span class="fill" aria-hidden="true"></span>
-        <span class="lbl">Let's get started</span>
-      </a>
-    </div>
-  </section>
+<BaseLayout title={copy.title} description={copy.description}>
+  <About copy={copy} chrome={chrome} />
 </BaseLayout>
-
-<style>
-  /* Bark hero — Home's construction at half height: a full-bleed field with the
-     H1 overlaid. This is About's material difference from Services. The short
-     band only works because the field opts into `lockAspect`; without it the
-     engine maps normalized dash width to canvas width and the lenticels smear
-     into horizontal streaks. */
-  .hero {
-    position: relative; min-height: 44vh;
-    display: grid; place-items: center;
-    border-bottom: 1px solid var(--line);
-    overflow: hidden;
-    padding-inline: var(--space-4);
-  }
-  .hero h1 {
-    position: relative;
-    font-size: var(--text-3xl);
-    text-align: center;
-    /* billboard color (distinct from the bark's --mark hue) so the H1 keeps
-       contrast over the brightest lenticels, not just over the field */
-    color: var(--billboard-color);
-  }
-  .bark-credit-pin {
-    position: absolute;
-    left: 50%;
-    bottom: var(--space-4);
-    transform: translateX(-50%);
-    z-index: 1;
-  }
-
-  .prose { display: grid; gap: var(--space-4); padding-block: 0 var(--space-4); }
-  .epic, .founder { border-top: 1px solid var(--line); padding-top: var(--space-5); max-width: var(--measure-wide); }
-  .etym { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.4; }
-  .epic p + p, .founder p { color: var(--mark-muted); margin-top: var(--space-3); }
-
-  /* Loud moment — manifesto pull-quote + closing CTA (.loud primitive in base.css). */
-  .manifesto {
-    font-family: var(--font-display); font-size: var(--text-3xl);
-    line-height: 1.15; max-width: 20ch;
-  }
-  .loud .cta-engraved { margin-top: var(--space-5); }
-</style>
