@@ -137,3 +137,116 @@ describe('contact worker', () => {
     expect(res.status).toBe(200);
   });
 });
+
+// School forms (spec section 5) add a hidden `return` field naming the school.
+// The Worker confirms /t/<id>/contact/sent/ exists in ASSETS before using it.
+describe('contact worker, school return path', () => {
+  const ROOT_SENT = 'https://birchdesignlab.com/contact/sent/';
+  const THEME_SENT = 'https://birchdesignlab.com/t/vaporwave/contact/sent/';
+
+  /** ASSETS mock that answers 200 only for the listed paths, 404 otherwise. */
+  function assetsServing(...paths: string[]) {
+    return {
+      fetch: vi.fn(async (req: Request) =>
+        new Response('asset', { status: paths.includes(new URL(req.url).pathname) ? 200 : 404 }),
+      ),
+    };
+  }
+
+  function assetPaths(env: { ASSETS: { fetch: { mock: { calls: unknown[][] } } } }) {
+    return env.ASSETS.fetch.mock.calls.map((call) => new URL((call[0] as Request).url).pathname);
+  }
+
+  it('redirects to the school sent page when that page exists', async () => {
+    const env = makeEnv({ ASSETS: assetsServing('/t/vaporwave/contact/sent/') });
+    const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe(THEME_SENT);
+    expect(assetPaths(env)).toEqual(['/t/vaporwave/contact/sent/']);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+    expectSecureHeaders(res);
+  });
+
+  it('falls back to root when a well-formed school has no sent page', async () => {
+    const env = makeEnv({ ASSETS: assetsServing() });
+    const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe(ROOT_SENT);
+    expect(assetPaths(env)).toEqual(['/t/vaporwave/contact/sent/']);
+  });
+
+  it.each(['../etc', 'Vaporwave', 'a'.repeat(40), 'https://evil.example', 'x y', ''])(
+    'falls back to root for malformed return %j without touching ASSETS',
+    async (bad) => {
+      const env = makeEnv({ ASSETS: assetsServing('/t/vaporwave/contact/sent/') });
+      const res = await worker.fetch(contactRequest({ ...GOOD, return: bad }), env);
+      expect(res.status).toBe(303);
+      expect(res.headers.get('location')).toBe(ROOT_SENT);
+      expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+      expectSecureHeaders(res);
+    },
+  );
+
+  it('falls back to root when the ASSETS lookup throws', async () => {
+    const env = makeEnv({ ASSETS: { fetch: vi.fn().mockRejectedValue(new Error('assets down')) } });
+    const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe(ROOT_SENT);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a honeypot bot to the school sent page with no email', async () => {
+    const env = makeEnv({ ASSETS: assetsServing('/t/vaporwave/contact/sent/') });
+    const res = await worker.fetch(
+      contactRequest({ ...GOOD, company: 'Bot Co', return: 'vaporwave' }),
+      env,
+    );
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe(THEME_SENT);
+    expect(env.EMAIL.send).not.toHaveBeenCalled();
+  });
+
+  it('points the 429 page back at the school form', async () => {
+    const env = makeEnv({
+      ASSETS: assetsServing('/t/vaporwave/contact/sent/'),
+      CONTACT_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) },
+    });
+    const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
+    expect(res.status).toBe(429);
+    const html = await res.text();
+    expect(html).toContain('<a href="https://birchdesignlab.com/t/vaporwave/contact/">Back to the form</a>');
+    expect(env.EMAIL.send).not.toHaveBeenCalled();
+    expectSecureHeaders(res);
+  });
+
+  it('points the 400 page back at the school form', async () => {
+    const env = makeEnv({ ASSETS: assetsServing('/t/vaporwave/contact/sent/') });
+    const res = await worker.fetch(contactRequest({ ...GOOD, name: '', return: 'vaporwave' }), env);
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain('href="https://birchdesignlab.com/t/vaporwave/contact/"');
+  });
+
+  it('points the 502 page back at the school form', async () => {
+    const env = makeEnv({
+      ASSETS: assetsServing('/t/vaporwave/contact/sent/'),
+      EMAIL: { send: vi.fn().mockRejectedValue(new Error('send failed')) },
+    });
+    const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
+    expect(res.status).toBe(502);
+    expect(await res.text()).toContain('href="https://birchdesignlab.com/t/vaporwave/contact/"');
+    expectSecureHeaders(res);
+  });
+
+  it('leaves a root submission exactly as before: old Location, old back link, no lookup', async () => {
+    const okEnv = makeEnv();
+    const ok = await worker.fetch(contactRequest(GOOD), okEnv);
+    expect(ok.headers.get('location')).toBe(ROOT_SENT);
+    expect(okEnv.ASSETS.fetch).not.toHaveBeenCalled();
+
+    const limitedEnv = makeEnv({ CONTACT_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } });
+    const limited = await worker.fetch(contactRequest(GOOD), limitedEnv);
+    expect(limited.status).toBe(429);
+    expect(await limited.text()).toContain('<a href="https://birchdesignlab.com/contact">Back to the form</a>');
+    expect(limitedEnv.ASSETS.fetch).not.toHaveBeenCalled();
+  });
+});

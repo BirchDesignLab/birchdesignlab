@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { THEMES, getTheme } from '../src/themes/registry';
-import { PAGE_IDS, pagePath, pageFromPath, rootPathFor, hrefFor, schoolStaticPaths } from '../src/themes/paths';
+import { PAGE_IDS, SCHOOL_ID, pagePath, pageFromPath, rootPathFor, hrefFor, schoolStaticPaths } from '../src/themes/paths';
 
 const THEMES_DIR = new URL('../src/themes/', import.meta.url);
 const schoolDirs = readdirSync(THEMES_DIR).filter(
@@ -25,7 +25,7 @@ describe('theme registry', () => {
   for (const t of THEMES) {
     describe(t.id, () => {
       it('has a URL-safe id', () => {
-        expect(t.id).toMatch(/^[a-z][a-z0-9-]{0,31}$/);
+        expect(t.id).toMatch(SCHOOL_ID);
       });
       it('fills every descriptive field', () => {
         for (const key of ['name', 'era', 'lesson', 'signature'] as const) expect(t[key].trim().length, key).toBeGreaterThan(0);

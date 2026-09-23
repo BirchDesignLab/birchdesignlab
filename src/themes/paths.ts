@@ -27,6 +27,10 @@ const ROOT_HREF: Record<PageId, string> = {
   sent: '/contact/sent/',
 };
 
+/** The shape of a school id: its directory name and its /t/<id>/ segment.
+    The contact Worker validates the form's `return` field against it too. */
+export const SCHOOL_ID = /^[a-z][a-z0-9-]{0,31}$/;
+
 /** '/t/<theme>/' prefix, or '' on the root site. */
 export function themePrefix(theme?: string): string {
   return theme ? `/t/${theme}` : '';
@@ -46,8 +50,8 @@ export function rootPathFor(page: PageId): string {
 
 /** Inverse of pagePath for school routes. Null for anything that is not one. */
 export function pageFromPath(pathname: string): { theme: string; page: PageId } | null {
-  const m = /^\/t\/([a-z][a-z0-9-]{0,31})\/(.*)$/.exec(pathname);
-  if (!m) return null;
+  const m = /^\/t\/([^/]+)\/(.*)$/.exec(pathname);
+  if (!m || !SCHOOL_ID.test(m[1])) return null;
   const rest = m[2].replace(/\/+$/, '');
   const page = (Object.keys(SEGMENT) as PageId[]).find((p) => SEGMENT[p] === rest);
   return page ? { theme: m[1], page } : null;
