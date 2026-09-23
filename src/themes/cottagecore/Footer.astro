@@ -1,18 +1,87 @@
 ---
+/** Cottagecore footer: a stitched seam, the name set in the display face with
+    the place written underneath by hand, a small pressed posy, and the
+    tablecloth's scalloped gingham hem to close the page. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
+import Pressed from './assets/Pressed.astro';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
 const year = new Date().getFullYear();
 ---
-<footer class="site-footer">
-  <p>{chrome.name}</p>
-  <p>{chrome.location}</p>
-  <nav aria-label="Footer">
-    {chrome.nav.map(({ to, label }) => (
-      <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
-    ))}
-  </nav>
-  <p>&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+<footer class="cc-footer">
+  <div class="cc-wrap inner">
+    <div class="cc-stitch-rule" aria-hidden="true"></div>
+    <div class="grid">
+      <div class="ident">
+        <div class="posy" aria-hidden="true">
+          <Pressed kind="lavender" seed={31} class="posy-lav" />
+          <Pressed kind="daisy" seed={32} class="posy-daisy" />
+        </div>
+        <div>
+          <p class="f-name">{chrome.name}</p>
+          <p class="f-loc">{chrome.location}</p>
+        </div>
+      </div>
+      <nav aria-label="Footer">
+        {chrome.nav.map(({ to, label }) => (
+          <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
+        ))}
+      </nav>
+      <p class="fine">&copy; {year} {chrome.name} <span class="sep" aria-hidden="true">&#10047;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+    </div>
+  </div>
+  <div class="hem cc-gingham" aria-hidden="true"></div>
 </footer>
+
+<style>
+  .cc-footer { position: relative; z-index: 1; margin-top: clamp(4rem, 9vw, 7rem); overflow-x: clip; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    align-items: end;
+    gap: 1.5rem 2rem;
+    padding-block: 2.2rem 2.4rem;
+  }
+  .ident { display: flex; align-items: flex-end; gap: 0.9rem; }
+  .posy { position: relative; width: 3.4rem; height: 5.4rem; flex: none; }
+  .posy :global(.posy-lav) { position: absolute; left: 0; bottom: 0; width: 2.3rem; rotate: -14deg; }
+  .posy :global(.posy-daisy) { position: absolute; left: 1.2rem; bottom: 0; width: 2.2rem; rotate: 10deg; }
+  .f-name {
+    font-family: var(--font-display);
+    font-weight: 560;
+    font-size: 1.55rem;
+    line-height: 1.1;
+    font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+  .f-loc {
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    color: var(--accent);
+  }
+  nav { display: flex; flex-wrap: wrap; gap: 0.3rem 1.3rem; justify-content: center; }
+  nav a { color: var(--mark); text-decoration: none; }
+  nav a:hover { color: var(--accent); text-decoration: underline wavy var(--accent) 1px; }
+  .fine { color: var(--mark-muted); font-size: 0.95rem; text-align: right; }
+  .fine a { color: var(--mark-muted); }
+  .sep { color: var(--accent); margin-inline: 0.2em; }
+  /* The tablecloth hem: gingham with scallops cut along its top edge. */
+  .hem {
+    height: 2.2rem;
+    --scallop: 0.7rem;
+    -webkit-mask:
+      radial-gradient(var(--scallop) at 50% var(--scallop), #000 97%, #0000) 50% 0 / calc(2 * var(--scallop)) 100% repeat-x,
+      linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--scallop)) no-repeat;
+    mask:
+      radial-gradient(var(--scallop) at 50% var(--scallop), #000 97%, #0000) 50% 0 / calc(2 * var(--scallop)) 100% repeat-x,
+      linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--scallop)) no-repeat;
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; align-items: start; gap: 1.3rem; }
+    nav { justify-content: flex-start; }
+    .fine { text-align: left; }
+  }
+</style>

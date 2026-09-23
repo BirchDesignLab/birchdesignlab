@@ -1,0 +1,333 @@
+---
+/**
+ * Pressed botanicals, drawn for this school: daisy, lavender, fern, a birch
+ * twig with catkins, a wild rose and a single leaf. Each is generated at build
+ * time from a few hand-tuned curves plus a seeded jitter, so two presses of
+ * the same flower never match (the imperfection is the point) while the build
+ * stays deterministic. Colours are custom properties from theme.css, so both
+ * schemes restyle them. Always decorative.
+ */
+interface Props {
+  kind: 'daisy' | 'lavender' | 'fern' | 'birch' | 'rose' | 'leaf';
+  seed?: number;
+  class?: string;
+}
+const { kind, seed = 1, class: cls } = Astro.props;
+
+type Pt = [number, number];
+
+/** mulberry32: small, seedable, good enough for petal wobble. */
+function rng(s: number) {
+  let a = (s * 2654435761) >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = rng(seed);
+const jit = (amount: number) => (rand() * 2 - 1) * amount;
+const n1 = (v: number) => Math.round(v * 10) / 10;
+const P = ([x, y]: Pt) => `${n1(x)} ${n1(y)}`;
+
+/** A smooth closed or open path through points (quadratic midpoint splines). */
+function smooth(pts: Pt[], close = true): string {
+  if (pts.length < 3) return `M${pts.map(P).join('L')}`;
+  const mid = (a: Pt, b: Pt): Pt => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  let d = `M${P(pts[0])}`;
+  for (let i = 1; i < pts.length - 1; i++) d += `Q${P(pts[i])} ${P(mid(pts[i], pts[i + 1]))}`;
+  d += `L${P(pts[pts.length - 1])}`;
+  return close ? `${d}Z` : d;
+}
+
+/** Point and unit tangent on a quadratic Bezier. */
+function quad(a: Pt, c: Pt, b: Pt, t: number): { p: Pt; tan: Pt } {
+  const u = 1 - t;
+  const p: Pt = [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]];
+  const dx = 2 * u * (c[0] - a[0]) + 2 * t * (b[0] - c[0]);
+  const dy = 2 * u * (c[1] - a[1]) + 2 * t * (b[1] - c[1]);
+  const len = Math.hypot(dx, dy) || 1;
+  return { p, tan: [dx / len, dy / len] };
+}
+
+interface LeafOpts {
+  /** Samples per side. */
+  n?: number;
+  /** Sideways curl of the midrib, as a fraction of length. */
+  bend?: number;
+  /** Where along the leaf it is widest, 0-1. */
+  widest?: number;
+  /** Edge teeth count and depth (0 = smooth). */
+  teeth?: number;
+  depth?: number;
+  /** Rounded lobes instead of sharp teeth. */
+  lobed?: boolean;
+}
+
+/** A leaf or petal outline from base `b` along angle `ang` (radians), plus its midrib. */
+function leaf(b: Pt, ang: number, len: number, width: number, o: LeafOpts = {}): { outline: string; rib: string } {
+  const { n = 16, bend = 0, widest = 0.4, teeth = 0, depth = 0, lobed = false } = o;
+  const dir: Pt = [Math.cos(ang), Math.sin(ang)];
+  const perp: Pt = [-dir[1], dir[0]];
+  const pow = Math.log(0.5) / Math.log(widest);
+  const left: Pt[] = [];
+  const right: Pt[] = [];
+  const rib: Pt[] = [];
+  for (let i = 0; i <= n; i++) {
+    const s = i / n;
+    const along = s * len;
+    const side = bend * len * s * s;
+    const m: Pt = [b[0] + dir[0] * along + perp[0] * side, b[1] + dir[1] * along + perp[1] * side];
+    rib.push(m);
+    let w = (width / 2) * Math.sin(Math.PI * Math.pow(s, pow));
+    if (teeth) {
+      const phase = s * teeth;
+      const edge = lobed ? Math.abs(Math.cos(phase * Math.PI)) : 1 - (phase % 1);
+      w *= 1 - depth + depth * edge;
+    }
+    left.push([m[0] + perp[0] * w, m[1] + perp[1] * w]);
+    right.push([m[0] - perp[0] * w, m[1] - perp[1] * w]);
+  }
+  const outline = teeth && !lobed
+    ? `M${[...left, ...right.reverse().slice(1)].map(P).join('L')}Z`
+    : smooth([...left, ...right.reverse().slice(1)]);
+  return { outline, rib: `M${rib.map(P).join('L')}` };
+}
+
+interface Shape { d: string; cls: string; op?: number }
+const shapes: Shape[] = [];
+let viewBox = '0 0 100 100';
+const add = (d: string, c: string, op?: number) => shapes.push({ d, cls: c, op });
+const deg = Math.PI / 180;
+
+if (kind === 'daisy') {
+  viewBox = '0 0 140 250';
+  const head: Pt = [70 + jit(4), 60];
+  const stemTop: Pt = [head[0], head[1] + 8];
+  add(`M${P(stemTop)}Q${P([56 + jit(8), 150])} ${P([66 + jit(6), 248])}`, 'stem');
+  for (const [t, a, l] of [[0.52, -140, 46], [0.7, -38, 40]] as const) {
+    const at = quad(stemTop, [56, 150], [66, 248], t).p;
+    const lf = leaf(at, (a + jit(8)) * deg, l + jit(5), 10 + jit(1.5), { bend: 0.12, widest: 0.62, teeth: 5, depth: 0.28, lobed: true });
+    add(lf.outline, 'leaf');
+    add(lf.rib, 'vein');
+  }
+  // Two rings of petals: the back ring shows between the front one, as a
+  // flattened daisy does.
+  for (const ring of [0, 1]) {
+    const count = 13;
+    for (let i = 0; i < count; i++) {
+      const a = ((i + ring * 0.5) / count) * Math.PI * 2 + jit(0.09);
+      const short = rand() < 0.14 ? 0.72 : 1;
+      const len = (ring ? 36 : 39) * short + jit(3);
+      const base: Pt = [head[0] + Math.cos(a) * 6, head[1] + Math.sin(a) * 6];
+      const p = leaf(base, a, len, 9 + jit(1.4), { n: 12, widest: 0.62, bend: jit(0.05) });
+      add(p.outline, ring ? 'petal' : 'petal petal--back');
+      add(p.rib, 'petal-vein');
+    }
+  }
+  add(`M${P([head[0] - 11, head[1]])}a11 11 0 1 0 22 0a11 11 0 1 0 -22 0Z`, 'heart');
+  // Florets on a golden-angle spiral.
+  let dots = '';
+  for (let k = 1; k < 40; k++) {
+    const r = 1.55 * Math.sqrt(k);
+    const a = k * 137.508 * deg;
+    dots += `M${P([head[0] + Math.cos(a) * r - 0.8, head[1] + Math.sin(a) * r])}a.8 .8 0 1 0 1.6 0a.8 .8 0 1 0 -1.6 0Z`;
+  }
+  add(dots, 'floret');
+}
+
+if (kind === 'lavender') {
+  viewBox = '0 0 110 270';
+  const base: Pt = [55, 268];
+  const stems: [Pt, Pt, number][] = [
+    [[60 + jit(4), 12], [48, 140], 1],
+    [[26 + jit(4), 44], [44, 160], 0.86],
+    [[88 + jit(4), 58], [60, 170], 0.8],
+  ];
+  for (const [top, ctrl] of stems) add(`M${P(base)}Q${P(ctrl)} ${P(top)}`, 'stem stem--thin');
+  for (const [t, a] of [[0.78, -125], [0.7, -58], [0.86, -70]] as const) {
+    const at = quad(base, stems[0][1], stems[0][0], 1 - t).p;
+    const lf = leaf(at, (a + jit(6)) * deg, 44 + jit(6), 4.4, { bend: 0.1, widest: 0.35 });
+    add(lf.outline, 'leaf');
+  }
+  for (const [top, ctrl, scale] of stems) {
+    // Whorls run down the top of the spike, spreading apart as they go, the
+    // top ones small and tight.
+    let t = 0.015;
+    for (let w = 0; w < 13; w++) {
+      const { p, tan } = quad(top, ctrl, base, t);
+      const up = Math.atan2(-tan[1], -tan[0]);
+      const size = scale * (0.55 + 0.45 * Math.min(1, w / 6));
+      for (const spread of [-38, 0, 38]) {
+        const a = up + (spread + jit(10)) * deg;
+        const b = leaf([p[0] - Math.cos(a) * 2, p[1] - Math.sin(a) * 2], a, 9.5 * size + jit(1), 5.4 * size, { n: 8, widest: 0.55 });
+        add(b.outline, spread === 0 ? 'bud bud--front' : 'bud', 0.78 + jit(0.14));
+      }
+      t += 0.021 + w * 0.0026;
+    }
+  }
+}
+
+if (kind === 'fern') {
+  viewBox = '0 0 160 290';
+  const base: Pt = [80, 288];
+  const ctrl: Pt = [58 + jit(6), 150];
+  const tip: Pt = [92 + jit(6), 8];
+  add(`M${P(base)}Q${P(ctrl)} ${P(tip)}`, 'stem');
+  const pairs = 19;
+  for (let i = 0; i < pairs; i++) {
+    const t = 0.08 + (i / pairs) * 0.9;
+    for (const side of [-1, 1]) {
+      const tt = Math.min(0.99, t + (side > 0 ? 0.018 : 0));
+      const { p, tan } = quad(base, ctrl, tip, tt);
+      const taper = Math.min(1, (tt + 0.04) / 0.28);
+      const len = (58 * Math.pow(1 - tt, 0.8) * taper + 5) * (1 + jit(0.06));
+      const tangent = Math.atan2(tan[1], tan[0]);
+      const a = tangent + side * (70 - 26 * tt + jit(5)) * deg;
+      const lf = leaf(p, a, len, Math.max(4, len * 0.3), {
+        n: 22, bend: -side * 0.1, widest: 0.3, teeth: Math.max(2, Math.round(len / 6)), depth: 0.42, lobed: true,
+      });
+      add(lf.outline, 'frond', 0.82 + jit(0.12));
+      add(lf.rib, 'vein');
+    }
+  }
+}
+
+if (kind === 'birch') {
+  viewBox = '0 0 300 400';
+  // Birch twigs zigzag a little at each node.
+  const nodes: Pt[] = [[36, 396], [74, 318], [104, 262], [150, 196], [184, 134], [236, 72], [268, 22]].map(
+    ([x, y]) => [x + jit(5), y + jit(4)] as Pt,
+  );
+  add(smooth(nodes, false), 'twig');
+  let lenticels = '';
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const [a, b] = [nodes[i], nodes[i + 1]];
+    for (let k = 0.25; k < 1; k += 0.3) {
+      const x = a[0] + (b[0] - a[0]) * k;
+      const y = a[1] + (b[1] - a[1]) * k;
+      lenticels += `M${P([x - 1.8, y + jit(0.6)])}h3.6`;
+    }
+  }
+  add(lenticels, 'lenticel');
+  const leaves: [number, number, number][] = [[1, -168, 78], [2, -18, 84], [3, 196, 88], [4, -30, 74], [5, 172, 62]];
+  for (const [ni, a, l] of leaves) {
+    const at = nodes[ni];
+    const ang = (a + jit(10)) * deg;
+    const petiole: Pt = [at[0] + Math.cos(ang) * 12, at[1] + Math.sin(ang) * 12];
+    add(`M${P(at)}L${P(petiole)}`, 'twig twig--thin');
+    const lf = leaf(petiole, ang, l + jit(6), l * 0.68, { n: 34, widest: 0.3, teeth: 13, depth: 0.12, bend: jit(0.08) });
+    add(lf.outline, 'leaf leaf--birch');
+    add(lf.rib, 'vein');
+    // Birch leaves have straight, parallel side veins.
+    let veins = '';
+    const dir: Pt = [Math.cos(ang), Math.sin(ang)];
+    const perp: Pt = [-dir[1], dir[0]];
+    for (let v = 1; v <= 6; v++) {
+      const s = v / 8;
+      const m: Pt = [petiole[0] + dir[0] * l * s, petiole[1] + dir[1] * l * s];
+      const reach = l * 0.3 * Math.sin(Math.PI * Math.pow(s, 0.58));
+      for (const sd of [-1, 1]) {
+        const e: Pt = [m[0] + perp[0] * reach * sd + dir[0] * reach * 0.7, m[1] + perp[1] * reach * sd + dir[1] * reach * 0.7];
+        veins += `M${P(m)}L${P(e)}`;
+      }
+    }
+    add(veins, 'vein');
+  }
+  // Gummed paper strips holding the twig to its mount, drawn across it at
+  // fixed points along the path so they scale and rotate with the twig
+  // instead of floating as separately-positioned elements.
+  const strips: [number, number][] = [[1, 0.5], [3, 0.4], [5, 0.55]];
+  for (const [seg, t] of strips) {
+    const a = nodes[seg];
+    const b = nodes[seg + 1];
+    const mx = a[0] + (b[0] - a[0]) * t;
+    const my = a[1] + (b[1] - a[1]) * t;
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len;
+    const uy = dy / len;
+    const px = -uy;
+    const py = ux;
+    const hl = 13 + jit(1.5);
+    const hw = 4.4;
+    const a0: Pt = [mx + px * hl + ux * hw, my + py * hl + uy * hw];
+    const a1: Pt = [mx + px * hl - ux * hw, my + py * hl - uy * hw];
+    const a2: Pt = [mx - px * hl - ux * hw, my - py * hl - uy * hw];
+    const a3: Pt = [mx - px * hl + ux * hw, my - py * hl + uy * hw];
+    add(`M${P(a0)}L${P(a1)}L${P(a2)}L${P(a3)}Z`, 'gum-strip');
+  }
+  // Two catkins hang from the upper nodes: stacked scales along a droop.
+  for (const [ni, sway, len] of [[4, 18, 78], [6, -14, 64]] as const) {
+    const top = nodes[ni];
+    const c: Pt = [top[0] + sway, top[1] + len * 0.5];
+    const end: Pt = [top[0] + sway * 0.4, top[1] + len];
+    let scales = '';
+    for (let k = 0; k <= 14; k++) {
+      const { p } = quad(top, c, end, 0.06 + (k / 14) * 0.94);
+      const w = 5.4 * Math.sin(Math.PI * (0.18 + (k / 14) * 0.72));
+      scales += `M${P([p[0] - w, p[1]])}q${n1(w)} ${n1(w * 1.3)} ${n1(w * 2)} 0q${n1(-w)} ${n1(-w * 0.7)} ${n1(-w * 2)} 0Z`;
+    }
+    add(`M${P(top)}Q${P(c)} ${P(end)}`, 'twig twig--thin');
+    add(scales, 'catkin');
+  }
+}
+
+if (kind === 'rose') {
+  viewBox = '0 0 170 230';
+  const c: Pt = [80 + jit(3), 66];
+  add(`M${P([c[0], c[1] + 10])}Q${P([92, 150])} ${P([78, 228])}`, 'stem');
+  add(`M${P(quad([c[0], c[1] + 10], [92, 150], [78, 228], 0.45).p)}Q${P([124, 124])} ${P([138, 104])}`, 'stem stem--thin');
+  // Compound rose leaf: five small serrated leaflets.
+  const rachisBase = quad([c[0], c[1] + 10], [92, 150], [78, 228], 0.68).p;
+  const ra = -150 * deg;
+  add(`M${P(rachisBase)}l${n1(Math.cos(ra) * 50)} ${n1(Math.sin(ra) * 50)}`, 'stem stem--thin');
+  for (const [s, side] of [[0.3, 1], [0.3, -1], [0.62, 1], [0.62, -1], [1, 0]] as const) {
+    const at: Pt = [rachisBase[0] + Math.cos(ra) * 50 * s, rachisBase[1] + Math.sin(ra) * 50 * s];
+    const a = ra + side * 58 * deg + jit(0.12);
+    const lf = leaf(at, a, 20 + jit(2), 12, { n: 18, widest: 0.45, teeth: 7, depth: 0.14 });
+    add(lf.outline, 'leaf');
+    add(lf.rib, 'vein');
+  }
+  // A closed bud on the side shoot, with its sepals.
+  add(`M138 104c-9-2-12-14-4-22c3-3 5-6 6-10c2 5 5 7 8 11c6 8 0 20-10 21Z`, 'petal petal--rose');
+  add(`M138 104c-5-6-11-6-15-4M139 104c3-7 10-9 14-7`, 'sepal');
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * 360 + jit(9) - 90;
+    const s = 1 + jit(0.08);
+    const rot = (a + 90) * deg;
+    const tf = (x: number, y: number): string => {
+      const X = x * s;
+      const Y = y * s;
+      return P([c[0] + X * Math.cos(rot) - Y * Math.sin(rot), c[1] + X * Math.sin(rot) + Y * Math.cos(rot)]);
+    };
+    // Heart-shaped petal pointing out from the centre, notched at the rim.
+    add(`M${tf(0, -4)}C${tf(-20, -10)} ${tf(-30, -36)} ${tf(-14, -46)}Q${tf(-5, -50)} ${tf(0, -42)}Q${tf(5, -50)} ${tf(14, -46)}C${tf(30, -36)} ${tf(20, -10)} ${tf(0, -4)}Z`, 'petal petal--rose', 0.86 + jit(0.08));
+  }
+  add(`M${P([c[0] - 13, c[1]])}a13 13 0 1 0 26 0a13 13 0 1 0 -26 0Z`, 'blush');
+  let stamens = '';
+  let tips = '';
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2 + jit(0.1);
+    const l = 8 + jit(3);
+    const e: Pt = [c[0] + Math.cos(a) * l, c[1] + Math.sin(a) * l];
+    stamens += `M${P([c[0] + Math.cos(a) * 3, c[1] + Math.sin(a) * 3])}L${P(e)}`;
+    tips += `M${P([e[0] - 1.1, e[1]])}a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0Z`;
+  }
+  add(stamens, 'stamen');
+  add(tips, 'floret');
+  add(`M${P([c[0] - 3.4, c[1]])}a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0 -6.8 0Z`, 'pistil');
+}
+
+if (kind === 'leaf') {
+  viewBox = '0 0 24 24';
+  const lf = leaf([3, 21], -52 * deg, 24, 11, { widest: 0.45, bend: 0.1 });
+  add(lf.outline, 'leaf');
+  add(lf.rib, 'vein');
+}
+---
+<svg class:list={['pressed', `pressed--${kind}`, cls]} viewBox={viewBox} aria-hidden="true" focusable="false">
+  {shapes.map((s) => <path class={s.cls} d={s.d} fill-opacity={s.op === undefined ? undefined : n1(Math.max(0.4, Math.min(1, s.op)) * 10) / 10} />)}
+</svg>

@@ -1,0 +1,12 @@
+---
+/** A hand-drawn arrow for handwritten links; `back` points it the other way. */
+interface Props { back?: boolean }
+const { back = false } = Astro.props;
+---
+<svg class:list={['cc-arrow', { back }]} viewBox="0 0 64 26" aria-hidden="true" focusable="false">
+  {back ? (
+    <path d="M61 13c-12-5-27-6-41-2-5 1-9 3-15 5M20 5c-5 3-9 7-14 11 5 1 9 3 13 6" />
+  ) : (
+    <path d="M3 15c12-6 27-7 41-3 5 1 9 3 15 5M44 5c5 3 9 7 14 11-5 1-9 3-13 6" />
+  )}
+</svg>
