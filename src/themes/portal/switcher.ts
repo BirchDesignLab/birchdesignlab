@@ -23,8 +23,8 @@
  * Speed (P4): opening the dialog warms every other school's same page, and
  * pointing at or focusing Shuffle picks its school and warms that page, so
  * the click finds the page in memory. A school's row, or Shuffle, that the
- * visitor rests on or presses also has its page drawn ahead (runtime.ts,
- * drawOnIntent), so its first draw is cheap. The control that started a
+ * visitor rests on (a mouse or a keyboard focus, never a press) also has its
+ * page drawn ahead (runtime.ts, drawOnIntent), so its first draw is cheap. The control that started a
  * school change shows a busy state until the new page has loaded (or the
  * navigation is abandoned), inside its own box, and its labels keep the
  * width of the longest word they can show, so the bar never changes size

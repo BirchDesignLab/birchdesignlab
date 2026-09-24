@@ -53,8 +53,8 @@
  * Drawing ahead (tier3-stage2/freeze-investigation.md): on a first arrival
  * the swap holds still while the GPU compiles a program for every new kind
  * of paint the page draws, up to about 450 ms. So when the visitor reaches
- * for a page (a pointer or a keyboard focus resting on its row in the
- * switcher's dialog or on Shuffle, or a press on either), a script-less copy
+ * for a page (a mouse or a keyboard focus resting on its row in the
+ * switcher's dialog or on Shuffle; never a press), a script-less copy
  * of it is drawn over the current page at opacity 0.001 (a quarter of an
  * 8-bit level: no pixel moves) until its first frame is on screen, then
  * removed. The programs stay compiled for the browser session, and the real
@@ -397,12 +397,19 @@ export function drawAheadOf(path: string): void {
 }
 
 /**
- * Draw ahead the page a link opens when the visitor reaches for it: a press
- * at once, a mouse pointer once it has rested on the link DRAW_DWELL_MS (so
- * sweeping across a list draws nothing), keyboard focus once it has stayed
- * FOCUS_DWELL_MS (so tabbing through one draws nothing).
+ * Draw ahead the page a link opens when the visitor reaches for it: a mouse
+ * pointer once it has rested on the link DRAW_DWELL_MS (so sweeping across a
+ * list draws nothing), keyboard focus once it has stayed FOCUS_DWELL_MS (so
+ * tabbing through one draws nothing).
  * `pathOf` names the page the event's link opens, or null for one that is
  * not drawn ahead.
+ *
+ * A press draws nothing (the founder's call, 09-24-26). It comes only about
+ * 0.1 s before the click, and a copy parses and lays out its page in one
+ * block, so the click waits behind it: measured from the release on the live
+ * build (harness/draw-ahead-press.mjs), a press 60 or 100 ms ahead was worse
+ * or even almost everywhere, glassmorphism 193 to 361 ms on a dark desktop
+ * and cottagecore 336 to 445 on a phone. Touch therefore never draws ahead.
  */
 export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string | null): void {
   let rest: ReturnType<typeof setTimeout> | undefined;
@@ -431,10 +438,6 @@ export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string |
   target.addEventListener('pointerout', leave);
   target.addEventListener('focusin', (e) => settle(pathOf(e), FOCUS_DWELL_MS));
   target.addEventListener('focusout', leave);
-  target.addEventListener('pointerdown', (e) => {
-    const path = pathOf(e);
-    if (path) drawAheadOf(path);
-  });
 }
 
 /** A navigation has begun: take the copy down before the old page is
