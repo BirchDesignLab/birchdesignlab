@@ -6,7 +6,7 @@ Stage 2.
 ## Where things stand
 
 Branch `feat/theme-schools-tier3-stage2` (from `main` at `f797bc9`), pushed
-to origin 09-24-26 at the founder's request. No PR yet. All six schools'
+to origin 09-24-26 at the founder's request, and open as PR #89 (https://github.com/BirchDesignLab/birchdesignlab/pull/89); the wrap-up commits land on it. All six schools'
 Stage 2 repairs are done and committed, and so are the portal fixes, the
 freeze investigation and the 400 ms draw-ahead rest. `npm run verify` was clean at
 the last commit: 331 unit tests, astro check 0 errors and 0 warnings, 440
@@ -135,7 +135,7 @@ All under `docs/superpowers/specs/theme-schools-research/`.
    before/after sheets, the decisions taken, and what is open (below).
    Update `docs/lab-backlog.md` and write the Stage 3 handoff (pair B:
    glassmorphism and vaporwave).
-5. **Stop for the founder.** Ask whether to PR and merge so they can test
+5. **Stop for the founder.** PR #89 is open; ask whether to merge so they can test
    on the phone, as after Stage 1. Merging to main deploys to production.
 
 ## Open or held (goes in the report, not fixed in Stage 2)
