@@ -95,10 +95,114 @@ function leaf(b: Pt, ang: number, len: number, width: number, o: LeafOpts = {}):
   return { outline, rib: `M${rib.map(P).join('L')}` };
 }
 
+/**
+ * The same path, written shorter: every point stays exactly where it was
+ * (every number here is a whole tenth, so the arithmetic is done in integer
+ * tenths and nothing is rounded again), but each segment is written relative
+ * to the one before, a repeated command drops its letter, and a quadratic
+ * whose control point is the mirror of the last one becomes `t`. The midpoint
+ * splines above mirror often, so a daisy or a lavender spike loses about half
+ * its bytes. Tier 3 Stage 2 (cottagecore item 3): the specimens were 95% of a
+ * 340 KB Home page. Anything it cannot read exactly is left as it was.
+ */
+function compact(d: string): string {
+  const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)/g) ?? [];
+  const tenth = (s: string): number => {
+    const v = Number(s) * 10;
+    const t = Math.round(v);
+    if (Math.abs(v - t) > 1e-6) throw new Error('not a whole tenth');
+    return t;
+  };
+  const fmt = (t: number): string => {
+    const a = Math.abs(t);
+    const whole = Math.floor(a / 10);
+    const frac = a % 10;
+    const s = frac ? `${whole || ''}.${frac}` : `${whole}`;
+    return t < 0 ? `-${s}` : s;
+  };
+  let out = '';
+  let lastNum = '';
+  let lastCmd = '';
+  const num = (s: string) => {
+    if (lastNum && !s.startsWith('-') && !(s.startsWith('.') && lastNum.includes('.'))) out += ' ';
+    out += s;
+    lastNum = s;
+  };
+  const cmd = (c: string) => {
+    const implicit = c === lastCmd ? c !== 'm' && c !== 'z' : c === 'l' && lastCmd === 'm';
+    if (!implicit) {
+      out += c;
+      lastNum = '';
+    }
+    lastCmd = c;
+  };
+  try {
+    let i = 0;
+    let letter = '';
+    let cx = 0, cy = 0, sx = 0, sy = 0;
+    // The last quadratic control point, absolute, for the mirror test.
+    let qx: number | null = null, qy = 0;
+    const next = () => tenth(tokens[i++]);
+    while (i < tokens.length) {
+      if (/[a-zA-Z]/.test(tokens[i])) letter = tokens[i++];
+      else if (!letter || /[zZ]/.test(letter)) throw new Error('stray number');
+      const rel = letter === letter.toLowerCase();
+      const L = letter.toUpperCase();
+      const ox = rel ? cx : 0, oy = rel ? cy : 0;
+      let q: [number, number] | null = null;
+      if (L === 'M' || L === 'L') {
+        const x = next() + ox, y = next() + oy;
+        cmd(L === 'M' ? 'm' : 'l');
+        num(fmt(x - cx)); num(fmt(y - cy));
+        cx = x; cy = y;
+        if (L === 'M') { sx = x; sy = y; letter = rel ? 'l' : 'L'; }
+      } else if (L === 'H') {
+        const x = next() + (rel ? cx : 0);
+        cmd('h'); num(fmt(x - cx));
+        cx = x;
+      } else if (L === 'Q') {
+        const x1 = next() + ox, y1 = next() + oy, x = next() + ox, y = next() + oy;
+        if (qx !== null && x1 === 2 * cx - qx && y1 === 2 * cy - qy) {
+          cmd('t');
+        } else {
+          cmd('q'); num(fmt(x1 - cx)); num(fmt(y1 - cy));
+        }
+        num(fmt(x - cx)); num(fmt(y - cy));
+        q = [x1, y1];
+        cx = x; cy = y;
+      } else if (L === 'C') {
+        const p = [next() + ox, next() + oy, next() + ox, next() + oy, next() + ox, next() + oy];
+        cmd('c');
+        for (let k = 0; k < 6; k += 2) { num(fmt(p[k] - cx)); num(fmt(p[k + 1] - cy)); }
+        cx = p[4]; cy = p[5];
+      } else if (L === 'A') {
+        const args = tokens.slice(i, i + 5);
+        if (args.length < 5 || !/^[01]$/.test(args[3]) || !/^[01]$/.test(args[4])) throw new Error('arc');
+        i += 5;
+        const x = next() + ox, y = next() + oy;
+        cmd('a');
+        num(fmt(tenth(args[0]))); num(fmt(tenth(args[1]))); num(fmt(tenth(args[2]))); num(args[3]); num(args[4]);
+        num(fmt(x - cx)); num(fmt(y - cy));
+        cx = x; cy = y;
+      } else if (L === 'Z') {
+        cmd('z');
+        cx = sx; cy = sy;
+      } else {
+        throw new Error(`command ${letter}`);
+      }
+      if (q) [qx, qy] = q;
+      else qx = null;
+    }
+    return out;
+  } catch {
+    return d;
+  }
+}
+
 interface Shape { d: string; cls: string; op?: number }
 const shapes: Shape[] = [];
 let viewBox = '0 0 100 100';
-const add = (d: string, c: string, op?: number) => shapes.push({ d, cls: c, op });
+const add = (d: string, c: string, op?: number) => shapes.push({ d: compact(d), cls: c, op });
 const deg = Math.PI / 180;
 
 if (kind === 'daisy') {
@@ -327,7 +431,13 @@ if (kind === 'leaf') {
   add(lf.outline, 'leaf');
   add(lf.rib, 'vein');
 }
+// Written as one string of self-closed paths (legal inside an inline <svg>),
+// with each opacity to two places rather than a float's tail: a Home page
+// carries about 800 of them. Every value here is built above from numbers,
+// so nothing needs escaping.
+const op = (v: number) => String(Math.round(Math.max(0.4, Math.min(1, v)) * 100) / 100);
+const markup = shapes
+  .map((s) => `<path class="${s.cls}" d="${s.d}"${s.op === undefined ? '' : ` fill-opacity="${op(s.op)}"`}/>`)
+  .join('');
 ---
-<svg class:list={['pressed', `pressed--${kind}`, cls]} viewBox={viewBox} aria-hidden="true" focusable="false">
-  {shapes.map((s) => <path class={s.cls} d={s.d} fill-opacity={s.op === undefined ? undefined : n1(Math.max(0.4, Math.min(1, s.op)) * 10) / 10} />)}
-</svg>
+<svg class:list={['pressed', `pressed--${kind}`, cls]} viewBox={viewBox} aria-hidden="true" focusable="false" set:html={markup} />

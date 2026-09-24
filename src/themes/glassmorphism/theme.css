@@ -375,27 +375,98 @@
 }
 :where([data-theme='glassmorphism']) .skip:focus { left: 0.75rem; }
 
-/* ---------- arrival: blur-in ---------- */
+/* ---------- arrival and page swap: an opacity handoff ---------- */
 
-/* The page arrives out of focus and a touch large, then settles, like a
-   window surfacing from behind frosted glass. */
-html[data-theme='glassmorphism']::view-transition-old(root) {
-  animation: 260ms cubic-bezier(0.4, 0, 1, 1) both glass-leave;
+/* A defect fix, not the choreography (that waits for the transitions
+   phase): text is never blurred or scaled, and no filter touches the
+   full-viewport snapshot, which cost about 370 ms of first-use GPU compile.
+   A fade through the field: the old page is nearly gone (about 3%) before
+   the new one starts, so no frame holds both pages' text. From another
+   school the new page lands with the wordmark, about 333 ms in; between two
+   glass pages it takes 250 ms. Wrapped in no-preference so the reduce block
+   below still wins. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme='glassmorphism']::view-transition-old(root) {
+    animation: 83ms cubic-bezier(0, 0, 0, 1) both glass-out;
+  }
+  html[data-theme='glassmorphism']:not([data-from-theme='glassmorphism'])::view-transition-new(root) {
+    animation: 275ms cubic-bezier(0, 0, 0, 1) 60ms both glass-in;
+  }
+  html[data-theme='glassmorphism'][data-from-theme='glassmorphism']::view-transition-new(root) {
+    animation: 250ms cubic-bezier(0, 0, 0, 1) 60ms both glass-in;
+  }
+  html[data-theme='glassmorphism']::view-transition-group(wordmark) {
+    animation-duration: 333ms;
+    animation-timing-function: cubic-bezier(0.55, 0.55, 0, 1);
+  }
+  /* The wordmark default (README, "The wordmark"): each wordmark drawn at
+     its own size, left-anchored (the orb leads it on every width), on the
+     group's clock rather than Astro's 180 ms. From another school the old
+     one is gone before the new one shows. The group's curve starts fast and
+     settles slowly, so each fade's tail runs long: out by 30% and in from
+     25% keep the old wordmark from outliving the old page and hold the
+     empty header (both under 10%) to about 59 ms, under the founder's
+     80 ms. */
+  html[data-theme='glassmorphism']::view-transition-old(wordmark),
+  html[data-theme='glassmorphism']::view-transition-new(wordmark) {
+    height: 100%;
+    object-fit: none;
+    object-position: left center;
+    animation-duration: inherit;
+    animation-timing-function: inherit;
+    animation-delay: inherit;
+    animation-fill-mode: both;
+  }
+  html[data-theme='glassmorphism']:not([data-from-theme='glassmorphism'])::view-transition-old(wordmark) {
+    animation-name: glassmorphism-wordmark-out;
+  }
+  html[data-theme='glassmorphism']:not([data-from-theme='glassmorphism'])::view-transition-new(wordmark) {
+    animation-name: glassmorphism-wordmark-in;
+  }
 }
-html[data-theme='glassmorphism']::view-transition-new(root) {
-  animation: 620ms cubic-bezier(0.16, 0.84, 0.24, 1) both glass-arrive;
+/* The header bar holds still on an in-school swap (founder, wave A stop):
+   named only when both sides are glass (README recipe), so from another
+   school it stays in the root snapshot and rides the fade. The name goes on
+   the bar itself, never the header: a named element is a backdrop root, so
+   a named ancestor would stop the frost below it.
+   While named, the frost moves off the bar to an underlay just behind it.
+   A captured element that carries a backdrop-filter, or a backdrop-filter
+   anywhere in the transition's pseudo-elements, costs Chrome's snapshots
+   their subpixel text: the switcher's labels thin for the whole swap and it
+   fails hold-still. Dropping the frost outright shows the orbs crisp
+   through the bar. So the bar is captured as its tint and ink alone, and
+   the header's own ::before (same pill, same blur, unnamed) is baked into
+   the page's snapshot under it, fading with the page as the live bar's
+   backdrop would. At rest neither rule matches and the bar blurs itself. */
+html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header > .bar {
+  view-transition-name: glassmorphism-header;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
-html[data-theme='glassmorphism']::view-transition-group(wordmark) {
-  animation-duration: 520ms;
-  animation-timing-function: cubic-bezier(0.16, 0.84, 0.24, 1);
+html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 999px;
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  pointer-events: none;
 }
-@keyframes glass-leave {
-  to { opacity: 0; filter: blur(12px); }
+/* Pinned in place, crossfade kept (animation-name: none, not animation:
+   none): the current-page thumb hands over across the page's own fade
+   instead of jumping to the new page before the old one has left. The bar's
+   pixels are the same in both images, so under the pair's plus-lighter the
+   glass itself never dims. */
+html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
+  animation-name: none;
 }
-@keyframes glass-arrive {
-  from { opacity: 0; filter: blur(22px); transform: scale(1.035); }
-  to { opacity: 1; filter: blur(0); transform: scale(1); }
+@keyframes glass-out {
+  to { opacity: 0; }
 }
+@keyframes glass-in {
+  from { opacity: 0; }
+}
+@keyframes glassmorphism-wordmark-out { 30%, 100% { opacity: 0; } }
+@keyframes glassmorphism-wordmark-in { 0%, 25% { opacity: 0; } 100% { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   :where([data-theme='glassmorphism']) .orb { animation: none; }

@@ -13,21 +13,27 @@ const [first, ...rest] = chrome.wordmark;
 ---
 <header class="cc-header">
   <a class="skip" href="#main">{chrome.skip}</a>
-  <div class="valance cc-gingham" aria-hidden="true"></div>
-  <div class="cc-wrap bar">
-    <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
-      <Pressed kind="daisy" seed={11} class="wm-daisy" />
-      <span class="wm-name">{first}</span>{rest.map((part) => <> <span class="wm-hand">{part}</span></>)}
-    </a>
-    <nav aria-label="Main">
-      {chrome.nav.map(({ to, label }) => (
-        <a
-          href={hrefFor(to, theme)}
-          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
-          data-astro-reload={to === 'lab' ? '' : undefined}
-        >{label}</a>
-      ))}
-    </nav>
+  {/* The curtain and the header row, named cottagecore-header between two
+      cottagecore pages so they hold still (theme.css, "page change"). A plain
+      block: at rest it adds no space and no stacking context, so the
+      fireflies still drift over the valance and under the bar. */}
+  <div class="cc-chrome">
+    <div class="valance cc-gingham" aria-hidden="true"></div>
+    <div class="cc-wrap bar">
+      <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
+        <Pressed kind="daisy" seed={11} class="wm-daisy" />
+        <span class="wm-name">{first}</span>{rest.map((part) => <> <span class="wm-hand">{part}</span></>)}
+      </a>
+      <nav aria-label="Main">
+        {chrome.nav.map(({ to, label }) => (
+          <a
+            href={hrefFor(to, theme)}
+            aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
+            data-astro-reload={to === 'lab' ? '' : undefined}
+          >{label}</a>
+        ))}
+      </nav>
+    </div>
   </div>
   <canvas class="cc-motes" data-cc-motes aria-hidden="true"></canvas>
 </header>

@@ -15,6 +15,14 @@
  *   with the rest of the old page's <html> attributes. When the switcher
  *   warmed the destination (below), load it from memory instead of the
  *   network, and stop only the warming the navigation made useless.
+ *   At the same moment, take the departing wordmark out of the morph when
+ *   less than half of it is on screen (the header scrolls away with the
+ *   page, so on a swap clicked from low down a page its box is above the
+ *   viewport and the new wordmark would morph down from off screen): its
+ *   name is set to none inline, so it is drawn as part of whatever holds it
+ *   in the old capture (the root, or the school's named header on an
+ *   in-school swap). Every navigation gives the name back first and decides
+ *   again, so an aborted one never carries it into the next swap.
  * - before-swap: carry the scheme, the .js marker and .reveal-on onto the
  *   incoming document. The router replaces every <html> attribute with the
  *   new document's, and the inline bootstrap never runs again (F001). Mark
@@ -22,6 +30,12 @@
  *   clear that once the transition has finished, so a page at rest names no
  *   chrome whichever way the visitor arrived (a view-transition-name makes
  *   an element a stacking context and a backdrop root even at rest).
+ *   When the departing wordmark was taken out of the morph, take the
+ *   incoming one out too, so it has no pseudo-element of its own to wait
+ *   on and appears exactly when its page (or held header) does. Its name
+ *   comes back when that transition finishes, is skipped or fails, or when
+ *   the next navigation starts, whichever is first, so no page keeps an
+ *   unnamed wordmark into its own next swap.
  * - page-load: restore the proportional scroll position (school switches),
  *   move focus into the page (link navigations), and count a pageview for
  *   Zaraz on client-side navigations only (the edge already counted the
@@ -35,6 +49,21 @@
  * switch pays no round trip. A plain
  * prefetch cannot do this: the site's HTML is max-age=0, must-revalidate, so
  * the router's own fetch would still go to the network.
+ *
+ * Drawing ahead (tier3-stage2/freeze-investigation.md): on a first arrival
+ * the swap holds still while the GPU compiles a program for every new kind
+ * of paint the page draws, up to about 450 ms. So when the visitor reaches
+ * for a page (a pointer or a keyboard focus resting on its row in the
+ * switcher's dialog or on Shuffle, or a press on either), a script-less copy
+ * of it is drawn over the current page at opacity 0.001 (a quarter of an
+ * 8-bit level: no pixel moves) until its first frame is on screen, then
+ * removed. The programs stay compiled for the browser session, and the real
+ * page's first draw reuses them. One copy at a time, only the page reached
+ * for, never during an arrival, and taken down the moment a navigation
+ * begins (a rest still being timed then is dropped). Drawing a copy holds
+ * the page underneath for up to about 250 ms (the freeze, moved earlier),
+ * so it is only done on the switcher's own controls, where the visitor is
+ * already changing school; a link in the page is not drawn ahead.
  */
 import { onMount } from '../../lib/lifecycle';
 import { mountReveals } from '../../lib/reveal';
@@ -94,6 +123,9 @@ interface Warmed {
   /** Set once the HTML has arrived. From then on the entry is never dropped
       by a navigation: its bytes are paid for, and its files finish loading. */
   htmlIn: boolean;
+  /** The HTML, once its files are in the HTTP cache too, so a copy drawn
+      ahead loads nothing from the network. */
+  ready: string | null;
   abort: AbortController;
 }
 
@@ -166,7 +198,13 @@ async function warmFiles(html: string, signal: AbortSignal): Promise<void> {
 }
 
 function warmOne(key: string): Promise<void> {
-  const entry: Warmed = { html: Promise.resolve(null), at: performance.now(), htmlIn: false, abort: new AbortController() };
+  const entry: Warmed = {
+    html: Promise.resolve(null),
+    at: performance.now(),
+    htmlIn: false,
+    ready: null,
+    abort: new AbortController(),
+  };
   entry.html = fetchPage(key, entry.abort.signal);
   warmed.set(key, entry);
   return entry.html.then(async (html) => {
@@ -177,6 +215,8 @@ function warmOne(key: string): Promise<void> {
     entry.at = performance.now();
     entry.htmlIn = true;
     await warmFiles(html, entry.abort.signal);
+    entry.ready = html;
+    if (drawWanted?.key === key) void drawWanted.go(html);
   });
 }
 
@@ -205,6 +245,204 @@ export function warmPages(paths: string[]): void {
   const fresh = paths.map(keyOf).filter((key) => !warmed.has(key));
   warmQueue = [...fresh, ...warmQueue.filter((key) => !fresh.includes(key))];
   void drainWarmQueue();
+}
+
+/**
+ * Drawing ahead (header comment), on intent only. A copy of the page the
+ * visitor then opens is the swap's own work done earlier; a copy of any
+ * other page is work in the way of the swap (measured: a pick made while
+ * another school's copy is drawn answers up to about 250 ms later). So only
+ * the one page the visitor is reaching for is drawn, never a list. A page is
+ * drawn at most once per hard load: the GPU keeps what it compiled.
+ */
+const drawnAhead = new Set<string>();
+/** The page reached for last, drawn once its HTML is in hand. */
+let drawWanted: { key: string; html: string | null; go: (html: string) => Promise<void> } | null = null;
+/** The copy on screen, removed the moment a navigation begins. */
+let copy: HTMLIFrameElement | null = null;
+/** Navigations begun since the hard load (stopDrawingAhead), so a rest timed
+    before one knows it is stale. */
+let navigations = 0;
+/** How long a mouse pointer rests on a link before its page is drawn, so
+    browsing the list draws nothing (the founder's call, 09-24-26). Measured
+    with the pointer moved down the switcher's rows (draw-ahead-rest.mjs):
+    a rest draws every row the pointer stays on at least as long, so 300 ms
+    draws all six at 300 ms a row, and 400 ms is the shortest tried that
+    draws none at 150 to 350 ms a row, a reading pace (about 250 ms) with a
+    margin. Each copy drawn holds the dialog for up to about 180 ms. The
+    price: a copy needs about 500 ms before the click to pay in full
+    (grandmillennial's hold 374 to about 45 ms), so a visitor who rests less
+    than about 900 ms before clicking gains less, nothing below about
+    500 ms, and a click 100 to 200 ms into a copy waits for it (up to about
+    100 ms). */
+const DRAW_DWELL_MS = 400;
+/** The same for keyboard focus, longer: tabbing down the list at a reading
+    pace stops on every row, and each copy drawn holds the dialog for up to
+    about 250 ms, so only a focus the visitor stays on draws. */
+const FOCUS_DWELL_MS = 500;
+/** How long a copy stays up once its first frame is on screen, so tiles just
+    past the viewport are drawn too. */
+const COPY_HOLD_MS = 100;
+/** Never wait on a copy longer than this (a frame that never comes: a hidden
+    tab, a stalled GPU). */
+const COPY_MAX_MS = 3000;
+/** What the copy must not do: a backdrop filter drawn over the page makes
+    Chrome draw the page's own text without subpixel antialiasing while it is
+    up (glassmorphism's panels, measured). The blur is cheap to compile at the
+    swap; the rest of the page is not. */
+const COPY_STYLE = '*,::before,::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}';
+
+const nextFrames = (n: number): Promise<void> =>
+  new Promise((resolve) => {
+    const step = () => (--n > 0 ? requestAnimationFrame(step) : resolve());
+    requestAnimationFrame(step);
+  });
+
+/** The page as it will arrive, with nothing that runs or loads on its own:
+    no scripts, no preloads, the scheme and the .js marker the swap carries
+    over (not .reveal-on, which would hide every block a script reveals). */
+function copyOf(key: string, html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, noscript, link:not([rel~="stylesheet"])').forEach((el) => el.remove());
+  const base = doc.createElement('base');
+  base.href = key;
+  doc.head.insertBefore(base, doc.head.firstChild); // not prepend(): the Workers types shadow it
+  const style = doc.createElement('style');
+  style.textContent = COPY_STYLE;
+  doc.head.appendChild(style);
+  doc.documentElement.setAttribute(SCHEME_ATTR, currentScheme());
+  doc.documentElement.classList.add('js');
+  return `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
+}
+
+function removeCopy(): void {
+  copy?.remove();
+  copy = null;
+}
+
+/** Draw one copy until its first frame is on screen; false if it was
+    stopped (a navigation began, the tab was hidden). */
+async function drawCopy(key: string, html: string): Promise<boolean> {
+  const f = document.createElement('iframe');
+  // Same origin, so its stylesheets and fonts come from the HTTP cache; no
+  // allow-scripts, so nothing in it runs.
+  f.setAttribute('sandbox', 'allow-same-origin');
+  f.setAttribute('aria-hidden', 'true');
+  f.setAttribute('tabindex', '-1');
+  f.inert = true;
+  f.style.cssText =
+    'position:fixed;left:0;top:0;width:100%;height:100%;border:0;margin:0;padding:0;' +
+    'opacity:0.001;pointer-events:none;z-index:2147483647';
+  const loaded = new Promise<void>((resolve) => f.addEventListener('load', () => resolve(), { once: true }));
+  f.srcdoc = copyOf(key, html);
+  copy = f;
+  document.body.appendChild(f);
+  const up = () => copy === f && document.visibilityState === 'visible';
+  const done = (async () => {
+    await loaded;
+    const win = f.contentWindow;
+    const root = f.contentDocument?.documentElement;
+    if (!up() || !win || !root) return;
+    // Where the swap will put the visitor (a school change keeps the same
+    // spot on the page, any other link opens at the top), so the copy draws
+    // the same part of it.
+    const same = pageFromPath(location.pathname)?.page === pageFromPath(new URL(key).pathname)?.page;
+    const room = document.documentElement.scrollHeight - innerHeight;
+    const ratio = same && room > 0 ? scrollY / room : 0;
+    win.scrollTo(0, Math.round(ratio * Math.max(root.scrollHeight - win.innerHeight, 0)));
+    await f.contentDocument?.fonts.ready;
+    // A frame is presented only once the copy's tiles are drawn, which is
+    // when the GPU has compiled what they need.
+    if (up()) await nextFrames(3);
+    if (up()) await new Promise((resolve) => setTimeout(resolve, COPY_HOLD_MS));
+  })();
+  await Promise.race([done, new Promise((resolve) => setTimeout(resolve, COPY_MAX_MS))]);
+  const whole = up();
+  if (copy === f) removeCopy();
+  else f.remove();
+  return whole;
+}
+
+/**
+ * Draw `path` ahead of time: the visitor is reaching for it. Warms it first
+ * when it is not warm (warmPages()'s rules: never in dev, never for
+ * Save-Data or 2G). Replaces an earlier wish that has not started drawing;
+ * never draws the page the visitor is on, over another copy, during an
+ * arrival or in a hidden tab.
+ */
+export function drawAheadOf(path: string): void {
+  if (import.meta.env.DEV || frugal()) return;
+  const key = keyOf(path);
+  if (key === keyOf(location.href) || drawnAhead.has(key) || drawWanted?.key === key) return;
+  const wish: NonNullable<typeof drawWanted> = {
+    key,
+    html: null,
+    go: async (html: string) => {
+      wish.html = html;
+      // One copy at a time: the one up now hands over when it is done.
+      if (drawWanted !== wish || copy) return;
+      // An arrival holds data-from-theme until its transition has finished.
+      while (document.documentElement.dataset.fromTheme && drawWanted === wish) await nextFrames(6);
+      if (drawWanted !== wish || copy || document.visibilityState !== 'visible') return;
+      if (await drawCopy(key, html)) drawnAhead.add(key);
+      if (drawWanted === wish) drawWanted = null;
+      const next = drawWanted && (drawWanted.html ?? warmed.get(drawWanted.key)?.ready);
+      if (drawWanted && next) void drawWanted.go(next);
+    },
+  };
+  drawWanted = wish;
+  const ready = warmed.get(key)?.ready;
+  if (ready) void wish.go(ready);
+  else warmPages([path]);
+}
+
+/**
+ * Draw ahead the page a link opens when the visitor reaches for it: a press
+ * at once, a mouse pointer once it has rested on the link DRAW_DWELL_MS (so
+ * sweeping across a list draws nothing), keyboard focus once it has stayed
+ * FOCUS_DWELL_MS (so tabbing through one draws nothing).
+ * `pathOf` names the page the event's link opens, or null for one that is
+ * not drawn ahead.
+ */
+export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string | null): void {
+  let rest: ReturnType<typeof setTimeout> | undefined;
+  let at: string | null = null;
+  const settle = (path: string | null, dwell = DRAW_DWELL_MS) => {
+    if (path === at) return;
+    clearTimeout(rest);
+    at = path;
+    // A rest still being timed when a navigation begins (a click before it
+    // was reached) must not draw into that navigation: measured, a copy
+    // started just after the click held glassmorphism's arrival about 460 ms.
+    const leg = navigations;
+    if (path) rest = setTimeout(() => leg === navigations && drawAheadOf(path), dwell);
+  };
+  const leave = (e: Event) => {
+    // Crossing from one part of a link to another (a row's name to its era)
+    // is not leaving it, and must not start the rest again.
+    const from = (e.target as Element | null)?.closest?.('a, button');
+    const to = (e as PointerEvent | FocusEvent).relatedTarget;
+    if (from && to instanceof Node && from.contains(to)) return;
+    if (pathOf(e) === at) settle(null);
+  };
+  target.addEventListener('pointerover', (e) => {
+    if ((e as PointerEvent).pointerType === 'mouse') settle(pathOf(e));
+  });
+  target.addEventListener('pointerout', leave);
+  target.addEventListener('focusin', (e) => settle(pathOf(e), FOCUS_DWELL_MS));
+  target.addEventListener('focusout', leave);
+  target.addEventListener('pointerdown', (e) => {
+    const path = pathOf(e);
+    if (path) drawAheadOf(path);
+  });
+}
+
+/** A navigation has begun: take the copy down before the old page is
+    captured, and draw nothing more for the page being left. */
+function stopDrawingAhead(): void {
+  navigations++;
+  drawWanted = null;
+  removeCopy();
 }
 
 /**
@@ -281,6 +519,65 @@ async function loadWarmed(
   if (styles.length && !e.signal.aborted) await Promise.all(styles);
 }
 
+/**
+ * The departing wordmark and the view-transition names a swap captures
+ * (header comment, before-preparation). Half on screen is the line: above
+ * it, the old image is mostly in view and the morph starts from where the
+ * visitor saw the mark; below it, most of the old image is off screen and
+ * the morph reads as a drop from above. A wordmark at the top of an
+ * unscrolled page is wholly in view, so arrivals and in-school swaps from
+ * the top keep their morph and crossfade exactly.
+ */
+let unnamedMark: HTMLElement | null = null;
+/** The arriving wordmark, unnamed for its swap when the departing one was
+    (header comment, before-swap). Kept apart from unnamedMark so the end of
+    one transition never renames a mark the next navigation has unnamed. */
+let unnamedArrival: HTMLElement | null = null;
+
+function renameWordmark(): void {
+  unnamedMark?.style.removeProperty('view-transition-name');
+  unnamedMark = null;
+  renameArrival();
+}
+
+function renameArrival(): void {
+  unnamedArrival?.style.removeProperty('view-transition-name');
+  unnamedArrival = null;
+}
+
+/**
+ * The incoming page's wordmark, read from the scope Astro's inline style
+ * names `wordmark` (the new document has no computed style yet). Every
+ * portal page has exactly one transition:name element, but the style is
+ * what makes it the wordmark.
+ */
+function arrivingWordmark(doc: Document): HTMLElement | null {
+  for (const style of doc.querySelectorAll('style')) {
+    const scope = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/.exec(
+      style.textContent ?? '',
+    )?.[1];
+    if (scope) return doc.querySelector<HTMLElement>(`[data-astro-transition-scope="${CSS.escape(scope)}"]`);
+  }
+  return null;
+}
+
+function unnameWordmarkOffScreen(): void {
+  renameWordmark();
+  // Astro marks every transition:name element with its scope (README, "Links").
+  const mark = [...document.querySelectorAll<HTMLElement>('[data-astro-transition-scope]')].find(
+    (el) => getComputedStyle(el).viewTransitionName === 'wordmark',
+  );
+  if (!mark) return;
+  const r = mark.getBoundingClientRect();
+  const area = r.width * r.height;
+  if (area === 0) return; // not rendered, so not captured either
+  const seenW = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
+  const seenH = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
+  if (seenW * seenH * 2 >= area) return;
+  mark.style.setProperty('view-transition-name', 'none');
+  unnamedMark = mark;
+}
+
 export function initPortal(): void {
   if (window.__bdlPortal) return;
   window.__bdlPortal = true;
@@ -294,6 +591,8 @@ export function initPortal(): void {
   document.addEventListener('astro:before-preparation', (event) => {
     const e = event as TransitionBeforePreparationEvent;
     delete html.dataset.toTheme;
+    renameWordmark();
+    stopDrawingAhead();
     fromSwitcher = e.info === SWITCHER_INFO;
     const from = pageFromPath(location.pathname);
     const to = pageFromPath(e.to.pathname);
@@ -313,13 +612,30 @@ export function initPortal(): void {
       await Promise.all([load(), fonts]);
       // Set after the load, not before it: the old page stays unnamed while
       // the next one is fetched, and `e.to` is final after any redirect.
+      // The router starts the view transition once this resolves (router.js,
+      // transition()), so the wordmark is measured where the capture will
+      // find it.
       const dest = pageFromPath(e.to.pathname);
-      if (dest && !e.defaultPrevented && !e.signal.aborted) html.dataset.toTheme = dest.theme;
+      if (e.defaultPrevented || e.signal.aborted) return;
+      if (dest) html.dataset.toTheme = dest.theme;
+      unnameWordmarkOffScreen();
     };
   });
 
   document.addEventListener('astro:before-swap', (event) => {
     const e = event as TransitionBeforeSwapEvent;
+    // The old wordmark leaves with the old page. When it was taken out of
+    // the morph, take the new one out too, before the router swaps it in
+    // and the new state is captured (swap-functions.js keeps its inline
+    // style), so it is drawn with its own page or held header.
+    const leftMorph = unnamedMark !== null;
+    unnamedMark = null;
+    renameArrival();
+    const mark = leftMorph ? arrivingWordmark(e.newDocument) : null;
+    if (mark) {
+      mark.style.setProperty('view-transition-name', 'none');
+      unnamedArrival = mark;
+    }
     const next = e.newDocument.documentElement;
     next.setAttribute(SCHEME_ATTR, currentScheme());
     next.classList.add('js');
@@ -333,6 +649,9 @@ export function initPortal(): void {
     arrival = vt;
     const settle = () => {
       if (arrival === vt) delete html.dataset.fromTheme;
+      // Unless a later navigation has given it back already (and perhaps
+      // unnamed the page after this one).
+      if (mark && unnamedArrival === mark) renameArrival();
     };
     vt?.finished.then(settle, settle);
   });

@@ -1,12 +1,20 @@
 ---
 /** A panel of the chintz repeat (parts/Defs.astro), filling its positioned
-    parent. `swatch` swaps in the half-scale tile: at sample-book size the
-    full tile only shows one flower and reads as a grid, not a fabric. */
+    parent. `swatch` cuts the sample-book swatch from the full-size repeat,
+    off the grain: the cloth is turned 9 degrees and shifted so no rose lines
+    up in a row or a column with the pinked edges, and the swatch reads as a
+    cutting from a bigger design rather than a tiled grid. */
 interface Props { class?: string; swatch?: boolean }
 const { class: cls, swatch = false } = Astro.props;
 ---
 <svg class:list={['gm-chintz', cls]} aria-hidden="true" focusable="false">
-  <rect width="100%" height="100%" fill={swatch ? 'url(#gm-chintz-swatch)' : 'url(#gm-chintz)'} />
+  {swatch ? (
+    <g transform="rotate(-9) translate(-118 -71)">
+      <rect x="-100%" y="-100%" width="400%" height="400%" fill="url(#gm-chintz)" />
+    </g>
+  ) : (
+    <rect width="100%" height="100%" fill="url(#gm-chintz)" />
+  )}
 </svg>
 
 <style>

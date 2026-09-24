@@ -7,16 +7,19 @@ still applies; this file supersedes it as the starting point.
 
 - **Tier 3 Stage 1 (the portal) is done.** It was built, reviewed by a
   six-reviewer panel, fixed, and put through the founder's decisions. It went
-  to `main` in one PR from `feat/theme-schools-tranche-1`, so the founder
-  could test on mobile live (find it with `gh pr list --state all --head feat/theme-schools-tranche-1`).
-  BDL-010 stays `forthcoming` in the Lab until the schools reach A+, so the
-  `/t/` rooms are live but not linked.
+  to `main` in PR #88 from `feat/theme-schools-tranche-1`, so the founder
+  could test on mobile live. **#88 is merged** (merge commit `f797bc9`), main
+  is synced and the tranche-1 branch is deleted.
+- **BDL-010 (the Portal) and BDL-009 (Bayou Kitchen) are working specimens**,
+  not forthcoming (founder call, 09-23-26, commit `5226800`). BDL-010 is live
+  in the Lab and links into `/t/quiet/`, while the schools' Tier 3 revisions
+  continue in public. The home page's "From the lab" shows the three newest
+  working specimens, each designation linked (`5dd153f`, `specimenLink` in
+  `src/lib/copy.ts`), on the root site and in every school.
 - **First steps in the new session:**
-  1. `git status` and `git log`.
-  2. Ask the founder whether the PR merged. If it did: check out `main`,
-     pull, delete the merged branch locally and on the remote (CLAUDE.md),
-     and branch `feat/theme-schools-tier3-stage2` from `main`.
-  3. Ask what the founder saw on mobile live. That feedback comes before
+  1. `git status` and `git log`; Stage 2 works on
+     `feat/theme-schools-tier3-stage2`, branched from `main` at `f797bc9`.
+  2. Ask what the founder saw on mobile live. That feedback comes before
      Stage 2's plan.
 - **The exhibit is "the Portal"**, never "Period Rooms" in new writing.
 - **Order after the schools (founder, 09-23-26):** first themes and

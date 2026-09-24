@@ -57,8 +57,22 @@ const year = new Date().getFullYear();
   .sep { color: var(--accent); margin-inline: 0.3em; font-size: 0.7em; vertical-align: 0.15em; }
 
   /* The floor: a checkerboard plane tipped back in perspective, fading into
-     the page field at its far edge. */
-  .floor { position: relative; height: 150px; overflow: hidden; perspective: 320px; }
+     the page field at its far edge.
+
+     The portal keeps a 76px tail under every footer for its switcher
+     (README, "Links": [data-portal-tail]) and leaves it unpainted, so the
+     floor used to stop 76px short of the page bottom on a flat band. The
+     floor now runs on beneath the tail: it is taller by the tail's height
+     and hands that height back with a matching negative margin, so the page
+     is exactly as long as before and the tail, still unpainted, shows the
+     floor through it. No flat colour could continue a plane in perspective.
+     The perspective origin stays where it sat in the old 150px box, so the
+     visible floor keeps its look and only gains its near rows. */
+  .floor {
+    --vw-tail: 76px;
+    position: relative; height: calc(150px + var(--vw-tail)); margin-bottom: calc(-1 * var(--vw-tail));
+    overflow: hidden; perspective: 320px; perspective-origin: 50% 75px;
+  }
   .plane {
     /* Tall enough that the tipped-back checkerboard still reaches the box's
        bottom edge instead of running out partway and leaving a flat band. */

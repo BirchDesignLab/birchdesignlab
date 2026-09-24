@@ -58,14 +58,36 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Branch `feat/theme-schools-tranche-1`. Current handoff:
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-tier3.md`
-(Tier 1 and 2 done; the founder's Stage 0 decisions are in
-`tier3-briefs/stage0-decisions.md`; Tier 3 next). Six
+Branch `feat/theme-schools-tier3-stage2`. Current handoff (wrap-up):
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-24-26-stage2-wrapup.md`,
+plan `tier3-stage2/stage2-plan.md` (Tier 1 and 2 done; the founder's
+decisions are in `tier3-briefs/stage0-decisions.md`). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
 cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
-PR'd so the founder can test on mobile live (BDL-010 is a working specimen
-in the Lab from PR #88); Stage 2 onward continues on a new branch.
+merged in PR #88 (BDL-010 is a working specimen in the Lab); Stage 2 (the
+defect sweep) under way.
+
+**Held for review after Stage 2's wave B (founder, 09-23-26).** Four
+issues, to be looked at together for a common pattern
+(`theme-schools-research/tier3-stage2/assessment-before-wave-b.md`, and
+the decisions file):
+- Safari (below): the founder's equipment cannot test it.
+- The dark-desktop first-draw freeze: 200 to 400 ms with no frames on the
+  first switch into vaporwave, cottagecore or glassmorphism in dark. Reduce
+  it if possible (drawing destinations ahead of time).
+- The wordmark dropping in from above the viewport on a swap clicked from
+  low down a page, in every school. Vaporwave's taskbar shows an empty Start
+  slot meanwhile.
+- Glassmorphism's page change is a correct but plain fade, with nothing of
+  glass in it.
+
+**Parked from the Stage 2 start (09-23-26):**
+- Safari. The founder's iPhone 17 Pro Max test (Safari, private) found some
+  transitions "a little stuttery or buggy". Every film and trace so far is
+  Chromium. For the transitions phase: film in WebKit too (Playwright's
+  WebKit is a download, and its Windows build is not iOS Safari, so a real
+  device pass stays the final word), and check Safari's view-transition
+  support for each school's choreography.
 
 **Parked from the Stage 1 stop (09-23-26):**
 - Vaporwave's pressed task button switches instantly on an in-school swap
@@ -91,7 +113,9 @@ revisions fed by the dossiers, then a founder round. Research must come from
 trusted, reliable primary sources.
 
 **Sidenote, 09-23-26: transitions are the next push after A+.** Crank up the
-transitions between schools and the motion within them. The model is the
+transitions between schools and the motion within them. The founder,
+clarifying at Stage 2: the push turns today's simple, low-motion transitions
+into transformations; stalls are reduced where possible, never promised away. The model is the
 wordmark morph: it transforms and moves while the page changes under it.
 Purposefully built, possibly a distinct transition for each pair of schools
 ("this is a crown jewel for a while"). Scope it after A+; the research

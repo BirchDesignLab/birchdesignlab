@@ -47,9 +47,12 @@ describe('theme registry', () => {
         expect(t.signature.trim()).toMatch(/[.!?]$/);
         expect(t.signature.trim().slice(0, -1)).not.toMatch(/[.!?]\s/);
       });
-      it('preloads at most two font files', () => {
+      // Four, for the faces that paint above the fold: the founder's Tier 3
+      // Stage 2 decision 4 ("eat it up front"), raised from two
+      // (docs/superpowers/specs/theme-schools-research/tier3-briefs/stage0-decisions.md).
+      it('preloads at most four font files', () => {
         const preloads = t.fonts.flatMap((f) => f.preload ?? []);
-        expect(preloads.length).toBeLessThanOrEqual(2);
+        expect(preloads.length).toBeLessThanOrEqual(4);
         for (const p of preloads) expect(p).toMatch(/\.woff2$/);
       });
       it('has a route file, enabled or still under construction', () => {

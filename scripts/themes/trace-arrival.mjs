@@ -68,6 +68,67 @@
  * Output: scripts/themes/.out/<label>/<tag>.runs.json (every run),
  * <tag>.summary.json and <tag>.summary.md (medians and spread), and
  * trace-<id>-<direction>-<viewport>.json plus <tag>.traces.json for --trace.
+ *
+ * Added 09-23-26 for Tier 3 stage 2 (the freeze investigation,
+ * tier3-stage2/freeze-investigation.md). The wave B strips showed the page
+ * holding still for up to 435 ms on a first arrival in a fresh browser; these
+ * measure that hold and say what fills it:
+ *   --fresh-browser  every cold, pf-* and switcher-warm run gets its own
+ *             browser process, not just its own context, so the GPU
+ *             process's shader and pipeline caches start empty, as they did
+ *             for motion.mjs's strips (Playwright launches each browser on
+ *             a new temporary profile, with no shader cache on disk). `warm`
+ *             stays the second arrival in the same browser;
+ *   --pages <ids>  also time the in-school swap, /t/<id>/ to /t/<id>/about/
+ *             (quiet loaded first, then the school's home by a hard load);
+ *   gaps      every run records the longest gap between screencast frames
+ *             from the trigger to `finished` + 100 ms, measured as
+ *             motion.mjs's dense.maxGapMs is (between frames after the
+ *             trigger), and the longest gap between animation frames in the
+ *             page (rAF, which does not fire while rendering is paused);
+ *   --trace   now also reads, from the trace, every frame the display
+ *             compositor drew and swapped (Display::DrawAndSwap in the GPU
+ *             process) and reports the longest presented-frame gap from the
+ *             trigger to `finished`, with each thread's work summed inside
+ *             that gap (the freeze window). --trace-runs <n> traces n
+ *             arrivals per school (default 1), and a traced run obeys
+ *             --no-film, so a trace can be taken without the screencast's
+ *             own cost in it;
+ *   --trace-condition <c>  the condition a traced run is prepared under
+ *             (default cold), so a warm-up's effect on the GPU can be read;
+ *   pf-raster a diagnostic condition: pf-render's copy of the destination,
+ *             drawn on top of the page at opacity 0.001 (no 8-bit pixel
+ *             moves) instead of 0, so the compositor rasterises it on the GPU
+ *             and the shaders its paint needs are compiled before the click;
+ *   --stub <names>  a diagnostic: apply named stubs from
+ *             harness/freeze-stubs.mjs (CSS added to every page the run
+ *             draws, including the incoming document before the swap, and
+ *             script run before the page's own) to take one layer out and
+ *             re-measure; the stub names go in the output.
+ * --base defaults to $SNAP_BASE when set (snap.mjs sets it), else :8787.
+ *
+ * Added 09-23-26 for the same investigation's drawing-ahead agent (D), which
+ * put a drawn copy into the portal runtime:
+ *   --raster-place top|under|below|below-far|below-scaled, --raster-wait <ms>,
+ *   --raster-css <css>, --raster-seq <ids>, --raster-lead <ms>  where
+ *             pf-raster's copy sits, how long it stays up, a style added to
+ *             it, a sequence of copies (as the dialog draws them), or a copy
+ *             started <ms> before the click and taken down by it (a pointer
+ *             resting on a link);
+ *   switcher-warm  now also waits for the runtime's copies to finish, and
+ *             records the start page's longest animation-frame gap while the
+ *             dialog was open (aheadRafGap: what drawing ahead costs the
+ *             visitor looking at it) and each copy's school and time up;
+ *   switcher-pick  the dialog opened and the destination's row clicked
+ *             --pick-after ms later: the visitor's own path;
+ *   pf-raster records the same animation-frame gap while its copy is up.
+ *
+ * Added 09-24-26 for the stage 2 wrap-up (tuning the mouse's rest before a
+ * row is drawn ahead): --rest-before-click <ms>, hover timed exactly from
+ * the row's pointerover to a press and click (see its comment below). Note
+ * for older hover runs: without it, the rest before the click was
+ * --hover-lead plus at least 400 ms (the idle watch and the screencast's
+ * start), and the click had no press.
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -87,9 +148,64 @@ function arg(name, fallback) {
 const list = (name, fallback) => (arg(name, fallback) || '').split(',').filter(Boolean);
 
 const ALL = ['bauhaus', 'swiss', 'vaporwave', 'cottagecore', 'grandmillennial', 'glassmorphism'];
-const base = arg('base', 'http://127.0.0.1:8787').replace(/\/$/, '');
+const base = arg('base', process.env.SNAP_BASE || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const schools = list('schools', ALL.join(','));
 const returns = list('returns', '');
+const pages = list('pages', '');
+const freshBrowser = process.argv.includes('--fresh-browser');
+const traceRuns = Number(arg('trace-runs', '1'));
+const stubNames = list('stub', '');
+const traceCondition = arg('trace-condition', 'cold');
+/* pf-raster: the pf-render copy drawn on top of the page at this opacity
+   instead of 0, so the compositor rasterises and draws it (an opacity of 0
+   is skipped). 0.001 moves no 8-bit pixel: 255 x 0.001 is a quarter level. */
+const RASTER_OPACITY = 0.001;
+/* --raster-place top|below|below-far and --raster-wait <ms> (agent D,
+   09-23-26): where pf-raster's copy is drawn and how long it stays up. */
+const rasterPlace = arg('raster-place', 'top');
+const rasterWait = Number(arg('raster-wait', '400'));
+/* --raster-css <css>: a style added to the copy (e.g. glassmorphism's
+   backdrop filters taken out, which otherwise change the page's text). */
+const rasterCss = arg('raster-css', '');
+/* switcher-pick (agent D, 09-23-26): the visitor's own path through the
+   switcher. The dialog is opened on the start page (which warms, and draws
+   ahead, every other school's same page), and --pick-after ms later the
+   destination's row in the dialog is clicked: the trigger. What a visitor
+   gets who chooses that fast. */
+const pickAfter = Number(arg('pick-after', '1500'));
+/* --raster-seq <ids> (agent D): pf-raster draws a copy of each listed
+   school's same page, in order, instead of the destination's alone (the
+   destination must be listed), as drawing ahead from the dialog does. */
+const rasterSeq = list('raster-seq', '');
+/* --raster-lead <ms> (agent D): a stand-in for drawing ahead on a pointer
+   resting on a link. pf-raster's copy (fetch included) is started this long
+   before the click instead of being let finish, and the click's
+   astro:before-preparation takes it down, as runtime.ts would. */
+const rasterLead = Number(arg('raster-lead', '0'));
+/* hover and tap (agent D, 09-23-26): drawing ahead on intent, as shipped.
+   hover: for an arrival the dialog is opened and its warm-up let finish (a
+   visitor reading the list), then the real mouse rests on the destination's
+   row --hover-lead ms before the click; for an in-school swap the mouse
+   rests on the page's own link to the destination. tap: the dialog is opened
+   and let warm, then a touch goes down on the row --hover-lead ms before
+   the click (a finger's press; pointerdown draws at once). */
+const hoverLead = Number(arg('hover-lead', '300'));
+/* --rest-before-click <ms> (Tier 3 stage 2 wrap-up, 09-24-26): hover, timed
+   exactly. Under plain hover the rest before the click is --hover-lead plus
+   the film's idle watch (IDLE_MS) and the screencast's start, at least 400 ms
+   more than asked (measured: a 150 ms hover-lead gave the copy about 555 ms
+   before the click), and the click is a script click with no press. With
+   this flag (arrivals through the dialog only) the mouse moves onto the
+   destination's row, the film starts (measure() says why in that order),
+   and the click lands this many ms after the row's own pointerover, on the
+   page's clock, as a press (pointerdown) and a click at the same instant: a
+   press adds no lead here, where a real one adds about 0.1 s. --no-press
+   leaves the pointerdown out. Each run also records how late the click ran
+   (the main thread busy with a copy) and when each copy went up and came
+   down, relative to the click. */
+const restBeforeClick = arg('rest-before-click', null) == null ? null : Number(arg('rest-before-click'));
+const restNoPress = process.argv.includes('--no-press');
+const stubs = stubNames.length ? (await import('./harness/freeze-stubs.mjs')).pick(stubNames) : [];
 const runs = Number(arg('runs', '7'));
 const vpName = arg('viewport', 'desktop');
 const scheme = arg('scheme', 'dark');
@@ -115,7 +231,7 @@ const tag = arg('tag', vpName);
 const vp = VIEWPORTS[vpName];
 if (!vp) throw new Error(`unknown viewport ${vpName}`);
 for (const c of conditions) {
-  if (!['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'switcher-warm', 'warm'].includes(c)) throw new Error(`unknown condition ${c}`);
+  if (!['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'pf-raster', 'switcher-warm', 'switcher-pick', 'hover', 'tap', 'warm'].includes(c)) throw new Error(`unknown condition ${c}`);
 }
 
 /* After the trigger, how long to keep filming. Every arrival so far has
@@ -135,9 +251,10 @@ const DIFF_FLOOR = 0.004;
 const DIFF_W = 320;
 
 const useGpu = process.env.BDL_GPU === '1';
-const browser = await chromium.launch({
+const launch = () => chromium.launch({
   args: ['--hide-scrollbars', ...(useGpu ? ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-gpu-rasterization'] : [])],
 });
+const browser = await launch();
 const outDir = join(HERE, '.out', label);
 await mkdir(outDir, { recursive: true });
 const problems = [];
@@ -153,6 +270,18 @@ function instrument() {
     try { performance.mark('bdl:' + name); } catch {}
   };
   window.__bdlMark = mark;
+  // The portal's copies drawn ahead (runtime.ts, agent D): when each went up
+  // and came down, on this clock. Kept across the trigger.
+  const copies = (window.__bdlCopies = []);
+  new MutationObserver((records) => {
+    for (const r of records) {
+      for (const n of r.addedNodes) if (n.nodeName === 'IFRAME' && n.getAttribute('aria-hidden') === 'true') copies.push({ up: performance.now(), el: n });
+      for (const n of r.removedNodes) {
+        const c = copies.find((x) => x.el === n && x.down == null);
+        if (c) c.down = performance.now();
+      }
+    }
+  }).observe(document, { childList: true, subtree: true });
   for (const n of ['before-preparation', 'after-preparation', 'before-swap', 'after-swap', 'page-load']) {
     document.addEventListener('astro:' + n, () => mark(n));
   }
@@ -286,22 +415,63 @@ async function decodeFonts(page, assets) {
     parsed its CSS, decoded its fonts (every one it uses, not only the
     preloads) and shaped its text. Near warm means the gap between pf-full and
     warm is first-render work in the renderer, not the network. */
-async function renderOffscreen(page, to) {
-  await page.evaluate(async (to) => {
+async function renderOffscreen(page, to, opacity = 0) {
+  const ahead = await page.evaluate(async ({ to, opacity, place, wait, css }) => {
     // The site sends X-Frame-Options: DENY, so the page goes in as srcdoc.
     const html = await (await fetch(to)).text();
     const f = document.createElement('iframe');
     f.setAttribute('sandbox', 'allow-same-origin');
-    f.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:0;pointer-events:none;z-index:-1;border:0';
+    // --raster-place (agent D): where a drawn copy sits. `top` is M's
+    // pf-raster (over the page at 0.001); `below` is the copy at full
+    // opacity just past the bottom edge of the viewport, its own layer, so
+    // it is never on screen; `below-far` is the same a viewport lower.
+    // `under` is the copy at 0.001 beneath the page (z-index -1, painted
+    // into the page's own layer); `below-scaled` is `below` shrunk to a
+    // quarter, so all of it sits inside the band cc rasterises soon.
+    const tops = { below: '100vh', 'below-far': '200vh' };
+    f.style.cssText = !opacity
+      ? 'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:0;pointer-events:none;z-index:-1;border:0'
+      : place === 'under'
+        ? `position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:${opacity};pointer-events:none;z-index:-1;border:0`
+      : place === 'below-scaled'
+        ? 'position:fixed;left:0;top:100vh;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;border:0;transform:scale(0.25);transform-origin:0 0'
+      : place in tops
+        ? `position:fixed;left:0;top:${tops[place]};width:100vw;height:100vh;pointer-events:none;z-index:2147483647;border:0;will-change:transform`
+        : `position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:${opacity};pointer-events:none;z-index:2147483647;border:0`;
+    // The page's own animation frames while the copy is up: what drawing
+    // ahead costs the visitor looking at the start page.
+    const frames = [];
+    let up = true;
+    const tick = (ts) => { frames.push(ts); if (up) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+    const t0 = performance.now();
     const loaded = new Promise((r) => { f.onload = r; });
-    f.srcdoc = html.replace('<head>', `<head><base href="${location.origin}/">`);
+    f.srcdoc = html.replace('<head>', `<head><base href="${location.origin}/">${css ? `<style>${css}</style>` : ''}`);
     document.body.append(f);
     await loaded;
+    // A drawn copy wears the scheme and the .js marker the runtime carries
+    // onto the incoming page at the swap: with no script in it, it would
+    // otherwise draw the scheme-less (light) page. Not .reveal-on: that hides
+    // every [data-reveal] block until the page's own script settles it, and
+    // the copy has none, so those blocks would never be drawn (or warmed).
+    if (opacity) {
+      const html = document.documentElement;
+      const next = f.contentDocument.documentElement;
+      if (html.dataset.scheme) next.setAttribute('data-scheme', html.dataset.scheme);
+      next.classList.add('js');
+    }
     await f.contentDocument.fonts.ready;
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // A drawn copy has to reach the GPU before it goes: wait for its tiles.
+    if (opacity) await new Promise((r) => setTimeout(r, wait));
     f.remove();
-  }, to);
+    up = false;
+    let gap = 0;
+    for (let i = 1; i < frames.length; i++) gap = Math.max(gap, frames[i] - frames[i - 1]);
+    return { ms: Math.round(performance.now() - t0), rafGap: Math.round(gap) };
+  }, { to, opacity, place: rasterPlace, wait: rasterWait, css: rasterCss });
   await page.waitForTimeout(150);
+  return ahead;
 }
 
 /** pf-memory and pf-best: fetch the destination HTML ahead and answer the
@@ -330,22 +500,42 @@ async function serveFromMemory(page, to) {
     runs one page at a time, so a quiet spell means it is done), then closes
     the dialog and lets the page settle, so neither the backdrop leaving nor a
     warm-up still running lands in the measurement. */
-async function switcherWarm(page, to) {
+async function switcherWarm(page, to, close = true) {
+  // The start page's animation frames while the dialog is open: what the
+  // warm-up (and drawing ahead) costs the visitor looking at it.
+  await page.evaluate(() => {
+    const f = (window.__bdlDialogFrames = []);
+    const tick = (ts) => { f.push(ts); if (!window.__bdlDialogDone) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
   await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());
   await page.waitForFunction(
     (to) => performance.getEntriesByType('resource').some((e) => new URL(e.name).pathname === to),
     to,
     { timeout: 15000 },
   ).catch(() => problems.push(`switcher-warm: ${to} was never warmed`));
+  // Quiet: no new resource and no copy drawn ahead up or come down for
+  // 800 ms (the warm-up and the drawing run one page at a time).
   let count = -1;
-  for (let quiet = 0, waited = 0; quiet < 800 && waited < 20000; waited += 200) {
-    const now = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => e.responseEnd > 0).length);
+  for (let quiet = 0, waited = 0; quiet < 800 && waited < 30000; waited += 200) {
+    const now = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => e.responseEnd > 0).length
+      + 1000 * window.__bdlCopies.length + 100000 * window.__bdlCopies.filter((c) => c.down != null).length);
     quiet = now === count ? quiet + 200 : 0;
     count = now;
     await page.waitForTimeout(200);
   }
+  const cost = await page.evaluate(() => {
+    window.__bdlDialogDone = true;
+    const f = window.__bdlDialogFrames;
+    let gap = 0;
+    for (let i = 1; i < f.length; i++) gap = Math.max(gap, f[i] - f[i - 1]);
+    const copies = window.__bdlCopies.map((c) => ({ up: Math.round(c.up - f[0]), ms: c.down == null ? null : Math.round(c.down - c.up), src: (c.el.srcdoc.match(/data-theme="([^"]+)"/) || [])[1] }));
+    return { rafGap: Math.round(gap), copies };
+  });
+  if (!close) return cost;
   await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('dialog').close());
   await page.waitForTimeout(400);
+  return cost;
 }
 
 /** Share of pixels that differ visibly between two decoded frames. */
@@ -395,8 +585,24 @@ async function firstVisible(frames, triggerWall, offset, trigger) {
   return { firstVisible, firstAny, noise, threshold, framesAfter: after.length, series };
 }
 
-async function newContext() {
-  const context = await browser.newContext({
+/** --stub: each stub's CSS goes into every document the context opens and,
+    through astro:before-swap, into the incoming document before it is
+    swapped in (so the new state is drawn without that layer); its script,
+    when it has one, runs before the page's own. */
+function applyStubs({ css, stubNames }) {
+  const add = (doc) => {
+    const s = doc.createElement('style');
+    s.setAttribute('data-freeze-stub', stubNames);
+    s.textContent = css;
+    (doc.head || doc.documentElement).append(s);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => add(document));
+  else add(document);
+  document.addEventListener('astro:before-swap', (e) => add(e.newDocument));
+}
+
+async function newContext(b = browser) {
+  const context = await b.newContext({
     viewport: { width: vp.width, height: vp.height },
     deviceScaleFactor: vp.mobile ? 2 : 1,
     isMobile: !!vp.mobile,
@@ -408,6 +614,11 @@ async function newContext() {
     try { localStorage.setItem('scheme', s); } catch {}
   }, scheme);
   await context.addInitScript(instrument);
+  if (stubs.length) {
+    const css = stubs.map((s) => s.css || '').join(NL);
+    if (css.trim()) await context.addInitScript(applyStubs, { css, stubNames: stubNames.join(',') });
+    for (const s of stubs) if (s.js) await context.addInitScript(s.js);
+  }
   if (!showPrompt) await suppressPrompt(context);
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
@@ -429,20 +640,44 @@ async function settle(page, path) {
 
 /** One navigation from `trip.from` to `trip.to`, measured. The page must
     already be settled on `trip.from`. */
-async function measure(page, cdp, trip) {
+async function measure(page, cdp, trip, viaDialog = false, rest = null) {
   const frames = [];
   const onFrame = async ({ data, metadata, sessionId }) => {
     frames.push({ data, at: metadata.timestamp });
     try { await cdp.send('Page.screencastFrameAck', { sessionId }); } catch {}
   };
+  // --rest-before-click: the mouse onto the row first, its pointerover timed,
+  // then the film starts and watches the page idle for what is left of the
+  // rest (at most IDLE_MS). Not the other way round: filming longer than
+  // about 1 s before the click delays the first frames after it, a capture
+  // artifact (measured on freeze-d0, nothing drawn ahead, 1000 ms: bauhaus
+  // 243 to 273 and glassmorphism 407 to 440 with the film started first,
+  // against 65 to 88 and 178 to 211 with the mouse moved first, which match
+  // the cold runs).
+  if (rest) {
+    await page.evaluate((id) => {
+      window.__bdlOverAt = null;
+      document.querySelector('bdl-switcher').shadowRoot.addEventListener('pointerover', (e) => {
+        if (window.__bdlOverAt == null && e.target.closest?.(`a[data-school="${id}"]`)) window.__bdlOverAt = performance.now();
+      }, { capture: true });
+    }, rest.id);
+    await page.mouse.move(rest.box.x, rest.box.y);
+  }
   if (film) {
     cdp.on('Page.screencastFrame', onFrame);
     await cdp.send('Page.startScreencast', {
       format: 'jpeg', quality: 70, everyNthFrame: 1, maxWidth: vp.width, maxHeight: vp.height,
     });
-    await page.waitForTimeout(IDLE_MS);
+    await page.waitForTimeout(rest ? Math.max(100, Math.min(IDLE_MS, rest.ms - 150)) : IDLE_MS);
   }
-  const t = await page.evaluate((to) => {
+  const t = await page.evaluate(async ({ to, viaDialog, restMs, press }) => {
+    let intended = null;
+    if (restMs != null) {
+      const t0 = performance.now();
+      while (window.__bdlOverAt == null && performance.now() - t0 < 2000) await new Promise((r) => setTimeout(r, 1));
+      intended = (window.__bdlOverAt ?? t0) + restMs;
+      while (performance.now() < intended) await new Promise((r) => setTimeout(r, Math.max(0, Math.min(4, intended - performance.now() - 1))));
+    }
     const T = window.__bdlTrace;
     T.marks = [];
     T.loaf = [];
@@ -460,9 +695,15 @@ async function measure(page, cdp, trip) {
       if (!T.marks.some((m) => m.name === 'vt-finished') && ts - perf < 5000) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-    a.click();
-    return { wall, perf };
-  }, trip.to);
+    if (viaDialog) {
+      a.remove();
+      const id = to.split('/')[2];
+      const row = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
+      if (restMs != null && press) row.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse', isPrimary: true }));
+      row.click();
+    } else a.click();
+    return { wall, perf, late: intended == null ? null : perf - intended, overAt: window.__bdlOverAt ?? null };
+  }, { to: trip.to, viaDialog, restMs: rest ? rest.ms : null, press: !restNoPress });
   await page.waitForTimeout(FILM_MS);
   const deadline = Date.now() + FINISH_MAX_MS - FILM_MS;
   while (Date.now() < deadline) {
@@ -491,6 +732,15 @@ async function measure(page, cdp, trip) {
   const at = {};
   for (const m of data.marks) if (!(m.name in at)) at[m.name] = m.t - trigger;
   const vis = film ? await firstVisible(frames, t.wall, t.wall - t.perf, trigger) : { firstVisible: null };
+  // --rest-before-click: the click's lateness and every copy, from the click.
+  // (Any click through the dialog records its copies too, so a plain hover
+  // run shows how long its copy really had.)
+  const restInfo = rest || viaDialog ? {
+    rest: rest?.ms ?? null, late: t.late == null ? null : Math.round(t.late), overToClick: t.overAt == null ? null : Math.round(trigger - t.overAt),
+    copies: await page.evaluate((trig) => window.__bdlCopies.map((c) => ({
+      up: Math.round(c.up - trig), down: c.down == null ? null : Math.round(c.down - trig),
+    })), trigger).catch(() => null),
+  } : null;
   if (data.url !== trip.to) problems.push(`${trip.id} ${trip.dir}: ended on ${data.url}, wanted ${trip.to}`);
   if (!('vt-finished' in at)) problems.push(`${trip.id} ${trip.dir}: view transition never finished`);
   const rel = (r) => ({ ...r, start: r.start - trigger, end: r.end - trigger });
@@ -505,7 +755,26 @@ async function measure(page, cdp, trip) {
     const d = data.frames[i] - data.frames[i - 1];
     if (d > 34) gaps.push({ at: Math.round(data.frames[i - 1] - trigger), ms: Math.round(d) });
   }
-  return { at, ...vis, resources, loaf, frameGaps: gaps, ended: data.url };
+  // The longest holds, from the trigger to `finished` + 100 ms: between
+  // screencast frames after the trigger (motion.mjs's dense.maxGapMs), and
+  // between the page's animation frames.
+  const end = ('vt-finished' in at ? at['vt-finished'] : FILM_MS) + 100;
+  const longest = (ts) => {
+    let best = null;
+    for (let i = 1; i < ts.length; i++) {
+      const d = ts[i] - ts[i - 1];
+      if (!best || d > best.ms) best = { ms: Math.round(d), from: Math.round(ts[i - 1]), to: Math.round(ts[i]) };
+    }
+    return best;
+  };
+  const offset = t.wall - t.perf;
+  const filmed = frames.map((f) => f.at * 1000 - offset - trigger).filter((ms) => ms >= 0 && ms <= end);
+  const screencastGap = film ? longest(filmed) : null;
+  const rafGap = longest([0, ...data.frames.map((ts) => ts - trigger).filter((ms) => ms > 0 && ms <= end)]);
+  return {
+    at, ...vis, resources, loaf, frameGaps: gaps, ended: data.url, ...(restInfo ? { restInfo } : {}),
+    screencastGap, screencastFrames: filmed.length, firstFrameMs: filmed.length ? Math.round(filmed[0]) : null, rafGap,
+  };
 }
 
 /** The intervals the report reads, from one run's marks. */
@@ -515,6 +784,8 @@ function phases(r) {
   return {
     firstVisible: r.firstVisible,
     firstAny: r.firstAny ?? null,
+    aheadRafGap: r.ahead?.rafGap ?? null,
+    aheadCopies: r.ahead?.copies?.length ?? null,
     toPrep: a['before-preparation'] ?? null,
     fetch: d('fetch-start', 'fetch-body'),
     parse: d('parse-start', 'parse-end'),
@@ -531,6 +802,16 @@ function phases(r) {
     finished: a['vt-finished'] ?? null,
     pageLoad: a['page-load'] ?? null,
     longestLoaf: Math.max(0, ...r.loaf.filter((l) => l.start < (a['vt-ready'] ?? Infinity)).map((l) => l.duration)),
+    // still: the longest time nothing new reached the screen, from the trigger
+    // to `finished` + 100 ms. screencastGap alone starts at the first frame
+    // after the trigger, so it misses a hold that begins at the click (a copy
+    // still drawing when the click lands holds the old page's capture).
+    still: r.firstFrameMs == null && r.screencastGap == null ? null : Math.max(r.firstFrameMs ?? 0, r.screencastGap?.ms ?? 0),
+    firstFrame: r.firstFrameMs ?? null,
+    screencastGap: r.screencastGap?.ms ?? null,
+    screencastGapAt: r.screencastGap?.from ?? null,
+    rafGap: r.rafGap?.ms ?? null,
+    rafGapAt: r.rafGap?.from ?? null,
   };
 }
 
@@ -677,7 +958,69 @@ async function analyseTrace(file, firstVisibleMs) {
     }
     windows.push({ from, to, what, ms: Math.round((w1 - w0) / 100) / 10, threads });
   }
-  return { marks: Object.fromEntries(Object.entries(marks).map(([k, v]) => [k, Math.round((v - marks.trigger) / 100) / 10])), windows };
+  const presented = presentedFrames(events, threadName, marks, byThread, group);
+  return { marks: Object.fromEntries(Object.entries(marks).map(([k, v]) => [k, Math.round((v - marks.trigger) / 100) / 10])), windows, presented };
+}
+
+/** Frames the display compositor drew and swapped to the screen
+    (Display::DrawAndSwap on the GPU process's VizCompositorThread), from the
+    trigger to `finished` + 100 ms: the longest gap between two, where it sits
+    against the phases, and every thread's work summed inside it (the freeze
+    window). During a view transition something animates every frame, so a
+    gap over two vsyncs is a frame the screen did not get. */
+function presentedFrames(events, threadName, marks, byThread, group) {
+  const viz = new Set([...threadName].filter(([, n]) => n === 'VizCompositorThread').map(([k]) => k));
+  const swaps = events
+    .filter((e) => e.ph === 'X' && e.name === 'Display::DrawAndSwap' && viz.has(`${e.pid}:${e.tid}`))
+    .map((e) => e.ts + e.dur)
+    .sort((p, q) => p - q);
+  if (!swaps.length) return { error: 'no Display::DrawAndSwap in the trace' };
+  const t0 = marks.trigger;
+  const t1 = ('vt-finished' in marks ? marks['vt-finished'] : t0 + FILM_MS * 1000) + 100 * 1000;
+  // The last swap before the trigger opens the window, so a hold that starts
+  // at the click is counted from the frame that was on screen.
+  const before = swaps.filter((s) => s < t0).pop();
+  const inside = [...(before != null ? [before] : []), ...swaps.filter((s) => s >= t0 && s <= t1)];
+  const ms = (x) => Math.round((x - t0) / 100) / 10;
+  let max = null;
+  const long = [];
+  for (let i = 1; i < inside.length; i++) {
+    const d = (inside[i] - inside[i - 1]) / 1000;
+    if (d > 50) long.push({ ms: Math.round(d), from: ms(inside[i - 1]), to: ms(inside[i]) });
+    if (!max || d > max.ms) max = { ms: Math.round(d), from: ms(inside[i - 1]), to: ms(inside[i]), w0: inside[i - 1], w1: inside[i] };
+  }
+  let freeze = null;
+  if (max) {
+    const sums = {};
+    for (const { g, ev } of byThread.values()) {
+      for (const s of selfSegments(ev.filter((e) => e.ts < max.w1 && e.ts + e.dur > max.w0))) {
+        const d = (Math.min(s.to, max.w1) - Math.max(s.from, max.w0)) / 1000;
+        if (d <= 0) continue;
+        sums[g] ??= { busy: 0, categories: {}, names: {} };
+        sums[g].busy += d;
+        const c = category(s.name);
+        sums[g].categories[c] = (sums[g].categories[c] || 0) + d;
+        sums[g].names[s.name] = (sums[g].names[s.name] || 0) + d;
+      }
+    }
+    const round = (o) => Object.fromEntries(Object.entries(o).sort((p, q) => q[1] - p[1]).map(([k, v]) => [k, Math.round(v * 10) / 10]));
+    freeze = Object.fromEntries(Object.entries(sums).map(([g, t]) => [g, {
+      busy: Math.round(t.busy * 10) / 10, categories: round(t.categories), top: Object.fromEntries(Object.entries(round(t.names)).slice(0, 12)),
+    }]));
+  }
+  // Skia's GPU program compiles (a first draw of a new kind of paint), in
+  // the whole span and inside the longest gap.
+  const compiles = events.filter((e) => e.ph === 'X' && e.name === 'shader_compile');
+  const sumIn = (a, z) => {
+    const c = compiles.filter((e) => e.ts >= a && e.ts < z);
+    return { count: c.length, ms: Math.round(c.reduce((s, e) => s + e.dur, 0) / 100) / 10 };
+  };
+  const shaderCompiles = { span: sumIn(before ?? t0, t1), inMaxGap: max ? sumIn(max.w0, max.w1) : null, wholeTrace: sumIn(-Infinity, Infinity) };
+  if (max) {
+    delete max.w0;
+    delete max.w1;
+  }
+  return { swaps: inside.length, maxGap: max, longGaps: long, freeze, shaderCompiles };
 }
 
 // ---------------------------------------------------------------- main
@@ -695,10 +1038,87 @@ if (process.argv.includes('--reanalyse')) {
   process.exit(0);
 }
 
+/** Load the start page (quiet first, as a visitor enters the portal there),
+    then do whatever the condition does ahead of the click. */
+async function prepare(page, trip, condition, assets) {
+  if (trip.dir !== 'arrive') await settle(page, '/t/quiet/');
+  await settle(page, trip.from);
+  if (condition === 'pf-render' || condition === 'pf-best') await renderOffscreen(page, trip.to);
+  else if (condition === 'pf-raster' && rasterSeq.length) {
+    const at = trip.to.split('/')[2];
+    const aheads = [];
+    for (const id of rasterSeq) aheads.push(await renderOffscreen(page, trip.to.replace(`/t/${at}/`, `/t/${id}/`), RASTER_OPACITY));
+    return { ahead: { rafGap: Math.max(...aheads.map((x) => x.rafGap)), copies: aheads } };
+  } else if (condition === 'pf-raster' && rasterLead) {
+    await page.evaluate(({ to, css }) => {
+      (async () => {
+        const html = await (await fetch(to)).text();
+        const f = document.createElement('iframe');
+        f.setAttribute('sandbox', 'allow-same-origin');
+        f.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;opacity:0.001;pointer-events:none;z-index:2147483647;border:0';
+        document.addEventListener('astro:before-preparation', () => f.remove(), { once: true });
+        const loaded = new Promise((r) => { f.onload = r; });
+        f.srcdoc = html.replace('<head>', `<head><base href="${location.origin}/">${css ? `<style>${css}</style>` : ''}`);
+        document.body.append(f);
+        await loaded;
+        const next = f.contentDocument && f.contentDocument.documentElement;
+        if (!next) return;
+        if (document.documentElement.dataset.scheme) next.setAttribute('data-scheme', document.documentElement.dataset.scheme);
+        next.classList.add('js');
+      })();
+    }, { to: trip.to, css: rasterCss });
+    await page.waitForTimeout(rasterLead);
+    return {};
+  } else if (condition === 'pf-raster') return { ahead: await renderOffscreen(page, trip.to, RASTER_OPACITY) };
+  else if (condition === 'switcher-warm') return { ahead: await switcherWarm(page, trip.to) };
+  else if ((condition === 'hover' || condition === 'tap') && trip.dir === 'page') {
+    const box = await page.evaluate((to) => {
+      const r = [...document.querySelectorAll(`a[href="${to}"]`)].map((a) => a.getBoundingClientRect()).find((b) => b.width && b.top >= 0 && b.bottom <= innerHeight);
+      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
+    }, trip.to);
+    if (!box) { problems.push(`${trip.id} ${condition}: no visible link to ${trip.to}`); return {}; }
+    await page.mouse.move(box.x, box.y);
+    await page.waitForTimeout(hoverLead);
+    return {};
+  } else if (condition === 'hover' || condition === 'tap') {
+    const cost = await switcherWarm(page, trip.to, false);
+    const id = trip.to.split('/')[2];
+    const box = await page.evaluate((id) => {
+      const r = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`).getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }, id);
+    // --rest-before-click: measure() moves the mouse, after the idle watch.
+    if (condition === 'hover' && restBeforeClick != null) return { viaDialog: true, rest: { box, id, ms: restBeforeClick }, ahead: cost };
+    if (condition === 'hover') await page.mouse.move(box.x, box.y);
+    else await page.context()._bdlCdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x, y: box.y }] });
+    await page.waitForTimeout(hoverLead);
+    return { viaDialog: true, touch: condition === 'tap', ahead: cost };
+  } else if (condition === 'switcher-pick') {
+    await page.evaluate(() => { window.__bdlOpened = performance.now(); document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click(); });
+    await page.waitForTimeout(pickAfter);
+    const copies = await page.evaluate(() => window.__bdlCopies.map((c) => ({ up: Math.round(c.up - window.__bdlOpened), ms: c.down == null ? null : Math.round(c.down - c.up), src: (c.el.srcdoc.match(/data-theme="([^"]+)"/) || [])[1] })));
+    return { ahead: { copies }, viaDialog: true };
+  }
+  else if (condition !== 'cold') await prefetch(page, trip.to, assets, condition !== 'pf-brief');
+  if (condition === 'pf-decode') await decodeFonts(page, assets);
+  if (condition === 'pf-memory' || condition === 'pf-best') await serveFromMemory(page, trip.to);
+  if (prewarmKana) {
+    await page.evaluate(() => {
+      const s = document.createElement('span');
+      s.textContent = 'バーチ・デザイン・ラボ';
+      s.style.cssText = "position:fixed;left:-9999px;top:0;font-weight:700;letter-spacing:0.35em;font-family:'Yu Gothic','Hiragino Kaku Gothic ProN','Noto Sans JP','Meiryo',sans-serif";
+      document.body.append(s);
+      return s.getBoundingClientRect().width;
+    });
+    await page.waitForTimeout(100);
+  }
+}
+
 let renderer = null;
 const trips = [
   ...schools.map((id) => ({ id, dir: 'arrive', from: '/t/quiet/', to: `/t/${id}/` })),
   ...returns.map((id) => ({ id, dir: 'return', from: `/t/${id}/`, to: '/t/quiet/' })),
+  ...pages.map((id) => ({ id, dir: 'page', from: `/t/${id}/`, to: `/t/${id}/about/` })),
 ];
 const results = [];
 
@@ -706,7 +1126,8 @@ for (const trip of trips) {
   const assets = await destinationAssets(trip.to);
   for (let run = 0; run < runs; run++) {
     for (const condition of conditions.filter((c) => c !== 'warm')) {
-      const { context, page, cdp } = await newContext();
+      const b = freshBrowser ? await launch() : browser;
+      const { context, page, cdp } = await newContext(b);
       if (!renderer) {
         renderer = await page.evaluate(() => {
           const gl = document.createElement('canvas').getContext('webgl');
@@ -716,67 +1137,61 @@ for (const trip of trips) {
         console.log(`renderer: ${renderer}`);
       }
       // A visitor always enters the portal on quiet, so quiet's assets are
-      // cached on every return trip.
-      if (trip.dir === 'return') await settle(page, '/t/quiet/');
-      await settle(page, trip.from);
-      if (condition === 'pf-render' || condition === 'pf-best') await renderOffscreen(page, trip.to);
-      else if (condition === 'switcher-warm') await switcherWarm(page, trip.to);
-      else if (condition !== 'cold') await prefetch(page, trip.to, assets, condition !== 'pf-brief');
-      if (condition === 'pf-decode') await decodeFonts(page, assets);
-      if (condition === 'pf-memory' || condition === 'pf-best') await serveFromMemory(page, trip.to);
-      if (prewarmKana) {
-        await page.evaluate(() => {
-          const s = document.createElement('span');
-          s.textContent = 'バーチ・デザイン・ラボ';
-          s.style.cssText = "position:fixed;left:-9999px;top:0;font-weight:700;letter-spacing:0.35em;font-family:'Yu Gothic','Hiragino Kaku Gothic ProN','Noto Sans JP','Meiryo',sans-serif";
-          document.body.append(s);
-          return s.getBoundingClientRect().width;
-        });
-        await page.waitForTimeout(100);
-      }
-      const r = await measure(page, cdp, trip);
-      results.push({ ...trip, condition, run, ...r });
+      // cached on every return trip (and in-school swap).
+      context._bdlCdp = cdp;
+      const prep = await prepare(page, trip, condition, assets);
+      const r = await measure(page, cdp, trip, !!prep?.viaDialog, prep?.rest ?? null);
+      if (prep?.touch) await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }).catch(() => {});
+      results.push({ ...trip, condition, run, ...r, ...(prep?.ahead ? { ahead: prep.ahead } : {}) });
       if (condition === 'cold' && conditions.includes('warm')) {
         await settle(page, trip.from);
         const w = await measure(page, cdp, trip);
         results.push({ ...trip, condition: 'warm', run, ...w });
       }
       await context.close();
+      if (freshBrowser) await b.close();
     }
     const last = results.filter((x) => x.id === trip.id && x.dir === trip.dir && x.run === run);
-    console.log(`${trip.id} ${trip.dir} run ${run + 1}/${runs}: ` + last.map((x) => `${x.condition} ${x.firstVisible == null ? '?' : Math.round(x.firstVisible)}`).join(', '));
+    const gap = (x) => (x.screencastGap ? ` gap ${x.screencastGap.ms}` : '');
+    console.log(`${trip.id} ${trip.dir} run ${run + 1}/${runs}: ` + last.map((x) => `${x.condition} ${x.firstVisible == null ? '?' : Math.round(x.firstVisible)}${gap(x)}`).join(', '));
   }
 }
 
-// One traced cold arrival per listed school, after the timed runs so tracing
-// never overlaps them.
+// Traced cold arrivals (--trace-runs per listed school), after the timed runs
+// so tracing never overlaps them.
 const traceSummaries = [];
 for (const id of traced) {
-  for (const trip of trips.filter((t) => t.id === id)) {
-    const { context, page, cdp } = await newContext();
-    if (trip.dir === 'return') await settle(page, '/t/quiet/');
-    await settle(page, trip.from);
-    const file = join(outDir, `trace-${id}-${trip.dir}-${vpName}.json`);
-    await browser.startTracing(page, {
+  for (const trip of trips.filter((t) => t.id === id)) for (let n = 0; n < traceRuns; n++) {
+    const b = freshBrowser ? await launch() : browser;
+    const { context, page, cdp } = await newContext(b);
+    await prepare(page, trip, traceCondition, await destinationAssets(trip.to));
+    const file = join(outDir, `trace-${id}-${trip.dir}-${vpName}-${scheme}${traceCondition !== 'cold' ? `-${traceCondition}` : ''}${traceRuns > 1 ? `-${n + 1}` : ''}.json`);
+    await b.startTracing(page, {
       path: file,
       categories: [
         'devtools.timeline', 'disabled-by-default-devtools.timeline', 'disabled-by-default-devtools.timeline.frame',
         'blink.user_timing', 'v8.execute', 'v8', 'loading', 'blink', 'cc', 'gpu', 'viz', 'toplevel', 'benchmark',
+        // Skia's and ANGLE's own events, so a raster flush can be split into
+        // shader compiles, path work and the draw itself.
+        'skia', 'disabled-by-default-skia', 'disabled-by-default-skia.gpu', 'disabled-by-default-skia.shaders', 'gpu.angle',
+        'disabled-by-default-gpu.service', 'blink.image_decode',
       ],
     });
     const r = await measure(page, cdp, trip);
-    await browser.stopTracing();
+    await b.stopTracing();
     await context.close();
+    if (freshBrowser) await b.close();
     const summary = await analyseTrace(file, r.firstVisible);
-    traceSummaries.push({ id, dir: trip.dir, viewport: vpName, file, run: { at: r.at, firstVisible: r.firstVisible, phases: phases(r) }, ...summary });
-    console.log(`traced ${id} ${trip.dir}: ${file}`);
+    traceSummaries.push({ id, dir: trip.dir, viewport: vpName, scheme, condition: traceCondition, file, run: { at: r.at, firstVisible: r.firstVisible, phases: phases(r) }, ...summary });
+    const p = summary.presented;
+    console.log(`traced ${id} ${trip.dir}: ${file}${p?.maxGap ? `  presented gap ${p.maxGap.ms} ms at +${p.maxGap.from}, screencast gap ${r.screencastGap?.ms ?? 'n/a'}, shader compiles ${p.shaderCompiles.span.count} (${p.shaderCompiles.span.ms} ms)` : ''}`);
   }
 }
 await browser.close();
 
 const summary = [];
 for (const trip of trips) {
-  for (const condition of ['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'switcher-warm', 'warm']) {
+  for (const condition of ['cold', 'pf-brief', 'pf-full', 'pf-decode', 'pf-render', 'pf-memory', 'pf-best', 'pf-raster', 'switcher-warm', 'switcher-pick', 'hover', 'tap', 'warm']) {
     const rs = results.filter((r) => r.id === trip.id && r.dir === trip.dir && r.condition === condition);
     if (!rs.length) continue;
     const ph = rs.map(phases);
@@ -786,17 +1201,18 @@ for (const trip of trips) {
   }
 }
 
-const meta = { base, viewport: vpName, scheme, film, latency, gpu: useGpu, renderer, runs, written: new Date().toISOString() };
+const meta = { base, viewport: vpName, scheme, film, latency, gpu: useGpu, renderer, runs, freshBrowser, stubs: stubNames, written: new Date().toISOString() };
 await writeFile(join(outDir, `${tag}.runs.json`), JSON.stringify({ meta, results, problems }, null, 2));
 await writeFile(join(outDir, `${tag}.summary.json`), JSON.stringify({ meta, summary }, null, 2));
 if (traceSummaries.length) await writeFile(join(outDir, `${tag}.traces.json`), JSON.stringify(traceSummaries, null, 2));
 
 const cell = (s) => (s ? `${Math.round(s.median)} (${Math.round(s.min)} to ${Math.round(s.max)})` : 'n/a');
-const cols = ['firstAny', 'firstVisible', 'vtStart', 'ready', 'fetch', 'cssWait', 'fontWait', 'oldCapture', 'swap', 'newRender', 'readyToVisible', 'finished'];
+const cols = ['still', 'firstFrame', 'screencastGap', 'rafGap', 'aheadRafGap', 'firstAny', 'firstVisible', 'vtStart', 'ready', 'fetch', 'cssWait', 'fontWait', 'oldCapture', 'swap', 'newRender', 'readyToVisible', 'finished'];
 const md = [
-  `# Arrival timings, ${vpName} ${scheme} (${renderer}${film ? '' : ', not filmed'}${latency ? `, +${latency} ms per request` : ''})`,
+  `# Arrival timings, ${vpName} ${scheme} (${renderer}${film ? '' : ', not filmed'}${latency ? `, +${latency} ms per request` : ''}${freshBrowser ? ', fresh browser per run' : ''}${stubNames.length ? `, stubs ${stubNames.join('+')}` : ''})`,
   '',
   'Median (min to max) ms after the trigger, or per phase.',
+  'still = the longer of firstFrame (the trigger to the first new screencast frame) and screencastGap (the longest gap between frames after that): read still, not screencastGap, for the hold.',
   '',
   `| school | trip | condition | runs | ${cols.join(' | ')} |`,
   `|${'---|'.repeat(cols.length + 4)}`,

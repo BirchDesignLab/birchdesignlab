@@ -389,10 +389,14 @@
 /* ---------- arrival ----------
 
    From another school: the set warms up like a CRT, a bright line that opens
-   into the picture. Within this school: a short VHS tracking wobble. Both
+   into the picture. Within this school: a short VHS tracking error. Both
    under 700 ms, and none at all for reduced motion. */
 
 html[data-theme='vaporwave']::view-transition { background: #07011a; }
+/* In light, a swap between two vaporwave pages shows the pastel field through
+   the tear and the skew slivers, so the tear reads as tape, not a dropout.
+   Arriving from another school keeps the dark screen the CRT warms up on. */
+html[data-theme='vaporwave'][data-scheme='light'][data-from-theme='vaporwave']::view-transition { background: var(--field); }
 
 html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-old(root) {
   animation: vw-crt-off 220ms ease-in both;
@@ -400,16 +404,53 @@ html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition
 html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-new(root) {
   animation: vw-crt-on 640ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+/* Pastel dawn warms up gentler: the same beam line, the same opening and
+   timing, but the picture opens near its own brightness, since dark's
+   overdrive washed the pastel page out to white. data-scheme is always set
+   (the stored choice, else the OS), and light is only ever that attribute. */
+html[data-theme='vaporwave'][data-scheme='light']:not([data-from-theme='vaporwave'])::view-transition-new(root) {
+  animation-name: vw-crt-on-light;
+}
+/* Within the school the set stays on: the new page is on screen from the
+   first frame, carried in by the tracking error, while the old one simply
+   fades beneath it. The power-off belongs to leaving the school. */
 html[data-theme='vaporwave'][data-from-theme='vaporwave']::view-transition-new(root) {
-  animation: vw-track 360ms steps(6, end) both;
+  animation: vw-track 360ms step-end both;
 }
 html[data-theme='vaporwave'][data-from-theme='vaporwave']::view-transition-old(root) {
-  animation: vw-crt-off 180ms linear both;
+  animation: vw-tape-out 120ms linear both;
 }
 html[data-theme='vaporwave']::view-transition-group(wordmark) {
   animation-duration: 520ms;
   animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
+
+/* The wordmark default (README, "The wordmark"): each wordmark drawn at its
+   own size, left-anchored like the Start button, on the group's clock. From
+   another school the old one is gone by 40% and the new one starts at 22%:
+   under this steep ease-out each fade is nearly done a third of the way into
+   its span, so the old drops under 10% at about 91 ms and the new passes 10%
+   at about 126 ms. The header is never empty for long, and never shows two
+   wordmarks. Between two vaporwave pages Astro's matched crossfade stays, so
+   the Start button holds still. */
+html[data-theme='vaporwave']::view-transition-old(wordmark),
+html[data-theme='vaporwave']::view-transition-new(wordmark) {
+  height: 100%;
+  object-fit: none;
+  object-position: left center;
+  animation-duration: inherit;
+  animation-timing-function: inherit;
+  animation-delay: inherit;
+  animation-fill-mode: both;
+}
+html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-old(wordmark) {
+  animation-name: vaporwave-wordmark-out;
+}
+html[data-theme='vaporwave']:not([data-from-theme='vaporwave'])::view-transition-new(wordmark) {
+  animation-name: vaporwave-wordmark-in;
+}
+@keyframes vaporwave-wordmark-out { 40%, 100% { opacity: 0; } }
+@keyframes vaporwave-wordmark-in { 0%, 22% { opacity: 0; } 100% { opacity: 1; } }
 
 @keyframes vw-crt-off {
   to { opacity: 0; transform: scale(1, 0.02); filter: brightness(3); }
@@ -420,12 +461,44 @@ html[data-theme='vaporwave']::view-transition-group(wordmark) {
   65% { transform: scale(1, 1); filter: brightness(1.5) saturate(1.3); }
   100% { transform: none; filter: none; }
 }
+@keyframes vw-crt-on-light {
+  0% { opacity: 1; transform: scale(0.02, 0.004); filter: brightness(5) saturate(0); }
+  30% { transform: scale(1, 0.004); filter: brightness(1.1) saturate(0.7); }
+  65% { transform: scale(1, 1); filter: brightness(1) saturate(1); }
+  100% { transform: none; filter: none; }
+}
+@keyframes vw-tape-out { to { opacity: 0; } }
+/* Tape, not a GPU fault: no colour shift and no filter at all. Six 60 ms
+   holds (the timing function applies per keyframe interval, so each sixth
+   is its own keyframe on step-end): the picture jumps sideways and shears,
+   and from the third hold one horizontal tear (a band cut out of the
+   picture by the clip-path, the same eight-point polygon throughout) rolls
+   down it, then everything settles. The tear waits until the old page has
+   faded, so it only ever shows the tape gap (dark, or the pastel field in
+   light). */
 @keyframes vw-track {
-  0% { transform: translateX(-3%) skewX(-6deg); filter: hue-rotate(60deg) saturate(2); clip-path: inset(0 0 55% 0); }
-  25% { transform: translateX(2%); clip-path: inset(35% 0 0 0); }
-  50% { transform: translateX(-1%); filter: hue-rotate(-30deg); clip-path: inset(0 0 12% 0); }
-  75% { transform: translateX(0.5%); clip-path: inset(0); }
-  100% { transform: none; filter: none; clip-path: inset(0); }
+  0% {
+    transform: translateX(-2.5%) skewX(-5deg);
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0, 0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  16.667% { transform: translateX(1.8%) skewX(2deg); }
+  33.333% {
+    transform: translateX(-1.2%);
+    clip-path: polygon(0 0, 100% 0, 100% 28%, 0 28%, 0 33%, 100% 33%, 100% 100%, 0 100%);
+  }
+  50% {
+    transform: translateX(0.8%) skewX(-1.5deg);
+    clip-path: polygon(0 0, 100% 0, 100% 56%, 0 56%, 0 60%, 100% 60%, 100% 100%, 0 100%);
+  }
+  66.667% {
+    transform: translateX(-0.4%);
+    clip-path: polygon(0 0, 100% 0, 100% 81%, 0 81%, 0 83%, 100% 83%, 100% 100%, 0 100%);
+  }
+  83.333% {
+    transform: translateX(0.2%);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 100%, 100% 100%, 100% 100%, 0 100%);
+  }
+  100% { transform: none; clip-path: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

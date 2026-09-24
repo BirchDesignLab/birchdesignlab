@@ -1,6 +1,8 @@
 import type { ThemeMeta } from '../types';
 import caslon from '@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2?url';
 import dela from '@fontsource/dela-gothic-one/files/dela-gothic-one-latin-400-normal.woff2?url';
+import exo from '@fontsource-variable/exo-2/files/exo-2-latin-wght-normal.woff2?url';
+import vt323 from '@fontsource/vt323/files/vt323-latin-400-normal.woff2?url';
 
 /** Vaporwave: the studio as a 1995 screensaver dreaming about the 1980s. */
 export const meta: ThemeMeta = {
@@ -11,13 +13,16 @@ export const meta: ThemeMeta = {
   signature: 'Sunset gradients, a neon grid running to the horizon and marble statuary, like a 1995 screensaver dreaming about the 1980s.',
   forbids: ['gold', 'script faces', 'frosted glass', 'the primary triad', 'wood grain'],
   nativeScheme: 'dark',
-  /* The two display faces carry the billboard and the wordmark, so they are
-     the ones preloaded; Exo 2 swaps in over a metric-matched fallback. */
+  /* All four faces paint above the fold on every page: the display faces
+     carry the billboard and the wordmark, Exo 2 the task buttons and VT323
+     the tray clock and the kickers. So all four are preloaded (the founder's
+     cap of four, Tier 3 Stage 2 decision 4), and on a switch from another
+     school the portal waits for them, within its cap, before the swap. */
   fonts: [
     { family: 'Libre Caslon Display', role: 'heading', preload: [caslon] },
-    { family: 'Exo 2 Variable', role: 'body' },
+    { family: 'Exo 2 Variable', role: 'body', preload: [exo] },
     { family: 'Dela Gothic One', role: 'accent', preload: [dela] },
-    { family: 'VT323', role: 'mono' },
+    { family: 'VT323', role: 'mono', preload: [vt323] },
   ],
   /* Every surface beyond --field that carries text. The CRT screen and the
      window title bars keep their colours in both schemes (a screen is dark,

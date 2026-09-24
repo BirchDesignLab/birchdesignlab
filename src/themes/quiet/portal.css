@@ -1,0 +1,25 @@
+/* Quiet inside the /t/ portal only. The /t/quiet/ route imports this beside the
+   root site's tokens.css and base.css; the root business pages never do, so
+   nothing here reaches them. It carries the wordmark default (README, "The
+   wordmark") for arrivals at quiet from another school. Quiet leaves its
+   wordmark group on the browser's default morph (250 ms, ease), and the
+   images follow it. */
+
+html[data-theme='quiet']::view-transition-old(wordmark),
+html[data-theme='quiet']::view-transition-new(wordmark) {
+  height: 100%;
+  object-fit: none;
+  object-position: left center;
+  animation-duration: inherit;
+  animation-timing-function: inherit;
+  animation-delay: inherit;
+  animation-fill-mode: both;
+}
+html[data-theme='quiet']:not([data-from-theme='quiet'])::view-transition-old(wordmark) {
+  animation-name: quiet-wordmark-out;
+}
+html[data-theme='quiet']:not([data-from-theme='quiet'])::view-transition-new(wordmark) {
+  animation-name: quiet-wordmark-in;
+}
+@keyframes quiet-wordmark-out { 35%, 100% { opacity: 0; } }
+@keyframes quiet-wordmark-in { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }

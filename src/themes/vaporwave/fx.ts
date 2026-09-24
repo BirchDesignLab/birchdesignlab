@@ -8,8 +8,11 @@
  * module stays loaded after the visitor walks into another school; DPR capped
  * at 1.5; paused while the tab is hidden or the hero is off-screen; context
  * loss handled like src/components/BarkField.astro; the context released on
- * teardown; reduced motion draws one still frame. The hero paints the same
- * sky in CSS underneath, so a blank canvas still reads.
+ * teardown (once the swap's snapshot of the hero is gone); reduced motion
+ * draws one still frame. The hero paints the same
+ * sky in CSS underneath, so a blank canvas still reads. Arriving from another
+ * school, the program links behind the CRT's beam line rather than holding
+ * the page's first render (mountHorizon).
  *
  * Colours come from the --hz-* tokens in theme.css, re-read when the scheme
  * flips, so the shader never hardcodes a palette.
@@ -174,8 +177,33 @@ interface Scene {
   setColors(): void;
 }
 
-function createScene(canvas: HTMLCanvasElement): Scene | null {
-  const gl = canvas.getContext('webgl', { antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
+/** A program handed to the driver and not yet asked about. */
+interface Linking {
+  gl: WebGLRenderingContext;
+  program: WebGLProgram;
+  vs: WebGLShader;
+  fs: WebGLShader;
+  /** Whether asking about the link now would return at once. */
+  settled(): boolean;
+}
+
+/**
+ * Compile and link without asking how either went. Any question about a
+ * program (its status, a uniform's location) makes the main thread wait for
+ * the GPU to finish linking it, about 70 ms the first time in a browser
+ * (Tier 3 Stage 2 freeze investigation), so the questions wait for
+ * finishScene.
+ */
+function startScene(canvas: HTMLCanvasElement): Linking | null {
+  // No preserveDrawingBuffer: the swap's snapshot of the hero holds because
+  // the teardown keeps the context until the transition finishes (below),
+  // so the buffer copy it costs every frame buys nothing (Tier 3 brief E1a).
+  const gl = canvas.getContext('webgl', {
+    antialias: false,
+    depth: false,
+    stencil: false,
+    powerPreference: 'low-power',
+  });
   if (!gl) return null;
 
   const compile = (type: number, src: string) => {
@@ -183,7 +211,7 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
     if (!shader) return null;
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
-    return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+    return shader;
   };
   const vs = compile(gl.VERTEX_SHADER, VERT);
   const fs = compile(gl.FRAGMENT_SHADER, FRAG);
@@ -192,6 +220,18 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.linkProgram(program);
+  // Send the work to the GPU now, so it links while the page renders.
+  gl.flush();
+  // Where the driver links off the main thread, this says when it is done;
+  // elsewhere the question simply waits, as it always did.
+  const parallel = gl.getExtension('KHR_parallel_shader_compile');
+  const settled = () => !parallel || gl.getProgramParameter(program, parallel.COMPLETION_STATUS_KHR) !== false;
+  return { gl, program, vs, fs, settled };
+}
+
+function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null {
+  const { gl, program, vs, fs } = linking;
+  // A shader that failed to compile fails the link too.
   const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
   // Shaders are only needed until link time; free them either way, and free
   // the program too on a failed link so a driver reset never leaks GL objects.
@@ -272,10 +312,23 @@ export function mountHorizon(): (() => void) | void {
   if (!canvas) return;
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  let scene = createScene(canvas);
-  if (!scene) return;
+  let linking = startScene(canvas);
+  if (!linking) return;
+  let scene: Scene | null = null;
+  // Arriving from another school, the new page opens as the CRT's beam line
+  // for its first 190 ms, so the sunset can finish linking behind it while
+  // the page renders, instead of holding that render. Everywhere else (a
+  // hard load, a swap within the school, where the picture is on screen
+  // from the first frame) it is linked before the first frame, as always.
+  const from = document.documentElement.dataset.fromTheme;
+  if (!from || from === THEME) {
+    scene = finishScene(canvas, linking);
+    linking = null;
+    if (!scene) return;
+  }
 
   let frame = 0;
+  let waiting = 0;
   let lost = false;
   let inView = true;
   let pageVisible = !document.hidden;
@@ -302,7 +355,23 @@ export function mountHorizon(): (() => void) | void {
       scene.draw(now());
     }
   };
-  sync();
+  // Asked once a frame until the link is done, then the first frame is drawn
+  // in that same frame. A failed link leaves the CSS sky, as a failed
+  // context always has.
+  const settle = () => {
+    waiting = 0;
+    if (!linking || lost) return;
+    if (!linking.settled()) {
+      waiting = requestAnimationFrame(settle);
+      return;
+    }
+    scene = finishScene(canvas, linking);
+    linking = null;
+    if (scene && shouldAnimate()) tick();
+    else sync();
+  };
+  if (linking) waiting = requestAnimationFrame(settle);
+  else sync();
 
   const onContextLost = (event: Event) => {
     event.preventDefault();
@@ -310,7 +379,11 @@ export function mountHorizon(): (() => void) | void {
     stop();
   };
   const onContextRestored = () => {
-    scene = createScene(canvas);
+    if (waiting) cancelAnimationFrame(waiting);
+    waiting = 0;
+    linking = startScene(canvas);
+    scene = linking && finishScene(canvas, linking);
+    linking = null;
     // If the rebuild fails (a shader that no longer compiles after the driver
     // reset), stay in the lost state so every caller keeps treating this as
     // a no-op instead of drawing with a null scene.
@@ -348,8 +421,22 @@ export function mountHorizon(): (() => void) | void {
 
   reducedMotion.addEventListener('change', sync);
 
+  // The swap that tears this hero down. Its outgoing snapshot keeps drawing
+  // from the canvas until the transition finishes, so releasing the context
+  // at once blanked the hero to grey-white mid-swap (Tier 3 brief E1a). The
+  // router's before-swap carries the transition; a capture listener on
+  // window runs before the document listener that calls the teardown.
+  let swap: ViewTransition | undefined;
+  const onBeforeSwap = (event: Event) => {
+    swap = (event as Event & { viewTransition?: ViewTransition }).viewTransition;
+  };
+  window.addEventListener('astro:before-swap', onBeforeSwap, true);
+
   return () => {
     stop();
+    if (waiting) cancelAnimationFrame(waiting);
+    waiting = 0;
+    linking = null;
     // Loss listeners first: releasing the context fires a loss on purpose.
     canvas.removeEventListener('webglcontextlost', onContextLost, false);
     canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
@@ -358,7 +445,12 @@ export function mountHorizon(): (() => void) | void {
     schemeWatch.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
     reducedMotion.removeEventListener('change', sync);
-    canvas.getContext('webgl')?.getExtension('WEBGL_lose_context')?.loseContext();
+    window.removeEventListener('astro:before-swap', onBeforeSwap, true);
     scene = null;
+    // Released as soon as nothing shows it: at once on a real pagehide, or
+    // once the swap's snapshot is gone.
+    const release = () => canvas.getContext('webgl')?.getExtension('WEBGL_lose_context')?.loseContext();
+    if (swap) swap.finished.then(release, release);
+    else release();
   };
 }

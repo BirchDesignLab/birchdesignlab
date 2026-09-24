@@ -22,17 +22,19 @@
  *
  * Speed (P4): opening the dialog warms every other school's same page, and
  * pointing at or focusing Shuffle picks its school and warms that page, so
- * the click finds the page in memory. The control that started a school
- * change shows a busy state until the new page has loaded (or the navigation
- * is abandoned), inside its own box, and its labels keep the width of the
- * longest word they can show, so the bar never changes size while it holds
- * still through the swap.
+ * the click finds the page in memory. A school's row, or Shuffle, that the
+ * visitor rests on or presses also has its page drawn ahead (runtime.ts,
+ * drawOnIntent), so its first draw is cheap. The control that started a
+ * school change shows a busy state until the new page has loaded (or the
+ * navigation is abandoned), inside its own box, and its labels keep the
+ * width of the longest word they can show, so the bar never changes size
+ * while it holds still through the swap.
  */
 import { navigate, type TransitionBeforePreparationEvent } from 'astro:transitions/client';
 import { currentScheme, setScheme } from '../../lib/scheme';
 import { pagePath, pageFromPath, rootPathFor, type PageId } from '../paths';
 import { readPortalData, type SchoolSummary } from './schools';
-import { SWITCHER_INFO, warmPages } from './runtime';
+import { drawOnIntent, SWITCHER_INFO, warmPages } from './runtime';
 
 /**
  * The first-load prompt's words, chosen by the founder 09-23-26. It names no
@@ -322,6 +324,13 @@ class BdlSwitcher extends HTMLElement {
       });
     }
 
+    // The row the visitor is reaching for is drawn ahead (not the one they
+    // are on, which aria-current marks).
+    drawOnIntent(dialog, (e) => {
+      const a = (e.target as Element | null)?.closest?.('a[data-school]');
+      return a instanceof HTMLAnchorElement && a.getAttribute('aria-current') !== 'page' ? new URL(a.href).pathname : null;
+    });
+
     const shuffle = this.root.querySelector<HTMLButtonElement>('.shuffle')!;
     const primeShuffle = () => {
       const here = this.here();
@@ -330,6 +339,11 @@ class BdlSwitcher extends HTMLElement {
     };
     shuffle.addEventListener('pointerenter', primeShuffle);
     shuffle.addEventListener('focus', primeShuffle);
+    drawOnIntent(shuffle, () => {
+      const here = this.here();
+      const pick = this.pickShuffle();
+      return here && pick ? pagePath(here.page, pick) : null;
+    });
     shuffle.addEventListener('click', () => {
       const here = this.here();
       const pick = this.pickShuffle();

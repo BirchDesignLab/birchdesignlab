@@ -70,6 +70,9 @@
   --field-texture:
     repeating-linear-gradient(0deg, rgba(58, 42, 31, 0.022) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(58, 42, 31, 0.026) 0 1px, transparent 1px 4px);
+  /* The bare table: the body's background, and what a page change shows
+     where no sheet covers it (the arrival block below). */
+  --table: var(--field-texture);
   --lamp: none;
 
   /* pressed-flower colours */
@@ -151,6 +154,10 @@
   --cc-stamp-face: #c9a15a;
   --field-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 .75h5M9 .75h5M18 .75h5M.75 0v5M.75 9v5M.75 18v5' stroke='%23f2e5cc' stroke-opacity='.03' stroke-width='1.5'/%3E%3C/svg%3E");
   --lamp: radial-gradient(closest-side, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.14) 55%, transparent);
+  /* The lamp hangs over the top of the table. */
+  --table:
+    radial-gradient(ellipse 60rem 38rem at 20% -6rem, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.1) 55%, transparent 75%),
+    var(--field-texture);
 
   --cc-petal: #eee2ca;
   --cc-petal-back: #c7b596;
@@ -183,7 +190,7 @@
   margin: 0;
   color: var(--mark);
   background-color: var(--field);
-  background-image: var(--field-texture);
+  background-image: var(--table);
   font-family: var(--font-body);
   font-size: 1.0625rem;
   line-height: 1.65;
@@ -202,12 +209,6 @@
   background-size: auto, 28px 28px, 28px 28px;
 }
 [data-theme='cottagecore'][data-scheme='dark'] [data-portal-tail] { background-size: 28px 28px, 28px 28px, 28px 28px; }
-/* Dark only: the lamp hangs over the top of the table. */
-[data-theme='cottagecore'][data-scheme='dark'] body {
-  background-image:
-    radial-gradient(ellipse 60rem 38rem at 20% -6rem, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.1) 55%, transparent 75%),
-    var(--field-texture);
-}
 [data-theme='cottagecore'] :is(h1, h2, h3, p, ul, ol, figure, blockquote) { margin: 0; }
 [data-theme='cottagecore'] :is(h1, h2, h3) {
   font-family: var(--font-display);
@@ -471,33 +472,123 @@
 }
 [data-theme='cottagecore'][data-scheme='dark'] .cc-motes { display: block; }
 
-/* ---------- arrival: a soft page turn ---------- */
+/* ---------- page change: a fresh sheet on the table ---------- */
 
+/* On one ~630 ms clock, compositor-only (opacity and transform, no filter on
+   a full-viewport snapshot):
+     0 to 150 ms    the old sheet fades off the table (ease-out);
+     150 to 240 ms  the new sheet comes in, fully opaque within the first
+                    quarter of its run, like a sheet laid on the table;
+     150 to 630 ms  it settles the last 10px into place.
+   The two never share a frame. Filmed with the new sheet starting at 120 ms
+   (the brief's figure), the old one's last tenth still showed under the new
+   one's first third on the dense strips, dark desktop and light alike (Tier
+   3 Stage 2), so the new one waits for the old one to clear. Between them
+   the table itself shows (the root group's background, the lamp included by
+   night), so a sheet fading out or a sheet still settling shows cloth, never
+   an unpainted band. The blend is reset so the two sheets never add into a
+   wash. The full "laid on the table" choreography (tapes laid, paper
+   settling from 1.01) waits for the transitions phase. */
 @media (prefers-reduced-motion: no-preference) {
+  html[data-theme='cottagecore']::view-transition-group(root) {
+    background-color: var(--field);
+    background-image: var(--table);
+  }
+  html[data-theme='cottagecore']::view-transition-old(root),
+  html[data-theme='cottagecore']::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
   html[data-theme='cottagecore']::view-transition-old(root) {
-    animation: cc-set-down 360ms ease-in both;
+    animation: cc-sheet-away 150ms ease-out both;
   }
   html[data-theme='cottagecore']::view-transition-new(root) {
-    transform-origin: 0 40%;
-    animation: cc-page-turn 640ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
+    animation:
+      cc-sheet-in 90ms ease-out 150ms both,
+      cc-sheet-settle 480ms cubic-bezier(0.2, 0.7, 0.2, 1) 150ms both;
   }
   html[data-theme='cottagecore']::view-transition-group(wordmark) {
     animation-duration: 560ms;
     animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
   }
+  /* The wordmark default (README, "The wordmark"): each wordmark drawn at its
+     own size, left-anchored as it sits in both headers, on the group's timing
+     rather than Astro's 180 ms; from another school the old one is gone
+     before the new one shows. The two fades are straight lines of their
+     own (a keyframe's timing function overrides the group's curve for its
+     interval, while the box still morphs on the curve): the old wordmark
+     goes from full to nothing between 20% and 45% of the 560 ms, and the new
+     one from nothing to full between 45% and 75%. On the group's own eased
+     curve the old one's last tenth lingered, and on the dense wordmark
+     strips it still read under the arriving one; a straight fade ends
+     exactly where the next begins. Both are under 10% for about 31 ms
+     (founder decision b: at most 80), and never both over it. Fill both
+     holds the old one hidden to the end. */
+  html[data-theme='cottagecore']::view-transition-old(wordmark),
+  html[data-theme='cottagecore']::view-transition-new(wordmark) {
+    height: 100%;
+    object-fit: none;
+    object-position: left center;
+    animation-duration: inherit;
+    animation-timing-function: inherit;
+    animation-delay: inherit;
+    animation-fill-mode: both;
+  }
+  html[data-theme='cottagecore']:not([data-from-theme='cottagecore'])::view-transition-old(wordmark) {
+    animation-name: cottagecore-wordmark-out;
+  }
+  html[data-theme='cottagecore']:not([data-from-theme='cottagecore'])::view-transition-new(wordmark) {
+    animation-name: cottagecore-wordmark-in;
+  }
 }
+@keyframes cottagecore-wordmark-out {
+  0%, 20% { opacity: 1; animation-timing-function: linear; }
+  45%, 100% { opacity: 0; }
+}
+@keyframes cottagecore-wordmark-in {
+  0%, 45% { opacity: 0; animation-timing-function: linear; }
+  75%, 100% { opacity: 1; }
+}
+@keyframes cc-sheet-away { to { opacity: 0; } }
+@keyframes cc-sheet-in { from { opacity: 0; } }
+@keyframes cc-sheet-settle { from { transform: translateY(10px); } }
+
+/* Between two cottagecore pages the curtain and the header row hold still:
+   the chrome (valance and bar, Header.astro .cc-chrome) is named only when
+   both sides of the swap are cottagecore (README, "View-transition names"),
+   so the sheets change beneath it. Arriving from another school it stays
+   unnamed and comes in with the rest of the page. The chrome, not the
+   header: the header also holds the fireflies' canvas, fixed to the whole
+   viewport, which would freeze a viewport of motes into the header's picture
+   and draw them over the sheets for the swap. Unnamed, the canvas rides the
+   root snapshots like the rest of the table. The group is pinned (no morph)
+   and its two pictures, the same but for the current page's stitch, trade in
+   one step on the swap's first frame; the old one is hidden outright, since
+   with the group's animation gone both would stay at full strength and add
+   up into bolder type. The new picture carries the table behind it: the bar
+   is transparent and the header is not sticky, so on a swap clicked from low
+   down a page it would otherwise sit at the top of the viewport over the
+   old page's scrolled content. The chrome runs the full width from the top
+   of the page, so the table's lamp and texture line up with the page's. The
+   wordmark keeps its own group above the chrome's, except on a swap from a
+   scrolled page, where the portal unnames it and it rides the chrome's
+   picture (README, "The wordmark"). */
+html[data-theme='cottagecore']:is([data-to-theme='cottagecore'], [data-from-theme='cottagecore']:not([data-to-theme])) .cc-chrome {
+  view-transition-name: cottagecore-header;
+}
+html[data-theme='cottagecore']::view-transition-group(cottagecore-header),
+html[data-theme='cottagecore']::view-transition-new(cottagecore-header) { animation: none; }
+html[data-theme='cottagecore']::view-transition-new(cottagecore-header) {
+  background-color: var(--field);
+  background-image: var(--table);
+}
+html[data-theme='cottagecore']::view-transition-old(cottagecore-header) { animation: none; opacity: 0; }
+/* Naming the chrome costs the clicked link its hover for the one frame the
+   old page is still drawn, which showed it plain between its hover rose and
+   its stitch (header crop, light mobile). The click left it focused, so hold
+   the rose on that. */
+html[data-theme='cottagecore'][data-to-theme='cottagecore'] .cc-chrome nav a:focus { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='cottagecore']::view-transition-group(*),
   html[data-theme='cottagecore']::view-transition-old(*),
   html[data-theme='cottagecore']::view-transition-new(*) { animation-duration: 1ms; }
-}
-@keyframes cc-page-turn {
-  /* Compositor-only properties (opacity, transform): no filter on the
-     full-viewport snapshot, which was the costly part on low-end phones. */
-  from { opacity: 0; transform: perspective(2200px) rotateY(-16deg) translateX(-1.5%); }
-  55% { opacity: 1; }
-  to { opacity: 1; transform: none; }
-}
-@keyframes cc-set-down {
-  to { opacity: 0; transform: scale(0.985) translateY(6px); }
 }

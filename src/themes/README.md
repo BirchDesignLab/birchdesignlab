@@ -154,10 +154,17 @@ Rules:
   `html[data-theme='x']::view-transition-group(x-taskbar)` and its
   `-image-pair`, `-old` and `-new`. With no rule it gets the browser's
   default morph and crossfade, which suits chrome that sits in the same place
-  on every page. To pin it, give the group `animation: none`, as vaporwave's
-  taskbar does. That also ends the crossfade at once (the old and new images
-  inherit the group's animation timing), so the new picture simply replaces
-  the old; `animation-name: none` pins it and keeps the crossfade.
+  on every page. To pin it, pick one of two ways:
+  - Keep the crossfade: `animation-name: none` on the group pins it, and the
+    old and new images still crossfade in place (glassmorphism's header).
+  - Swap in one step: `animation: none` on the group and on `-new`, plus
+    `::view-transition-old(x-header) { animation: none; opacity: 0; }`
+    (swiss's header).
+  `animation: none` on the group alone does not end the crossfade. The shorthand
+  also drops the group's fill, which the images inherit, so both can stay
+  at full strength for the whole swap and add up under `plus-lighter`. On
+  see-through chrome that draws the type visibly bolder (swiss, Tier 3
+  Stage 2). Vaporwave's opaque taskbar, pinned that way, films unchanged.
 - While named, an element is a stacking context and a backdrop root. The
   spec says so for any element whose name is not `none`, at any time, not
   only during a transition, and Chrome agrees. The recipe keeps your chrome
@@ -165,6 +172,22 @@ Rules:
   element that carries a `backdrop-filter` itself, never an ancestor of
   elements that blur what is behind them: their backdrop would stop at the
   named ancestor.
+- While named, move that `backdrop-filter` off the element too. A
+  backdrop-filter on a captured element, or anywhere in the
+  `::view-transition-*` pseudo-elements, makes Chrome draw every snapshot's
+  text without subpixel anti-aliasing for the whole swap, the switcher's
+  included. So the switcher fails hold-still on a 1x desktop (2x phones
+  pass). Glassmorphism puts the blur on an unnamed underlay while the bar
+  is named (its header's `::before`, same shape, same blur). The underlay is
+  baked into the page's snapshot, and the bar is captured as its tint and
+  ink alone.
+- A named element is drawn where it sits on each page. Chrome that is not
+  pinned to the viewport (not `sticky` or `fixed`) shows its new picture at
+  the top of the viewport. On a swap clicked from low down a page (a footer
+  link), that picture lands over the old page's scrolled content until your
+  root choreography covers it. Give `::view-transition-new(x-header)` a
+  background, as swiss does, or name only chrome that stays in view.
+  `scripts/themes/probe-scrolled-swap.mjs` films that case.
 - The element must be rendered on both pages of an in-school swap. A name on
   one side only animates on its own.
 - Never use another school's prefix. `auto`, `match-element` and `var()`
@@ -247,8 +270,9 @@ background stack listed top to bottom, translucent layers included.
   CSS in the route file (`@fontsource-variable/<x>/wght.css` or
   `@fontsource/<x>/latin-400.css`). Ask the orchestrator for anything not
   installed; do not run npm.
-- `meta.fonts[].preload`: at most two woff2 files, imported with `?url` from
-  the package's `files/` (latin subset), for the faces above the fold.
+- `meta.fonts[].preload`: at most four woff2 files, for the faces that paint
+  above the fold, imported with `?url` from the package's `files/` (latin
+  subset).
 - Font stacks name the fontaine fallback: `'Exo 2 Variable', 'Exo 2 Variable fallback', system-ui, sans-serif`.
 
 ## Motion and backgrounds
@@ -296,8 +320,19 @@ background stack listed top to bottom, translucent layers included.
 The browser's default crossfade shows two differently shaped wordmarks at
 once, each scaled to the morphing box, so one smears across the other (item
 2 of `docs/superpowers/specs/theme-schools-research/tier3-briefs/cottagecore.md`).
+What runs without a rule of yours: `transition:name="wordmark"` makes Astro
+write an inline style block into every page. Besides the name, it gives the
+two images its own fade inside `@layer astro`: `astroFadeOut` and
+`astroFadeIn`, 180 ms, `cubic-bezier(0.76, 0, 0.24, 1)`, fill `both`. Those
+rules beat the browser's own, which would have the images inherit the
+group's timing. So whatever duration and curve you give
+`::view-transition-group(wordmark)`, the two wordmarks crossfade in the
+first 180 ms of the morph and sit near half opacity together at about
++90 ms. Only the group's delay still reaches them, because Astro sets none.
+(Measured on all six schools and quiet in Tier 3, Stage 2.)
+
 This is the default every school adopts in Tier 3, Stage 2, and may then
-tune:
+tune. It was proved on cottagecore and on quiet as a destination:
 
 ```css
 html[data-theme='x']::view-transition-old(wordmark),
@@ -305,6 +340,9 @@ html[data-theme='x']::view-transition-new(wordmark) {
   height: 100%;
   object-fit: none;
   object-position: left center; /* where your wordmark sits in its box */
+  animation-duration: inherit;
+  animation-timing-function: inherit;
+  animation-delay: inherit;
   animation-fill-mode: both;
 }
 html[data-theme='x']:not([data-from-theme='x'])::view-transition-old(wordmark) {
@@ -317,20 +355,71 @@ html[data-theme='x']:not([data-from-theme='x'])::view-transition-new(wordmark) {
 @keyframes x-wordmark-in { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
 ```
 
+- The three `inherit`s put both images back on the group's clock: its
+  duration, its curve and its delay. Your rule is unlayered, so it beats
+  Astro's layer whatever the specificity. Without them your keyframes run on
+  Astro's 180 ms and finish in the first third of a 560 ms morph. Set the
+  timing once, on `::view-transition-group(wordmark)`, as you do now. A group
+  with `animation: none` has no duration, so its images swap in one step.
 - The old wordmark fades out over the first 35% of the group's duration and
-  the new one fades in from 40%, so the two are never legible together. Both
-  images inherit the group's duration, so set it on
-  `::view-transition-group(wordmark)` as you do now.
+  the new one fades in from 40%, so the two are never legible together. The
+  percentages are of time; the group's curve shapes each fade. With an
+  ease-out group the box is most of the way there by 40%, so the new
+  wordmark lands with the morph, not after it.
 - `height: 100%; object-fit: none` draws each wordmark at its own size inside
   the morphing box instead of stretching it; `object-position` anchors it
   where your wordmark sits.
-- `animation-fill-mode: both` holds the old one hidden after its fade. The
-  images inherit the group's fill mode, and an `animation` shorthand on the
-  group resets it to `none`; then, if your root runs longer than the group,
-  the old wordmark would come back for the rest of the transition.
+- `animation-fill-mode: both` holds the old one hidden after its fade. Today
+  it comes from Astro's layer, not the group; say it yourself so the recipe
+  does not lean on Astro. Without it, if your root runs longer than the group
+  (cottagecore's page turn runs 640 ms against a 560 ms group), the old
+  wordmark comes back for the rest of the transition.
 - The fades apply only when arriving from another school. Between two of
   your own pages the two wordmarks are identical, and fading one out and the
-  other in would make a still wordmark blink.
+  other in would make a still wordmark blink. There the guard leaves Astro's
+  matched crossfade in place, now on the group's clock: the two images add
+  up to full opacity on every frame, so the wordmark holds still.
+- On a swap clicked from low down a page, the portal takes the old wordmark
+  out of the morph. Every school's header scrolls away with the page, so the
+  old wordmark's box sits above the viewport, and the morph would bring the
+  new one down from off screen after the header had sat empty. So when less
+  than half of the old wordmark is on screen just before the capture,
+  `src/themes/portal/runtime.ts` sets its `view-transition-name` to `none`
+  inline. The old wordmark is then drawn as part of whatever holds it in the
+  old capture: the old page's root snapshot, or your named chrome's old
+  image when an in-school swap names chrome around the wordmark (every
+  school's header or taskbar today, bauhaus and quiet aside). On that same
+  swap the portal takes the arriving page's wordmark out too, from the swap
+  until the transition finishes, so it rides your new root or your named
+  chrome's new image and appears exactly when they do: never ahead of its
+  page, never in an empty slot. No `wordmark` pseudo-element exists on such
+  a swap, so your wordmark rules sit idle and your root and chrome
+  choreography carry it. The name comes back when the transition finishes
+  or the next navigation starts. A wordmark at least half on screen keeps
+  its name, and so does the arriving one, so swaps from the top of a page
+  are unchanged. `scripts/themes/probe-scrolled-swap.mjs` films the case
+  (`--to-school` for a school change, `--seen` for a wordmark part on
+  screen).
+- Astro also writes `[data-astro-transition-fallback]` rules. They animate
+  the element itself in a browser without view transitions, and the portal's
+  router runs with `fallback="none"`, so they never apply.
+- Quiet carries the same default in `src/themes/quiet/portal.css`, which only
+  the `/t/quiet/` route imports, so the root pages never load it. Quiet's
+  group keeps the browser's default morph (250 ms, `ease`).
+- `motion.mjs --crop wordmark` films the wordmark and judges it. An arrival
+  fails if both images are above 10% opacity at once (`wordmarkOverlap`), or
+  if the header shows neither above 10% for more than 80 ms
+  (`wordmarkBlank`, the founder's limit on the empty header; tune your fade
+  offsets to it). An in-school swap fails if the wordmark's coverage drops
+  below 90% (`wordmarkBlink`): the two images add up under `plus-lighter`
+  (Astro's crossfade carries it) and composite under `normal` (your own
+  keyframes drop it). Visibility `hidden` counts as 0, and an image counted
+  visible while a clip-path or transform hides it is a problem
+  (`wordmarkDrawn`). The judge still cannot see filters other than
+  `opacity()`, masks, clips above the group, 3D back faces, or what the
+  snapshot's pixels hold, so read the strip too.
+  `rejudge-wordmark.mjs --label <folder>` re-judges filmed strips without
+  filming.
 
 ## Dark and light
 

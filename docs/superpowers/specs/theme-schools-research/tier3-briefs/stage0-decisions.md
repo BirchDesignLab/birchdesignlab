@@ -203,6 +203,133 @@ counterpart: dandelion seeds (pappus floaters) drifting across the page, in
 the same spirit (independent clocks, never over body text, per D7's
 placement rule). Design and bring it to the founder at the pair stage.
 
+## Stage 2 start (09-23-26)
+
+**The founder's mobile test of #88** (iPhone 17 Pro Max, Safari, private
+mode): the switcher and prompt are good, entering and leaving the Portal
+works, nothing individually looked broken. "Everything looked pretty good on
+the phone. I am still impressed." Some transitions are "a little stuttery or
+buggy, but i know that is coming down the road": transitions phase, not Stage
+2. The plan is `tier3-stage2/stage2-plan.md`.
+
+**Stage 2 decisions (09-23-26).** Founder: "do you trust your judgement on all
+that stuff? if so let's go with exactly what you think we should do." All
+nine recommendations in `stage2-plan.md` ("Decisions for the founder before
+launch") are taken as written:
+1. The P5 proof is filmed on cottagecore.
+2. Stop after the proof, before the sweep adopts the recipe.
+3. Quiet as a destination is fixed in Stage 2, by a stylesheet imported only
+   by the `/t/quiet/` route (the root pages stay untouched).
+4. The font-preload cap rises to four, for faces that paint above the fold;
+   vaporwave adds Exo 2 and VT323. The first-load cost is shown at the stop.
+5. The sweep runs in two waves of three (A: vaporwave, glassmorphism, swiss;
+   B: cottagecore, grandmillennial, bauhaus).
+6. Safari/WebKit filming is parked for the transitions phase (backlog).
+7. Swiss's wordmark swaps in one step (the brief's station clock), never a
+   crossfade.
+8. Grandmillennial's awning is named `grandmillennial-header` if it blinks
+   mid-swap.
+9. Bauhaus's 12ch process heading is not widened (it tunes to today's copy).
+The per-school defaults in `stage2-plan.md` apply as listed.
+
+**At the P5 checkpoint (09-23-26).** The proof passed
+(`tier3-stage2/p5-proof.md`). Asked about the empty header between the old
+wordmark leaving and the new one arriving, the founder chose (b): each school
+tunes its wordmark fade offsets in the sweep so the blank (both images under
+10% opacity) stays at or under 80 ms, while the overlap judge still passes.
+The judge gains a blank measurement first. Then: "let's kick off wave a".
+
+**At the wave A stop (09-23-26).** To `tier3-stage2/wave-a.md`, "Open for the
+founder": "your recommendation for all 3 calls sounds good. your two small
+fixes sound fine in theory."
+1. Swiss and glassmorphism name their headers `swiss-header` and
+   `glassmorphism-header`, in-school only (the S2 recipe), so the nav holds
+   still on in-school swaps.
+2. Vaporwave's light scheme gets a gentler `vw-crt-on` (lower brightness
+   through the opening, same beam line and timing); dark is untouched.
+3. Swiss's six-panel desktop sheets keep four uneven beats (1, 2, 1, 2)
+   under the ~700 ms cap; phones stay one panel per beat.
+Also approved: vaporwave's view-transition background follows the scheme
+(no dark band in light), and `preserveDrawingBuffer` goes if the strips hold
+without it. Then a wave A follow-up, and a stop to assess before wave B.
+
+**At the assessment before wave B (09-23-26).** Swiss's header band on a
+scrolled in-school swap carries the bare field, so the column guides vanish
+from it for the swap: accepted ("your small call on swiss is fine"). The
+guides go at pair stage 4. Wave B runs as planned once the transitions-phase
+list is settled (`tier3-stage2/assessment-before-wave-b.md`).
+
+**What "the transitions phase" means (founder, 09-23-26).** "we'll
+realistically never eliminate the stalling transitions. the 'post A+
+transition phase' i meant was making the transitions into transformations
+essentially. we have some nice, simple low motion ones now. i want to crank
+that up a notch." The post-A+ push is about richer motion, transitions
+becoming transformations, not about removing every stall. Stalls get reduced
+where it is possible, never promised away.
+
+**The four held items (founder, 09-23-26).** From the assessment's list, all
+four are held until after wave B, then reviewed together: "we may see a
+pattern emerge from these issues that may become more evident later."
+1. Safari: cannot be tested with the founder's current equipment.
+2. The dark-desktop first-draw freeze: "if that is possible we should
+   consider it."
+3. The wordmark dropping in from above on a swap clicked low on a page:
+   still a concern.
+4. Glassmorphism's plain-fade page change: still a concern.
+Wave B builders record what they see of items 2 and 3 in their schools, as
+evidence for that review. They fix none of the four.
+
+**At the wave B stop (09-23-26).** To `tier3-stage2/wave-b.md`: "ok lets do
+the small followup. the four held items. then the stage 2 wrap up."
+- The small follow-up: the portal-level wordmark fix (held item 3, all
+  seven schools), bauhaus's old wordmark fading without the arrival delay
+  (small call 1), grandmillennial's shared header token (small call 3).
+  Cottagecore's beat of bare table is accepted (small call 2).
+- The held items, asked and answered: a freeze investigation (held item 2).
+  Measure the first-draw freeze and try both reductions (drawing the next
+  page ahead of time; making heavy schools cheaper to draw first), and
+  report what each saves with numbers and strips. A change ships only if it
+  is clean and invisible. Glassmorphism's plain fade waits for the
+  transitions phase, where every school gets its own gesture. Safari stays
+  parked.
+- Then the Stage 2 wrap-up.
+
+**At the freeze stop (09-24-26).** To `tier3-stage2/freeze-investigation.md`,
+the fixer's four questions:
+1. Drawing ahead waits for a press: "let's not do this until someone
+   actually clicks on the school in the switcher." No drawing on a resting
+   mouse or a lingering focus. A press (pointer down on a row or Shuffle, or
+   Enter or Space on one) starts the copy, which gives only about 80 to
+   100 ms of lead. Expected: cottagecore and vaporwave keep most of their
+   gain (tap numbers: 338 to 102, 235 to 80); grandmillennial and
+   glassmorphism fall back near today's freeze. The dialog no longer hitches
+   while a visitor browses the rows.
+2. Drawing ahead on a school's own links stays out; it belongs to the
+   transitions phase.
+3. Cottagecore's fireflies are protected: the deferred-fireflies change stays
+   out.
+4. Vaporwave's sky-first frame on a slow GPU: kept as is.
+The founder then asked what the Stage 2 wrap-up consists of, with the session's
+context nearly full; it continues in a new session from
+`HANDOFF-09-24-26-stage2-wrapup.md`.
+
+**Call 1 revised (09-24-26).** Told that a press alone gives about 0.1 s of
+lead: "good call, drawing ahead with the rest possibly a longer one should be
+fine." Drawing ahead stays on a resting mouse, with a longer rest, so a
+visitor browsing the rows at a reading pace (about 250 ms a row) draws
+nothing; a press still starts it too. The wrap-up tunes and measures the
+rest. The founder chose to run the wrap-up in this session; Stage 3 moves to
+another session.
+- Done (`cfe6df8`): a 400 ms rest. It draws nothing while browsing at up to
+  350 ms a row, and a rest of about 0.9 s before a click saves nearly the
+  whole freeze.
+- Open, first thing next session: whether a press still starts a copy. A
+  real press comes about 0.1 s before the click, and at that lead drawing
+  ahead measured worse for glass (349 against 184) and bauhaus. The
+  recommendation is to drop the press trigger. The founder asked to push the
+  branch and settle this at the start of the next session
+  (`HANDOFF-09-24-26-stage2-wrapup.md`, step 1).
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
