@@ -30,7 +30,10 @@
  *   node scripts/themes/snap.mjs --name wrapup-main          # build and freeze
  *   BDL_GPU=1 node scripts/themes/harness/draw-ahead-press.mjs [--snap wrapup-main] [--port 4650] \
  *     [--phases run,table] [--press-leads 60,100,140] [--rest 350] \
- *     [--viewports desktop,mobile] [--schemes dark,light] [--runs 5] [--label press-wrapup]
+ *     [--viewports desktop,mobile] [--schemes dark,light] [--runs 5] [--label press-wrapup] [--press-draws no]
+ * --press-draws no (added the same day, once the founder dropped the press
+ * trigger): the build's press should draw nothing, so a press that draws a
+ * copy is the problem, not one that does not (the re-check on snap-press-drop).
  * Output: scripts/themes/.out/<label>/press-<variant>-<viewport>-<scheme>.runs.json
  * (and .summary.*), tables.md.
  */
@@ -60,6 +63,7 @@ const label = arg('label', 'press-wrapup');
 const OUT = join(OUT_ROOT, label);
 const SCHOOLS = 'grandmillennial,glassmorphism,cottagecore,vaporwave,bauhaus';
 const variants = ['nopress', ...leads.map((l) => `press-${l}`)];
+const pressDraws = arg('press-draws', 'yes') !== 'no';
 
 if (phases.includes('run')) {
   for (const viewport of viewports) for (const scheme of schemes) for (const v of variants) {
@@ -108,7 +112,8 @@ for (const viewport of viewports) for (const scheme of schemes) {
       const withCopy = rs.filter((r) => (r.restInfo?.copies ?? []).some((c) => c.up < 0)).length;
       if (after) problems.push(`${viewport} ${scheme} ${v} ${school}: a copy went up after the click in ${after} of ${rs.length} runs`);
       if (v === 'nopress' && withCopy) problems.push(`${viewport} ${scheme} ${v} ${school}: a copy was drawn before the click in ${withCopy} runs`);
-      if (v !== 'nopress' && withCopy !== rs.length) problems.push(`${viewport} ${scheme} ${v} ${school}: the press drew a copy in only ${withCopy} of ${rs.length} runs`);
+      if (v !== 'nopress' && pressDraws && withCopy !== rs.length) problems.push(`${viewport} ${scheme} ${v} ${school}: the press drew a copy in only ${withCopy} of ${rs.length} runs`);
+      if (v !== 'nopress' && !pressDraws && withCopy) problems.push(`${viewport} ${scheme} ${v} ${school}: the press drew a copy in ${withCopy} of ${rs.length} runs, and it should draw none`);
       cols.wait.push(cell(rs.map((r) => still(r) + (r.restInfo?.late ?? 0))));
       cols.still.push(`${cell(rs.map(still))} / ${cell(rs.map((r) => r.restInfo?.late))}`);
       // pressAt is from the click as it really ran; the release was due `late` earlier.

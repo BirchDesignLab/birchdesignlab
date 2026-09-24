@@ -87,6 +87,9 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 ## The wrap-up, in order
 
 1. **First, ask the founder the one open question: the press trigger.**
+   *Done 09-24-26: measured with a real press, then dropped on the
+   founder's word and re-checked (`freeze-investigation.md`, "Wrap-up: the
+   press trigger").*
    Call 1, as revised ("Call 1 revised" in stage0-decisions), is done in
    `cfe6df8`: drawing ahead waits for a 400 ms mouse rest on a switcher
    row or Shuffle.
