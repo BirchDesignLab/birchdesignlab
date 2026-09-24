@@ -294,6 +294,25 @@ the small followup. the four held items. then the stage 2 wrap up."
   parked.
 - Then the Stage 2 wrap-up.
 
+**At the freeze stop (09-24-26).** To `tier3-stage2/freeze-investigation.md`,
+the fixer's four questions:
+1. Drawing ahead waits for a press: "let's not do this until someone
+   actually clicks on the school in the switcher." No drawing on a resting
+   mouse or a lingering focus. A press (pointer down on a row or Shuffle, or
+   Enter or Space on one) starts the copy, which gives only about 80 to
+   100 ms of lead. Expected: cottagecore and vaporwave keep most of their
+   gain (tap numbers: 338 to 102, 235 to 80); grandmillennial and
+   glassmorphism fall back near today's freeze. The dialog no longer hitches
+   while a visitor browses the rows.
+2. Drawing ahead on a school's own links stays out; it belongs to the
+   transitions phase.
+3. Cottagecore's fireflies are protected: the deferred-fireflies change stays
+   out.
+4. Vaporwave's sky-first frame on a slow GPU: kept as is.
+The founder then asked what the Stage 2 wrap-up consists of, with the session's
+context nearly full; it continues in a new session from
+`HANDOFF-09-24-26-stage2-wrapup.md`.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

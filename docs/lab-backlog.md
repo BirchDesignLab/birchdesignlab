@@ -58,8 +58,8 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Branch `feat/theme-schools-tier3-stage2`. Current handoff:
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-23-26-stage2.md`,
+Branch `feat/theme-schools-tier3-stage2`. Current handoff (wrap-up):
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-24-26-stage2-wrapup.md`,
 plan `tier3-stage2/stage2-plan.md` (Tier 1 and 2 done; the founder's
 decisions are in `tier3-briefs/stage0-decisions.md`). Six
 tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
