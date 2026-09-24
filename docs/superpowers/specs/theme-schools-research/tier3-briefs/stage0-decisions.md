@@ -279,6 +279,21 @@ pattern emerge from these issues that may become more evident later."
 Wave B builders record what they see of items 2 and 3 in their schools, as
 evidence for that review. They fix none of the four.
 
+**At the wave B stop (09-23-26).** To `tier3-stage2/wave-b.md`: "ok lets do
+the small followup. the four held items. then the stage 2 wrap up."
+- The small follow-up: the portal-level wordmark fix (held item 3, all
+  seven schools), bauhaus's old wordmark fading without the arrival delay
+  (small call 1), grandmillennial's shared header token (small call 3).
+  Cottagecore's beat of bare table is accepted (small call 2).
+- The held items, asked and answered: a freeze investigation (held item 2).
+  Measure the first-draw freeze and try both reductions (drawing the next
+  page ahead of time; making heavy schools cheaper to draw first), and
+  report what each saves with numbers and strips. A change ships only if it
+  is clean and invisible. Glassmorphism's plain fade waits for the
+  transitions phase, where every school gets its own gesture. Safari stays
+  parked.
+- Then the Stage 2 wrap-up.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
