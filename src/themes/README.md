@@ -385,15 +385,21 @@ html[data-theme='x']:not([data-from-theme='x'])::view-transition-new(wordmark) {
   new one down from off screen after the header had sat empty. So when less
   than half of the old wordmark is on screen just before the capture,
   `src/themes/portal/runtime.ts` sets its `view-transition-name` to `none`
-  inline. It rides the old page's root snapshot, and the new wordmark, with
-  no partner, enters where it sits on your `::view-transition-new(wordmark)`
-  animation alone: your `-in` keyframes from another school, Astro's fade
-  on your group's clock between your own pages. Nothing moves the group,
-  and your wordmark shows only as your keyframes allow, so a fade that
-  starts late leaves the slot empty for that long. A wordmark in view keeps
-  its name, so swaps from the top of a page are unchanged.
-  `scripts/themes/probe-scrolled-swap.mjs` films the case (`--to-school` for
-  a school change).
+  inline. The old wordmark is then drawn as part of whatever holds it in the
+  old capture: the old page's root snapshot, or your named chrome's old
+  image when an in-school swap names chrome around the wordmark (every
+  school's header or taskbar today, bauhaus and quiet aside). On that same
+  swap the portal takes the arriving page's wordmark out too, from the swap
+  until the transition finishes, so it rides your new root or your named
+  chrome's new image and appears exactly when they do: never ahead of its
+  page, never in an empty slot. No `wordmark` pseudo-element exists on such
+  a swap, so your wordmark rules sit idle and your root and chrome
+  choreography carry it. The name comes back when the transition finishes
+  or the next navigation starts. A wordmark at least half on screen keeps
+  its name, and so does the arriving one, so swaps from the top of a page
+  are unchanged. `scripts/themes/probe-scrolled-swap.mjs` films the case
+  (`--to-school` for a school change, `--seen` for a wordmark part on
+  screen).
 - Astro also writes `[data-astro-transition-fallback]` rules. They animate
   the element itself in a browser without view transitions, and the portal's
   router runs with `fallback="none"`, so they never apply.

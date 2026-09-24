@@ -569,7 +569,9 @@
    down a page it would otherwise sit at the top of the viewport over the
    old page's scrolled content. The chrome runs the full width from the top
    of the page, so the table's lamp and texture line up with the page's. The
-   wordmark keeps its own group above the chrome's. */
+   wordmark keeps its own group above the chrome's, except on a swap from a
+   scrolled page, where the portal unnames it and it rides the chrome's
+   picture (README, "The wordmark"). */
 html[data-theme='cottagecore']:is([data-to-theme='cottagecore'], [data-from-theme='cottagecore']:not([data-to-theme])) .cc-chrome {
   view-transition-name: cottagecore-header;
 }

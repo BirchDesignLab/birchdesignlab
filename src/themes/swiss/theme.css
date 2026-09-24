@@ -402,7 +402,9 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
    cleared. The field runs out to both sides of the viewport (a spread
    shadow, clipped to the bar's height), so a bleed block's fill cannot show
    in the margins either. The cost is the column guides in the header band,
-   gone for the swap. The wordmark keeps its own group above the bar's. */
+   gone for the swap. The wordmark keeps its own group above the bar's,
+   except on a swap from a scrolled page, where the portal unnames it and
+   it rides the bar's picture (README, "The wordmark"). */
 html[data-theme='swiss']:is([data-to-theme='swiss'], [data-from-theme='swiss']:not([data-to-theme])) .site-header > .bar {
   view-transition-name: swiss-header;
 }

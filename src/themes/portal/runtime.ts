@@ -19,11 +19,10 @@
  *   less than half of it is on screen (the header scrolls away with the
  *   page, so on a swap clicked from low down a page its box is above the
  *   viewport and the new wordmark would morph down from off screen): its
- *   name is set to none inline, so it rides the old page's root snapshot and
- *   the new wordmark, with no partner, enters where it sits on its school's
- *   ::view-transition-new(wordmark) animation. Every navigation gives the
- *   name back first and decides again, so an aborted one never carries it
- *   into the next swap.
+ *   name is set to none inline, so it is drawn as part of whatever holds it
+ *   in the old capture (the root, or the school's named header on an
+ *   in-school swap). Every navigation gives the name back first and decides
+ *   again, so an aborted one never carries it into the next swap.
  * - before-swap: carry the scheme, the .js marker and .reveal-on onto the
  *   incoming document. The router replaces every <html> attribute with the
  *   new document's, and the inline bootstrap never runs again (F001). Mark
@@ -31,6 +30,12 @@
  *   clear that once the transition has finished, so a page at rest names no
  *   chrome whichever way the visitor arrived (a view-transition-name makes
  *   an element a stacking context and a backdrop root even at rest).
+ *   When the departing wordmark was taken out of the morph, take the
+ *   incoming one out too, so it has no pseudo-element of its own to wait
+ *   on and appears exactly when its page (or held header) does. Its name
+ *   comes back when that transition finishes, is skipped or fails, or when
+ *   the next navigation starts, whichever is first, so no page keeps an
+ *   unnamed wordmark into its own next swap.
  * - page-load: restore the proportional scroll position (school switches),
  *   move focus into the page (link navigations), and count a pageview for
  *   Zaraz on client-side navigations only (the edge already counted the
@@ -300,10 +305,36 @@ async function loadWarmed(
  * the top keep their morph and crossfade exactly.
  */
 let unnamedMark: HTMLElement | null = null;
+/** The arriving wordmark, unnamed for its swap when the departing one was
+    (header comment, before-swap). Kept apart from unnamedMark so the end of
+    one transition never renames a mark the next navigation has unnamed. */
+let unnamedArrival: HTMLElement | null = null;
 
 function renameWordmark(): void {
   unnamedMark?.style.removeProperty('view-transition-name');
   unnamedMark = null;
+  renameArrival();
+}
+
+function renameArrival(): void {
+  unnamedArrival?.style.removeProperty('view-transition-name');
+  unnamedArrival = null;
+}
+
+/**
+ * The incoming page's wordmark, read from the scope Astro's inline style
+ * names `wordmark` (the new document has no computed style yet). Every
+ * portal page has exactly one transition:name element, but the style is
+ * what makes it the wordmark.
+ */
+function arrivingWordmark(doc: Document): HTMLElement | null {
+  for (const style of doc.querySelectorAll('style')) {
+    const scope = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/.exec(
+      style.textContent ?? '',
+    )?.[1];
+    if (scope) return doc.querySelector<HTMLElement>(`[data-astro-transition-scope="${CSS.escape(scope)}"]`);
+  }
+  return null;
 }
 
 function unnameWordmarkOffScreen(): void {
@@ -368,7 +399,18 @@ export function initPortal(): void {
 
   document.addEventListener('astro:before-swap', (event) => {
     const e = event as TransitionBeforeSwapEvent;
-    unnamedMark = null; // it leaves with the old page
+    // The old wordmark leaves with the old page. When it was taken out of
+    // the morph, take the new one out too, before the router swaps it in
+    // and the new state is captured (swap-functions.js keeps its inline
+    // style), so it is drawn with its own page or held header.
+    const leftMorph = unnamedMark !== null;
+    unnamedMark = null;
+    renameArrival();
+    const mark = leftMorph ? arrivingWordmark(e.newDocument) : null;
+    if (mark) {
+      mark.style.setProperty('view-transition-name', 'none');
+      unnamedArrival = mark;
+    }
     const next = e.newDocument.documentElement;
     next.setAttribute(SCHEME_ATTR, currentScheme());
     next.classList.add('js');
@@ -382,6 +424,9 @@ export function initPortal(): void {
     arrival = vt;
     const settle = () => {
       if (arrival === vt) delete html.dataset.fromTheme;
+      // Unless a later navigation has given it back already (and perhaps
+      // unnamed the page after this one).
+      if (mark && unnamedArrival === mark) renameArrival();
     };
     vt?.finished.then(settle, settle);
   });

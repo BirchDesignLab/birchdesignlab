@@ -400,7 +400,9 @@
    so its light falls 1800px, of which the picture shows the canopy's top
    band): the header is not sticky, so on a swap clicked from low down a page
    it sits at the top of the viewport over the old room's scrolled content
-   until that clears. The wordmark keeps its own group above. */
+   until that clears. The wordmark keeps its own group above, except on a
+   swap from a scrolled page, where the portal unnames it and it rides the
+   canopy's picture (README, "The wordmark"). */
 html[data-theme='grandmillennial']:is([data-to-theme='grandmillennial'], [data-from-theme='grandmillennial']:not([data-to-theme])) .site-header > .canopy {
   view-transition-name: grandmillennial-header;
 }
