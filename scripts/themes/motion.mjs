@@ -107,6 +107,23 @@
  * blocked analytics) is a problem too, so a missing font or model shows up
  * beside the strip it spoiled instead of as a silent 404.
  *
+ * --draw-ahead (added 09-23-26, the freeze investigation's agent D): before
+ * an arrive or page trigger, let the portal draw the destination ahead of
+ * time (runtime.ts) the way a visitor makes it: for arrive, open the
+ * switcher's dialog and rest the pointer on the destination's row until its
+ * copy has been drawn and taken down, then close the dialog; for page, rest
+ * the pointer on the header's link to About the same way. Then film as
+ * usual. The judges then see a swap to a page drawn ahead of time.
+ * Changed 09-24-26 (the investigation's fixer): a link in the page is no
+ * longer drawn ahead, so for page the pointer rests on About for 800 ms and
+ * a copy going up there is reported as a problem.
+ *
+ * --stub <names> (added 09-24-26, the same fixer): film with the named
+ * script stubs from harness/freeze-stubs.mjs run before the page's own
+ * scripts (trace-arrival.mjs --stub's, script ones only), e.g. slowlink600
+ * to see what a visitor on a GPU that links vaporwave's sunset slowly sees.
+ * A diagnostic: a stubbed film is not what this machine shows.
+ *
  * --base defaults to $SNAP_BASE when set (snap.mjs sets it), else :8787.
  */
 import { chromium } from 'playwright';
@@ -164,6 +181,25 @@ if (from && schools.includes(from) && scenarios.includes('arrive')) {
   process.exit(1);
 }
 const dense = crop === 'wordmark' || process.argv.includes('--dense');
+/* --draw-ahead (header comment). */
+const drawAhead = process.argv.includes('--draw-ahead');
+/* --stub <names> (header comment): script stubs only. */
+const stubNames = list('stub', '');
+const stubs = stubNames.length ? (await import('./harness/freeze-stubs.mjs')).pick(stubNames) : [];
+if (stubs.some((s) => s.css)) {
+  console.error('--stub: motion.mjs takes script stubs only (trace-arrival.mjs takes the CSS ones)');
+  process.exit(1);
+}
+
+/** Rest the pointer on `box` until the portal's copy drawn ahead has gone up
+    and come down again; false if none went up. */
+async function restForCopy(page, box, wait = 8000) {
+  await page.mouse.move(box.x, box.y);
+  const sel = 'iframe[aria-hidden="true"][sandbox]';
+  const up = await page.waitForSelector(sel, { state: 'attached', timeout: wait }).then(() => true, () => false);
+  if (up) await page.waitForSelector(sel, { state: 'detached', timeout: 8000 }).catch(() => {});
+  return up;
+}
 /** The arrive file-name tag: only when --from was given, so every name
     filmed before it existed stays the same. */
 const fromTag = (scenario) => (from && scenario === 'arrive' ? `__from-${from}` : '');
@@ -465,6 +501,7 @@ for (const scheme of schemes) {
       });
     }
     if (dense) await context.addInitScript(samplerInit, PSEUDOS);
+    for (const s of stubs) await context.addInitScript(s.js);
     await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
     const page = await context.newPage();
     page.on('pageerror', (e) => problem(`${page.url()} pageerror: ${e.message}`));
@@ -484,6 +521,31 @@ for (const scheme of schemes) {
         await page.goto(base + start, { waitUntil: 'networkidle' });
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(600);
+        if (drawAhead && scenario !== 'fx') {
+          let drawn = false;
+          if (scenario === 'arrive') {
+            await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('.open').click());
+            await page.waitForTimeout(500);
+            const box = await page.evaluate((id) => {
+              const a = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
+              a?.scrollIntoView({ block: 'nearest' }); // the list scrolls on a phone
+              const r = a?.getBoundingClientRect();
+              return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
+            }, id);
+            if (box) drawn = await restForCopy(page, box);
+            await page.evaluate(() => document.querySelector('bdl-switcher').shadowRoot.querySelector('dialog').close());
+            if (!drawn) problem(`${id} ${scenario} ${vpName}: --draw-ahead saw no copy drawn ahead`);
+          } else {
+            // A link in the page is not drawn ahead (withdrawn by the fixer,
+            // 09-24-26): rest on About as a visitor would, and a copy going
+            // up is the problem.
+            const box = await page.locator(`header a[href="/t/${id}/about/"]`).first().boundingBox().catch(() => null);
+            if (box) drawn = await restForCopy(page, { x: box.x + box.width / 2, y: box.y + box.height / 2 }, 800);
+            if (drawn) problem(`${id} ${scenario} ${vpName}: resting on a page link drew a copy`);
+          }
+          await page.mouse.move(vp.width - 2, Math.round(vp.height * 0.6));
+          await page.waitForTimeout(600);
+        }
         // The crop box is measured on the page before the trigger, padded,
         // and clamped to the viewport. The wordmark's is widened to take in
         // the arriving page's wordmark once the film has settled.
