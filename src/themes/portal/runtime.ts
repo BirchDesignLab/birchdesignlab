@@ -49,6 +49,21 @@
  * switch pays no round trip. A plain
  * prefetch cannot do this: the site's HTML is max-age=0, must-revalidate, so
  * the router's own fetch would still go to the network.
+ *
+ * Drawing ahead (tier3-stage2/freeze-investigation.md): on a first arrival
+ * the swap holds still while the GPU compiles a program for every new kind
+ * of paint the page draws, up to about 450 ms. So when the visitor reaches
+ * for a page (a pointer or a keyboard focus resting on its row in the
+ * switcher's dialog or on Shuffle, or a press on either), a script-less copy
+ * of it is drawn over the current page at opacity 0.001 (a quarter of an
+ * 8-bit level: no pixel moves) until its first frame is on screen, then
+ * removed. The programs stay compiled for the browser session, and the real
+ * page's first draw reuses them. One copy at a time, only the page reached
+ * for, never during an arrival, and taken down the moment a navigation
+ * begins. Drawing a copy holds the page underneath for up to about 250 ms
+ * (the freeze, moved earlier), so it is only done on the switcher's own
+ * controls, where the visitor is already changing school; a link in the
+ * page is not drawn ahead.
  */
 import { onMount } from '../../lib/lifecycle';
 import { mountReveals } from '../../lib/reveal';
@@ -108,6 +123,9 @@ interface Warmed {
   /** Set once the HTML has arrived. From then on the entry is never dropped
       by a navigation: its bytes are paid for, and its files finish loading. */
   htmlIn: boolean;
+  /** The HTML, once its files are in the HTTP cache too, so a copy drawn
+      ahead loads nothing from the network. */
+  ready: string | null;
   abort: AbortController;
 }
 
@@ -180,7 +198,13 @@ async function warmFiles(html: string, signal: AbortSignal): Promise<void> {
 }
 
 function warmOne(key: string): Promise<void> {
-  const entry: Warmed = { html: Promise.resolve(null), at: performance.now(), htmlIn: false, abort: new AbortController() };
+  const entry: Warmed = {
+    html: Promise.resolve(null),
+    at: performance.now(),
+    htmlIn: false,
+    ready: null,
+    abort: new AbortController(),
+  };
   entry.html = fetchPage(key, entry.abort.signal);
   warmed.set(key, entry);
   return entry.html.then(async (html) => {
@@ -191,6 +215,8 @@ function warmOne(key: string): Promise<void> {
     entry.at = performance.now();
     entry.htmlIn = true;
     await warmFiles(html, entry.abort.signal);
+    entry.ready = html;
+    if (drawWanted?.key === key) void drawWanted.go(html);
   });
 }
 
@@ -219,6 +245,181 @@ export function warmPages(paths: string[]): void {
   const fresh = paths.map(keyOf).filter((key) => !warmed.has(key));
   warmQueue = [...fresh, ...warmQueue.filter((key) => !fresh.includes(key))];
   void drainWarmQueue();
+}
+
+/**
+ * Drawing ahead (header comment), on intent only. A copy of the page the
+ * visitor then opens is the swap's own work done earlier; a copy of any
+ * other page is work in the way of the swap (measured: a pick made while
+ * another school's copy is drawn answers up to about 250 ms later). So only
+ * the one page the visitor is reaching for is drawn, never a list. A page is
+ * drawn at most once per hard load: the GPU keeps what it compiled.
+ */
+const drawnAhead = new Set<string>();
+/** The page reached for last, drawn once its HTML is in hand. */
+let drawWanted: { key: string; html: string | null; go: (html: string) => Promise<void> } | null = null;
+/** The copy on screen, removed the moment a navigation begins. */
+let copy: HTMLIFrameElement | null = null;
+/** How long a mouse pointer rests on a link before its page is drawn, so a
+    sweep across a list draws nothing. */
+const DRAW_DWELL_MS = 100;
+/** The same for keyboard focus, longer: tabbing down the list at a reading
+    pace stops on every row, and each copy drawn holds the dialog for up to
+    about 250 ms, so only a focus the visitor stays on draws. */
+const FOCUS_DWELL_MS = 500;
+/** How long a copy stays up once its first frame is on screen, so tiles just
+    past the viewport are drawn too. */
+const COPY_HOLD_MS = 100;
+/** Never wait on a copy longer than this (a frame that never comes: a hidden
+    tab, a stalled GPU). */
+const COPY_MAX_MS = 3000;
+/** What the copy must not do: a backdrop filter drawn over the page makes
+    Chrome draw the page's own text without subpixel antialiasing while it is
+    up (glassmorphism's panels, measured). The blur is cheap to compile at the
+    swap; the rest of the page is not. */
+const COPY_STYLE = '*,::before,::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}';
+
+const nextFrames = (n: number): Promise<void> =>
+  new Promise((resolve) => {
+    const step = () => (--n > 0 ? requestAnimationFrame(step) : resolve());
+    requestAnimationFrame(step);
+  });
+
+/** The page as it will arrive, with nothing that runs or loads on its own:
+    no scripts, no preloads, the scheme and the .js marker the swap carries
+    over (not .reveal-on, which would hide every block a script reveals). */
+function copyOf(key: string, html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, noscript, link:not([rel~="stylesheet"])').forEach((el) => el.remove());
+  const base = doc.createElement('base');
+  base.href = key;
+  doc.head.insertBefore(base, doc.head.firstChild); // not prepend(): the Workers types shadow it
+  const style = doc.createElement('style');
+  style.textContent = COPY_STYLE;
+  doc.head.appendChild(style);
+  doc.documentElement.setAttribute(SCHEME_ATTR, currentScheme());
+  doc.documentElement.classList.add('js');
+  return `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
+}
+
+function removeCopy(): void {
+  copy?.remove();
+  copy = null;
+}
+
+/** Draw one copy until its first frame is on screen; false if it was
+    stopped (a navigation began, the tab was hidden). */
+async function drawCopy(key: string, html: string): Promise<boolean> {
+  const f = document.createElement('iframe');
+  // Same origin, so its stylesheets and fonts come from the HTTP cache; no
+  // allow-scripts, so nothing in it runs.
+  f.setAttribute('sandbox', 'allow-same-origin');
+  f.setAttribute('aria-hidden', 'true');
+  f.setAttribute('tabindex', '-1');
+  f.inert = true;
+  f.style.cssText =
+    'position:fixed;left:0;top:0;width:100%;height:100%;border:0;margin:0;padding:0;' +
+    'opacity:0.001;pointer-events:none;z-index:2147483647';
+  const loaded = new Promise<void>((resolve) => f.addEventListener('load', () => resolve(), { once: true }));
+  f.srcdoc = copyOf(key, html);
+  copy = f;
+  document.body.appendChild(f);
+  const up = () => copy === f && document.visibilityState === 'visible';
+  const done = (async () => {
+    await loaded;
+    const win = f.contentWindow;
+    const root = f.contentDocument?.documentElement;
+    if (!up() || !win || !root) return;
+    // Where the swap will put the visitor (a school change keeps the same
+    // spot on the page, any other link opens at the top), so the copy draws
+    // the same part of it.
+    const same = pageFromPath(location.pathname)?.page === pageFromPath(new URL(key).pathname)?.page;
+    const room = document.documentElement.scrollHeight - innerHeight;
+    const ratio = same && room > 0 ? scrollY / room : 0;
+    win.scrollTo(0, Math.round(ratio * Math.max(root.scrollHeight - win.innerHeight, 0)));
+    await f.contentDocument?.fonts.ready;
+    // A frame is presented only once the copy's tiles are drawn, which is
+    // when the GPU has compiled what they need.
+    if (up()) await nextFrames(3);
+    if (up()) await new Promise((resolve) => setTimeout(resolve, COPY_HOLD_MS));
+  })();
+  await Promise.race([done, new Promise((resolve) => setTimeout(resolve, COPY_MAX_MS))]);
+  const whole = up();
+  if (copy === f) removeCopy();
+  else f.remove();
+  return whole;
+}
+
+/**
+ * Draw `path` ahead of time: the visitor is reaching for it. Warms it first
+ * when it is not warm (warmPages()'s rules: never in dev, never for
+ * Save-Data or 2G). Replaces an earlier wish that has not started drawing;
+ * never draws the page the visitor is on, over another copy, during an
+ * arrival or in a hidden tab.
+ */
+export function drawAheadOf(path: string): void {
+  if (import.meta.env.DEV || frugal()) return;
+  const key = keyOf(path);
+  if (key === keyOf(location.href) || drawnAhead.has(key) || drawWanted?.key === key) return;
+  const wish: NonNullable<typeof drawWanted> = {
+    key,
+    html: null,
+    go: async (html: string) => {
+      wish.html = html;
+      // One copy at a time: the one up now hands over when it is done.
+      if (drawWanted !== wish || copy) return;
+      // An arrival holds data-from-theme until its transition has finished.
+      while (document.documentElement.dataset.fromTheme && drawWanted === wish) await nextFrames(6);
+      if (drawWanted !== wish || copy || document.visibilityState !== 'visible') return;
+      if (await drawCopy(key, html)) drawnAhead.add(key);
+      if (drawWanted === wish) drawWanted = null;
+      const next = drawWanted && (drawWanted.html ?? warmed.get(drawWanted.key)?.ready);
+      if (drawWanted && next) void drawWanted.go(next);
+    },
+  };
+  drawWanted = wish;
+  const ready = warmed.get(key)?.ready;
+  if (ready) void wish.go(ready);
+  else warmPages([path]);
+}
+
+/**
+ * Draw ahead the page a link opens when the visitor reaches for it: a press
+ * at once, a mouse pointer once it has rested on the link DRAW_DWELL_MS (so
+ * sweeping across a list draws nothing), keyboard focus once it has stayed
+ * FOCUS_DWELL_MS (so tabbing through one draws nothing).
+ * `pathOf` names the page the event's link opens, or null for one that is
+ * not drawn ahead.
+ */
+export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string | null): void {
+  let rest: ReturnType<typeof setTimeout> | undefined;
+  let at: string | null = null;
+  const settle = (path: string | null, dwell = DRAW_DWELL_MS) => {
+    if (path === at) return;
+    clearTimeout(rest);
+    at = path;
+    if (path) rest = setTimeout(() => drawAheadOf(path), dwell);
+  };
+  const leave = (e: Event) => {
+    if (pathOf(e) === at) settle(null);
+  };
+  target.addEventListener('pointerover', (e) => {
+    if ((e as PointerEvent).pointerType === 'mouse') settle(pathOf(e));
+  });
+  target.addEventListener('pointerout', leave);
+  target.addEventListener('focusin', (e) => settle(pathOf(e), FOCUS_DWELL_MS));
+  target.addEventListener('focusout', leave);
+  target.addEventListener('pointerdown', (e) => {
+    const path = pathOf(e);
+    if (path) drawAheadOf(path);
+  });
+}
+
+/** A navigation has begun: take the copy down before the old page is
+    captured, and draw nothing more for the page being left. */
+function stopDrawingAhead(): void {
+  drawWanted = null;
+  removeCopy();
 }
 
 /**
@@ -368,6 +569,7 @@ export function initPortal(): void {
     const e = event as TransitionBeforePreparationEvent;
     delete html.dataset.toTheme;
     renameWordmark();
+    stopDrawingAhead();
     fromSwitcher = e.info === SWITCHER_INFO;
     const from = pageFromPath(location.pathname);
     const to = pageFromPath(e.to.pathname);
