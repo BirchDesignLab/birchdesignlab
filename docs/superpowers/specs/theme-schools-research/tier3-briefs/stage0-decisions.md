@@ -313,6 +313,14 @@ The founder then asked what the Stage 2 wrap-up consists of, with the session's
 context nearly full; it continues in a new session from
 `HANDOFF-09-24-26-stage2-wrapup.md`.
 
+**Call 1 revised (09-24-26).** Told that a press alone gives about 0.1 s of
+lead: "good call, drawing ahead with the rest possibly a longer one should be
+fine." Drawing ahead stays on a resting mouse, with a longer rest, so a
+visitor browsing the rows at a reading pace (about 250 ms a row) draws
+nothing; a press still starts it too. The wrap-up tunes and measures the
+rest. The founder chose to run the wrap-up in this session; Stage 3 moves to
+another session.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
