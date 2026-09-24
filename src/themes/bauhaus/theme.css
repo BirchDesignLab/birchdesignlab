@@ -333,10 +333,15 @@ html[data-theme='bauhaus'][data-from-theme='bauhaus']::view-transition-group(wor
 /* The wordmark default (src/themes/README.md, "The wordmark"): both images
    back on the group's clock and drawn at their own size, left-anchored like
    the trio and name. Arriving from another school the old mark is gone
-   before the new one shows, so two marks never read at once. The snap curve
-   shapes each fade (it runs per keyframe interval), so the offsets are tuned
-   to keep the empty header at or under 80 ms. Between two Bauhaus pages
-   Astro's matched crossfade stays, so the mark holds still. */
+   before the new one shows, so two marks never read at once. The old mark
+   skips the group's delay and starts fading at once: waiting with it, it was
+   still faintly there when the circle opened over the new nav row beneath
+   it (a phone arrival, Tier 3 Stage 2). The new mark keeps the delay, so the
+   shape still leads, and comes up over the first 40% of the morph to meet
+   the old one's earlier exit. The snap curve shapes each fade (it runs per
+   keyframe interval), so the offsets are tuned to keep the empty header at
+   or under 80 ms. Between two Bauhaus pages Astro's matched crossfade stays,
+   so the mark holds still. */
 html[data-theme='bauhaus']::view-transition-old(wordmark),
 html[data-theme='bauhaus']::view-transition-new(wordmark) {
   height: 100%;
@@ -349,12 +354,13 @@ html[data-theme='bauhaus']::view-transition-new(wordmark) {
 }
 html[data-theme='bauhaus']:not([data-from-theme='bauhaus'])::view-transition-old(wordmark) {
   animation-name: bauhaus-wordmark-out;
+  animation-delay: 0ms;
 }
 html[data-theme='bauhaus']:not([data-from-theme='bauhaus'])::view-transition-new(wordmark) {
   animation-name: bauhaus-wordmark-in;
 }
-@keyframes bauhaus-wordmark-out { 35%, 100% { opacity: 0; } }
-@keyframes bauhaus-wordmark-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes bauhaus-wordmark-out { 30%, 100% { opacity: 0; } }
+@keyframes bauhaus-wordmark-in { 0% { opacity: 0; } 40%, 100% { opacity: 1; } }
 @keyframes bh-wipe-circle {
   from { clip-path: circle(6% at 88% 10%); }
   to { clip-path: circle(150% at 88% 10%); }

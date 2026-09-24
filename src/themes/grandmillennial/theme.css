@@ -49,6 +49,8 @@
   --ornament-deep: var(--gold-deep);
   --lattice: rgb(31 74 138 / 0.13);
   --band-lattice: rgb(223 231 242 / 0.14);
+  /* The lamp over the field: none by day (the lacquered room's is below). */
+  --lamp: none;
   --piping: var(--hunter);
   --btn-rule: var(--gold-light);
   --porcelain-ground: var(--porcelain-pale);
@@ -118,6 +120,11 @@
   --ornament-deep: #8a6a26;
   --lattice: rgb(220 191 120 / 0.09);
   --band-lattice: rgb(226 198 127 / 0.1);
+  /* The lacquered room: a slow sheen across the green, as if lit from one
+     lamp, falling 60% of the way down the picture it lights. One token for
+     the body and the canopy's swap picture (the foot of this file), so the
+     two never drift apart. */
+  --lamp: radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%);
   --piping: #c9a95c;
   --btn-rule: #8a6a26;
   --porcelain-ground: #2a4a7e;
@@ -153,7 +160,7 @@
 
 [data-theme='grandmillennial'] body {
   margin: 0;
-  background: var(--field);
+  background: var(--lamp), var(--field);
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.25rem;
@@ -163,12 +170,6 @@
   font-variant-ligatures: common-ligatures;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
-}
-/* The lacquered room: a slow sheen across the green, as if lit from one lamp. */
-[data-theme='grandmillennial'][data-scheme='dark'] body {
-  background:
-    radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%),
-    var(--field);
 }
 [data-theme='grandmillennial'] :is(h1, h2, h3, p, ul, ol, figure, blockquote) { margin: 0; }
 [data-theme='grandmillennial'] :is(h1, h2, h3) {
@@ -395,21 +396,19 @@
    outright, because with the group's animation gone both would otherwise
    stay at full strength and add up (plus-lighter) into bolder type. The new
    picture carries what lies behind the canopy on the page (the field, and in
-   the lacquered room its lamp sheen, the body's gradient at the canopy's
-   width): the header is not sticky, so on a swap clicked from low down a
-   page it sits at the top of the viewport over the old room's scrolled
-   content until that clears. The wordmark keeps its own group above. */
+   the lacquered room the body's --lamp, sized as over a page 3000px tall,
+   so its light falls 1800px, of which the picture shows the canopy's top
+   band): the header is not sticky, so on a swap clicked from low down a page
+   it sits at the top of the viewport over the old room's scrolled content
+   until that clears. The wordmark keeps its own group above. */
 html[data-theme='grandmillennial']:is([data-to-theme='grandmillennial'], [data-from-theme='grandmillennial']:not([data-to-theme])) .site-header > .canopy {
   view-transition-name: grandmillennial-header;
 }
 html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header),
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
 html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
-html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { background: var(--field); }
-html[data-theme='grandmillennial'][data-scheme='dark']::view-transition-new(grandmillennial-header) {
-  background:
-    radial-gradient(120% 1800px at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%),
-    var(--field);
+html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
+  background: var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),
