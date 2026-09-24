@@ -205,6 +205,20 @@ const hoverLead = Number(arg('hover-lead', '300'));
    down, relative to the click. */
 const restBeforeClick = arg('rest-before-click', null) == null ? null : Number(arg('rest-before-click'));
 const restNoPress = process.argv.includes('--no-press');
+/* --press-lead <ms> (the wrap-up's press question, 09-24-26): with
+   --rest-before-click, the press goes down this many ms before the click on
+   the page's clock, as a real one does (a mouse button or a finger is down
+   about 0.1 s), instead of at the same instant. A copy the press starts has
+   that much lead, and the click waits while the main thread draws it, as a
+   real release would. On the mobile viewport the press says pointerType
+   touch (runtime.ts draws on a press of either kind; the mouse still moves
+   onto the row first, which only starts a rest the click cuts short). Each
+   run records when the press really went down (restInfo.pressAt, from the
+   click). */
+const pressLead = Number(arg('press-lead', '0'));
+if (pressLead && (restBeforeClick == null || restNoPress || pressLead > restBeforeClick)) {
+  throw new Error('--press-lead needs --rest-before-click at least as long, and no --no-press');
+}
 const stubs = stubNames.length ? (await import('./harness/freeze-stubs.mjs')).pick(stubNames) : [];
 const runs = Number(arg('runs', '7'));
 const vpName = arg('viewport', 'desktop');
@@ -668,15 +682,27 @@ async function measure(page, cdp, trip, viaDialog = false, rest = null) {
     await cdp.send('Page.startScreencast', {
       format: 'jpeg', quality: 70, everyNthFrame: 1, maxWidth: vp.width, maxHeight: vp.height,
     });
-    await page.waitForTimeout(rest ? Math.max(100, Math.min(IDLE_MS, rest.ms - 150)) : IDLE_MS);
+    // (An early press, --press-lead, must still be ahead of this page script.)
+    await page.waitForTimeout(rest ? Math.max(100, Math.min(IDLE_MS, rest.ms - 150 - pressLead)) : IDLE_MS);
   }
-  const t = await page.evaluate(async ({ to, viaDialog, restMs, press }) => {
+  const t = await page.evaluate(async ({ to, viaDialog, restMs, press, pressLead, pointerType }) => {
     let intended = null;
+    let pressedAt = null;
+    const until = async (when) => {
+      while (performance.now() < when) await new Promise((r) => setTimeout(r, Math.max(0, Math.min(4, when - performance.now() - 1))));
+    };
+    const rowOf = () => document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${to.split('/')[2]}"]`);
+    const pressRow = () => rowOf().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType, isPrimary: true }));
     if (restMs != null) {
       const t0 = performance.now();
       while (window.__bdlOverAt == null && performance.now() - t0 < 2000) await new Promise((r) => setTimeout(r, 1));
       intended = (window.__bdlOverAt ?? t0) + restMs;
-      while (performance.now() < intended) await new Promise((r) => setTimeout(r, Math.max(0, Math.min(4, intended - performance.now() - 1))));
+      if (press && pressLead > 0) {
+        await until(intended - pressLead);
+        pressedAt = performance.now();
+        pressRow();
+      }
+      await until(intended);
     }
     const T = window.__bdlTrace;
     T.marks = [];
@@ -697,13 +723,17 @@ async function measure(page, cdp, trip, viaDialog = false, rest = null) {
     requestAnimationFrame(tick);
     if (viaDialog) {
       a.remove();
-      const id = to.split('/')[2];
-      const row = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
-      if (restMs != null && press) row.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse', isPrimary: true }));
-      row.click();
+      if (restMs != null && press && !(pressLead > 0)) pressRow();
+      rowOf().click();
     } else a.click();
-    return { wall, perf, late: intended == null ? null : perf - intended, overAt: window.__bdlOverAt ?? null };
-  }, { to: trip.to, viaDialog, restMs: rest ? rest.ms : null, press: !restNoPress });
+    return {
+      wall, perf, late: intended == null ? null : perf - intended, overAt: window.__bdlOverAt ?? null,
+      pressAt: pressedAt == null ? null : pressedAt - perf,
+    };
+  }, {
+    to: trip.to, viaDialog, restMs: rest ? rest.ms : null, press: !restNoPress, pressLead,
+    pointerType: vp.mobile ? 'touch' : 'mouse',
+  });
   await page.waitForTimeout(FILM_MS);
   const deadline = Date.now() + FINISH_MAX_MS - FILM_MS;
   while (Date.now() < deadline) {
@@ -737,6 +767,7 @@ async function measure(page, cdp, trip, viaDialog = false, rest = null) {
   // run shows how long its copy really had.)
   const restInfo = rest || viaDialog ? {
     rest: rest?.ms ?? null, late: t.late == null ? null : Math.round(t.late), overToClick: t.overAt == null ? null : Math.round(trigger - t.overAt),
+    pressAt: t.pressAt == null ? null : Math.round(t.pressAt), pressLead: rest && !restNoPress ? pressLead : null,
     copies: await page.evaluate((trig) => window.__bdlCopies.map((c) => ({
       up: Math.round(c.up - trig), down: c.down == null ? null : Math.round(c.down - trig),
     })), trigger).catch(() => null),
@@ -1084,7 +1115,11 @@ async function prepare(page, trip, condition, assets) {
     const cost = await switcherWarm(page, trip.to, false);
     const id = trip.to.split('/')[2];
     const box = await page.evaluate((id) => {
-      const r = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`).getBoundingClientRect();
+      // On a phone the list scrolls: bring the row into view first (a no-op
+      // on desktop, where every row shows).
+      const row = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
+      row.scrollIntoView({ block: 'nearest' });
+      const r = row.getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }, id);
     // --rest-before-click: measure() moves the mouse, after the idle watch.
