@@ -95,7 +95,12 @@
   line-height: 0.95;
   letter-spacing: -0.02em;
   font-kerning: normal;
+  text-wrap: balance;
 }
+/* Body text never ends on a lone word. The display ledes set as paragraphs
+   (.lead, .pull and the rest) balance like headings, in their pages' own
+   rules, which outrank this one. */
+[data-theme='bauhaus'] p { text-wrap: pretty; }
 [data-theme='bauhaus'] a {
   color: var(--link);
   text-decoration-thickness: 2px;
@@ -301,8 +306,12 @@
 html[data-theme='bauhaus']::view-transition-old(root),
 html[data-theme='bauhaus']::view-transition-new(root) { mix-blend-mode: normal; }
 html[data-theme='bauhaus']::view-transition-old(root) { animation: none; }
+/* The circle opens on its own curve, not the snap: the snap's flat start
+   left a dark disc growing over a dark corner for about 170 ms before
+   anything showed (tier3-stage1/p4-trace.md). This one moves from the first
+   frame, and the disc starts big enough to be seen, then lands as hard. */
 html[data-theme='bauhaus']::view-transition-new(root) {
-  animation: bh-wipe-circle 640ms var(--ease-snap) both;
+  animation: bh-wipe-circle 640ms cubic-bezier(0.45, 0.15, 0.2, 1) both;
 }
 html[data-theme='bauhaus'][data-from-theme='bauhaus']::view-transition-new(root) {
   animation: bh-wipe-square 420ms var(--ease-snap) both;
@@ -321,8 +330,33 @@ html[data-theme='bauhaus'][data-from-theme='bauhaus']::view-transition-group(wor
   animation-duration: 420ms;
   animation-delay: 0ms;
 }
+/* The wordmark default (src/themes/README.md, "The wordmark"): both images
+   back on the group's clock and drawn at their own size, left-anchored like
+   the trio and name. Arriving from another school the old mark is gone
+   before the new one shows, so two marks never read at once. The snap curve
+   shapes each fade (it runs per keyframe interval), so the offsets are tuned
+   to keep the empty header at or under 80 ms. Between two Bauhaus pages
+   Astro's matched crossfade stays, so the mark holds still. */
+html[data-theme='bauhaus']::view-transition-old(wordmark),
+html[data-theme='bauhaus']::view-transition-new(wordmark) {
+  height: 100%;
+  object-fit: none;
+  object-position: left center;
+  animation-duration: inherit;
+  animation-timing-function: inherit;
+  animation-delay: inherit;
+  animation-fill-mode: both;
+}
+html[data-theme='bauhaus']:not([data-from-theme='bauhaus'])::view-transition-old(wordmark) {
+  animation-name: bauhaus-wordmark-out;
+}
+html[data-theme='bauhaus']:not([data-from-theme='bauhaus'])::view-transition-new(wordmark) {
+  animation-name: bauhaus-wordmark-in;
+}
+@keyframes bauhaus-wordmark-out { 35%, 100% { opacity: 0; } }
+@keyframes bauhaus-wordmark-in { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes bh-wipe-circle {
-  from { clip-path: circle(0% at 88% 10%); }
+  from { clip-path: circle(6% at 88% 10%); }
   to { clip-path: circle(150% at 88% 10%); }
 }
 @keyframes bh-wipe-square {
