@@ -60,10 +60,10 @@
  * removed. The programs stay compiled for the browser session, and the real
  * page's first draw reuses them. One copy at a time, only the page reached
  * for, never during an arrival, and taken down the moment a navigation
- * begins. Drawing a copy holds the page underneath for up to about 250 ms
- * (the freeze, moved earlier), so it is only done on the switcher's own
- * controls, where the visitor is already changing school; a link in the
- * page is not drawn ahead.
+ * begins (a rest still being timed then is dropped). Drawing a copy holds
+ * the page underneath for up to about 250 ms (the freeze, moved earlier),
+ * so it is only done on the switcher's own controls, where the visitor is
+ * already changing school; a link in the page is not drawn ahead.
  */
 import { onMount } from '../../lib/lifecycle';
 import { mountReveals } from '../../lib/reveal';
@@ -260,9 +260,22 @@ const drawnAhead = new Set<string>();
 let drawWanted: { key: string; html: string | null; go: (html: string) => Promise<void> } | null = null;
 /** The copy on screen, removed the moment a navigation begins. */
 let copy: HTMLIFrameElement | null = null;
-/** How long a mouse pointer rests on a link before its page is drawn, so a
-    sweep across a list draws nothing. */
-const DRAW_DWELL_MS = 100;
+/** Navigations begun since the hard load (stopDrawingAhead), so a rest timed
+    before one knows it is stale. */
+let navigations = 0;
+/** How long a mouse pointer rests on a link before its page is drawn, so
+    browsing the list draws nothing (the founder's call, 09-24-26). Measured
+    with the pointer moved down the switcher's rows (draw-ahead-rest.mjs):
+    a rest draws every row the pointer stays on at least as long, so 300 ms
+    draws all six at 300 ms a row, and 400 ms is the shortest tried that
+    draws none at 150 to 350 ms a row, a reading pace (about 250 ms) with a
+    margin. Each copy drawn holds the dialog for up to about 180 ms. The
+    price: a copy needs about 500 ms before the click to pay in full
+    (grandmillennial's hold 374 to about 45 ms), so a visitor who rests less
+    than about 900 ms before clicking gains less, nothing below about
+    500 ms, and a click 100 to 200 ms into a copy waits for it (up to about
+    100 ms). */
+const DRAW_DWELL_MS = 400;
 /** The same for keyboard focus, longer: tabbing down the list at a reading
     pace stops on every row, and each copy drawn holds the dialog for up to
     about 250 ms, so only a focus the visitor stays on draws. */
@@ -398,9 +411,18 @@ export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string |
     if (path === at) return;
     clearTimeout(rest);
     at = path;
-    if (path) rest = setTimeout(() => drawAheadOf(path), dwell);
+    // A rest still being timed when a navigation begins (a click before it
+    // was reached) must not draw into that navigation: measured, a copy
+    // started just after the click held glassmorphism's arrival about 460 ms.
+    const leg = navigations;
+    if (path) rest = setTimeout(() => leg === navigations && drawAheadOf(path), dwell);
   };
   const leave = (e: Event) => {
+    // Crossing from one part of a link to another (a row's name to its era)
+    // is not leaving it, and must not start the rest again.
+    const from = (e.target as Element | null)?.closest?.('a, button');
+    const to = (e as PointerEvent | FocusEvent).relatedTarget;
+    if (from && to instanceof Node && from.contains(to)) return;
     if (pathOf(e) === at) settle(null);
   };
   target.addEventListener('pointerover', (e) => {
@@ -418,6 +440,7 @@ export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string |
 /** A navigation has begun: take the copy down before the old page is
     captured, and draw nothing more for the page being left. */
 function stopDrawingAhead(): void {
+  navigations++;
   drawWanted = null;
   removeCopy();
 }
