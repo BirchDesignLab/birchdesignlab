@@ -20,8 +20,9 @@
  *            up and loaded, and again once it is down (the pointer left where
  *            it is): the two must be equal pixel for pixel. The focused
  *            control must not move, and no copy may be focused;
- *   sweep    move the mouse across every row, 30 ms each: no copy
- *            may go up;
+ *   sweep    move the mouse across every row, 30 ms each, then off the
+ *            rows: no copy may go up (09-24-26: --sweep-paces sets the
+ *            paces, one sweep each, so a reading pace can be checked too);
  *   shuffle  rest on Shuffle (its pick drawn over the bare page), same rule;
  *   link     (changed 09-24-26: the page's own links are no longer drawn
  *            ahead) rest the mouse on the page's first link to another
@@ -33,6 +34,10 @@
  *   network  no URL reaches the network twice, and a copy's own requests
  *            all come from the HTTP cache;
  *   console  no console message and no page error at all;
+ *   press    (added 09-24-26) the mouse onto a row and pressed at once,
+ *            well inside the rest: the press alone must put its copy up,
+ *            judged as a row's is; then released on the row, which
+ *            navigates, with no copy left at astro:after-preparation;
  *   navigate rest on a row until its copy is up, then click it: at
  *            astro:after-preparation (before the view transition captures
  *            the old page) no copy may be in the document, none may appear
@@ -57,7 +62,7 @@
  * Usage:
  *   BDL_GPU=1 node scripts/themes/harness/draw-ahead-check.mjs --serve freeze-d2 [--port 4492] \
  *     [--from quiet,swiss,glassmorphism] [--viewports desktop,mobile] [--schemes dark,light] \
- *     [--label freeze-d2] [--parts rows,shuffle,keyboard,navigate]
+ *     [--label freeze-d2] [--parts rows,shuffle,keyboard,press,navigate] [--sweep-paces 30,250,300]
  * Exit code 1 on any failure. Differing shots are written to
  * scripts/themes/.out/<label>/drawcheck-*.png.
  */
@@ -105,7 +110,9 @@ if (serveName) {
 }
 const froms = list('from', 'quiet,swiss,glassmorphism');
 /* --parts (09-24-26): which visits to run, all by default. */
-const parts = list('parts', 'rows,shuffle,keyboard,navigate');
+const parts = list('parts', 'rows,shuffle,keyboard,press,navigate');
+/* --sweep-paces (09-24-26): the rows' sweeps, ms a row, one sweep each. */
+const sweepPaces = list('sweep-paces', '30').map(Number);
 const viewports = list('viewports', 'desktop,mobile');
 const schemes = list('schemes', 'dark,light');
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '.out', arg('label', 'freeze-d2'));
@@ -303,15 +310,18 @@ for (const vpName of viewports) {
         const ids = await v.page.evaluate(() => [...document.querySelector('bdl-switcher').shadowRoot.querySelectorAll('a[data-school]')]
           .filter((a) => a.getAttribute('aria-current') !== 'page').map((a) => a.dataset.school));
         if (await v.page.evaluate(() => window.__copiesSeen)) fail(`${where}: opening the dialog drew a copy`);
-        // The sweep first (nothing drawn yet): 30 ms a row, under the dwell.
-        const boxes = [];
-        for (const id of ids) boxes.push(await rowBox(v.page, id));
-        for (const b of boxes) { await v.page.mouse.move(b.x, b.y); await v.page.waitForTimeout(30); }
-        await v.page.mouse.move(vp.width - 2, 2);
-        await v.page.waitForTimeout(400);
-        const swept = await v.page.evaluate(() => window.__copiesSeen);
-        console.log(`  ${where} sweep across ${ids.length} rows: ${swept} copies`);
-        if (swept) fail(`${where}: a sweep across the rows drew ${swept} copies`);
+        // The sweeps first (nothing drawn yet), each pace under the rest.
+        // Each row's box taken just before the move (09-24-26): on mobile the
+        // list scrolls, and boxes taken all at once went stale, so the pointer
+        // stayed on one row for two paces (a rest, at 250 ms a row).
+        for (const pace of sweepPaces) {
+          for (const id of ids) { const b = await rowBox(v.page, id); await v.page.mouse.move(b.x, b.y); await v.page.waitForTimeout(pace); }
+          await v.page.mouse.move(vp.width - 2, 2);
+          await v.page.waitForTimeout(400);
+          const swept = await v.page.evaluate(() => window.__copiesSeen);
+          console.log(`  ${where} sweep across ${ids.length} rows at ${pace} ms a row: ${swept} copies`);
+          if (swept) fail(`${where}: a sweep across the rows at ${pace} ms a row drew ${swept} copies`);
+        }
         for (const id of ids) {
           const b = await rowBox(v.page, id);
           await v.page.mouse.move(b.x, b.y);
@@ -386,6 +396,38 @@ for (const vpName of viewports) {
         if (v.logs.length) fail(`${where} keyboard: ${v.logs.join(' | ')}`);
         await v.context.close();
       }
+      // A press draws at once, before any rest (a visitor who clicks fast).
+      if (parts.includes('press')) {
+        const v = await visit(vp, scheme, from);
+        await v.page.evaluate((sel) => {
+          window.__probe = [];
+          document.addEventListener('astro:after-preparation', () => window.__probe.push(!!document.querySelector(sel)));
+        }, COPY);
+        await holdCopies(v.page);
+        await v.page.locator('bdl-switcher .open').click();
+        await v.page.waitForTimeout(400);
+        const to = await v.page.evaluate(() => [...document.querySelector('bdl-switcher').shadowRoot.querySelectorAll('a[data-school]')]
+          .find((a) => a.getAttribute('aria-current') !== 'page' && a.dataset.school !== 'quiet').dataset.school);
+        const b = await rowBox(v.page, to);
+        await v.page.mouse.move(b.x, b.y);
+        const t0 = await v.page.evaluate(() => performance.now());
+        await v.page.mouse.down();
+        const upAt = await v.page.waitForFunction((sel) => (document.querySelector(sel) ? performance.now() : false), COPY, { timeout: 8000, polling: 'raf' })
+          .then((h) => h.jsonValue(), () => null);
+        if (upAt == null) fail(`${where} press: no copy went up`);
+        else console.log(`  ${where} press on ${to}: copy up ${Math.round(upAt - t0)} ms after the pointer arrived`);
+        await judgeCopy(v.page, `${where} press ${to}`);
+        await v.page.mouse.up();
+        await v.page.mouse.move(vp.width - 2, Math.round(vp.height * 0.6));
+        await v.page.waitForURL(`**/t/${to}/`, { timeout: 10000 }).catch(() => fail(`${where} press: never landed on ${to}`));
+        await v.page.waitForTimeout(1500);
+        const probe = await v.page.evaluate(() => window.__probe);
+        const left = await v.page.evaluate((sel) => !!document.querySelector(sel), COPY);
+        console.log(`  ${where} press, released: copy at after-preparation ${JSON.stringify(probe)}, one left ${left}`);
+        if (!probe?.length || probe.some(Boolean) || left) fail(`${where} press: a copy outlived the navigation (${JSON.stringify(probe)}, left ${left})`);
+        if (v.logs.length) fail(`${where} press: ${v.logs.join(' | ')}`);
+        await v.context.close();
+      }
       // A navigation while a copy is up takes it down before the capture.
       if (parts.includes('navigate')) {
         const v = await visit(vp, scheme, from);
@@ -399,7 +441,12 @@ for (const vpName of viewports) {
           .find((a) => a.getAttribute('aria-current') !== 'page' && a.dataset.school !== 'quiet').dataset.school);
         const b = await rowBox(v.page, to);
         await v.page.mouse.move(b.x, b.y);
-        await v.page.waitForSelector(COPY, { state: 'attached', timeout: 8000 }).catch(() => fail(`${where} navigate: no copy went up`));
+        // Polled every 10 ms in the page (changed 09-24-26): with the 400 ms
+        // rest, waitForSelector missed every copy (the page's own counter saw
+        // it go up), so the click came after it was down.
+        const upNow = await v.page.waitForFunction((sel) => !!document.querySelector(sel), COPY, { timeout: 8000, polling: 10 })
+          .then(() => v.page.evaluate((sel) => !!document.querySelector(sel), COPY), () => fail(`${where} navigate: no copy went up`));
+        if (upNow === false) console.log(`  ${where} navigate: the copy came down before the click (the case still ran)`);
         await v.page.mouse.down();
         await v.page.mouse.up();
         // Off every link, so nothing on the arriving page is reached for.

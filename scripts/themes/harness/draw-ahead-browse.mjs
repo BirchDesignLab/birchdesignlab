@@ -43,7 +43,7 @@ function arg(name, fallback) {
 }
 const base = arg('base', process.env.SNAP_BASE || 'http://127.0.0.1:4495').replace(/\/$/, '');
 const modes = arg('modes', 'tab,mouse,rest').split(',').filter(Boolean);
-const pace = Number(arg('pace', '250'));
+const paces = arg('paces', arg('pace', '250')).split(',').filter(Boolean).map(Number);
 const runs = Number(arg('runs', '5'));
 const from = arg('from', 'quiet');
 const vpName = arg('viewport', 'desktop');
@@ -55,7 +55,7 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '.out', label);
 const useGpu = process.env.BDL_GPU === '1';
 const COPY = 'iframe[aria-hidden="true"][sandbox]';
 
-async function one(mode) {
+async function one(mode, pace) {
   const browser = await chromium.launch({
     args: ['--hide-scrollbars', ...(useGpu ? ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-gpu-rasterization'] : [])],
   });
@@ -107,6 +107,20 @@ async function one(mode) {
       for (let i = 0; i < rows.length; i++) { await page.keyboard.press('Tab'); await page.waitForTimeout(pace); }
     } else if (mode === 'mouse') {
       for (const r of rows) { const b = await box(r.id); await page.mouse.move(b.x, b.y); await page.waitForTimeout(pace); }
+      await page.mouse.move(vp.width - 2, 2);
+    } else if (mode === 'drift') {
+      const id = rows.find((r) => !r.current).id;
+      const spots = await page.evaluate((id) => {
+        const a = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
+        a.scrollIntoView({ block: 'nearest' });
+        const r = a.getBoundingClientRect();
+        const pad = { x: r.left + 3, y: r.top + r.height / 2 };
+        const parts = [...a.querySelectorAll('span')].map((s) => s.getBoundingClientRect()).filter((b) => b.width && b.height)
+          .map((b) => ({ x: b.left + Math.min(b.width / 2, 20), y: b.top + b.height / 2 }));
+        return [pad, ...parts, pad];
+      }, id);
+      await page.evaluate(() => { window.__browse.arrived = performance.now(); });
+      for (let t = 0, i = 0; t < 1500; t += 60, i++) { await page.mouse.move(spots[i % spots.length].x, spots[i % spots.length].y); await page.waitForTimeout(60); }
     } else if (mode === 'rest') {
       const b = await box(rows.find((r) => !r.current).id);
       await page.mouse.move(b.x, b.y);
@@ -114,9 +128,10 @@ async function one(mode) {
     await page.waitForTimeout(1500);
     const got = await page.evaluate(() => {
       const w = window.__browse;
-      return { maxGap: Math.round(w.maxGap), copies: w.copies.map((c) => ({ school: c.school, up: Math.round(c.up - w.start) })) };
+      const from = w.arrived ?? w.start;
+      return { maxGap: Math.round(w.maxGap), copies: w.copies.map((c) => ({ school: c.school, up: Math.round(c.up - from) })) };
     });
-    return { mode, renderer, ...got };
+    return { mode, pace: mode === 'tab' || mode === 'mouse' ? pace : null, renderer, ...got };
   } finally {
     await browser.close();
   }
@@ -125,18 +140,20 @@ async function one(mode) {
 const med = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
 await mkdir(OUT, { recursive: true });
 const all = [];
-const lines = [`| mode (${vpName} ${scheme}, from ${from}, pace ${pace} ms) | copies | longest animation-frame gap |`, '|---|---|---|'];
+const lines = [`| mode (${vpName} ${scheme}, from ${from}) | pace | copies | longest animation-frame gap | first copy up (ms after the first move, or the arrival for drift) |`, '|---|---|---|---|---|'];
+const span = (xs) => (xs.length ? `${med(xs)} (${Math.min(...xs)} to ${Math.max(...xs)})` : 'none');
 for (const mode of modes) {
-  const rs = [];
-  for (let i = 0; i < runs; i++) {
-    const r = await one(mode);
-    console.log(`${mode} run ${i + 1}: gap ${r.maxGap} ms, copies ${r.copies.map((c) => `${c.school}@${c.up}`).join(' ') || 'none'} (${r.renderer})`);
-    rs.push(r);
+  for (const pace of mode === 'tab' || mode === 'mouse' ? paces : [null]) {
+    const rs = [];
+    for (let i = 0; i < runs; i++) {
+      const r = await one(mode, pace);
+      console.log(`${mode}${pace ? ` ${pace} ms` : ''} run ${i + 1}: gap ${r.maxGap} ms, copies ${r.copies.map((c) => `${c.school}@${c.up}`).join(' ') || 'none'} (${r.renderer})`);
+      rs.push(r);
+    }
+    all.push(...rs);
+    const firsts = rs.filter((r) => r.copies.length).map((r) => r.copies[0].up);
+    lines.push(`| ${mode} | ${pace ?? '-'} | ${span(rs.map((r) => r.copies.length))} | ${span(rs.map((r) => r.maxGap))} | ${span(firsts)} |`);
   }
-  all.push(...rs);
-  const gaps = rs.map((r) => r.maxGap);
-  const counts = rs.map((r) => r.copies.length);
-  lines.push(`| ${mode} | ${med(counts)} (${Math.min(...counts)} to ${Math.max(...counts)}) | ${med(gaps)} (${Math.min(...gaps)} to ${Math.max(...gaps)}) |`);
 }
-await writeFile(join(OUT, `${tag}-${vpName}-${scheme}.json`), JSON.stringify({ base, from, pace, runs, all }, null, 2));
+await writeFile(join(OUT, `${tag}-${vpName}-${scheme}.json`), JSON.stringify({ base, from, paces, runs, all }, null, 2));
 console.log(`\n${lines.join('\n')}`);

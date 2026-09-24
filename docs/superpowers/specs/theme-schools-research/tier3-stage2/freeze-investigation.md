@@ -944,7 +944,8 @@ on the RTX 3070, logged in every batch), a fresh browser per timed run,
 
 - `src/themes/portal/runtime.ts`: drawing ahead on intent, for the
   switcher's rows (not the current one) and Shuffle only: a mouse resting
-  100 ms, a keyboard focus staying 500 ms, or a press. Everything else as D
+  100 ms (**400 ms since the wrap-up**, "Wrap-up: a longer mouse rest"
+  below), a keyboard focus staying 500 ms, or a press. Everything else as D
   described (one copy at a time, once per page per hard load, never during
   an arrival, taken down at `astro:before-preparation`, backdrop filters
   left out of the copy).
@@ -958,7 +959,11 @@ on the RTX 3070, logged in every batch), a fresh browser per timed run,
 Still (the longest time the screen showed nothing new from the click to
 `finished` + 100 ms) / first visible change / finished, the mouse resting on
 the destination's row 300 ms before the click (`hover300`), against D's
-`freeze-d0` (HEAD) runs of the same trip:
+`freeze-d0` (HEAD) runs of the same trip. (Wrap-up correction: under
+`hover` the rest was `--hover-lead` plus the film's idle watch, so a
+"300 ms" rest was about 700 ms and the copy had about 600 ms before the
+click; measured with the copies recorded, a 150 ms lead gave 541 to 575 ms.
+The rows below are what a visitor who rests about 0.7 s gets.)
 
 | trip, desktop dark | `freeze-d0` | `freeze-fix` |
 |---|---|---|
@@ -1016,7 +1021,8 @@ costs: a visitor who moves the pointer down the list at a reading pace
 draws every school, and the dialog holds up to about 180 ms at a time while
 it does. This is the same kind of cost as the withdrawn page-link trigger,
 but on the switcher, where the reviewer accepted it; it is put to the
-founder below rather than changed here.
+founder below rather than changed here. (The founder chose a longer rest;
+the wrap-up below ships 400 ms, and the same browsing draws nothing.)
 
 ### Is it invisible? (`freeze-fix`)
 
@@ -1085,6 +1091,8 @@ GPUs.
    about 180 ms at a time. A longer mouse rest before drawing (as keyboard
    now has) would stop that, but a visitor who rests less than that before
    clicking would get today's freeze. Keep 100 ms, or lengthen it?
+   **Answered 09-24-26: lengthen it** (stage0-decisions.md, "Call 1
+   revised"); done in the wrap-up below.
 2. **Links in the page** (withdrawn): drawing ahead on a nav link removed
    the in-school freeze (grandmillennial About 265 to 42), at the price of
    up to about 250 ms of held page whenever the pointer rests on a link,
@@ -1119,3 +1127,215 @@ Raw output: `scripts/themes/.out/freeze-fix/` (`_drawcheck*.log`,
 `freeze-fix-films/`, `freeze-fix-slowlink300/`, `freeze-fix-slowlink600/`,
 `freeze-fix-stills/`, `freeze-d0-ccrest/`, `freeze-fix-ccrest/` and their
 `diff-*` folders.
+
+## Wrap-up: a longer mouse rest
+
+Written 09-24-26 in the stage 2 wrap-up, on the founder's revised call
+(stage0-decisions.md, "Call 1 revised"): keep drawing ahead on a resting
+mouse, with a rest long enough that browsing the rows at a reading pace
+draws nothing; a press still draws. Same method: one frozen build per
+candidate rest (`rest-100` to `rest-500`, `DRAW_DWELL_MS` set to each),
+served on :4640, one batch at a time, `BDL_GPU=1` (ANGLE D3D11, RTX 3070,
+logged in every batch), a fresh browser per run, 5 runs per cell, median
+(min to max).
+
+### What ships
+
+- `DRAW_DWELL_MS` **400 ms** (was 100). The focus rest (500 ms), the press,
+  and every other guard are unchanged: one copy at a time, once per page per
+  hard load, never for Save-Data or 2G, never in a hidden tab, never during
+  an arrival, taken down at `astro:before-preparation`.
+- **Two fixes the longer rest needed** (both in `drawOnIntent` and
+  `stopDrawingAhead`):
+  - *A rest still being timed when a navigation begins is dropped.* Before,
+    a click shortly before the rest was reached let the timer fire into the
+    navigation, which drew a copy of the destination during the swap: at
+    rest 400 and a click 400 ms after arriving, a second copy went up 8 ms
+    after the click and glassmorphism held 460 ms (dark; 184 with no drawing
+    ahead at all). With the fix the same cell holds 175, and no copy goes up
+    after a click. At 100 ms this needed a click inside a 100 ms window; at
+    400 ms it is every quick click.
+  - *Crossing from one part of a row to another is not leaving it.* The row
+    is a link holding three spans (name, era, signature), and moving between
+    them sent a `pointerout` that restarted the rest. `drift` (the pointer
+    wandering over one row every 60 ms): the copy went up 426 ms (404 to
+    437) after arriving with a 100 ms rest before the fix, 108 (104 to 122)
+    after it, and 416 (414 to 431) at 400 ms.
+
+### Browsing: copies drawn
+
+`harness/draw-ahead-browse.mjs`, desktop dark, from quiet, the dialog open
+and warmed, the mouse moved onto each of the seven rows in turn at the pace
+given, then off the rows (the mouse mode now leaves the list at the end; it
+used to stay on the last row, which is a rest):
+
+| rest | 150 ms a row | 250 | 300 | 350 | 500 |
+|---|---|---|---|---|---|
+| 100 | 5 (4 to 5) | 6 | 6 | 6 | 6 |
+| 200 | 0 | 6 | 6 | 6 | 6 |
+| 300 | 0 | 0 | 6 | 6 | 6 |
+| **400** | 0 | **0** | **0** | 0 | 6 |
+| 500 | 0 | 0 | 0 | 0 | 6 |
+
+A rest draws every row the pointer stays on at least as long (plus a few
+ms of the probe's own move), so 300 ms draws all six at 300 ms a row: no
+margin over a reading pace. **400 ms is the shortest that draws nothing at
+250 and 300 ms a row**, with 350 ms a row as margin. Wherever nothing is
+drawn, the page's longest animation-frame gap is 17 ms (one frame);
+wherever copies are drawn, 167 to 250 ms per copy. Re-measured on the
+shipped build (both fixes in): mouse at 250 and 300 ms a row, 0 copies,
+17 ms; Tab at 250 and 300 ms a stop, 0 copies; one row rested on, its copy
+417 ms (415 to 419) after arriving.
+
+### Before a click: what the rest costs
+
+`trace-arrival.mjs --conditions hover --rest-before-click <ms>` (new, timed
+from the row's own `pointerover` to a press and click on the page's clock;
+see its header for why the film now starts after the move), arriving from
+quiet, desktop. Still (as the tables above) plus how late the click ran
+(the main thread busy with a copy), pooled over the five builds by the
+copy's lead (rest-before-click minus the rest; 0 = none before the click,
+the press starts one at the click):
+
+| desktop dark | no drawing | lead 0 | 100 | 200 | 300 | 400 | 500 | 600 to 900 |
+|---|---|---|---|---|---|---|---|---|
+| grandmillennial | 374 | 389 | 368 | 264 | 177 | 63 | 47 | 46 to 49 |
+| glassmorphism | 184 | 178 | **349** | **228** | 140 | 56 | 50 | 51 |
+| cottagecore | 380 | 389 | 341 | 249 | 144 | 60 | 71 | 68 to 73 |
+| vaporwave | 269 | 218 | 216 | 103 | 76 | 66 | 69 | 65 to 71 |
+| bauhaus | 66 | 77 | **103** | 50 | 51 | 52 | 111 | 52 to 55 |
+
+| desktop light | no drawing | lead 0 | 100 | 200 | 300 | 400 | 500 | 600 to 900 |
+|---|---|---|---|---|---|---|---|---|
+| grandmillennial | 366 | 389 | 364 | 270 | 174 | 70 | 47 | 46 to 48 |
+| glassmorphism | 303 | 317 | 328 | 210 | 110 | 49 | 48 | 49 to 52 |
+| cottagecore | 354 | 362 | 278 | 173 | 97 | 95 | 109 | 100 to 103 |
+| vaporwave | 264 | 212 | 205 | 93 | 68 | 74 | 69 | 68 to 71 |
+| bauhaus | 65 | 75 | **101** | 49 | 52 | 56 | 101 | 54 to 56 |
+
+"No drawing" is `freeze-d0` (HEAD before drawing ahead) under the same
+harness. The gain curve:
+
+- **Below about 150 ms of lead nothing is gained, and a click 100 ms into a
+  copy is worse than none:** the click waits for the copy's main-thread
+  first render (40 to 100 ms late) and the swap still compiles. Worst:
+  glassmorphism dark 349 against 184, bauhaus 103 against 66. A press
+  alone (lead 0) is today's hold, 6 ms better to 23 ms worse, except
+  vaporwave (about 50 ms better).
+- **From 200 to 400 ms it pays more with every 100 ms**, and **by 400 to
+  500 ms it has paid in full** (grandmillennial is the slowest: 63 at 400,
+  47 at 500). After that, nothing more. For scale, a copy is up about
+  300 ms for bauhaus, 400 for vaporwave and 470 to 590 for grandmillennial,
+  glassmorphism and cottagecore, its last 100 ms or so a hold after its
+  first frame.
+- Unexplained: bauhaus at a 500 ms lead holds 116 (dark) and 115 (light)
+  on the 100 ms build clicked at 600 ms, and 79 and 71 on the 500 ms build
+  clicked at 1000 ms, against about 52 at every other lead past 200. It is
+  bauhaus only; its copy is done about 200 ms before the click.
+
+So at the shipped 400 ms rest, by how long the visitor rests on the row
+before clicking (the rest-400 rows alone):
+
+| rest before the click, desktop dark | 400 ms | 600 ms | 1000 ms |
+|---|---|---|---|
+| grandmillennial (374 without) | 389 | 259 | 45 |
+| glassmorphism (184) | 175 | 225 | 48 |
+| cottagecore (380) | 387 | 243 | 67 |
+| vaporwave (269) | 215 | 98 | 67 |
+| bauhaus (66) | 72 | 48 | 53 |
+
+Light: grandmillennial 382 / 274 / 46, glassmorphism (303 without) 314 /
+210 / 47, cottagecore (354) 359 / 158 / 101, vaporwave (264) 195 / 88 /
+64, bauhaus (65) 73 / 46 / 50. A visitor who rests about 0.9 s or more
+gets the whole saving; one who clicks within 0.4 s gets today's hold; in
+between, part of it, and a click 0.5 to 0.6 s after arriving can land on a
+copy still drawing (glassmorphism dark 225 against 184). The 100 ms rest
+gave the same savings 300 ms sooner, at the cost of drawing every row
+browsed. A longer rest than 400 buys nothing more for browsing (400
+already draws nothing at 350 ms a row) and moves the whole curve later.
+
+The 600 ms column was challenged in review and re-measured on a fresh
+rebuild (`rest-fix`, byte-identical to `rest-400`, :4642, 5 runs, fresh
+browser, `.out/rest-wrapup-fix/`): dark grandmillennial 261 (255 to 266),
+glassmorphism 238 (224 to 253), cottagecore 251 (240 to 262), vaporwave 95
+(87 to 107), bauhaus 38 (28 to 48); light 295 (274 to 332), 241 (222 to
+242), 192 (189 to 238), 94 (73 to 147), 48 (47 to 51). Leads 186 to 217
+ms, the copy taken down 4 to 6 ms after the click. So the partial saving
+at 600 ms stands. The review read `screencastGap` alone (37, 46 and 86 ms
+for the first three in dark), which starts at the first new frame after
+the click and so misses this hold: at 600 ms the whole hold comes before
+that frame. It is real on the page's own clock, not a capture artifact:
+grandmillennial's and glassmorphism's first animation frame after the click
+comes 190 to 279 ms late (`rafGap`, starting at the click; cottagecore's
+133 to 250 ms gap starts 10 to 25 ms after it), and the view transition's
+capture of the old page takes 135 to 271 ms in 29 of those 30 runs (about
+8 at a 1000 ms rest),
+waiting on the copy's drawing. `trace-arrival.mjs` now prints `still` and `firstFrame` ahead of
+`screencastGap` so the summary shows the hold as these tables do.
+
+### Is it still invisible? (`rest-400`)
+
+- **`draw-ahead-check.mjs --serve rest-400 --sweep-paces 30,250,300`**
+  (rows, sweeps, Shuffle, page link, keyboard, the new press visit,
+  navigate; from quiet, swiss and glassmorphism; desktop and mobile; dark
+  and light): **108 copies judged, 108 moved no pixel**; no sweep drew
+  anything at 30, 250 or 300 ms a row (36 of 36); the page link drew
+  nothing; no path reached the server twice; focus never moved; console
+  clean; no copy at `astro:after-preparation`. **A press draws at once**:
+  the mouse pressed on a row the moment it arrives puts its copy up 6 ms
+  later in all 12 cells, judged clean, and releasing it navigates with no
+  copy left.
+- Two probe fixes on the way: the navigate visit waited with
+  `waitForSelector`, which missed every copy at the longer rest (the page's
+  own counter saw it go up), so it now polls every 10 ms and confirms the
+  copy is up at the click; and the sweep now measures each row just before
+  moving to it (on mobile the list scrolls, and boxes taken all at once
+  left the pointer on one row for two paces, which is a rest).
+- **Wordmark judge** (`motion.mjs --crop wordmark --draw-ahead`, all six
+  schools, arrive, desktop and mobile, dark): 12 of 12 pass, numbers within
+  a few ms of `freeze-fix`'s (e.g. grandmillennial blank 44.8 against 44.6,
+  bauhaus 67.8 against 67.7). **Switcher hold-still** (`--crop switcher
+  --draw-ahead`, grandmillennial and glassmorphism, arrive and page, desktop
+  and mobile, dark and light): 16 of 16 held still, worst 0.0%; resting on
+  About drew nothing.
+- `motion.mjs --draw-ahead` reported "saw no copy drawn ahead" for 8 of 12
+  wordmark strips and 7 of 8 switcher arrive strips: its `restForCopy` waits
+  with the same `waitForSelector` that missed every copy in the check above
+  (motion.mjs is outside this slice, so it is not changed here). It waits
+  up to 8 s on the row, so the copy is drawn 400 ms in either way; the
+  judges' numbers match `freeze-fix`'s. The one-line fix is the check's:
+  poll `document.querySelector` every 10 ms instead.
+
+### Harness notes
+
+- Plain `--conditions hover` rests `--hover-lead` plus at least 400 ms, and
+  its click has no press; every earlier "hover300" row is a rest of about
+  0.7 s (corrected above).
+- Starting the film first and moving the mouse after the idle watch (the
+  first version of `--rest-before-click`) delayed the first frames after
+  the click by up to about 250 ms, a capture artifact: on `freeze-d0`, with
+  nothing drawn ahead, bauhaus 243 to 273 and glassmorphism 407 to 440 at a
+  1000 ms rest, against 65 to 88 and 178 to 211 with the mouse moved
+  first. Those first `rest-400` click runs are set aside in
+  `.out/rest-wrapup/void-harness1/`.
+
+### Rerunning
+
+```
+# each candidate: set DRAW_DWELL_MS, then
+node scripts/themes/snap.mjs --name rest-400
+BDL_GPU=1 node scripts/themes/harness/draw-ahead-rest.mjs --rests 100,200,300,400,500 --phases browse,base,click,table
+BDL_GPU=1 node scripts/themes/harness/draw-ahead-check.mjs --serve rest-400 --port 4640 --sweep-paces 30,250,300 --label rest-wrapup
+BDL_GPU=1 node scripts/themes/snap.mjs --name rest-400 --reuse --port 4640 -- \
+  node scripts/themes/harness/draw-ahead-browse.mjs --modes mouse,tab,drift,rest --paces 250,300 --label rest-wrapup --tag browse-final-rest-400
+BDL_GPU=1 node scripts/themes/snap.mjs --name rest-400 --reuse --port 4640 -- \
+  node scripts/themes/motion.mjs --schools bauhaus,swiss,vaporwave,cottagecore,grandmillennial,glassmorphism \
+  --scenarios arrive --viewports desktop,mobile --schemes dark --crop wordmark --draw-ahead --label rest-wrapup-gates-wm
+```
+
+Raw output: `scripts/themes/.out/rest-wrapup/` (`tables.md`, `browse-*`,
+`click-*`, `click-base-*`, `probe-*`, `_drawcheck-desktop.log`,
+`_drawcheck-mobile.log`, `_gates-*.log`), `rest-wrapup-gates-wm/`,
+`rest-wrapup-gates-sw/`. The browsing batch ran on builds with the row fix
+but before the navigation fix, which only acts once a navigation begins;
+the shipped build's browsing was re-measured (`browse-final-rest-400-*`).

@@ -122,6 +122,13 @@
  *   switcher-pick  the dialog opened and the destination's row clicked
  *             --pick-after ms later: the visitor's own path;
  *   pf-raster records the same animation-frame gap while its copy is up.
+ *
+ * Added 09-24-26 for the stage 2 wrap-up (tuning the mouse's rest before a
+ * row is drawn ahead): --rest-before-click <ms>, hover timed exactly from
+ * the row's pointerover to a press and click (see its comment below). Note
+ * for older hover runs: without it, the rest before the click was
+ * --hover-lead plus at least 400 ms (the idle watch and the screencast's
+ * start), and the click had no press.
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -183,6 +190,21 @@ const rasterLead = Number(arg('raster-lead', '0'));
    and let warm, then a touch goes down on the row --hover-lead ms before
    the click (a finger's press; pointerdown draws at once). */
 const hoverLead = Number(arg('hover-lead', '300'));
+/* --rest-before-click <ms> (Tier 3 stage 2 wrap-up, 09-24-26): hover, timed
+   exactly. Under plain hover the rest before the click is --hover-lead plus
+   the film's idle watch (IDLE_MS) and the screencast's start, at least 400 ms
+   more than asked (measured: a 150 ms hover-lead gave the copy about 555 ms
+   before the click), and the click is a script click with no press. With
+   this flag (arrivals through the dialog only) the mouse moves onto the
+   destination's row, the film starts (measure() says why in that order),
+   and the click lands this many ms after the row's own pointerover, on the
+   page's clock, as a press (pointerdown) and a click at the same instant: a
+   press adds no lead here, where a real one adds about 0.1 s. --no-press
+   leaves the pointerdown out. Each run also records how late the click ran
+   (the main thread busy with a copy) and when each copy went up and came
+   down, relative to the click. */
+const restBeforeClick = arg('rest-before-click', null) == null ? null : Number(arg('rest-before-click'));
+const restNoPress = process.argv.includes('--no-press');
 const stubs = stubNames.length ? (await import('./harness/freeze-stubs.mjs')).pick(stubNames) : [];
 const runs = Number(arg('runs', '7'));
 const vpName = arg('viewport', 'desktop');
@@ -618,20 +640,44 @@ async function settle(page, path) {
 
 /** One navigation from `trip.from` to `trip.to`, measured. The page must
     already be settled on `trip.from`. */
-async function measure(page, cdp, trip, viaDialog = false) {
+async function measure(page, cdp, trip, viaDialog = false, rest = null) {
   const frames = [];
   const onFrame = async ({ data, metadata, sessionId }) => {
     frames.push({ data, at: metadata.timestamp });
     try { await cdp.send('Page.screencastFrameAck', { sessionId }); } catch {}
   };
+  // --rest-before-click: the mouse onto the row first, its pointerover timed,
+  // then the film starts and watches the page idle for what is left of the
+  // rest (at most IDLE_MS). Not the other way round: filming longer than
+  // about 1 s before the click delays the first frames after it, a capture
+  // artifact (measured on freeze-d0, nothing drawn ahead, 1000 ms: bauhaus
+  // 243 to 273 and glassmorphism 407 to 440 with the film started first,
+  // against 65 to 88 and 178 to 211 with the mouse moved first, which match
+  // the cold runs).
+  if (rest) {
+    await page.evaluate((id) => {
+      window.__bdlOverAt = null;
+      document.querySelector('bdl-switcher').shadowRoot.addEventListener('pointerover', (e) => {
+        if (window.__bdlOverAt == null && e.target.closest?.(`a[data-school="${id}"]`)) window.__bdlOverAt = performance.now();
+      }, { capture: true });
+    }, rest.id);
+    await page.mouse.move(rest.box.x, rest.box.y);
+  }
   if (film) {
     cdp.on('Page.screencastFrame', onFrame);
     await cdp.send('Page.startScreencast', {
       format: 'jpeg', quality: 70, everyNthFrame: 1, maxWidth: vp.width, maxHeight: vp.height,
     });
-    await page.waitForTimeout(IDLE_MS);
+    await page.waitForTimeout(rest ? Math.max(100, Math.min(IDLE_MS, rest.ms - 150)) : IDLE_MS);
   }
-  const t = await page.evaluate(({ to, viaDialog }) => {
+  const t = await page.evaluate(async ({ to, viaDialog, restMs, press }) => {
+    let intended = null;
+    if (restMs != null) {
+      const t0 = performance.now();
+      while (window.__bdlOverAt == null && performance.now() - t0 < 2000) await new Promise((r) => setTimeout(r, 1));
+      intended = (window.__bdlOverAt ?? t0) + restMs;
+      while (performance.now() < intended) await new Promise((r) => setTimeout(r, Math.max(0, Math.min(4, intended - performance.now() - 1))));
+    }
     const T = window.__bdlTrace;
     T.marks = [];
     T.loaf = [];
@@ -652,10 +698,12 @@ async function measure(page, cdp, trip, viaDialog = false) {
     if (viaDialog) {
       a.remove();
       const id = to.split('/')[2];
-      document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`).click();
+      const row = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`);
+      if (restMs != null && press) row.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse', isPrimary: true }));
+      row.click();
     } else a.click();
-    return { wall, perf };
-  }, { to: trip.to, viaDialog });
+    return { wall, perf, late: intended == null ? null : perf - intended, overAt: window.__bdlOverAt ?? null };
+  }, { to: trip.to, viaDialog, restMs: rest ? rest.ms : null, press: !restNoPress });
   await page.waitForTimeout(FILM_MS);
   const deadline = Date.now() + FINISH_MAX_MS - FILM_MS;
   while (Date.now() < deadline) {
@@ -684,6 +732,15 @@ async function measure(page, cdp, trip, viaDialog = false) {
   const at = {};
   for (const m of data.marks) if (!(m.name in at)) at[m.name] = m.t - trigger;
   const vis = film ? await firstVisible(frames, t.wall, t.wall - t.perf, trigger) : { firstVisible: null };
+  // --rest-before-click: the click's lateness and every copy, from the click.
+  // (Any click through the dialog records its copies too, so a plain hover
+  // run shows how long its copy really had.)
+  const restInfo = rest || viaDialog ? {
+    rest: rest?.ms ?? null, late: t.late == null ? null : Math.round(t.late), overToClick: t.overAt == null ? null : Math.round(trigger - t.overAt),
+    copies: await page.evaluate((trig) => window.__bdlCopies.map((c) => ({
+      up: Math.round(c.up - trig), down: c.down == null ? null : Math.round(c.down - trig),
+    })), trigger).catch(() => null),
+  } : null;
   if (data.url !== trip.to) problems.push(`${trip.id} ${trip.dir}: ended on ${data.url}, wanted ${trip.to}`);
   if (!('vt-finished' in at)) problems.push(`${trip.id} ${trip.dir}: view transition never finished`);
   const rel = (r) => ({ ...r, start: r.start - trigger, end: r.end - trigger });
@@ -715,7 +772,7 @@ async function measure(page, cdp, trip, viaDialog = false) {
   const screencastGap = film ? longest(filmed) : null;
   const rafGap = longest([0, ...data.frames.map((ts) => ts - trigger).filter((ms) => ms > 0 && ms <= end)]);
   return {
-    at, ...vis, resources, loaf, frameGaps: gaps, ended: data.url,
+    at, ...vis, resources, loaf, frameGaps: gaps, ended: data.url, ...(restInfo ? { restInfo } : {}),
     screencastGap, screencastFrames: filmed.length, firstFrameMs: filmed.length ? Math.round(filmed[0]) : null, rafGap,
   };
 }
@@ -745,6 +802,12 @@ function phases(r) {
     finished: a['vt-finished'] ?? null,
     pageLoad: a['page-load'] ?? null,
     longestLoaf: Math.max(0, ...r.loaf.filter((l) => l.start < (a['vt-ready'] ?? Infinity)).map((l) => l.duration)),
+    // still: the longest time nothing new reached the screen, from the trigger
+    // to `finished` + 100 ms. screencastGap alone starts at the first frame
+    // after the trigger, so it misses a hold that begins at the click (a copy
+    // still drawing when the click lands holds the old page's capture).
+    still: r.firstFrameMs == null && r.screencastGap == null ? null : Math.max(r.firstFrameMs ?? 0, r.screencastGap?.ms ?? 0),
+    firstFrame: r.firstFrameMs ?? null,
     screencastGap: r.screencastGap?.ms ?? null,
     screencastGapAt: r.screencastGap?.from ?? null,
     rafGap: r.rafGap?.ms ?? null,
@@ -1024,6 +1087,8 @@ async function prepare(page, trip, condition, assets) {
       const r = document.querySelector('bdl-switcher').shadowRoot.querySelector(`a[data-school="${id}"]`).getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }, id);
+    // --rest-before-click: measure() moves the mouse, after the idle watch.
+    if (condition === 'hover' && restBeforeClick != null) return { viaDialog: true, rest: { box, id, ms: restBeforeClick }, ahead: cost };
     if (condition === 'hover') await page.mouse.move(box.x, box.y);
     else await page.context()._bdlCdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x, y: box.y }] });
     await page.waitForTimeout(hoverLead);
@@ -1075,7 +1140,7 @@ for (const trip of trips) {
       // cached on every return trip (and in-school swap).
       context._bdlCdp = cdp;
       const prep = await prepare(page, trip, condition, assets);
-      const r = await measure(page, cdp, trip, !!prep?.viaDialog);
+      const r = await measure(page, cdp, trip, !!prep?.viaDialog, prep?.rest ?? null);
       if (prep?.touch) await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }).catch(() => {});
       results.push({ ...trip, condition, run, ...r, ...(prep?.ahead ? { ahead: prep.ahead } : {}) });
       if (condition === 'cold' && conditions.includes('warm')) {
@@ -1142,11 +1207,12 @@ await writeFile(join(outDir, `${tag}.summary.json`), JSON.stringify({ meta, summ
 if (traceSummaries.length) await writeFile(join(outDir, `${tag}.traces.json`), JSON.stringify(traceSummaries, null, 2));
 
 const cell = (s) => (s ? `${Math.round(s.median)} (${Math.round(s.min)} to ${Math.round(s.max)})` : 'n/a');
-const cols = ['screencastGap', 'rafGap', 'aheadRafGap', 'firstAny', 'firstVisible', 'vtStart', 'ready', 'fetch', 'cssWait', 'fontWait', 'oldCapture', 'swap', 'newRender', 'readyToVisible', 'finished'];
+const cols = ['still', 'firstFrame', 'screencastGap', 'rafGap', 'aheadRafGap', 'firstAny', 'firstVisible', 'vtStart', 'ready', 'fetch', 'cssWait', 'fontWait', 'oldCapture', 'swap', 'newRender', 'readyToVisible', 'finished'];
 const md = [
   `# Arrival timings, ${vpName} ${scheme} (${renderer}${film ? '' : ', not filmed'}${latency ? `, +${latency} ms per request` : ''}${freshBrowser ? ', fresh browser per run' : ''}${stubNames.length ? `, stubs ${stubNames.join('+')}` : ''})`,
   '',
   'Median (min to max) ms after the trigger, or per phase.',
+  'still = the longer of firstFrame (the trigger to the first new screencast frame) and screencastGap (the longest gap between frames after that): read still, not screencastGap, for the hold.',
   '',
   `| school | trip | condition | runs | ${cols.join(' | ')} |`,
   `|${'---|'.repeat(cols.length + 4)}`,
