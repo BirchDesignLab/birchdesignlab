@@ -196,8 +196,14 @@ if (stubs.some((s) => s.css)) {
 async function restForCopy(page, box, wait = 8000) {
   await page.mouse.move(box.x, box.y);
   const sel = 'iframe[aria-hidden="true"][sandbox]';
-  const up = await page.waitForSelector(sel, { state: 'attached', timeout: wait }).then(() => true, () => false);
-  if (up) await page.waitForSelector(sel, { state: 'detached', timeout: 8000 }).catch(() => {});
+  // Polled every 10 ms in the page: waitForSelector missed every copy at the
+  // 400 ms rest (freeze-investigation.md, "Wrap-up: a longer mouse rest";
+  // draw-ahead-check.mjs made the same change), reporting none drawn.
+  const poll = (gone, timeout) => page.waitForFunction(
+    ({ sel, gone }) => !!document.querySelector(sel) !== gone, { sel, gone }, { polling: 10, timeout },
+  ).then(() => true, () => false);
+  const up = await poll(false, wait);
+  if (up) await poll(true, 8000);
   return up;
 }
 /** The arrive file-name tag: only when --from was given, so every name
