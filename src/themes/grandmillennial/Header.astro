@@ -1,7 +1,11 @@
 ---
 /** Grandmillennial header: a striped awning with a scalloped, gilt-piped
     edge, and under it a symmetrical masthead, the wordmark centred like a
-    monogram with the nav split two and two either side (stacked on phones). */
+    monogram with the nav split two and two either side (stacked on phones).
+    The canopy (awning and masthead) holds still between rooms of this school:
+    theme.css names it grandmillennial-header for in-school swaps only. It
+    leaves out the skip link, parked a viewport off to the left, which would
+    only widen the snapshot. */
 import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 import Defs from './parts/Defs.astro';
@@ -12,21 +16,23 @@ const { chrome, theme } = Astro.props;
 <header class="site-header">
   <a class="skip" href="#main">{chrome.skip}</a>
   <Defs />
-  <div class="awning-hang" aria-hidden="true"><div class="awning gm-scallop-b"></div></div>
-  <div class="masthead gm-wrap">
-    <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
-      {chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class={i === 0 ? 'wm-first' : 'wm-rest'}>{part}</span></>)}
-      <svg class="swash" viewBox="0 0 120 12" aria-hidden="true" focusable="false"><path d="M2 6C22 6 30 1 44 1S56 11 60 6 70 1 76 1 98 6 118 6" /><circle cx="60" cy="6" r="2" /></svg>
-    </a>
-    <nav aria-label="Main">
-      {chrome.nav.map(({ to, label }) => (
-        <a
-          href={hrefFor(to, theme)}
-          aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
-          data-astro-reload={to === 'lab' ? '' : undefined}
-        >{label}</a>
-      ))}
-    </nav>
+  <div class="canopy">
+    <div class="awning-hang" aria-hidden="true"><div class="awning gm-scallop-b"></div></div>
+    <div class="masthead gm-wrap">
+      <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
+        {chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class={i === 0 ? 'wm-first' : 'wm-rest'}>{part}</span></>)}
+        <svg class="swash" viewBox="0 0 120 12" aria-hidden="true" focusable="false"><path d="M2 6C22 6 30 1 44 1S56 11 60 6 70 1 76 1 98 6 118 6" /><circle cx="60" cy="6" r="2" /></svg>
+      </a>
+      <nav aria-label="Main">
+        {chrome.nav.map(({ to, label }) => (
+          <a
+            href={hrefFor(to, theme)}
+            aria-current={isCurrent(to, Astro.url.pathname) ? 'page' : undefined}
+            data-astro-reload={to === 'lab' ? '' : undefined}
+          >{label}</a>
+        ))}
+      </nav>
+    </div>
   </div>
 </header>
 

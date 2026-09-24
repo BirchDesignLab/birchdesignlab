@@ -324,27 +324,92 @@
   html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-old(root) {
     animation: gm-hold 640ms linear both;
   }
+  /* Decelerating, so the drapes are moving from the first frame and slow as
+     they gather. The old ease-in-out sat still for its first 50 to 60ms. */
   html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-new(root) {
-    animation: gm-drapes 640ms cubic-bezier(0.62, 0, 0.22, 1) both;
+    animation: gm-drapes 640ms cubic-bezier(0.33, 0, 0.15, 1) both;
   }
-  html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(root),
+  /* Between rooms the old one clears before the new one comes up: the old
+     fades over the first 45%, the new from 40%, so two pages' type is never
+     laid over each other. */
+  html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(root) {
+    animation: gm-leave 300ms ease-out both;
+  }
   html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-new(root) {
-    animation-duration: 260ms;
+    animation: gm-enter 300ms ease-out both;
   }
   html[data-theme='grandmillennial']::view-transition-group(wordmark) {
     animation-duration: 560ms;
     animation-timing-function: cubic-bezier(0.62, 0, 0.22, 1);
   }
+  /* Between rooms the wordmark does not move; its matched crossfade keeps
+     the swap's own clock. */
+  html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-group(wordmark) {
+    animation-duration: 300ms;
+    animation-timing-function: ease-out;
+  }
+  /* The wordmark default (README, "The wordmark"): each wordmark drawn at its
+     own size, centred in the morphing box as this one sits in its own, on the
+     group's clock. Arriving from another school the old one is gone by half
+     the morph and the new one starts at a fifth, which on this ease-in-out
+     curve leaves the header empty for about 45ms, never both legible. */
+  html[data-theme='grandmillennial']::view-transition-old(wordmark),
+  html[data-theme='grandmillennial']::view-transition-new(wordmark) {
+    height: 100%;
+    object-fit: none;
+    object-position: center;
+    animation-duration: inherit;
+    animation-timing-function: inherit;
+    animation-delay: inherit;
+    animation-fill-mode: both;
+  }
+  html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-old(wordmark) {
+    animation-name: grandmillennial-wordmark-out;
+  }
+  html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-new(wordmark) {
+    animation-name: grandmillennial-wordmark-in;
+  }
 }
 /* The new room bares itself from the centre outward, like two drapes drawn
-   back at once. No filter: a brightness pass over the full-page snapshot
-   cost a repaint every frame for a flicker nobody could see under 640ms. */
+   back at once, already parted a hand's width on the first frame. No filter:
+   a brightness pass over the full-page snapshot cost a repaint every frame
+   for a flicker nobody could see under 640ms. */
 @keyframes gm-drapes {
-  from { clip-path: inset(0 50% 0 50%); }
+  from { clip-path: inset(0 47% 0 47%); }
   to { clip-path: inset(0 0 0 0); }
 }
 @keyframes gm-hold {
   from, to { opacity: 1; }
+}
+@keyframes gm-leave { 45%, 100% { opacity: 0; } }
+@keyframes gm-enter { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes grandmillennial-wordmark-out { 50%, 100% { opacity: 0; } }
+@keyframes grandmillennial-wordmark-in { 0%, 20% { opacity: 0; } 100% { opacity: 1; } }
+
+/* Between rooms of this school the canopy (awning and masthead) holds still
+   while the room under it changes: named only when both sides of the swap
+   are grandmillennial (README, "View-transition names"), so on arrival it
+   still rides the drapes with the rest of the room. The group is pinned (no
+   morph) and its two pictures, the same but for the current page's mark,
+   trade in one step on the swap's first frame; the old one is hidden
+   outright, because with the group's animation gone both would otherwise
+   stay at full strength and add up (plus-lighter) into bolder type. The new
+   picture carries what lies behind the canopy on the page (the field, and in
+   the lacquered room its lamp sheen, the body's gradient at the canopy's
+   width): the header is not sticky, so on a swap clicked from low down a
+   page it sits at the top of the viewport over the old room's scrolled
+   content until that clears. The wordmark keeps its own group above. */
+html[data-theme='grandmillennial']:is([data-to-theme='grandmillennial'], [data-from-theme='grandmillennial']:not([data-to-theme])) .site-header > .canopy {
+  view-transition-name: grandmillennial-header;
+}
+html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header),
+html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
+html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
+html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { background: var(--field); }
+html[data-theme='grandmillennial'][data-scheme='dark']::view-transition-new(grandmillennial-header) {
+  background:
+    radial-gradient(120% 1800px at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%),
+    var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),
