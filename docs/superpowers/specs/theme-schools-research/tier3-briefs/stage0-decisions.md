@@ -320,6 +320,15 @@ visitor browsing the rows at a reading pace (about 250 ms a row) draws
 nothing; a press still starts it too. The wrap-up tunes and measures the
 rest. The founder chose to run the wrap-up in this session; Stage 3 moves to
 another session.
+- Done (`cfe6df8`): a 400 ms rest. It draws nothing while browsing at up to
+  350 ms a row, and a rest of about 0.9 s before a click saves nearly the
+  whole freeze.
+- Open, first thing next session: whether a press still starts a copy. A
+  real press comes about 0.1 s before the click, and at that lead drawing
+  ahead measured worse for glass (349 against 184) and bauhaus. The
+  recommendation is to drop the press trigger. The founder asked to push the
+  branch and settle this at the start of the next session
+  (`HANDOFF-09-24-26-stage2-wrapup.md`, step 1).
 
 ## Still open from before (carry forward)
 

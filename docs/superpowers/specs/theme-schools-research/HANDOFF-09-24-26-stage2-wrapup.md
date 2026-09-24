@@ -5,9 +5,10 @@ Stage 2.
 
 ## Where things stand
 
-Branch `feat/theme-schools-tier3-stage2` (from `main` at `f797bc9`), nothing
-pushed. All six schools' Stage 2 repairs are done and committed, and so are
-the portal fixes and the freeze investigation. `npm run verify` was clean at
+Branch `feat/theme-schools-tier3-stage2` (from `main` at `f797bc9`), pushed
+to origin 09-24-26 at the founder's request. No PR yet. All six schools'
+Stage 2 repairs are done and committed, and so are the portal fixes, the
+freeze investigation and the 400 ms draw-ahead rest. `npm run verify` was clean at
 the last commit: 331 unit tests, astro check 0 errors and 0 warnings, 440
 built-site tests.
 
@@ -81,20 +82,37 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 
 ## The wrap-up, in order
 
-1. **Apply the founder's call 1** (stage0-decisions "At the freeze stop"):
-   - Drawing ahead waits for a press. Remove the 100 ms mouse dwell and the
-     500 ms focus dwell from the switcher rows and Shuffle, and start the
-     copy on pointer down, or on Enter or Space.
-   - The code is in `src/themes/portal/runtime.ts` (`drawOnIntent`,
-     `drawAheadOf`) and `switcher.ts`.
-   - Re-run `harness/draw-ahead-check.mjs --serve <snap>`, which needs the
-     production cache headers; without them the network checks fail
-     falsely.
-   - Re-measure with `trace-arrival.mjs --conditions cold,tap` (and a
-     mouse-press equivalent, if the tool needs one), then update
-     `freeze-investigation.md`.
-   - Expected result: cottagecore and vaporwave keep most of their gain;
-     grandmillennial and glassmorphism fall back near cold.
+1. **First, ask the founder the one open question: the press trigger.**
+   Call 1, as revised ("Call 1 revised" in stage0-decisions), is done in
+   `cfe6df8`: drawing ahead waits for a 400 ms mouse rest on a switcher
+   row or Shuffle.
+   - What it does now:
+     - browsing the rows at up to 350 ms a row draws nothing;
+     - a rest of about 0.9 s before the click saves nearly the whole freeze
+       (grandmillennial 374 to about 45 ms);
+     - a quicker click behaves as today, apart from a narrow window at 0.5
+       to 0.6 s where glass dark holds 225 against 184 today.
+   - The open question: a press on a row still starts a copy too, a holdover
+     from the first version of call 1. A real mouse press comes about 0.1 s
+     before the click. At that lead the measured gain-by-lead table
+     (`freeze-investigation.md`, "Wrap-up: a longer mouse rest") shows
+     drawing ahead makes a quick click worse: glass dark 349 against 184,
+     bauhaus 103 against 66, the others about even. It was not measured
+     with a real press.
+   - Recommendation given: drop the press trigger and keep only the 400 ms
+     rest, so quick clicks match today exactly.
+   - Whatever they pick, apply it in `src/themes/portal/runtime.ts`
+     (`drawOnIntent`: its pointerdown and keydown paths) and `switcher.ts`.
+     Re-run `harness/draw-ahead-check.mjs --serve <snap>`; it needs the
+     production cache headers, and without them the network checks fail
+     falsely. Re-measure one quick-click cell per heavy school with
+     `trace-arrival.mjs --rest-before-click 150` (5 runs, fresh browser,
+     alone on the machine). Then update `freeze-investigation.md`.
+   - Two measuring traps, both hit before:
+     - "still" in the draw-ahead tables is max(first frame, screencast gap),
+       not the screencast gap alone;
+     - the bauhaus holds of about 100 to 116 ms at a 500 ms lead are
+       unexplained. Log them; don't chase them.
 2. **Final gates, on a fresh Worker build** (`preview_start worker`, :8787):
    - `npm run verify`;
    - `smoke.mjs --contact`;
