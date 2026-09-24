@@ -259,6 +259,26 @@ from it for the swap: accepted ("your small call on swiss is fine"). The
 guides go at pair stage 4. Wave B runs as planned once the transitions-phase
 list is settled (`tier3-stage2/assessment-before-wave-b.md`).
 
+**What "the transitions phase" means (founder, 09-23-26).** "we'll
+realistically never eliminate the stalling transitions. the 'post A+
+transition phase' i meant was making the transitions into transformations
+essentially. we have some nice, simple low motion ones now. i want to crank
+that up a notch." The post-A+ push is about richer motion, transitions
+becoming transformations, not about removing every stall. Stalls get reduced
+where it is possible, never promised away.
+
+**The four held items (founder, 09-23-26).** From the assessment's list, all
+four are held until after wave B, then reviewed together: "we may see a
+pattern emerge from these issues that may become more evident later."
+1. Safari: cannot be tested with the founder's current equipment.
+2. The dark-desktop first-draw freeze: "if that is possible we should
+   consider it."
+3. The wordmark dropping in from above on a swap clicked low on a page:
+   still a concern.
+4. Glassmorphism's plain-fade page change: still a concern.
+Wave B builders record what they see of items 2 and 3 in their schools, as
+evidence for that review. They fix none of the four.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
