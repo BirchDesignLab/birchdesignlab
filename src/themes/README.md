@@ -379,6 +379,21 @@ html[data-theme='x']:not([data-from-theme='x'])::view-transition-new(wordmark) {
   other in would make a still wordmark blink. There the guard leaves Astro's
   matched crossfade in place, now on the group's clock: the two images add
   up to full opacity on every frame, so the wordmark holds still.
+- On a swap clicked from low down a page, the portal takes the old wordmark
+  out of the morph. Every school's header scrolls away with the page, so the
+  old wordmark's box sits above the viewport, and the morph would bring the
+  new one down from off screen after the header had sat empty. So when less
+  than half of the old wordmark is on screen just before the capture,
+  `src/themes/portal/runtime.ts` sets its `view-transition-name` to `none`
+  inline. It rides the old page's root snapshot, and the new wordmark, with
+  no partner, enters where it sits on your `::view-transition-new(wordmark)`
+  animation alone: your `-in` keyframes from another school, Astro's fade
+  on your group's clock between your own pages. Nothing moves the group,
+  and your wordmark shows only as your keyframes allow, so a fade that
+  starts late leaves the slot empty for that long. A wordmark in view keeps
+  its name, so swaps from the top of a page are unchanged.
+  `scripts/themes/probe-scrolled-swap.mjs` films the case (`--to-school` for
+  a school change).
 - Astro also writes `[data-astro-transition-fallback]` rules. They animate
   the element itself in a browser without view transitions, and the portal's
   router runs with `fallback="none"`, so they never apply.

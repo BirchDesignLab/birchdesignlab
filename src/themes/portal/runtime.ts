@@ -15,6 +15,15 @@
  *   with the rest of the old page's <html> attributes. When the switcher
  *   warmed the destination (below), load it from memory instead of the
  *   network, and stop only the warming the navigation made useless.
+ *   At the same moment, take the departing wordmark out of the morph when
+ *   less than half of it is on screen (the header scrolls away with the
+ *   page, so on a swap clicked from low down a page its box is above the
+ *   viewport and the new wordmark would morph down from off screen): its
+ *   name is set to none inline, so it rides the old page's root snapshot and
+ *   the new wordmark, with no partner, enters where it sits on its school's
+ *   ::view-transition-new(wordmark) animation. Every navigation gives the
+ *   name back first and decides again, so an aborted one never carries it
+ *   into the next swap.
  * - before-swap: carry the scheme, the .js marker and .reveal-on onto the
  *   incoming document. The router replaces every <html> attribute with the
  *   new document's, and the inline bootstrap never runs again (F001). Mark
@@ -281,6 +290,39 @@ async function loadWarmed(
   if (styles.length && !e.signal.aborted) await Promise.all(styles);
 }
 
+/**
+ * The departing wordmark and the view-transition names a swap captures
+ * (header comment, before-preparation). Half on screen is the line: above
+ * it, the old image is mostly in view and the morph starts from where the
+ * visitor saw the mark; below it, most of the old image is off screen and
+ * the morph reads as a drop from above. A wordmark at the top of an
+ * unscrolled page is wholly in view, so arrivals and in-school swaps from
+ * the top keep their morph and crossfade exactly.
+ */
+let unnamedMark: HTMLElement | null = null;
+
+function renameWordmark(): void {
+  unnamedMark?.style.removeProperty('view-transition-name');
+  unnamedMark = null;
+}
+
+function unnameWordmarkOffScreen(): void {
+  renameWordmark();
+  // Astro marks every transition:name element with its scope (README, "Links").
+  const mark = [...document.querySelectorAll<HTMLElement>('[data-astro-transition-scope]')].find(
+    (el) => getComputedStyle(el).viewTransitionName === 'wordmark',
+  );
+  if (!mark) return;
+  const r = mark.getBoundingClientRect();
+  const area = r.width * r.height;
+  if (area === 0) return; // not rendered, so not captured either
+  const seenW = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
+  const seenH = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
+  if (seenW * seenH * 2 >= area) return;
+  mark.style.setProperty('view-transition-name', 'none');
+  unnamedMark = mark;
+}
+
 export function initPortal(): void {
   if (window.__bdlPortal) return;
   window.__bdlPortal = true;
@@ -294,6 +336,7 @@ export function initPortal(): void {
   document.addEventListener('astro:before-preparation', (event) => {
     const e = event as TransitionBeforePreparationEvent;
     delete html.dataset.toTheme;
+    renameWordmark();
     fromSwitcher = e.info === SWITCHER_INFO;
     const from = pageFromPath(location.pathname);
     const to = pageFromPath(e.to.pathname);
@@ -313,13 +356,19 @@ export function initPortal(): void {
       await Promise.all([load(), fonts]);
       // Set after the load, not before it: the old page stays unnamed while
       // the next one is fetched, and `e.to` is final after any redirect.
+      // The router starts the view transition once this resolves (router.js,
+      // transition()), so the wordmark is measured where the capture will
+      // find it.
       const dest = pageFromPath(e.to.pathname);
-      if (dest && !e.defaultPrevented && !e.signal.aborted) html.dataset.toTheme = dest.theme;
+      if (e.defaultPrevented || e.signal.aborted) return;
+      if (dest) html.dataset.toTheme = dest.theme;
+      unnameWordmarkOffScreen();
     };
   });
 
   document.addEventListener('astro:before-swap', (event) => {
     const e = event as TransitionBeforeSwapEvent;
+    unnamedMark = null; // it leaves with the old page
     const next = e.newDocument.documentElement;
     next.setAttribute(SCHEME_ATTR, currentScheme());
     next.classList.add('js');

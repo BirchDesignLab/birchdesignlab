@@ -17,6 +17,29 @@
  * --top <px> lays out only the top <px> CSS px of each frame (the header
  * band), at full size, and the file name gains `__top`.
  * Output: scripts/themes/.out/<label>/<school>__scrolled-page__<scheme>__<viewport>[__top].png
+ *
+ * Added 09-23-26 for Tier 3 stage 2 (held item 3, the wordmark dropping in
+ * after a scrolled swap):
+ *
+ * --to-school <id>: film a school change instead. From the bottom of the
+ * source school's Home, follow a link to /t/<id>/ the way motion.mjs's
+ * followLink does (the header's own link if it is on screen, otherwise a
+ * link the probe adds, since the header has scrolled away). The file name
+ * reads `__scrolled-to-<id>__` in place of `__scrolled-page__`. Home to
+ * Home is the switcher's path, so the portal keeps the proportional scroll
+ * and the new page lands scrolled to its bottom too, its header off screen.
+ * `--to <page>` with --to-school goes to that page of the other school
+ * instead (/t/<id>/<page>/, file name `__scrolled-to-<id>-<page>__`), which
+ * lands at the top, so the new header and its wordmark are in view:
+ *   BDL_GPU=1 node scripts/themes/snap.mjs --name fu-portal --reuse --port 4467 -- \
+ *     node scripts/themes/probe-scrolled-swap.mjs --school quiet --to-school cottagecore [--to about]
+ *
+ * Every sheet's title and console line also say what the wordmark did: the
+ * departing wordmark's computed view-transition-name when the transition
+ * started (`none` once the portal has taken it out of the pair) and where
+ * its box sat against the viewport, and the wordmark pseudo-elements that
+ * ran (`group`, `old`, `new`), so a sheet with no old image is told from one
+ * that morphed.
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -35,15 +58,19 @@ const list = (name, fallback) => (arg(name, fallback) || '').split(',').filter(B
 
 const base = arg('base', process.env.SNAP_BASE || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const school = arg('school', '');
-const to = arg('to', 'about');
+const toSchool = arg('to-school', '');
+const to = arg('to', toSchool ? 'home' : 'about');
 const schemes = list('schemes', 'dark,light');
 const viewports = list('viewports', 'desktop,mobile');
 const label = arg('label', 'scrolled');
 const top = Number(arg('top', '0'));
-if (!/^[a-z][a-z0-9-]{0,31}$/.test(school) || !/^[a-z][a-z0-9-]{0,31}$/.test(to)) {
-  console.error('usage: node scripts/themes/probe-scrolled-swap.mjs --school <id> [--to about]');
+const ID =/^[a-z][a-z0-9-]{0,31}$/;
+if (!ID.test(school) || !ID.test(to) || (toSchool && (!ID.test(toSchool) || toSchool === school))) {
+  console.error('usage: node scripts/themes/probe-scrolled-swap.mjs --school <id> [--to about] [--to-school <other id>]');
   process.exit(1);
 }
+const toHome = !!toSchool && to === 'home';
+const kind = toSchool ? `scrolled-to-${toSchool}${toHome ? '' : `-${to}`}` : 'scrolled-page';
 
 const useGpu = process.env.BDL_GPU === '1';
 const browser = await chromium.launch({
@@ -103,10 +130,26 @@ for (const scheme of schemes) {
       if (!orig) return;
       window.__probe = { runs: [] };
       document.startViewTransition = (...a) => {
+        // The departing wordmark as the capture will see it: the page's one
+        // transition:name element (README, "Links").
+        const mark = document.querySelector('[data-astro-transition-scope]');
+        const box = mark?.getBoundingClientRect();
         const vt = orig(...a);
-        const run = { at: Date.now(), ready: null, finished: null };
+        const run = {
+          at: Date.now(), ready: null, finished: null,
+          oldName: mark ? getComputedStyle(mark).viewTransitionName : null,
+          oldBox: box ? { top: Math.round(box.top), bottom: Math.round(box.bottom), vh: innerHeight } : null,
+          pseudos: [],
+        };
         window.__probe.runs.push(run);
-        vt.ready.then(() => { run.ready = Date.now(); }, () => {});
+        vt.ready.then(() => {
+          run.ready = Date.now();
+          const ran = document.getAnimations()
+            .map((an) => an.effect?.pseudoElement ?? '')
+            .filter((p) => /\(wordmark\)/.test(p))
+            .map((p) => p.replace(/^::view-transition-(image-pair|group|old|new)\(wordmark\)$/, '$1'));
+          run.pseudos = [...new Set(ran)];
+        }, () => {});
         vt.finished.then(() => { run.finished = Date.now(); }, () => {});
         return vt;
       };
@@ -119,14 +162,26 @@ for (const scheme of schemes) {
     await page.evaluate(() => document.fonts.ready);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await page.waitForTimeout(600);
-    const href = `/t/${school}/${to}/`;
-    const link = page.locator(`footer a[href="${href}"]`).first();
-    if (!(await link.count())) {
+    const href = toSchool ? `/t/${toSchool}/${toHome ? '' : `${to}/`}` : `/t/${school}/${to}/`;
+    const link = page.locator(`${toSchool ? 'header' : 'footer'} a[href="${href}"]`).first();
+    if (!toSchool && !(await link.count())) {
       failed = true;
       console.log(`${scheme} ${vpName}: no footer link to ${href}`);
       await context.close();
       continue;
     }
+    /** motion.mjs's followLink: the header's link if it is on screen, else an added one. */
+    const go = async () => {
+      if (!toSchool || (await link.isVisible().catch(() => false))) return link.click();
+      await page.evaluate((h) => {
+        const a = document.createElement('a');
+        a.href = h;
+        a.textContent = 'go';
+        a.style.cssText = 'position:fixed;left:0;top:0;opacity:0';
+        document.body.append(a);
+        a.click();
+      }, href);
+    };
 
     const cdp = await context.newCDPSession(page);
     const frames = [];
@@ -141,7 +196,7 @@ for (const scheme of schemes) {
       frames.push({ data, at: Date.now() / 1000 });
     }
     const t0 = await page.evaluate(() => Date.now());
-    await link.click();
+    await go();
     await page
       .waitForFunction(() => window.__probe?.runs.some((r) => r.finished != null), null, { timeout: 4000 })
       .catch(() => {});
@@ -149,16 +204,23 @@ for (const scheme of schemes) {
     await cdp.send('Page.stopScreencast');
     await cdp.detach();
     const run = await page.evaluate(() => window.__probe?.runs.at(-1) ?? null);
+    if (new URL(page.url()).pathname !== href) {
+      failed = true;
+      console.log(`${scheme} ${vpName}: ended on ${page.url()}, wanted ${href}`);
+    }
     const before = frames.filter((f) => f.at * 1000 < t0).slice(-1);
     const after = frames.filter((f) => f.at * 1000 >= t0);
     const shown = [...before, ...after].map((f) => ({ ...f, ms: Math.round(f.at * 1000 - t0) }));
     const timing = run ? `ready +${run.ready - t0}, finished +${run.finished - t0}` : 'no transition seen';
-    const file = join(outDir, `${school}__scrolled-page__${scheme}__${vpName}${top ? '__top' : ''}.png`);
+    const box = run?.oldBox ? ` at ${run.oldBox.top}..${run.oldBox.bottom} of ${run.oldBox.vh}` : '';
+    const mark = run ? `; wordmark ${run.oldName ?? 'missing'}${box}, ran ${run.pseudos.join('+') || 'nothing'}` : '';
+    const file = join(outDir, `${school}__${kind}__${scheme}__${vpName}${top ? '__top' : ''}.png`);
     const cols = top ? (vp.mobile ? 4 : 2) : vp.mobile ? 8 : 5;
     const cellW = top ? (vp.mobile ? 390 : 720) : vp.mobile ? 200 : 300;
+    const what = toSchool ? `school change to ${href}` : `page swap (footer ${to})`;
     await sheet(shown, file, cols, cellW,
-      `${school} scrolled page swap (footer ${to}), ${scheme} ${vpName}: ${shown.length} frames, ${timing}`, vp.width);
-    console.log(`${file}  (${shown.length} frames; ${timing})`);
+      `${school} scrolled ${what}, ${scheme} ${vpName}: ${shown.length} frames, ${timing}${mark}`, vp.width);
+    console.log(`${file}  (${shown.length} frames; ${timing}${mark})`);
     await context.close();
   }
 }
