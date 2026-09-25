@@ -58,28 +58,41 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Branch `feat/theme-schools-tier3-stage2`. Current handoff (wrap-up):
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-24-26-stage2-wrapup.md`,
-plan `tier3-stage2/stage2-plan.md` (Tier 1 and 2 done; the founder's
-decisions are in `tier3-briefs/stage0-decisions.md`). Six
-tranche-1 schools built 09-23-26 (vaporwave, grandmillennial, glassmorphism,
-cottagecore, bauhaus, swiss). Tier 3 Stage 1 (the portal) done 09-23-26 and
-merged in PR #88 (BDL-010 is a working specimen in the Lab); Stage 2 (the
-defect sweep) under way.
+Current handoff: Stage 3, pair B (glassmorphism and vaporwave),
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-24-26-stage3.md`
+(Tier 1 and 2 done; the founder's decisions are in
+`tier3-briefs/stage0-decisions.md`). Six tranche-1 schools built 09-23-26
+(vaporwave, grandmillennial, glassmorphism, cottagecore, bauhaus, swiss).
+Tier 3 Stage 1 (the portal) merged in PR #88 (BDL-010 is a working specimen
+in the Lab). Stage 2 (the defect sweep) merged in PR #89 09-24-26; its
+wrap-up (the press trigger dropped, final gates, review panel,
+`tier3-stage2/stage2-report.md`) is on
+`feat/theme-schools-tier3-stage2-wrapup`.
 
-**Held for review after Stage 2's wave B (founder, 09-23-26).** Four
-issues, to be looked at together for a common pattern
-(`theme-schools-research/tier3-stage2/assessment-before-wave-b.md`, and
-the decisions file):
-- Safari (below): the founder's equipment cannot test it.
-- The dark-desktop first-draw freeze: 200 to 400 ms with no frames on the
-  first switch into vaporwave, cottagecore or glassmorphism in dark. Reduce
-  it if possible (drawing destinations ahead of time).
-- The wordmark dropping in from above the viewport on a swap clicked from
-  low down a page, in every school. Vaporwave's taskbar shows an empty Start
-  slot meanwhile.
-- Glassmorphism's page change is a correct but plain fade, with nothing of
-  glass in it.
+**Stage 2 results (09-24-26).** Every school's repair passes the shared
+swap acceptance and the wordmark judge (56 of 56; blank at most 68 ms); the
+switcher holds still in 72 of 72 strips. Drawing ahead cuts the first-draw
+freeze for a visitor who rests the mouse on a school's row (grandmillennial
+432 to 37 ms, cottagecore 396 to 67, dark desktop); a quick click or a phone
+tap still gets the full freeze, by the founder's calls (no drawing on a
+press or on the page's own links).
+
+**Held for review after Stage 2's wave B (founder, 09-23-26), resolved in
+Stage 2.** Four issues looked at together
+(`theme-schools-research/tier3-stage2/wave-b.md`, "The held review"):
+- Safari (below): still parked; the founder's equipment cannot test it.
+- The first-draw freeze: measured (`tier3-stage2/freeze-investigation.md`)
+  and reduced by drawing ahead on a 400 ms mouse rest on the switcher.
+  What is left goes to the transitions phase: drawing ahead on a school's
+  own links (grandmillennial About still holds about 260 ms), and phones,
+  which never draw ahead (a tap gets the full freeze).
+- The wordmark dropping in from above on a scrolled swap: fixed at the
+  portal level for all seven schools. Its mirror, going Back to a scrolled
+  page, still morphs toward an off-screen box (older than Stage 2,
+  `harness/wm-close-back.mjs`).
+- Glassmorphism's plain fade: part of a wider pattern (four schools'
+  in-school swaps converged on one safe fade shape). The transitions phase
+  gives every school its own gesture, glass's material one first.
 
 **Parked from the Stage 2 start (09-23-26):**
 - Safari. The founder's iPhone 17 Pro Max test (Safari, private) found some
@@ -737,6 +750,11 @@ Kept here because it is the kind of clearance that gets lost in a merged PR body
   What the Astro jump actually touches: content collections (`content.config.ts`, the glob loader, `lab-schema.ts`, and zod if it majors too), `@astrojs/sitemap` compatibility, the three Svelte 5 islands, and `astro:assets` image optimization used by the BDL-005 hero. The 123 tests plus `astro check` catch structural breakage; they do **not** catch rendering and CSS drift, so it needs a real browser pass like the CSP gate got. Fully reversible: revert the commit, redeploy.
 
   **Done 09-22-26 on the theme-schools branch stack** (`chore/deps-minors`, `chore/astro-7`, then one branch per remaining major). Astro 7.3.4 + @astrojs/svelte 9 + zod 4 landed together; every root and Lab page was pixel-diffed against the Astro 5 build (`scripts/themes/capture.mjs` + `diff-captures.mjs`, GPU). Two regressions surfaced and are fixed in `astro.config.mjs`: `compressHTML` pinned to `true` (the new `'jsx'` default ate whitespace in the copy) and a CSS restore plugin (Astro's CSS plugin cannot restore deleted CSS under Rolldown, which broke `/?tune`). Delete that plugin when Astro restores via `emitFile`.
+
+  **Check on every Astro upgrade (the Portal leans on Astro internals, 09-24-26):**
+  - `loadWarmed` in `src/themes/portal/runtime.ts` stands in for Astro's own loader when a warmed page is swapped in; check it against the new router.
+  - The arriving wordmark is found by matching the inline style text Astro writes for `transition:name` (`runtime.ts`); a change in that text silently breaks the scrolled-swap wordmark fix.
+  - Astro's `@layer astro` wordmark fade (180 ms) is overridden by the README's `inherit` recipe; re-run the wordmark judge (`harness/stage-gates.mjs --steps wordmark`).
 
   **Held back, with reasons:**
   - **TypeScript 7.0** ships no classic compiler API (its package exports only `version.cjs` plus `unstable/*` native bindings), and `@astrojs/check` 0.9.10 peers on `typescript ^5 || ^6`. On TS 7 the typecheck gate would not run, which is the failure mode `npm run verify` exists to prevent. Pinned to **TypeScript 6.0.x**, the newest version the gate supports; `astro check` proven live on it with a planted error. Revisit when `@astrojs/check` / `@astrojs/language-server` add TS 7 support.
