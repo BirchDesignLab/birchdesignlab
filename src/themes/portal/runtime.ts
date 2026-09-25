@@ -269,7 +269,7 @@ let navigations = 0;
     a rest draws every row the pointer stays on at least as long, so 300 ms
     draws all six at 300 ms a row, and 400 ms is the shortest tried that
     draws none at 150 to 350 ms a row, a reading pace (about 250 ms) with a
-    margin. Each copy drawn holds the dialog for up to about 180 ms. The
+    margin. Each copy drawn holds the dialog for about 170 to 250 ms. The
     price: a copy needs about 500 ms before the click to pay in full
     (grandmillennial's hold 374 to about 45 ms), so a visitor who rests less
     than about 900 ms before clicking gains less, nothing below about
@@ -277,8 +277,8 @@ let navigations = 0;
     100 ms). */
 const DRAW_DWELL_MS = 400;
 /** The same for keyboard focus, longer: tabbing down the list at a reading
-    pace stops on every row, and each copy drawn holds the dialog for up to
-    about 250 ms, so only a focus the visitor stays on draws. */
+    pace stops on every row, and each copy drawn holds the dialog (about 170
+    to 250 ms, as above), so only a focus the visitor stays on draws. */
 const FOCUS_DWELL_MS = 500;
 /** How long a copy stays up once its first frame is on screen, so tiles just
     past the viewport are drawn too. */
@@ -402,7 +402,9 @@ export function drawAheadOf(path: string): void {
  * list draws nothing), keyboard focus once it has stayed FOCUS_DWELL_MS (so
  * tabbing through one draws nothing).
  * `pathOf` names the page the event's link opens, or null for one that is
- * not drawn ahead.
+ * not drawn ahead. `draw` is drawAheadOf, taken as an argument so the
+ * founder's rules below can be tested without a browser
+ * (tests/draw-on-intent.test.ts).
  *
  * A press draws nothing (the founder's call, 09-24-26). It comes only about
  * 0.1 s before the click, and a copy parses and lays out its page in one
@@ -411,7 +413,11 @@ export function drawAheadOf(path: string): void {
  * or even almost everywhere, glassmorphism 193 to 361 ms on a dark desktop
  * and cottagecore 336 to 445 on a phone. Touch therefore never draws ahead.
  */
-export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string | null): void {
+export function drawOnIntent(
+  target: EventTarget,
+  pathOf: (e: Event) => string | null,
+  draw: (path: string) => void = drawAheadOf,
+): void {
   let rest: ReturnType<typeof setTimeout> | undefined;
   let at: string | null = null;
   const settle = (path: string | null, dwell = DRAW_DWELL_MS) => {
@@ -422,7 +428,7 @@ export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string |
     // was reached) must not draw into that navigation: measured, a copy
     // started just after the click held glassmorphism's arrival about 460 ms.
     const leg = navigations;
-    if (path) rest = setTimeout(() => leg === navigations && drawAheadOf(path), dwell);
+    if (path) rest = setTimeout(() => leg === navigations && draw(path), dwell);
   };
   const leave = (e: Event) => {
     // Crossing from one part of a link to another (a row's name to its era)
@@ -549,6 +555,15 @@ function renameArrival(): void {
 }
 
 /**
+ * The rule Astro writes into an inline style for `transition:name="wordmark"`,
+ * whose scope names the wordmark element. It is Astro's internal output, so
+ * an Astro upgrade can change it; the built tests check every portal page
+ * against this same pattern, because a miss here silently turns off the
+ * scrolled-swap fix (the arriving wordmark keeps its name with no partner).
+ */
+export const WORDMARK_SCOPE = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/;
+
+/**
  * The incoming page's wordmark, read from the scope Astro's inline style
  * names `wordmark` (the new document has no computed style yet). Every
  * portal page has exactly one transition:name element, but the style is
@@ -556,9 +571,7 @@ function renameArrival(): void {
  */
 function arrivingWordmark(doc: Document): HTMLElement | null {
   for (const style of doc.querySelectorAll('style')) {
-    const scope = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/.exec(
-      style.textContent ?? '',
-    )?.[1];
+    const scope = WORDMARK_SCOPE.exec(style.textContent ?? '')?.[1];
     if (scope) return doc.querySelector<HTMLElement>(`[data-astro-transition-scope="${CSS.escape(scope)}"]`);
   }
   return null;
