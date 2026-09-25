@@ -306,6 +306,19 @@ background stack listed top to bottom, translucent layers included.
     `html[data-theme='<destination>'][data-from-theme='<source>']::view-transition-*`
     in the destination's `theme.css`. The departing school's stylesheet is
     gone by then too.
+- **Drawing ahead.** When a visitor rests the mouse 400 ms on your school's
+  row in the switcher (or on Shuffle when it picks you), or keeps keyboard
+  focus there 500 ms, the portal draws a copy of your page over the current
+  one at opacity 0.001, so the GPU compiles your page's paint before the
+  click (`src/themes/portal/runtime.ts`;
+  `docs/superpowers/specs/theme-schools-research/tier3-stage2/freeze-investigation.md`).
+  A press, a tap and your own page links draw nothing. The copy is your
+  page's HTML with every script, `noscript` and non-stylesheet link removed;
+  it carries the scheme and `.js` but not `.reveal-on` (so `[data-reveal]`
+  blocks draw as settled), and every `backdrop-filter` is forced off in it.
+  So paint your stylesheet makes is warmed, and anything your script builds
+  (a canvas, WebGL, classes a script adds) still pays its first-draw cost at
+  the swap. Keep what paints above the fold in CSS and SVG where you can.
 - Reduced motion is out of scope for the portal's schools. This is a Lab
   piece and the motion is part of the exhibit. Existing reduced-motion code
   in a school may stay but gets no further work, and reviewers do not flag

@@ -1,3 +1,8 @@
+/**
+ * Archived one-off probe (Tier 3 Stage 2, 09-23-26): Tally a label folder's wordmark verdicts
+ * Kept as a record; see README.md in this folder for what superseded it.
+ * Paths inside may point at a scratchpad; fix them before running it again.
+ */
 const fs=require('fs');
 for (const d of process.argv.slice(2)) {
   const m=JSON.parse(fs.readFileSync(d+'/manifest.json','utf8'));

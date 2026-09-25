@@ -1,3 +1,8 @@
+/**
+ * Archived one-off probe (Tier 3 Stage 2, 09-23-26): How near-white is each frame of a strip? (vaporwave light CRT)
+ * Kept as a record; see README.md in this folder for what superseded it.
+ * Paths inside may point at a scratchpad; fix them before running it again.
+ */
 import { loadImage, createCanvas } from '@napi-rs/canvas';
 import { readFile } from 'node:fs/promises';
 

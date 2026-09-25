@@ -182,13 +182,17 @@ const rasterSeq = list('raster-seq', '');
    before the click instead of being let finish, and the click's
    astro:before-preparation takes it down, as runtime.ts would. */
 const rasterLead = Number(arg('raster-lead', '0'));
-/* hover and tap (agent D, 09-23-26): drawing ahead on intent, as shipped.
-   hover: for an arrival the dialog is opened and its warm-up let finish (a
-   visitor reading the list), then the real mouse rests on the destination's
-   row --hover-lead ms before the click; for an in-school swap the mouse
-   rests on the page's own link to the destination. tap: the dialog is opened
-   and let warm, then a touch goes down on the row --hover-lead ms before
-   the click (a finger's press; pointerdown draws at once). */
+/* hover and tap (agent D, 09-23-26): drawing ahead on intent, as it first
+   shipped. hover: for an arrival the dialog is opened and its warm-up let
+   finish (a visitor reading the list), then the real mouse rests on the
+   destination's row --hover-lead ms before the click; for an in-school swap
+   the mouse rests on the page's own link to the destination. tap: the dialog
+   is opened and let warm, then a touch goes down on the row --hover-lead ms
+   before the click. Since 09-24-26 runtime.ts draws on neither a page link
+   (the fixer withdrew it) nor a press or touch (the founder dropped it), so
+   an in-school hover and a tap now measure no drawing ahead; and plain hover
+   and tap add the film's idle watch to --hover-lead (see --rest-before-click
+   below for an exact rest). */
 const hoverLead = Number(arg('hover-lead', '300'));
 /* --rest-before-click <ms> (Tier 3 stage 2 wrap-up, 09-24-26): hover, timed
    exactly. Under plain hover the rest before the click is --hover-lead plus
@@ -211,8 +215,10 @@ const restNoPress = process.argv.includes('--no-press');
    about 0.1 s), instead of at the same instant. A copy the press starts has
    that much lead, and the click waits while the main thread draws it, as a
    real release would. On the mobile viewport the press says pointerType
-   touch (runtime.ts draws on a press of either kind; the mouse still moves
-   onto the row first, which only starts a rest the click cuts short). Each
+   touch (runtime.ts drew on a press of either kind until the founder dropped
+   the press trigger the same day; since then a press draws nothing, and this
+   flag measures that it does not; the mouse still moves onto the row first,
+   which only starts a rest the click cuts short). Each
    run records when the press really went down (restInfo.pressAt, from the
    click). */
 const pressLead = Number(arg('press-lead', '0'));
