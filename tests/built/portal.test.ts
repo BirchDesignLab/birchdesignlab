@@ -14,6 +14,7 @@ import {
 } from './helpers';
 import { ROOT_PAGES } from '../../scripts/themes/lib/root-pages.mjs';
 import { THEMES } from '../../src/themes/registry';
+import { WORDMARK_SCOPE } from '../../src/themes/portal/runtime';
 
 /**
  * The /t/ portal's promises, checked on the built site (spec §1, §5, §6).
@@ -408,4 +409,48 @@ describe('"From the lab" lines link to their entries', () => {
       }
     });
   }
+});
+
+describe('the wordmark contract holds on the built site (README, "The wordmark")', () => {
+  // runtime.ts finds the arriving wordmark by this pattern in Astro's inline
+  // style; if an Astro upgrade changes that output, the scrolled-swap fix
+  // turns itself off without a sound, so every page is checked against it.
+  for (const route of portalRoutes) {
+    it(`${route}: Astro's inline style names the wordmark in the form runtime.ts reads`, () => {
+      const page = doc(readPage(route));
+      const scopes = page
+        .querySelectorAll('style')
+        .map((s) => WORDMARK_SCOPE.exec(s.text)?.[1])
+        .filter((x): x is string => !!x);
+      expect(scopes, 'runtime.ts WORDMARK_SCOPE no longer matches what Astro writes').toHaveLength(1);
+      expect(page.querySelectorAll(`[data-astro-transition-scope="${scopes[0]}"]`)).toHaveLength(1);
+    });
+  }
+  // Without these three, a school's wordmark falls back to Astro's layered
+  // 180 ms fade inside a longer morph (p5-proof.md), which only a film shows.
+  for (const id of schools) {
+    it(`${id}: both wordmark images run on the group's clock (duration and delay inherit, fill both)`, () => {
+      const rules = rulesOf(schoolCssOf(readPage(`/t/${id}/`)));
+      for (const image of ['old', 'new']) {
+        const own = new RegExp(`data-theme=['"]?${id}['"]?\\]::view-transition-${image}\\(wordmark\\)$`);
+        const recipe = rules.some(
+          (r) =>
+            r.selector.split(',').some((sel) => own.test(sel.trim())) &&
+            ['animation-duration', 'animation-delay'].every((prop) => r.decls.some((d) => d.prop === prop && d.value === 'inherit')) &&
+            r.decls.some((d) => d.prop === 'animation-fill-mode' && d.value === 'both'),
+        );
+        expect(recipe, `${id} ::view-transition-${image}(wordmark) lacks the recipe`).toBe(true);
+      }
+    });
+  }
+});
+
+describe("vaporwave's floor runs to the true page bottom", () => {
+  it('its --vw-tail is the height of the portal tail it paints under', () => {
+    const html = readPage('/t/vaporwave/');
+    const tail = /height:\s*(\d+)px/.exec(doc(html).querySelector('[data-portal-tail]')?.getAttribute('style') ?? '')?.[1];
+    const floor = /--vw-tail:\s*(\d+)px/.exec(schoolCssOf(html))?.[1];
+    expect(tail, 'PortalLayout no longer sets the tail height inline').toBeDefined();
+    expect(floor, 'src/themes/vaporwave/Footer.astro --vw-tail must match PortalLayout.astro data-portal-tail').toBe(tail);
+  });
 });

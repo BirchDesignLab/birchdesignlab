@@ -1,3 +1,8 @@
+/**
+ * Archived one-off probe (Tier 3 Stage 2, 09-23-26): Do the wordmark images follow the group's timing? (P5)
+ * Kept as a record; see README.md in this folder for what superseded it.
+ * Paths inside may point at a scratchpad; fix them before running it again.
+ */
 import { chromium } from 'playwright';
 const b = await chromium.launch({ args: ['--use-angle=d3d11','--enable-gpu','--ignore-gpu-blocklist'] });
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });

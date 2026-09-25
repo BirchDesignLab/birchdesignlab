@@ -53,8 +53,8 @@
  * Drawing ahead (tier3-stage2/freeze-investigation.md): on a first arrival
  * the swap holds still while the GPU compiles a program for every new kind
  * of paint the page draws, up to about 450 ms. So when the visitor reaches
- * for a page (a pointer or a keyboard focus resting on its row in the
- * switcher's dialog or on Shuffle, or a press on either), a script-less copy
+ * for a page (a mouse or a keyboard focus resting on its row in the
+ * switcher's dialog or on Shuffle; never a press), a script-less copy
  * of it is drawn over the current page at opacity 0.001 (a quarter of an
  * 8-bit level: no pixel moves) until its first frame is on screen, then
  * removed. The programs stay compiled for the browser session, and the real
@@ -260,16 +260,23 @@ const drawnAhead = new Set<string>();
 let drawWanted: { key: string; html: string | null; go: (html: string) => Promise<void> } | null = null;
 /** The copy on screen, removed the moment a navigation begins. */
 let copy: HTMLIFrameElement | null = null;
-/** Navigations begun since the hard load (stopDrawingAhead), so a rest timed
-    before one knows it is stale. */
-let navigations = 0;
+/** A navigation has begun and its page has not landed yet (stopDrawingAhead
+    to resumeDrawingAhead). Nothing is drawn meanwhile: a link named then was
+    named against the page being left, and a copy drawn into the load is
+    swapped out with the old body (review code-1, 09-24-26: the mouse
+    reaching Shuffle during a slow load drew a copy there, and the lost copy
+    blocked drawing ahead for 3 s). */
+let navigating = false;
+/** Changes whenever a navigation begins or lands, so a rest timed in one
+    stretch knows it is stale in the next. */
+let epoch = 0;
 /** How long a mouse pointer rests on a link before its page is drawn, so
     browsing the list draws nothing (the founder's call, 09-24-26). Measured
     with the pointer moved down the switcher's rows (draw-ahead-rest.mjs):
     a rest draws every row the pointer stays on at least as long, so 300 ms
     draws all six at 300 ms a row, and 400 ms is the shortest tried that
     draws none at 150 to 350 ms a row, a reading pace (about 250 ms) with a
-    margin. Each copy drawn holds the dialog for up to about 180 ms. The
+    margin. Each copy drawn holds the dialog for about 170 to 250 ms. The
     price: a copy needs about 500 ms before the click to pay in full
     (grandmillennial's hold 374 to about 45 ms), so a visitor who rests less
     than about 900 ms before clicking gains less, nothing below about
@@ -277,8 +284,8 @@ let navigations = 0;
     100 ms). */
 const DRAW_DWELL_MS = 400;
 /** The same for keyboard focus, longer: tabbing down the list at a reading
-    pace stops on every row, and each copy drawn holds the dialog for up to
-    about 250 ms, so only a focus the visitor stays on draws. */
+    pace stops on every row, and each copy drawn holds the dialog (about 170
+    to 250 ms, as above), so only a focus the visitor stays on draws. */
 const FOCUS_DWELL_MS = 500;
 /** How long a copy stays up once its first frame is on screen, so tiles just
     past the viewport are drawn too. */
@@ -367,11 +374,11 @@ async function drawCopy(key: string, html: string): Promise<boolean> {
  * Draw `path` ahead of time: the visitor is reaching for it. Warms it first
  * when it is not warm (warmPages()'s rules: never in dev, never for
  * Save-Data or 2G). Replaces an earlier wish that has not started drawing;
- * never draws the page the visitor is on, over another copy, during an
- * arrival or in a hidden tab.
+ * never draws the page the visitor is on, over another copy, while a
+ * navigation loads, during an arrival or in a hidden tab.
  */
 export function drawAheadOf(path: string): void {
-  if (import.meta.env.DEV || frugal()) return;
+  if (import.meta.env.DEV || frugal() || navigating) return;
   const key = keyOf(path);
   if (key === keyOf(location.href) || drawnAhead.has(key) || drawWanted?.key === key) return;
   const wish: NonNullable<typeof drawWanted> = {
@@ -397,25 +404,51 @@ export function drawAheadOf(path: string): void {
 }
 
 /**
- * Draw ahead the page a link opens when the visitor reaches for it: a press
- * at once, a mouse pointer once it has rested on the link DRAW_DWELL_MS (so
- * sweeping across a list draws nothing), keyboard focus once it has stayed
- * FOCUS_DWELL_MS (so tabbing through one draws nothing).
+ * Draw ahead the page a link opens when the visitor reaches for it: a mouse
+ * pointer once it has rested on the link DRAW_DWELL_MS (so sweeping across a
+ * list draws nothing), keyboard focus once it has stayed FOCUS_DWELL_MS (so
+ * tabbing through one draws nothing).
  * `pathOf` names the page the event's link opens, or null for one that is
- * not drawn ahead.
+ * not drawn ahead. `draw` is drawAheadOf, taken as an argument so the
+ * founder's rules below can be tested without a browser
+ * (tests/draw-on-intent.test.ts).
+ *
+ * A press draws nothing (the founder's call, 09-24-26). It comes only about
+ * 0.1 s before the click, and a copy parses and lays out its page in one
+ * block, so the click waits behind it: measured from the release on the live
+ * build (harness/draw-ahead-press.mjs), a press 60 or 100 ms ahead was worse
+ * or even almost everywhere, glassmorphism 193 to 361 ms on a dark desktop
+ * and cottagecore 336 to 445 on a phone. Touch therefore never draws ahead.
  */
-export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string | null): void {
+export function drawOnIntent(
+  target: EventTarget,
+  pathOf: (e: Event) => string | null,
+  draw: (path: string) => void = drawAheadOf,
+): void {
   let rest: ReturnType<typeof setTimeout> | undefined;
   let at: string | null = null;
+  let seen = epoch;
   const settle = (path: string | null, dwell = DRAW_DWELL_MS) => {
+    // The link remembered belongs to before a navigation began or landed:
+    // forget it, so the same link on the new page is timed afresh.
+    if (seen !== epoch) {
+      clearTimeout(rest);
+      at = null;
+      seen = epoch;
+    }
     if (path === at) return;
     clearTimeout(rest);
     at = path;
-    // A rest still being timed when a navigation begins (a click before it
-    // was reached) must not draw into that navigation: measured, a copy
-    // started just after the click held glassmorphism's arrival about 460 ms.
-    const leg = navigations;
-    if (path) rest = setTimeout(() => leg === navigations && drawAheadOf(path), dwell);
+    // No rest is timed while a navigation loads (see `navigating`). One still
+    // being timed when a navigation begins (a click before it was reached)
+    // must not draw into it either: measured, a copy started just after the
+    // click held glassmorphism's arrival about 460 ms. A pointer left still
+    // on Shuffle through a swap draws nothing until it moves: a visitor
+    // shuffling again and again must not meet a copy mid-draw at the click
+    // (the press trigger's lesson).
+    if (!path || navigating) return;
+    const leg = epoch;
+    rest = setTimeout(() => leg === epoch && draw(path), dwell);
   };
   const leave = (e: Event) => {
     // Crossing from one part of a link to another (a row's name to its era)
@@ -431,18 +464,87 @@ export function drawOnIntent(target: EventTarget, pathOf: (e: Event) => string |
   target.addEventListener('pointerout', leave);
   target.addEventListener('focusin', (e) => settle(pathOf(e), FOCUS_DWELL_MS));
   target.addEventListener('focusout', leave);
-  target.addEventListener('pointerdown', (e) => {
-    const path = pathOf(e);
-    if (path) drawAheadOf(path);
-  });
 }
 
 /** A navigation has begun: take the copy down before the old page is
-    captured, and draw nothing more for the page being left. */
+    captured, and draw nothing more until the next page lands. */
 function stopDrawingAhead(): void {
-  navigations++;
+  navigating = true;
+  epoch++;
   drawWanted = null;
   removeCopy();
+}
+
+/** Drawing ahead may start again, from fresh rests. A no-op unless a
+    navigation was under way. */
+function resumeDrawingAhead(): void {
+  if (!navigating) return;
+  navigating = false;
+  epoch++;
+  removeCopy();
+}
+
+/*
+ * When a navigation is over, told by the router's events (initPortal wires
+ * them; tests/draw-on-intent.test.ts drives them with plain AbortSignals).
+ * Only the latest navigation's landing resumes drawing ahead. Astro's
+ * router (router.js) can end a navigation four ways, and the review of the
+ * first fix (09-24-26, harness/draw-ahead-nav-code-probe.mjs) found the
+ * first two missed:
+ * - aborted with nothing after it: a same-page hash link (every header's
+ *   skip link) or a Back to the same page's entry aborts a loading
+ *   navigation and starts none, so no page lands. The abort resumes, unless
+ *   a navigation that replaced it has begun: transition() aborts the old one
+ *   and dispatches the new one's astro:before-preparation in one synchronous
+ *   stretch, before the queued microtask runs;
+ * - landed, but not the latest: a Back or a click during the old page's
+ *   capture lets the first navigation swap while the second still loads.
+ *   Its after-swap and page-load must not resume (a copy would be drawn
+ *   into the second's load); the second's landing does;
+ * - refused (the preparation prevented, not aborted): the router falls back
+ *   to a full load, which unloads the page; if it does not (the visitor
+ *   stops it), drawing ahead resumes rather than stay off;
+ * - restored from the back/forward cache mid-navigation: resumes.
+ */
+/** The latest navigation begun, and whether the swap under way is its own. */
+let latestNavigation: AbortSignal | null = null;
+let swapIsLatest = false;
+
+/** astro:before-preparation. */
+export function navigationBegan(signal: AbortSignal): void {
+  latestNavigation = signal;
+  swapIsLatest = false;
+  stopDrawingAhead();
+  signal.addEventListener(
+    'abort',
+    () =>
+      queueMicrotask(() => {
+        if (latestNavigation === signal) resumeDrawingAhead();
+      }),
+    { once: true },
+  );
+}
+
+/** astro:before-swap: the swap about to happen, and whether it is the latest navigation's. */
+export function swapBegan(signal: AbortSignal): void {
+  swapIsLatest = signal === latestNavigation && !signal.aborted;
+}
+
+/** astro:after-swap, and astro:page-load as a safety net. */
+export function navigationLanded(): void {
+  if (swapIsLatest) resumeDrawingAhead();
+}
+
+/** A refused preparation (its loader prevented it, not an abort). */
+export function navigationRefused(signal: AbortSignal): void {
+  if (signal === latestNavigation && !signal.aborted) resumeDrawingAhead();
+}
+
+/** pageshow from the back/forward cache: whatever was under way is gone. */
+export function pageRestored(): void {
+  latestNavigation = null;
+  swapIsLatest = false;
+  resumeDrawingAhead();
 }
 
 /**
@@ -546,6 +648,15 @@ function renameArrival(): void {
 }
 
 /**
+ * The rule Astro writes into an inline style for `transition:name="wordmark"`,
+ * whose scope names the wordmark element. It is Astro's internal output, so
+ * an Astro upgrade can change it; the built tests check every portal page
+ * against this same pattern, because a miss here silently turns off the
+ * scrolled-swap fix (the arriving wordmark keeps its name with no partner).
+ */
+export const WORDMARK_SCOPE = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/;
+
+/**
  * The incoming page's wordmark, read from the scope Astro's inline style
  * names `wordmark` (the new document has no computed style yet). Every
  * portal page has exactly one transition:name element, but the style is
@@ -553,9 +664,7 @@ function renameArrival(): void {
  */
 function arrivingWordmark(doc: Document): HTMLElement | null {
   for (const style of doc.querySelectorAll('style')) {
-    const scope = /\[data-astro-transition-scope="([^"]+)"\]\s*\{\s*view-transition-name:\s*wordmark\s*;/.exec(
-      style.textContent ?? '',
-    )?.[1];
+    const scope = WORDMARK_SCOPE.exec(style.textContent ?? '')?.[1];
     if (scope) return doc.querySelector<HTMLElement>(`[data-astro-transition-scope="${CSS.escape(scope)}"]`);
   }
   return null;
@@ -592,7 +701,7 @@ export function initPortal(): void {
     const e = event as TransitionBeforePreparationEvent;
     delete html.dataset.toTheme;
     renameWordmark();
-    stopDrawingAhead();
+    navigationBegan(e.signal);
     fromSwitcher = e.info === SWITCHER_INFO;
     const from = pageFromPath(location.pathname);
     const to = pageFromPath(e.to.pathname);
@@ -610,6 +719,7 @@ export function initPortal(): void {
     const load = hit ? () => loadWarmed(e, hit, original) : original;
     e.loader = async () => {
       await Promise.all([load(), fonts]);
+      if (e.defaultPrevented && !e.signal.aborted) navigationRefused(e.signal);
       // Set after the load, not before it: the old page stays unnamed while
       // the next one is fetched, and `e.to` is final after any redirect.
       // The router starts the view transition once this resolves (router.js,
@@ -624,6 +734,7 @@ export function initPortal(): void {
 
   document.addEventListener('astro:before-swap', (event) => {
     const e = event as TransitionBeforeSwapEvent;
+    swapBegan(e.signal);
     // The old wordmark leaves with the old page. When it was taken out of
     // the morph, take the new one out too, before the router swaps it in
     // and the new state is captured (swap-functions.js keeps its inline
@@ -656,7 +767,13 @@ export function initPortal(): void {
     vt?.finished.then(settle, settle);
   });
 
+  document.addEventListener('astro:after-swap', navigationLanded);
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) pageRestored();
+  });
+
   document.addEventListener('astro:page-load', () => {
+    navigationLanded();
     if (firstLoad) {
       firstLoad = false;
       return;

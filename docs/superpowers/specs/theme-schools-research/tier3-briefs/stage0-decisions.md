@@ -330,6 +330,28 @@ another session.
   branch and settle this at the start of the next session
   (`HANDOFF-09-24-26-stage2-wrapup.md`, step 1).
 
+**The press trigger (09-24-26, wrap-up).** Measured first with a real press
+(`harness/draw-ahead-press.mjs`, 400 runs on the live build): a press copy
+parses and lays out its page in one block, so the click waits 40 to 150 ms
+behind it, and from the release a press 60 or 100 ms ahead is worse or even
+almost everywhere (glassmorphism dark desktop 193 to 361 at 100 ms,
+cottagecore on the phone 336 to 445, bauhaus up to twice as long); only a
+140 ms press mostly pays, and glassmorphism still loses. Keeping it for touch
+alone was not supported either. Founder: "let's drop the press trigger."
+- A press draws nothing, on any pointer. Drawing ahead stays on the 400 ms
+  mouse rest and the 500 ms keyboard focus.
+- Phones therefore never draw ahead (no hover). Accepted with the answer.
+
+**At the Stage 2 stop (09-24-26).** To `tier3-stage2/stage2-report.md`,
+"Decisions for the founder":
+1. The two runtime bugs the review's code lens found (code-1, a copy drawn
+   while a navigation loads; code-2, Shuffle's stale pick after a swap):
+   "yes let's absolutely fix those", before merging.
+2. Grandmillennial's and cottagecore's header bands on a scrolled swap:
+   "let's live with it for now" (as swiss's); the transitions phase
+   revisits them.
+3. Merge PR #90: after the fixes.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

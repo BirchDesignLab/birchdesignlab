@@ -23,8 +23,8 @@
  * Speed (P4): opening the dialog warms every other school's same page, and
  * pointing at or focusing Shuffle picks its school and warms that page, so
  * the click finds the page in memory. A school's row, or Shuffle, that the
- * visitor rests on or presses also has its page drawn ahead (runtime.ts,
- * drawOnIntent), so its first draw is cheap. The control that started a
+ * visitor rests on (a mouse or a keyboard focus, never a press) also has its
+ * page drawn ahead (runtime.ts, drawOnIntent), so its first draw is cheap. The control that started a
  * school change shows a busy state until the new page has loaded (or the
  * navigation is abandoned), inside its own box, and its labels keep the
  * width of the longest word they can show, so the bar never changes size
@@ -243,8 +243,13 @@ class BdlSwitcher extends HTMLElement {
   private promptOff: AbortController | null = null;
   /** The control showing the busy state, while a school change it started is under way. */
   private busy: { control: HTMLElement } | null = null;
-  /** Shuffle's next school, picked when the visitor points at it, so the page it warms is the one they get. */
-  private shufflePick: string | null = null;
+  /** Shuffle's next school, picked when the visitor points at it, so the page
+      it warms (and draws ahead) is the one they get; `on` is the page it was
+      picked on, and a pick from a page since left is never used. */
+  private shufflePick: { id: string; on: string } | null = null;
+  /** True while the router's lost focus is put back after a swap: that focus
+      is not the visitor reaching for Shuffle, so it draws nothing. */
+  private refocusing = false;
 
   connectedCallback() {
     // Each swap briefly connects the incoming page's own <bdl-switcher>
@@ -340,6 +345,10 @@ class BdlSwitcher extends HTMLElement {
     shuffle.addEventListener('pointerenter', primeShuffle);
     shuffle.addEventListener('focus', primeShuffle);
     drawOnIntent(shuffle, () => {
+      // Review code-2 (09-24-26): without this, Safari's and Firefox's
+      // refocus after a swap drew a copy 500 ms after arriving, of a school
+      // Shuffle then did not go to (a wasted hold, on a phone too).
+      if (this.refocusing) return null;
       const here = this.here();
       const pick = this.pickShuffle();
       return here && pick ? pagePath(here.page, pick) : null;
@@ -360,7 +369,9 @@ class BdlSwitcher extends HTMLElement {
 
     document.addEventListener('astro:page-load', () => {
       this.clearBusy();
-      this.shufflePick = null; // picked against the page just left
+      // No need to drop Shuffle's pick here: one made on the page just left
+      // no longer matches the address (pickShuffle). Dropping it at page-load
+      // threw away a pick made at the swap, which a rest had already named.
       this.update();
       // A visitor shuffling again and again stays on the button: pick and warm the next one now.
       if (shuffle.matches(':hover') || this.root.activeElement === shuffle) primeShuffle();
@@ -390,7 +401,13 @@ class BdlSwitcher extends HTMLElement {
       const control = refocus;
       refocus = null;
       const lost = document.activeElement === null || document.activeElement === document.body;
-      if (control && lost && this.root.contains(control)) control.focus({ preventScroll: true });
+      if (!control || !lost || !this.root.contains(control)) return;
+      this.refocusing = true; // focus events are dispatched inside focus()
+      try {
+        control.focus({ preventScroll: true });
+      } finally {
+        this.refocusing = false;
+      }
     });
     window.addEventListener('pageshow', (e) => {
       if (e.persisted) this.clearBusy();
@@ -439,15 +456,18 @@ class BdlSwitcher extends HTMLElement {
     warmPages(next.map((s) => pagePath(here.page, s.id)));
   }
 
-  /** Shuffle's school: the one already picked for this page, or a new random other school. */
+  /** Shuffle's school: the one already picked on this very page, or a new random other school. */
   private pickShuffle(): string | null {
     const here = this.here();
     if (!here) return null;
-    if (this.shufflePick && this.shufflePick !== here.theme) return this.shufflePick;
+    const on = location.pathname;
+    const pick = this.shufflePick;
+    if (pick && pick.on === on && pick.id !== here.theme) return pick.id;
     const others = readPortalData().schools.filter((s) => s.id !== here.theme);
     if (others.length === 0) return null;
-    this.shufflePick = others[Math.floor(Math.random() * others.length)].id;
-    return this.shufflePick;
+    const id = others[Math.floor(Math.random() * others.length)].id;
+    this.shufflePick = { id, on };
+    return id;
   }
 
   /** Painted at the click, so the visitor has an answer before the page starts to change. */

@@ -945,7 +945,8 @@ on the RTX 3070, logged in every batch), a fresh browser per timed run,
 - `src/themes/portal/runtime.ts`: drawing ahead on intent, for the
   switcher's rows (not the current one) and Shuffle only: a mouse resting
   100 ms (**400 ms since the wrap-up**, "Wrap-up: a longer mouse rest"
-  below), a keyboard focus staying 500 ms, or a press. Everything else as D
+  below), a keyboard focus staying 500 ms, or a press (**dropped in the
+  wrap-up**, "Wrap-up: the press trigger" below). Everything else as D
   described (one copy at a time, once per page per hard load, never during
   an arrival, taken down at `astro:before-preparation`, backdrop filters
   left out of the copy).
@@ -1339,3 +1340,186 @@ Raw output: `scripts/themes/.out/rest-wrapup/` (`tables.md`, `browse-*`,
 `rest-wrapup-gates-sw/`. The browsing batch ran on builds with the row fix
 but before the navigation fix, which only acts once a navigation begins;
 the shipped build's browsing was re-measured (`browse-final-rest-400-*`).
+
+## Wrap-up: the press trigger (dropped)
+
+Written 09-24-26, the wrap-up's first question. Since the first version of
+the founder's call 1, a press on a row or Shuffle drew its page at once, so a
+visitor who clicks before the 400 ms rest still got a copy. The lead-100
+column above was a copy started by the rest, not a press, and the older
+`tap80` rows (`freeze-fix`, "Mobile emulation") had the film's 400 ms idle
+watch between the touch and the click, so their real lead is unknown. So the
+press was filmed directly before the founder was asked.
+
+`trace-arrival.mjs --press-lead <ms>` (new) puts the pointerdown that many ms
+before the click on the page's clock, after the mouse has been on the row
+350 ms (under the rest, so only the press can draw); on the mobile viewport
+it says pointerType touch. `harness/draw-ahead-press.mjs` (new) runs no press
+against presses 60, 100 and 140 ms before the release on one build of what
+is live (`wrapup-main`, :4650), the four heavy schools and bauhaus from
+quiet through the warmed dialog, desktop and mobile, dark and light, a fresh
+browser per run, 5 runs per cell: 400 runs. The presses measured 57 to 60,
+95 to 100 and 135 to 140 ms ahead.
+
+### What a press did
+
+A copy parses and lays out its page in one block of about 125 to 210 ms
+(glassmorphism shortest, cottagecore longest), so
+the click itself queues behind it: 75 to 150 ms late at 60 ms, 35 to 105 at
+100, 2 to 72 at 140. Nothing on screen moves meanwhile (the copy is at
+opacity 0.001), so what the visitor sees from letting go of the button is
+**late + still**; the tables above read still alone, which hides this.
+
+Wait from the release, ms, median of 5 (min to max): no press / press 60 /
+100 / 140 ms before it.
+
+| desktop dark | none | 60 | 100 | 140 |
+|---|---|---|---|---|
+| grandmillennial | 409 (385 to 422) | 419 | 389 | 340 |
+| glassmorphism | 193 (188 to 196) | **400** | **361** | **319** |
+| cottagecore | 399 (355 to 419) | 398 | 358 | 322 |
+| vaporwave | 230 (209 to 239) | 263 | 224 | 189 |
+| bauhaus | 65 (64 to 95) | **141** | **104** | 72 |
+
+| desktop light | none | 60 | 100 | 140 |
+|---|---|---|---|---|
+| grandmillennial | 384 (378 to 405) | 422 | 358 | 323 |
+| glassmorphism | 331 (305 to 336) | 375 | 318 | 286 |
+| cottagecore | 363 (358 to 375) | 334 | 275 | 238 |
+| vaporwave | 197 (192 to 203) | 251 | 201 | 162 |
+| bauhaus | 66 (64 to 82) | **139** | **96** | 56 |
+
+| mobile dark | none | 60 | 100 | 140 |
+|---|---|---|---|---|
+| grandmillennial | 315 (311 to 321) | 321 | 297 | 265 |
+| glassmorphism | 216 (209 to 220) | **344** | **328** | **288** |
+| cottagecore | 336 (223 to 350) | **441** | **445** | 365 |
+| vaporwave | 182 (180 to 182) | 204 | 184 | 105 |
+| bauhaus | 74 (64 to 78) | 118 | 81 | 39 |
+
+| mobile light | none | 60 | 100 | 140 |
+|---|---|---|---|---|
+| grandmillennial | 340 (336 to 358) | 335 | 292 | 256 |
+| glassmorphism | 226 (205 to 242) | **343** | **298** | **280** |
+| cottagecore | 371 (332 to 392) | **443** | **407** | 363 |
+| vaporwave | 177 (156 to 179) | 200 | 160 | 140 |
+| bauhaus | 78 (72 to 79) | 113 | 81 | 44 |
+
+- **A quick press (60 ms) is worse or even in 19 of 20 cells,** by up to
+  207 ms (glassmorphism, dark desktop).
+- **A typical press (100 ms) is mixed:** glassmorphism loses up to 168 ms,
+  cottagecore on the phone 109 (its best desktop gain turned into its worst
+  loss), bauhaus up to 39; the gains elsewhere are 6 to 88 ms.
+- **Only a slow press (140 ms) mostly pays,** and glassmorphism still loses
+  in 3 of 4 cells.
+- Touch alone is no better, so keeping the press for phones only was not
+  supported either. The mobile rows are emulation on this desktop's CPU and
+  GPU; a phone's slower main thread would make the queued click later still.
+
+**The founder's call (09-24-26): drop the press trigger**
+(stage0-decisions.md, "The press trigger"). `drawOnIntent` no longer
+listens for `pointerdown`; drawing ahead is the 400 ms mouse rest and the
+500 ms keyboard focus only, and phones (no hover) never draw ahead.
+
+### The re-check (`press-drop`)
+
+- **`draw-ahead-check.mjs --serve press-drop --sweep-paces 30,250,300`**,
+  its press visit inverted (a press held 200 ms, twice a real one, still
+  inside the rest; the mouse on desktop, a touch on the phone; then released
+  on the row): **12 of 12 presses drew nothing** and navigated with no copy
+  at `astro:after-preparation` and none after; **96 copies judged, 96 moved
+  no pixel**; 36 of 36 sweeps drew nothing; no path reached the server twice;
+  focus kept; console clean (`.out/press-drop/_drawcheck.log`).
+- **The same press batch on `press-drop`** (no press against a press 100 ms
+  ahead, all four cells): the press drew no copy in any of 100 runs, and
+  the two columns agree within run-to-run spread in all 20 rows (for
+  example desktop dark glassmorphism 219 (193 to 222) against 185 (181 to
+  187), cottagecore 386 against 390; `.out/press-drop/tables.md`).
+- **A quick click** (`trace-arrival.mjs --conditions hover
+  --rest-before-click 150`, press and click together, desktop, 5 runs):
+  dark grandmillennial 379 (364 to 395), glassmorphism 182 (180 to 214),
+  cottagecore 385 (368 to 390), vaporwave 211 (208 to 231), bauhaus 81 (64
+  to 93); light 382, 306, 362, 196, 68; the click 2 to 4 ms late and no copy
+  in any run. That is the hold with no drawing ahead, as the founder's call
+  intends.
+
+### Rerunning
+
+```
+node scripts/themes/snap.mjs --name wrapup-main          # the build before the change
+BDL_GPU=1 node scripts/themes/harness/draw-ahead-press.mjs --snap wrapup-main --port 4650 --label press-wrapup
+node scripts/themes/snap.mjs --name press-drop           # the build after it
+BDL_GPU=1 node scripts/themes/harness/draw-ahead-check.mjs --serve press-drop --port 4660 --sweep-paces 30,250,300 --label press-drop
+BDL_GPU=1 node scripts/themes/harness/draw-ahead-press.mjs --snap press-drop --port 4650 --press-leads 100 --press-draws no --label press-drop
+BDL_GPU=1 node scripts/themes/snap.mjs --name press-drop --reuse --port 4650 -- \
+  node scripts/themes/trace-arrival.mjs --schools grandmillennial,glassmorphism,cottagecore,vaporwave,bauhaus \
+  --conditions hover --rest-before-click 150 --fresh-browser --runs 5 --viewport desktop --scheme dark \
+  --label press-drop --tag quick150-desktop-dark
+```
+
+Raw output: `scripts/themes/.out/press-wrapup/` (`tables.md`,
+`press-*.runs.json`, `_batch.log`), `scripts/themes/.out/press-drop/`
+(`tables.md`, `_drawcheck.log`, `quick150-*`).
+
+## Wrap-up: drawing ahead and the navigation lifecycle
+
+Written 09-24-26. The Stage 2 review panel's code lens found two bugs by
+reading the code (`stage2-report.md`, review code-1 and code-2), and the
+founder asked for both to be fixed before PR #90 merges. The first fix
+(`953ef7f`) went through its own adversarial review
+(`aplus-tier3-stage2-navfix-review-workflow.js`, run `wf_40469d84-2dd`: an
+Opus code lens, a Sonnet browser lens, two Sonnet refute seats). That
+review found one regression in the fix and one older race it did not
+cover; both were reproduced by their refute seats and are fixed too.
+
+### What was wrong
+
+- **A copy drawn into a navigation's load** (review code-1): a rest timed
+  while the next page loaded (the mouse reaching Shuffle during a slow
+  load) drew a copy there; the swap took it away with the old body, and the
+  runtime still counted it as up.
+- **Shuffle's stale pick** (review code-2): the pick was dropped at
+  page-load after a rest at the swap had already named it, and Safari's
+  and Firefox's post-swap refocus started a focus rest, so a copy of a
+  school Shuffle did not go to was drawn about 500 ms after arriving.
+- **In the first fix** (navfix review code-1, a regression): a same-page
+  hash link (every header's skip link) aborts a loading navigation and
+  starts none, so the first fix's `navigating` stayed on and nothing was
+  drawn ahead on that page until another navigation landed.
+- **Older than both** (navfix review code-2): Back (or a click) during the
+  old page's capture lets the first navigation swap while the second still
+  loads; its after-swap resumed drawing ahead into the second's load.
+
+### What ships
+
+- `runtime.ts`: nothing is drawn, and no rest is timed, from a navigation's
+  start until the latest navigation's page lands (`navigationBegan`,
+  `swapBegan`, `navigationLanded`). An abort with nothing after it, a
+  refused preparation and a back/forward-cache restore end the wait too
+  (`navigationRefused`, `pageRestored`). Rests are timed afresh after.
+- `switcher.ts`: Shuffle's pick belongs to the page it was made on (no
+  page-load reset), and the switcher's own refocus after a swap draws
+  nothing.
+- `tests/draw-on-intent.test.ts`: every exit, in the order Astro's router
+  sends its events, with plain AbortSignals; each guard was shown to fail
+  its own test when removed.
+
+### Evidence
+
+| probe | build before the fixes | after the first fix (`953ef7f`) | final |
+|---|---|---|---|
+| `draw-ahead-nav-probe.mjs` load (a copy during a slow load) | 5 of 5 | 0 of 5 | 0 of 5 (the copy after landing is where Shuffle goes, 5 of 5; a new row rest draws in 401 to 404 ms) |
+| `draw-ahead-nav-probe.mjs` refocus (a wasted copy after Safari's refocus) | 3 of 3 | 0 of 5 | 0 of 5 |
+| `draw-ahead-nav-code-probe.mjs` hashabort (drawing ahead stuck) | not stuck | 2 of 2 stuck | 0 of 3 (a row rest draws in 351 to 361 ms) |
+| `draw-ahead-nav-code-probe.mjs` race (a copy during the second load) | 1 of 1 | 2 of 2 | 0 of 3 |
+| `draw-ahead-nav-code-probe.mjs` back (a copy during Back's load) | not run | 3 of 3 | 0 of 3 |
+
+The browser lens also ran six cases on `953ef7f` (a slow load with Back,
+an aborted row click, five Shuffles in a row, keyboard Shuffle on Safari's
+path, a full load mid-navigation and Back, the contact form and Back): all
+clean, 15 runs. Its back/forward-cache case never engaged the cache in
+headless Chromium, so the restore path is checked by the unit test only.
+Since the final fix: `npm run verify` clean (347 unit tests, astro check 0 errors and 0 warnings, 483 built-site tests); `draw-ahead-check.mjs` judged 96 copies, 96 moved no pixel, 12 of 12 presses and 36 of 36 sweeps drew nothing; `smoke.mjs` passed all 166 checks.
+
+Raw output: `scripts/themes/.out/nav-probe/`, `nav-code-probe/`,
+`navfix-browser/`.

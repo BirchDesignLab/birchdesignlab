@@ -5,12 +5,16 @@ Stage 2.
 
 ## Where things stand
 
-Branch `feat/theme-schools-tier3-stage2` (from `main` at `f797bc9`), pushed
-to origin 09-24-26 at the founder's request, and open as PR #89 (https://github.com/BirchDesignLab/birchdesignlab/pull/89); the wrap-up commits land on it. All six schools'
-Stage 2 repairs are done and committed, and so are the portal fixes, the
-freeze investigation and the 400 ms draw-ahead rest. `npm run verify` was clean at
-the last commit: 331 unit tests, astro check 0 errors and 0 warnings, 440
-built-site tests.
+Branch `feat/theme-schools-tier3-stage2` (from `main` at `f797bc9`) was
+merged to `main` 09-24-26 as PR #89
+(https://github.com/BirchDesignLab/birchdesignlab/pull/89, merge commit
+`1f0882b`) and deleted. Merging deployed it: the live site has everything
+Stage 2 shipped, the 400 ms draw-ahead rest included. The wrap-up lands on
+a new branch, `feat/theme-schools-tier3-stage2-wrapup`, from `main` at
+`1f0882b`. All six schools' Stage 2 repairs are done and committed, and so
+are the portal fixes, the freeze investigation and the 400 ms draw-ahead
+rest. `npm run verify` was clean at the last commit: 331 unit tests, astro
+check 0 errors and 0 warnings, 440 built-site tests.
 
 ## Read first, in this order
 
@@ -83,6 +87,9 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 ## The wrap-up, in order
 
 1. **First, ask the founder the one open question: the press trigger.**
+   *Done 09-24-26: measured with a real press, then dropped on the
+   founder's word and re-checked (`freeze-investigation.md`, "Wrap-up: the
+   press trigger").*
    Call 1, as revised ("Call 1 revised" in stage0-decisions), is done in
    `cfe6df8`: drawing ahead waits for a 400 ms mouse rest on a switcher
    row or Shuffle.
@@ -102,7 +109,9 @@ All under `docs/superpowers/specs/theme-schools-research/`.
    - Recommendation given: drop the press trigger and keep only the 400 ms
      rest, so quick clicks match today exactly.
    - Whatever they pick, apply it in `src/themes/portal/runtime.ts`
-     (`drawOnIntent`: its pointerdown and keydown paths) and `switcher.ts`.
+     (`drawOnIntent`: its pointerdown path; there is no keydown path, since
+     Enter on a row navigates at once and the keyboard draws only on the
+     500 ms focus rest) and `switcher.ts`.
      Re-run `harness/draw-ahead-check.mjs --serve <snap>`; it needs the
      production cache headers, and without them the network checks fail
      falsely. Re-measure one quick-click cell per heavy school with
@@ -135,8 +144,9 @@ All under `docs/superpowers/specs/theme-schools-research/`.
    before/after sheets, the decisions taken, and what is open (below).
    Update `docs/lab-backlog.md` and write the Stage 3 handoff (pair B:
    glassmorphism and vaporwave).
-5. **Stop for the founder.** PR #89 is open; ask whether to merge so they can test
-   on the phone, as after Stage 1. Merging to main deploys to production.
+5. **Stop for the founder.** Open a PR for
+   `feat/theme-schools-tier3-stage2-wrapup` and ask whether to merge.
+   Merging to main deploys to production.
 
 ## Open or held (goes in the report, not fixed in Stage 2)
 

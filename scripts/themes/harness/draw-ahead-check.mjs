@@ -5,8 +5,9 @@
  *
  * Written 09-23-26 for Tier 3 stage 2 (the freeze investigation, agent D,
  * tier3-stage2/freeze-investigation.md). runtime.ts draws a script-less copy
- * of the page the visitor reaches for (a mouse resting on a link, a focus, a
- * press) over the current page at opacity 0.001, so the GPU compiles its
+ * of the page the visitor reaches for (a mouse or a focus resting on a link;
+ * a press draws nothing since 09-24-26) over the current page at opacity
+ * 0.001, so the GPU compiles its
  * programs before the click. trace-arrival.mjs measures what that saves;
  * this checks that nobody can tell it happened. No init script runs in the
  * page (Playwright's run in every frame, and a sandboxed copy would report
@@ -34,10 +35,12 @@
  *   network  no URL reaches the network twice, and a copy's own requests
  *            all come from the HTTP cache;
  *   console  no console message and no page error at all;
- *   press    (added 09-24-26) the mouse onto a row and pressed at once,
- *            well inside the rest: the press alone must put its copy up,
- *            judged as a row's is; then released on the row, which
- *            navigates, with no copy left at astro:after-preparation;
+ *   press    (added 09-24-26; inverted the same day, when the founder
+ *            dropped the press trigger) a press held PRESS_HOLD_MS on a row,
+ *            inside the rest (the mouse on desktop; a touch on the phone,
+ *            which has no hover): no copy may go up; then released on the
+ *            row, which navigates, with no copy at astro:after-preparation,
+ *            none after and none left;
  *   navigate rest on a row until its copy is up, then click it: at
  *            astro:after-preparation (before the view transition captures
  *            the old page) no copy may be in the document, none may appear
@@ -111,6 +114,9 @@ if (serveName) {
 const froms = list('from', 'quiet,swiss,glassmorphism');
 /* --parts (09-24-26): which visits to run, all by default. */
 const parts = list('parts', 'rows,shuffle,keyboard,press,navigate');
+/* How long the press visit holds its press: twice a real one (about 0.1 s),
+   still well inside the 400 ms rest, so only a press could draw. */
+const PRESS_HOLD_MS = 200;
 /* --sweep-paces (09-24-26): the rows' sweeps, ms a row, one sweep each. */
 const sweepPaces = list('sweep-paces', '30').map(Number);
 const viewports = list('viewports', 'desktop,mobile');
@@ -192,7 +198,7 @@ async function visit(vp, scheme, from) {
       .observe(document.documentElement, { childList: true, subtree: true });
   }, COPY);
   clearServed();
-  return { context, page, logs, reqs, main };
+  return { context, page, logs, reqs, main, cdp };
 }
 
 const focusOf = (page) => page.evaluate(() => {
@@ -396,35 +402,41 @@ for (const vpName of viewports) {
         if (v.logs.length) fail(`${where} keyboard: ${v.logs.join(' | ')}`);
         await v.context.close();
       }
-      // A press draws at once, before any rest (a visitor who clicks fast).
+      // A press draws nothing (the founder's call, 09-24-26): a real one is
+      // held about 0.1 s; this one is held twice that, still inside the rest.
       if (parts.includes('press')) {
         const v = await visit(vp, scheme, from);
         await v.page.evaluate((sel) => {
           window.__probe = [];
           document.addEventListener('astro:after-preparation', () => window.__probe.push(!!document.querySelector(sel)));
         }, COPY);
-        await holdCopies(v.page);
         await v.page.locator('bdl-switcher .open').click();
         await v.page.waitForTimeout(400);
         const to = await v.page.evaluate(() => [...document.querySelector('bdl-switcher').shadowRoot.querySelectorAll('a[data-school]')]
           .find((a) => a.getAttribute('aria-current') !== 'page' && a.dataset.school !== 'quiet').dataset.school);
         const b = await rowBox(v.page, to);
-        await v.page.mouse.move(b.x, b.y);
-        const t0 = await v.page.evaluate(() => performance.now());
-        await v.page.mouse.down();
-        const upAt = await v.page.waitForFunction((sel) => (document.querySelector(sel) ? performance.now() : false), COPY, { timeout: 8000, polling: 'raf' })
-          .then((h) => h.jsonValue(), () => null);
-        if (upAt == null) fail(`${where} press: no copy went up`);
-        else console.log(`  ${where} press on ${to}: copy up ${Math.round(upAt - t0)} ms after the pointer arrived`);
-        await judgeCopy(v.page, `${where} press ${to}`);
-        await v.page.mouse.up();
-        await v.page.mouse.move(vp.width - 2, Math.round(vp.height * 0.6));
+        const seen0 = await v.page.evaluate(() => window.__copiesSeen);
+        const touch = !!vp.mobile;
+        if (touch) await v.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: b.x, y: b.y }] });
+        else {
+          await v.page.mouse.move(b.x, b.y);
+          await v.page.mouse.down();
+        }
+        await v.page.waitForTimeout(PRESS_HOLD_MS);
+        const held = (await v.page.evaluate(() => window.__copiesSeen)) - seen0;
+        if (touch) await v.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+        else {
+          await v.page.mouse.up();
+          await v.page.mouse.move(vp.width - 2, Math.round(vp.height * 0.6));
+        }
         await v.page.waitForURL(`**/t/${to}/`, { timeout: 10000 }).catch(() => fail(`${where} press: never landed on ${to}`));
         await v.page.waitForTimeout(1500);
         const probe = await v.page.evaluate(() => window.__probe);
         const left = await v.page.evaluate((sel) => !!document.querySelector(sel), COPY);
-        console.log(`  ${where} press, released: copy at after-preparation ${JSON.stringify(probe)}, one left ${left}`);
-        if (!probe?.length || probe.some(Boolean) || left) fail(`${where} press: a copy outlived the navigation (${JSON.stringify(probe)}, left ${left})`);
+        const drew = (await v.page.evaluate(() => window.__copiesSeen)) - seen0;
+        console.log(`  ${where} ${touch ? 'touch' : 'mouse'} press on ${to}, held ${PRESS_HOLD_MS} ms: ${held} copies while held, ${drew} in all; copy at after-preparation ${JSON.stringify(probe)}, one left ${left}`);
+        if (held || drew) fail(`${where} press: a press drew ${drew} copies (${held} while held); a press must draw nothing`);
+        if (!probe?.length || probe.some(Boolean) || left) fail(`${where} press: a copy at or after the navigation (${JSON.stringify(probe)}, left ${left})`);
         if (v.logs.length) fail(`${where} press: ${v.logs.join(' | ')}`);
         await v.context.close();
       }
