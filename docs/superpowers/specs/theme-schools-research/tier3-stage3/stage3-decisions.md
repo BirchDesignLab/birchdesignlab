@@ -204,3 +204,39 @@ items:
 8. Pressed task button: **instant**.
 9. Vaporwave interactables: yes. **The frozen tray clock reads 19:93, not
    12:00** (founder). It stays frozen and `aria-hidden`.
+
+## Answers at the Tier A stop (founder, 09-25-26)
+
+To `tier-a-report.md`:
+
+1. Heading face: the founder asked why Plus Jakarta over Inter Display
+   (the recommendation was Inter Display) and to see a side by side; sent
+   `type/specimen.png`. **Open:** the pick.
+2. Tear or restart: the founder asked whether the tear is an artistic
+   choice or a bug. Answered: a choice (brief F4 (b)): vaporwave's canon
+   motion is a loop with its seam showing, like a GIF or a tape loop
+   restarting, and the tear is a two-frame tape-tracking jolt at that
+   seam; the old endless forward drive is outrun's "driving" feel. **Open:**
+   tear, restart, or keep the old drive (F4 (a)).
+3. Lens: **the recommendations, tweak from there**: the WebGL lens
+   everywhere, under the page content in the Home hero's empty half.
+   Pane edge: **bending inward**.
+4. Marble head: **discuss further and see options.** The founder is happy
+   to make a free account somewhere (for example Sketchfab) but will not
+   pay for any model. Next: show the candidates side by side (and look at
+   other free sources, such as threedscans.com, whose licence must be
+   checked on its own page), then the founder downloads the pick.
+5. Dev tools: **yes**: add `meshoptimizer` as an explicit devDependency and
+   keep `sharp` for AVIF.
+6. WebKit: the founder asked whether Playwright is not already installed.
+   Answered: the Playwright package and its Chromium are installed; WebKit
+   is a separate engine download (about 150 MB). **Open:** yes or no.
+   Wall label lesson: the three drafts were put to the founder again.
+   **Open.** Era: "whichever years are the correct one": vaporwave began
+   in 2010 to 2011 (Eccojams 2010, Floral Shoppe 2011), its core visual
+   canon is 2011 to 2013, and the glossy rendered-marble wave the founder
+   references is 2017 to 2019 (supyrb's Vapordays renders are dated 11-17
+   to 04-18; Marbloid 2019). Recommended wording: "The internet in the
+   2010s" (correct across all of it). **Open:** confirm.
+7. Push: "only if we're at a good stopping point" (the context window was
+   getting full). Stopped here with a handoff; branch pushed.
