@@ -467,28 +467,84 @@ export function drawOnIntent(
 }
 
 /** A navigation has begun: take the copy down before the old page is
-    captured, and draw nothing more until the next page lands. Exported for
-    tests/draw-on-intent.test.ts; initPortal() calls it. */
-export function stopDrawingAhead(): void {
+    captured, and draw nothing more until the next page lands. */
+function stopDrawingAhead(): void {
   navigating = true;
   epoch++;
   drawWanted = null;
   removeCopy();
 }
 
-/** The next page has landed (astro:after-swap; astro:page-load as a safety
-    net; or a page restored from the back/forward cache mid-navigation):
-    drawing ahead may start again, from fresh rests. A no-op unless a
-    navigation was under way. Every way out of one is covered: a same-page
-    hash link never begins one (router.js returns before the preparation), a
-    refused preparation falls back to a full load, and an aborted one is
-    replaced by the navigation that aborted it. Exported for
-    tests/draw-on-intent.test.ts; initPortal() calls it. */
-export function resumeDrawingAhead(): void {
+/** Drawing ahead may start again, from fresh rests. A no-op unless a
+    navigation was under way. */
+function resumeDrawingAhead(): void {
   if (!navigating) return;
   navigating = false;
   epoch++;
   removeCopy();
+}
+
+/*
+ * When a navigation is over, told by the router's events (initPortal wires
+ * them; tests/draw-on-intent.test.ts drives them with plain AbortSignals).
+ * Only the latest navigation's landing resumes drawing ahead. Astro's
+ * router (router.js) can end a navigation four ways, and the review of the
+ * first fix (09-24-26, harness/draw-ahead-nav-code-probe.mjs) found the
+ * first two missed:
+ * - aborted with nothing after it: a same-page hash link (every header's
+ *   skip link) or a Back to the same page's entry aborts a loading
+ *   navigation and starts none, so no page lands. The abort resumes, unless
+ *   a navigation that replaced it has begun: transition() aborts the old one
+ *   and dispatches the new one's astro:before-preparation in one synchronous
+ *   stretch, before the queued microtask runs;
+ * - landed, but not the latest: a Back or a click during the old page's
+ *   capture lets the first navigation swap while the second still loads.
+ *   Its after-swap and page-load must not resume (a copy would be drawn
+ *   into the second's load); the second's landing does;
+ * - refused (the preparation prevented, not aborted): the router falls back
+ *   to a full load, which unloads the page; if it does not (the visitor
+ *   stops it), drawing ahead resumes rather than stay off;
+ * - restored from the back/forward cache mid-navigation: resumes.
+ */
+/** The latest navigation begun, and whether the swap under way is its own. */
+let latestNavigation: AbortSignal | null = null;
+let swapIsLatest = false;
+
+/** astro:before-preparation. */
+export function navigationBegan(signal: AbortSignal): void {
+  latestNavigation = signal;
+  swapIsLatest = false;
+  stopDrawingAhead();
+  signal.addEventListener(
+    'abort',
+    () =>
+      queueMicrotask(() => {
+        if (latestNavigation === signal) resumeDrawingAhead();
+      }),
+    { once: true },
+  );
+}
+
+/** astro:before-swap: the swap about to happen, and whether it is the latest navigation's. */
+export function swapBegan(signal: AbortSignal): void {
+  swapIsLatest = signal === latestNavigation && !signal.aborted;
+}
+
+/** astro:after-swap, and astro:page-load as a safety net. */
+export function navigationLanded(): void {
+  if (swapIsLatest) resumeDrawingAhead();
+}
+
+/** A refused preparation (its loader prevented it, not an abort). */
+export function navigationRefused(signal: AbortSignal): void {
+  if (signal === latestNavigation && !signal.aborted) resumeDrawingAhead();
+}
+
+/** pageshow from the back/forward cache: whatever was under way is gone. */
+export function pageRestored(): void {
+  latestNavigation = null;
+  swapIsLatest = false;
+  resumeDrawingAhead();
 }
 
 /**
@@ -645,7 +701,7 @@ export function initPortal(): void {
     const e = event as TransitionBeforePreparationEvent;
     delete html.dataset.toTheme;
     renameWordmark();
-    stopDrawingAhead();
+    navigationBegan(e.signal);
     fromSwitcher = e.info === SWITCHER_INFO;
     const from = pageFromPath(location.pathname);
     const to = pageFromPath(e.to.pathname);
@@ -663,6 +719,7 @@ export function initPortal(): void {
     const load = hit ? () => loadWarmed(e, hit, original) : original;
     e.loader = async () => {
       await Promise.all([load(), fonts]);
+      if (e.defaultPrevented && !e.signal.aborted) navigationRefused(e.signal);
       // Set after the load, not before it: the old page stays unnamed while
       // the next one is fetched, and `e.to` is final after any redirect.
       // The router starts the view transition once this resolves (router.js,
@@ -677,6 +734,7 @@ export function initPortal(): void {
 
   document.addEventListener('astro:before-swap', (event) => {
     const e = event as TransitionBeforeSwapEvent;
+    swapBegan(e.signal);
     // The old wordmark leaves with the old page. When it was taken out of
     // the morph, take the new one out too, before the router swaps it in
     // and the new state is captured (swap-functions.js keeps its inline
@@ -709,13 +767,13 @@ export function initPortal(): void {
     vt?.finished.then(settle, settle);
   });
 
-  document.addEventListener('astro:after-swap', resumeDrawingAhead);
+  document.addEventListener('astro:after-swap', navigationLanded);
   window.addEventListener('pageshow', (e) => {
-    if (e.persisted) resumeDrawingAhead();
+    if (e.persisted) pageRestored();
   });
 
   document.addEventListener('astro:page-load', () => {
-    resumeDrawingAhead();
+    navigationLanded();
     if (firstLoad) {
       firstLoad = false;
       return;
