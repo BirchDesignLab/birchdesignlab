@@ -400,6 +400,14 @@ every brief default applied there stands, and the open calls were answered:
 - The marble head: options next session; free models only (a free account
   is fine, no payment).
 
+**Tier B, wave B1 (09-25-26).** Before B1 (`tier3-stage3/stage3-decisions.md`,
+"Answers at the start of Tier B"): the head is the Chiragan Venus (Musée
+Saint-Raymond, CC0), the glass wallpaper is painted offline, Tier B runs in
+two waves with a stop, B1 uses stand-in stills. At the B1 stop ("Answers at
+the B1 stop"): glass's slightly later arrival is accepted for now and
+re-measured after B2; Sent keeps its pink and cyan lattice; Home and Services
+keep a plain footer; push and stop, B2 in a new session.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

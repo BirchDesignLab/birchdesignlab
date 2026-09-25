@@ -291,3 +291,17 @@ To `tier-b-plan.md` and the candidates sheet
    showpieces and interactables, then the gates.
 4. B1 dresses the rooms with the **Tier A stand-in stills**; the head goes in
    during B2.
+
+## Answers at the B1 stop (founder, 09-25-26)
+
+To `tier-b1-report.md`, "Calls for the founder":
+
+1. Glass arrival 20 to 70 ms later than the base build: **accept, revisit
+   later** (re-measure at the Stage 3 gates after B2 adds the lens; the
+   transitions phase takes it with the other arrival work).
+2. The pane bend: not raised separately; the approved Tier A look stands
+   (`FULL_FROST_TO_RIM` stays false).
+3. Sent's desktop: **keep the pink and cyan lattice** (not Win95 teal).
+4. Home and Services: **keep the plain footer** (the lobby floor stops at the
+   footer rule).
+5. **Push the branch and stop here**; B2 starts in a new session.

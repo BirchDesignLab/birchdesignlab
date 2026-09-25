@@ -117,6 +117,10 @@ Owed before the PR, not a call: a look at glass on your iPhone (Safari's
 frosted panes cannot be seen from Windows) and the iOS scroll check for the
 lens once B2 builds it.
 
+**Answered (09-25-26):** accept the later arrival and re-measure after B2;
+keep the pane bend as approved; keep Sent's lattice; keep the plain footer;
+push and stop (`stage3-decisions.md`, "Answers at the B1 stop").
+
 ## Where to look
 
 - Glass: `scripts/themes/.out/stage3-b1/glass-final/` (`index.md` lists every
