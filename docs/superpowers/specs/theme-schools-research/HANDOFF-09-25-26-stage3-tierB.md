@@ -42,7 +42,8 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 - Glass: Liquid Glass forward; warm Big Sur wallpaper (dark = deep blue
   with ember light); no title bar, keep the traffic lights; the Control
   Centre controls and draggable lens (S3); D2 C; D3 no noise; D4 C
-  (vibrancy); D7 flat discs. The lens: WebGL everywhere, under the page
+  (vibrancy); D7 flat discs; D8 A, Plus Jakarta Sans stays (founder: "more
+  square"; brief E14 may still move body Inter to the opsz file). The lens: WebGL everywhere, under the page
   content in the Home hero's empty half, rigid-glass handling as proven;
   panes bend with the SVG filter in Chromium only, **bevel inward**;
   frosted with edge light elsewhere. Text on bare wallpaper moves onto a
@@ -59,16 +60,12 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 
 ## Open: ask the founder first thing
 
-1. **Heading face:** Plus Jakarta Sans or Inter Display. The founder asked
-   "why Plus Jakarta over Inter Display" (the recommendation was Inter
-   Display; they may have misread) and got `type/specimen.png`. Clarify
-   and get the pick.
-2. **Grid loop:** tear, restart, or the old endless drive. The founder
+1. **Grid loop:** tear, restart, or the old endless drive. The founder
    asked whether the tear is a bug; it is a choice (the canon's loop with
    its seam showing, a tape-tracking jolt). Show
    `vaporwave/hero__dark__compare.mp4` and `hero__light__compare.mp4` again
    if needed.
-3. **Marble head:** discuss and show options. Free only (the founder will
+2. **Marble head:** discuss and show options. Free only (the founder will
    make a free account, will not pay). Candidates in `proofs/marble.md`
    (pick so far: CMA Head of Apollo, chipped nose tip; Augustus bust;
    Doryphoros cast; Memnon; Tranquillina; Vespasian). Show them side by
@@ -76,9 +73,9 @@ All under `docs/superpowers/specs/theme-schools-research/`.
    other free sources (threedscans.com: verify its licence on its own
    page). Then the founder downloads the pick into
    `scripts/themes/.out/meshes/` (gitignored); never sign in yourself.
-4. **Playwright WebKit:** yes or no to `npx playwright install webkit`
+3. **Playwright WebKit:** yes or no to `npx playwright install webkit`
    (about 150 MB; Chromium is already installed, WebKit is not).
-5. **Wall label lesson:** A, B or C (drafts in `stage3-decisions.md` item
+4. **Wall label lesson:** A, B or C (drafts in `stage3-decisions.md` item
    13), or the founder's words. Era: recommend "The internet in the 2010s"
    (the founder said "whichever years are the correct one"); confirm.
 

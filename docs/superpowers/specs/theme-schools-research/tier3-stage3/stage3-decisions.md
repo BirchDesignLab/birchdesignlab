@@ -211,7 +211,8 @@ To `tier-a-report.md`:
 
 1. Heading face: the founder asked why Plus Jakarta over Inter Display
    (the recommendation was Inter Display) and to see a side by side; sent
-   `type/specimen.png`. **Open:** the pick.
+   `type/specimen.png`. **Plus Jakarta Sans** (founder: "i like plus jakarta
+   since it's more square"). D8 = A; the heading face stays as it is.
 2. Tear or restart: the founder asked whether the tear is an artistic
    choice or a bug. Answered: a choice (brief F4 (b)): vaporwave's canon
    motion is a loop with its seam showing, like a GIF or a tape loop
