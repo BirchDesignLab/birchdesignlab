@@ -490,6 +490,214 @@ All in `scripts/themes/.out/stage3-proofs/lens/` (gitignored):
   and liked a mock of it, and Tier B should put this version in front of
   them.
 
+## WebKit run (Playwright WebKit 26.6, 09-25-26)
+
+Playwright's WebKit was installed and driven directly (`import { webkit } from
+'playwright'`), headless, on the same Windows machine, serving the same proof
+folder unchanged on 127.0.0.1:4468:
+`scripts/themes/harness/stage3-lens-webkit.mjs`. No change was needed to
+`index.html`, `room.js`, `lens.js` or `main.js` to run it in WebKit; the proof
+page loaded and reached `data-ready="1"` on the first try. Output:
+`scripts/themes/.out/stage3-proofs/lens-webkit/` (gitignored), `results.json`
+plus PNGs.
+
+**Caveat that bounds everything below**, repeated because it matters for
+every number: Playwright's WebKit on Windows is Playwright's own WebKit
+build, not Apple Safari. Its GPU path and some platform features differ from
+a real Mac or iPhone. Its answers bound what Safari's **engine** does (CSS
+parsing, backdrop-filter url() handling, WebGL shader support), not what
+Safari's **compositor** or iOS's scrolling do. Two build-specific limits
+turned up during this run and are called out below because they change how
+to read items 2, 3 and 7; neither is a proof-page bug.
+
+1. **The support gate.** `bendSupport()` returns `bend: false`
+(`navigator.userAgentData` does not exist in WebKit). `CSS.supports`
+still says true for all three probe strings the doc names:
+`backdrop-filter: url(#x)` → true, `backdrop-filter: url(#does-not-exist)
+blur(2px)` → true, `-webkit-backdrop-filter: url(#x)` → true. This is the
+same lie Chromium's `CSS.supports` tells, from the other engine, and the
+gate stays correct against it (`item1_supportGate` in results.json).
+
+2. **Frosted fallback look.** Computed `-webkit-backdrop-filter` and
+`backdrop-filter` both carry the literal `blur(14px) saturate(1.7)
+brightness(1.06)` list on every pane: WebKit does not drop the `-webkit-`
+form, ignore the property, or refuse the declaration. But a controlled
+pixel test (the same recipe, over crisp stripes, against a `none`
+control) shows **no visible difference at all** between the blurred box
+and the none box, confirmed a second time with a minimal, page-independent
+repro (a bare div with `backdrop-filter: blur(14px)`, then separately
+`brightness(0.1)` and `grayscale(1)`, over a plain gradient -- none of
+them visibly changed anything). `backdrop-filter` is accepted, parsed and
+computed correctly by this headless Playwright WebKit 26.6 build on
+Windows, but **does not composite**: nothing behind a `backdrop-filter`
+element visibly changes, blur, saturate, brightness or grayscale alike
+(`item2_frostedFallback.blurRecipe`, `backdropFilterRendersVisibly: false`
+in results.json; screenshots `item2__frosted-blur-test-crop__desktop.png`
+shows two identically crisp stripe boxes side by side). *Critic
+re-check, 09-25-26:* the "minimal repro" above was run ad hoc and was not
+on disk, so it is now `scripts/themes/harness/stage3-webkit-backdrop-probe.mjs`.
+Re-run both headless and **headed**: the none, `blur(14px)`,
+`brightness(0.1)` and `grayscale(1)` backdrop boxes all read the same
+(horizontal gradient 39.7, luminance 136), while a plain `filter:
+blur(14px)` positive control on the same stripes drops to 0.1, so the
+rasteriser blurs fine and only `backdrop-filter` is inert, headed or not.
+This reads as a gap in Playwright's Windows WebKit port (not a headless
+artifact), not a CSS feature Safari lacks -- Safari 18 to 26 do ship `backdrop-filter` per
+the research above -- so it bounds this run's ability to *see* the
+frosted look, not a claim that Safari cannot render it. The rim ring
+still reads a little brighter at the edge (edge luminance 200 vs 178
+mid-pane, `item2__rim-corner-4x__desktop.png`; that ring is drawn with
+`mask`/gradient, not `backdrop-filter`, so it is unaffected). The
+adaptive tint and ink flip both work correctly: `--tint` and
+`--pane-ink` change across three scroll depths, and the reading pane's
+ink genuinely flips from light (`#fbf7f2`, warm sky behind it) to dark
+(`#1c1a24`, once it scrolls somewhere lighter) -- that machinery is JS
+reading the DOM/CSS model, independent of whether the filter itself
+paints, and it runs correctly on WebKit (`item2_frostedFallback.tint`,
+`inkFlipObserved: true`).
+
+3. **The deliberate url() test.** Built the same bad-url box the Chromium
+detect stage used -- `backdrop-filter: url(#does-not-exist) blur(10px)`
+and the `-webkit-` form, over crisp stripes, against a `blur(10px)`
+control and a `none` control. Because the blur control itself does not
+visibly render (finding 2), the pixel classification is **unreliable**
+here: every box in the test looks identically crisp, so "applies the
+blur" cannot be told apart from "nothing" by pixels alone
+(`item3_urlTest.blurControlWorks: false`,
+`item3__url-test-crop__desktop.png`). What this run can still say: both
+the unprefixed and prefixed forms stay on screen (not hidden outright)
+and their computed style keeps the full declaration
+(`backdropFilter: 'url("#does-not-exist") blur(10px)'`), so WebKit
+accepts and keeps the declaration rather than invalidating the whole
+property the way an invalid value would. Whether it then keeps the blur
+(Chromium's behaviour) or silently drops just the effect (WebKit bug
+245510's claim [W1]) cannot be told apart pixel-for-pixel in this build;
+the research citations above are the more reliable source until a real
+macOS Safari run confirms it visually.
+
+4. **The WebGL lens.** Context created: true. `UNMASKED_RENDERER_WEBGL`
+reports `"Apple GPU"` (vendor `"Apple Inc."`). WebKit masks this string
+to a fixed value for fingerprinting reasons, so it says nothing about
+the actual rasteriser: whether this run's WebGL was hardware or software
+is **unknown** (results.json `softwareOrUnclear: true`). Frame-time or
+performance numbers from this build would mean nothing; none are claimed.
+`highp` float is supported in the fragment shader (precision 23,
+range ±127). Unlike `backdrop-filter`, **the WebGL canvas does actually
+render**: `item4__lens-rim-zoom-4x__desktop.png` shows the lens visibly
+magnifying and bending the gold/pink orb edge, with the bright top-left
+specular rim and the shadow, at 4x zoom, matching the Chromium look by
+eye (no pixel diff against the Chromium stills was made). A premultiplied-alpha rim-fringe proxy (max luminance
+darkening at the disc edge vs local background) reads 29 levels, which
+the crop shows is the shader's own designed rim highlight, not an
+unwanted dark halo. The `?probe=identity` check (the lens's own backdrop
+model, undrawn, against the true page with the lens hidden) matches to a
+max difference of 24 levels (0-255), mean 0.08, 0.19% of pixels over 8 --
+confirmed against a *visible*, non-identity render first, specifically
+so a blank/non-rendering canvas could not produce a false match by
+trivially agreeing with whatever was already behind it.
+
+5. **Scroll alignment, `?probe=seam`.** Playwright WebKit has no CDP
+screencast and no touch-momentum scrolling, so this could not repeat the
+Chromium proof's continuous, in-flight capture. Instead: `page.mouse
+.wheel()` in 16 steps of 68px, with a full screenshot taken immediately
+after each step, measuring the same seam offset the Chromium align stage
+measures. Both orbs=js and orbs=css read a median |dy| of 0.09px over
+the (few -- 3 of 16) samples where a clean edge was measurable. **This
+number is not informative about the iOS momentum risk section 7
+describes**: a stepped, screenshot-after-each-wheel-event measurement
+gives the main thread and the compositor time to agree before the shot
+is taken, so a near-zero offset here only shows the model and the page
+agree at each instant it was possible to sample -- it cannot reproduce
+the compositor-vs-main-thread race a fast, continuous scroll creates,
+which is exactly what the Chromium proof caught with real screencast
+frames (13.5px median lag, CSS orb driver) and what section 7 already
+says needs a device.
+
+6. **Touch (checklist item 7).** A 393x852 `hasTouch`/`isMobile` context was created at
+`deviceScaleFactor: 3` (WebKit accepted it; no fallback to 2 was
+needed -- `phoneDeviceScaleFactorUsed: 3`). First attempt, as the
+checklist asks: dispatch a synthetic `PointerEvent('pointerdown', {
+pointerType: 'touch', pointerId: 7, ... })` at `#lens-hit`. **This
+throws inside WebKit's own event handling**: `lens.js`'s `pointerdown`
+listener calls `hit.setPointerCapture(ev.pointerId)` as its first
+statement, and WebKit raises `NotFoundError: "The object can not be
+found here."` for a `pointerId` that was never registered by a real
+input session, so the rest of the handler (`s.held = true`, the grab
+offset, everything) never runs. A JS `try/catch` around the
+`dispatchEvent()` call does not see this -- per the DOM spec, an
+exception thrown inside a listener is reported to the page, not
+rethrown to the caller -- so it had to be caught with a `pageerror`
+listener instead. This means **synthetic touch-typed `PointerEvent`
+dispatch is a dead end for testing this lens in WebKit**, headless or
+not; a genuine touch always supplies a `pointerId` the browser itself is
+tracking, so `setPointerCapture` succeeds for real input -- this is a
+property of how the test tries to drive the page, not a bug in
+`lens.js`. Falling back to Playwright's `page.mouse` (a real, trusted
+pointer session, still inside the `hasTouch`/`isMobile` context): the
+page did not scroll, the lens moved 174px and stopped exactly at its
+left bound (`x=75` vs `bounds[0]=75`, clamped). That confirms the
+JS-level drag-and-clamp path works correctly in WebKit under a real
+pointer session, but the pointer is typed `'mouse'`, not `'touch'` -- it
+cannot test `touch-action: none` scroll suppression or touch-specific
+behaviour (`getCoalescedEvents`, multi-touch) at the browser/compositor
+level. Side effect worth carrying into Tier B: the
+`item7__touch-after__phone.png` still shows the mouse drag also
+**selected page text** (the bar, the hero heading and body are
+highlighted), so the lens's hit area does not suppress text selection
+for a mouse-typed drag (no `user-select: none` / `preventDefault` on that
+path). Harmless for real touch, visible on a desktop mouse drag.
+Checklist items 6, 8 and 9 (momentum-fling rAF cadence, the floating
+toolbar, and frame time plus context loss on real hardware) still need
+an iPhone, exactly as the doc already says; this run does not attempt
+them.
+
+7. **`prefers-reduced-transparency`, `prefers-contrast`, and the lens's off
+state (checklist item 10).** Unemulated (default) `matchMedia`: `(prefers-reduced-
+transparency: reduce)` → `matches: false`; `(prefers-contrast: more)` →
+`matches: false`. Playwright 1.63's `page.emulateMedia()` accepts a
+`contrast` option (`'no-preference' | 'more'`) and it works -- after
+emulating `'more'`, `matchMedia` correctly reports `matches: true` -- but
+this Playwright version has **no `reducedTransparency` option at all**
+(checked `playwright-core`'s own type definitions, not just trial and
+error), so the reduced-transparency reading above is WebKit-under-
+Playwright's own unemulated default, not a chosen state; it cannot be
+driven either way from this harness. A grep of `room.js`, `lens.js` and
+`main.js` for `prefers-reduced-transparency` or `prefers-contrast` finds
+no matches: **the proof page wires no automatic response to either
+feature.** `window.__lens.setHidden(true)` is a manual API only, and it
+works (confirmed after waiting a frame, since the canvas's own
+`visibility` is written inside the rAF loop, not synchronously) -- but
+nothing calls it based on a media query. Tier B needs to add a real
+`matchMedia` listener (and decide what "off" should look like -- the
+recommendation section already suggests a plain frosted disc as the
+lens's poster/fallback) if the off state should be automatic rather than
+manual.
+
+### Does the Tier B pane recipe hold?
+
+**Yes, with the WebKit-build caveat above attached to the evidence, not to
+the recipe.** The gate itself is proven correct from the WebKit side the
+same way it was from Chromium's: `bendSupport()` returns `false` in WebKit
+(finding 1) exactly as the frosted-base-for-every-engine design requires,
+and `CSS.supports` lying `true` in both engines (for different reasons -- a
+lax grammar check in each) is exactly why the recipe was never designed to
+trust it. The frosted list is declared literally, prefixed and unprefixed,
+with no custom properties inside `-webkit-backdrop-filter` (per [B2]) -- this
+run adds nothing new to that design decision, since whether it *paints* here
+is a build limit, not a declaration problem: the computed style is correct,
+the property is accepted, and Chromium's own frosted-fallback screenshots
+already establish that this exact declaration composites correctly in a
+real Blink engine. The WebGL lens is confirmed **actually rendering**
+(finding 4) in WebKit, magnifying and bending exactly as designed, which is
+the part of the recipe that matters most for "every engine, identically" -- 
+Tier B's core bet (WebGL everywhere, frosted CSS behind an engine gate) is
+unshaken. What remains open, unchanged from the doc's existing "Limits" and
+"For Tier B" sections: whether the frosted look actually *composites* on a
+real Safari (this run cannot answer that, only that the declaration is
+correctly formed and accepted), and the iOS momentum-tearing risk (section
+7), which no headless run -- Chromium's or WebKit's -- can settle. Both still
+need a real device before Tier B ships.
+
 ## Sources
 
 - [B1] MDN browser-compat-data, `css/properties/backdrop-filter.json`,

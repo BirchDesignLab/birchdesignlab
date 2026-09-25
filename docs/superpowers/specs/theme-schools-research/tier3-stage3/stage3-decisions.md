@@ -271,3 +271,23 @@ These settle the open items above; where they differ, these win.
      for sale."
 7. Record everything, push the branch, update the handoff and memory; the
    founder starts a new session.
+
+## Answers at the start of Tier B (founder, 09-25-26)
+
+To `tier-b-plan.md` and the candidates sheet
+(`scripts/themes/.out/stage3-proofs/marble/candidates.jpg`, made by
+`scripts/themes/vaporwave/marble-candidates-sheet.mjs` from
+`marble-candidates.json`; the sweep is in `proofs/marble.md`):
+
+1. Marble head: **the Venus** ("i like the venus one honestly"): the Musée
+   Saint-Raymond's Tête d'Aphrodite-Vénus from the Chiragan villa (Parian
+   marble, 1st century, a Knidian Aphrodite type), CC0 on Sketchfab,
+   199,994 triangles. Checked at 1920 px before asking for the download:
+   nose, lips and chin intact; an old break line crosses the neck, which the
+   plinth cut hides. The founder downloads it (free Sketchfab account).
+2. Glass wallpaper: **painted offline** into image files (dawn, day and dusk
+   in each scheme), one source for the CSS background and the lens texture.
+3. Tier B runs in **two waves with a stop between**: B1 the rooms, B2 the
+   showpieces and interactables, then the gates.
+4. B1 dresses the rooms with the **Tier A stand-in stills**; the head goes in
+   during B2.

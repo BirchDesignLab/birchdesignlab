@@ -341,6 +341,51 @@ of the Head of Apollo (Roman, 1 to 200 CE, Cleveland Museum of Art
 rendered. (Another seat has `meta.ts` open in the working tree today; this
 seat did not touch it.)
 
+## The Tier B sweep and the pick (09-25-26)
+
+A second search at the start of Tier B (workflow `marble-head-sources`: four
+Sonnet finders over Sketchfab's CC0 search, threedscans.com, other museum
+sources and the six picks above; an Opus shortlist; a Sonnet licence
+refuter). Nothing was downloaded. The candidates, thumbnails hotlinked from
+each source's own page, are in `scripts/themes/vaporwave/marble-candidates.json`
+and on the sheet `scripts/themes/.out/stage3-proofs/marble/candidates.jpg`
+(`marble-candidates-sheet.mjs`).
+
+- **SMK's Royal Cast Collection is the richest free source.** Its plaster
+  cast scans are CC0 on Sketchfab and Public Domain Mark or CC0 on
+  MyMiniFactory (the refuter checked the David page: CC0, remixable, no
+  commercial restriction; SMK's own licence page agrees). Other MyMiniFactory
+  uploads are often CC BY-NC-SA, so each object must be checked on its own
+  page. New pristine options from it: the head of Michelangelo's David, a
+  bust of Antinous as Dionysus, the Apollo Belvedere (whole statue), the
+  Lycean Apollo (whole statue), and a Venus de Milo (whole statue).
+- **threedscans.com no longer states a licence.** Its info page said "All
+  scans can be downloaded and used without copyright restrictions" in every
+  Wayback snapshot from 2017 to 12-16-24, and the line is gone from
+  07-30-25 on, with no replacement. Its scans (a pristine Aphrodite bust, a
+  Napoleon in a laurel wreath) rank below every CC0 option.
+- No CC0 scan of the Helios bust turned up. Smithsonian's CC0 busts are
+  American portraits; Paris Musées' CC0 open content has no 3D.
+
+**Founder's pick: Venus (Tête d'Aphrodite-Vénus), Musée Saint-Raymond,
+https://sketchfab.com/3d-models/venus-dd50296725c54dc6a7dc68f2b9acc9d0.**
+Parian marble, 1st century, from the Chiragan villa excavations (1826); a
+replica of Praxiteles' Knidian Aphrodite; 40 cm; inventory Ra 52; scanned
+with an Artec Eva or Spider by IMA Solutions. Sketchfab API: licence "CC0
+Public Domain", 199,994 triangles, 99,999 vertices, downloadable. Viewed at
+1920 px: nose, lips and chin intact, a smooth idealised face under a banded
+coiffure with a chignon; an old break line runs round the neck above the
+bust cut, which the plinth hides. Its triangle count decimates comfortably to
+the 30,000 budget above.
+
+The download (the founder's, signed in): the glTF option in Sketchfab's
+download dialog, unzipped into `scripts/themes/.out/meshes/venus/`
+(gitignored). Its size shows in the dialog; estimate about 5 to 30 MB with
+textures, which the pipeline discards. Provenance for `meta.ts` when it
+lands: the head is a CC0 3D scan of a Roman marble head of Aphrodite
+(Knidian type, 1st century, from the Chiragan villa, Musée Saint-Raymond,
+Toulouse, Ra 52).
+
 ## Open for the founder
 
 - Yes or no to downloading the pick (Head of Apollo, CMA 2023.108, from the
