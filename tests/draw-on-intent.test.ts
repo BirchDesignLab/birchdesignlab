@@ -76,11 +76,9 @@ describe('drawOnIntent: when a school is drawn ahead', () => {
 
   it('listens for nothing but rest and leave: no press, click, key or touch listener', () => {
     const target = new EventTarget();
-    const types: string[] = [];
-    const add = target.addEventListener.bind(target);
-    target.addEventListener = (type: string, ...rest: never[]) => { types.push(type); return add(type, ...rest); };
+    const add = vi.spyOn(target, 'addEventListener');
     drawOnIntent(target, () => PATH, vi.fn());
-    expect(types.sort()).toEqual(['focusin', 'focusout', 'pointerout', 'pointerover']);
+    expect(add.mock.calls.map((c) => c[0]).sort()).toEqual(['focusin', 'focusout', 'pointerout', 'pointerover']);
   });
 });
 
