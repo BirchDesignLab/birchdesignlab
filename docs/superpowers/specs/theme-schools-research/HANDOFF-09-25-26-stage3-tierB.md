@@ -2,7 +2,7 @@
 
 Start here. It supersedes `HANDOFF-09-24-26-stage3.md` for Stage 3 (pair B:
 glassmorphism and vaporwave). Tier A (the proofs) is done and committed;
-the founder answered part of the Tier A stop, and a few calls are open.
+the founder answered the Tier A stop; only the marble head is open.
 Tier B (the build) has not started.
 
 ## Where things stand
@@ -39,33 +39,46 @@ All under `docs/superpowers/specs/theme-schools-research/`.
 
 ## Decided (do not re-ask)
 
+All in `tier3-stage3/stage3-decisions.md`; the last section, "Final answers
+at the Tier A stop", wins over anything earlier.
+
 - Glass: Liquid Glass forward; warm Big Sur wallpaper (dark = deep blue
   with ember light); no title bar, keep the traffic lights; the Control
   Centre controls and draggable lens (S3); D2 C; D3 no noise; D4 C
-  (vibrancy); D7 flat discs; D8 A, Plus Jakarta Sans stays (founder: "more
-  square"; brief E14 may still move body Inter to the opsz file). The lens: WebGL everywhere, under the page
-  content in the Home hero's empty half, rigid-glass handling as proven;
-  panes bend with the SVG filter in Chromium only, **bevel inward**;
-  frosted with edge light elsewhere. Text on bare wallpaper moves onto a
-  pane (it cannot pass contrast). Warm light's mauve overlap gets a coral
-  shape.
+  (vibrancy); D7 flat discs; **D8 B, Inter Display** for headings (weight
+  about 740, tracking about -0.022em; with E14 one Inter opsz file serves
+  headings and body, and the Jakarta and Inter wght files go). The lens:
+  WebGL everywhere, under the page content in the Home hero's empty half,
+  rigid-glass handling as proven; panes bend with the SVG filter in
+  Chromium only, **bevel inward**; frosted with edge light elsewhere. Text
+  on bare wallpaper moves onto a pane (it cannot pass contrast). Warm
+  light's mauve overlap gets a coral shape.
 - Vaporwave: F1 (b); F3 rendered, pristine, tinted, glossy marble, stills
-  plus a live draggable bust on About; F5 as built; F6 declined; the
-  pressed task button switches instantly; the interactables (draggable
+  plus a live draggable bust on About; **F4 restart** (remove the 'tear'
+  variant and the proof-only `?vwLoop=` query); F5 as built; F6 declined;
+  the pressed task button switches instantly; the interactables (draggable
   windows, screensaver Settings and Preview, kiosk attract loop, pressing
   caption buttons); the frozen tray clock reads **19:93**.
+- Vaporwave wall label (`meta.ts`), the founder's words:
+  - era: "The internet in the 2010s, dreaming of mid-90s software and
+    shopping malls."
+  - signature: "Windows 95 chrome, file names for titles, Japanese for
+    headlines, a mall lobby and glossy marble statuary, with one sunset
+    screensaver on the front page."
+  - lesson: "We borrow the mall, the operating system and the museum gift
+    shop, because the ethos behind vaporwave is that comfort was always
+    for sale."
 - Dev tools: add `meshoptimizer` as an explicit devDependency (same
   version as on disk, 1.1.1, via @types/three); keep `sharp` (with Astro)
   for AVIF.
+- **Playwright WebKit: approved.** Run `npx playwright install webkit`
+  (about 150 MB) at the start of the next session, then run the lens
+  proof's WebKit checklist (`tier3-stage3/proofs/lens.md`) before Tier B
+  commits to the glass pane recipe.
 
 ## Open: ask the founder first thing
 
-1. **Grid loop:** tear, restart, or the old endless drive. The founder
-   asked whether the tear is a bug; it is a choice (the canon's loop with
-   its seam showing, a tape-tracking jolt). Show
-   `vaporwave/hero__dark__compare.mp4` and `hero__light__compare.mp4` again
-   if needed.
-2. **Marble head:** discuss and show options. Free only (the founder will
+1. **Marble head:** discuss and show options. Free only (the founder will
    make a free account, will not pay). Candidates in `proofs/marble.md`
    (pick so far: CMA Head of Apollo, chipped nose tip; Augustus bust;
    Doryphoros cast; Memnon; Tranquillina; Vespasian). Show them side by
@@ -73,11 +86,6 @@ All under `docs/superpowers/specs/theme-schools-research/`.
    other free sources (threedscans.com: verify its licence on its own
    page). Then the founder downloads the pick into
    `scripts/themes/.out/meshes/` (gitignored); never sign in yourself.
-3. **Playwright WebKit:** yes or no to `npx playwright install webkit`
-   (about 150 MB; Chromium is already installed, WebKit is not).
-4. **Wall label lesson:** A, B or C (drafts in `stage3-decisions.md` item
-   13), or the founder's words. Era: recommend "The internet in the 2010s"
-   (the founder said "whichever years are the correct one"); confirm.
 
 ## Then Tier B
 
@@ -90,13 +98,13 @@ side by side, `harness/stage-gates.mjs` (`--before-dir stage3-before
 
 - Glass: E1 to E14, E16 under Liquid Glass; the warm wallpaper painted once
   from one source (CSS background and lens texture); the Control Centre
-  cluster; the lens; the face; vibrancy; the phone targets under 44 px in
-  its chrome.
+  cluster; the lens; Inter Display headings (E14 body on the same file);
+  vibrancy; the phone targets under 44 px in its chrome.
 - Vaporwave: the E3 plaza (kiosk, lobby tile), F1 framing on the other
   pages, the marble (render pipeline in `scripts/themes/vaporwave/`, then
   the live About bust), E4 to E8, E10 to E15, the rest of E9, the 19:93
   clock, the wall label, the interactables, the phone targets; remove the
-  losing loop variant and the `?vwLoop=` proof query.
+  tear variant and the `?vwLoop=` proof query (restart ships).
 
 ## Lessons from Tier A
 

@@ -384,6 +384,22 @@ every brief default applied there stands, and the open calls were answered:
   pressing caption buttons. The frozen tray clock reads **19:93**, not
   12:00 (founder); it stays frozen.
 
+**At the Stage 3 Tier A stop (09-25-26).** To `tier3-stage3/tier-a-report.md`
+(details in `tier3-stage3/stage3-decisions.md`, last two sections):
+- Glass headings: Inter Display (D8 = B): "if it's for glassmorphism, inter
+  display probably fits better with that style."
+- Vaporwave grid: restart ("kind of torn but let's give restart a try").
+- The lens as recommended (WebGL everywhere, under the content, in the Home
+  hero's empty half); pane bevel inward.
+- meshoptimizer as a devDependency and sharp for AVIF: yes. Playwright
+  WebKit: yes.
+- Vaporwave wall label: era "The internet in the 2010s, dreaming of mid-90s
+  software and shopping malls."; lesson B reworded by the founder: "We
+  borrow the mall, the operating system and the museum gift shop, because
+  the ethos behind vaporwave is that comfort was always for sale."
+- The marble head: options next session; free models only (a free account
+  is fine, no payment).
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

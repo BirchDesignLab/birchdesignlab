@@ -241,3 +241,33 @@ To `tier-a-report.md`:
    2010s" (correct across all of it). **Open:** confirm.
 7. Push: "only if we're at a good stopping point" (the context window was
    getting full). Stopped here with a handoff; branch pushed.
+
+## Final answers at the Tier A stop (founder, 09-25-26)
+
+These settle the open items above; where they differ, these win.
+
+1. Heading face: **Inter Display** (D8 = B). Founder: "if it's for
+   glassmorphism, inter display probably fits better with that style." This
+   replaces the "Plus Jakarta, more square" answer given minutes before.
+   Weight about 740 with tracking about -0.022em (the proof's match to
+   Jakarta 760); with brief E14 one Inter opsz file serves headings and
+   body, about 2.7 KB less than today once the Jakarta and Inter wght files
+   go.
+2. Grid loop: **restart** ("kind of torn but let's give restart a try").
+   Tier B removes the 'tear' variant and the proof-only `?vwLoop=` query.
+3. (Unchanged: the lens recommendations, bevel inward.)
+4. Marble head: a next-session discussion with options, as above.
+5. (Unchanged: meshoptimizer and sharp.)
+6. **Playwright WebKit: yes** (install it at the start of the next
+   session). Wall label: **lesson B, reworded by the founder**; era **the
+   2010s**. The label becomes:
+   - era: "The internet in the 2010s, dreaming of mid-90s software and
+     shopping malls."
+   - signature: "Windows 95 chrome, file names for titles, Japanese for
+     headlines, a mall lobby and glossy marble statuary, with one sunset
+     screensaver on the front page."
+   - lesson: "We borrow the mall, the operating system and the museum gift
+     shop, because the ethos behind vaporwave is that comfort was always
+     for sale."
+7. Record everything, push the branch, update the handoff and memory; the
+   founder starts a new session.
