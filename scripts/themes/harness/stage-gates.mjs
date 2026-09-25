@@ -35,7 +35,10 @@
  * Usage:
  *   BDL_GPU=1 node scripts/themes/harness/stage-gates.mjs [--base http://127.0.0.1:8787] \
  *     [--label stage2-gates] [--steps smoke,timing,switcher,unname,wordmark,after,sheets] \
- *     [--before-dir stage2-before] [--after-label stage2-after] [--runs 5]
+ *     [--before-dir stage2-before] [--after-label stage2-after] [--runs 5] [--reuse]
+ * --reuse films and times nothing: it re-reads each step's output (after a
+ * strip was re-filmed on its own, say, since motion.mjs merges manifests)
+ * and rewrites the verdicts; the sheets step still redraws its sheets.
  * Output: scripts/themes/.out/<label>/gates.json and gates.md (each step's
  * command, exit code, time and verdicts), the steps' own folders
  * (<label>-timing, <label>-switcher, <label>-unname, <label>-wordmark,
@@ -61,6 +64,7 @@ const steps = list('steps', 'smoke,timing,switcher,unname,wordmark,after,sheets'
 const beforeDir = arg('before-dir', 'stage2-before');
 const afterLabel = arg('after-label', 'stage2-after');
 const runs = arg('runs', '5');
+const reuse = process.argv.includes('--reuse');
 const OUT = join(OUT_ROOT, label);
 const SIX = 'vaporwave,glassmorphism,swiss,cottagecore,grandmillennial,bauhaus';
 if (process.env.BDL_GPU !== '1') console.warn('stage-gates: BDL_GPU is not 1, so every film and timing runs on the software rasteriser');
@@ -71,6 +75,7 @@ const summary = existsSync(summaryFile) ? JSON.parse(await readFile(summaryFile,
 summary.base = base;
 
 function run(step, script, args) {
+  if (reuse) return { cmd: `node scripts/themes/${[script, ...args].join(' ')}`, exit: null, ms: 0, reused: true };
   const cmd = [join(THEMES, script), ...args];
   console.log(`\n=== ${step}: node ${[script, ...args].join(' ')}`);
   const t0 = Date.now();
@@ -169,6 +174,8 @@ for (const step of steps) {
     }
     s.pass = s.sheets === pngs.length && s.missing.length === 0;
   } else throw new Error(`unknown step ${step}`);
+  // Re-reading keeps the commands and exit codes of the run that filmed.
+  if (reuse && summary.steps[step]?.runs?.length) s.runs = summary.steps[step].runs.map((r) => ({ ...r, verdictsReread: true }));
   summary.steps[step] = s;
   await writeFile(summaryFile, JSON.stringify(summary, null, 2));
 }
@@ -176,7 +183,7 @@ for (const step of steps) {
 const md = [`# Gates against ${summary.base}`, ''];
 for (const [step, s] of Object.entries(summary.steps)) {
   const { runs: rs, ...rest } = s;
-  md.push(`## ${step}: ${s.pass ? 'PASS' : 'FAIL'}`, '', ...rs.map((r) => `- \`${r.cmd}\`: exit ${r.exit}, ${Math.round(r.ms / 1000)} s`), '', '```', JSON.stringify(rest, null, 2), '```', '');
+  md.push(`## ${step}: ${s.pass ? 'PASS' : 'FAIL'}`, '', ...rs.map((r) => `- \`${r.cmd}\`: ${r.reused ? 're-read, not re-run' : `exit ${r.exit}, ${Math.round(r.ms / 1000)} s`}`), '', '```', JSON.stringify(rest, null, 2), '```', '');
 }
 await writeFile(join(OUT, 'gates.md'), md.join('\n'));
 console.log(`\n${md.join('\n')}`);

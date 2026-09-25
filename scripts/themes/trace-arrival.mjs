@@ -1199,7 +1199,9 @@ for (const id of traced) {
   for (const trip of trips.filter((t) => t.id === id)) for (let n = 0; n < traceRuns; n++) {
     const b = freshBrowser ? await launch() : browser;
     const { context, page, cdp } = await newContext(b);
-    await prepare(page, trip, traceCondition, await destinationAssets(trip.to));
+    // The prepared state reaches the traced run as it does a timed one, so a
+    // hover trace (--rest-before-click) clicks through the dialog after its rest.
+    const prep = await prepare(page, trip, traceCondition, await destinationAssets(trip.to));
     const file = join(outDir, `trace-${id}-${trip.dir}-${vpName}-${scheme}${traceCondition !== 'cold' ? `-${traceCondition}` : ''}${traceRuns > 1 ? `-${n + 1}` : ''}.json`);
     await b.startTracing(page, {
       path: file,
@@ -1212,7 +1214,7 @@ for (const id of traced) {
         'disabled-by-default-gpu.service', 'blink.image_decode',
       ],
     });
-    const r = await measure(page, cdp, trip);
+    const r = await measure(page, cdp, trip, !!prep?.viaDialog, prep?.rest ?? null);
     await b.stopTracing();
     await context.close();
     if (freshBrowser) await b.close();
