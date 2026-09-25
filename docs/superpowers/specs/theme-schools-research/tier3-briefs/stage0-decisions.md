@@ -352,6 +352,38 @@ alone was not supported either. Founder: "let's drop the press trigger."
    revisits them.
 3. Merge PR #90: after the fixes.
 
+## Stage 3 start: pair B, glassmorphism and vaporwave (09-25-26)
+
+The per-school list (`tier3-stage3/stage3-decisions.md`) was put to the
+founder before anything was built. "Everything sounds pretty good to me":
+every brief default applied there stands, and the open calls were answered:
+- Glass lensing: an SVG displacement filter in `backdrop-filter` on every
+  pane (Chromium bends, Safari and Firefox get frosted glass with the edge
+  light), plus one draggable WebGL glass lens so an iPhone sees refraction
+  where it matters. Proven in Chromium and WebKit before it is committed.
+- Glass wallpaper leads with the warm Big Sur set (orange, coral, deep
+  blue); dark is deep blue with ember light, not indigo.
+- Glass controls: a Control Centre cluster on Home (the hero toggle flips
+  Clear and Tinted, a frost slider, a wallpaper time-of-day segmented
+  control, the location pill), the draggable lens, inert switches and
+  steppers in the Services settings pane; live settings hold across glass
+  pages for the session. "We'll just have to see how that actually
+  manifests."
+- Glass D4 = C: vibrancy, the headline coloured by the wallpaper behind it.
+  D8: show Plus Jakarta Sans and Inter Display side by side first.
+- Vaporwave F3: rendered marble, pristine, tinted and glossy (the founder's
+  supyrb references); offline-rendered stills dress the rooms, About's bust
+  is live and draggable (About's one WebGL canvas) with the still as its
+  poster; a CC0 mesh, downloaded only after the founder's yes with file,
+  source and size named.
+- Vaporwave F2 era: "2012 to 2017" (the founder's dates). The lesson is
+  still to pick.
+- Vaporwave's pressed task button on an in-school swap: instant.
+- Vaporwave interactables: windows drag by the title bar on desktop, the
+  screensaver window's Settings and Preview, the kiosk's attract loop,
+  pressing caption buttons. The frozen tray clock reads **19:93**, not
+  12:00 (founder); it stays frozen.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root
