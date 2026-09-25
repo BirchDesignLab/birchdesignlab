@@ -342,6 +342,16 @@ alone was not supported either. Founder: "let's drop the press trigger."
   mouse rest and the 500 ms keyboard focus.
 - Phones therefore never draw ahead (no hover). Accepted with the answer.
 
+**At the Stage 2 stop (09-24-26).** To `tier3-stage2/stage2-report.md`,
+"Decisions for the founder":
+1. The two runtime bugs the review's code lens found (code-1, a copy drawn
+   while a navigation loads; code-2, Shuffle's stale pick after a swap):
+   "yes let's absolutely fix those", before merging.
+2. Grandmillennial's and cottagecore's header bands on a scrolled swap:
+   "let's live with it for now" (as swiss's); the transitions phase
+   revisits them.
+3. Merge PR #90: after the fixes.
+
 ## Still open from before (carry forward)
 
 - Quiet's header marks Contact as current on `/contact/sent/`, on the root

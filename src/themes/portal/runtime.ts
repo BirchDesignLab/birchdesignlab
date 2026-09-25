@@ -260,9 +260,16 @@ const drawnAhead = new Set<string>();
 let drawWanted: { key: string; html: string | null; go: (html: string) => Promise<void> } | null = null;
 /** The copy on screen, removed the moment a navigation begins. */
 let copy: HTMLIFrameElement | null = null;
-/** Navigations begun since the hard load (stopDrawingAhead), so a rest timed
-    before one knows it is stale. */
-let navigations = 0;
+/** A navigation has begun and its page has not landed yet (stopDrawingAhead
+    to resumeDrawingAhead). Nothing is drawn meanwhile: a link named then was
+    named against the page being left, and a copy drawn into the load is
+    swapped out with the old body (review code-1, 09-24-26: the mouse
+    reaching Shuffle during a slow load drew a copy there, and the lost copy
+    blocked drawing ahead for 3 s). */
+let navigating = false;
+/** Changes whenever a navigation begins or lands, so a rest timed in one
+    stretch knows it is stale in the next. */
+let epoch = 0;
 /** How long a mouse pointer rests on a link before its page is drawn, so
     browsing the list draws nothing (the founder's call, 09-24-26). Measured
     with the pointer moved down the switcher's rows (draw-ahead-rest.mjs):
@@ -367,11 +374,11 @@ async function drawCopy(key: string, html: string): Promise<boolean> {
  * Draw `path` ahead of time: the visitor is reaching for it. Warms it first
  * when it is not warm (warmPages()'s rules: never in dev, never for
  * Save-Data or 2G). Replaces an earlier wish that has not started drawing;
- * never draws the page the visitor is on, over another copy, during an
- * arrival or in a hidden tab.
+ * never draws the page the visitor is on, over another copy, while a
+ * navigation loads, during an arrival or in a hidden tab.
  */
 export function drawAheadOf(path: string): void {
-  if (import.meta.env.DEV || frugal()) return;
+  if (import.meta.env.DEV || frugal() || navigating) return;
   const key = keyOf(path);
   if (key === keyOf(location.href) || drawnAhead.has(key) || drawWanted?.key === key) return;
   const wish: NonNullable<typeof drawWanted> = {
@@ -420,15 +427,28 @@ export function drawOnIntent(
 ): void {
   let rest: ReturnType<typeof setTimeout> | undefined;
   let at: string | null = null;
+  let seen = epoch;
   const settle = (path: string | null, dwell = DRAW_DWELL_MS) => {
+    // The link remembered belongs to before a navigation began or landed:
+    // forget it, so the same link on the new page is timed afresh.
+    if (seen !== epoch) {
+      clearTimeout(rest);
+      at = null;
+      seen = epoch;
+    }
     if (path === at) return;
     clearTimeout(rest);
     at = path;
-    // A rest still being timed when a navigation begins (a click before it
-    // was reached) must not draw into that navigation: measured, a copy
-    // started just after the click held glassmorphism's arrival about 460 ms.
-    const leg = navigations;
-    if (path) rest = setTimeout(() => leg === navigations && draw(path), dwell);
+    // No rest is timed while a navigation loads (see `navigating`). One still
+    // being timed when a navigation begins (a click before it was reached)
+    // must not draw into it either: measured, a copy started just after the
+    // click held glassmorphism's arrival about 460 ms. A pointer left still
+    // on Shuffle through a swap draws nothing until it moves: a visitor
+    // shuffling again and again must not meet a copy mid-draw at the click
+    // (the press trigger's lesson).
+    if (!path || navigating) return;
+    const leg = epoch;
+    rest = setTimeout(() => leg === epoch && draw(path), dwell);
   };
   const leave = (e: Event) => {
     // Crossing from one part of a link to another (a row's name to its era)
@@ -447,10 +467,27 @@ export function drawOnIntent(
 }
 
 /** A navigation has begun: take the copy down before the old page is
-    captured, and draw nothing more for the page being left. */
-function stopDrawingAhead(): void {
-  navigations++;
+    captured, and draw nothing more until the next page lands. Exported for
+    tests/draw-on-intent.test.ts; initPortal() calls it. */
+export function stopDrawingAhead(): void {
+  navigating = true;
+  epoch++;
   drawWanted = null;
+  removeCopy();
+}
+
+/** The next page has landed (astro:after-swap; astro:page-load as a safety
+    net; or a page restored from the back/forward cache mid-navigation):
+    drawing ahead may start again, from fresh rests. A no-op unless a
+    navigation was under way. Every way out of one is covered: a same-page
+    hash link never begins one (router.js returns before the preparation), a
+    refused preparation falls back to a full load, and an aborted one is
+    replaced by the navigation that aborted it. Exported for
+    tests/draw-on-intent.test.ts; initPortal() calls it. */
+export function resumeDrawingAhead(): void {
+  if (!navigating) return;
+  navigating = false;
+  epoch++;
   removeCopy();
 }
 
@@ -672,7 +709,13 @@ export function initPortal(): void {
     vt?.finished.then(settle, settle);
   });
 
+  document.addEventListener('astro:after-swap', resumeDrawingAhead);
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) resumeDrawingAhead();
+  });
+
   document.addEventListener('astro:page-load', () => {
+    resumeDrawingAhead();
     if (firstLoad) {
       firstLoad = false;
       return;

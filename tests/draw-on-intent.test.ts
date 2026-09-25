@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { drawOnIntent } from '../src/themes/portal/runtime';
+import { drawOnIntent, stopDrawingAhead, resumeDrawingAhead } from '../src/themes/portal/runtime';
 
 /**
  * The founder's rules for drawing a school ahead (tier3-briefs/
@@ -12,8 +12,12 @@ import { drawOnIntent } from '../src/themes/portal/runtime';
  *   - keyboard focus staying 500 ms draws it;
  *   - a press (mouse or touch) draws nothing, and touch never draws at all;
  *   - only the switcher's rows and Shuffle draw ahead, never a page link.
- * The rest being dropped when a navigation begins needs the router, so it is
- * checked in the browser (scripts/themes/harness/draw-ahead-check.mjs).
+ * And, from the Stage 2 review (code-1, 09-24-26), what a navigation does to
+ * a rest: one being timed when it begins is dropped, none is timed while the
+ * next page loads, and the same link is timed afresh once it has landed.
+ * The router's side (which events call stopDrawingAhead and
+ * resumeDrawingAhead) is checked in the browser
+ * (scripts/themes/harness/draw-ahead-check.mjs, draw-ahead-nav-probe.mjs).
  */
 
 const PATH = '/t/cottagecore/';
@@ -79,6 +83,52 @@ describe('drawOnIntent: when a school is drawn ahead', () => {
     const add = vi.spyOn(target, 'addEventListener');
     drawOnIntent(target, () => PATH, vi.fn());
     expect(add.mock.calls.map((c) => c[0]).sort()).toEqual(['focusin', 'focusout', 'pointerout', 'pointerover']);
+  });
+});
+
+describe('drawOnIntent: a navigation and the rest', () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  // Module state: every test leaves no navigation under way.
+  afterEach(() => { resumeDrawingAhead(); vi.useRealTimers(); });
+
+  it('a rest being timed when a navigation begins draws nothing', () => {
+    const { draw, fire } = setup();
+    fire('pointerover', { pointerType: 'mouse' });
+    vi.advanceTimersByTime(300);
+    stopDrawingAhead();
+    vi.advanceTimersByTime(2000);
+    resumeDrawingAhead();
+    vi.advanceTimersByTime(2000);
+    expect(draw).not.toHaveBeenCalled();
+  });
+
+  it('no rest is timed while the next page loads (the mouse reaching Shuffle during a slow load)', () => {
+    const { draw, fire } = setup();
+    stopDrawingAhead();
+    fire('pointerover', { pointerType: 'mouse' });
+    fire('focusin');
+    vi.advanceTimersByTime(2000);
+    expect(draw).not.toHaveBeenCalled();
+  });
+
+  it('once the page has landed, the same link is timed afresh', () => {
+    const { draw, fire } = setup();
+    stopDrawingAhead();
+    fire('pointerover', { pointerType: 'mouse' }); // remembered, not timed
+    resumeDrawingAhead();
+    vi.advanceTimersByTime(2000);
+    expect(draw).not.toHaveBeenCalled(); // a pointer left still draws nothing
+    fire('pointerover', { pointerType: 'mouse' }); // it moves: same link, new page
+    vi.advanceTimersByTime(400);
+    expect(draw).toHaveBeenCalledTimes(1);
+  });
+
+  it('landing twice (after-swap, then page-load) changes nothing', () => {
+    const { draw, fire } = setup();
+    fire('pointerover', { pointerType: 'mouse' });
+    resumeDrawingAhead(); // no navigation under way: a no-op, the rest runs on
+    vi.advanceTimersByTime(400);
+    expect(draw).toHaveBeenCalledTimes(1);
   });
 });
 
