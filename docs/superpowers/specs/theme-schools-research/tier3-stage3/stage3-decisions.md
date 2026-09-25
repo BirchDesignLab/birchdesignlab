@@ -182,6 +182,13 @@ items:
    magnified, edge band pulling in what lies just outside with a faint
    colour fringe, bright top-left rim, a soft shadow, stretching along a
    fling and settling back, Clear and Tinted).
+   - Founder on the mock: "i like the draggable lens in clear or tinted.
+     can we make it a little less bouncy when dragging? kind of rubbery
+     where we're shooting for glass." So the lens handles as rigid glass:
+     at most about 4% stretch along a fling, eased in and out with no
+     oscillation, a glide that decays to a stop (no spring, no overshoot),
+     no bounce off the edges (it stops against them), and a small lift
+     (deeper shadow) while held. A second mock showed that feel.
 2. Palette: **warm Big Sur** leads.
 3. Glass controls: yes, "we'll just have to see how that actually
    manifests".
