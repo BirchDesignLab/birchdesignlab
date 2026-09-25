@@ -136,6 +136,18 @@ async function main() {
       // local ones (the modal is not ours to diff).
       await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
       const page = await context.newPage();
+      // Playwright has no `reducedTransparency` context option; headless
+      // Chromium here otherwise reports prefers-reduced-transparency:
+      // reduce by default, which pushed glass's E10 fallback into every
+      // capture (glassmorphism/verify-b1-glass-2.mjs, "B1-sheets-invalid-
+      // light"). Forced to the real no-preference default via CDP so every
+      // school captures the state a visitor with no OS preference set sees.
+      try {
+        const cdp = await context.newCDPSession(page);
+        await cdp.send('Emulation.setEmulatedMedia', {
+          features: [{ name: 'prefers-reduced-transparency', value: 'no-preference' }],
+        });
+      } catch {}
       page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('net::ERR_FAILED')) problems.push(`${page.url()} console: ${m.text()}`); });
       page.on('pageerror', (e) => problems.push(`${page.url()} pageerror: ${e.message}`));
       page.on('requestfailed', (r) => {

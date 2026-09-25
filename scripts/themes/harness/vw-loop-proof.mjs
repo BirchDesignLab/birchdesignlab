@@ -1,10 +1,8 @@
 /**
- * Prove the vaporwave grid's F4(b) loop-with-a-seam: film the Home hero's
- * WebGL grid (fx.ts) and the Home closer's CSS floor (.vw-floor::before,
- * theme.css) long enough to hold at least two seams each, dark and light,
- * desktop, before (the frozen HEAD build) and after (this seat's build) -
- * and, since the Tier A critique, both loop variants the brief asks the
- * founder to choose between, plus honest films and a Services F5 check.
+ * Prove the vaporwave grid's F4(b) loop-with-a-seam: film the Home closer's
+ * CSS floor (.vw-floor::before, theme.css) long enough to hold at least two
+ * seams, dark and light, desktop, before (the frozen HEAD build) and after
+ * (this seat's build), plus honest films and a Services F5 check.
  *
  * Written 09-25-26 for Tier 3 stage 3 (Tier A proofs), topic "vaporwave" F4.
  * Rewritten 09-25-26 for the Tier A fix round: motion.mjs's `fx` scenario
@@ -16,31 +14,34 @@
  * Method: the seam's wall-clock moment is read from the page itself rather
  * than guessed at from pixels, because a global pixel-diff sweep over 15s of
  * an animating grid turned up false positives (star twinkle, JPEG noise) on
- * the drive-only "before" build too. For the WebGL hero, fx.ts stamps a
- * proof-only `window.__vwHeroStarted` (its loop's clock zero) - only when the
- * page was loaded with an explicit `?vwLoop=` query, so a production load
- * never creates it (fix round finding 6). For the CSS floor, the animation's
- * own `currentTime` (`getAnimations({ subtree: true })`) gives the same
- * answer with no code change at all: it reads `vw-floor-seam`, the floor's
- * 6.4 s seam animation (every floor carries it in both variants since the
- * Tier A fix rounds; only the hero's grid has two variants).
- * Either way, "after" tells this script when its own seams fall; "before"
- * (the frozen HEAD build, no F4 code) gets the SAME wall-clock windows for a
- * same-time comparison (fix round finding 5: this doubles as a noise
- * baseline - see huntBoth / the manifest's `baseline` block for what that can
- * and cannot show). Inside each predicted window a short, local
- * frame-to-frame diff (not a global one) finds the exact native frame the
- * tear lands on.
+ * the drive-only "before" build too. The CSS floor's animation's own
+ * `currentTime` (`getAnimations({ subtree: true })`) gives the answer with
+ * no code change needed: it reads `vw-floor-seam`, the floor's 6.4s seam
+ * animation (every floor has carried it since the Tier A fix rounds).
+ * "After" tells this script when its own seams fall; "before" (the frozen
+ * HEAD build, no F4 code) gets the SAME wall-clock windows for a same-time
+ * comparison (fix round finding 5: this doubles as a noise baseline - see
+ * huntBoth / the manifest's `baseline` block for what that can and cannot
+ * show). Inside each predicted window a short, local frame-to-frame diff
+ * (not a global one) finds the exact native frame the tear lands on.
+ *
+ * Fix round 2 (Tier 3 stage 3, item 7): Tier B removed the 'tear' loop
+ * variant and the proof-only `?vwLoop=` query (and the `__vwHeroStarted`
+ * hook it gated) entirely - restart is the only shipped behaviour
+ * (stage3-decisions.md). So is the 'hero' scene below: with no hook to read,
+ * heroSeamOffset() could only ever return null, silently skipping every
+ * hero seam check rather than failing loud. The hero's own seam now has
+ * dedicated, better-instrumented probes that read the real WebGL calls
+ * instead of a page-side hook (scripts/themes/vaporwave/b1-recritic.mjs,
+ * verify-seam-throttle.mjs, film-hero-seam.mjs); this script keeps to what
+ * it can still do with no hook at all - the CSS floor's own seam, read
+ * straight from the animation's `currentTime` - so "the floor probe runs
+ * clean" instead of quietly filming a scene it can no longer measure.
  *
  * Fix round additions (Tier A critique):
- *   - two loop variants, 'tear' (the drive never resets, only the seam marks
- *     the loop) and 'restart' (the scroll/stripe phase itself jumps at the
- *     seam) - see fx.ts readLoopVariant. Both are filmed for "after"; the
- *     frozen "before" build predates F4(b) entirely and is filmed once.
- *   - real MP4s of the hero and the closer, before/tear/restart, dark/light,
- *     15s each (mp4()), plus a before|tear|restart side-by-side per scheme
- *     (sideBySideMp4()) and a 2x crop strip of the frames either side of each
- *     seam (cropSheet()).
+ *   - real MP4s of the closer (mp4()), plus a before|restart side-by-side per
+ *     scheme (sideBySideMp4()) and a 2x crop strip of the frames either side
+ *     of each seam (cropSheet()).
  *   - a Services F5 capture that screenshots the `.apps` element directly
  *     (filmServicesF5()), so both windows are in frame regardless of where
  *     the fold falls, and asserts exactly one `.vw-win-bar` lacks `.inactive`
@@ -52,18 +53,18 @@
  * first, e.g. via snap.mjs --reuse --hold):
  *   BDL_GPU=1 node scripts/themes/harness/vw-loop-proof.mjs \
  *     --before http://127.0.0.1:4463 --after http://127.0.0.1:4464 \
- *     [--film-ms 15000] [--schemes dark,light] [--variants tear,restart]
- *     [--skip-mp4] [--skip-services]
+ *     [--film-ms 15000] [--schemes dark,light] [--skip-mp4] [--skip-services]
  *
  * Output: scripts/themes/.out/stage3-proofs/vaporwave/ (gitignored)
- *   <scene>__<scheme>__before.png / __tear.png / __restart.png   (seam sheets)
- *   <scene>__<scheme>__<variant>__crop.png                       (2x seam crops)
- *   <scene>__<scheme>__before.mp4 / __tear.mp4 / __restart.mp4   (15s films)
- *   <scene>__<scheme>__compare.mp4                               (side by side)
+ *   closer__<scheme>__before.png / __restart.png                 (seam sheets)
+ *   closer__<scheme>__restart__crop.png                          (2x seam crop)
+ *   closer__<scheme>__before.mp4 / __restart.mp4                 (15s films)
+ *   closer__<scheme>__compare.mp4                                (side by side)
  *   services__<scheme>__compare.png                              (F5, both windows)
  *   loop-proof-manifest.json                                     (all measurements)
- * scene is "hero" (fx.ts, the WebGL grid) or "closer" (the CSS floor on
- * Home's closer band, the same component Services and Sent use).
+ * The only scene left is "closer" - the CSS floor on Home's closer band, the
+ * same component Services uses (see the file header for why "hero" was
+ * dropped in fix round 2).
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -88,7 +89,10 @@ const beforeBase = arg('before', 'http://127.0.0.1:4463').replace(/\/$/, '');
 const afterBase = arg('after', 'http://127.0.0.1:4464').replace(/\/$/, '');
 const filmMs = Number(arg('film-ms', 15000));
 const schemes = list('schemes', 'dark,light');
-const variants = list('variants', 'tear,restart');
+/* fix round 2, item 7: 'tear' is gone (see the file header); 'restart' is
+   the only variant left, kept as a list of one rather than collapsed away so
+   the loop below and the manifest/sheet shape need no further changes. */
+const variants = list('variants', 'restart');
 const skipMp4 = flag('skip-mp4');
 const skipServices = flag('skip-services');
 const VP = { width: 1440, height: 900 };
@@ -108,11 +112,11 @@ const CONTEXT_FRAMES = 2;
    rather than assumed, and the manifest records the real deltas either way. */
 const SEAM_TOLERANCE_MS = 34;
 
-/* The two scenes on Home, and the box each one's crop is measured against.
-   Read live so a later layout change cannot silently point this script at
-   the wrong element. */
+/* The scene this script can still probe without a page-side hook (see the
+   file header): the CSS floor's own seam, read from the animation's
+   currentTime. Read live so a later layout change cannot silently point this
+   script at the wrong element. */
 const SCENES = {
-  hero: { selector: '.hero', label: 'Home hero (fx.ts WebGL grid)' },
   closer: { selector: '.closer-band', label: 'Home closer (.vw-floor CSS grid)' },
 };
 
@@ -177,26 +181,13 @@ function meanAbsDiff(a, b) {
   return sum / a.length;
 }
 
-/** How long from right now until the hero's WebGL seam next starts, reading
-    fx.ts's proof hook; null if the hook is missing (no `?vwLoop=` query was
-    used to load this page - the "before" build, or a variant load that
-    somehow dropped the query). */
-async function heroSeamOffset(page) {
-  return page.evaluate((CYCLE) => {
-    const started = window.__vwHeroStarted;
-    if (typeof started !== 'number') return null;
-    const cyclePos = ((performance.now() - started) / 1000) % (CYCLE / 1000);
-    return CYCLE - cyclePos * 1000;
-  }, CYCLE_MS);
-}
-
 /** How long from right now until the CSS floor's seam next starts: the
     animation's own currentTime, no code change needed. Reads `vw-floor-seam`
-    (every floor since the second fix round, in both variants: the tear rides
-    its own `translate` animation on a 6.4s clock beside the 1.6s scroll),
-    falling back to `vw-floor` for the "before" build, whose only floor
-    animation it is. The seam sits at 99.2%-100% of the 6.4s cycle. Null if
-    neither is animating (should not happen). */
+    (every floor since the second fix round: it rides its own `translate`
+    animation on a 6.4s clock beside the 1.6s scroll), falling back to
+    `vw-floor` for the "before" build, whose only floor animation it is. The
+    seam sits at 99.2%-100% of the 6.4s cycle. Null if neither is animating
+    (should not happen). */
 async function closerSeamOffset(page, selector) {
   return page.evaluate(({ selector, CYCLE }) => {
     const host = document.querySelector(`${selector} .vw-floor`);
@@ -396,12 +387,10 @@ async function sideBySideMp4(columns, file, ms, problems) {
   return r.status === 0;
 }
 
-/** Film one scene on its own: the hero needs no scroll (it is the first
-    thing on the page), the closer band needs scrolling into view first, so
-    each gets its own page load rather than sharing one scroll position that
-    would leave the other's crop capturing nothing. `variant` is appended as
-    `?vwLoop=` for a build that understands it (the "after" build only; the
-    frozen "before" build predates F4(b) and ignores any query). */
+/** Film one scene on its own (today, only 'closer': see the file header).
+    `variant` is kept as a parameter for the manifest/sheet labelling below,
+    but no longer changes the URL - fix round 2 removed the `?vwLoop=` query
+    the build understood, along with the 'tear' variant it used to pick. */
 async function filmScene(base, scheme, sceneKey, label, variant) {
   const scene = SCENES[sceneKey];
   const context = await browser.newContext({
@@ -421,8 +410,7 @@ async function filmScene(base, scheme, sceneKey, label, variant) {
   page.on('console', (m) => { if (m.type() === 'error') problems.push(`console: ${m.text()}`); });
   page.on('requestfailed', (r) => { if (!r.url().includes('/cdn-cgi/zaraz/')) problems.push(`request failed: ${r.url()}`); });
 
-  const url = base + '/t/vaporwave/' + (variant ? `?vwLoop=${variant}` : '');
-  await page.goto(url, { waitUntil: 'networkidle' });
+  await page.goto(base + '/t/vaporwave/', { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
   if (sceneKey === 'closer') {
     await page.evaluate((sel) => document.querySelector(sel)?.scrollIntoView({ block: 'center' }), scene.selector);
@@ -440,7 +428,7 @@ async function filmScene(base, scheme, sceneKey, label, variant) {
   }, scene.selector);
   if (!box) problems.push(`${label}: no ${scene.selector} on the page`);
 
-  const offset = sceneKey === 'hero' ? await heroSeamOffset(page) : await closerSeamOffset(page, scene.selector);
+  const offset = await closerSeamOffset(page, scene.selector);
 
   console.log(`${label}: filming ${filmMs} ms (predicted first seam +${offset?.toFixed(0) ?? 'n/a'} ms)...`);
   const frames = await recordIdle(page, filmMs);

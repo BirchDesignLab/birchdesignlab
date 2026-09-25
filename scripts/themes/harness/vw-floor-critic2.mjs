@@ -32,17 +32,25 @@ const BEFORE = arg('before');
 const AFTER = arg('after');
 if (!BEFORE || !AFTER) { console.error('need --before and --after'); process.exit(2); }
 
+/* fix round 2, item 7: Sent dropped its sunset scene entirely (F1(b); its
+   .stage-horizon became a Win95 desktop, item 5), so it never carried a
+   .vw-floor to probe and is dropped from this list rather than left to
+   crash on a selector that no longer exists. */
 const PAGES = [
   { key: 'home', path: '/t/vaporwave/', sel: '.closer-band' },
   { key: 'services', path: '/t/vaporwave/services/', sel: '.ask-band' },
   { key: 'contact', path: '/t/vaporwave/contact/', sel: '.side-scene' },
-  { key: 'sent', path: '/t/vaporwave/contact/sent/', sel: '.stage-horizon' },
 ];
 const FRACS = [0, 0.6, 0.8, 0.95];
+/* fix round 2, item 7: Tier B removed the 'tear' loop variant and the
+   proof-only ?vwLoop= query entirely (restart is the only shipped
+   behaviour, stage3-decisions.md); the third column here used to ask the
+   "after" build for ?vwLoop=tear, which the build now just ignores as an
+   unknown query and serves restart under a misleading label. Two columns:
+   before (frozen base, pre-F4) and after (restart, the shipped build). */
 const COLS = [
   { label: 'before (frozen base)', base: BEFORE, q: '' },
-  { label: 'after, restart (default)', base: AFTER, q: '' },
-  { label: 'after, tear (?vwLoop=tear)', base: AFTER, q: '?vwLoop=tear' },
+  { label: 'after (restart)', base: AFTER, q: '' },
 ];
 
 const useGpu = process.env.BDL_GPU === '1';

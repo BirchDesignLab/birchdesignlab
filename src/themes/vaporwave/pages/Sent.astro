@@ -1,49 +1,161 @@
 ---
-/** Vaporwave sent: a system dialog over the sunset. The message went out;
-    the only button takes you home. */
+/** Vaporwave sent: a system dialog over a Win95 desktop (F1(b): the sunset
+    stays the Home hero's alone). The message went out; the only button
+    takes you home. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Win from '../parts/Win.astro';
-import Horizon from '../parts/Horizon.astro';
 
 interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
+{/* F1(b): the message box sits on a Win95 desktop, not the sunset. A Display
+    Properties dialog has one Close button, no minimise or maximise (E6). */}
 <section class="stage">
-  <Horizon class="stage-horizon" />
+  {/* fix round 2, item 5: a few aria-hidden desktop icons, My Computer
+      style, so the wallpaper reads as a working desktop rather than an empty
+      pattern. Plain elements, not focusable, decoration only. */}
+  <div class="desktop-icons" aria-hidden="true">
+    <div class="desktop-icon">
+      <span class="icon-glyph icon-computer">
+        {/* fix round 3, item 3: four blank bevelled squares read as
+            placeholders, not desktop icons. A tiny 16px pixel glyph per
+            square, drawn from rects (crisp edges, no anti-aliasing at this
+            size) in the school's own tokens so it repalettes with the
+            scheme. Decoration nested inside an aria-hidden ancestor: not
+            focusable, no separate aria-hidden needed on the svg itself. */}
+        <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+          <rect x="2" y="2" width="12" height="8" style="fill: var(--field-sunk)" />
+          <rect x="3" y="3" width="10" height="6" style="fill: var(--crt-link)" />
+          <rect x="4" y="4" width="8" height="4" style="fill: var(--crt-bg)" />
+          <rect x="6" y="10" width="4" height="2" style="fill: var(--bevel-lo)" />
+          <rect x="4" y="12" width="8" height="1" style="fill: var(--bevel-hi)" />
+        </svg>
+      </span>
+      <span class="icon-label">My Computer</span>
+    </div>
+    <div class="desktop-icon">
+      <span class="icon-glyph icon-bin">
+        <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+          <rect x="5" y="2" width="6" height="1" style="fill: var(--bevel-hi)" />
+          <rect x="4" y="4" width="8" height="1" style="fill: var(--bevel-hi)" />
+          <rect x="5" y="5" width="6" height="9" style="fill: var(--field-sunk)" />
+          <rect x="6" y="7" width="1" height="5" style="fill: var(--mark-muted)" />
+          <rect x="8" y="7" width="1" height="5" style="fill: var(--mark-muted)" />
+          <rect x="10" y="7" width="1" height="5" style="fill: var(--mark-muted)" />
+        </svg>
+      </span>
+      <span class="icon-label">Recycle Bin</span>
+    </div>
+    <div class="desktop-icon">
+      <span class="icon-glyph icon-exe">
+        {/* The site's own striped sun (theme.css .vw-sun, hz-sun tokens),
+            small enough that plain stripes read fine without the mask. */}
+        <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+          <rect x="4" y="3" width="8" height="4" style="fill: var(--hz-sun-a)" />
+          <rect x="4" y="7" width="8" height="1" style="fill: var(--hz-sun-b)" />
+          <rect x="4" y="9" width="8" height="2" style="fill: var(--hz-sun-b)" />
+          <rect x="4" y="12" width="8" height="1" style="fill: var(--hz-sun-c)" />
+        </svg>
+      </span>
+      <span class="icon-label">birch.exe</span>
+    </div>
+    <div class="desktop-icon">
+      <span class="icon-glyph icon-txt">
+        <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+          <rect x="4" y="2" width="8" height="12" style="fill: var(--field-sunk)" />
+          <rect x="9" y="2" width="3" height="3" style="fill: var(--bevel-lo)" />
+          <rect x="5" y="6" width="6" height="1" style="fill: var(--mark-muted)" />
+          <rect x="5" y="8" width="6" height="1" style="fill: var(--mark-muted)" />
+          <rect x="5" y="10" width="4" height="1" style="fill: var(--mark-muted)" />
+        </svg>
+      </span>
+      <span class="icon-label">readme.txt</span>
+    </div>
+  </div>
   <p class="vw-kana kana" aria-hidden="true">メッセージ送信完了</p>
-  <Win title="transmission.sys" class="dialog">
+  <Win title="transmission.sys" class="dialog" buttons="close">
     <div class="dialog-row">
       <div class="icon" aria-hidden="true"><span></span></div>
-      <div>
+      {/* The glyph, the copy and the CTA share one left edge (E6): the button
+          sits in the text column instead of hanging right-aligned under it. */}
+      <div class="content">
         <h1>{copy.heading}</h1>
         <p>{copy.body}</p>
+        <div class="actions">
+          <a class="vw-btn" href={hrefFor('home', theme)}>{copy.back}</a>
+        </div>
       </div>
-    </div>
-    <div class="actions">
-      <a class="vw-btn" href={hrefFor('home', theme)}>{copy.back}</a>
     </div>
   </Win>
 </section>
 
 <style>
+  /* F1(b): a Win95 desktop, a tiled bitmap in the school's own tokens
+     (a diamond weave, the classic desktop-pattern shape) rather than the
+     sunset; the stage runs flush to the footer's own floor below it, so no
+     band of plain field ever separates them. fix round 2, item 5: the old
+     55%-alpha-on-field tile read as nearly flat, especially in light; now
+     the same --vw-desktop pattern (theme.css) Footer.astro carries into the
+     footer behind this page, so the desktop and the footer read as one
+     surface instead of a wallpaper stopping short of a checkerboard. */
   .stage {
     position: relative; overflow: hidden; isolation: isolate;
     min-height: clamp(560px, 82vh, 860px);
     display: grid; justify-items: center; align-content: start; gap: 1.5rem;
     padding: clamp(3rem, 9vh, 6rem) var(--gutter) 0;
+    /* The desktop pattern is Sent's body background (theme.css), one surface
+       under the stage, the footer and the portal tail. */
+    background: transparent;
   }
-  /* The sun sets clear of the dialog rather than half behind it. */
-  .stage :global(.stage-horizon) { --hz-line: 62%; --hz-sun-w: min(28vw, 320px); --hz-sun-x: 84%; z-index: -1; }
-  .kana { position: relative; font-size: 0.85rem; letter-spacing: 0.7em; margin-right: -0.7em; color: var(--neon-pink); }
+  /* item 5: a few aria-hidden desktop icons in the top-left, My Computer
+     style, file names in the school's own voice. Hidden under 700px so they
+     never compete with the dialog card on a narrow phone. */
+  .desktop-icons {
+    position: absolute; left: clamp(1rem, 4vw, 2.5rem); top: clamp(1.4rem, 5vh, 2.8rem);
+    display: grid; gap: 1.3rem; z-index: 0;
+  }
+  /* Named .desktop-icon, not .icon: this component already uses .icon for
+     the dialog's own striped-sun checkmark glyph below, and a same-named
+     class in the same scoped stylesheet applies to both - found when it
+     rendered as a circular sunset blob with the label text wrapped inside
+     it, the checkmark glyph's own border-radius/background bleeding onto
+     these. */
+  .desktop-icon { display: grid; justify-items: center; gap: 0.35rem; width: 72px; }
+  .icon-glyph {
+    display: grid; place-items: center;
+    width: 34px; height: 30px;
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  }
+  .icon-computer { background: linear-gradient(160deg, var(--crt-case-a), var(--crt-case-b)); }
+  .icon-bin { background: linear-gradient(180deg, var(--field-raised), var(--field-sunk)); }
+  .icon-exe { background: linear-gradient(180deg, var(--neon-pink), var(--neon-lav)); }
+  .icon-txt { background: var(--field-raised); }
+  /* fix round 3, item 3: a 16x16 pixel-art glyph per bevelled square,
+     scaled up with no smoothing so it reads as blocky pixel art rather
+     than a blurred vector. */
+  .icon-glyph .pixel { width: 18px; height: 18px; shape-rendering: crispEdges; image-rendering: pixelated; }
+  .icon-label {
+    padding: 0.15em 0.35em; text-align: center;
+    font-family: var(--font-mono); font-size: 0.85rem; line-height: 1; letter-spacing: 0.03em;
+    color: var(--mark);
+    background: color-mix(in srgb, var(--field) 55%, transparent);
+  }
+  @media (max-width: 700px) {
+    .desktop-icons { display: none; }
+  }
+  /* 1.1rem, not 0.85: Dela Gothic One is ultra-heavy, and at 13.6px the
+     kanji of 送信完了 closed up into blobs on a 1x screen. */
+  .kana { position: relative; font-size: 1.1rem; letter-spacing: 0.55em; margin-right: -0.55em; color: var(--neon-pink); }
   :global([data-scheme='light']) .kana { color: var(--accent); }
-  /* An opaque drop, so nothing of the scene behind shows through the shadow. */
+  /* An opaque drop, so nothing of the tiled desktop behind shows through the shadow. */
   .stage :global(.dialog) {
     width: min(100%, 560px);
     box-shadow: 12px 12px 0 color-mix(in srgb, var(--win-drop) 100%, var(--field) 100%);
   }
   .dialog-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.4rem; align-items: start; }
-  /* A tiny striped sun with a tick through it: the "all good" icon. */
+  /* A tiny striped sun with a tick through it: the "all good" icon. Still
+     the sunset's own palette, kept as the school's one checkmark glyph. */
   .icon {
     position: relative; width: 64px; height: 64px; border-radius: 50%;
     background: linear-gradient(180deg, var(--hz-sun-a) 0 45%, var(--hz-sun-b) 45% 58%, transparent 58% 64%, var(--hz-sun-b) 64% 76%, transparent 76% 83%, var(--hz-sun-c) 83%);
@@ -54,15 +166,13 @@ const { copy, theme } = Astro.props;
   }
   h1 { font-family: var(--font-display); font-size: clamp(3rem, 8vw, 4.6rem); line-height: 0.95; margin-bottom: 0.9rem; }
   p { color: var(--mark-muted); }
-  .actions { display: flex; justify-content: flex-end; margin-top: 2rem; }
+  /* E6: the CTA shares the text's left edge instead of hanging right-aligned
+     under a left-set paragraph. */
+  .actions { display: flex; justify-content: flex-start; margin-top: 1.6rem; }
 
-  @media (max-width: 760px) {
-    /* Narrow screens: the sun sets below the dialog instead of beside it. */
-    .stage { padding-bottom: 280px; }
-    .stage :global(.stage-horizon) { --hz-sun-x: 50%; --hz-sun-w: 56vw; --hz-line: calc(100% - 130px); }
-  }
   @media (max-width: 520px) {
     .dialog-row { grid-template-columns: 1fr; }
-    .actions { justify-content: flex-start; }
+    /* E10: match theme.css's smaller window drop under 520px. */
+    .stage :global(.dialog) { box-shadow: 6px 6px 0 color-mix(in srgb, var(--win-drop) 100%, var(--field) 100%); }
   }
 </style>

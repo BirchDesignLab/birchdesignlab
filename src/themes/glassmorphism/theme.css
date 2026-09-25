@@ -12,48 +12,74 @@
 :root[data-theme='glassmorphism'] {
   color-scheme: light;
 
-  /* Field: pale lilac into sky, the page behind everything. */
-  --field: #eef0fb;
-  --field-top: #f4eefd;
-  --field-bottom: #e7f2fd;
+  /* Field: a pale warm cream, close to the wallpaper's own lightest edge,
+     for the sliver a reader sees before the image decodes and for anything
+     that must fall back to a flat colour. Deliberately paler than the
+     wallpaper itself: this token carries real body-text contrast pairs
+     (required, and meta.contrast), which the painted image does not need
+     to. */
+  --field: #fdece0;
+  --field-top: #fff3e6;
+  --field-bottom: #ffe6d0;
   /* Opaque panel, the no-backdrop-filter fallback and the required pair. */
-  --field-raised: #fbfbff;
+  --field-raised: #fffaf6;
+  --wp-body: #6b5a8e;
 
-  --mark: #17143a;
-  --mark-muted: #474467;
-  --accent: #6526cf;
-  --accent-2: #9d1a8f;
-  --link: #4a24c4;
+  --mark: #141a38;
+  --mark-muted: #3e4260;
+  --accent: #7a230a;
+  --accent-2: #a01f45;
+  --link: #123a7a;
   --on-accent: #ffffff;
+  /* D4 = C, vibrancy: the "Design Lab" headline takes its colour from the
+     wallpaper behind it (the coral bridge and the orange body), the one
+     coloured text in the room, held to the D2 = C 3:1 floor. */
+  --vibrant-a: #6b2308;
+  --vibrant-b: #6b1a38;
 
-  /* Orbs: a highlight and a body per hue. --blob-worst is the orb a panel's
-     text must survive: dark ink loses the most over the deepest body. */
-  --blob-violet-hi: #c4b1ff;
-  --blob-violet: #7c3aed;
-  --blob-cyan-hi: #a5f3fc;
-  --blob-cyan: #0ab4d6;
-  --blob-peach-hi: #ffe0c2;
-  --blob-peach: #fb8b4b;
-  --blob-pink-hi: #fbc6e3;
-  --blob-pink: #ec4899;
+  /* Orbs (D7: flat two-stop discs, warm Big Sur set). The class names stay
+     (no markup change): violet = deep blue, cyan = ember/amber, peach =
+     coral, pink = rose, magenta and cyan kept as accents only.
+     --blob-worst is the orb a panel's text must survive: dark ink loses the
+     most over the deepest body. */
+  --blob-violet-hi: #86a6ff;
+  --blob-violet: #2f55c8;
+  --blob-cyan-hi: #ffcf8a;
+  --blob-cyan: #f08424;
+  --blob-peach-hi: #ffb4a2;
+  --blob-peach: #ec5b49;
+  --blob-pink-hi: #ffb0c9;
+  --blob-pink: #d63c73;
   --blob-worst: var(--blob-violet);
   --orb-glow: 0 0 0 transparent;
 
-  /* Glass. --sheen is the brightest point of a panel's diagonal highlight. */
-  --glass: rgb(255 255 255 / 0.56);
-  --glass-strong: rgb(255 255 255 / 0.7);
+  /* Glass, in three thicknesses plus a solid surface (E1). --mat-thin is
+     the one showpiece pane per page: thinnest fill, most saturated blur,
+     over the most colour (D2 = C lets its display type use the WCAG 3:1
+     large-text floor). --mat-regular carries body copy. --mat-thick is
+     navigation chrome only. --surface-solid never blurs. */
+  --mat-thin: rgb(255 255 255 / 0.26);
+  --mat-regular: rgb(255 255 255 / 0.56);
+  --mat-thick: rgb(255 255 255 / 0.7);
+  --surface-solid: var(--field-raised);
   --glass-fallback: rgb(251 251 255 / 0.94);
-  --sheen: rgb(255 255 255 / 0.45);
   --well: rgb(255 255 255 / 0.62);
   --line: rgb(52 36 140 / 0.16);
   --thumb: #ffffff;
   --edge: rgb(255 255 255 / 0.75);
   --edge-hi: rgb(255 255 255 / 0.95);
-  --shadow: 0 30px 60px -24px rgb(72 50 170 / 0.28), 0 2px 8px -2px rgb(72 50 170 / 0.08);
-  --shadow-sm: 0 10px 24px -12px rgb(72 50 170 / 0.3);
-  --blur: blur(24px) saturate(170%);
+  --edge-rim: rgb(255 255 255 / 0.85);
+  --shadow: 0 30px 60px -24px rgb(80 50 30 / 0.28), 0 2px 8px -2px rgb(80 50 30 / 0.08);
+  --shadow-sm: 0 10px 24px -12px rgb(80 50 30 / 0.3);
+  /* E8: a luminosity step (brightness) stands in for Acrylic's exclusion
+     layer, in place of the diagonal sheen stripe. Thin gets the most
+     saturation (it is the showpiece); thick the least (chrome should not
+     compete with the room). */
+  --blur-thin: blur(20px) saturate(2.1) brightness(1.12);
+  --blur: blur(24px) saturate(1.7) brightness(1.08);
+  --blur-thick: blur(30px) saturate(1.45) brightness(1.05);
 
-  --font-head: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans Variable fallback', system-ui, sans-serif;
+  --font-head: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
   --font-body: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
   --font-label: 'Space Grotesk Variable', 'Space Grotesk Variable fallback', system-ui, sans-serif;
 
@@ -62,79 +88,90 @@
   --r-md: 16px;
   --gutter: clamp(16px, 4vw, 40px);
   --measure: 62ch;
-  --ambient-opacity: 0.62;
 
-  /* Dark keeps its own saturated button so it reads as lit, not disabled. */
-  --btn-a: var(--accent);
-  --btn-b: var(--accent-2);
-  --btn-ink: var(--on-accent);
-  --btn-glow: color-mix(in srgb, var(--accent) 70%, transparent);
+  --btn-a: #cf4515;
+  --btn-b: #c2304c;
+  --btn-ink: #ffffff;
+  --btn-glow: rgb(224 82 30 / 0.55);
 
   /* Darker than the orbs' own hue: white numerals need more ink under
      them than --blob-cyan/peach/pink give at full light-scheme brightness. */
-  --icon-cyan-hi: #4fb0c9;
-  --icon-cyan: #076580;
-  --icon-peach-hi: #f0a868;
-  --icon-peach: #a8460a;
-  --icon-pink-hi: #e58ec0;
-  --icon-pink: #9c1160;
+  --icon-cyan-hi: #f2a04a;
+  --icon-cyan: #a8460a;
+  --icon-peach-hi: #f08a7a;
+  --icon-peach: #b3322a;
+  --icon-pink-hi: #e88aa8;
+  --icon-pink: #9e1f4e;
 }
 
 :root[data-theme='glassmorphism'][data-scheme='dark'] {
   color-scheme: dark;
 
-  /* Deep navy; the orbs glow instead of tint. */
-  --field: #0a0e24;
-  --field-top: #120c2e;
-  --field-bottom: #07162b;
-  --field-raised: #161a3a;
+  /* Deep blue with ember and coral light, not indigo or violet (stage3
+     founder direction). */
+  --field: #0d1b4a;
+  --field-top: #0d1b4a;
+  --field-bottom: #060e2a;
+  --field-raised: #101c44;
+  --wp-body: #050b22;
 
-  --mark: #f5f4ff;
-  --mark-muted: #d6d6f0;
-  --accent: #d6c8ff;
-  --accent-2: #9ee8f6;
-  --link: #d8ccff;
-  --on-accent: #120b2e;
+  --mark: #f7f5f2;
+  --mark-muted: #dcdbe6;
+  --accent: #ffcaa6;
+  --accent-2: #ffd9a8;
+  --link: #ffc9a8;
+  --on-accent: #1a0d05;
+  /* D4 vibrancy: ember and coral, the colours the dark wallpaper is made of. */
+  --vibrant-a: #ffc79a;
+  --vibrant-b: #ffd6e0;
 
-  --blob-violet-hi: #b69cff;
-  --blob-violet: #6d28d9;
-  --blob-cyan-hi: #3aa8b8;
-  --blob-cyan: #0e7fa8;
-  --blob-peach-hi: #ff9ec7;
-  --blob-peach: #c2227a;
-  --blob-pink-hi: #f18af5;
-  --blob-pink: #a21caf;
+  --blob-violet-hi: #5b86f2;
+  --blob-violet: #1d3d9e;
+  --blob-cyan-hi: #f08a3c;
+  --blob-cyan: #c9521a;
+  --blob-peach-hi: #ff8c7c;
+  --blob-peach: #c43f3a;
+  --blob-pink-hi: #ff7fa6;
+  --blob-pink: #a3285a;
   /* Light ink loses the most over the brightest highlight. */
   --blob-worst: var(--blob-cyan-hi);
-  --orb-glow: 0 0 90px 10px rgb(120 90 255 / 0.28);
+  --orb-glow: 0 0 90px 6px rgb(255 120 60 / 0.22);
 
-  /* Lighter than light's own glass on purpose (was 0.7/0.78): at that
-     weight the panel hid the orbs it was meant to frost. Not as thin as a
-     first pass either, or panel text stops clearing 4.5 over the worst orb. */
-  --glass: rgb(20 24 56 / 0.68);
-  --glass-strong: rgb(20 24 56 / 0.76);
+  /* Lighter than light's own glass on purpose: at heavier weight the panel
+     hid the orbs it was meant to frost. Not as thin as a first pass either,
+     or panel text stops clearing 4.5 over the worst orb. The showpiece
+     (--mat-thin) is Clear-plus-dim: a lower-alpha navy fill, so it reads as
+     clearer than the regular/thick panes above it, plus the same dim inset
+     shadow every dark panel carries. */
+  --mat-thin: rgb(16 20 46 / 0.52);
+  --mat-regular: rgb(20 24 56 / 0.68);
+  --mat-thick: rgb(20 24 56 / 0.76);
+  --surface-solid: var(--field-raised);
   --glass-fallback: rgb(22 26 58 / 0.96);
-  --sheen: rgb(255 255 255 / 0.07);
   /* A light tint, not a hole: form fields frost instead of recessing to black. */
   --well: rgb(255 255 255 / 0.12);
   --line: rgb(255 255 255 / 0.16);
   --thumb: rgb(255 255 255 / 0.16);
   --edge: rgb(255 255 255 / 0.13);
   --edge-hi: rgb(255 255 255 / 0.22);
+  --edge-rim: rgb(255 255 255 / 0.3);
   --shadow: 0 34px 70px -24px rgb(0 0 0 / 0.65), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   --shadow-sm: 0 12px 26px -12px rgb(0 0 0 / 0.6);
-  --ambient-opacity: 0.92;
+  --blur-thin: blur(22px) saturate(1.9) brightness(1.14);
+  --blur: blur(24px) saturate(1.7) brightness(1.1);
+  --blur-thick: blur(30px) saturate(1.4) brightness(1.06);
 
   /* Own saturated gradient: pastel light buttons go soft and disabled-looking
-     against luminous orbs, so dark gets colour that lights like they do. Dark
-     ink at this end, not white: the cyan stop is too light for white text. */
-  --btn-a: #8b5cf6;
-  --btn-b: #22d3ee;
-  --btn-ink: #0b0820;
-  --btn-glow: rgb(139 92 246 / 0.6);
+     against luminous orbs, so dark gets colour that lights like they do. */
+  --btn-a: #ff7a3d;
+  --btn-b: #ffae5c;
+  --btn-ink: #1a0d05;
+  --btn-glow: rgb(255 122 61 / 0.55);
 
   --icon-cyan-hi: var(--blob-cyan-hi);
-  --icon-cyan: var(--blob-cyan);
+  /* Darker than --blob-cyan itself (was a direct alias): the white numeral
+     needs more ink under it than the orb's own ember hue gives. */
+  --icon-cyan: #a8420e;
   --icon-peach-hi: var(--blob-peach-hi);
   --icon-peach: var(--blob-peach);
   --icon-pink-hi: var(--blob-pink-hi);
@@ -142,11 +179,104 @@
 }
 
 /* Without backdrop-filter a translucent panel shows the orbs crisp behind
-   the words, so it goes nearly opaque instead. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+   the words, so it goes nearly opaque instead.
+   Nested, not `not ((a) or (b))`: the build's CSS minifier (lightningcss,
+   run with no browser targets because Astro builds for esnext) treats the
+   -webkit- name as a redundant alias and drops that branch of an `or`,
+   which sent Safari 17 and older, the engines that only know the prefixed
+   name, to the opaque fallback (scripts/themes/glassmorphism/
+   b1-fix2-lightningcss.mjs). Nested queries both survive. */
+@supports not (backdrop-filter: blur(1px)) {
+  @supports not (-webkit-backdrop-filter: blur(1px)) {
+    :root[data-theme='glassmorphism'] {
+      --mat-thin: var(--glass-fallback);
+      --mat-regular: var(--glass-fallback);
+      --mat-thick: var(--glass-fallback);
+    }
+  }
+}
+
+/* E10: reduced transparency and increased contrast go solid, flat and still.
+   Every material token becomes the opaque fallback, every blur turns off,
+   the wallpaper flattens (its saturated stops are exactly what reduced
+   transparency exists to remove), and orb and scroll-driven motion stop.
+   prefers-contrast: more also raises the edge to a solid line-strength
+   border, since the 1px highlight is the light cue the rest of the recipe
+   leans on. forced-colors gets a sanity pass: real borders, no reliance on
+   a background alone. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root[data-theme='glassmorphism'] {
-    --glass: var(--glass-fallback);
-    --glass-strong: var(--glass-fallback);
+    --mat-thin: var(--glass-fallback);
+    --mat-regular: var(--glass-fallback);
+    --mat-thick: var(--glass-fallback);
+  }
+  /* Dark's own token block (:root[data-theme][data-scheme=dark], specificity
+     0,3,0) outranks a :where()-wrapped override, so the fallback above never
+     took over dark's --mat-thin/-regular/-thick. Same selector shape, same
+     specificity, and placed after the dark block in the cascade: this wins
+     dark's opaque fallback outright rather than relying on :where()'s zero
+     specificity against a higher one. */
+  :root[data-theme='glassmorphism'][data-scheme='dark'] {
+    --mat-thin: var(--glass-fallback);
+    --mat-regular: var(--glass-fallback);
+    --mat-thick: var(--glass-fallback);
+  }
+  /* Real (non-:where()) selectors here on purpose, and the attribute
+     selector doubled: the base .glass/.glass.thin/.glass-strong/.orb/
+     main::before rules elsewhere in this file (347 on) are themselves
+     :where()-zero, so a single plain attribute selector ties a two-class
+     combinator like .glass.thin (0,2,0 either way) and the later rule in
+     source wins regardless of what this media block says (that includes the
+     phone blur block near the end of the file, which sits after this one).
+     Repeating the attribute selector costs nothing semantically and pushes
+     this to (0,3,0), clear of every two-class base rule this school has, so
+     it wins on specificity alone and no longer depends on where in the file
+     a base rule happens to sit. */
+  /* The prefixed `none` sits in its own @supports block. The build's CSS
+     minifier (lightningcss with no browser targets: Astro builds for
+     esnext) treats -webkit-backdrop-filter as a redundant alias of
+     backdrop-filter, so inside one rule, or two adjacent rules with the
+     same selector (which it merges first), it keeps only the unprefixed
+     declaration, and Safari 17 and older kept their blur here. A
+     declaration alone in an @supports block has no twin to be merged
+     with (proved in the built CSS: scripts/themes/glassmorphism/
+     b1-fix2-lightningcss.mjs, and the snap's _astro CSS). */
+  @supports (-webkit-backdrop-filter: none) {
+    [data-theme='glassmorphism'][data-theme='glassmorphism'] :is(.glass, .glass-strong) {
+      -webkit-backdrop-filter: none;
+    }
+  }
+  [data-theme='glassmorphism'][data-theme='glassmorphism'] :is(.glass, .glass-strong) {
+    backdrop-filter: none;
+  }
+  [data-theme='glassmorphism'][data-theme='glassmorphism'] main::before {
+    background-image: none;
+    background-color: var(--field);
+  }
+  [data-theme='glassmorphism'][data-theme='glassmorphism'] .orb {
+    animation: none;
+    transform: none;
+    translate: none;
+  }
+  [data-theme='glassmorphism'][data-theme='glassmorphism'] :is(.glass, .glass-strong)::before {
+    display: none;
+  }
+}
+@media (prefers-contrast: more) {
+  :root[data-theme='glassmorphism'] {
+    --edge: var(--line);
+    --edge-hi: var(--line);
+  }
+  :where([data-theme='glassmorphism']) :is(.glass, .glass-strong) {
+    border-width: 1.5px;
+  }
+}
+@media (forced-colors: active) {
+  :where([data-theme='glassmorphism']) :is(.glass, .glass-strong, .surface-solid) {
+    border: 1px solid CanvasText;
+  }
+  :where([data-theme='glassmorphism']) .btn {
+    border: 1px solid ButtonText;
   }
 }
 
@@ -157,7 +287,13 @@
 :where([data-theme='glassmorphism']) body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(172deg, var(--field-top), var(--field) 38%, var(--field-bottom)) var(--field);
+  /* The wallpaper (main::before) is fixed and covers the viewport; this is
+     only what shows before it decodes, or below it if a layout ever runs
+     taller than the fixed layer. Matches the wallpaper's own edge tone
+     (E3: "keep text off the field entirely" is the panes' job; this is a
+     flash-of-unstyled-background guard, not a background a reader reads
+     text on). */
+  background: var(--wp-body);
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.0625rem;
@@ -167,14 +303,35 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+/* The field a cross-school arrival fades through (B1 fix round 2). The
+   arrival (below) is a fade through the field: the old page is nearly gone
+   before the new one starts, and in between Chromium paints the NEW page's
+   canvas colour, which is the body background (the wallpaper image is not
+   painted there, only the colour). With --wp-body that gap read as one to
+   three frames of flat mauve after a light school, where the base build's
+   pale field passed unseen (films and probes:
+   scripts/themes/glassmorphism/b1-fix2-arrive-ab.mjs, conditions pale and
+   field against nobend, nobf, nowp and tinywp, which all kept the flat
+   frames). So while a light arrival from another school is in flight
+   (runtime.ts holds data-from-theme until the transition finishes) the
+   canvas is the pale --field instead. Dark keeps --wp-body: the base build
+   faded through a near-black field there too, and the films show the same
+   frames in both builds. Between two glass pages the mauve stays: it is
+   the wallpaper's own edge tone, not a flash between two vivid rooms. */
+:root[data-theme='glassmorphism'][data-from-theme]:not([data-from-theme='glassmorphism']):not([data-scheme='dark']) body {
+  background: var(--field);
+}
 :where([data-theme='glassmorphism']) :is(h1, h2, h3, p, ul, ol, figure) { margin: 0; }
 :where([data-theme='glassmorphism']) :is(h1, h2, h3) {
   font-family: var(--font-head);
-  font-weight: 760;
-  letter-spacing: -0.03em;
-  /* Tight tracking on Plus Jakarta 800 shrinks the word gap along with the
-     letter gap; give it back so words stay words. */
-  word-spacing: 0.05em;
+  /* D8 = B, Inter Display: weight 740 (the proof's match to Jakarta 760),
+     tracking -0.022em. Inter does not need Jakarta's word-spacing give-back.
+     opsz pinned to 32 (the proof's finding: font-optical-sizing: auto would
+     drift the smaller heading sizes below the display optical size). */
+  font-weight: 740;
+  letter-spacing: -0.022em;
+  font-optical-sizing: none;
+  font-variation-settings: 'opsz' 32;
   line-height: 1.08;
   text-wrap: balance;
 }
@@ -184,54 +341,155 @@
 :where([data-theme='glassmorphism']) main:focus { outline: none; }
 :where([data-theme='glassmorphism']) main { display: block; position: relative; z-index: 0; overflow-x: clip; }
 
-/* Ambient wash: soft colour behind the crisp foreground orbs, so the field
-   between panels reads as a Big Sur wallpaper instead of flat lilac or navy.
-   Fixed to the viewport (transform-only drift, one compositor layer) so it
-   never forces a repaint of the page under it. */
+/* The wallpaper (E3): a fixed, saturated warm Big Sur mesh, painted offline
+   once (scripts/themes/glassmorphism/paint-wallpaper.mjs) to
+   src/themes/glassmorphism/wallpaper/, not a runtime CSS gradient, so B2's
+   lens can sample the same bitmap as its texture and never disagree with
+   the page (proofs/lens.md, "one wallpaper source"). Fixed to the viewport,
+   100lvh-safe (inset uses lvh so a collapsing mobile toolbar does not
+   rescale the cover rect mid-scroll), carried through the whole scroll: no
+   idle drift (dropped, E3), the vignette is baked into the image so lower
+   sections never fall back to a flat field. The "day" time of day is the
+   default in each scheme; dawn and dusk are painted and wait for the B2
+   time-of-day control. */
 :where([data-theme='glassmorphism']) main::before {
   content: '';
   position: fixed;
-  inset: -10vh -10vw;
+  inset: 0;
+  height: 100lvh;
   z-index: -1;
   pointer-events: none;
-  opacity: var(--ambient-opacity);
-  background:
-    radial-gradient(42vw 42vw at 14% 20%, var(--blob-violet-hi), transparent 68%),
-    radial-gradient(46vw 46vw at 88% 10%, var(--blob-cyan-hi), transparent 68%),
-    radial-gradient(44vw 44vw at 80% 92%, var(--blob-peach-hi), transparent 68%),
-    radial-gradient(38vw 38vw at 10% 88%, var(--blob-pink-hi), transparent 68%);
-  filter: blur(100px);
-  animation: ambient-drift 80s ease-in-out infinite alternate;
+  background-image: -webkit-image-set(
+    url('./wallpaper/light-day.avif') type('image/avif') 1x,
+    url('./wallpaper/light-day.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/light-day.avif') type('image/avif') 1x,
+    url('./wallpaper/light-day.webp') type('image/webp') 1x
+  );
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
-@keyframes ambient-drift {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(-3vw, 3vh) scale(1.08); }
-}
-@media (prefers-reduced-motion: reduce) {
-  :where([data-theme='glassmorphism']) main::before { animation: none; }
+:root[data-theme='glassmorphism'][data-scheme='dark'] main::before {
+  background-image: -webkit-image-set(
+    url('./wallpaper/dark-day.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-day.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/dark-day.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-day.webp') type('image/webp') 1x
+  );
 }
 :where([data-theme='glassmorphism']) :is(img, svg, canvas) { max-width: 100%; display: block; }
-:where([data-theme='glassmorphism']) ::selection { background: var(--blob-violet-hi); color: #17143a; }
+:where([data-theme='glassmorphism']) ::selection { background: var(--blob-cyan-hi); color: var(--mark); }
 
 :where([data-theme='glassmorphism']) .wrap {
   width: min(1180px, 100% - 2 * var(--gutter));
   margin-inline: auto;
 }
 
-/* ---------- glass ---------- */
+/* ---------- glass: three thicknesses plus a solid surface (E1) ---------- */
 
+/* E8's modern recipe replaces the 2000s diagonal sheen stripe: the
+   luminosity step lives in --blur/--blur-thin/--blur-thick's brightness()
+   term, and the light cue is the 1px edge plus the inset highlight plus a
+   rim ring (below), not a painted highlight. .glass is the regular
+   thickness by default; add .thin or .thick (or use .glass-strong, kept as
+   the thick alias) for the other two. .surface-solid never blurs. */
+/* -webkit-backdrop-filter is given literal values, not var(--blur*): Safari
+   ignores custom properties inside the prefixed property (BCD issue 25914,
+   confirmed again in the Tier A WebKit run), so a token-only declaration is
+   silently dropped there. The literal list mirrors --blur/--blur-thin/
+   --blur-thick's current values; if those tokens change, update the literal
+   copy too (light default here, dark and mobile overrides below). The
+   unprefixed backdrop-filter keeps var(--blur*), which fx.ts reads by token
+   to build the SVG bevel's list.
+   The literals live in their own @supports block, ahead of the base rules,
+   not beside backdrop-filter in the same rule: the build's CSS minifier
+   (lightningcss, no browser targets) keeps only one of a prefixed and an
+   unprefixed twin in one rule, and it kept the var() one, so Safari 17 and
+   older had no blur at all (b1-fix2-lightningcss.mjs). Ahead of the base
+   rules on purpose: Safari 18+ treats the prefixed name as an alias of the
+   unprefixed one, so the later, equally specific var(--blur*) declaration
+   still wins there; Chromium has no prefixed name and ignores this block. */
+@supports (-webkit-backdrop-filter: none) {
+  :where([data-theme='glassmorphism']) .glass {
+    -webkit-backdrop-filter: blur(24px) saturate(1.7) brightness(1.08);
+  }
+  :where([data-theme='glassmorphism']) .glass.thin {
+    -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12);
+  }
+  :where([data-theme='glassmorphism']) .glass-strong,
+  :where([data-theme='glassmorphism']) .glass.thick {
+    -webkit-backdrop-filter: blur(30px) saturate(1.45) brightness(1.05);
+  }
+}
 :where([data-theme='glassmorphism']) .glass {
   position: relative;
   z-index: 1;
-  background: linear-gradient(140deg, var(--sheen), transparent 48%), var(--glass);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--mat-regular);
   backdrop-filter: var(--blur);
   border: 1px solid var(--edge);
   border-radius: var(--r-xl);
   box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow);
 }
-:where([data-theme='glassmorphism']) .glass-strong {
-  background: linear-gradient(140deg, var(--sheen), transparent 48%), var(--glass-strong);
+:where([data-theme='glassmorphism']) .glass.thin {
+  background: var(--mat-thin);
+  backdrop-filter: var(--blur-thin);
+}
+:where([data-theme='glassmorphism']) .glass-strong,
+:where([data-theme='glassmorphism']) .glass.thick {
+  background: var(--mat-thick);
+  backdrop-filter: var(--blur-thick);
+}
+/* The adaptive tint (Liquid pane recipe, item 8): fx.ts's mountPanes() leans
+   each pane's fill toward the colour of the largest orb it overlaps, capped
+   low enough to stay inside the margin meta.ts already proved against the
+   worst-case orb directly under a pane. Painted as its own layer, not mixed
+   into --mat-*, so a pane with no script (reduced transparency, a failed
+   mount) just shows its plain material. Defaults to invisible. */
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: rgb(var(--pane-tint-rgb, 255 255 255) / var(--pane-tint-alpha, 0));
+  pointer-events: none;
+  transition: background-color 260ms ease;
+}
+/* A Mica-like opaque surface (E1): field-raised, hairline edge, no blur.
+   For secondary and inner blocks that would otherwise compete with the
+   showpiece for the same material. */
+:where([data-theme='glassmorphism']) .surface-solid {
+  position: relative;
+  z-index: 1;
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* The rim ring (E8, the lens proof's recipe): a bright top-left, fainter
+   bottom-right specular edge, drawn as a masked gradient ring rather than a
+   painted highlight, so it reads as the light source instead of a sticker.
+   Skipped on .surface-solid, which has no glass edge to catch light. */
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.25px;
+  background: linear-gradient(135deg, var(--edge-rim) 0%, transparent 32%, transparent 68%, var(--edge-rim) 100%);
+  opacity: 0.9;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 /* Dark panels have no light source to catch, so they get their own edge
    light: a hairline plus a soft glow off the top, in place of a shadow. */
@@ -242,17 +500,65 @@
     inset 0 1px 0 var(--edge-hi),
     var(--shadow);
 }
+/* Dark's own literal -webkit-backdrop-filter values, mirroring dark's
+   --blur/--blur-thin/--blur-thick above. */
+:root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass) {
+  -webkit-backdrop-filter: blur(24px) saturate(1.7) brightness(1.1);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass.thin) {
+  -webkit-backdrop-filter: blur(22px) saturate(1.9) brightness(1.14);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass-strong),
+:root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass.thick) {
+  -webkit-backdrop-filter: blur(30px) saturate(1.4) brightness(1.06);
+}
+/* E10 again, placed after dark's own literal -webkit-backdrop-filter values
+   above: those match this media block's ealier override on specificity
+   (0,3,0 each, :root[data-theme][data-scheme=dark) vs plain attribute
+   selectors), so whichever comes later in the file wins. This repeats the
+   turn-off here, after them, so reduced transparency still beats dark's
+   literal blur in Safari/WebKit too. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  /* The prefixed none in its own @supports block, as in the first E10 block
+     (the minifier merges same-selector twins and keeps one). */
+  @supports (-webkit-backdrop-filter: none) {
+    [data-theme='glassmorphism'][data-theme='glassmorphism'][data-scheme='dark'] :is(.glass, .glass-strong) {
+      -webkit-backdrop-filter: none;
+    }
+  }
+  [data-theme='glassmorphism'][data-theme='glassmorphism'][data-scheme='dark'] :is(.glass, .glass-strong) {
+    backdrop-filter: none;
+  }
+  /* Dark's own main::before wallpaper rule (:root[data-theme][data-scheme=
+     dark] main::before, specificity 0,3,2, further down this file at "dark
+     main::before") outranks the earlier flat-field override the same way
+     the material tokens did, so the wallpaper stayed lit under reduced
+     transparency in dark. Repeated here, after it, at matching specificity
+     for the same reason as the tokens block above. */
+  [data-theme='glassmorphism'][data-theme='glassmorphism'][data-scheme='dark'] main::before {
+    background-image: none;
+    background-color: var(--field);
+  }
+}
 
 /* Kicker chip: a small frosted pill in the label face. Lifted over its
    section's orbs (z-index 0), which would otherwise paint across it. */
+/* E7: no glass on glass. A kicker chip used to be its own translucent well
+   sitting on top of another pane's blur, a second frosted layer inside the
+   first. It is now a plain opaque pill (--surface-solid, the same token a
+   solid surface block uses), which also gives it real contrast wherever it
+   sits directly on the wallpaper (Home's "WHAT WE BUILD"), not only inside
+   a pane. */
 :where([data-theme='glassmorphism']) .chip {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.55em;
   padding: 0.42em 0.95em 0.42em 0.75em;
   border-radius: 999px;
-  background: var(--well);
-  border: 1px solid var(--edge);
-  color: var(--accent);
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  /* E9: neutral text on glass. Kickers use neutral secondary ink; colour
+     moves to the orbs and the D4 headline, not to every small label. */
+  color: var(--mark-muted);
   font-family: var(--font-label);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -288,12 +594,17 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 20px 36px -12px var(--btn-glow);
 }
 :where([data-theme='glassmorphism']) .btn:active { transform: translateY(0) scale(0.98); }
+/* E7: .btn-glass is a control, not a pane; it goes solid with a hairline
+   edge (the same recipe as .surface-solid) instead of stacking its own
+   blur on whatever it sits over. */
 :where([data-theme='glassmorphism']) .btn-glass {
+  position: relative;
+  z-index: 1;
   color: var(--mark);
-  background: var(--glass-strong);
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
-  border: 1px solid var(--edge);
+  background: var(--surface-solid);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
 }
 :where([data-theme='glassmorphism']) .btn-glass:hover {
@@ -333,29 +644,100 @@
   pointer-events: none;
   z-index: 0;
 }
+/* D7 = B: flat two-stop discs, crisp edges, no specular hotspot. The soft
+   Big Sur forms live in the painted wallpaper now (E3); the orbs supply the
+   crisp colour a pane's frosting can visibly bend. */
 :where([data-theme='glassmorphism']) .orb {
   position: absolute;
   left: var(--x); top: var(--y);
   width: var(--s); aspect-ratio: 1;
   translate: -50% -50%;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, var(--hi) 0%, var(--lo) 68%);
+  background: linear-gradient(155deg, var(--hi) 8%, var(--lo) 78%);
   box-shadow: var(--orb-glow);
-  filter: blur(1.5px);
+  filter: none;
   animation: glass-drift var(--t) ease-in-out var(--delay) infinite alternate;
 }
 :where([data-theme='glassmorphism']) .orb.violet { --hi: var(--blob-violet-hi); --lo: var(--blob-violet); }
 :where([data-theme='glassmorphism']) .orb.cyan { --hi: var(--blob-cyan-hi); --lo: var(--blob-cyan); }
 :where([data-theme='glassmorphism']) .orb.peach { --hi: var(--blob-peach-hi); --lo: var(--blob-peach); }
 :where([data-theme='glassmorphism']) .orb.pink { --hi: var(--blob-pink-hi); --lo: var(--blob-pink); }
-:where([data-theme='glassmorphism']) .orb.d1 { --t: 19s; --delay: -4s; --dx: 5vw; --dy: -4vw; --ds: 1.08; }
-:where([data-theme='glassmorphism']) .orb.d2 { --t: 24s; --delay: -11s; --dx: -6vw; --dy: 3vw; --ds: 0.92; }
-:where([data-theme='glassmorphism']) .orb.d3 { --t: 29s; --delay: -7s; --dx: 3vw; --dy: 5vw; --ds: 1.12; }
+:where([data-theme='glassmorphism']) .orb.d1 { --t: 19s; --delay: -4s; --dx: 5vw; --dy: -4vw; --ds: 1.08; --scroll-rate: 0.35; }
+:where([data-theme='glassmorphism']) .orb.d2 { --t: 24s; --delay: -11s; --dx: -6vw; --dy: 3vw; --ds: 0.92; --scroll-rate: 0.55; }
+:where([data-theme='glassmorphism']) .orb.d3 { --t: 29s; --delay: -7s; --dx: 3vw; --dy: 5vw; --ds: 1.12; --scroll-rate: 0.45; }
+/* E4: the backdrop moves relative to the glass on scroll, so the frosting
+   visibly changes as a reader reads. The wallpaper stays fixed (E3); the
+   orbs get a second, scroll-linked animation at 0.35 to 0.55 of scroll
+   travel (per drift class, the dossier's 0.3 to 0.6x range), layered onto
+   the existing time-based wobble via the animation shorthand's per-entry
+   list (animation-timeline maps to animation-name positionally). No page in
+   B1 carries the lens, so every page gets this (the lens proof's finding
+   that CSS scroll timelines lag a co-located lens only applies once B2
+   adds one). Guarded by @supports; S1 dropped the reduced-motion
+   requirement, and the existing reduced-motion block below already turns
+   off every .orb animation, this one included.
+
+   view(), not scroll(root) (B1 fix): scroll(root) ties every orb's 0-100%
+   range to the WHOLE document's scroll distance, not to its own section, so
+   a long page (Home has four) leaves an early section's orbs maxed out and
+   frozen for the rest of the scroll while a later section's orbs have
+   already been dragged toward their max before the reader ever reaches
+   them; at whatever scroll position the reader stops, orbs from unrelated
+   sections land bunched together in the gutter between sections, frosting
+   nothing (E2, the critic's occlusion evidence). view() scopes the range to
+   this orb's own pass through the viewport instead, so its drift stays
+   proportional to its own section's scroll-through the way the 0.3 to 0.6x
+   spec describes. */
+@supports (animation-timeline: view()) {
+  :where([data-theme='glassmorphism']) .orb {
+    /* glass-drift already animates transform (the time-based wobble); this
+       animates translate instead, so both compose (transform and translate
+       are independent properties) rather than the later animation replacing
+       the earlier one's property outright. Its keyframes start at the same
+       -50%/-50% centering the base rule sets statically, so nothing jumps
+       when the animation takes over at scroll 0. */
+    animation:
+      glass-drift var(--t) ease-in-out var(--delay) infinite alternate,
+      glass-orb-scroll linear both;
+    animation-timeline: auto, view();
+    animation-range: 0 100%;
+  }
+  @keyframes glass-orb-scroll {
+    from { translate: -50% -50%; }
+    to { translate: -50% calc(-50% - (var(--scroll-rate) * 100vh)); }
+  }
+}
 @media (max-width: 720px) {
   :where([data-theme='glassmorphism']) .orb { left: var(--mx); top: var(--my); }
   /* Cheaper glass on phones: saturate() and a wide blur are the priciest
      parts of the filter, and small screens have the least GPU headroom. */
-  :root[data-theme='glassmorphism'] { --blur: blur(16px); }
+  /* Both schemes share one mobile blur set. Dark's own token block
+     (:root[data-theme][data-scheme=dark], 0,3,0) outranks a plain :root
+     override (0,2,0), so dark phones used to keep the desktop blur (B1
+     re-critic nit); the dark selector is listed too, and this block sits
+     after dark's, so it wins the tie on source order. */
+  :root[data-theme='glassmorphism'],
+  :root[data-theme='glassmorphism'][data-scheme='dark'] {
+    --blur-thin: blur(14px) saturate(1.6);
+    --blur: blur(16px) saturate(1.4);
+    --blur-thick: blur(18px) saturate(1.3);
+  }
+  /* Same phone-cheap values, literal for -webkit- (mirrors the tokens just
+     above). Dark's literal rules above are 0,3,0 too, so dark gets its own
+     copies here for the same reason. */
+  :where([data-theme='glassmorphism']) .glass.thin,
+  :root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass.thin) {
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  }
+  :where([data-theme='glassmorphism']) .glass:not(.thin),
+  :root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass:not(.thin)) {
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+  :where([data-theme='glassmorphism']) .glass-strong,
+  :where([data-theme='glassmorphism']) .glass.thick,
+  :root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass-strong, .glass.thick) {
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  }
 }
 /* fx.ts marks each .orbs group data-live only while its section is on
    screen (plus a margin), so a reader scrolled past never keeps every
@@ -368,6 +750,7 @@
 
 /* Skip link: a glass pill that drops in on focus. */
 :where([data-theme='glassmorphism']) .skip {
+  display: inline-flex; align-items: center; min-height: 44px;
   position: absolute; left: -100vw; top: 0.75rem; z-index: 30;
   padding: 0.6rem 1.1rem; border-radius: 999px;
   background: var(--field-raised); color: var(--mark);
@@ -447,8 +830,8 @@ html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-
   content: '';
   position: absolute; inset: 0;
   border-radius: 999px;
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur-thick);
+  backdrop-filter: var(--blur-thick);
   pointer-events: none;
 }
 /* Pinned in place, crossfade kept (animation-name: none, not animation:

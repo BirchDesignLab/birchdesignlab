@@ -25,7 +25,7 @@ const { copy, theme } = Astro.props;
     </div>
   </div>
 
-  <form class="form glass" method="post" action="/api/contact" data-astro-reload>
+  <form class="form glass thin" method="post" action="/api/contact" data-astro-reload>
     <div class="field">
       <label for="cf-name">{copy.labels.name}</label>
       <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
@@ -65,34 +65,36 @@ const { copy, theme } = Astro.props;
     display: grid; justify-items: start; gap: 1.1rem;
     padding: clamp(1.5rem, 4vw, 3rem);
   }
+  /* D8: weight/tracking come from the global h1,h2,h3 rule. */
   .intro h1 {
     font-size: clamp(2.5rem, 5.6vw, 4.5rem);
-    font-weight: 800;
-    letter-spacing: -0.05em;
-    word-spacing: 0.08em;
     line-height: 0.95;
   }
-  .subline { font-size: 1.125rem; color: var(--mark-muted); }
+  .subline { font-size: 1.125rem; color: var(--mark); }
   /* Two chips, not a bullet-joined sentence: each part wraps as a whole,
      never mid-line on the separator. */
   .trust { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  /* E7: no glass on glass. A solid tinted pill inside the intro pane, not a
+     second translucent well nested in its blur. */
   .trust-chip {
     padding: 0.35em 0.85em;
     border-radius: 999px;
-    background: var(--well);
-    border: 1px solid var(--edge);
+    background: var(--surface-solid);
+    border: 1px solid var(--line);
     font-family: var(--font-label);
     font-size: 0.8125rem;
     letter-spacing: 0.02em;
     color: var(--mark-muted);
   }
 
+  /* E5: the old margin-top was meant to line up with the intro column's h1
+     but landed about 52px below its top edge with no shared line. .contact
+     already aligns its grid items to the row's start (align-items: start);
+     the form just needs to stop fighting that with its own offset, so its
+     top edge and the intro pane's top edge share one line. */
   .form {
     grid-area: form;
     display: grid; gap: 1.2rem;
-    /* Lines up with the intro column's h1 baseline instead of a fixed
-       clamp that answers to nothing on that side. */
-    margin-top: clamp(2.5rem, 5vw, 3.25rem);
     padding: clamp(1.25rem, 4vw, 2.75rem);
     border-radius: 36px;
   }
@@ -104,10 +106,12 @@ const { copy, theme } = Astro.props;
     letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--mark-muted);
   }
+  /* E7: form fields become opaque solid wells with a hairline edge, not a
+     translucent well nested inside the form's own thin-glass blur. */
   .field input, .field textarea {
     width: 100%;
     font: inherit; color: var(--mark);
-    background: var(--well);
+    background: var(--surface-solid);
     border: 1px solid var(--line);
     border-radius: 18px;
     padding: 0.85rem 1.1rem;
@@ -136,6 +140,7 @@ const { copy, theme } = Astro.props;
     line-height: 1.2;
   }
   .mail {
+    display: inline-flex; align-items: center; min-height: 44px;
     font-family: var(--font-head);
     font-weight: 650;
     font-size: clamp(1.05rem, 4.6vw, 1.35rem);

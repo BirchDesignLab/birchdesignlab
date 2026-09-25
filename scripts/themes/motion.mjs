@@ -510,6 +510,16 @@ for (const scheme of schemes) {
     for (const s of stubs) await context.addInitScript(s.js);
     await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
     const page = await context.newPage();
+    // Playwright has no `reducedTransparency` context option; headless
+    // Chromium here otherwise reports prefers-reduced-transparency: reduce
+    // by default, which pushed glass's E10 fallback into every strip
+    // ("B1-sheets-invalid-light"). Forced to no-preference via CDP.
+    try {
+      const cdp = await context.newCDPSession(page);
+      await cdp.send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-transparency', value: 'no-preference' }],
+      });
+    } catch {}
     page.on('pageerror', (e) => problem(`${page.url()} pageerror: ${e.message}`));
     page.on('console', (m) => { if (m.type() === 'error') problem(`${page.url()} console: ${m.text()}`); });
     page.on('response', (r) => { if (r.status() >= 400) problem(`${page.url()} ${r.status()} for ${r.url()}`); });

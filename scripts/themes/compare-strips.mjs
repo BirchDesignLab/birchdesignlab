@@ -8,11 +8,14 @@
  *
  * Usage:
  *   node scripts/themes/compare-strips.mjs --before <png> --after <png> \
- *     --out <png> [--title "..."] [--before-label "..."] [--after-label "..."]
+ *     --out <png> [--title "..."] [--before-label "..."] [--after-label "..."] \
+ *     [--quality 86]
  *
- * An --out ending in .jpg writes a JPEG (quality 86) instead of a PNG. Added
- * 09-23-26 (Tier 3 stage 2): tall phone sheets run past 5 MB as PNG, too big
- * to reach the founder's phone.
+ * An --out ending in .jpg writes a JPEG (quality 86 by default) instead of a
+ * PNG. Added 09-23-26 (Tier 3 stage 2): tall phone sheets run past 5 MB as
+ * PNG, too big to reach the founder's phone. --quality added 09-25-26 (Tier
+ * 3 stage 3, Tier B) for founder sheets that need q90+; the default is
+ * unchanged so every existing caller keeps its own result.
  */
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -33,11 +36,12 @@ if (!beforePath || !afterPath || !out) {
 const title = arg('title', '');
 const beforeLabel = arg('before-label', 'BEFORE');
 const afterLabel = arg('after-label', 'AFTER');
+const quality = Number(arg('quality', '86'));
 
 const [before, after] = await Promise.all([loadImage(beforePath), loadImage(afterPath)]);
 const PAD = 16;
 const HEAD = title ? 44 : 0;
-const TAG = 36;
+const TAG = 40;
 const width = Math.max(before.width, after.width) + PAD * 2;
 const height = HEAD + TAG + before.height + PAD + TAG + after.height + PAD;
 const canvas = createCanvas(width, height);
@@ -57,7 +61,7 @@ function block(img, label, colour) {
   ctx.fillStyle = colour;
   ctx.fillRect(PAD, y + 8, 6, TAG - 16);
   ctx.fillStyle = '#f4f0e6';
-  ctx.font = '600 16px sans-serif';
+  ctx.font = '600 20px sans-serif';
   ctx.fillText(label, PAD + 16, y + TAG / 2);
   y += TAG;
   ctx.drawImage(img, PAD, y);
@@ -67,5 +71,5 @@ block(before, beforeLabel, '#c0504d');
 block(after, afterLabel, '#a3bd8f');
 
 await mkdir(dirname(out), { recursive: true });
-await writeFile(out, /\.jpe?g$/i.test(out) ? await canvas.encode('jpeg', 86) : await canvas.encode('png'));
+await writeFile(out, /\.jpe?g$/i.test(out) ? await canvas.encode('jpeg', quality) : await canvas.encode('png'));
 console.log(out);

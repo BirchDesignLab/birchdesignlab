@@ -6,7 +6,12 @@
     `inactive` (Tier 3 stage 3, F5): a static Win95 back-window caption, for a
     window that sits behind another and never gets the pointer. Two-stop
     desaturated bar, dimmed ink and caption buttons; no behaviour, no focus
-    handling, only the CSS look (`.vw-win-bar.inactive`, theme.css). */
+    handling, only the CSS look (`.vw-win-bar.inactive`, theme.css).
+
+    `buttons` (Tier 3 stage 3, E6): a Win95 message box has no minimise or
+    maximise, only Close (and sometimes Help). 'full' (default) keeps the
+    three-button cluster every other window uses; 'close' draws the X alone;
+    'help-close' draws a "?" help glyph beside it. Decoration only. */
 interface Props {
   title: string;
   tag?: 'div' | 'article' | 'section';
@@ -14,13 +19,19 @@ interface Props {
   address?: string;
   class?: string;
   inactive?: boolean;
+  buttons?: 'full' | 'close' | 'help-close';
 }
-const { title, tag: Tag = 'div', menu, address, class: className, inactive = false } = Astro.props;
+const { title, tag: Tag = 'div', menu, address, class: className, inactive = false, buttons = 'full' } = Astro.props;
 ---
 <Tag class:list={['vw-win', className]}>
   <div class:list={['vw-win-bar', { inactive }]} aria-hidden="true">
     <span class="vw-win-title">{title}</span>
-    <span class="vw-win-btns"><span></span><span></span><span></span></span>
+    <span class="vw-win-btns">
+      {buttons === 'help-close' && <span class="help">?</span>}
+      {buttons === 'full' && <span class="min"></span>}
+      {buttons === 'full' && <span class="max"></span>}
+      <span class="close"></span>
+    </span>
   </div>
   {menu && <div class="vw-win-menu" aria-hidden="true">{menu.map((item) => <span>{item}</span>)}</div>}
   {address && (

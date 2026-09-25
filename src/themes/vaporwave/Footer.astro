@@ -3,6 +3,7 @@
     floor that runs off toward the horizon. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
+import Palm from './parts/Palm.astro';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
@@ -21,7 +22,11 @@ const year = new Date().getFullYear();
     </nav>
     <p class="fine">&copy; {year} {chrome.name} <span class="sep" aria-hidden="true">&#9670;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
   </div>
-  <div class="floor" aria-hidden="true"><div class="plane"></div></div>
+  <div class="floor" aria-hidden="true">
+    <div class="plane"></div>
+    <div class="sheen"></div>
+    <div class="planter"><Palm class="planter-palm" /><div class="planter-pot"></div></div>
+  </div>
 </footer>
 
 <style>
@@ -30,8 +35,40 @@ const year = new Date().getFullYear();
     border-top: 3px solid; border-image: linear-gradient(90deg, var(--neon-cyan), var(--neon-lav), var(--neon-pink)) 1;
   }
   /* A page that already ends on a sunset (home, services, sent) needs no
-     extra run of flat field before the footer's own scene picks it up. */
-  main:has(> :last-child :is(.closer, .ask, .stage)) + .foot { margin-top: 0; }
+     extra run of flat field before the footer's own scene picks it up.
+     fix round 2, item 4: two compounding bugs, both silent (a selector that
+     never matches just leaves the default margin, no error anywhere).
+     First, `main` is rendered by PortalLayout, not by this component, so a
+     bare scoped `main` selector never matches (Astro's scope attribute only
+     lands on elements this component itself renders) - the compiled CSS
+     read `main[data-astro-cid-x]:has(...)`, an attribute no real `<main>`
+     ever carries. `:global(main)` reaches the real element while `.foot`
+     stays scoped to this component. Second, `:last-child` was never true
+     for it anyway: Home.astro (and Contact.astro) end their template with a
+     top-level `<script>` for onMount, which Astro renders as `.closer`'s
+     next sibling inside `<main>` - so `.closer` was main's second-to-last
+     child, not its last, on the one page (home) this rule most needed to
+     reach. Dropped `:last-child` rather than special-cased around a script
+     tag: `:has(> .closer, > .ask, > .stage)` asks only "does one of these
+     scenes sit directly in this page's content", which is what the comment
+     above always meant, and does not care what else main holds or where.
+     Measured before this fix: services light carried a 112px flat band
+     between the lobby floor and the footer rule, misread at review as
+     "~60px" (home carried the same 112px, silently, since its `.closer` was
+     never even in the running). */
+  :global(main):has(> .closer, > .ask, > .stage) + .foot { margin-top: 0; }
+  /* Same fix round 2, item 4: a page that already painted its own floor
+     (home's closer, services' ask) doesn't need this footer's separate
+     checkerboard too - stacked with zero gap they read as two floors broken
+     by a strip of footer text, not one lobby. */
+  :global(main):has(> .closer, > .ask) + .foot .floor { display: none; }
+  /* item 5: "carried to the footer" - Sent's desktop pattern (Sent.astro,
+     --vw-desktop, theme.css) continues onto the footer behind it instead of
+     handing off to this footer's own checkerboard floor, so the two read as
+     one desktop rather than a wallpaper stopping short of a lobby tile that
+     has nothing to do with a Win95 dialog. */
+  :global(main):has(> .stage) + .foot { background: transparent; }
+  :global(main):has(> .stage) + .foot .floor { display: none; }
   .foot-grid {
     display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem 3rem;
     padding-block: 2.5rem 2rem; align-items: end;
@@ -46,18 +83,34 @@ const year = new Date().getFullYear();
     text-transform: uppercase; letter-spacing: 0.08em;
   }
   nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; justify-content: flex-end; }
+  /* Phone touch targets (12): a 44px hit area with a matching negative
+     margin, so the row's visual spacing holds while the tap target grows. */
   nav a {
+    display: inline-block; padding-block: 0.85rem; margin-block: -0.85rem;
     color: var(--mark-muted); text-decoration: none;
     font-size: 0.8rem; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
   }
-  nav a:hover { color: var(--link); }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { color: var(--link); }
+  }
   .fine { grid-column: 1 / -1; font-size: 0.85rem; color: var(--mark-muted); font-family: var(--font-body); }
-  .fine a { color: var(--mark-muted); }
-  .fine a:hover { color: var(--link); }
+  /* footer-privacy-link-hit-area (case 14): same 44px hit-area technique as
+     `nav a` above, applied to the Privacy link inline in the colophon line,
+     which had no padding of its own (measured 45 x 17px at 390px). */
+  .fine a {
+    display: inline-block; padding-block: 0.85rem; margin-block: -0.85rem;
+    color: var(--mark-muted);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .fine a:hover { color: var(--link); }
+  }
   .sep { color: var(--accent); margin-inline: 0.3em; font-size: 0.7em; vertical-align: 0.15em; }
 
-  /* The floor: a checkerboard plane tipped back in perspective, fading into
-     the page field at its far edge.
+  /* The floor: E3's atrium tile, flattened (a higher camera, less
+     vanishing) from the road this used to be, fading into the page field at
+     its far edge. A soft sheen band stands in for reflective gloss, and a
+     planter grounds one corner, so it reads as lobby floor underfoot rather
+     than a road to a horizon.
 
      The portal keeps a 76px tail under every footer for its switcher
      (README, "Links": [data-portal-tail]) and leaves it unpainted, so the
@@ -71,18 +124,60 @@ const year = new Date().getFullYear();
   .floor {
     --vw-tail: 76px;
     position: relative; height: calc(150px + var(--vw-tail)); margin-bottom: calc(-1 * var(--vw-tail));
-    overflow: hidden; perspective: 320px; perspective-origin: 50% 75px;
+    overflow: hidden; perspective: 640px; perspective-origin: 50% 75px;
   }
   .plane {
     /* Tall enough that the tipped-back checkerboard still reaches the box's
        bottom edge instead of running out partway and leaving a flat band. */
     position: absolute; left: -60%; right: -60%; top: 0; height: 700px;
-    background: conic-gradient(var(--chk-a) 25%, var(--chk-b) 0 50%, var(--chk-a) 0 75%, var(--chk-b) 0) 0 0 / 72px 72px;
-    transform: rotateX(64deg); transform-origin: 50% 0;
+    background: conic-gradient(var(--chk-a) 25%, var(--chk-b) 0 50%, var(--chk-a) 0 75%, var(--chk-b) 0) 0 0 / 88px 88px;
+    opacity: 0.85;
+    transform: rotateX(50deg); transform-origin: 50% 0;
     -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 40%);
     mask-image: linear-gradient(180deg, transparent 0, #000 40%);
   }
+  /* fix round 3, item 4 (same fix as the Lobby's own floor,
+     parts/Lobby.astro): a soft grey wash blurred this into a smear rather
+     than gloss on tile. A thin, near-unblurred, palette-tinted streak
+     instead, screen-blended so it lifts off the dark floor without washing
+     it out; light's floor is pale already, so the streak stays a subtle
+     highlight there under normal blending instead of a white blob. */
+  .sheen {
+    position: absolute; left: 16%; right: 16%; top: 22px; height: 14px;
+    background: linear-gradient(90deg,
+      transparent,
+      color-mix(in srgb, var(--neon-cyan) 55%, transparent) 30%,
+      color-mix(in srgb, var(--bb-plain) 65%, transparent) 50%,
+      color-mix(in srgb, var(--neon-pink) 55%, transparent) 70%,
+      transparent);
+    opacity: 0.4; filter: blur(1.5px); mix-blend-mode: screen;
+    transform: rotateX(50deg); transform-origin: 50% 0;
+  }
+  :global([data-scheme='light']) .sheen { opacity: 0.22; mix-blend-mode: normal; }
+  /* fix round 2, item 6 nit: bottom:10px sat inside the 76px portal tail
+     (--vw-tail, above), so the switcher's own fixed bar covered the pot and
+     the palm's lower trunk on every page at desktop. Lifted clear of the
+     tail so the planter stays visible above the switcher. */
+  .planter {
+    position: absolute; right: 6%; bottom: calc(var(--vw-tail) + 14px); width: clamp(56px, 8vw, 90px); z-index: 1;
+  }
+  .planter :global(.planter-palm) { width: 100%; height: auto; }
+  .planter-pot {
+    width: 60%; height: 18px; margin-inline: auto; margin-top: -6px;
+    background: linear-gradient(180deg, var(--field-raised), var(--field));
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+  }
+  @media (max-width: 620px) {
+    .planter { display: none; }
+  }
 
+  /* E10: the tablet band tightens the nav so its four links fit one line
+     instead of stranding CONTACT alone on a wrap. */
+  @media (max-width: 860px) and (min-width: 721px) {
+    nav { gap: 0.4rem 1rem; }
+    nav a { letter-spacing: 0.14em; font-size: 0.75rem; }
+  }
   @media (max-width: 720px) {
     .foot-grid { grid-template-columns: 1fr; }
     nav { justify-content: flex-start; }

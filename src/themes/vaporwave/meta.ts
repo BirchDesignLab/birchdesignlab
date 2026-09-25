@@ -8,9 +8,12 @@ import vt323 from '@fontsource/vt323/files/vt323-latin-400-normal.woff2?url';
 export const meta: ThemeMeta = {
   id: 'vaporwave',
   name: 'Vaporwave',
-  era: 'The internet, 2010 to 2013, dreaming of 1985',
-  lesson: 'Nostalgia is a palette: pink-to-cyan gradients and cheap chrome read as a memory of a future that never came.',
-  signature: 'Sunset gradients, a neon grid running to the horizon and marble statuary, like a 1995 screensaver dreaming about the 1980s.',
+  /* Tier 3 stage 3, "Final answers at the Tier A stop" item 6 (founder's
+     own words, exact): era, signature and lesson rewritten for the F1(b)
+     plaza and marble build, off the old synthwave-picture wording. */
+  era: 'The internet in the 2010s, dreaming of mid-90s software and shopping malls.',
+  lesson: 'We borrow the mall, the operating system and the museum gift shop, because the ethos behind vaporwave is that comfort was always for sale.',
+  signature: 'Windows 95 chrome, file names for titles, Japanese for headlines, a mall lobby and glossy marble statuary, with one sunset screensaver on the front page.',
   forbids: ['gold', 'script faces', 'frosted glass', 'the primary triad', 'wood grain'],
   nativeScheme: 'dark',
   /* All four faces paint above the fold on every page: the display faces

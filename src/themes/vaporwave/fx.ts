@@ -19,66 +19,39 @@
  */
 const THEME = 'vaporwave';
 const MAX_DPR = 1.5;
+/* E11: a coarse pointer or a narrow (phone-width) viewport draws at a lower
+   ceiling; a mouse-driven wide viewport keeps the sharper 1.5. */
+const MAX_DPR_COARSE = 1.25;
+const COARSE_BREAKPOINT = 760;
 /** The frame drawn under reduced motion: stars lit, stripes mid-drift. */
 const STILL_TIME = 7.3;
 /**
- * F4(b) (Tier 3 stage 3 brief, "the grid: drive or loop"): the hero's grid now
- * visibly restarts every CYCLE seconds instead of driving forever. 6.4s is
- * exactly four turns of the CSS floors' existing 1.6s per-cell scroll
- * (.vw-floor::before, theme.css), the low-middle of the brief's 4-8s band, so
- * every loop in the school (this canvas and every CSS floor) shares one
- * period and one seam. The scroll rate itself is unchanged (F4: "same speed
- * as today"); only the seam is new.
+ * F4(b) (Tier 3 stage 3 brief, "the grid: drive or loop"; settled "restart" at
+ * the Tier A stop): the hero's grid visibly restarts every CYCLE seconds
+ * instead of driving forever. 6.4s is exactly four turns of the CSS floors'
+ * existing 1.6s per-cell scroll (.vw-floor::before, theme.css), the
+ * low-middle of the brief's 4-8s band, so every loop in the school (this
+ * canvas and every CSS floor) shares one period and one seam. The scroll rate
+ * itself is unchanged (F4: "same speed as today"); only the seam is new.
+ * uScroll/uStripe run off `time % CYCLE`, so the instant the cycle wraps, the
+ * scroll snaps from wherever CYCLE*0.55 mod 1 landed back to 0 - a real phase
+ * jump, not just the tear below - because 6.4 * 0.55 is not a whole number of
+ * turns. (Tier B removed the 'tear' alternative and the proof-only `?vwLoop=`
+ * query that picked between them; restart is the only shipped behaviour.)
  */
 const CYCLE = 6.4;
 /* The tracking hiccup at the seam: a one-to-two-frame horizontal tear on the
    floor grid (E1's tape language), not a hue shift or a brightness flash. Two
    discrete offsets (not eased between them) so it reads as a stutter, then
-   the grid snaps back to true for the rest of the cycle. Shared by both loop
-   variants below: the tear is the one thing the brief asks both to carry. */
-const SEAM_FRAME_1 = 1 / 60;
+   the grid snaps back to true for the rest of the cycle. Which offset draws
+   on which frame is a two-draw latch (mountHorizon, `pendingSeam`), not a
+   cyclePos window on SEAM_FRAME_1 any more (seam-tear-step-lottery, fix
+   round 2): SEAM_FRAME_2 still marks how wide a cyclePos window counts as
+   "still inside the seam" for the once-off case of a page loading already
+   inside it. */
 const SEAM_FRAME_2 = 2 / 60;
 const SEAM_OFFSET_1 = 0.16;
 const SEAM_OFFSET_2 = -0.06;
-
-/**
- * Fix round (Tier A critique, finding 2): "loop" (b) was really only a tear
- * every CYCLE seconds bolted onto a scroll that never stops - honest for the
- * tear, not for a "cycle that visibly restarts". Two real variants, so the
- * founder can see both before Tier B commits to one:
- *   'tear'    the drive never resets: uScroll/uStripe run off raw session
- *             time, same as before this fix, so the grid looks like it never
- *             stopped except for the tear.
- *   'restart' uScroll/uStripe run off `time % CYCLE` instead, so the instant
- *             the cycle wraps, the scroll snaps from wherever CYCLE*0.55 mod 1
- *             landed back to 0 - a real phase jump, not just the tear -
- *             because 6.4 * 0.55 is not a whole number of turns.
- * The default is 'restart', the brief's reading of F4(b); the founder picks
- * between the two at the Tier A stop, and the loser and the query go in
- * Tier B. See readLoopVariant for how a proof picks one.
- */
-type LoopVariant = 'tear' | 'restart';
-const DEFAULT_VARIANT: LoopVariant = 'restart';
-
-/**
- * proof-only: `?vwLoop=tear` or `?vwLoop=restart` on the URL picks a variant
- * for scripts/themes/harness/vw-loop-proof.mjs to film, without a rebuild.
- * Any other value, or no query at all - the case for every real visit -
- * resolves to DEFAULT_VARIANT with no trace of having asked: mountHorizon
- * only sets the proof timing hook (`__vwHeroStarted`) when the query named a
- * variant explicitly. A production load, which carries no `vwLoop` query,
- * writes nothing.
- */
-function readLoopVariant(): { variant: LoopVariant; isProof: boolean } {
-  try {
-    const q = new URLSearchParams(location.search).get('vwLoop');
-    if (q === 'tear' || q === 'restart') return { variant: q, isProof: true };
-  } catch {
-    /* location/URLSearchParams unavailable (SSR, an odd embed): fall through
-       to the shipped default exactly as a query-free visit would. */
-  }
-  return { variant: DEFAULT_VARIANT, isProof: false };
-}
 
 const VERT = `
 attribute vec2 aPos;
@@ -200,9 +173,14 @@ void main() {
     float dz = 0.5 - abs(fract(z + uScroll) - 0.5);
     float wxx = lineW * z * 1.6;
     float dx = 0.5 - abs(fract(wx) - 0.5);
-    float fade = smoothstep(0.0, uFade, dy) * (1.0 - smoothstep(0.08, 0.3, wz));
-    float line = max(1.0 - smoothstep(0.0, wz, dz), 1.0 - smoothstep(0.0, wxx, dx)) * fade;
-    float glow = max(exp(-dz / (wz * 5.0)), exp(-dx / (wxx * 5.0))) * fade;
+    // E11: fade far, thinning lines out sooner (a tighter wz band than
+    // before), and scale their own alpha by their true on-screen width, so a
+    // sub-pixel row dims toward zero instead of aliasing into a
+    // constant-brightness speckle under the horizon.
+    float fade = smoothstep(0.0, uFade, dy) * (1.0 - smoothstep(0.04, 0.18, wz));
+    float widthScale = clamp(wz / 0.02, 0.0, 1.0);
+    float line = max(1.0 - smoothstep(0.0, wz, dz), 1.0 - smoothstep(0.0, wxx, dx)) * fade * widthScale;
+    float glow = max(exp(-dz / (wz * 5.0)), exp(-dx / (wxx * 5.0))) * fade * widthScale;
     col = mix(col, uGrid, clamp(line, 0.0, 1.0));
     col += uGrid * glow * uGridGlow;
   }
@@ -292,7 +270,7 @@ function startScene(canvas: HTMLCanvasElement): Linking | null {
   return { gl, program, vs, fs, settled };
 }
 
-function finishScene(canvas: HTMLCanvasElement, linking: Linking, variant: LoopVariant): Scene | null {
+function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null {
   const { gl, program, vs, fs } = linking;
   // A shader that failed to compile fails the link too.
   const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
@@ -340,7 +318,8 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking, variant: LoopV
   };
 
   const resize = () => {
-    const dpr = Math.min(devicePixelRatio || 1, MAX_DPR);
+    const coarse = matchMedia('(pointer: coarse)').matches || canvas.clientWidth < COARSE_BREAKPOINT;
+    const dpr = Math.min(devicePixelRatio || 1, coarse ? MAX_DPR_COARSE : MAX_DPR);
     const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
     const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) {
@@ -356,22 +335,49 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking, variant: LoopV
     gl.uniform1f(uHorizonY, aspect < 1 ? 0.3 : 0.32);
   };
 
+  // seam-throttle fix (round 1) found the 30fps throttle could skip the one
+  // draw that would have landed inside the narrow SEAM_FRAME_2 window
+  // outright. That round's fix picked the offset from cyclePos at the moment
+  // of the wrapped draw, which fixed the miss but introduced a new bug
+  // (seam-tear-step-lottery, fix round 2): at 30fps only one draw call
+  // typically lands in the whole two-frame seam window, so whichever offset
+  // its cyclePos happened to fall under - OFFSET_1 if under SEAM_FRAME_1,
+  // else OFFSET_2 - is the ONLY one that ever drew for the rest of that
+  // session, because rAF's phase relative to the CYCLE's own start is fixed
+  // once the hero links. Confirmed: 5 of 5 wraps in one session drew only
+  // -0.06; a separate load drew only 0.16.
+  //
+  // Fixed as a real two-draw latch instead: `pendingSeam` counts down from 2
+  // (OFFSET_1 due, then OFFSET_2 due) to 0 (no seam), independent of what
+  // cyclePos happens to read on either draw. A wrap always arms it at 2, so
+  // the very next draw call - whatever its cyclePos, whatever the frame rate
+  // or vsync phase - carries OFFSET_1, and the draw after that carries
+  // OFFSET_2, then it holds at 0 for the rest of the cycle. This also covers
+  // the throttle skipping straight past both frames in one gap: the latch
+  // does not care how long it waited to be asked again, only that the next
+  // two draws are the ones that carry the tear.
+  let lastCyclePos = -1;
+  let pendingSeam = 0;
   const draw = (time: number) => {
     // Phases wrap here, in double precision, so the shader's floats stay small.
     gl.uniform1f(uTime, time % 1000);
-    // F4(b) fix round: 'restart' drives the scroll and the stripe drift off
-    // the cycle's own clock, so both visibly jump back at the seam instead of
-    // sailing through it; 'tear' keeps driving off raw time, as before this
-    // round, so only the seam interrupts it. See readLoopVariant.
+    // F4(b): the scroll and the stripe drift run off the cycle's own clock
+    // (time % CYCLE), so both visibly jump back at the seam instead of
+    // sailing through it.
     const cyclePos = time % CYCLE;
-    const loopTime = variant === 'restart' ? cyclePos : time;
-    gl.uniform1f(uScroll, (loopTime * 0.55) % 1);
-    gl.uniform1f(uStripe, (loopTime * 0.06) % 1);
-    // The seam itself: cyclePos re-zeros every CYCLE seconds; for its first
-    // two frames the grid tears sideways in two discrete steps, then holds at
-    // zero for the rest of the cycle. Shared by both variants.
-    const seam = cyclePos < SEAM_FRAME_2 ? (cyclePos < SEAM_FRAME_1 ? SEAM_OFFSET_1 : SEAM_OFFSET_2) : 0;
+    gl.uniform1f(uScroll, (cyclePos * 0.55) % 1);
+    gl.uniform1f(uStripe, (cyclePos * 0.06) % 1);
+    // The seam itself: cyclePos re-zeros every CYCLE seconds. Arm the latch
+    // on the wrap (or on the very first draw, if it happens to load already
+    // inside the seam window), then drain it: this draw gets OFFSET_1 if two
+    // are still owed, OFFSET_2 if one is, zero otherwise.
+    const wrapped = cyclePos < lastCyclePos;
+    if (wrapped || (lastCyclePos < 0 && cyclePos < SEAM_FRAME_2)) pendingSeam = 2;
+    let seam = 0;
+    if (pendingSeam === 2) { seam = SEAM_OFFSET_1; pendingSeam = 1; }
+    else if (pendingSeam === 1) { seam = SEAM_OFFSET_2; pendingSeam = 0; }
     gl.uniform1f(uSeam, seam);
+    lastCyclePos = cyclePos;
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
@@ -384,12 +390,6 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking, variant: LoopV
 export function mountHorizon(): (() => void) | void {
   if (document.documentElement.dataset.theme !== THEME) return;
   const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-vw-horizon]');
-
-  // F4(b) fix round: which loop variant this load draws, and whether it was
-  // asked for by the proof (never by a real visit). Only the hero's grid has
-  // variants; the CSS floors carry the same seam in one shape (theme.css).
-  const { variant, isProof } = readLoopVariant();
-
   if (!canvas) return;
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -403,7 +403,7 @@ export function mountHorizon(): (() => void) | void {
   // from the first frame) it is linked before the first frame, as always.
   const from = document.documentElement.dataset.fromTheme;
   if (!from || from === THEME) {
-    scene = finishScene(canvas, linking, variant);
+    scene = finishScene(canvas, linking);
     linking = null;
     if (!scene) return;
   }
@@ -414,19 +414,33 @@ export function mountHorizon(): (() => void) | void {
   let inView = true;
   let pageVisible = !document.hidden;
   const started = performance.now();
-  // Proof-only hook for scripts/themes/harness/vw-loop-proof.mjs: the loop's
-  // clock zero, so the F4(b) seam's wall-clock moment can be computed instead
-  // of guessed at from pixels. Gated on `isProof` (finding 6 of the Tier A
-  // fix round): a production load carries no `vwLoop` query, so `isProof` is
-  // false and this global is never created. Read nowhere else.
-  if (isProof) (window as unknown as { __vwHeroStarted?: number }).__vwHeroStarted = started;
   const now = () => (reducedMotion.matches ? STILL_TIME : (performance.now() - started) / 1000);
 
   const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches && !lost;
-  const tick = () => {
+  // E11: throttle to 30fps. rAF still fires every vsync so the loop stays in
+  // step with the browser, but a frame under 33ms since the last draw is
+  // skipped rather than drawn, halving the GPU cost in the hero's own band
+  // without changing the picture (uTime keeps real wall-clock time either
+  // way, so the motion itself is unaffected).
+  const FRAME_BUDGET = 1000 / 30;
+  // seam-throttle fix: rAF timestamps jitter a millisecond or two around
+  // each vsync, so two 60Hz frames land at just under FRAME_BUDGET (33.33ms)
+  // about half the time. An exact `>=` rejected that pair and waited for a
+  // third vsync, drawing at ~20fps instead of the intended 30 (measured:
+  // 720 draws in 32.5s, median gap 49.7ms). A small tolerance accepts the
+  // jittered pair without accepting a single vsync (16.7ms is nowhere close).
+  const FRAME_TOLERANCE = 4;
+  let lastDrawn = 0;
+  // Defaulted so the one direct call (settle(), below, resuming after the
+  // shader's link finishes) always draws its first frame at once; every
+  // later call is rAF's own callback, which always passes a timestamp.
+  const tick = (t: number = Infinity) => {
     frame = 0;
     if (!scene || lost) return;
-    scene.draw(now());
+    if (t - lastDrawn >= FRAME_BUDGET - FRAME_TOLERANCE) {
+      lastDrawn = t;
+      scene.draw(now());
+    }
     if (shouldAnimate()) frame = requestAnimationFrame(tick);
   };
   const stop = () => {
@@ -452,7 +466,7 @@ export function mountHorizon(): (() => void) | void {
       waiting = requestAnimationFrame(settle);
       return;
     }
-    scene = finishScene(canvas, linking, variant);
+    scene = finishScene(canvas, linking);
     linking = null;
     if (scene && shouldAnimate()) tick();
     else sync();
@@ -469,7 +483,7 @@ export function mountHorizon(): (() => void) | void {
     if (waiting) cancelAnimationFrame(waiting);
     waiting = 0;
     linking = startScene(canvas);
-    scene = linking && finishScene(canvas, linking, variant);
+    scene = linking && finishScene(canvas, linking);
     linking = null;
     // If the rebuild fails (a shader that no longer compiles after the driver
     // reset), stay in the lost state so every caller keeps treating this as

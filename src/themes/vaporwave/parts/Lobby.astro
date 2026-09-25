@@ -1,0 +1,104 @@
+---
+/** F1(b): the resort framing every page but Home gets once the sunset stays
+    the hero's alone. A flattened, glossy atrium tile (E3's floor, a higher
+    camera and less vanishing than a road to the horizon), a skylight glow
+    from directly above instead of a horizon glow, a potted palm and a
+    marble column stand-in (the Tier A render; B2 moves the pipeline into
+    src/ and swaps in the Venus). Decoration only, fills its positioned
+    parent. */
+import Palm from './Palm.astro';
+import Still from './Still.astro';
+import columnAvif from '../stills/column-pink-512.avif?url';
+import columnWebp from '../stills/column-pink-512.webp?url';
+
+interface Props { class?: string }
+const { class: className } = Astro.props;
+---
+<div class:list={['vw-lobby', className]} aria-hidden="true">
+  <div class="lobby-sky"></div>
+  <div class="lobby-floor">
+    <div class="tile"></div>
+    <div class="sheen"></div>
+  </div>
+  <div class="lobby-planter">
+    <Palm class="lobby-palm" />
+    <div class="lobby-pot"></div>
+  </div>
+  <Still class="lobby-column" avif={columnAvif} webp={columnWebp} size={512} />
+</div>
+
+<style>
+  .vw-lobby { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+  /* A skylight glow from directly overhead, not a sunset's horizon glow. */
+  .lobby-sky {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 55% at 50% 0%, color-mix(in srgb, var(--bb-plain) 22%, transparent), transparent 72%);
+  }
+
+  /* Flattened atrium tile: a higher camera (a shallower rotateX, a longer
+     perspective) than the footer's own floor, so it reads as polished floor
+     underfoot rather than a road running to a vanishing point. A soft sheen
+     band stands in for the reflective gloss the brief asks for. */
+  .lobby-floor {
+    position: absolute; left: -40%; right: -40%; bottom: 0; height: 62%;
+    overflow: hidden; perspective: 900px; perspective-origin: 50% 0%;
+  }
+  .tile {
+    position: absolute; inset: 0 0 -20% 0;
+    background: conic-gradient(var(--chk-a) 25%, var(--chk-b) 0 50%, var(--chk-a) 0 75%, var(--chk-b) 0) 0 0 / 88px 88px;
+    opacity: 0.5;
+    transform: rotateX(52deg); transform-origin: 50% 0;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+  }
+  /* fix round 3, item 4: a 28%-tall, blur(6px) grey wash (bb-plain, which is
+     near-black in light) read as a blurred smear laid over the tile rather
+     than gloss on it, worst in light and on phone where the wash covers
+     more of a shorter floor. Gloss on a hard, reflective surface is a thin,
+     bright streak, not a soft grey cloud: shrunk to a narrow band, tinted
+     from the neon palette (the same hues the checker squares and grid
+     already carry) instead of the flat plain-ink mix, and nearly unblurred
+     so the streak's edge stays crisp. screen against the dark floor lifts
+     it without washing the tile out; light's floor is pale already, so
+     normal blending there keeps the same streak from turning into a white
+     blob. */
+  .sheen {
+    position: absolute; left: 14%; right: 14%; top: 36%; height: 9%;
+    background: linear-gradient(90deg,
+      transparent,
+      color-mix(in srgb, var(--neon-cyan) 55%, transparent) 30%,
+      color-mix(in srgb, var(--bb-plain) 65%, transparent) 50%,
+      color-mix(in srgb, var(--neon-pink) 55%, transparent) 70%,
+      transparent);
+    opacity: 0.4; filter: blur(1.5px); mix-blend-mode: screen;
+    transform: rotateX(52deg); transform-origin: 50% 0;
+  }
+  :global([data-scheme='light']) .sheen { opacity: 0.22; mix-blend-mode: normal; }
+
+  .lobby-planter {
+    position: absolute; left: 6%; bottom: 6%; width: clamp(70px, 12vw, 120px);
+  }
+  .lobby-planter :global(.lobby-palm) { position: relative; z-index: 1; width: 100%; height: auto; }
+  /* height:20% on .lobby-planter (an auto-height, absolutely positioned
+     parent) resolved to 0, so the pot never painted (nit: only a 4px border
+     hairline showed). Footer's own planter-pot uses a fixed px height for
+     the same reason; matched here, scaled up for the lobby's larger planter. */
+  .lobby-pot {
+    width: 62%; height: 22px; margin-inline: auto; margin-top: -8px;
+    background: linear-gradient(180deg, var(--field-raised), var(--field));
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+  }
+
+  .lobby-floor + .lobby-planter { z-index: 1; }
+  :global(.vw-lobby .lobby-column) {
+    position: absolute; right: 8%; bottom: 4%; width: clamp(90px, 15vw, 160px); height: auto;
+    filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.25));
+  }
+
+  @media (max-width: 620px) {
+    .lobby-planter { display: none; }
+    :global(.vw-lobby .lobby-column) { right: 50%; translate: 50% 0; width: clamp(90px, 26vw, 130px); }
+  }
+</style>

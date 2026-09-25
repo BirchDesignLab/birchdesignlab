@@ -9,6 +9,9 @@ import Column from '../parts/Column.astro';
 import Marble from '../parts/Marble.astro';
 import Meander from '../parts/Meander.astro';
 import Rune from '../parts/Rune.astro';
+import Still from '../parts/Still.astro';
+import bustAvif from '../stills/sphere-pink-1024.avif?url';
+import bustWebp from '../stills/sphere-pink-1024.webp?url';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -22,6 +25,18 @@ const [founderLead, ...founderRest] = copy.founder.body;
   <div class="temple-title">
     <p class="vw-kana kana" aria-hidden="true">シャイニング・ツリー</p>
     <h1>{copy.heading}</h1>
+  </div>
+  {/* F3 staging: a stepped plinth between the columns, where the Venus goes
+      in B2. A Tier A stand-in still (pastel-tinted, glossy) holds the spot;
+      the pipeline is still scripts/themes/vaporwave/render-marble.mjs today,
+      so this is a picture, not the live bust. */}
+  <div class="centerpiece" aria-hidden="true">
+    <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} />
+    <div class="centerpiece-steps">
+      <div class="tier tier-top"><Marble id="cp-tier-top" seed={31} /><div class="tier-gloss"></div></div>
+      <div class="tier tier-mid"><Marble id="cp-tier-mid" seed={37} /><div class="tier-gloss"></div></div>
+      <div class="tier tier-base"><Marble id="cp-tier-base" seed={43} /><div class="tier-gloss"></div></div>
+    </div>
   </div>
   <Meander id="meander-top" class="frieze" />
 </header>
@@ -52,7 +67,10 @@ const [founderLead, ...founderRest] = copy.founder.body;
     <Meander id="meander-plinth" class="plinth-frieze" />
     <p class="manifesto">{copy.manifesto}</p>
   </div>
-  <div class="plinth-base" aria-hidden="true"></div>
+  <div class="plinth-base" aria-hidden="true">
+    <div class="tier tier-1"></div>
+    <div class="tier tier-2"></div>
+  </div>
   <a class="vw-btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
 </section>
 
@@ -79,13 +97,68 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .temple-title { position: relative; align-self: start; text-align: center; max-width: min(100%, 52rem); }
   .kana { font-size: 0.85rem; letter-spacing: 0.8em; margin-right: -0.8em; color: var(--neon-pink); }
   :global([data-scheme='light']) .kana { color: var(--accent); }
+  /* E10: the chromatic split scales with the type instead of a flat 3px, so
+     it never triples a phone's smaller heading; the alpha drops under 700px
+     too, so the fringe stays a hint rather than a third colour. */
   h1 {
     margin-top: 1rem;
+    --chroma: clamp(1px, 0.03em, 3px);
     font-family: var(--font-display); font-size: clamp(3rem, 8.5vw, 7rem); line-height: 0.98;
     color: var(--bb-plain);
-    text-shadow: -3px 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent), 3px 0 0 color-mix(in srgb, var(--neon-pink) 70%, transparent);
+    text-shadow: calc(-1 * var(--chroma)) 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent), var(--chroma) 0 0 color-mix(in srgb, var(--neon-pink) 70%, transparent);
+  }
+  @media (max-width: 700px) {
+    h1 { text-shadow: calc(-1 * var(--chroma)) 0 0 color-mix(in srgb, var(--neon-cyan) 40%, transparent), var(--chroma) 0 0 color-mix(in srgb, var(--neon-pink) 40%, transparent); }
   }
   .temple :global(.frieze) { position: absolute; left: 0; right: 0; bottom: 0; color: var(--neon-pink); background: var(--field-top); }
+
+  /* The centrepiece: a stepped museum plinth between the columns, holding
+     the stand-in still until B2's Venus. */
+  .centerpiece {
+    position: absolute; left: 50%; bottom: 34px; translate: -50% 0; z-index: 1;
+    display: grid; justify-items: center; width: clamp(160px, 20vw, 260px);
+  }
+  /* about-sphere-floats (fix round 2): round 1 measured the transparent
+     margin at alpha > 12/255, which counts the still's own faint baked
+     contact shadow, not the sphere's opaque ring - undercounting the true
+     gap by nearly half (14% left about 27px showing at desktop). Remeasured
+     from the opaque silhouette alone (alpha >= 200/255:
+     scripts/themes/vaporwave/measure-still-bbox.mjs --solid), which puts the
+     ring's own edge 25.7% up from the canvas's bottom on both stand-ins
+     (sphere-pink-1024 and sphere-white-512 agree within 0.1%). translateY
+     moves the picture (paint only, not layout) down by that fraction, so the
+     ring - not the shadow's fading tail - lands flush on the tier below, and
+     the shadow itself now drapes onto the tier's own surface instead of
+     being clipped off above it. z-index keeps the prop (and its shadow)
+     painting over the tiers where they now overlap. */
+  :global(.centerpiece-prop) {
+    width: 84%; position: relative; z-index: 2;
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
+    transform: translateY(25.7%);
+  }
+  /* A real stepped plinth (fix round 2, item 2): three tiers of the same
+     procedural, pastel-tinted marble the rune plaque is cut from
+     (Marble.astro: SVG turbulence stone with the pink/cyan corner tint), each
+     with a diagonal glossy sheen, replacing the old two 10px slivers that
+     read as nothing over the sun's stripes. Proportioned a little wide of
+     the stand-in sphere's own footprint on purpose: B2 swaps in the Venus,
+     expected about 1.3x the sphere's height and narrower at its base, so the
+     top tier keeps headroom instead of being sized to the sphere alone. */
+  .centerpiece-steps { position: relative; width: 100%; }
+  .centerpiece-steps .tier {
+    position: relative; overflow: hidden; margin-inline: auto;
+    border: 1px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  }
+  .centerpiece-steps .tier-gloss {
+    position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.1) 42%, transparent 64%);
+  }
+  .centerpiece-steps .tier-top { width: 70%; height: 20px; }
+  .centerpiece-steps .tier-mid { width: 86%; height: 18px; margin-top: -1px; }
+  .centerpiece-steps .tier-base {
+    width: 100%; height: 20px; margin-top: -1px;
+    box-shadow: 0 16px 20px -10px rgba(0, 0, 0, 0.4);
+  }
 
   /* ---------- etymology ---------- */
   .etym { padding-block: clamp(3.5rem, 8vw, 6rem) clamp(3rem, 6vw, 4.5rem); }
@@ -117,28 +190,50 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .founder-body { columns: 2 22rem; column-fill: balance; column-gap: 3rem; }
   .founder-body p { break-inside: avoid; margin-bottom: 1.1rem; color: var(--mark-muted); }
 
-  /* ---------- the plinth ---------- */
+  /* ---------- the plinth (E12) ---------- */
   .plinth-wrap { display: grid; justify-items: center; padding-bottom: 2rem; }
+  /* Marble is statuary, not a window: no offset drop shadow on the slab
+     itself (that read moved to the stepped base below it instead). */
   .plinth {
     position: relative; overflow: hidden; width: 100%; max-width: 980px;
     padding: clamp(3rem, 7vw, 5rem) clamp(1.5rem, 6vw, 5rem);
     border: 2px solid; border-color: #ffffff #7d6aa2 #7d6aa2 #ffffff;
-    box-shadow: 14px 14px 0 var(--win-drop);
   }
   .plinth :global(.plinth-frieze) { position: absolute; left: 0; right: 0; top: 0.9rem; color: color-mix(in srgb, var(--inscription) 55%, transparent); }
-  /* Cut into the stone: deep ink with a pale lower lip, like a chiselled groove. */
+  /* Cut into the stone: deep ink with a pale lower lip, like a chiselled
+     groove. Balanced into two lines rather than one ragged block. */
   .manifesto {
     position: relative; text-align: center;
-    font-family: var(--font-display); font-size: clamp(1.5rem, 3.4vw, 2.5rem); line-height: 1.3;
-    text-transform: uppercase; letter-spacing: 0.12em;
+    text-wrap: balance;
+    /* Sized to land this copy's length in two balanced lines within the
+       plinth (E12), rather than the four short ones the old, larger size
+       wrapped into. */
+    font-family: var(--font-display); font-size: clamp(1.3rem, 2.3vw, 1.75rem); line-height: 1.35;
+    text-transform: uppercase; letter-spacing: 0.1em;
     color: var(--inscription);
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
   }
+  /* A deliberate stepped base: two tiers, each wider than the plaque above
+     it by about 12px a side, instead of one flat neon bar. An explicit width
+     here (matching .plinth's own track) gives the tiers' percentage widths
+     something definite to resolve against; without it an auto-width grid
+     item collapses to its content's own size and the percentages below
+     resolve against nothing, not the wide base the steps need. */
   .plinth-base {
-    width: calc(min(100%, 980px) + 2.5rem); max-width: calc(100% + 1rem); height: 18px;
-    background: linear-gradient(90deg, var(--neon-pink), var(--neon-lav), var(--neon-cyan));
-    margin-bottom: 3rem;
+    display: grid; justify-items: center; margin-bottom: 3rem;
+    width: 100%; max-width: calc(980px + 2.5rem);
   }
+  .plinth-base .tier {
+    height: 16px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-lav), var(--neon-cyan));
+    border: 1px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  }
+  /* The overhang is capped at twice the page gutter, so a narrow phone
+     (where the gutter floors at 16px) never lets the base run past the
+     viewport - found while checking the "no horizontal scroll" requirement
+     at 390px, where the flat 2.5rem step overhung it by 4px a side. */
+  .plinth-base .tier-1 { width: calc(min(100%, 980px) + min(1rem, 2 * var(--gutter))); }
+  .plinth-base .tier-2 { width: calc(min(100%, 980px) + min(2.5rem, 2 * var(--gutter))); margin-top: -1px; }
 
   @media (max-width: 760px) {
     /* Scaled down and pulled fully on-screen: a whole column each side, not
@@ -148,5 +243,6 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .temple :global(.col-r) { right: 6px; }
     .etym-grid { grid-template-columns: 1fr; }
     .etym-grid :global(.rune) { width: min(220px, 70%); margin-inline: auto; }
+    .centerpiece { width: clamp(120px, 34vw, 180px); bottom: 24px; }
   }
 </style>

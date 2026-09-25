@@ -27,7 +27,9 @@ const { chrome, theme } = Astro.props;
     </nav>
     <span class="tray" aria-hidden="true">
       <span class="tray-kana">バーチ</span>
-      <span class="clock">12<span class="colon">:</span>00</span>
+      {/* Frozen on purpose (founder, Tier 3 stage 3 decisions): 19:93, not
+          the real-clock 12:00 a VCR tray would show. */}
+      <span class="clock">19<span class="colon">:</span>93</span>
     </span>
   </div>
 </header>
@@ -75,7 +77,25 @@ const { chrome, theme } = Astro.props;
     font-size: 0.78rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
     line-height: 1.2;
   }
-  .task:hover { background: color-mix(in srgb, var(--task) 70%, var(--neon-lav)); }
+  @media (hover: hover) and (pointer: fine) {
+    .task:hover, .wordmark:hover { background: color-mix(in srgb, var(--task) 70%, var(--neon-lav)); }
+  }
+  /* E8: a real Win95 press. The bevel inverts and the button sinks a pixel,
+     with no transition (buttons snap). Guarded off the current page's task
+     (already permanently pressed) so the two states never fight. */
+  .task:not([aria-current='page']):active, .wordmark:active {
+    border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+    background: var(--task-pressed);
+    transform: translate(1px, 1px);
+  }
+  /* E8: a dotted rectangle inside the bevel plus a contrast-checked outer
+     ring, so focus reads on the bevelled fill either scheme gives it
+     (meta.ts measures --task-ink on --task at 4.5:1+, which currentColor
+     here resolves to). */
+  .task:focus-visible, .wordmark:focus-visible {
+    outline: 2px dotted currentColor; outline-offset: -5px;
+    box-shadow: 0 0 0 2px var(--link);
+  }
   .task[aria-current='page'] {
     border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
     background: var(--task-pressed); color: var(--task-current);
@@ -88,22 +108,38 @@ const { chrome, theme } = Astro.props;
     border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
     font-family: var(--font-mono); font-size: 1.35rem; line-height: 1; color: var(--task-ink);
   }
-  .tray-kana { font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Meiryo', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--task-current); letter-spacing: 0.2em; }
+  /* E5: var(--font-kana), not the literal family name, so the astro.config
+     fallback-injection step (fontaine) cannot split it into invalid CSS
+     inside this component <style> block (kana-font-not-dela). Weight 400:
+     Dela Gothic One ships no 700, and a synthesized bold blobs the kanji at
+     this size (sent-kanji-blobs). */
+  .tray-kana { font-family: var(--font-kana); font-size: 0.8rem; font-weight: 400; color: var(--task-current); letter-spacing: 0.2em; }
   /* WCAG 2.2.2: blinking that starts on its own stops after a few seconds. */
   .colon { animation: vw-blink 1s steps(1) 5; }
 
-  @media (max-width: 860px) {
-    /* Row one keeps reading as a taskbar: the wordmark fills the width, the
-       clock stays at the right. Row two is the nav, a full-width 4-up grid
-       with a real tap target on each button. */
+  /* E10: the tablet band still fits one strip (tighter task buttons, the
+     wordmark's tracked "DESIGN LAB" line dropped so it reads as an icon plus
+     BIRCH), and バーチ stays in the tray since the freed width leaves room
+     for it. */
+  @media (max-width: 860px) and (min-width: 621px) {
+    .bar { gap: 0.5rem; }
+    .wm-rest { display: none; }
+    .task { min-width: 0; padding-inline: 0.55rem; letter-spacing: 0.12em; font-size: 0.72rem; }
+  }
+  @media (max-width: 620px) {
+    /* Row one is the Start button alone, full width, the way a taskbar's
+       Start sits apart from its task buttons. Row two docks the nav and the
+       tray together, the clock at the right of the button row. */
     .bar { flex-wrap: wrap; min-height: 44px; }
-    .wordmark { flex: 1 1 auto; min-height: 44px; order: 1; }
-    .tray { padding: 0.3rem 0.6rem; min-height: 44px; order: 2; }
-    .tray-kana { display: none; }
-    /* Row two: DOM order puts the tray before nav, but the tray belongs on
-       row one beside the wordmark, so nav is reordered after it. */
-    nav { flex: 1 1 100%; order: 3; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .wordmark { flex: 1 1 100%; min-height: 44px; order: 1; }
+    /* flex-basis 0 plus an explicit min-width: without both, nav's grid
+       content (four buttons at their natural, unshrunk width) sets its
+       hypothetical size for the wrap decision, which was enough on its own
+       to push the tray onto a third row instead of docking beside it. */
+    nav { flex: 1 1 0%; min-width: 0; order: 2; display: grid; grid-template-columns: repeat(4, 1fr); }
     .task { min-width: 0; min-height: 44px; padding-inline: 0.2rem; letter-spacing: 0.12em; font-size: 0.72rem; }
+    .tray { flex: 0 0 auto; padding: 0.3rem 0.6rem; min-height: 44px; order: 3; }
+    .tray-kana { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .colon { animation: none; }
