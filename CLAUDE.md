@@ -10,15 +10,23 @@ has burned a month of usage in about ten minutes.
 
 | Model | Relative cost | Effort levels | Capable of |
 |---|---|---|---|
-| Haiku 4.5 | 1x | None. The API rejects `effort` on Haiku; set `model` only and write `effort: n/a` in the plan so the choice reads as deliberate. | Fast, literal work: listing files, grep sweeps, pulling fields out of JSON or docs, summarizing one file, reformatting. **Not** for judging correctness, multi-file reasoning, or anything touching auth or secrets. 200K context. |
+| Haiku 4.5 | 1x | None. The API rejects `effort` on Haiku; set `model` only and write `effort: n/a` in the plan so the choice reads as deliberate. | Fast, literal work: listing files, grep sweeps, pulling fields out of JSON or docs, summarizing one file, reformatting. **Not** for judging correctness, multi-file reasoning, or anything touching the sensitive code below. 200K context. |
 | Sonnet 5 | 2x | `low` `medium` `high` `xhigh` `max` | Strong coder. Implements from a precise spec, writes tests, runs routine finders, verifies or refutes a claim against the code. |
-| Opus 5.5 | 4x | `low` `medium` `high` `xhigh` `max`. Always thinks; effort is its only cost control. | Hardest reasoning: auth, money-path and CI-gate code, design, synthesis across many reports, whole-branch review. |
+| Opus 5.5 | 4x | `low` `medium` `high` `xhigh` `max`. Always thinks; effort is its only cost control. | Hardest reasoning: the sensitive code below, design, synthesis across many reports, whole-branch review. |
 
 Relative cost is per token (API list prices: Haiku $1/$5, Sonnet 5 $2/$10,
 Opus 5.5 $4/$20 per million in/out). Effort multiplies on top of it: higher
 effort means more thinking and more tool calls per task.
 
 **Fable is never a subagent model.** It costs more than twice Opus.
+
+**Sensitive code in this repo** (the seats below name it): the Worker
+(`worker/index.ts`) and its `/api/contact` route (email sending, the
+honeypot), secrets and `wrangler.jsonc`, `public/_headers`, analytics consent
+(Zaraz, `docs/analytics.md`), and the verify gate plus the merge-to-`main`
+deploy.
+There is no auth and no money path here; a mistake in any of these is still
+live the moment a PR merges.
 
 ## The effort levels (Sonnet 5 and Opus 5.5)
 
@@ -38,12 +46,12 @@ effort means more thinking and more tool calls per task.
 | Model | Effort | Use it for |
 |---|---|---|
 | Opus 5.5 | `max` | Only when the developer asks, or `xhigh` fell short on a correctness-critical question. One agent, never a fleet. |
-| Opus 5.5 | `xhigh` | Whole-branch review of an auth, money-path or CI-gate PR (Ticket Tailor, webhooks, secrets, forms). Deep debugging across the Worker, Sanity and Ticket Tailor. |
+| Opus 5.5 | `xhigh` | Whole-branch review of a PR that touches sensitive code. Deep debugging across the Worker, the build and the portal runtime (view transitions, drawing ahead, the navigation lifecycle). |
 | Opus 5.5 | `high` | Hard finders, design and judge panels, whole-branch review of an ordinary PR. |
-| Opus 5.5 | `medium` | Implementing an auth, money-path or CI-gate task from a plan. Synthesizing several agents' reports into one answer. |
-| Opus 5.5 | `low` | A narrow judgment call that needs Opus-grade reasoning but no exploration ("is this CSP change safe, given these three lines"). |
+| Opus 5.5 | `medium` | Implementing a sensitive-code task from a plan. Synthesizing several agents' reports into one answer. The critic seat on a visual or motion workflow. |
+| Opus 5.5 | `low` | A narrow judgment call that needs Opus-grade reasoning but no exploration ("is this `_headers` change safe, given these three lines"). |
 | Sonnet 5 | `max` | Not used. Work that hard goes to Opus. |
-| Sonnet 5 | `xhigh` | Rarely. A long unsupervised implementation that is not auth-adjacent. If it is hard, use Opus instead. |
+| Sonnet 5 | `xhigh` | Rarely. A long unsupervised implementation that touches no sensitive code. If it is hard, use Opus instead. |
 | Sonnet 5 | `high` | Implementation that needs judgment across several files; finders in unfamiliar code; code-quality review of one task. |
 | Sonnet 5 | `medium` | Implementing one plan task with its tests (TDD) in one to three files; routine finders over a bounded area; spec-compliance review of one task. |
 | Sonnet 5 | `low` | Verify or refute one claim against named files; a fully specified mechanical edit (a rename, one function to a given spec); run the suite and report. |
@@ -57,8 +65,10 @@ effort means more thinking and more tool calls per task.
   tier it.
 - Before launching a workflow, state the per-stage model and effort plan and
   the agent count.
-
-
+- Keep an Opus critic on every workflow that builds or films something. In
+  the theme-schools work, Sonnet builders and verifiers passed regressions
+  that only the Opus critic caught (Tier 3 Stage 2 wave A; Stage 3 Tier A,
+  where two Sonnet fixes in a row broke vaporwave's floor).
 
 ## Scripts stay in the repo, not in temp
 
