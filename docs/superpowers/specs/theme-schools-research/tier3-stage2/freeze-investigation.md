@@ -1460,3 +1460,66 @@ BDL_GPU=1 node scripts/themes/snap.mjs --name press-drop --reuse --port 4650 -- 
 Raw output: `scripts/themes/.out/press-wrapup/` (`tables.md`,
 `press-*.runs.json`, `_batch.log`), `scripts/themes/.out/press-drop/`
 (`tables.md`, `_drawcheck.log`, `quick150-*`).
+
+## Wrap-up: drawing ahead and the navigation lifecycle
+
+Written 09-24-26. The Stage 2 review panel's code lens found two bugs by
+reading the code (`stage2-report.md`, review code-1 and code-2), and the
+founder asked for both to be fixed before PR #90 merges. The first fix
+(`953ef7f`) went through its own adversarial review
+(`aplus-tier3-stage2-navfix-review-workflow.js`, run `wf_40469d84-2dd`: an
+Opus code lens, a Sonnet browser lens, two Sonnet refute seats). That
+review found one regression in the fix and one older race it did not
+cover; both were reproduced by their refute seats and are fixed too.
+
+### What was wrong
+
+- **A copy drawn into a navigation's load** (review code-1): a rest timed
+  while the next page loaded (the mouse reaching Shuffle during a slow
+  load) drew a copy there; the swap took it away with the old body, and the
+  runtime still counted it as up.
+- **Shuffle's stale pick** (review code-2): the pick was dropped at
+  page-load after a rest at the swap had already named it, and Safari's
+  and Firefox's post-swap refocus started a focus rest, so a copy of a
+  school Shuffle did not go to was drawn about 500 ms after arriving.
+- **In the first fix** (navfix review code-1, a regression): a same-page
+  hash link (every header's skip link) aborts a loading navigation and
+  starts none, so the first fix's `navigating` stayed on and nothing was
+  drawn ahead on that page until another navigation landed.
+- **Older than both** (navfix review code-2): Back (or a click) during the
+  old page's capture lets the first navigation swap while the second still
+  loads; its after-swap resumed drawing ahead into the second's load.
+
+### What ships
+
+- `runtime.ts`: nothing is drawn, and no rest is timed, from a navigation's
+  start until the latest navigation's page lands (`navigationBegan`,
+  `swapBegan`, `navigationLanded`). An abort with nothing after it, a
+  refused preparation and a back/forward-cache restore end the wait too
+  (`navigationRefused`, `pageRestored`). Rests are timed afresh after.
+- `switcher.ts`: Shuffle's pick belongs to the page it was made on (no
+  page-load reset), and the switcher's own refocus after a swap draws
+  nothing.
+- `tests/draw-on-intent.test.ts`: every exit, in the order Astro's router
+  sends its events, with plain AbortSignals; each guard was shown to fail
+  its own test when removed.
+
+### Evidence
+
+| probe | build before the fixes | after the first fix (`953ef7f`) | final |
+|---|---|---|---|
+| `draw-ahead-nav-probe.mjs` load (a copy during a slow load) | 5 of 5 | 0 of 5 | 0 of 5 (the copy after landing is where Shuffle goes, 5 of 5; a new row rest draws in 401 to 404 ms) |
+| `draw-ahead-nav-probe.mjs` refocus (a wasted copy after Safari's refocus) | 3 of 3 | 0 of 5 | 0 of 5 |
+| `draw-ahead-nav-code-probe.mjs` hashabort (drawing ahead stuck) | not stuck | 2 of 2 stuck | 0 of 3 (a row rest draws in 351 to 361 ms) |
+| `draw-ahead-nav-code-probe.mjs` race (a copy during the second load) | 1 of 1 | 2 of 2 | 0 of 3 |
+| `draw-ahead-nav-code-probe.mjs` back (a copy during Back's load) | not run | 3 of 3 | 0 of 3 |
+
+The browser lens also ran six cases on `953ef7f` (a slow load with Back,
+an aborted row click, five Shuffles in a row, keyboard Shuffle on Safari's
+path, a full load mid-navigation and Back, the contact form and Back): all
+clean, 15 runs. Its back/forward-cache case never engaged the cache in
+headless Chromium, so the restore path is checked by the unit test only.
+Since the final fix: `npm run verify` clean (347 unit tests, astro check 0 errors and 0 warnings, 483 built-site tests); `draw-ahead-check.mjs` judged 96 copies, 96 moved no pixel, 12 of 12 presses and 36 of 36 sweeps drew nothing; `smoke.mjs` passed all 166 checks.
+
+Raw output: `scripts/themes/.out/nav-probe/`, `nav-code-probe/`,
+`navfix-browser/`.

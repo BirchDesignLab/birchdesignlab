@@ -233,15 +233,24 @@ All in `tier3-briefs/stage0-decisions.md`.
      included (read from the code, not filmed there).
    Recommendation: **fix both before merging**, with a re-check (about 30
    minutes). The alternative is to make them Stage 3's first task.
+   **Answered: "yes let's absolutely fix those." Fixed.** The fix went
+   through its own adversarial review, which found one regression in it (a
+   same-page hash link, such as the skip link, left drawing ahead off) and
+   one older race (Back pressed during the old page's capture drew a copy
+   into the new load); both are fixed too. Every case is shown before and
+   after with probes, and the final build is clean on all of them
+   (`freeze-investigation.md`, "Wrap-up: drawing ahead and the navigation
+   lifecycle").
 2. **Grandmillennial's and cottagecore's header bands on a swap clicked
    low on a page** (review motion-1): their named header lands at the top
    of the screen over the old page for about 100 ms before the old page
    fades, the same as swiss's band, which you accepted. Recommendation:
    **accept it for both, as for swiss**; the transitions phase revisits all
-   three.
+   three. **Answered: "let's live with it for now."**
 3. **Merge the wrap-up?** It deploys the press change (a visitor who clicks
    a row quickly sees exactly what they saw before drawing ahead existed),
    plus the tests, records and tooling. PR: https://github.com/BirchDesignLab/birchdesignlab/pull/90.
+   **Answered: after the fixes.**
 
 ## What's next
 

@@ -152,10 +152,12 @@ where the founder overrode it. Put this list to the founder first:
   prompt dismiss and icon buttons; some schools' header and footer links):
   fix glass's and vaporwave's in their chrome work here, the rest at their
   pair stages, the switcher's in a portal pass (`stage2-report.md`).
-- If the founder did not have the Stage 2 wrap-up fix them first: review
-  code-1 (a copy can start during a navigation's load and block drawing for
-  3 s) and code-2 (Shuffle's pick is stale after a swap, and Safari and
-  Firefox draw a wrong copy on the refocus). See `stage2-report.md`,
-  "Decisions for the founder".
+- Review code-1 and code-2 (a copy drawn into a navigation's load; a stale
+  Shuffle pick and Safari's refocus drawing a wrong copy) were fixed before
+  PR #90 merged, on the founder's word (`953ef7f`;
+  `harness/draw-ahead-nav-probe.mjs` shows both before and after).
+- Grandmillennial's and cottagecore's scrolled header bands: the founder
+  lives with them for now, as with swiss's; the transitions phase
+  revisits all three.
 - `motion.mjs` cannot tell a dropped navigation from a slow one (review
   motion-3); a failed arrive film under load should be re-filmed alone.
