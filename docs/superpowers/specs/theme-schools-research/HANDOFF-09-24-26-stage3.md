@@ -9,7 +9,8 @@ vaporwave, so the two are designed in one sitting.
 
 - Stage 2 (the defect sweep) is merged (PR #89, `1f0882b`) and live.
 - The Stage 2 wrap-up is on `feat/theme-schools-tier3-stage2-wrapup`
-  (PR-LINK): the press trigger dropped, the final gates, the review panel and
+  (PR #90, https://github.com/BirchDesignLab/birchdesignlab/pull/90): the
+  press trigger dropped, the final gates, the review panel and
   `tier3-stage2/stage2-report.md`. If it is merged, branch Stage 3 from
   `main`; if not, ask the founder before branching from the wrap-up branch.
 - `npm run verify` was clean at the wrap-up: 331 unit tests, astro check

@@ -241,7 +241,7 @@ All in `tier3-briefs/stage0-decisions.md`.
    three.
 3. **Merge the wrap-up?** It deploys the press change (a visitor who clicks
    a row quickly sees exactly what they saw before drawing ahead existed),
-   plus the tests, records and tooling. PR: PR-LINK.
+   plus the tests, records and tooling. PR: https://github.com/BirchDesignLab/birchdesignlab/pull/90.
 
 ## What's next
 
