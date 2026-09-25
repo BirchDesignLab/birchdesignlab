@@ -1,3 +1,65 @@
+# Subagents and workflows: set model and effort on every dispatch
+
+Every subagent dispatch (the Agent tool, Workflow `agent()` calls, the
+implementer and reviewer seats in subagent-driven development) sets `model`
+**and** `effort` on purpose. Never leave either unset: an unset agent inherits
+the session's model at the session's effort, and an untiered fleet of those
+has burned a month of usage in about ten minutes.
+
+## The models
+
+| Model | Relative cost | Effort levels | Capable of |
+|---|---|---|---|
+| Haiku 4.5 | 1x | None. The API rejects `effort` on Haiku; set `model` only and write `effort: n/a` in the plan so the choice reads as deliberate. | Fast, literal work: listing files, grep sweeps, pulling fields out of JSON or docs, summarizing one file, reformatting. **Not** for judging correctness, multi-file reasoning, or anything touching auth or secrets. 200K context. |
+| Sonnet 5 | 2x | `low` `medium` `high` `xhigh` `max` | Strong coder. Implements from a precise spec, writes tests, runs routine finders, verifies or refutes a claim against the code. |
+| Opus 5.5 | 4x | `low` `medium` `high` `xhigh` `max`. Always thinks; effort is its only cost control. | Hardest reasoning: auth, money-path and CI-gate code, design, synthesis across many reports, whole-branch review. |
+
+Relative cost is per token (API list prices: Haiku $1/$5, Sonnet 5 $2/$10,
+Opus 5.5 $4/$20 per million in/out). Effort multiplies on top of it: higher
+effort means more thinking and more tool calls per task.
+
+**Fable is never a subagent model.** It costs more than twice Opus.
+
+## The effort levels (Sonnet 5 and Opus 5.5)
+
+- `low`: little thinking, fewest and most consolidated tool calls, terse
+  output. For work fully specified in the prompt that has one right answer.
+- `medium`: normal thoroughness. For a routine task with a clear plan.
+- `high`: thorough; weighs alternatives and edge cases. For work that needs
+  judgment or unfamiliar code.
+- `xhigh`: deep and long-running; Anthropic's recommended setting for long
+  agentic coding, and Claude Code's own default. That is what an unset agent
+  usually inherits, which is why "unset" is expensive.
+- `max`: no ceiling on thinking. Only when correctness matters more than cost
+  **and** `xhigh` measurably fell short. Never in a fleet.
+
+## Every seat, from Opus down
+
+| Model | Effort | Use it for |
+|---|---|---|
+| Opus 5.5 | `max` | Only when the developer asks, or `xhigh` fell short on a correctness-critical question. One agent, never a fleet. |
+| Opus 5.5 | `xhigh` | Whole-branch review of an auth, money-path or CI-gate PR (Ticket Tailor, webhooks, secrets, forms). Deep debugging across the Worker, Sanity and Ticket Tailor. |
+| Opus 5.5 | `high` | Hard finders, design and judge panels, whole-branch review of an ordinary PR. |
+| Opus 5.5 | `medium` | Implementing an auth, money-path or CI-gate task from a plan. Synthesizing several agents' reports into one answer. |
+| Opus 5.5 | `low` | A narrow judgment call that needs Opus-grade reasoning but no exploration ("is this CSP change safe, given these three lines"). |
+| Sonnet 5 | `max` | Not used. Work that hard goes to Opus. |
+| Sonnet 5 | `xhigh` | Rarely. A long unsupervised implementation that is not auth-adjacent. If it is hard, use Opus instead. |
+| Sonnet 5 | `high` | Implementation that needs judgment across several files; finders in unfamiliar code; code-quality review of one task. |
+| Sonnet 5 | `medium` | Implementing one plan task with its tests (TDD) in one to three files; routine finders over a bounded area; spec-compliance review of one task. |
+| Sonnet 5 | `low` | Verify or refute one claim against named files; a fully specified mechanical edit (a rename, one function to a given spec); run the suite and report. |
+| Haiku 4.5 | n/a | Enumeration and extraction: list, grep, pull fields, summarize one file. |
+
+## Rules
+
+- Start at the cheapest seat that can do the job. On a failure, step up one
+  notch at a time (the next row up the table), never straight to `max`.
+- Volume is fine; tiering is the mandate. Do not shrink a fleet to save cost,
+  tier it.
+- Before launching a workflow, state the per-stage model and effort plan and
+  the agent count.
+
+
+
 ## Scripts stay in the repo, not in temp
 
 Founder direction 2026-08-13, carried over from the Cheer & Chatter repo.
