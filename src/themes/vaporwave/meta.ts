@@ -40,6 +40,8 @@ export const meta: ThemeMeta = {
     { fg: '--bar-ink', bg: ['--bar-a'], min: 4.5, note: 'window title, pink end of the bar' },
     { fg: '--bar-ink', bg: ['--bar-b'], min: 4.5, note: 'window title, lavender middle of the bar' },
     { fg: '--bar-ink', bg: ['--bar-c'], min: 4.5, note: 'window title, cyan end of the bar' },
+    { fg: '--bar-ink-dim', bg: ['--bar-inactive-a'], min: 4.5, note: 'inactive window title, near end of the bar (F5)' },
+    { fg: '--bar-ink-dim', bg: ['--bar-inactive-b'], min: 4.5, note: 'inactive window title, far end of the bar (F5)' },
     { fg: '--task-ink', bg: ['--task'], min: 4.5, note: 'taskbar buttons' },
     { fg: '--task-current', bg: ['--task-pressed'], min: 4.5, note: 'the pressed taskbar button' },
     { fg: '--bb-plain', bg: ['--hz-sky-top'], min: 4.5, note: 'billboard second line over the top of the sky' },

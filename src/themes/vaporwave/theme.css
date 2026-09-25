@@ -44,6 +44,23 @@
   --bar-b: #d9adff;
   --bar-c: #01cdfe;
   --bar-ink: #1a0536;
+  /* F5 (Tier 3 stage 3, "how much the captions quiet down"): the inactive
+     back-window bar. Desaturated lavender-grey, two stops (Win95's plain
+     inactive title, brief section 4 F5), dimmed ink. Both stops measured
+     against --bar-ink-dim in meta.ts contrast (>= 4.5:1 each). */
+  --bar-inactive-a: #a8a0c0;
+  /* Fix round (Tier A critique, finding 7): the critic measured this stop at
+     4.95:1 against --bar-ink-dim, the thinnest margin of the four F5 pairs
+     (the near stop and both light-scheme stops all clear 6:1+). Eased from
+     #8c85a6 to #968fac - lighter, not darker: this stop sits lighter than
+     the ink already (#8c85a6's luminance is well above #1c182c's), so moving
+     it toward the ink is what shrank the margin from the near stop's 6.95 to
+     4.95 in the first place, and moving it further that way would shrink it
+     more, not less. #968fac keeps the same muted, slightly muddier read as
+     the far end of the two-stop fill (still visibly darker than the near
+     stop's #a8a0c0) while measuring 5.61:1. */
+  --bar-inactive-b: #968fac;
+  --bar-ink-dim: #1c182c;
 
   --task: #1d0b47;
   --task-pressed: #07011a;
@@ -142,6 +159,10 @@
   --task-pressed: #ffffff;
   --task-ink: #2a0a4a;
   --task-current: #a50f6c;
+
+  --bar-inactive-a: #cec8e0;
+  --bar-inactive-b: #b2abc8;
+  --bar-ink-dim: #2e2844;
 
   --hz-sky-top: #cdb6ff;
   --hz-sky-mid: #ffc8dc;
@@ -265,6 +286,24 @@
   color: var(--bar-ink);
   font-family: var(--font-mono); font-size: 1.3rem; line-height: 1;
 }
+/* F5: a back window that never gets the pointer, statically inactive (E4).
+   Two-stop desaturated lavender-grey instead of the three-stop neon fill, ink
+   dimmed to match (meta.ts contrast). The Win95 source keeps its caption
+   glyph the same shape; only the fill and ink change, so the pair still reads
+   as one system palette (brief F5 "gradient" call). */
+[data-theme='vaporwave'] .vw-win-bar.inactive {
+  background: linear-gradient(90deg, var(--bar-inactive-a), var(--bar-inactive-b));
+  color: var(--bar-ink-dim);
+}
+[data-theme='vaporwave'] .vw-win-bar.inactive .vw-win-title::before {
+  border-color: var(--bar-ink-dim);
+  background: var(--bar-inactive-b);
+}
+[data-theme='vaporwave'] .vw-win-bar.inactive .vw-win-btns span {
+  /* Opacity, not a recolour: it dims the glyph and its border together
+     without reaching into nth-child(2)'s different ::before shape. */
+  opacity: 0.55;
+}
 [data-theme='vaporwave'] .vw-win-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-theme='vaporwave'] .vw-win-title::before {
   content: ''; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.45em; vertical-align: -0.05em;
@@ -357,7 +396,19 @@
 }
 /* The grid itself, on a child so the parent's mask never has to repaint: this
    layer only ever moves by a composited transform. It runs a tile taller than
-   its box so the translate never uncovers an edge. */
+   its box so the translate never uncovers an edge.
+
+   F4 (b), Tier 3 stage 3: the loop's seam. The scroll keeps its own 1.6 s,
+   one-tile clock (vw-floor), which the one-tile overhang covers. The seam
+   rides a second animation on the separate translate property
+   (vw-floor-seam, 6.4 s, four turns of the scroll): two one-frame sideways
+   snaps at the cycle's end, the tape language of E1, no hue or brightness
+   change. A floor cannot show a phase jump the way the hero's grid can
+   (fx.ts, the 'restart' variant): a whole number of tiles paints the same, so
+   the tear is what marks its loop. The static transform stays on the rule so
+   animation: none (reduced motion) falls back to the tilted floor. (Tier A
+   fix rounds: a 256 px single keyframe uncovered the layer's top, and growing
+   the overhang moved the tilt's pivot; this shape has neither problem.) */
 [data-theme='vaporwave'] .vw-floor::before {
   content: ''; position: absolute; inset: -64px 0 0;
   background-image:
@@ -367,7 +418,7 @@
   background-position: center top;
   transform: perspective(260px) rotateX(62deg) translateY(0);
   transform-origin: 50% 64px;
-  animation: vw-floor 1.6s linear infinite;
+  animation: vw-floor 1.6s linear infinite, vw-floor-seam 6.4s linear infinite;
 }
 
 /* CRT scanlines, for the hero and the screen. */
@@ -379,6 +430,14 @@
 
 @keyframes vw-blink { 50% { opacity: 0; } }
 @keyframes vw-floor { to { transform: perspective(260px) rotateX(62deg) translateY(64px); } }
+/* Each step holds 0.25% of 6.4 s, about one frame at 60 Hz. step-end on every
+   keyframe so nothing eases: 0, then 10 px, then -4 px, then back to 0. */
+@keyframes vw-floor-seam {
+  0%, 99.2% { translate: 0 0; animation-timing-function: step-end; }
+  99.45% { translate: 10px 0; animation-timing-function: step-end; }
+  99.7% { translate: -4px 0; animation-timing-function: step-end; }
+  100% { translate: 0 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-theme='vaporwave'] .vw-kicker::after,

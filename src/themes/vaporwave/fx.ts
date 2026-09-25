@@ -21,6 +21,64 @@ const THEME = 'vaporwave';
 const MAX_DPR = 1.5;
 /** The frame drawn under reduced motion: stars lit, stripes mid-drift. */
 const STILL_TIME = 7.3;
+/**
+ * F4(b) (Tier 3 stage 3 brief, "the grid: drive or loop"): the hero's grid now
+ * visibly restarts every CYCLE seconds instead of driving forever. 6.4s is
+ * exactly four turns of the CSS floors' existing 1.6s per-cell scroll
+ * (.vw-floor::before, theme.css), the low-middle of the brief's 4-8s band, so
+ * every loop in the school (this canvas and every CSS floor) shares one
+ * period and one seam. The scroll rate itself is unchanged (F4: "same speed
+ * as today"); only the seam is new.
+ */
+const CYCLE = 6.4;
+/* The tracking hiccup at the seam: a one-to-two-frame horizontal tear on the
+   floor grid (E1's tape language), not a hue shift or a brightness flash. Two
+   discrete offsets (not eased between them) so it reads as a stutter, then
+   the grid snaps back to true for the rest of the cycle. Shared by both loop
+   variants below: the tear is the one thing the brief asks both to carry. */
+const SEAM_FRAME_1 = 1 / 60;
+const SEAM_FRAME_2 = 2 / 60;
+const SEAM_OFFSET_1 = 0.16;
+const SEAM_OFFSET_2 = -0.06;
+
+/**
+ * Fix round (Tier A critique, finding 2): "loop" (b) was really only a tear
+ * every CYCLE seconds bolted onto a scroll that never stops - honest for the
+ * tear, not for a "cycle that visibly restarts". Two real variants, so the
+ * founder can see both before Tier B commits to one:
+ *   'tear'    the drive never resets: uScroll/uStripe run off raw session
+ *             time, same as before this fix, so the grid looks like it never
+ *             stopped except for the tear.
+ *   'restart' uScroll/uStripe run off `time % CYCLE` instead, so the instant
+ *             the cycle wraps, the scroll snaps from wherever CYCLE*0.55 mod 1
+ *             landed back to 0 - a real phase jump, not just the tear -
+ *             because 6.4 * 0.55 is not a whole number of turns.
+ * The default is 'restart', the brief's reading of F4(b); the founder picks
+ * between the two at the Tier A stop, and the loser and the query go in
+ * Tier B. See readLoopVariant for how a proof picks one.
+ */
+type LoopVariant = 'tear' | 'restart';
+const DEFAULT_VARIANT: LoopVariant = 'restart';
+
+/**
+ * proof-only: `?vwLoop=tear` or `?vwLoop=restart` on the URL picks a variant
+ * for scripts/themes/harness/vw-loop-proof.mjs to film, without a rebuild.
+ * Any other value, or no query at all - the case for every real visit -
+ * resolves to DEFAULT_VARIANT with no trace of having asked: mountHorizon
+ * only sets the proof timing hook (`__vwHeroStarted`) when the query named a
+ * variant explicitly. A production load, which carries no `vwLoop` query,
+ * writes nothing.
+ */
+function readLoopVariant(): { variant: LoopVariant; isProof: boolean } {
+  try {
+    const q = new URLSearchParams(location.search).get('vwLoop');
+    if (q === 'tear' || q === 'restart') return { variant: q, isProof: true };
+  } catch {
+    /* location/URLSearchParams unavailable (SSR, an odd embed): fall through
+       to the shipped default exactly as a query-free visit would. */
+  }
+  return { variant: DEFAULT_VARIANT, isProof: false };
+}
 
 const VERT = `
 attribute vec2 aPos;
@@ -44,6 +102,7 @@ uniform float uGlow;
 uniform float uFade;
 uniform float uHaze;
 uniform float uGridGlow;
+uniform float uSeam;
 uniform vec3 uSkyTop;
 uniform vec3 uSkyMid;
 uniform vec3 uHorizon;
@@ -127,7 +186,11 @@ void main() {
     const float GRID = 7.0;
     float dy = -p.y;
     float z = 0.12 * GRID / dy;
-    float wx = p.x * z * 1.6;
+    // uSeam: a brief lateral tear at the loop's seam (F4b), zero the rest of
+    // the cycle. Added to wx (not p.x) so it rides the same perspective scale
+    // as the grid lines: a tracking error the depth of the floor, not a flat
+    // screen-space shove.
+    float wx = p.x * z * 1.6 + uSeam;
     col = mix(uHorizon, uGround, smoothstep(0.0, uHaze, dy));
     // The sun's reflection, a soft streak on the floor.
     col += uSunB * 0.25 * exp(-abs(p.x) * 7.0) * exp(-dy * 9.0);
@@ -229,7 +292,7 @@ function startScene(canvas: HTMLCanvasElement): Linking | null {
   return { gl, program, vs, fs, settled };
 }
 
-function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null {
+function finishScene(canvas: HTMLCanvasElement, linking: Linking, variant: LoopVariant): Scene | null {
   const { gl, program, vs, fs } = linking;
   // A shader that failed to compile fails the link too.
   const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
@@ -262,6 +325,7 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   const uFade = u('uFade');
   const uHaze = u('uHaze');
   const uGridGlow = u('uGridGlow');
+  const uSeam = u('uSeam');
 
   const setColors = () => {
     const cs = getComputedStyle(document.documentElement);
@@ -295,8 +359,19 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   const draw = (time: number) => {
     // Phases wrap here, in double precision, so the shader's floats stay small.
     gl.uniform1f(uTime, time % 1000);
-    gl.uniform1f(uScroll, (time * 0.55) % 1);
-    gl.uniform1f(uStripe, (time * 0.06) % 1);
+    // F4(b) fix round: 'restart' drives the scroll and the stripe drift off
+    // the cycle's own clock, so both visibly jump back at the seam instead of
+    // sailing through it; 'tear' keeps driving off raw time, as before this
+    // round, so only the seam interrupts it. See readLoopVariant.
+    const cyclePos = time % CYCLE;
+    const loopTime = variant === 'restart' ? cyclePos : time;
+    gl.uniform1f(uScroll, (loopTime * 0.55) % 1);
+    gl.uniform1f(uStripe, (loopTime * 0.06) % 1);
+    // The seam itself: cyclePos re-zeros every CYCLE seconds; for its first
+    // two frames the grid tears sideways in two discrete steps, then holds at
+    // zero for the rest of the cycle. Shared by both variants.
+    const seam = cyclePos < SEAM_FRAME_2 ? (cyclePos < SEAM_FRAME_1 ? SEAM_OFFSET_1 : SEAM_OFFSET_2) : 0;
+    gl.uniform1f(uSeam, seam);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
@@ -309,6 +384,12 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
 export function mountHorizon(): (() => void) | void {
   if (document.documentElement.dataset.theme !== THEME) return;
   const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-vw-horizon]');
+
+  // F4(b) fix round: which loop variant this load draws, and whether it was
+  // asked for by the proof (never by a real visit). Only the hero's grid has
+  // variants; the CSS floors carry the same seam in one shape (theme.css).
+  const { variant, isProof } = readLoopVariant();
+
   if (!canvas) return;
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -322,7 +403,7 @@ export function mountHorizon(): (() => void) | void {
   // from the first frame) it is linked before the first frame, as always.
   const from = document.documentElement.dataset.fromTheme;
   if (!from || from === THEME) {
-    scene = finishScene(canvas, linking);
+    scene = finishScene(canvas, linking, variant);
     linking = null;
     if (!scene) return;
   }
@@ -333,6 +414,12 @@ export function mountHorizon(): (() => void) | void {
   let inView = true;
   let pageVisible = !document.hidden;
   const started = performance.now();
+  // Proof-only hook for scripts/themes/harness/vw-loop-proof.mjs: the loop's
+  // clock zero, so the F4(b) seam's wall-clock moment can be computed instead
+  // of guessed at from pixels. Gated on `isProof` (finding 6 of the Tier A
+  // fix round): a production load carries no `vwLoop` query, so `isProof` is
+  // false and this global is never created. Read nowhere else.
+  if (isProof) (window as unknown as { __vwHeroStarted?: number }).__vwHeroStarted = started;
   const now = () => (reducedMotion.matches ? STILL_TIME : (performance.now() - started) / 1000);
 
   const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches && !lost;
@@ -365,7 +452,7 @@ export function mountHorizon(): (() => void) | void {
       waiting = requestAnimationFrame(settle);
       return;
     }
-    scene = finishScene(canvas, linking);
+    scene = finishScene(canvas, linking, variant);
     linking = null;
     if (scene && shouldAnimate()) tick();
     else sync();
@@ -382,7 +469,7 @@ export function mountHorizon(): (() => void) | void {
     if (waiting) cancelAnimationFrame(waiting);
     waiting = 0;
     linking = startScene(canvas);
-    scene = linking && finishScene(canvas, linking);
+    scene = linking && finishScene(canvas, linking, variant);
     linking = null;
     // If the rebuild fails (a shader that no longer compiles after the driver
     // reset), stay in the lost state so every caller keeps treating this as

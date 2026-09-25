@@ -32,6 +32,7 @@ const steps = copy.process.steps.length;
       menu={apps[i]?.menu}
       address={apps[i]?.address}
       class={`app app-${i}`}
+      inactive={i === 0}
     >
       <h2>{offering.heading}</h2>
       <div class="app-body">

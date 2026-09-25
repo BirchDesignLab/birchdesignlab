@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  The page render-marble.mjs opens in GPU Chromium to render vaporwave's marble
+  stills. Written 09-25-26 for Tier 3 stage 3 (Tier A proofs). Not part of the
+  site: it is served by render-marble.mjs's own local server, which maps
+  /three/ to node_modules/three/ and / to this folder.
+
+  Usage (normally driven by render-marble.mjs):
+    open http://127.0.0.1:4467/marble-scene.html, then in the page
+    await window.marble.render({ prop: 'sphere', tint: 'white', size: 2048 })
+    resolves with a PNG data URL on a transparent background.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>marble scene</title>
+<style>
+  html, body { margin: 0; background: transparent; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "/three/build/three.module.js", "three/addons/": "/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<script type="module" src="./marble-scene.js"></script>
+</body>
+</html>

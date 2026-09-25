@@ -1,0 +1,149 @@
+/* Glass wallpaper palette proof, variant WARM (Big Sur: orange, coral, deep
+   blue; magenta and cyan as accents only).
+
+   Written 09-25-26 for Tier 3 stage 3 (Tier A proofs). Injected over the
+   frozen base build by scripts/themes/harness/stage3-palette-proof.mjs; not
+   imported by the site. Tier B can lift these rules into
+   src/themes/glassmorphism/theme.css (the token blocks replace the matching
+   tokens there; the main::before and .orb rules replace theirs).
+
+   What it changes (glassmorphism.md E3, D7; stage0-decisions S3):
+   - E3 wallpaper: a fixed, saturated mesh of large mid-value forms that
+     darkens toward the edges, no idle drift, carried through the whole
+     scroll (it is position: fixed, and the body underneath takes the edge
+     colour so nothing below the fold falls to a flat field).
+   - D7 orbs: flat two-stop discs, crisp edges, no specular hotspot, no blur.
+   - Palette tokens: orbs, accents, buttons, icon plates and the field pairs
+     recoloured to the warm set. The orb class names (violet, cyan, peach,
+     pink) are kept so no page markup changes: violet = deep blue (the
+     lead), cyan = ember/amber, peach = coral, pink = rose (the accent).
+   - Glass fills, edges, blur and layout are untouched (Tier B).
+
+   Selector note: theme.css declares tokens on :root[data-theme] (0,2,0), so
+   the token blocks here use html:root[data-theme] (0,2,1) to win without
+   !important. Usage: see the harness header. */
+
+html:root[data-theme='glassmorphism'] {
+  --mark: #141a38;
+  --mark-muted: #3e4260;
+  --accent: #983208;
+  --accent-2: #a01f45;
+  --link: #1f45b3;
+  --on-accent: #ffffff;
+
+  --blob-violet-hi: #86a6ff;
+  --blob-violet: #2f55c8;
+  --blob-cyan-hi: #ffcf8a;
+  --blob-cyan: #f08424;
+  --blob-peach-hi: #ffb4a2;
+  --blob-peach: #ec5b49;
+  --blob-pink-hi: #ffb0c9;
+  --blob-pink: #d63c73;
+  --blob-worst: var(--blob-violet);
+  --orb-glow: 0 0 0 transparent;
+
+  --line: rgb(40 44 110 / 0.16);
+  --shadow: 0 30px 60px -24px rgb(60 40 90 / 0.3), 0 2px 8px -2px rgb(60 40 90 / 0.08);
+  --shadow-sm: 0 10px 24px -12px rgb(60 40 90 / 0.3);
+
+  /* Wallpaper stops. --wp-edge is the vignette colour and the body fill. */
+  --wp-base-a: #ffa56a;
+  --wp-base-b: #4a74e6;
+  --wp-blue: #3a64dc;
+  --wp-orange: #ff8a3a;
+  --wp-coral: #ff5e55;
+  --wp-amber: #ffb84e;
+  --wp-deep: #2748b4;
+  --wp-edge: rgb(28 34 96 / 0.42);
+  --wp-body: #6b5a8e;
+  --field: #ffc6a2;
+  --field-top: #ffd7b6;
+  --field-bottom: #c4d2ff;
+  --field-raised: #fffaf6;
+
+  --btn-a: #cf4515;
+  --btn-b: #c2304c;
+  --btn-ink: #ffffff;
+  --btn-glow: rgb(224 82 30 / 0.55);
+
+  --icon-cyan-hi: #f2a04a;
+  --icon-cyan: #a8460a;
+  --icon-peach-hi: #f08a7a;
+  --icon-peach: #b3322a;
+  --icon-pink-hi: #e88aa8;
+  --icon-pink: #9e1f4e;
+}
+
+html:root[data-theme='glassmorphism'][data-scheme='dark'] {
+  /* Deep blue with ember and coral light, not indigo and violet. */
+  --mark: #f7f5f2;
+  --mark-muted: #dcdbe6;
+  --accent: #ffcaa6;
+  --accent-2: #ffd9a8;
+  --link: #ffc9a8;
+  --on-accent: #1a0d05;
+
+  --blob-violet-hi: #5b86f2;
+  --blob-violet: #1d3d9e;
+  --blob-cyan-hi: #f08a3c;
+  --blob-cyan: #c9521a;
+  --blob-peach-hi: #ff8c7c;
+  --blob-peach: #c43f3a;
+  --blob-pink-hi: #ff7fa6;
+  --blob-pink: #a3285a;
+  /* Light ink loses the most over the brightest highlight. */
+  --blob-worst: var(--blob-cyan-hi);
+  --orb-glow: 0 0 90px 6px rgb(255 120 60 / 0.18);
+
+  --wp-base-a: #0d1b4a;
+  --wp-base-b: #081233;
+  --wp-blue: #1f45b0;
+  --wp-orange: #d9541d;
+  --wp-coral: #d9564e;
+  --wp-amber: #e0852f;
+  --wp-deep: #10297e;
+  --wp-edge: rgb(3 7 22 / 0.78);
+  --wp-body: #050b22;
+  --field: #081233;
+  --field-top: #0d1b4a;
+  --field-bottom: #060e2a;
+  --field-raised: #101c44;
+
+  --btn-a: #ff7a3d;
+  --btn-b: #ffae5c;
+  --btn-ink: #1a0d05;
+  --btn-glow: rgb(255 122 61 / 0.55);
+
+  --icon-cyan-hi: #e0833a;
+  --icon-cyan: #9c3c0c;
+  --icon-peach-hi: #e2685c;
+  --icon-peach: #a2302b;
+  --icon-pink-hi: #d8608a;
+  --icon-pink: #8c2250;
+}
+
+html[data-theme='glassmorphism'] body {
+  background: var(--wp-body);
+}
+
+html[data-theme='glassmorphism'] main::before {
+  inset: 0;
+  opacity: 1;
+  filter: none;
+  animation: none;
+  background:
+    radial-gradient(130% 110% at 50% 45%, transparent 48%, var(--wp-edge) 100%),
+    radial-gradient(52% 46% at 84% 18%, var(--wp-blue) 0%, var(--wp-blue) 22%, transparent 70%),
+    radial-gradient(48% 50% at 14% 28%, var(--wp-orange) 0%, var(--wp-orange) 18%, transparent 68%),
+    radial-gradient(46% 42% at 62% 78%, var(--wp-coral) 0%, var(--wp-coral) 20%, transparent 70%),
+    radial-gradient(36% 40% at 12% 90%, var(--wp-amber) 0%, transparent 66%),
+    radial-gradient(44% 44% at 98% 98%, var(--wp-deep) 0%, var(--wp-deep) 24%, transparent 70%),
+    radial-gradient(34% 30% at 42% 40%, var(--wp-coral) 0%, transparent 70%),
+    linear-gradient(150deg, var(--wp-base-a), var(--wp-base-b));
+}
+
+/* D7: flat two-stop discs, crisp edge, no hotspot, no blur. */
+html[data-theme='glassmorphism'] .orb {
+  background: linear-gradient(155deg, var(--hi) 8%, var(--lo) 78%);
+  filter: none;
+}
