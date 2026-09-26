@@ -26,17 +26,21 @@ const { copy, theme } = Astro.props;
   </div>
 
   <form class="form glass thin" method="post" action="/api/contact" data-astro-reload>
-    <div class="field">
-      <label for="cf-name">{copy.labels.name}</label>
-      <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
-    </div>
-    <div class="field">
-      <label for="cf-email">{copy.labels.email}</label>
-      <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
-    </div>
-    <div class="field">
-      <label for="cf-message">{copy.labels.message}</label>
-      <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+    {/* E12: the field group is the pointer-light's command group here (the
+        three fields as one unit, not per-field), wired from reveal.ts. */}
+    <div class="field-group">
+      <div class="field">
+        <label for="cf-name">{copy.labels.name}</label>
+        <input id="cf-name" name="name" type="text" required maxlength="200" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="cf-email">{copy.labels.email}</label>
+        <input id="cf-email" name="email" type="email" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="cf-message">{copy.labels.message}</label>
+        <textarea id="cf-message" name="message" required maxlength="5000" rows="7"></textarea>
+      </div>
     </div>
     <ContactHidden theme={theme} label={copy.labels.honeypot} />
     <button class="btn submit" type="submit">{copy.submit} <span class="arw" aria-hidden="true">&rarr;</span></button>
@@ -98,6 +102,7 @@ const { copy, theme } = Astro.props;
     padding: clamp(1.25rem, 4vw, 2.75rem);
     border-radius: 36px;
   }
+  .field-group { display: grid; gap: 1.2rem; }
   .field { display: grid; gap: 0.45rem; }
   .field label {
     padding-left: 0.35rem;

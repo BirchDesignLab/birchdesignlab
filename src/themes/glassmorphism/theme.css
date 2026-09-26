@@ -74,10 +74,19 @@
   /* E8: a luminosity step (brightness) stands in for Acrylic's exclusion
      layer, in place of the diagonal sheen stripe. Thin gets the most
      saturation (it is the showpiece); thick the least (chrome should not
-     compete with the room). */
-  --blur-thin: blur(20px) saturate(2.1) brightness(1.12);
-  --blur: blur(24px) saturate(1.7) brightness(1.08);
-  --blur-thick: blur(30px) saturate(1.45) brightness(1.05);
+     compete with the room).
+     --glass-frost (B2, the Control Centre's frost slider; lens/settings.ts)
+     is 0 to 1, held at 0.5 as the default and the baseline this recipe was
+     tuned at: (var(--glass-frost) + 0.5) is 1 exactly there, so the slider
+     scales blur from 0.5x to 1.5x the numbers below without moving the
+     baseline look. Only the unprefixed property reads it: Safari ignores
+     custom properties inside -webkit-backdrop-filter (BCD issue 25914), so
+     its literal declarations below step in three fixed stages instead,
+     keyed off data-glass-frost-step (also written by lens/settings.ts). */
+  --glass-frost: 0.5;
+  --blur-thin: blur(calc((var(--glass-frost) + 0.5) * 20px)) saturate(2.1) brightness(1.12);
+  --blur: blur(calc((var(--glass-frost) + 0.5) * 24px)) saturate(1.7) brightness(1.08);
+  --blur-thick: blur(calc((var(--glass-frost) + 0.5) * 30px)) saturate(1.45) brightness(1.05);
 
   --font-head: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
   --font-body: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
@@ -157,9 +166,9 @@
   --edge-rim: rgb(255 255 255 / 0.3);
   --shadow: 0 34px 70px -24px rgb(0 0 0 / 0.65), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   --shadow-sm: 0 12px 26px -12px rgb(0 0 0 / 0.6);
-  --blur-thin: blur(22px) saturate(1.9) brightness(1.14);
-  --blur: blur(24px) saturate(1.7) brightness(1.1);
-  --blur-thick: blur(30px) saturate(1.4) brightness(1.06);
+  --blur-thin: blur(calc((var(--glass-frost) + 0.5) * 22px)) saturate(1.9) brightness(1.14);
+  --blur: blur(calc((var(--glass-frost) + 0.5) * 24px)) saturate(1.7) brightness(1.1);
+  --blur-thick: blur(calc((var(--glass-frost) + 0.5) * 30px)) saturate(1.4) brightness(1.06);
 
   /* Own saturated gradient: pastel light buttons go soft and disabled-looking
      against luminous orbs, so dark gets colour that lights like they do. */
@@ -205,7 +214,14 @@
    leans on. forced-colors gets a sanity pass: real borders, no reliance on
    a background alone. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  :root[data-theme='glassmorphism'] {
+  /* B2 update: the Control Centre's Tinted setting also overrides --mat-*
+     (below, "Clear/Tinted"), at specificity (0,3,0) light / (0,4,0) dark, so
+     these fallback rules pick up one and two extra doubled [data-theme]
+     attributes (the file's existing trick) to stay strictly above both:
+     (0,4,0) light, (0,5,0) dark. E10 must always win over a Control Centre
+     setting (stage3-decisions.md, B2 item 2 and README, "The E10 off state
+     ... still wins over every Control Centre setting"). */
+  :root[data-theme='glassmorphism'][data-theme='glassmorphism'][data-theme='glassmorphism'] {
     --mat-thin: var(--glass-fallback);
     --mat-regular: var(--glass-fallback);
     --mat-thick: var(--glass-fallback);
@@ -216,7 +232,7 @@
      specificity, and placed after the dark block in the cascade: this wins
      dark's opaque fallback outright rather than relying on :where()'s zero
      specificity against a higher one. */
-  :root[data-theme='glassmorphism'][data-scheme='dark'] {
+  :root[data-theme='glassmorphism'][data-scheme='dark'][data-theme='glassmorphism'][data-theme='glassmorphism'] {
     --mat-thin: var(--glass-fallback);
     --mat-regular: var(--glass-fallback);
     --mat-thick: var(--glass-fallback);
@@ -381,6 +397,77 @@
     url('./wallpaper/dark-day.webp') type('image/webp') 1x
   );
 }
+/* The Control Centre's time-of-day segmented control (B2, item 3): the
+   other five painted files, wired only on Home (the only page with the
+   control) but declared for every glass page, since the setting holds for
+   the whole session (settings.ts). data-glass-tod is written by the inline
+   head script, astro:before-swap and the segmented control itself, always
+   to one of the three values; "day" needs no rule (it is the block above).
+   Specificity: :root+2 attrs (0,3,0) beats the light base's (0,2,0); the
+   dark pair adds [data-scheme='dark'] for :root+3 attrs (0,4,0), which beats
+   both the light-tod rule and the dark base rule (0,3,0), so dark always
+   shows its own file even though the light-tod selector alone does not
+   exclude data-scheme='dark'. lens/wallpaper-images.ts loads the identical
+   files for the WebGL lens's texture, so the CSS layer and the lens can
+   never show two different times of day at once. */
+:root[data-theme='glassmorphism'][data-glass-tod='dawn'] main::before {
+  background-image: -webkit-image-set(
+    url('./wallpaper/light-dawn.avif') type('image/avif') 1x,
+    url('./wallpaper/light-dawn.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/light-dawn.avif') type('image/avif') 1x,
+    url('./wallpaper/light-dawn.webp') type('image/webp') 1x
+  );
+}
+:root[data-theme='glassmorphism'][data-glass-tod='dusk'] main::before {
+  background-image: -webkit-image-set(
+    url('./wallpaper/light-dusk.avif') type('image/avif') 1x,
+    url('./wallpaper/light-dusk.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/light-dusk.avif') type('image/avif') 1x,
+    url('./wallpaper/light-dusk.webp') type('image/webp') 1x
+  );
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-tod='dawn'] main::before {
+  background-image: -webkit-image-set(
+    url('./wallpaper/dark-dawn.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-dawn.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/dark-dawn.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-dawn.webp') type('image/webp') 1x
+  );
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-tod='dusk'] main::before {
+  background-image: -webkit-image-set(
+    url('./wallpaper/dark-dusk.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-dusk.webp') type('image/webp') 1x
+  );
+  background-image: image-set(
+    url('./wallpaper/dark-dusk.avif') type('image/avif') 1x,
+    url('./wallpaper/dark-dusk.webp') type('image/webp') 1x
+  );
+}
+
+/* Clear/Tinted (B2, item 3, the kept hero toggle): every pane goes a step
+   more opaque and a touch warmer under Tinted, the iOS 26 Control Centre
+   setting by name. The lens reads the same data-glass-tint attribute itself
+   (lens.ts's initialTint and setTint()), so the puck and the panes always
+   agree. Specificity above both schemes' base --mat-* blocks, and safely
+   below the (doubled-attribute) E10 fallback above, which must always win
+   over a Control Centre setting regardless of Tinted. */
+:root[data-theme='glassmorphism'][data-glass-tint='tinted'] {
+  --mat-thin: rgb(255 250 244 / 0.4);
+  --mat-regular: rgb(255 250 244 / 0.68);
+  --mat-thick: rgb(255 250 244 / 0.8);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-tint='tinted'] {
+  --mat-thin: rgb(20 22 50 / 0.66);
+  --mat-regular: rgb(22 26 58 / 0.8);
+  --mat-thick: rgb(22 26 58 / 0.86);
+}
 :where([data-theme='glassmorphism']) :is(img, svg, canvas) { max-width: 100%; display: block; }
 :where([data-theme='glassmorphism']) ::selection { background: var(--blob-cyan-hi); color: var(--mark); }
 
@@ -414,6 +501,9 @@
    unprefixed one, so the later, equally specific var(--blur*) declaration
    still wins there; Chromium has no prefixed name and ignores this block. */
 @supports (-webkit-backdrop-filter: none) {
+  /* The tuned baseline (frost step "mid", also what a no-JS visitor sees:
+     lens/settings.ts only ever adds data-glass-frost-step, never removes
+     these unqualified rules). */
   :where([data-theme='glassmorphism']) .glass {
     -webkit-backdrop-filter: blur(24px) saturate(1.7) brightness(1.08);
   }
@@ -423,6 +513,34 @@
   :where([data-theme='glassmorphism']) .glass-strong,
   :where([data-theme='glassmorphism']) .glass.thick {
     -webkit-backdrop-filter: blur(30px) saturate(1.45) brightness(1.05);
+  }
+  /* The frost slider, Safari's path (B2, item 3): Safari ignores custom
+     properties inside -webkit-backdrop-filter (BCD issue 25914), so instead
+     of a continuous var() this steps between three literal stages,
+     keyed off data-glass-frost-step (lens/settings.ts writes it alongside
+     --glass-frost, which the unprefixed property above already reads
+     continuously). Same selector shape and specificity as the baseline
+     rules just above ([data-theme] and [data-glass-frost-step] as real
+     attribute selectors, the class part wrapped in :where()), so the tie is
+     broken by source order and these two blocks win whenever the attribute
+     is set to something other than "mid". */
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass) {
+    -webkit-backdrop-filter: blur(15px) saturate(1.5) brightness(1.05);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass.thin) {
+    -webkit-backdrop-filter: blur(13px) saturate(1.8) brightness(1.08);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass-strong, .glass.thick) {
+    -webkit-backdrop-filter: blur(19px) saturate(1.3) brightness(1.03);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass) {
+    -webkit-backdrop-filter: blur(34px) saturate(1.85) brightness(1.1);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass.thin) {
+    -webkit-backdrop-filter: blur(28px) saturate(2.3) brightness(1.15);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass-strong, .glass.thick) {
+    -webkit-backdrop-filter: blur(42px) saturate(1.55) brightness(1.07);
   }
 }
 :where([data-theme='glassmorphism']) .glass {
@@ -512,6 +630,30 @@
 :root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass.thick) {
   -webkit-backdrop-filter: blur(30px) saturate(1.4) brightness(1.06);
 }
+/* Dark's frost-step stages (mirrors the light block above; same reasoning).
+   :root plus three attribute selectors reaches specificity (0,4,0), matching
+   the doubled-attribute E10 override below (:is() counts as its one-class
+   argument, (0,3,0) attrs + (0,1,0) class), so E10 still wins that tie by
+   coming later in the file, exactly as dark's own literal blocks already
+   rely on for the same reason (the comment just below). */
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass) {
+  -webkit-backdrop-filter: blur(15px) saturate(1.5) brightness(1.06);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass.thin) {
+  -webkit-backdrop-filter: blur(14px) saturate(1.6) brightness(1.09);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass-strong, .glass.thick) {
+  -webkit-backdrop-filter: blur(19px) saturate(1.2) brightness(1.04);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass) {
+  -webkit-backdrop-filter: blur(34px) saturate(1.85) brightness(1.13);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass.thin) {
+  -webkit-backdrop-filter: blur(30px) saturate(2.05) brightness(1.18);
+}
+:root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass-strong, .glass.thick) {
+  -webkit-backdrop-filter: blur(42px) saturate(1.5) brightness(1.08);
+}
 /* E10 again, placed after dark's own literal -webkit-backdrop-filter values
    above: those match this media block's ealier override on specificity
    (0,3,0 each, :root[data-theme][data-scheme=dark) vs plain attribute
@@ -587,11 +729,16 @@
   color: var(--btn-ink);
   background: linear-gradient(120deg, var(--btn-a), var(--btn-b));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 14px 30px -12px var(--btn-glow);
+  -webkit-tap-highlight-color: transparent;
   transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease;
 }
-:where([data-theme='glassmorphism']) .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 20px 36px -12px var(--btn-glow);
+/* E11: hover only under a real pointer; a tap on a touch device must never
+   leave the lifted state stuck after the tap ends. */
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='glassmorphism']) .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 20px 36px -12px var(--btn-glow);
+  }
 }
 :where([data-theme='glassmorphism']) .btn:active { transform: translateY(0) scale(0.98); }
 /* E7: .btn-glass is a control, not a pane; it goes solid with a hairline
@@ -606,12 +753,36 @@
   backdrop-filter: none;
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+  transition: box-shadow 160ms ease, background-color 83ms linear, transform 83ms linear;
 }
-:where([data-theme='glassmorphism']) .btn-glass:hover {
-  box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow);
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='glassmorphism']) .btn-glass:hover {
+    box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow);
+  }
+}
+/* E11: the "ghost pill" gets the same brief fill-plus-scale press as .seg a
+   and .pills a. */
+:where([data-theme='glassmorphism']) .btn-glass:active {
+  background: var(--thumb);
+  transform: scale(0.97);
 }
 :where([data-theme='glassmorphism']) .btn .arw { transition: translate 180ms ease; }
-:where([data-theme='glassmorphism']) .btn:hover .arw { translate: 3px 0; }
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='glassmorphism']) .btn:hover .arw { translate: 3px 0; }
+}
+/* E12: .seg a, .pills a and .btn share one focus language (an --edge-hi ring
+   plus a soft accent halo) instead of the page-wide default ring, which
+   would otherwise clash with the pointer-light recipe these controls also
+   carry. The outline stays 2px solid transparent (not `none`): forced-colors
+   mode paints its own visible ring over a transparent outline specifically,
+   so this keeps that fallback the default :focus-visible rule already
+   relied on. */
+:where([data-theme='glassmorphism']) :is(.seg a, .pills a, .btn):focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--edge-hi), 0 0 16px 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
 
 /* App icon: the Big Sur squircle, gradient-filled, a numeral inside. */
 :where([data-theme='glassmorphism']) .app-icon {
@@ -706,6 +877,20 @@
     from { translate: -50% -50%; }
     to { translate: -50% calc(-50% - (var(--scroll-rate) * 100vh)); }
   }
+  /* Home only (B2, "orbs on the lens clock"): lens/orbs-clock.ts drives these
+     orbs' `translate` itself, every frame, from the lens's own rAF, at the
+     same --scroll-rate this file already gives them (proofs/lens.md, finding
+     2: a co-located lens and a CSS-driven orb can disagree by up to 21 px
+     while scrolling; the same rAF keeps them within about 0.3 px). Dropping
+     just the second animation-name/animation-timeline pair here leaves
+     glass-drift's time-based wobble running as `transform`, which JS never
+     touches, so the two keep composing exactly as they do everywhere else.
+     Higher specificity than the rule above (an extra attribute selector on
+     the ancestor), so it always wins regardless of source order. */
+  :where([data-theme='glassmorphism']) .orbs[data-js-driven] .orb {
+    animation: glass-drift var(--t) ease-in-out var(--delay) infinite alternate;
+    animation-timeline: auto;
+  }
 }
 @media (max-width: 720px) {
   :where([data-theme='glassmorphism']) .orb { left: var(--mx); top: var(--my); }
@@ -718,9 +903,9 @@
      after dark's, so it wins the tie on source order. */
   :root[data-theme='glassmorphism'],
   :root[data-theme='glassmorphism'][data-scheme='dark'] {
-    --blur-thin: blur(14px) saturate(1.6);
-    --blur: blur(16px) saturate(1.4);
-    --blur-thick: blur(18px) saturate(1.3);
+    --blur-thin: blur(calc((var(--glass-frost) + 0.5) * 14px)) saturate(1.6);
+    --blur: blur(calc((var(--glass-frost) + 0.5) * 16px)) saturate(1.4);
+    --blur-thick: blur(calc((var(--glass-frost) + 0.5) * 18px)) saturate(1.3);
   }
   /* Same phone-cheap values, literal for -webkit- (mirrors the tokens just
      above). Dark's literal rules above are 0,3,0 too, so dark gets its own
@@ -737,6 +922,39 @@
   :where([data-theme='glassmorphism']) .glass.thick,
   :root[data-theme='glassmorphism'][data-scheme='dark'] :where(.glass-strong, .glass.thick) {
     -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  }
+  /* The frost slider's Safari path, phone-cheap stages (mirrors the desktop
+     frost-step blocks above). The dark rules deliberately drop :root (three
+     plain attribute selectors, (0,3,0)) so they stay BELOW the E10 dark
+     override's (0,4,0): unlike the desktop frost-step rules, which sit
+     before E10 in the file and so need matching specificity to lose the
+     source-order tie, these sit after it (this whole block is much further
+     down the file), where equal specificity would let source order hand the
+     win to the wrong, later rule. Staying strictly lower keeps E10
+     dominant regardless of where in the file a frost rule lands. */
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass.thin),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass.thin) {
+    -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass:not(.thin)),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass:not(.thin)) {
+    -webkit-backdrop-filter: blur(11px) saturate(1.3);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='low'] :where(.glass-strong, .glass.thick),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='low'] :where(.glass-strong, .glass.thick) {
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass.thin),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass.thin) {
+    -webkit-backdrop-filter: blur(21px) saturate(1.75);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass:not(.thin)),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass:not(.thin)) {
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  }
+  [data-theme='glassmorphism'][data-glass-frost-step='high'] :where(.glass-strong, .glass.thick),
+  [data-theme='glassmorphism'][data-scheme='dark'][data-glass-frost-step='high'] :where(.glass-strong, .glass.thick) {
+    -webkit-backdrop-filter: blur(27px) saturate(1.4);
   }
 }
 /* fx.ts marks each .orbs group data-live only while its section is on
@@ -851,10 +1069,281 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
 @keyframes glassmorphism-wordmark-out { 30%, 100% { opacity: 0; } }
 @keyframes glassmorphism-wordmark-in { 0%, 25% { opacity: 0; } 100% { opacity: 1; } }
 
+/* ---------- the production lens (B2) ---------- */
+
+/* lens.ts creates the canvas, the hit control and the two shadows inside
+   .lens-host at mount time; nothing here shows without it. All four are
+   position: fixed and placed every frame by inline transforms (lens.ts), so
+   they never move with the page's own scroll (the iOS momentum mitigation,
+   proofs/lens.md section 7: the lens stays on the wallpaper plane, which is
+   fixed too). z-index sits with .lens-poster, under every pane and orb
+   (main's stacking context starts at 0; the poster and the lens both use -1
+   so text and panes always draw over either one, whichever is showing). */
+:where([data-theme='glassmorphism']) .lens-host { position: relative; }
+:where([data-theme='glassmorphism']) .lens-canvas {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: -1;
+  pointer-events: none;
+  visibility: hidden; /* lens.ts reveals it on the first real frame */
+}
+:where([data-theme='glassmorphism']) .lens-shadow {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: -1;
+  pointer-events: none;
+  visibility: hidden;
+  border-radius: 50%;
+  filter: blur(18px);
+}
+:where([data-theme='glassmorphism']) .lens-shadow-rest { background: rgb(20 10 40 / 0.22); }
+:where([data-theme='glassmorphism']) .lens-shadow-held { background: rgb(20 10 40 / 0.34); filter: blur(26px); }
+/* The hit control: a real, focusable button (README's control rule), sized
+   and moved by lens.ts. Fully transparent on purpose, the canvas is the only
+   visible thing at this spot; user-select and touch-action are the WebKit
+   run's fix (a mouse drag on the lens must never select page text, and a
+   touch drag must never scroll the page). */
+:where([data-theme='glassmorphism']) .lens-hit {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 2;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:where([data-theme='glassmorphism']) .lens-hit:active { cursor: grabbing; }
+:where([data-theme='glassmorphism']) .lens-hit:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+/* Belt and braces against the WebKit run's finding: while the lens is held
+   (lens.ts toggles this on <html> for the drag's duration), nothing on the
+   page may start a text selection, not only the hit area itself. */
+html.lens-held,
+html.lens-held :where(*) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- the Control Centre (B2) ---------- */
+
+:where([data-theme='glassmorphism']) .control-centre {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+}
+:where([data-theme='glassmorphism']) .cc-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+:where([data-theme='glassmorphism']) .cc-label {
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mark-muted);
+}
+:where([data-theme='glassmorphism']) .cc-frost {
+  width: clamp(96px, 14vw, 150px);
+  height: 44px; /* the house 44px target, even though the visible track is thinner */
+  accent-color: var(--blob-cyan);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+:where([data-theme='glassmorphism']) .cc-tod {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+:where([data-theme='glassmorphism']) .cc-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mark-muted);
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease, background-color 160ms ease, transform 83ms linear;
+}
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='glassmorphism']) .cc-seg:hover { color: var(--mark); }
+}
+/* E11: the same brief fill-plus-scale press as the nav segments and footer
+   pills, on every time-of-day segment, checked or not. */
+:where([data-theme='glassmorphism']) .cc-seg:active {
+  color: var(--mark);
+  background: var(--thumb);
+  transform: scale(0.97);
+  transition: color 83ms linear, background-color 83ms linear, transform 83ms linear;
+}
+:where([data-theme='glassmorphism']) .cc-seg[aria-checked='true'] {
+  color: var(--mark);
+  background: var(--thumb);
+  box-shadow: inset 0 1px 0 var(--edge-hi), 0 4px 12px -4px rgb(40 20 110 / 0.28);
+}
+:where([data-theme='glassmorphism']) .cc-seg:focus-visible,
+:where([data-theme='glassmorphism']) .cc-frost:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The hero switch (Clear/Tinted), now a real control: a button in place of
+   the old decorative span, reset to the same 60x34 track the design already
+   had. The thumb slides between the two ends instead of sitting fixed at the
+   right, so the control reads its own state. */
+:where([data-theme='glassmorphism']) .window-bar .switch {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 83ms linear;
+}
+/* E11: the same brief press feedback as the other Control Centre controls. */
+:where([data-theme='glassmorphism']) .switch:active { transform: scale(0.97); }
+:where([data-theme='glassmorphism']) .switch-thumb {
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Clear (unchecked) is the thumb's unmoved left-resting position (Home.astro
+   no longer margin-rights it). Tinted (checked) slides it to the track's
+   right end: the track is 60px with 4px padding each side (52px inside) and
+   the thumb is 26px, so the full rightward travel is 52 - 26 = 26px. */
+:where([data-theme='glassmorphism']) .switch[aria-checked='true'] .switch-thumb {
+  transform: translateX(26px);
+}
+:where([data-theme='glassmorphism']) .switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  :where([data-theme='glassmorphism']) .control-centre { width: 100%; justify-content: space-between; }
+  /* Home.astro's own phone rule shrinks the track to 48px (4px padding, 20px
+     thumb): the rightward travel becomes 40 - 20 = 20px. */
+  :where([data-theme='glassmorphism']) .switch[aria-checked='true'] .switch-thumb {
+    transform: translateX(20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-theme='glassmorphism']) .switch-thumb { transition: none; }
+}
+
+/* E10: the lens's off state (proofs/lens.md, "what a WebKit run would need
+   to check", item 10). Reduced transparency or increased contrast turns the
+   canvas and its shadows off outright (the poster, plain CSS, already reads
+   fine on its own); lens.ts never fights this because it only ever sets
+   `visibility` back to '' after its own successful frame, which cannot
+   un-set an !important rule. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :where([data-theme='glassmorphism']) :is(.lens-canvas, .lens-shadow, .lens-hit) {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :where([data-theme='glassmorphism']) .orb { animation: none; }
-  :where([data-theme='glassmorphism']) :is(.btn, .btn .arw) { transition: none; }
+  /* E11: .back (Sent's arrow, which also carries .arw) is on this list
+     explicitly, even though .btn .arw already reaches the same element by
+     class, so the intent reads without relying on that overlap. */
+  :where([data-theme='glassmorphism']) :is(.btn, .btn .arw, .btn .back) { transition: none; }
   html[data-theme='glassmorphism']::view-transition-old(root),
   html[data-theme='glassmorphism']::view-transition-new(root),
   html[data-theme='glassmorphism']::view-transition-group(wordmark) { animation: none; }
 }
+
+/* ---------- E12: pointer light (Reveal) ----------
+ *
+ * The command groups: the header's nav (.seg), the footer's pills (.pills),
+ * the Contact field group (.field-group) and the Control Centre
+ * (.control-centre, B2's own addition to the brief's list, since the Control
+ * Centre postdates it, and it reads as a command cluster the same way the
+ * nav and the pills do). Not the door cards or any other pane: this is
+ * scoped to controls, not decoration.
+ *
+ * reveal.ts sets --reveal-x/--reveal-y (px, relative to the group's own box)
+ * on pointermove and toggles [data-reveal-active] on pointerenter/leave, for
+ * a fine pointer only; the whole thing is gated in CSS too, under (hover:
+ * hover) and (pointer: fine), so a coarse pointer or a stylesheet-only
+ * preview never shows a ring that cannot move. The ring is a 1px masked
+ * border (padding-box excluded from border-box, the standard "spotlight
+ * border" trick); the halo is the same radial gradient again, larger and
+ * blurred, sitting behind the group. */
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre) {
+    position: relative;
+  }
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::before,
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::after {
+    content: '';
+    position: absolute;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::before {
+    /* the soft halo, behind the group's own content */
+    inset: -10px;
+    z-index: -1;
+    background: radial-gradient(160px circle at var(--reveal-x, 50%) var(--reveal-y, 50%), var(--edge-hi), transparent 70%);
+    filter: blur(8px);
+  }
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::after {
+    /* the masked 1px ring */
+    inset: 0;
+    padding: 1px;
+    background: radial-gradient(160px circle at var(--reveal-x, 50%) var(--reveal-y, 50%), var(--edge-hi), transparent 70%);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)[data-reveal-active]::before,
+  :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)[data-reveal-active]::after {
+    opacity: 1;
+  }
+}
+/* Safari's mask-composite lives only under its -webkit- prefix, and it must
+   stand alone in its own @supports block: Lightningcss (the build's CSS
+   pipeline, esnext target) drops a -webkit- declaration paired with its
+   unprefixed sibling outside one, exactly the failure mode
+   src/themes/glassmorphism/fx.ts's own -webkit-backdrop-filter rule (and
+   Home.astro's .lens-poster) already routes around the same way. */
+@supports (-webkit-mask-composite: xor) {
+  @media (hover: hover) and (pointer: fine) {
+    :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::after {
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+    }
+  }
+}
+/* Reduced motion keeps the lit ring reveal.ts leaves centred (a real
+   affordance) but this is the one place travel could still show as a jump
+   rather than a track: the opacity fade above is a fade, not a position
+   change, so it needs no separate reduced-motion rule. */

@@ -13,13 +13,21 @@
  *
  * Usage: node scripts/themes/vaporwave/measure-still-bbox.mjs [files...]
  * With no args, measures every .webp in src/themes/vaporwave/stills/.
+ * --solid: alpha >= 200/255 (the opaque silhouette alone) instead of the
+ *   default > 12/255 (any non-transparent pixel, fringe included). Tier 3
+ *   stage 3's B1 fix round (about-sphere-floats, round 2) found the default
+ *   threshold undercounts the true gap: it also catches a still's own baked
+ *   contact shadow, which fades below 12/255 well before the prop's own
+ *   opaque edge does, so a fix based on it doesn't reach the prop's actual
+ *   silhouette.
  */
 import sharp from 'sharp';
 import { readdirSync } from 'node:fs';
 import { join, basename } from 'node:path';
 
 const STILLS_DIR = join(import.meta.dirname, '..', '..', '..', 'src', 'themes', 'vaporwave', 'stills');
-const ALPHA_THRESHOLD = 12; // out of 255; ignore near-transparent anti-aliasing fringe
+const SOLID = process.argv.includes('--solid');
+const ALPHA_THRESHOLD = SOLID ? 200 : 12;
 
 async function measure(file) {
   const img = sharp(file);
@@ -43,7 +51,7 @@ async function measure(file) {
   return { file: basename(file), width, height, top, bottom, left, right, topMarginFrac, bottomMarginFrac };
 }
 
-const args = process.argv.slice(2);
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const files = args.length > 0 ? args : readdirSync(STILLS_DIR).filter((f) => f.endsWith('.webp')).map((f) => join(STILLS_DIR, f));
 
 for (const file of files) {

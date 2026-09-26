@@ -11,6 +11,8 @@ import Lobby from '../parts/Lobby.astro';
 import Still from '../parts/Still.astro';
 import sphereAvif from '../stills/sphere-white-512.avif?url';
 import sphereWebp from '../stills/sphere-white-512.webp?url';
+import venusKioskAvif from '../stills/venus-kiosk-512.avif?url';
+import venusKioskWebp from '../stills/venus-kiosk-512.webp?url';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -60,7 +62,9 @@ const doorFiles = ['software.exe', 'web_design.htm'];
         monitor, so a mall lobby has a plaza centre. The header strip, the
         touch prompt and the directory plaque are decoration; the CRT badge
         and LEDs are unchanged. A stand-in marble sphere (B2 swaps in the
-        Venus stills once the pipeline moves) dresses the kiosk's foot. */}
+        Venus stills once the pipeline moves) dresses the kiosk's foot. B2
+        item 14: the Venus kiosk still (vw-4a's white bust on its own drum)
+        joins it on the opposite side, mirroring the sphere's own anchor. */}
     <div class="kiosk">
       <p class="kiosk-header" aria-hidden="true">
         <span class="kiosk-kana">インフォメーション</span> INFORMATION DESK
@@ -79,6 +83,19 @@ const doorFiles = ['software.exe', 'web_design.htm'];
           </ul>
           <a class="crt-more" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more}</a>
           <div class="vw-scan" aria-hidden="true"></div>
+          {/* B2 vw-3, item 4: the kiosk's attract loop. Decoration only
+              (aria-hidden, not focusable): it plays over the CRT's real
+              content for a few seconds without ever detaching that content
+              from the keyboard/AT tree, so the specimens links and the
+              lab link above stay reachable throughout. */}
+          <div class="crt-attract" aria-hidden="true" data-kiosk-attract-screen>
+            <p class="attract-marquee" data-kiosk-marquee>
+              <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
+              <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
+            </p>
+            <p class="attract-kana">デザイン</p>
+            <div class="attract-scan"></div>
+          </div>
         </div>
         <div class="crt-chin" aria-hidden="true">
           {/* E14: one mixed-script decorative badge, the canon's own move
@@ -94,17 +111,30 @@ const doorFiles = ['software.exe', 'web_design.htm'];
           bezel's own width down to the body; the body carries the touch
           prompt and the directory plaque as one mounted panel; the foot
           widens again and grounds the whole stand with a cast shadow. */}
-      <div class="kiosk-stand" aria-hidden="true">
-        <div class="stand-neck"></div>
+      <div class="kiosk-stand">
+        <div class="stand-neck" aria-hidden="true"></div>
         <div class="stand-body">
-          <p class="kiosk-touch">TOUCH SCREEN TO BEGIN</p>
-          <div class="stand-plaque">
+          {/* B2 vw-3, item 4: a real button. The visible label sits in an
+              aria-hidden span (README: "letter a live control's visible
+              label inside an aria-hidden span and name the control with
+              aria-label, starting with the words the visitor sees"); the CRT
+              content it plays over is untouched and stays reachable. */}
+          <button
+            type="button"
+            class="kiosk-touch"
+            aria-label="Touch screen to begin: play the kiosk's attract loop"
+            data-kiosk-attract-btn
+          >
+            <span aria-hidden="true">TOUCH SCREEN TO BEGIN</span>
+          </button>
+          <div class="stand-plaque" aria-hidden="true">
             <p class="kiosk-directory">B1 SOFTWARE / 1F WEB / 2F LAB</p>
           </div>
         </div>
-        <div class="stand-foot"></div>
+        <div class="stand-foot" aria-hidden="true"></div>
       </div>
       <Still class="kiosk-prop" avif={sphereAvif} webp={sphereWebp} size={512} />
+      <Still class="kiosk-prop kiosk-prop-venus" avif={venusKioskAvif} webp={venusKioskWebp} size={512} />
     </div>
   </section>
 )}
@@ -120,8 +150,12 @@ const doorFiles = ['software.exe', 'web_design.htm'];
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { mountHorizon } from '../fx';
+  import { mountWindowDrag } from '../windows';
+  import { mountKioskAttract } from '../kiosk';
 
   onMount(mountHorizon);
+  onMount(mountWindowDrag);
+  onMount(mountKioskAttract);
 </script>
 
 <style>
@@ -338,16 +372,53 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
     box-shadow: 10px 10px 0 var(--win-drop);
   }
+  /* B2 vw-3, item 4: a real button, reset to the same look the decorative
+     <p> had. animation: none on :active keeps the tap feedback instant. */
   .kiosk-touch {
-    margin: 0; text-align: center;
+    appearance: none; background: none; border: none; padding: 0.2em 0.1em; margin: 0;
+    text-align: center; font: inherit; cursor: pointer;
     font-family: var(--font-mono); font-size: 1rem; line-height: 1; letter-spacing: 0.3em;
     color: var(--crt-link); text-transform: uppercase;
+  }
+  .kiosk-touch:active { translate: 0 1px; }
+  .kiosk-touch:focus-visible {
+    outline: 2px dotted currentColor; outline-offset: 4px;
+    box-shadow: 0 0 0 2px var(--link);
   }
   /* item 6 nit: cyan reads near-invisibly on the light pastel field (this
      decorative label is aria-hidden, so parity is unaffected). --accent is
      the light scheme's deep magenta, already contrast-checked against the
      page field elsewhere in meta.ts. */
   :global([data-scheme='light']) .kiosk-touch { color: var(--accent); }
+
+  /* B2 vw-3, item 4: the attract loop overlay. Covers the screen's real
+     content visually only (pointer-events: none), so the specimens links
+     and the lab link stay reachable by keyboard and screen reader while it
+     plays; JS toggles `.on` for a few seconds and removes it. */
+  .crt-attract {
+    position: absolute; inset: 0; z-index: 2; overflow: hidden;
+    display: grid; align-content: center; justify-items: center; gap: 1.4rem;
+    background: var(--crt-bg);
+    opacity: 0; pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+  .crt-attract.on { opacity: 1; }
+  .attract-marquee {
+    display: flex; gap: 0; white-space: nowrap; width: 100%; margin: 0;
+    font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: 0.14em;
+    color: var(--crt-phos); text-shadow: 0 0 8px color-mix(in srgb, var(--crt-phos) 60%, transparent);
+  }
+  .attract-marquee span { flex: none; padding-inline-end: 1ch; }
+  .crt-attract.on .attract-marquee { animation: vw-attract-scroll 6s linear infinite; }
+  @keyframes vw-attract-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .attract-kana {
+    margin: 0; font-family: var(--font-kana); font-weight: 400; letter-spacing: 0.4em;
+    font-size: 2.6rem; color: var(--crt-kick); text-shadow: 0 0 10px color-mix(in srgb, var(--crt-kick) 70%, transparent);
+  }
+  .attract-scan {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0 1px, transparent 1px 3px);
+  }
   .stand-plaque {
     width: min(100%, 420px); padding: 0.7rem 1.2rem;
     background: var(--field-raised);
@@ -406,6 +477,20 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      and a CSS ellipse on top of it gave two or three shadows, one of them
      about 20px below the sphere, so it read as hovering. */
 
+  /* B2 item 14: the Venus kiosk still, mirrored onto the stand's left edge
+     with the same fixed-gap anchor the sphere uses on the right (both share
+     .kiosk-stand's centre, so `right` at the same offset locks to the
+     opposite edge the same way `left` does above - never two independent
+     guesses). Its own translateY comes from measure-still-bbox.mjs --solid
+     against venus-kiosk-512.webp (18.6% bottom margin), not the sphere's
+     25.8%: the two renders bake different amounts of transparent margin
+     below the subject, so reusing the sphere's figure would either leave a
+     gap above the floor line or sink the bust below it. */
+  :global(.kiosk-prop-venus) {
+    left: auto; right: calc(50% + 320px + 0.6rem);
+    transform: translateY(18.6%);
+  }
+
   /* ---------- closer ---------- */
   .closer { position: relative; overflow: hidden; }
   .closer-inner {
@@ -450,5 +535,6 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      outweighs it), so no separate 390px-only rule is needed. */
   @media (max-width: 900px) {
     .lab :global(.kiosk-prop) { display: none; }
+    .lab :global(.kiosk-prop-venus) { display: none; }
   }
 </style>

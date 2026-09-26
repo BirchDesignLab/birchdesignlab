@@ -328,3 +328,20 @@ To the B2 launch questions, on branch `feat/theme-schools-tier3-stage3-b2`
    remote.
 4. The B2 model plan with split seats and Opus `high` critics (below, in
    `tier-b-plan.md`, "Wave B2 as run"): **launch as proposed**.
+
+## Answers after B2 workflow 1 (founder, 09-25-26)
+
+Both critics blocked workflow 1 (`tier-b2-status.md`). To the questions put
+with the first-pass sheets:
+
+1. The Venus: **keep the marble veins off the face** (the primary vein ran
+   across the cheek like a crack, which fails "pristine"); veins stay on the
+   hair, neck and back.
+2. Contact's 3D pipes screensaver: **shaded 3D-looking tubes** (cylinder
+   shading and ball joints, like the Win95 original), not flat neon lines.
+3. The glass Control Centre: **a compact tile cluster** (rounded-square
+   modules for Clear/Tinted, frost, time of day and the location, in the
+   macOS and iOS Control Centre manner), in flow below the hero, clear of the
+   portal switcher, in the first view where it fits.
+4. Fix workflow 2 **as proposed (8 agents), but held** until the founder
+   says go (other work running on the machine).

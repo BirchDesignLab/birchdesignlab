@@ -44,25 +44,46 @@ const { copy, theme } = Astro.props;
       <a class="address" href={`mailto:${copy.email}`}>{copy.email}</a>
       <p class="fine">{copy.fine}</p>
     </Win>
-    {/* F1(b): the resort sunset survives here inside a Display Properties
-        screensaver window, not as a scene of its own. Settings and Preview
-        are drawn as real Win95 chrome now; B2 wires them (cycle the loop,
-        run it full-window), so for B1 they are decoration, aria-hidden and
-        unfocusable, per the README's rule for a control that does nothing. */}
+    {/* F1(b)/B2 vw-3 item 3: the resort sunset survives here inside a
+        Display Properties screensaver window. Settings and Preview are real
+        buttons (README: a live control's visible label sits in an
+        aria-hidden span, and the button carries an aria-label starting with
+        the words the visitor sees); screensaver.ts wires the loop cycle and
+        the full-window preview. */}
     <div class="side-scene">
       <Win title="screensaver.scr" class="screensaver">
-        <div class="screensaver-preview"><Horizon class="side-horizon" /></div>
-        <div class="screensaver-controls" aria-hidden="true">
-          <span class="scr-btn">Settings</span>
-          <span class="scr-btn">Preview</span>
+        <div class="screensaver-preview">
+          <div data-scr-sunset><Horizon class="side-horizon" /></div>
+          <canvas class="scr-canvas" data-scr-canvas aria-hidden="true"></canvas>
+        </div>
+        <div class="screensaver-controls">
+          <button type="button" class="scr-btn" data-scr-settings aria-label="Settings: cycle the screensaver loop, now resort sunset">
+            <span aria-hidden="true">Settings</span>
+          </button>
+          <button type="button" class="scr-btn" data-scr-preview-btn aria-label="Preview: run the screensaver full screen">
+            <span aria-hidden="true">Preview</span>
+          </button>
         </div>
       </Win>
     </div>
   </div>
 </section>
 
+{/* B2 vw-3 item 3: Preview's full-window layer, a fixed overlay like Win95's
+    own Display Properties preview. Decoration (the loop itself carries no
+    information); it closes on a click anywhere in it, any key, or Escape,
+    and screensaver.ts returns focus to Preview. */}
+<div class="scr-fullscreen" data-scr-fullscreen hidden aria-hidden="true">
+  <div class="scr-fullscreen-inner">
+    <div data-scr-fs-sunset><Horizon class="fs-horizon" /></div>
+    <canvas class="scr-fs-canvas" data-scr-fs-canvas></canvas>
+  </div>
+</div>
+
 <script>
   import { onMount } from '../../../lib/lifecycle';
+  import { mountWindowDrag } from '../windows';
+  import { mountScreensaver } from '../screensaver';
 
   /** E15: pause the CSS floor's infinite animation while it is off-screen
       (the screensaver preview, scrolled past). One shared observer for every
@@ -77,6 +98,9 @@ const { copy, theme } = Astro.props;
     floors.forEach((el) => io.observe(el));
     return () => io.disconnect();
   });
+
+  onMount(mountWindowDrag);
+  onMount(mountScreensaver);
 </script>
 
 <style>
@@ -157,13 +181,46 @@ const { copy, theme } = Astro.props;
      --vw-floor-cell (theme.css .vw-floor::before) gets enough horizontal
      rungs into the box to read as a floor instead of radiating spikes. */
   .screensaver-preview :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 160px; --vw-floor-cell: 22px; }
+  /* B2 vw-3 item 3: the sunset and the canvas loops occupy the same box;
+     screensaver.ts toggles which one is visible. */
+  [data-scr-sunset] { position: absolute; inset: 0; transition: opacity 120ms ease; }
+  [data-scr-sunset].scr-hidden { opacity: 0; pointer-events: none; }
+  .scr-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; pointer-events: none; transition: opacity 120ms ease;
+  }
+  .scr-canvas.on { opacity: 1; }
   .screensaver-controls { display: flex; gap: 0.6rem; justify-content: flex-end; }
+  /* B2 vw-3 item 3: real buttons now, reset to the same look the decorative
+     spans had. */
   .scr-btn {
+    appearance: none; cursor: pointer;
     padding: 0.35rem 0.9rem;
     font: 600 0.8rem/1.1 var(--font-body); letter-spacing: 0.03em;
     background: var(--field-raised); color: var(--mark);
     border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
   }
+  .scr-btn:active { border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); }
+  .scr-btn:focus-visible {
+    outline: 2px dotted currentColor; outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--link);
+  }
+
+  /* B2 vw-3 item 3: Preview's full-window layer. */
+  .scr-fullscreen {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--field);
+    cursor: pointer;
+  }
+  .scr-fullscreen[hidden] { display: none; }
+  .scr-fullscreen-inner { position: absolute; inset: 0; }
+  .scr-fullscreen-inner [data-scr-fs-sunset] { position: absolute; inset: 0; transition: opacity 120ms ease; }
+  .scr-fullscreen-inner [data-scr-fs-sunset].scr-hidden { opacity: 0; }
+  .scr-fs-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 120ms ease;
+  }
+  .scr-fs-canvas.on { opacity: 1; }
 
   @media (max-width: 860px) {
     /* minmax(0, 1fr), not a bare 1fr: a bare track keeps the grid item's

@@ -155,7 +155,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
     to a probe element appended inside the orb (so it inherits the right
     cascade scope), rather than trusting getComputedStyle to have already
     resolved the var() chain, which is not guaranteed. */
-function orbColorAt(orb: HTMLElement): [number, number, number] | null {
+export function orbColorAt(orb: HTMLElement): [number, number, number] | null {
   const lo = getComputedStyle(orb).getPropertyValue('--lo').trim();
   if (!lo) return null;
   const probe = document.createElement('span');

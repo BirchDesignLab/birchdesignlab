@@ -358,6 +358,42 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 [data-theme='vaporwave'] .vw-win-btns .close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+/* B2 vw-3, item 2: a caption button presses. The bevel inverts on pointer
+   down and releases on up or leave (`:active` covers both: the browser ends
+   the active match itself when the pointer leaves the element while
+   pressed); the glyph shifts 1px to sell the sink. Decoration only (the
+   spans stay aria-hidden and unfocusable): this is a press animation, not a
+   new control. */
+[data-theme='vaporwave'] .vw-win-btns span:active {
+  border-color: #3a1a66 #ffffff #ffffff #3a1a66;
+}
+[data-theme='vaporwave'] .vw-win-btns span:active::before,
+[data-theme='vaporwave'] .vw-win-btns .close:active::after {
+  translate: 1px 1px;
+}
+[data-theme='vaporwave'] .vw-win-btns .max:active::before { translate: 1px 1px; }
+
+/* B2 vw-3, item 1: windows drag by their title bar on desktop. The bar shows
+   a grab cursor only where a mouse drag makes sense; touch and coarse
+   pointers get no affordance and no drag (windows.ts gates the drag itself
+   the same way, so this is belt and braces, not the only guard). */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='vaporwave'] .vw-win-bar { cursor: grab; touch-action: none; }
+  [data-theme='vaporwave'] .vw-win.dragging .vw-win-bar { cursor: grabbing; }
+}
+/* A window being dragged sits above the rest of its stack even before
+   windows.ts's inline z-index applies (avoids one frame under a neighbour). */
+[data-theme='vaporwave'] .vw-win.dragging { z-index: 50; }
+/* windows.ts sets this on the root for the duration of a drag so the pointer
+   crossing another window's text never starts a selection (the WebKit lens
+   run hit the same class of bug on glass's drag; vaporwave's own bar has no
+   `<label>`/`<input>` under it, but the door and app copy sits right next
+   to the bar and a fast drag can slide over it). */
+[data-theme='vaporwave'].vw-drag-lock,
+[data-theme='vaporwave'].vw-drag-lock * {
+  user-select: none;
+  -webkit-user-select: none;
+}
 /* E6: the Display Properties-style help glyph, a bevelled "?" key. */
 [data-theme='vaporwave'] .vw-win-btns .help {
   display: grid; place-items: center;

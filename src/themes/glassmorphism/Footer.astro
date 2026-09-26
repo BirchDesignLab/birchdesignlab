@@ -30,6 +30,8 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
 <script>
   import { onMount } from '../../lib/lifecycle';
   import { mountOrbs, mountPanes } from './fx';
+  import { mountReveal } from './reveal';
+  import { registerBeforeSwap, applySettingsNow } from './lens/session-hold';
 
   /* mountOrbs pauses every .orbs group's animation off-screen: this is the
      one place on every page that mounts it (Footer renders everywhere), so
@@ -39,6 +41,18 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
      pane on the page, footer's own thick dock included. */
   onMount(mountOrbs);
   onMount(mountPanes);
+  /* E12: one mount point for every page (Footer ships everywhere), same as
+     mountOrbs/mountPanes above. */
+  onMount(mountReveal);
+
+  /* The Control Centre's session hold (settings.ts): registerBeforeSwap runs
+     once, at module scope, and keeps working across every later navigation
+     for the rest of the session, glass or not; applySettingsNow is the
+     per-body safety net behind it and behind the route's inline head script
+     (hard load). Footer ships on all five pages, so every glass page gets
+     both, not only Home, where the Control Centre's own controls live. */
+  registerBeforeSwap();
+  onMount(applySettingsNow);
 </script>
 
 <style>
@@ -85,9 +99,19 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
     font-size: 0.875rem;
     font-weight: 550;
     text-decoration: none;
-    transition: background-color 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease, transform 83ms linear;
   }
-  .pills a:hover { background: var(--field); }
+  /* E11: hover only under a real pointer; a tap on touch never leaves this
+     state stuck after navigation. */
+  @media (hover: hover) and (pointer: fine) {
+    .pills a:hover { background: var(--field); }
+  }
+  .pills a:active {
+    background: var(--thumb);
+    transform: scale(0.97);
+    transition: background-color 83ms linear, transform 83ms linear;
+  }
   .fine {
     justify-self: end;
     white-space: nowrap;
@@ -101,8 +125,12 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
   .fine a {
     display: inline-flex; align-items: center; min-height: 44px;
     color: var(--mark-muted);
+    -webkit-tap-highlight-color: transparent;
   }
-  .fine a:hover { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    .fine a:hover { color: var(--mark); }
+  }
+  .fine a:active { color: var(--mark); }
 
   @media (max-width: 860px) {
     .card { grid-template-columns: 1fr; border-radius: var(--r-xl); justify-items: center; text-align: center; }

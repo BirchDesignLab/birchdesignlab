@@ -52,15 +52,39 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       on its own small opaque plate, the same solid-surface recipe as
       .step below it. */}
   <h2 class="process-head surface-solid">{copy.process.heading}</h2>
-  <ol class="steps" role="list">
-    {copy.process.steps.map((step, i) => (
-      <li class="step surface-solid">
-        <span class={`app-icon ${stepHues[i % stepHues.length]}`} aria-hidden="true">{num(i)}</span>
-        <h3>{step.title}</h3>
-        <p>{step.body}</p>
-      </li>
-    ))}
-  </ol>
+  {/* B2 item 1: the four steps become ONE settings-style grouped pane (an
+      iOS Settings list: grouped rows on one pane) instead of four separate
+      surface-solid tiles, per the brief's E1 material for this role (a
+      single solid pane holding hairline-divided columns, not four glass or
+      solid cards). Each row keeps B1's one-baseline win at desktop/tablet
+      (the four columns share one top edge, divided by a hairline instead of
+      a gap); at 600px and under, the same one pane becomes a true vertical
+      Settings list, one row per step. A decorative switch and stepper sit
+      beside each step's copy: inert per the README's rule (aria-hidden,
+      plain elements, nothing focusable, no visible label added, so word
+      parity is untouched), there only because "more interactable details,
+      not fewer" applies even where a control does nothing. */}
+  <div class="settings-pane surface-solid">
+    <ol class="settings-list" role="list">
+      {copy.process.steps.map((step, i) => (
+        <li class="settings-row">
+          <span class={`app-icon ${stepHues[i % stepHues.length]}`} aria-hidden="true">{num(i)}</span>
+          <div class="settings-text">
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </div>
+          <div class="settings-controls" aria-hidden="true">
+            <span class={`mini-switch${i % 2 === 0 ? ' is-on' : ''}`}><i class="mini-switch-thumb"></i></span>
+            <span class="mini-stepper">
+              <i class="mini-stepper-btn mini-stepper-minus"></i>
+              <i class="mini-stepper-val">{i + 1}</i>
+              <i class="mini-stepper-btn mini-stepper-plus"></i>
+            </span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
 </section>
 
 <section class="ask-row wrap">
@@ -124,22 +148,69 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     font-size: clamp(2rem, 4.2vw, 3.25rem);
     margin-bottom: clamp(1.25rem, 3vw, 2rem);
   }
-  .steps {
-    list-style: none; padding: 0;
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  /* B2 item 1: one settings-style grouped pane (surface-solid, the same
+     recipe .process-head already uses) holding the four steps as hairline-
+     divided rows, not four separate tiles. */
+  .settings-pane {
+    padding: 0;
+    border-radius: var(--r-xl);
+    overflow: hidden;
   }
+  .settings-list { list-style: none; padding: 0; display: grid; }
   /* E5: the stagger (every other tile riding lower) had no visible reason
      once the steps are one grouped, evenly-baselined pane (E1); dropped so
-     all four sit on one baseline. */
-  .step {
-    display: grid; align-content: start; gap: 0.75rem;
-    padding: clamp(1.25rem, 2.4vw, 1.75rem);
-    border-radius: var(--r-lg);
+     all four sit on one baseline, now as one pane's columns rather than
+     four separate cards. */
+  .settings-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .step .app-icon { width: 3rem; height: 3rem; font-size: 0.95rem; margin-bottom: 0.35rem; }
-  .step h3 { font-size: 1.45rem; }
-  .step p { font-size: 0.975rem; line-height: 1.6; color: var(--mark); }
+  .settings-row {
+    display: grid; align-content: start; gap: 0.6rem;
+    padding: clamp(1.1rem, 2.2vw, 1.6rem);
+    border-left: 1px solid var(--line);
+  }
+  .settings-row:first-child { border-left: 0; }
+  .settings-row .app-icon { width: 3rem; height: 3rem; font-size: 0.95rem; margin-bottom: 0.35rem; }
+  .settings-text h3 { font-size: 1.45rem; }
+  .settings-text p { font-size: 0.975rem; line-height: 1.6; color: var(--mark); }
+  /* The decorative switch and stepper: aria-hidden, inert, sitting beside
+     each step's own copy at the row's foot rather than crowding the icon. */
+  .settings-controls {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    margin-top: 0.35rem;
+  }
+  .mini-switch {
+    display: block;
+    width: 34px; height: 20px; padding: 2px;
+    border-radius: 999px;
+    background: var(--well);
+    box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
+  }
+  .mini-switch-thumb {
+    display: block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--field-raised);
+    box-shadow: var(--shadow-sm);
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .mini-switch.is-on { background: linear-gradient(145deg, var(--blob-cyan-hi), var(--blob-cyan)); }
+  .mini-switch.is-on .mini-switch-thumb { transform: translateX(14px); }
+  .mini-stepper {
+    display: flex; align-items: center; gap: 0.45em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-family: var(--font-label);
+    font-size: 0.75rem; font-weight: 650;
+    color: var(--mark-muted);
+  }
+  .mini-stepper-btn { position: relative; width: 0.7em; height: 0.7em; }
+  .mini-stepper-btn::before, .mini-stepper-btn::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .mini-stepper-btn::before { inset-inline: 0; top: 50%; height: 1.5px; transform: translateY(-50%); }
+  .mini-stepper-plus::after { inset-block: 0; left: 50%; width: 1.5px; transform: translateX(-50%); }
 
   /* E5: the negative margin was meant to ride the ask up over the last
      step's corner, but landed flush against the step row with an ~8px seam
@@ -169,13 +240,23 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     .offers { grid-template-columns: 1fr; }
     .offer + .offer { margin-top: 0; }
   }
+  /* Two columns: each row now needs a hairline above it too (the wrap
+     creates a new "left edge" every other item that no longer sits against
+     the pane's real left edge, and a new top row that needs its own top
+     hairline instead of the row above it). */
   @media (max-width: 1000px) {
-    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .settings-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .settings-row:nth-child(2) { border-left: 0; }
+    .settings-row:nth-child(n + 3) { border-top: 1px solid var(--line); }
   }
   @media (max-width: 720px) {
     .ask-row { justify-items: center; margin-top: 0; }
   }
+  /* One column: the pane is now a true iOS Settings list, one row per step,
+     divided by top hairlines instead of side ones. */
   @media (max-width: 600px) {
-    .steps { grid-template-columns: 1fr; }
+    .settings-list { grid-template-columns: 1fr; }
+    .settings-row { border-left: 0; }
+    .settings-row + .settings-row { border-top: 1px solid var(--line); }
   }
 </style>

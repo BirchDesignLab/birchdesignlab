@@ -1,0 +1,173 @@
+import { describe, it, expect } from 'vitest';
+import {
+  FEEL,
+  Lag2,
+  releaseVelocity,
+  capThrow,
+  lensBounds,
+  clampToBounds,
+  stepGlide,
+  stretchMatrix,
+  stretchTarget,
+  coverRect,
+  viewProgress,
+} from '../src/themes/glassmorphism/lens/physics';
+
+describe('Lag2', () => {
+  it('never overshoots a step target', () => {
+    const lag = new Lag2(0.05);
+    let max = 0;
+    for (let i = 0; i < 200; i++) {
+      const v = lag.step(1, 1 / 60);
+      max = Math.max(max, v);
+    }
+    expect(max).toBeLessThanOrEqual(1.0001);
+  });
+  it('settles to the target', () => {
+    const lag = new Lag2(0.05);
+    let v = 0;
+    for (let i = 0; i < 600; i++) v = lag.step(1, 1 / 60);
+    expect(v).toBeCloseTo(1, 3);
+  });
+});
+
+describe('releaseVelocity', () => {
+  it('is zero with fewer than two samples', () => {
+    expect(releaseVelocity([[0, 0, 0]], 10)).toEqual([0, 0]);
+  });
+  it('is zero if the pointer paused before release', () => {
+    const samples: Array<[number, number, number]> = [
+      [0, 0, 0],
+      [10, 10, 0],
+    ];
+    expect(releaseVelocity(samples, 100)).toEqual([0, 0]); // 90ms since last sample > 50ms
+  });
+  it('recovers a constant velocity from evenly spaced samples', () => {
+    // Moving at 500 px/s in x over the last 80ms.
+    const samples: Array<[number, number, number]> = [];
+    for (let t = 0; t <= 80; t += 10) samples.push([t, (500 * t) / 1000, 0]);
+    const [vx, vy] = releaseVelocity(samples, 80);
+    expect(vx).toBeCloseTo(500, 0);
+    expect(vy).toBeCloseTo(0, 5);
+  });
+});
+
+describe('capThrow', () => {
+  it('leaves a slow velocity untouched', () => {
+    expect(capThrow(100, 0)).toEqual([100, 0]);
+  });
+  it('caps a fast velocity at FEEL.maxThrow, keeping direction', () => {
+    const [vx, vy] = capThrow(4000, 3000); // speed 5000
+    const speed = Math.hypot(vx, vy);
+    expect(speed).toBeCloseTo(FEEL.maxThrow, 5);
+    expect(vx / vy).toBeCloseTo(4000 / 3000, 5);
+  });
+});
+
+describe('lensBounds / clampToBounds', () => {
+  it('insets the window by the radius, stretch, lift and wall inset', () => {
+    const [x0, y0, x1, y1] = lensBounds(100, 1000, 800);
+    const expectedInset = 100 * 1.04 * 1.012 + FEEL.wallInset;
+    expect(x0).toBeCloseTo(expectedInset, 5);
+    expect(y0).toBeCloseTo(expectedInset, 5);
+    expect(x1).toBeCloseTo(1000 - expectedInset, 5);
+    expect(y1).toBeCloseTo(800 - expectedInset, 5);
+  });
+  it('clamps a point into the bounds', () => {
+    const bounds = lensBounds(100, 1000, 800);
+    expect(clampToBounds(-500, -500, bounds)).toEqual([bounds[0], bounds[1]]);
+    expect(clampToBounds(5000, 5000, bounds)).toEqual([bounds[2], bounds[3]]);
+    expect(clampToBounds(500, 400, bounds)).toEqual([500, 400]);
+  });
+});
+
+describe('stepGlide', () => {
+  it('stops dead at a wall: velocity into it drops, never reflects', () => {
+    const bounds: [number, number, number, number] = [50, 50, 950, 750];
+    // Moving hard to the left, starting just inside the left wall.
+    const next = stepGlide(60, 400, -2000, 0, 1 / 60, bounds);
+    expect(next.x).toBe(50);
+    expect(next.vx).toBeGreaterThanOrEqual(0); // dropped, never negative (never reflected)
+  });
+  it('decays exponentially and stops below stopSpeed', () => {
+    const bounds: [number, number, number, number] = [0, 0, 10000, 10000];
+    let x = 500, y = 500, vx = 1000, vy = 0;
+    for (let i = 0; i < 600; i++) {
+      const next = stepGlide(x, y, vx, vy, 1 / 60, bounds);
+      x = next.x; y = next.y; vx = next.vx; vy = next.vy;
+    }
+    expect(vx).toBe(0);
+    expect(vy).toBe(0);
+  });
+  it('never backtracks after stopping at a wall (a proof-report invariant)', () => {
+    const bounds: [number, number, number, number] = [50, 50, 950, 750];
+    let x = 940, y = 400, vx = 2000, vy = 0;
+    let minAfterStop: number | null = null;
+    for (let i = 0; i < 300; i++) {
+      const next = stepGlide(x, y, vx, vy, 1 / 60, bounds);
+      x = next.x; vx = next.vx; y = next.y; vy = next.vy;
+      if (x >= bounds[2]) minAfterStop = minAfterStop == null ? x : Math.min(minAfterStop, x);
+    }
+    expect(minAfterStop).toBe(bounds[2]);
+  });
+});
+
+describe('stretchTarget / stretchMatrix', () => {
+  it('is zero for a near-stationary lens', () => {
+    expect(stretchTarget(0, 0)).toEqual([0, 0]);
+    expect(stretchTarget(0.5, 0.5)).toEqual([0, 0]);
+  });
+  it('saturates toward FEEL.maxStretch as speed grows', () => {
+    const [tx] = stretchTarget(1_000_000, 0);
+    expect(Math.abs(tx)).toBeLessThanOrEqual(FEEL.maxStretch);
+    expect(Math.abs(tx)).toBeGreaterThan(FEEL.maxStretch * 0.99);
+  });
+  it('reaches about 63% of max at FEEL.stretchSpeed (the documented point)', () => {
+    const [tx] = stretchTarget(FEEL.stretchSpeed, 0);
+    expect(Math.abs(tx) / FEEL.maxStretch).toBeCloseTo(1 - Math.exp(-1), 2);
+  });
+  it('identity matrix at zero stretch and lift', () => {
+    const { m00, m01, m11 } = stretchMatrix(0, 0, 0);
+    expect(m00).toBeCloseTo(1, 10);
+    expect(m11).toBeCloseTo(1, 10);
+    expect(m01).toBeCloseTo(0, 10);
+  });
+  it('stretches along the motion and narrows across it', () => {
+    // ex, ey encode the eased stretch vector; along x means ang = 0.
+    const { m00, m11 } = stretchMatrix(FEEL.maxStretch, 0, 0);
+    expect(m00).toBeGreaterThan(1);
+    expect(m11).toBeLessThan(1);
+  });
+});
+
+describe('coverRect', () => {
+  it('matches background-size: cover for a wider box than the image', () => {
+    const r = coverRect(2000, 1000, 1600, 1000);
+    // scale = max(2000/1600, 1000/1000) = 1.25
+    expect(r.w).toBeCloseTo(2000, 5);
+    expect(r.h).toBeCloseTo(1250, 5);
+    expect(r.x).toBeCloseTo(0, 5);
+    expect(r.y).toBeCloseTo(-125, 5);
+  });
+  it('centres the overflow on both axes', () => {
+    const r = coverRect(1000, 2000, 1600, 1000);
+    // scale = max(1000/1600, 2000/1000) = 2
+    expect(r.w).toBeCloseTo(3200, 5);
+    expect(r.h).toBeCloseTo(2000, 5);
+    expect(r.x).toBeCloseTo((1000 - 3200) / 2, 5);
+    expect(r.y).toBeCloseTo(0, 5);
+  });
+});
+
+describe('viewProgress', () => {
+  it('is 0 before the element enters the viewport', () => {
+    expect(viewProgress(2000, 500, 800)).toBe(0);
+  });
+  it('is 1 once the element has fully exited the top', () => {
+    expect(viewProgress(-2000, 500, 800)).toBe(1);
+  });
+  it('is 0.5 at the midpoint of its pass through the viewport', () => {
+    // span = 800 + 500 = 1300; progress 0.5 when elementTop = 800 - 650 = 150
+    expect(viewProgress(150, 500, 800)).toBeCloseTo(0.5, 5);
+  });
+});

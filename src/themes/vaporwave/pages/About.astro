@@ -10,8 +10,8 @@ import Marble from '../parts/Marble.astro';
 import Meander from '../parts/Meander.astro';
 import Rune from '../parts/Rune.astro';
 import Still from '../parts/Still.astro';
-import bustAvif from '../stills/sphere-pink-1024.avif?url';
-import bustWebp from '../stills/sphere-pink-1024.webp?url';
+import bustAvif from '../stills/venus-1024.avif?url';
+import bustWebp from '../stills/venus-1024.webp?url';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -26,12 +26,23 @@ const [founderLead, ...founderRest] = copy.founder.body;
     <p class="vw-kana kana" aria-hidden="true">シャイニング・ツリー</p>
     <h1>{copy.heading}</h1>
   </div>
-  {/* F3 staging: a stepped plinth between the columns, where the Venus goes
-      in B2. A Tier A stand-in still (pastel-tinted, glossy) holds the spot;
-      the pipeline is still scripts/themes/vaporwave/render-marble.mjs today,
-      so this is a picture, not the live bust. */}
+  {/* F3 staging (B2). The Venus is rendered live-quality by the shared scene
+      module (src/themes/vaporwave/marble/scene.js) at the exact
+      camera/yaw/lighting the live bust's first frame uses (seat vw-4a). The
+      <picture> in .centerpiece-stage is that pose's poster: what a no-JS
+      visitor, the drawn-ahead copy, and a blank/lost canvas all show.
+      data-marble-canvas is where the live bust mounts (seat vw-4b,
+      marble/live-bust.ts, loaded only once the centrepiece nears the
+      viewport): it sits behind the poster in the identical box, already
+      drawing the identical pose, before the poster fades to reveal it, so
+      there is no visible jump. */}
   <div class="centerpiece" aria-hidden="true">
-    <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} />
+    <div class="centerpiece-stage" data-marble-stage>
+      <canvas class="centerpiece-canvas" data-marble-canvas aria-hidden="true" tabindex="-1"></canvas>
+      <div class="centerpiece-poster" data-marble-poster>
+        <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} />
+      </div>
+    </div>
     <div class="centerpiece-steps">
       <div class="tier tier-top"><Marble id="cp-tier-top" seed={31} /><div class="tier-gloss"></div></div>
       <div class="tier tier-mid"><Marble id="cp-tier-mid" seed={37} /><div class="tier-gloss"></div></div>
@@ -113,37 +124,54 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .temple :global(.frieze) { position: absolute; left: 0; right: 0; bottom: 0; color: var(--neon-pink); background: var(--field-top); }
 
   /* The centrepiece: a stepped museum plinth between the columns, holding
-     the stand-in still until B2's Venus. */
+     the Venus (B2, seat vw-4a; a Tier A stand-in sphere held the spot before
+     this). */
   .centerpiece {
     position: absolute; left: 50%; bottom: 34px; translate: -50% 0; z-index: 1;
     display: grid; justify-items: center; width: clamp(160px, 20vw, 260px);
   }
-  /* about-sphere-floats (fix round 2): round 1 measured the transparent
-     margin at alpha > 12/255, which counts the still's own faint baked
-     contact shadow, not the sphere's opaque ring - undercounting the true
-     gap by nearly half (14% left about 27px showing at desktop). Remeasured
-     from the opaque silhouette alone (alpha >= 200/255:
-     scripts/themes/vaporwave/measure-still-bbox.mjs --solid), which puts the
-     ring's own edge 25.7% up from the canvas's bottom on both stand-ins
-     (sphere-pink-1024 and sphere-white-512 agree within 0.1%). translateY
-     moves the picture (paint only, not layout) down by that fraction, so the
-     ring - not the shadow's fading tail - lands flush on the tier below, and
-     the shadow itself now drapes onto the tier's own surface instead of
-     being clipped off above it. z-index keeps the prop (and its shadow)
-     painting over the tiers where they now overlap. */
-  :global(.centerpiece-prop) {
-    width: 84%; position: relative; z-index: 2;
-    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
-    transform: translateY(25.7%);
+  /* Re-measured for the Venus poster (B2): measure-still-bbox.mjs --solid
+     (alpha >= 200/255, the opaque silhouette alone, not the still's own
+     baked contact shadow - the method the sphere stand-in's own
+     about-sphere-floats fix round 2 established) puts the Venus's own
+     plinth-cut base 18.1% up from the canvas's bottom (venus-1024), against
+     25.7% for the old stand-in sphere. That measured figure still left a
+     hairline gap once composited against the plinth's own rendered
+     perspective (checked by eye, per fix round 2's own method); nudged to
+     22% closes it with no overlap at desktop, 820 and 390. translateY moves
+     the box (paint only, not layout) down by that fraction, so the bust's
+     own cut base - not the shadow's fading tail - lands flush on the tier
+     below. z-index keeps the stage (and its shadow) painting over the tiers
+     where they now overlap.
+     .centerpiece-stage carries the box the poster used to carry alone
+     (width, translateY, an aspect-ratio square to replace the height a
+     lone <picture> got for free from its own image); the live bust's
+     <canvas> (vw-4b, marble/live-bust.ts) and the poster now share it
+     exactly, canvas underneath, so the first live frame and the poster's
+     pixels sit in the identical box with no reflow between them. */
+  .centerpiece-stage {
+    width: 84%; position: relative; z-index: 2; aspect-ratio: 1 / 1;
+    transform: translateY(22%);
   }
-  /* A real stepped plinth (fix round 2, item 2): three tiers of the same
-     procedural, pastel-tinted marble the rune plaque is cut from
-     (Marble.astro: SVG turbulence stone with the pink/cyan corner tint), each
-     with a diagonal glossy sheen, replacing the old two 10px slivers that
-     read as nothing over the sun's stripes. Proportioned a little wide of
-     the stand-in sphere's own footprint on purpose: B2 swaps in the Venus,
-     expected about 1.3x the sphere's height and narrower at its base, so the
-     top tier keeps headroom instead of being sized to the sphere alone. */
+  .centerpiece-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
+    /* Decorative until marble/live-bust.ts hands it a live role (see its
+       setLiveA11y): plain elements only, no focusable content, per the
+       README's "a control that does nothing" rule. */
+    cursor: grab; touch-action: pan-y; user-select: none;
+  }
+  .centerpiece-canvas.is-dragging { cursor: grabbing; }
+  .centerpiece-poster {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
+    pointer-events: none;
+  }
+  :global(.centerpiece-prop) {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
+  }
+  /* A real stepped plinth: three tiers of the same procedural, pastel-tinted
+     marble the rune plaque is cut from (Marble.astro: SVG turbulence stone
+     with the pink/cyan corner tint), each with a diagonal glossy sheen. */
   .centerpiece-steps { position: relative; width: 100%; }
   .centerpiece-steps .tier {
     position: relative; overflow: hidden; margin-inline: auto;
@@ -246,3 +274,87 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .centerpiece { width: clamp(120px, 34vw, 180px); bottom: 24px; }
   }
 </style>
+
+<script>
+  // Mounts the live Venus bust (marble/live-bust.ts) only once the
+  // centrepiece nears the viewport and the main thread is idle, so three.js
+  // and the GLB never ship on Home, Services or Contact -- this file itself
+  // imports neither. onMount from src/lib/lifecycle.ts: on a plain load this
+  // runs once; under the /t/ portal's ClientRouter it also runs for every
+  // new body the router swaps in, and its teardown runs before that body is
+  // replaced (so five in-school swaps must never accumulate five live
+  // stages or five WebGL contexts).
+  import { onMount } from '../../../lib/lifecycle';
+  import type { LiveBustHandle } from '../marble/live-bust';
+
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'vaporwave') return;
+
+    const stageEl = document.querySelector<HTMLElement>('[data-marble-stage]');
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-marble-canvas]');
+    const poster = document.querySelector<HTMLElement>('[data-marble-poster]');
+    if (!stageEl || !canvas || !poster) return;
+
+    let torn = false;
+    let handle: LiveBustHandle | undefined;
+    let started = false;
+
+    const start = () => {
+      if (started || torn) return;
+      started = true;
+      io.disconnect();
+      const load = () => {
+        void import('../marble/live-bust')
+          .then(({ mountLiveBust }) => {
+            if (torn) return;
+            handle = mountLiveBust({ canvas, poster });
+            // The IntersectionObserver above already disconnected once it
+            // fired; this second one hands the live module its own
+            // on/off-screen signal so it can fully stop its render loop
+            // (not just skip starting) once mounted.
+            visibility.observe(canvas);
+            // Reconcile against whatever pageVisible/canvasInView already
+            // are (a tab backgrounded, or the canvas already scrolled back
+            // out, in the time it took the chunk to load) rather than
+            // trusting the module's own optimistic "visible" default.
+            syncVisible();
+          })
+          .catch((err) => {
+            // A rejected dynamic import (a stale chunk hash after a deploy)
+            // leaves the poster up; the page still reads fine without it.
+            console.error('[vaporwave] failed to load the live bust', err);
+          });
+      };
+      // Idle, not immediate: a visitor scrolling straight past the
+      // centrepiece should not have three.js competing with that scroll's
+      // own paint work.
+      if ('requestIdleCallback' in window) window.requestIdleCallback(load, { timeout: 2000 });
+      else setTimeout(load, 1);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) start(); },
+      { rootMargin: '200px' },
+    );
+    io.observe(stageEl);
+
+    let pageVisible = !document.hidden;
+    let canvasInView = true;
+    const syncVisible = () => handle?.setVisible(pageVisible && canvasInView);
+    const visibility = new IntersectionObserver((entries) => {
+      canvasInView = entries[0].isIntersecting;
+      syncVisible();
+    });
+    const onVisibilityChange = () => { pageVisible = !document.hidden; syncVisible(); };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      torn = true;
+      io.disconnect();
+      visibility.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      handle?.dispose();
+      handle = undefined;
+    };
+  });
+</script>

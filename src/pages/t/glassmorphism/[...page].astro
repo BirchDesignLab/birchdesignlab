@@ -29,6 +29,34 @@ const copy = await getCopy(page);
 const Body = { home: Home, about: About, services: Services, contact: Contact, sent: Sent }[page];
 ---
 <PortalLayout theme={meta} page={page} title={copy.title} description={copy.description}>
+  {/* The Control Centre's session hold (lens/settings.ts), applied before
+      first paint on a hard load: astro:before-swap (lens/session-hold.ts,
+      wired from Footer.astro) covers every navigation after this one, but a
+      fresh document has no swap to intercept. Kept in its own is:inline
+      script, not an import, so it runs synchronously during head parsing,
+      ahead of any module script and ahead of body paint; its storage key and
+      defaults are duplicated from settings.ts on purpose (that file explains
+      why) and must be kept in sync with it. */}
+  <script slot="head" is:inline>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('bdl:theme-schools:glassmorphism:controls');
+        var s = raw ? JSON.parse(raw) : null;
+        var tint = s && (s.tint === 'clear' || s.tint === 'tinted') ? s.tint : 'clear';
+        var tod = s && (s.tod === 'dawn' || s.tod === 'day' || s.tod === 'dusk') ? s.tod : 'day';
+        var frost = s && typeof s.frost === 'number' && isFinite(s.frost) ? Math.min(1, Math.max(0, s.frost)) : 0.5;
+        var html = document.documentElement;
+        html.dataset.glassTint = tint;
+        html.dataset.glassTod = tod;
+        html.style.setProperty('--glass-frost', frost.toFixed(3));
+      } catch (e) {
+        /* Private mode, blocked storage, corrupt JSON: the defaults above
+           already ran before the throw, or CSS's own unattributed rules
+           stand in (theme.css, "day", untinted). Either way, never let a
+           settings read break the page. */
+      }
+    })();
+  </script>
   <Header slot="header" chrome={chrome} theme={meta.id} />
   <Body copy={copy as never} chrome={chrome} theme={meta.id} />
   <Footer slot="footer" chrome={chrome} theme={meta.id} />

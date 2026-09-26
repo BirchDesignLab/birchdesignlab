@@ -12,7 +12,7 @@ const [first, ...rest] = chrome.name.split(' ');
 const icons = ['violet', 'cyan'];
 ---
 <section class="hero wrap">
-  <Orbs orbs={[
+  <Orbs jsDriven orbs={[
     { hue: 'violet', x: '22%', y: '34%', mx: '16%', my: '7%', size: 'clamp(230px, 34vw, 480px)', drift: 1 },
     { hue: 'cyan', x: '86%', y: '22%', mx: '94%', my: '16%', size: 'clamp(150px, 22vw, 330px)', drift: 2 },
     { hue: 'peach', x: '74%', y: '92%', mx: '80%', my: '96%', size: 'clamp(130px, 17vw, 250px)', drift: 3 },
@@ -22,12 +22,20 @@ const icons = ['violet', 'cyan'];
     { hue: 'pink', x: '17%', y: '80%', mx: '8%', my: '94%', size: 'clamp(70px, 9vw, 130px)', drift: 2 },
   ]} />
   <div class="window glass thin">
-    {/* The lights and the switch share one bar, both real desktop-window
-        chrome, so the switch reads as part of the window instead of a
-        clip-art widget bolted to its corner. */}
-    <div class="window-bar" aria-hidden="true">
-      <span class="lights"><i></i><i></i><i></i></span>
-      <span class="switch"><i></i></span>
+    {/* The lights are decoration; the switch is now a real control (B2, item
+        3): Clear/Tinted, holding for the whole session and reaching every
+        pane and the lens, not only this window. */}
+    <div class="window-bar">
+      <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+      {/* B2 item 4: the button itself is the 44px+ hit target at every
+          width; the visible pill track (its own size, unchanged) is a
+          separate inner span so growing the tap area on phones never grows
+          the track's look. */}
+      <button type="button" class="switch" role="switch" aria-checked="false" aria-label="Tinted glass">
+        <span class="switch-track" aria-hidden="true">
+          <i class="switch-thumb"></i>
+        </span>
+      </button>
     </div>
     <h1 class="billboard"><span class="b1">{first}</span> <span class="b2">{rest.join(' ')}</span></h1>
     <p class="lead">{copy.opener.lead}</p>
@@ -38,16 +46,50 @@ const icons = ['violet', 'cyan'];
   <div class="widget locale glass" aria-hidden="true">
     <span class="dot"></span>{chrome.location}
   </div>
-  {/* Item 10: a static stand-in for B2's draggable lens, not the lens
-      itself (no WebGL in B1). Fixed to the wallpaper plane, under the
-      content (z-index -1, same plane as main::before, painted after it in
-      DOM order so it sits above the wallpaper and below everything else),
+  {/* The Control Centre's other two live controls (B2, item 3): a frost
+      slider (every pane's blur) and a dawn/day/dusk segmented control (the
+      wallpaper, CSS and lens texture together). Visible labels sit under
+      aria-hidden spans and are named again as each control's aria-label
+      (README's rule: a new visible word would fail copy parity with quiet;
+      an aria-hidden one is exempt and the label is not lost, because the
+      control repeats it as its accessible name). Normal document flow, not
+      fixed: the portal's switcher already owns the fixed bottom edge (phone:
+      the whole width; desktop: the bottom-right corner), and this stays out
+      of both. */}
+  <div class="control-centre glass" data-control-centre>
+    <div class="cc-group">
+      <span class="cc-label" aria-hidden="true">Frost</span>
+      <input type="range" class="cc-frost" min="0" max="100" step="1" value="50" aria-label="Frost amount" />
+    </div>
+    <div class="cc-group cc-tod" role="radiogroup" aria-label="Time of day">
+      <button type="button" class="cc-seg" data-tod="dawn" role="radio" aria-checked="false" aria-label="Dawn">
+        <span aria-hidden="true">Dawn</span>
+      </button>
+      <button type="button" class="cc-seg" data-tod="day" role="radio" aria-checked="true" aria-label="Day">
+        <span aria-hidden="true">Day</span>
+      </button>
+      <button type="button" class="cc-seg" data-tod="dusk" role="radio" aria-checked="false" aria-label="Dusk">
+        <span aria-hidden="true">Dusk</span>
+      </button>
+    </div>
+  </div>
+  {/* The lens's poster (plain CSS, no script dependency): visible until the
+      real lens's first WebGL frame, again on context loss, and permanently
+      when WebGL is unavailable, with reduced transparency, or in the
+      portal's drawn-ahead copy (which strips every script, so lens.ts never
+      runs there at all). .lens-host is where lens.ts appends the canvas, the
+      hit control and the shadows once it mounts; empty and inert without
+      JS. Both sit on the wallpaper plane, under the content (z-index -1),
       in the hero's empty right half, across the cyan orb's edge. */}
   <div class="lens-poster" aria-hidden="true"></div>
+  {/* Not aria-hidden: lens.ts mounts a real, focusable, aria-labelled
+      button inside this container (the README forbids focusable content
+      under aria-hidden). The container itself draws nothing on its own. */}
+  <div class="lens-host" id="glass-lens-host"></div>
 </section>
 
 <section class="doors wrap">
-  <Orbs orbs={[
+  <Orbs jsDriven orbs={[
     { hue: 'pink', x: '50%', y: '55%', mx: '90%', my: '50%', size: 'clamp(160px, 22vw, 320px)', drift: 3 },
     { hue: 'cyan', x: '38%', y: '94%', mx: '86%', my: '97%', size: 'clamp(110px, 14vw, 200px)', drift: 1 },
     /* B1 fix round 2, item 1: was x2%/y30%, clear of both door cards
@@ -72,7 +114,7 @@ const icons = ['violet', 'cyan'];
 
 {featured.length > 0 && (
   <section class="lab wrap">
-    <Orbs orbs={[
+    <Orbs jsDriven orbs={[
       { hue: 'violet', x: '92%', y: '16%', mx: '94%', my: '58%', size: 'clamp(150px, 20vw, 300px)', drift: 2 },
       { hue: 'peach', x: '12%', y: '86%', mx: '8%', my: '99%', size: 'clamp(120px, 15vw, 230px)', drift: 1 },
     ]} />
@@ -98,7 +140,7 @@ const icons = ['violet', 'cyan'];
     beside it, rather than centred between two orbs like every other page's
     ending. */}
 <section class="closer wrap">
-  <Orbs orbs={[
+  <Orbs jsDriven orbs={[
     { hue: 'cyan', x: '76%', y: '46%', mx: '80%', my: '10%', size: 'clamp(220px, 30vw, 420px)', drift: 3 },
     { hue: 'violet', x: '94%', y: '88%', mx: '92%', my: '92%', size: 'clamp(120px, 16vw, 220px)', drift: 1 },
   ]} />
@@ -107,6 +149,13 @@ const icons = ['violet', 'cyan'];
     <a class="btn" href={hrefFor('contact', theme)}>{copy.closer.cta} <span class="arw" aria-hidden="true">&rarr;</span></a>
   </div>
 </section>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { mountHomeGlass } from '../lens/home-boot';
+
+  onMount(mountHomeGlass);
+</script>
 
 <style>
   section { position: relative; }
@@ -131,8 +180,14 @@ const icons = ['violet', 'cyan'];
   .lights i:nth-child(2) { background: #febc2e; }
   .lights i:nth-child(3) { background: #28c840; }
   /* The switch now rides in the window bar, glass on glass at one depth
-     instead of floating loose over the corner. */
+     instead of floating loose over the corner. B2 item 4: the button
+     (.switch) is the real hit target and stays unsized here (it takes the
+     track's own size by default); .switch-track carries the track's look,
+     so a phone-width min-height on the button alone cannot stretch it. */
   .switch {
+    display: flex; align-items: center; justify-content: center;
+  }
+  .switch-track {
     display: block;
     width: 60px; height: 34px; padding: 4px;
     border-radius: 999px;
@@ -140,7 +195,12 @@ const icons = ['violet', 'cyan'];
     box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
   }
   .switch i {
-    display: block; width: 26px; height: 26px; margin-left: auto;
+    /* B2: no longer margin-left: auto (a fixed right anchor). The thumb now
+       rests at the track's left end by default and theme.css's
+       .switch[aria-checked='true'] rule slides it to the right, so Clear and
+       Tinted read as two different, opposite positions instead of both
+       looking like the same right-parked dot. */
+    display: block; width: 26px; height: 26px;
     border-radius: 50%;
     background: linear-gradient(145deg, var(--blob-cyan-hi), var(--blob-cyan));
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), var(--shadow-sm);
@@ -208,8 +268,28 @@ const icons = ['violet', 'cyan'];
     border: 1px solid var(--edge-hi);
     box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
   }
+  /* B2: the lens must work on phones too (README, item 5), so the poster no
+     longer disappears once the window goes full width; it shrinks and moves
+     into the corner clear of the window's own text instead. lens.ts computes
+     the real lens's start position itself from the viewport (its `phone`
+     flag flips at 600px), independent of this static CSS spot; this is only
+     what a visitor sees before it mounts (or with reduced transparency, or
+     in a drawn-ahead copy), so the two do not need to match pixel for
+     pixel. */
   @media (max-width: 1140px) {
-    .lens-poster { display: none; }
+    .lens-poster {
+      top: auto;
+      right: clamp(4%, 6vw, 7%);
+      bottom: clamp(6%, 9vh, 12%);
+      width: clamp(140px, 30vw, 190px);
+    }
+  }
+  @media (max-width: 720px) {
+    .lens-poster {
+      width: 128px;
+      right: 16px;
+      bottom: 88px;
+    }
   }
 
   .widget { position: absolute; z-index: 2; border-radius: 999px; }
@@ -330,7 +410,11 @@ const icons = ['violet', 'cyan'];
   @media (max-width: 720px) {
     .hero { min-height: 0; padding-block: 3.5rem 4.5rem; }
     .window { border-radius: 30px; }
-    .switch { width: 48px; height: 28px; }
+    /* B2 item 4: the button (.switch) grows to the 44px minimum; the track
+       stays its own compact 48x28, centred inside the larger real hit
+       area, so the visible pill does not also grow. */
+    .switch { min-width: 44px; min-height: 44px; }
+    .switch-track { width: 48px; height: 28px; }
     .switch i { width: 20px; height: 20px; }
     .ask { justify-items: center; text-align: center; }
   }
