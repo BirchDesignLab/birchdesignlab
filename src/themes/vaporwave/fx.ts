@@ -19,8 +19,39 @@
  */
 const THEME = 'vaporwave';
 const MAX_DPR = 1.5;
+/* E11: a coarse pointer or a narrow (phone-width) viewport draws at a lower
+   ceiling; a mouse-driven wide viewport keeps the sharper 1.5. */
+const MAX_DPR_COARSE = 1.25;
+const COARSE_BREAKPOINT = 760;
 /** The frame drawn under reduced motion: stars lit, stripes mid-drift. */
 const STILL_TIME = 7.3;
+/**
+ * F4(b) (Tier 3 stage 3 brief, "the grid: drive or loop"; settled "restart" at
+ * the Tier A stop): the hero's grid visibly restarts every CYCLE seconds
+ * instead of driving forever. 6.4s is exactly four turns of the CSS floors'
+ * existing 1.6s per-cell scroll (.vw-floor::before, theme.css), the
+ * low-middle of the brief's 4-8s band, so every loop in the school (this
+ * canvas and every CSS floor) shares one period and one seam. The scroll rate
+ * itself is unchanged (F4: "same speed as today"); only the seam is new.
+ * uScroll/uStripe run off `time % CYCLE`, so the instant the cycle wraps, the
+ * scroll snaps from wherever CYCLE*0.55 mod 1 landed back to 0 - a real phase
+ * jump, not just the tear below - because 6.4 * 0.55 is not a whole number of
+ * turns. (Tier B removed the 'tear' alternative and the proof-only `?vwLoop=`
+ * query that picked between them; restart is the only shipped behaviour.)
+ */
+const CYCLE = 6.4;
+/* The tracking hiccup at the seam: a one-to-two-frame horizontal tear on the
+   floor grid (E1's tape language), not a hue shift or a brightness flash. Two
+   discrete offsets (not eased between them) so it reads as a stutter, then
+   the grid snaps back to true for the rest of the cycle. Which offset draws
+   on which frame is a two-draw latch (mountHorizon, `pendingSeam`), not a
+   cyclePos window on SEAM_FRAME_1 any more (seam-tear-step-lottery, fix
+   round 2): SEAM_FRAME_2 still marks how wide a cyclePos window counts as
+   "still inside the seam" for the once-off case of a page loading already
+   inside it. */
+const SEAM_FRAME_2 = 2 / 60;
+const SEAM_OFFSET_1 = 0.16;
+const SEAM_OFFSET_2 = -0.06;
 
 const VERT = `
 attribute vec2 aPos;
@@ -44,6 +75,7 @@ uniform float uGlow;
 uniform float uFade;
 uniform float uHaze;
 uniform float uGridGlow;
+uniform float uSeam;
 uniform vec3 uSkyTop;
 uniform vec3 uSkyMid;
 uniform vec3 uHorizon;
@@ -127,7 +159,11 @@ void main() {
     const float GRID = 7.0;
     float dy = -p.y;
     float z = 0.12 * GRID / dy;
-    float wx = p.x * z * 1.6;
+    // uSeam: a brief lateral tear at the loop's seam (F4b), zero the rest of
+    // the cycle. Added to wx (not p.x) so it rides the same perspective scale
+    // as the grid lines: a tracking error the depth of the floor, not a flat
+    // screen-space shove.
+    float wx = p.x * z * 1.6 + uSeam;
     col = mix(uHorizon, uGround, smoothstep(0.0, uHaze, dy));
     // The sun's reflection, a soft streak on the floor.
     col += uSunB * 0.25 * exp(-abs(p.x) * 7.0) * exp(-dy * 9.0);
@@ -137,9 +173,14 @@ void main() {
     float dz = 0.5 - abs(fract(z + uScroll) - 0.5);
     float wxx = lineW * z * 1.6;
     float dx = 0.5 - abs(fract(wx) - 0.5);
-    float fade = smoothstep(0.0, uFade, dy) * (1.0 - smoothstep(0.08, 0.3, wz));
-    float line = max(1.0 - smoothstep(0.0, wz, dz), 1.0 - smoothstep(0.0, wxx, dx)) * fade;
-    float glow = max(exp(-dz / (wz * 5.0)), exp(-dx / (wxx * 5.0))) * fade;
+    // E11: fade far, thinning lines out sooner (a tighter wz band than
+    // before), and scale their own alpha by their true on-screen width, so a
+    // sub-pixel row dims toward zero instead of aliasing into a
+    // constant-brightness speckle under the horizon.
+    float fade = smoothstep(0.0, uFade, dy) * (1.0 - smoothstep(0.04, 0.18, wz));
+    float widthScale = clamp(wz / 0.02, 0.0, 1.0);
+    float line = max(1.0 - smoothstep(0.0, wz, dz), 1.0 - smoothstep(0.0, wxx, dx)) * fade * widthScale;
+    float glow = max(exp(-dz / (wz * 5.0)), exp(-dx / (wxx * 5.0))) * fade * widthScale;
     col = mix(col, uGrid, clamp(line, 0.0, 1.0));
     col += uGrid * glow * uGridGlow;
   }
@@ -262,6 +303,7 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   const uFade = u('uFade');
   const uHaze = u('uHaze');
   const uGridGlow = u('uGridGlow');
+  const uSeam = u('uSeam');
 
   const setColors = () => {
     const cs = getComputedStyle(document.documentElement);
@@ -276,7 +318,8 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   };
 
   const resize = () => {
-    const dpr = Math.min(devicePixelRatio || 1, MAX_DPR);
+    const coarse = matchMedia('(pointer: coarse)').matches || canvas.clientWidth < COARSE_BREAKPOINT;
+    const dpr = Math.min(devicePixelRatio || 1, coarse ? MAX_DPR_COARSE : MAX_DPR);
     const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
     const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) {
@@ -292,11 +335,49 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
     gl.uniform1f(uHorizonY, aspect < 1 ? 0.3 : 0.32);
   };
 
+  // seam-throttle fix (round 1) found the 30fps throttle could skip the one
+  // draw that would have landed inside the narrow SEAM_FRAME_2 window
+  // outright. That round's fix picked the offset from cyclePos at the moment
+  // of the wrapped draw, which fixed the miss but introduced a new bug
+  // (seam-tear-step-lottery, fix round 2): at 30fps only one draw call
+  // typically lands in the whole two-frame seam window, so whichever offset
+  // its cyclePos happened to fall under - OFFSET_1 if under SEAM_FRAME_1,
+  // else OFFSET_2 - is the ONLY one that ever drew for the rest of that
+  // session, because rAF's phase relative to the CYCLE's own start is fixed
+  // once the hero links. Confirmed: 5 of 5 wraps in one session drew only
+  // -0.06; a separate load drew only 0.16.
+  //
+  // Fixed as a real two-draw latch instead: `pendingSeam` counts down from 2
+  // (OFFSET_1 due, then OFFSET_2 due) to 0 (no seam), independent of what
+  // cyclePos happens to read on either draw. A wrap always arms it at 2, so
+  // the very next draw call - whatever its cyclePos, whatever the frame rate
+  // or vsync phase - carries OFFSET_1, and the draw after that carries
+  // OFFSET_2, then it holds at 0 for the rest of the cycle. This also covers
+  // the throttle skipping straight past both frames in one gap: the latch
+  // does not care how long it waited to be asked again, only that the next
+  // two draws are the ones that carry the tear.
+  let lastCyclePos = -1;
+  let pendingSeam = 0;
   const draw = (time: number) => {
     // Phases wrap here, in double precision, so the shader's floats stay small.
     gl.uniform1f(uTime, time % 1000);
-    gl.uniform1f(uScroll, (time * 0.55) % 1);
-    gl.uniform1f(uStripe, (time * 0.06) % 1);
+    // F4(b): the scroll and the stripe drift run off the cycle's own clock
+    // (time % CYCLE), so both visibly jump back at the seam instead of
+    // sailing through it.
+    const cyclePos = time % CYCLE;
+    gl.uniform1f(uScroll, (cyclePos * 0.55) % 1);
+    gl.uniform1f(uStripe, (cyclePos * 0.06) % 1);
+    // The seam itself: cyclePos re-zeros every CYCLE seconds. Arm the latch
+    // on the wrap (or on the very first draw, if it happens to load already
+    // inside the seam window), then drain it: this draw gets OFFSET_1 if two
+    // are still owed, OFFSET_2 if one is, zero otherwise.
+    const wrapped = cyclePos < lastCyclePos;
+    if (wrapped || (lastCyclePos < 0 && cyclePos < SEAM_FRAME_2)) pendingSeam = 2;
+    let seam = 0;
+    if (pendingSeam === 2) { seam = SEAM_OFFSET_1; pendingSeam = 1; }
+    else if (pendingSeam === 1) { seam = SEAM_OFFSET_2; pendingSeam = 0; }
+    gl.uniform1f(uSeam, seam);
+    lastCyclePos = cyclePos;
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
@@ -336,10 +417,34 @@ export function mountHorizon(): (() => void) | void {
   const now = () => (reducedMotion.matches ? STILL_TIME : (performance.now() - started) / 1000);
 
   const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches && !lost;
-  const tick = () => {
+  // E11: throttle to 30fps. rAF still fires every vsync so the loop stays in
+  // step with the browser, but a frame under 33ms since the last draw is
+  // skipped rather than drawn, halving the GPU cost in the hero's own band
+  // without changing the picture (uTime keeps real wall-clock time either
+  // way, so the motion itself is unaffected).
+  const FRAME_BUDGET = 1000 / 30;
+  // seam-throttle fix: rAF timestamps jitter a millisecond or two around
+  // each vsync, so two 60Hz frames land at just under FRAME_BUDGET (33.33ms)
+  // about half the time. An exact `>=` rejected that pair and waited for a
+  // third vsync, drawing at ~20fps instead of the intended 30 (measured:
+  // 720 draws in 32.5s, median gap 49.7ms). A small tolerance accepts the
+  // jittered pair without accepting a single vsync (16.7ms is nowhere close).
+  const FRAME_TOLERANCE = 4;
+  let lastDrawn = 0;
+  // Defaulted so the one direct call (settle(), below, resuming after the
+  // shader's link finishes) always draws its first frame at once; every
+  // later call is rAF's own callback, which always passes a timestamp. The
+  // budget clock records performance.now() for that direct call, never the
+  // Infinity default: an Infinite lastDrawn made every later rAF tick fail
+  // the budget, so a hero reached from another school (the deferred-link
+  // path) froze on its first frame for the whole visit (PR #91 review).
+  const tick = (t: number = Infinity) => {
     frame = 0;
     if (!scene || lost) return;
-    scene.draw(now());
+    if (t - lastDrawn >= FRAME_BUDGET - FRAME_TOLERANCE) {
+      lastDrawn = Number.isFinite(t) ? t : performance.now();
+      scene.draw(now());
+    }
     if (shouldAnimate()) frame = requestAnimationFrame(tick);
   };
   const stop = () => {

@@ -1,0 +1,223 @@
+<!doctype html>
+<!--
+  Stage 3 lens proof: a slice of the glass room.
+
+  Written 09-25-26 for Tier 3 stage 3 (Tier A proofs). A proof, not production
+  code. A fixed warm Big Sur wallpaper, flat crisp orbs on their own scroll
+  rate (E4), DOM text, three glass panes on the SVG displacement recipe
+  (room.js) and one draggable glass lens drawn in WebGL (lens.js), with a
+  Clear/Tinted switch. Everything is local: no fonts, images or scripts from
+  the network.
+
+  Query parameters (all optional):
+    tint=clear|tinted   the lens and panes start Clear (default) or Tinted
+    lens=webgl|svg      webgl (default) draws the lens itself; svg uses a
+                        backdrop-filter displacement lens (Chromium only)
+    layer=over|under    the lens floats over the content (default) or sits on
+                        the wallpaper plane under it
+    orbs=js|css         orbs move from one rAF (default js) or from a CSS
+                        scroll-driven animation
+    bend=auto|off       auto bends the panes where url() backdrop filters
+                        work; off forces the frosted fallback Safari and
+                        Firefox get
+    bevel=in|out        the pane bevel samples inward (default) or outward
+                        (Chromium mirrors the inside past the rim)
+    probe=seam|identity rim-alignment probes (see lens.js)
+    at=x,y              the lens centre, CSS px
+
+  Usage: served by scripts/themes/harness/stage3-lens-proof.mjs on :4465, or
+  any static server rooted here; open http://127.0.0.1:4465/.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glass room lens proof</title>
+<style>
+  :root {
+    --ink: #1c1a24;
+    --ink-2: rgb(28 26 36 / 0.72);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font: 400 17px/1.55 -apple-system, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    background: #e9a06b;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* The room, back to front: wallpaper, orbs, (lens under), content, (lens over), controls. */
+  #wallpaper {
+    position: fixed; inset: 0; z-index: 0;
+    background: #e9a06b center / cover no-repeat;
+  }
+  #orbs { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+  .orb {
+    position: absolute; border-radius: 50%;
+    width: calc(var(--d) * 1px); height: calc(var(--d) * 1px);
+    left: calc(var(--x) * 1px); top: calc(var(--y) * 1px);
+    will-change: transform;
+  }
+  @supports (animation-timeline: scroll()) {
+    html[data-orbs='css'] .orb {
+      animation: orb-drift linear both;
+      animation-timeline: scroll(root);
+    }
+    @keyframes orb-drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(calc(var(--k) * var(--travel, 0) * -1px)); }
+    }
+  }
+  #lens-layer { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
+  html[data-layer='under'] #lens-layer { z-index: 2; }
+  main { position: relative; z-index: 3; }
+  .controls { z-index: 6; }
+
+  .lens-part {
+    position: absolute; left: 0; top: 0;
+    transform-origin: 0 0; will-change: transform;
+  }
+  #lens-canvas { pointer-events: none; }
+  #lens-hit {
+    border-radius: 50%; pointer-events: auto; touch-action: none; cursor: grab;
+  }
+  html.lens-held #lens-hit { cursor: grabbing; }
+  .lens-shadow { border-radius: 50%; pointer-events: none; }
+  #shadow-rest { box-shadow: 0 7px 18px rgb(40 18 30 / 0.22), 0 1px 3px rgb(40 18 30 / 0.16); }
+  #shadow-held { box-shadow: 0 20px 42px rgb(40 18 30 / 0.4), 0 4px 10px rgb(40 18 30 / 0.2); opacity: 0; }
+  #svg-lens {
+    border-radius: 50%; display: none; pointer-events: none;
+    box-shadow: inset 1.5px 1.5px 0 rgb(255 255 255 / 0.85), inset -1px -1px 0 rgb(255 255 255 / 0.25);
+  }
+  html[data-lens='svg'] #svg-lens { display: block; }
+  html[data-lens='svg'] #lens-canvas { display: none; }
+
+  /* Glass panes: the frosted recipe every browser gets. room.js adds the
+     url() displacement only where it is proven to apply. No custom
+     properties inside the -webkit- declaration: Safari ignores them there. */
+  .pane {
+    position: relative;
+    border-radius: var(--r);
+    background: rgb(var(--tint, 255 255 255) / var(--fill));
+    -webkit-backdrop-filter: blur(14px) saturate(1.7) brightness(1.06);
+    backdrop-filter: blur(14px) saturate(1.7) brightness(1.06);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.16),
+      0 24px 48px -28px rgb(40 18 40 / 0.45);
+    color: var(--pane-ink, var(--ink));
+    isolation: isolate;
+  }
+  /* Specular rim: a 1px ring, bright top-left, a fainter kick bottom-right. */
+  .pane::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.25px;
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.18) 32%,
+      rgb(255 255 255 / 0.04) 58%, rgb(255 255 255 / 0.55));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+  .thin { --fill: 0.10; --r: 34px; }
+  .regular { --fill: 0.24; --r: 28px; }
+  .thick { --fill: 0.42; --r: 22px; }
+  html.tinted .thin { --fill: 0.30; }
+  html.tinted .regular { --fill: 0.42; }
+  html.tinted .thick { --fill: 0.58; }
+
+  header.bar {
+    position: fixed; z-index: 5; top: 16px; left: 50%; transform: translateX(-50%);
+    width: min(720px, calc(100% - 32px)); height: 58px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 22px;
+  }
+  .wordmark { font-weight: 650; letter-spacing: -0.01em; }
+  .seg {
+    display: flex; gap: 2px; padding: 3px; border-radius: 999px;
+    background: rgb(255 255 255 / 0.28);
+  }
+  .seg button {
+    font: 600 14px/1 inherit; font-family: inherit; color: var(--ink);
+    border: 0; border-radius: 999px; padding: 10px 14px; min-height: 36px;
+    background: transparent; cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] { background: rgb(255 255 255 / 0.9); box-shadow: 0 1px 4px rgb(0 0 0 / 0.15); }
+
+  main { padding: 120px 48px 160px; max-width: 1440px; margin: 0 auto; }
+  section { min-height: 92vh; display: flex; align-items: flex-start; }
+  .hero { width: min(640px, 100%); padding: 48px 52px 44px; margin-top: 40px; }
+  .kicker { font: 600 13px/1 inherit; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pane-ink-2, var(--ink-2)); margin: 0 0 18px; }
+  h1 { font-size: clamp(44px, 6vw, 76px); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 22px; font-weight: 700; }
+  .hero p { margin: 0; max-width: 34ch; font-size: 19px; }
+  .reading { width: min(560px, 100%); margin-left: auto; margin-right: 6%; padding: 40px 44px; }
+  .reading h2 { font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 14px; }
+  .reading p { margin: 0 0 14px; }
+  .field-note { margin: 0; max-width: 30ch; font-size: 15px; color: rgb(255 255 255 / 0.9); text-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
+  .s3 { flex-direction: column; gap: 24px; }
+
+  #probe-readout {
+    position: fixed; left: 12px; bottom: 12px; z-index: 7; display: none;
+    font: 12px/1.3 ui-monospace, Consolas, monospace; background: rgb(0 0 0 / 0.6); color: #fff; padding: 6px 8px; border-radius: 6px;
+  }
+  html.debug #probe-readout { display: block; }
+  /* Rim-alignment probes compare the lens with the bare backdrop, so the
+     content and the bar step aside (they keep their layout, so the page
+     still scrolls the same distance). */
+  html[data-probe] main, html[data-probe] header.bar { visibility: hidden; }
+
+  @media (max-width: 600px) {
+    main { padding: 96px 16px 120px; }
+    header.bar { height: 54px; top: 10px; padding: 0 8px 0 16px; }
+    .seg button { padding: 10px 11px; font-size: 13px; min-height: 44px; }
+    .hero { padding: 30px 24px 28px; margin-top: 8px; }
+    h1 { font-size: 42px; }
+    .hero p { font-size: 17px; }
+    .reading { margin: 0; padding: 28px 24px; }
+    .reading h2 { font-size: 25px; }
+    section { min-height: 88vh; }
+  }
+</style>
+</head>
+<body>
+<div id="wallpaper"></div>
+<div id="orbs" aria-hidden="true"></div>
+<div id="lens-layer" aria-hidden="true">
+  <div class="lens-part lens-shadow" id="shadow-rest"></div>
+  <div class="lens-part lens-shadow" id="shadow-held"></div>
+  <canvas class="lens-part" id="lens-canvas"></canvas>
+  <div class="lens-part" id="svg-lens"></div>
+  <div class="lens-part" id="lens-hit" role="presentation"></div>
+</div>
+
+<header class="bar pane thick controls" data-pane="bar" data-bevel="10">
+  <span class="wordmark">Glass room</span>
+  <div class="seg" role="group" aria-label="Glass">
+    <button type="button" data-tint="clear" aria-pressed="true">Clear</button>
+    <button type="button" data-tint="tinted" aria-pressed="false">Tinted</button>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="pane thin hero" data-pane="hero" data-bevel="40">
+      <p class="kicker">Tier A proof, lens</p>
+      <h1>Glass that bends the room</h1>
+      <p>Drag the lens across the wallpaper. The panes bend what sits behind them where the browser allows it and frost it everywhere else.</p>
+    </div>
+  </section>
+  <section>
+    <div class="pane regular reading" data-pane="reading" data-bevel="28">
+      <h2>What sits behind</h2>
+      <p>The wallpaper holds still while the orbs drift at their own pace, so the colour under each pane keeps changing as you read.</p>
+      <p>The lens draws that backdrop itself, so it bends the same way on every browser. Text is not part of the backdrop it draws.</p>
+    </div>
+  </section>
+  <section class="s3">
+    <p class="field-note">Scroll back up and throw the lens. It glides, slows and stops against the edge of the window.</p>
+  </section>
+</main>
+<div id="probe-readout"></div>
+<svg id="filters" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"></svg>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

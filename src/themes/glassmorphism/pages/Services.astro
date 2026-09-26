@@ -16,7 +16,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     { hue: 'violet', x: '80%', y: '34%', mx: '90%', my: '6%', size: 'clamp(200px, 27vw, 400px)', drift: 1 },
     { hue: 'peach', x: '12%', y: '12%', mx: '6%', my: '96%', size: 'clamp(100px, 13vw, 190px)', drift: 2 },
   ]} />
-  <div class="head-card glass">
+  <div class="head-card glass thin">
     <p class="chip">{copy.kicker}</p>
     <h1>{copy.heading}</h1>
     <div class="sublines">
@@ -28,7 +28,10 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 <section class="offers wrap">
   <Orbs orbs={[
     { hue: 'cyan', x: '48%', y: '28%', mx: '92%', my: '48%', size: 'clamp(170px, 22vw, 330px)', drift: 2 },
-    { hue: 'pink', x: '6%', y: '88%', mx: '8%', my: '99%', size: 'clamp(120px, 15vw, 230px)', drift: 3 },
+    /* B1 fix round 2, item 1: was x6%/y88%, only clipping the left offer
+       card's bottom corner (3% coverage at 25% scroll, "useless"). Moved up
+       to straddle the card's bottom edge properly. */
+    { hue: 'pink', x: '13%', y: '76%', mx: '8%', my: '99%', size: 'clamp(120px, 15vw, 230px)', drift: 3 },
   ]} />
   {copy.offerings.map((offering, i) => (
     <article class="offer glass">
@@ -44,10 +47,14 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     { hue: 'violet', x: '20%', y: '66%', mx: '90%', my: '4%', size: 'clamp(160px, 21vw, 310px)', drift: 1 },
     { hue: 'peach', x: '88%', y: '44%', mx: '6%', my: '56%', size: 'clamp(140px, 18vw, 270px)', drift: 2 },
   ]} />
-  <h2 class="process-head">{copy.process.heading}</h2>
+  {/* Item 7: bare-wallpaper text. The section heading sat directly on the
+      field with nothing behind it (palette.md's flagged case); it now sits
+      on its own small opaque plate, the same solid-surface recipe as
+      .step below it. */}
+  <h2 class="process-head surface-solid">{copy.process.heading}</h2>
   <ol class="steps" role="list">
     {copy.process.steps.map((step, i) => (
-      <li class="step glass">
+      <li class="step surface-solid">
         <span class={`app-icon ${stepHues[i % stepHues.length]}`} aria-hidden="true">{num(i)}</span>
         <h3>{step.title}</h3>
         <p>{step.body}</p>
@@ -58,7 +65,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 
 <section class="ask-row wrap">
   <Orbs orbs={[
-    { hue: 'cyan', x: '26%', y: '50%', mx: '10%', my: '10%', size: 'clamp(130px, 17vw, 250px)', drift: 3 },
+    /* B1 fix round 2, item 1: was x26%/y50%, clear of the ask pane (0%
+       coverage at 75% scroll). Moved onto its left edge. */
+    { hue: 'cyan', x: '41%', y: '64%', mx: '10%', my: '10%', size: 'clamp(130px, 17vw, 250px)', drift: 3 },
     { hue: 'pink', x: '74%', y: '56%', mx: '90%', my: '90%', size: 'clamp(120px, 15vw, 220px)', drift: 1 },
   ]} />
   <div class="ask glass">
@@ -76,11 +85,10 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     width: min(100%, 900px);
     padding: clamp(1.5rem, 4.5vw, 3.75rem);
   }
+  /* D8: weight/tracking come from the global h1,h2,h3 rule; this pre-D8
+     override never got reconciled. */
   .head-card h1 {
     font-size: clamp(2.6rem, 7vw, 5.5rem);
-    font-weight: 800;
-    letter-spacing: -0.05em;
-    word-spacing: 0.08em;
     line-height: 0.95;
   }
   .sublines {
@@ -88,7 +96,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     gap: 1rem 2rem;
     margin-top: 0.5rem;
   }
-  .sublines p { color: var(--mark-muted); font-size: 1.125rem; }
+  .sublines p { color: var(--mark); font-size: 1.125rem; }
 
   .offers {
     display: grid; grid-template-columns: 1fr 1fr;
@@ -104,14 +112,16 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   .offer + .offer { margin-top: clamp(2rem, 6vw, 5rem); }
   .offer .app-icon { margin-bottom: 0.5rem; }
   .offer h2 { font-size: clamp(1.8rem, 3.4vw, 2.5rem); }
-  .offer p { color: var(--mark-muted); }
+  .offer p { color: var(--mark); }
 
   .process { padding-block: clamp(3rem, 7vw, 5rem) clamp(1rem, 3vw, 2rem); }
+  /* D8: weight/tracking come from the global h1,h2,h3 rule. */
   .process-head {
     position: relative; z-index: 1;
+    display: inline-block;
+    padding: clamp(0.5rem, 1.6vw, 0.9rem) clamp(1rem, 2.5vw, 1.75rem);
+    border-radius: var(--r-lg);
     font-size: clamp(2rem, 4.2vw, 3.25rem);
-    font-weight: 800;
-    letter-spacing: -0.045em;
     margin-bottom: clamp(1.25rem, 3vw, 2rem);
   }
   .steps {
@@ -119,25 +129,25 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: clamp(0.75rem, 1.8vw, 1.25rem);
   }
+  /* E5: the stagger (every other tile riding lower) had no visible reason
+     once the steps are one grouped, evenly-baselined pane (E1); dropped so
+     all four sit on one baseline. */
   .step {
     display: grid; align-content: start; gap: 0.75rem;
     padding: clamp(1.25rem, 2.4vw, 1.75rem);
     border-radius: var(--r-lg);
   }
-  /* An intentional stagger, not a stray overlap: every other tile rides
-     a little lower, the same rhythm the offer cards use above. */
-  .step:nth-child(even) { margin-top: 1.5rem; }
   .step .app-icon { width: 3rem; height: 3rem; font-size: 0.95rem; margin-bottom: 0.35rem; }
   .step h3 { font-size: 1.45rem; }
-  .step p { font-size: 0.975rem; line-height: 1.6; color: var(--mark-muted); }
+  .step p { font-size: 0.975rem; line-height: 1.6; color: var(--mark); }
 
-  /* The ask rides up over the last step's corner instead of sitting
-     centred below a clean gap, so the ending is not identical to the
-     other pages' centred CTA-between-two-orbs. */
+  /* E5: the negative margin was meant to ride the ask up over the last
+     step's corner, but landed flush against the step row with an ~8px seam
+     instead (a mistake, not a deliberate overlap). Given the full section
+     gap now, so the ending reads as a clean break instead of a near-miss. */
   .ask-row {
     display: grid; justify-items: end;
-    margin-top: clamp(-3.5rem, -6vw, -1.75rem);
-    padding-block: clamp(1rem, 3vw, 2rem) clamp(3rem, 7vw, 5rem);
+    padding-block: clamp(2rem, 5vw, 3.5rem) clamp(3rem, 7vw, 5rem);
   }
   .ask {
     display: grid; justify-items: center; gap: 1.6rem;
@@ -161,7 +171,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   }
   @media (max-width: 1000px) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .step:nth-child(even) { margin-top: 0; }
   }
   @media (max-width: 720px) {
     .ask-row { justify-items: center; margin-top: 0; }

@@ -8,9 +8,12 @@ import vt323 from '@fontsource/vt323/files/vt323-latin-400-normal.woff2?url';
 export const meta: ThemeMeta = {
   id: 'vaporwave',
   name: 'Vaporwave',
-  era: 'The internet, 2010 to 2013, dreaming of 1985',
-  lesson: 'Nostalgia is a palette: pink-to-cyan gradients and cheap chrome read as a memory of a future that never came.',
-  signature: 'Sunset gradients, a neon grid running to the horizon and marble statuary, like a 1995 screensaver dreaming about the 1980s.',
+  /* Tier 3 stage 3, "Final answers at the Tier A stop" item 6 (founder's
+     own words, exact): era, signature and lesson rewritten for the F1(b)
+     plaza and marble build, off the old synthwave-picture wording. */
+  era: 'The internet in the 2010s, dreaming of mid-90s software and shopping malls.',
+  lesson: 'We borrow the mall, the operating system and the museum gift shop, because the ethos behind vaporwave is that comfort was always for sale.',
+  signature: 'Windows 95 chrome, file names for titles, Japanese for headlines, a mall lobby and glossy marble statuary, with one sunset screensaver on the front page.',
   forbids: ['gold', 'script faces', 'frosted glass', 'the primary triad', 'wood grain'],
   nativeScheme: 'dark',
   /* All four faces paint above the fold on every page: the display faces
@@ -40,6 +43,8 @@ export const meta: ThemeMeta = {
     { fg: '--bar-ink', bg: ['--bar-a'], min: 4.5, note: 'window title, pink end of the bar' },
     { fg: '--bar-ink', bg: ['--bar-b'], min: 4.5, note: 'window title, lavender middle of the bar' },
     { fg: '--bar-ink', bg: ['--bar-c'], min: 4.5, note: 'window title, cyan end of the bar' },
+    { fg: '--bar-ink-dim', bg: ['--bar-inactive-a'], min: 4.5, note: 'inactive window title, near end of the bar (F5)' },
+    { fg: '--bar-ink-dim', bg: ['--bar-inactive-b'], min: 4.5, note: 'inactive window title, far end of the bar (F5)' },
     { fg: '--task-ink', bg: ['--task'], min: 4.5, note: 'taskbar buttons' },
     { fg: '--task-current', bg: ['--task-pressed'], min: 4.5, note: 'the pressed taskbar button' },
     { fg: '--bb-plain', bg: ['--hz-sky-top'], min: 4.5, note: 'billboard second line over the top of the sky' },

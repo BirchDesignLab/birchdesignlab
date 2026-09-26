@@ -1,0 +1,23 @@
+---
+/** A Tier A stand-in still (marble sphere, column, holo form or chrome orb),
+    dressing a room until the offline pipeline moves into src/ and the Venus
+    head lands (B2). Decorative only: empty alt, lazy below the fold, sized
+    so the layout never shifts. AVIF first, WebP fallback, both imported
+    through Vite so they ship hashed under /_astro/ (never public/). */
+interface Props {
+  avif: string;
+  webp: string;
+  size: number;
+  class?: string;
+}
+const { avif, webp, size, class: className } = Astro.props;
+---
+<picture class:list={['vw-still', className]}>
+  <source srcset={avif} type="image/avif" />
+  <img src={webp} width={size} height={size} alt="" loading="lazy" decoding="async" />
+</picture>
+
+<style>
+  .vw-still { display: block; line-height: 0; }
+  .vw-still img { width: 100%; height: 100%; max-width: none; object-fit: contain; }
+</style>

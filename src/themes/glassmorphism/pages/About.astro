@@ -11,10 +11,13 @@ const { copy, theme } = Astro.props;
 <section class="intro wrap">
   <Orbs orbs={[
     { hue: 'cyan', x: '44%', y: '30%', mx: '84%', my: '5%', size: 'clamp(200px, 28vw, 400px)', drift: 1 },
-    { hue: 'peach', x: '10%', y: '82%', mx: '8%', my: '40%', size: 'clamp(110px, 14vw, 210px)', drift: 3 },
+    /* B1 fix round 2, item 1: was x10%/y82%, clear of both the title card
+       and the reading pane (0% coverage at 0% and 25% scroll). Moved up
+       onto the title card's bottom-left corner. */
+    { hue: 'peach', x: '16%', y: '51%', mx: '8%', my: '40%', size: 'clamp(110px, 14vw, 210px)', drift: 3 },
     { hue: 'violet', x: '96%', y: '66%', mx: '94%', my: '97%', size: 'clamp(150px, 19vw, 280px)', drift: 2 },
   ]} />
-  <div class="title-card glass">
+  <div class="title-card glass thin">
     <span class="app-icon cyan" aria-hidden="true">B</span>
     <h1>{copy.heading}</h1>
   </div>
@@ -63,27 +66,33 @@ const { copy, theme } = Astro.props;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 4rem);
   }
+  /* E5: the deep bottom padding was carrying the overlap by itself, which
+     left a large empty lower half once the reading pane's own margin also
+     pulled it up. Cut to a normal padding; the overlap now comes from
+     .reading's negative margin alone, at the 2 to 3rem the brief asks for. */
   .title-card {
     grid-column: 1 / span 7;
     display: grid; gap: clamp(1.5rem, 4vw, 3rem);
-    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 4vw, 3rem) clamp(5rem, 9vw, 7.5rem);
+    padding: clamp(1.5rem, 4vw, 3rem);
   }
+  /* D8: weight/tracking come from the global h1,h2,h3 rule. */
   .title-card h1 {
     font-size: clamp(3rem, 7.4vw, 5.75rem);
-    font-weight: 800;
-    letter-spacing: -0.048em;
-    word-spacing: 0.09em;
     line-height: 0.92;
   }
   .reading {
     grid-column: 6 / -1;
     z-index: 2;
-    margin-top: clamp(-5.5rem, -6vw, -3.5rem);
+    /* E5: 2 to 3rem of overlap into the title card, now that the title
+       card no longer carries its own deep padding for this. */
+    margin-top: clamp(-3rem, -3.6vw, -2rem);
     display: grid; gap: 1.1rem;
     padding: clamp(1.5rem, 4vw, 3rem);
   }
-  .reading p { font-size: 1.125rem; line-height: 1.7; }
-  .reading :global(em) { font-style: normal; font-weight: 650; color: var(--accent); }
+  .reading p { font-size: 1.125rem; line-height: 1.7; color: var(--mark); }
+  /* E9: "Birch", "beorc" and "bright" keep their emphasis through weight
+     and italic, not hue: colour stays off body text. */
+  .reading :global(em) { font-style: italic; font-weight: 650; }
   .reading :global(strong) { font-weight: 750; }
 
   .founder { padding-block: clamp(1rem, 3vw, 1.75rem) clamp(2rem, 5vw, 4rem); }
@@ -100,7 +109,7 @@ const { copy, theme } = Astro.props;
   }
   .founder-card h2 { font-size: clamp(1.9rem, 3.6vw, 2.75rem); }
   .founder-body { display: grid; gap: 1.1rem; max-width: var(--measure); }
-  .founder-body p { color: var(--mark-muted); }
+  .founder-body p { color: var(--mark); }
   .founder-body .first {
     font-family: var(--font-head);
     font-size: clamp(1.3rem, 2.2vw, 1.6rem);
@@ -117,6 +126,17 @@ const { copy, theme } = Astro.props;
     position: relative; z-index: 1;
     display: grid; justify-items: start; gap: 1.75rem;
     max-width: 760px;
+  }
+  /* E5: the button used to float well below the manifesto pane with no
+     visual relationship to it (and could land over an orb). It now sits
+     seated on the pane's own bottom edge, inset to match the pane's
+     horizontal padding, instead of floating in the section's own gap. */
+  .promise-inner .btn {
+    margin-top: -1.5rem;
+    margin-left: clamp(1.25rem, 3.5vw, 2.25rem);
+  }
+  @media (max-width: 640px) {
+    .promise-inner .btn { margin-left: 0; }
   }
   .manifesto {
     font-family: var(--font-head);

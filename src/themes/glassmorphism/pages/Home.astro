@@ -16,9 +16,12 @@ const icons = ['violet', 'cyan'];
     { hue: 'violet', x: '22%', y: '34%', mx: '16%', my: '7%', size: 'clamp(230px, 34vw, 480px)', drift: 1 },
     { hue: 'cyan', x: '86%', y: '22%', mx: '94%', my: '16%', size: 'clamp(150px, 22vw, 330px)', drift: 2 },
     { hue: 'peach', x: '74%', y: '92%', mx: '80%', my: '96%', size: 'clamp(130px, 17vw, 250px)', drift: 3 },
-    { hue: 'pink', x: '6%', y: '90%', mx: '8%', my: '94%', size: 'clamp(70px, 9vw, 130px)', drift: 2 },
+    /* B1 fix round 2, item 1: was x6%/y90%, fully clear of the window (0%
+       coverage, "useless" at scroll 0). Moved onto the window's own
+       bottom-left corner so the pane frosts roughly half the disc. */
+    { hue: 'pink', x: '17%', y: '80%', mx: '8%', my: '94%', size: 'clamp(70px, 9vw, 130px)', drift: 2 },
   ]} />
-  <div class="window glass">
+  <div class="window glass thin">
     {/* The lights and the switch share one bar, both real desktop-window
         chrome, so the switch reads as part of the window instead of a
         clip-art widget bolted to its corner. */}
@@ -35,13 +38,22 @@ const icons = ['violet', 'cyan'];
   <div class="widget locale glass" aria-hidden="true">
     <span class="dot"></span>{chrome.location}
   </div>
+  {/* Item 10: a static stand-in for B2's draggable lens, not the lens
+      itself (no WebGL in B1). Fixed to the wallpaper plane, under the
+      content (z-index -1, same plane as main::before, painted after it in
+      DOM order so it sits above the wallpaper and below everything else),
+      in the hero's empty right half, across the cyan orb's edge. */}
+  <div class="lens-poster" aria-hidden="true"></div>
 </section>
 
 <section class="doors wrap">
   <Orbs orbs={[
     { hue: 'pink', x: '50%', y: '55%', mx: '90%', my: '50%', size: 'clamp(160px, 22vw, 320px)', drift: 3 },
     { hue: 'cyan', x: '38%', y: '94%', mx: '86%', my: '97%', size: 'clamp(110px, 14vw, 200px)', drift: 1 },
-    { hue: 'violet', x: '2%', y: '30%', mx: '88%', my: '2%', size: 'clamp(90px, 11vw, 160px)', drift: 2 },
+    /* B1 fix round 2, item 1: was x2%/y30%, clear of both door cards
+       (0% coverage at 25% scroll). Nudged onto the left door's top-left
+       corner. */
+    { hue: 'violet', x: '7%', y: '42%', mx: '88%', my: '2%', size: 'clamp(90px, 11vw, 160px)', drift: 2 },
   ]} />
   <div class="doors-head">
     <h2 class="chip">{copy.doors.kicker}</h2>
@@ -133,17 +145,20 @@ const icons = ['violet', 'cyan'];
     background: linear-gradient(145deg, var(--blob-cyan-hi), var(--blob-cyan));
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), var(--shadow-sm);
   }
+  /* D8: weight and tracking come from the global h1,h2,h3 rule (740,
+     -0.022em); this used to pin its own 800/-0.048em, from before D8
+     landed, and never got reconciled. */
   .billboard {
     font-size: clamp(3rem, 9.5vw, 7.25rem);
-    font-weight: 800;
-    letter-spacing: -0.048em;
-    word-spacing: 0.09em;
     line-height: 0.92;
   }
   .billboard span { display: block; }
+  /* D4 = C, vibrancy: the one coloured text in the room, its colour drawn
+     from the wallpaper behind the glass (--vibrant-a/-b), not a fixed
+     brand gradient. */
   .b2 {
     padding-bottom: 0.06em;
-    background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
+    background: linear-gradient(100deg, var(--vibrant-a) 10%, var(--vibrant-b) 90%);
     -webkit-background-clip: text; background-clip: text;
     color: transparent;
   }
@@ -155,11 +170,46 @@ const icons = ['violet', 'cyan'];
     letter-spacing: -0.025em;
     line-height: 1.2;
   }
+  /* E14: body copy on panes uses --mark, not --mark-muted (reserved for
+     meta: location, fine print), and reads a size up from the base. */
   .sub {
     margin-top: 0.85rem;
     max-width: 52ch;
-    color: var(--mark-muted);
-    font-size: 1.0625rem;
+    color: var(--mark);
+    font-size: clamp(1.125rem, 1.6vw, 1.2rem);
+  }
+
+  /* Item 10: the lens's future poster, a plain frosted disc (no WebGL in
+     B1). position: fixed so it never scrolls with the page, matching where
+     B2's real lens will sit; z-index -1 keeps it on the wallpaper's own
+     plane, under every pane and orb. Hidden once the layout stacks
+     (min-width matches where the locale pill also drops, .hero's empty
+     half stops existing once the window is full width).
+     Safari 17's literal blur sits in its own @supports block ahead of the
+     rule, as theme.css does for every pane: beside the var() declaration
+     the build's minifier drops it (PR #91 review). */
+  @supports (-webkit-backdrop-filter: none) {
+    .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
+  }
+  .lens-poster {
+    position: fixed;
+    z-index: -1;
+    right: clamp(4%, 9vw, 12%);
+    /* Nudged down past the cyan orb's own placement (--y: 22% in the hero's
+       Orbs list): at the old 16-26% top the disc sat directly behind it and
+       read as a stray crescent rather than its own frosted shape. */
+    top: clamp(34%, 40vh, 48%);
+    width: clamp(160px, 19vw, 260px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    pointer-events: none;
+    background: var(--mat-thin);
+    backdrop-filter: var(--blur-thin);
+    border: 1px solid var(--edge-hi);
+    box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
+  }
+  @media (max-width: 1140px) {
+    .lens-poster { display: none; }
   }
 
   .widget { position: absolute; z-index: 2; border-radius: 999px; }
@@ -183,7 +233,8 @@ const icons = ['violet', 'cyan'];
   .doors-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
   .door-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-    gap: clamp(1rem, 2.5vw, 1.75rem);
+    /* E5: at least 2 to 3rem between the two doors, not a thin seam. */
+    gap: clamp(2rem, 3.5vw, 3rem);
     margin-top: 1.25rem;
   }
   .door {
@@ -192,7 +243,7 @@ const icons = ['violet', 'cyan'];
   }
   .door .app-icon { margin-bottom: 0.6rem; }
   .door h3 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
-  .door p { color: var(--mark-muted); max-width: 48ch; }
+  .door p { color: var(--mark); max-width: 48ch; }
 
   /* ---- lab: a grouped list ---- */
   .lab { padding-block: clamp(2rem, 5vw, 4rem); }
@@ -212,20 +263,25 @@ const icons = ['violet', 'cyan'];
     line-height: 1.08;
     text-wrap: balance;
   }
+  /* E7: no glass on glass. A hairline-divided list, not a second translucent
+     well fill nested inside the lab panel's own blur. */
   .cells {
     list-style: none; padding: 0;
     border-radius: var(--r-lg);
-    background: var(--well);
-    border: 1px solid var(--edge);
+    background: transparent;
+    border: 1px solid var(--line);
     overflow: hidden;
   }
   .cell { display: grid; gap: 0.2rem; padding: 1.05rem 1.35rem; }
   .cell + .cell { border-top: 1px solid var(--line); }
+  /* E9: neutral text on glass. BDL designations use neutral secondary ink;
+     colour lives in the orbs and the D4 headline, not in every label. */
   .designation {
+    display: inline-flex; align-items: center; min-height: 44px;
     font-family: var(--font-label);
     font-size: 0.8125rem; font-weight: 650;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--accent);
+    color: var(--mark-muted);
     justify-self: start;
     text-decoration: none;
     border-radius: 6px;
@@ -244,10 +300,14 @@ const icons = ['violet', 'cyan'];
     display: grid;
     padding-block: clamp(3rem, 8vw, 6rem) clamp(1rem, 3vw, 2rem);
   }
+  /* E5: was a half-width card beside an empty half (the cyan orb showed
+     through the gap but nothing else did). Widened to a full-width strip,
+     so the same orb now sits mostly under the pane's own right edge
+     instead of beside it. */
   .ask {
     display: grid; justify-items: start; gap: 1.6rem;
-    width: min(100%, 560px);
-    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 3rem);
+    width: 100%;
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 6vw, 4.5rem);
     text-align: left;
   }
   .ask-lead {

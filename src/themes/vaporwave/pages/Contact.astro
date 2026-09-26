@@ -17,7 +17,8 @@ const { copy, theme } = Astro.props;
 </section>
 
 <section class="desk vw-wrap">
-  <Win title="new_message.eml" menu={['File', 'Edit', 'Insert', 'Format']} class="compose">
+  {/* E14: one mixed-script decorative title bar. */}
+  <Win title="メール new_message.eml" menu={['File', 'Edit', 'Insert', 'Format']} class="compose">
     <form method="post" action="/api/contact" data-astro-reload>
       <div class="field">
         <label for="cf-name">{copy.labels.name}</label>
@@ -43,16 +44,52 @@ const { copy, theme } = Astro.props;
       <a class="address" href={`mailto:${copy.email}`}>{copy.email}</a>
       <p class="fine">{copy.fine}</p>
     </Win>
-    <div class="side-scene"><Horizon class="side-horizon" /></div>
+    {/* F1(b): the resort sunset survives here inside a Display Properties
+        screensaver window, not as a scene of its own. Settings and Preview
+        are drawn as real Win95 chrome now; B2 wires them (cycle the loop,
+        run it full-window), so for B1 they are decoration, aria-hidden and
+        unfocusable, per the README's rule for a control that does nothing. */}
+    <div class="side-scene">
+      <Win title="screensaver.scr" class="screensaver">
+        <div class="screensaver-preview"><Horizon class="side-horizon" /></div>
+        <div class="screensaver-controls" aria-hidden="true">
+          <span class="scr-btn">Settings</span>
+          <span class="scr-btn">Preview</span>
+        </div>
+      </Win>
+    </div>
   </div>
 </section>
 
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+
+  /** E15: pause the CSS floor's infinite animation while it is off-screen
+      (the screensaver preview, scrolled past). One shared observer for every
+      `.vw-floor` this page carries. */
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'vaporwave') return;
+    const floors = document.querySelectorAll<HTMLElement>('.vw-floor');
+    if (!floors.length) return;
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) entry.target.classList.toggle('vw-floor-paused', !entry.isIntersecting);
+    });
+    floors.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  });
+</script>
+
 <style>
   .intro { padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
+  /* E10: the chromatic split scales with the type instead of a flat 3px. */
   h1 {
     margin-top: 1.2rem; max-width: 14ch;
+    --chroma: clamp(1px, 0.03em, 3px);
     font-family: var(--font-display); font-size: clamp(3rem, 8vw, 6.2rem); line-height: 0.98;
-    text-shadow: -3px 0 0 color-mix(in srgb, var(--neon-cyan) 55%, transparent), 3px 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent);
+    text-shadow: calc(-1 * var(--chroma)) 0 0 color-mix(in srgb, var(--neon-cyan) 55%, transparent), var(--chroma) 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent);
+  }
+  @media (max-width: 700px) {
+    h1 { text-shadow: calc(-1 * var(--chroma)) 0 0 color-mix(in srgb, var(--neon-cyan) 30%, transparent), var(--chroma) 0 0 color-mix(in srgb, var(--neon-pink) 30%, transparent); }
   }
   .subline { margin-top: 1.6rem; max-width: 48ch; font-size: 1.15rem; color: var(--mark-muted); }
 
@@ -104,11 +141,36 @@ const { copy, theme } = Astro.props;
     overflow-wrap: anywhere;
   }
   .fine { color: var(--mark-muted); font-size: 0.98rem; }
-  .side-scene { position: relative; height: 230px; }
-  .side-scene :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 200px; }
+
+  /* F1(b): the resort sunset lives inside a Display Properties screensaver
+     window, an OS frame around the loop rather than a scene of its own. */
+  .side-scene :global(.screensaver .vw-win-body) {
+    padding: 0.7rem; display: grid; gap: 0.7rem;
+  }
+  .screensaver-preview {
+    position: relative; height: 160px; overflow: hidden;
+    background: var(--field-sunk);
+    border: 2px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+  }
+  /* item 6 nit: the preview box is a few dozen px tall, where the full-size
+     64px grid tile only ever shows its converging verticals - a smaller
+     --vw-floor-cell (theme.css .vw-floor::before) gets enough horizontal
+     rungs into the box to read as a floor instead of radiating spikes. */
+  .screensaver-preview :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 160px; --vw-floor-cell: 22px; }
+  .screensaver-controls { display: flex; gap: 0.6rem; justify-content: flex-end; }
+  .scr-btn {
+    padding: 0.35rem 0.9rem;
+    font: 600 0.8rem/1.1 var(--font-body); letter-spacing: 0.03em;
+    background: var(--field-raised); color: var(--mark);
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  }
 
   @media (max-width: 860px) {
-    .desk { grid-template-columns: 1fr; }
+    /* minmax(0, 1fr), not a bare 1fr: a bare track keeps the grid item's
+       default min-width:auto, so the compose window's own unbreakable
+       min-content (its Notepad menu bar) could push the page past a narrow
+       viewport instead of shrinking with it. */
+    .desk { grid-template-columns: minmax(0, 1fr); }
     .side-scene { display: none; }
   }
 </style>

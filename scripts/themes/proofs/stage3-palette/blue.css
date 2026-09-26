@@ -1,0 +1,139 @@
+/* Glass wallpaper palette proof, variant BLUE (Windows 11 Bloom: cobalt,
+   azure and ice on navy; magenta and cyan as accents only).
+
+   Written 09-25-26 for Tier 3 stage 3 (Tier A proofs). Injected over the
+   frozen base build by scripts/themes/harness/stage3-palette-proof.mjs; not
+   imported by the site. Same shape as warm.css (read its header): E3 fixed
+   mesh wallpaper darkening to the edges, D7 flat discs, palette tokens
+   recoloured, glass fills and layout untouched. Orb classes map as: violet =
+   cobalt (the lead), cyan = azure, peach = ice, pink = deep royal blue, so
+   the whole field stays in the Bloom family and the only warm or pink notes
+   left are accents.
+
+   Selector note: html:root[data-theme] (0,2,1) beats theme.css's
+   :root[data-theme] (0,2,0) without !important.
+
+   Usage: see scripts/themes/harness/stage3-palette-proof.mjs. */
+
+html:root[data-theme='glassmorphism'] {
+  --mark: #0f1a38;
+  --mark-muted: #3b4666;
+  --accent: #1a4bbd;
+  --accent-2: #0a5a94;
+  --link: #1a44b0;
+  --on-accent: #ffffff;
+
+  --blob-violet-hi: #8fb2ff;
+  --blob-violet: #2a5fd8;
+  --blob-cyan-hi: #b3e0ff;
+  --blob-cyan: #2a92e8;
+  --blob-peach-hi: #e2f0ff;
+  --blob-peach: #7fb6f2;
+  --blob-pink-hi: #7aa2f2;
+  --blob-pink: #1c46b8;
+  --blob-worst: var(--blob-pink);
+  --orb-glow: 0 0 0 transparent;
+
+  --line: rgb(20 50 130 / 0.16);
+  --shadow: 0 30px 60px -24px rgb(20 50 140 / 0.3), 0 2px 8px -2px rgb(20 50 140 / 0.08);
+  --shadow-sm: 0 10px 24px -12px rgb(20 50 140 / 0.3);
+
+  --wp-base-a: #bcd6ff;
+  --wp-base-b: #4f86ec;
+  --wp-blue: #2f6cf0;
+  --wp-orange: #3fa2ff;
+  --wp-coral: #1f55d6;
+  --wp-amber: #cfe6ff;
+  --wp-deep: #1a3fae;
+  --wp-edge: rgb(10 28 90 / 0.42);
+  --wp-body: #4b6fc4;
+  --field: #cfe0ff;
+  --field-top: #dde9ff;
+  --field-bottom: #bcd4ff;
+  --field-raised: #f8fbff;
+
+  --btn-a: #1f5fe0;
+  --btn-b: #0b66b8;
+  --btn-ink: #ffffff;
+  --btn-glow: rgb(31 95 224 / 0.5);
+
+  --icon-cyan-hi: #6fb6ee;
+  --icon-cyan: #0b5fa8;
+  --icon-peach-hi: #8fb4f2;
+  --icon-peach: #2753c2;
+  --icon-pink-hi: #7ea6f0;
+  --icon-pink: #163f9e;
+}
+
+html:root[data-theme='glassmorphism'][data-scheme='dark'] {
+  /* Deep navy with the Bloom blues glowing out of it. */
+  --mark: #f4f7ff;
+  --mark-muted: #d6dcf0;
+  --accent: #c4dcff;
+  --accent-2: #cfe7ff;
+  --link: #b7d4ff;
+  --on-accent: #04102a;
+
+  --blob-violet-hi: #5f93ff;
+  --blob-violet: #1b4bd0;
+  --blob-cyan-hi: #5fa2f0;
+  --blob-cyan: #1a6fd6;
+  --blob-peach-hi: #6fa6f0;
+  --blob-peach: #2f7ee8;
+  --blob-pink-hi: #4d78e8;
+  --blob-pink: #122f94;
+  --blob-worst: var(--blob-peach-hi);
+  --orb-glow: 0 0 90px 6px rgb(60 130 255 / 0.22);
+
+  --wp-base-a: #06123a;
+  --wp-base-b: #030a24;
+  --wp-blue: #1b4fe0;
+  --wp-orange: #3f8cff;
+  --wp-coral: #0e2d8f;
+  --wp-amber: #6aa2ea;
+  --wp-deep: #0a2070;
+  --wp-edge: rgb(1 4 15 / 0.8);
+  --wp-body: #02071a;
+  --field: #030a24;
+  --field-top: #06123a;
+  --field-bottom: #020820;
+  --field-raised: #0c1a44;
+
+  --btn-a: #3d86ff;
+  --btn-b: #7fc0ff;
+  --btn-ink: #04102a;
+  --btn-glow: rgb(61 134 255 / 0.55);
+
+  --icon-cyan-hi: #3f8ae0;
+  --icon-cyan: #0e4fa6;
+  --icon-peach-hi: #4f86e6;
+  --icon-peach: #1d4fb8;
+  --icon-pink-hi: #4d78e8;
+  --icon-pink: #122f94;
+}
+
+html[data-theme='glassmorphism'] body {
+  background: var(--wp-body);
+}
+
+/* The Bloom: overlapping petals from one centre right of middle. */
+html[data-theme='glassmorphism'] main::before {
+  inset: 0;
+  opacity: 1;
+  filter: none;
+  animation: none;
+  background:
+    radial-gradient(130% 110% at 50% 45%, transparent 48%, var(--wp-edge) 100%),
+    radial-gradient(22% 26% at 60% 42%, var(--wp-amber) 0%, transparent 70%),
+    radial-gradient(50% 40% at 70% 30%, var(--wp-orange) 0%, var(--wp-orange) 18%, transparent 68%),
+    radial-gradient(46% 52% at 50% 62%, var(--wp-blue) 0%, var(--wp-blue) 22%, transparent 70%),
+    radial-gradient(40% 44% at 84% 70%, var(--wp-coral) 0%, var(--wp-coral) 20%, transparent 70%),
+    radial-gradient(42% 46% at 14% 20%, var(--wp-deep) 0%, transparent 70%),
+    radial-gradient(40% 40% at 10% 90%, var(--wp-coral) 0%, transparent 70%),
+    linear-gradient(150deg, var(--wp-base-a), var(--wp-base-b));
+}
+
+html[data-theme='glassmorphism'] .orb {
+  background: linear-gradient(155deg, var(--hi) 8%, var(--lo) 78%);
+  filter: none;
+}
