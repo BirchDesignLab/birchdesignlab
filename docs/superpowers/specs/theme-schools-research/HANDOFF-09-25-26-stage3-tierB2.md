@@ -111,3 +111,11 @@ Then the gates and a stop.
   second round went to Sonnet `xhigh` and landed everything.
 - Workflow agents see the triggering user message; say it is handled in
   every prompt. Verify every result against `journal.jsonl` and the disk.
+- **The PR #91 review caught a bug no film did:** E11's 30 fps throttle froze
+  vaporwave's hero after a cross-school arrival (the deferred-link path),
+  while every verifier hard-loaded the page. Film arrivals, not only loads:
+  `scripts/themes/vaporwave/verify-arrival-animates.mjs` counts WebGL draws
+  after one.
+- **The Portal keeps the scroll position across schools** on the same page:
+  a probe that clicks a link at the page foot arrives at the foot, with the
+  hero off-screen and paused. Click from the top.
