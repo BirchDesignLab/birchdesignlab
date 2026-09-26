@@ -94,3 +94,43 @@ stills that show the portal's welcome prompt.
 Then the orchestrator's own look, the gates (`harness/stage-gates.mjs
 --before-dir stage3-before --after-label stage3-after`), the S3 side by
 side, founder sheets, the B2 report and the stop.
+
+## Fix round, part 1 (09-26-26): paused before the review
+
+Workflow `wf_eb99fea5-5f7` ran the fixers; the founder asked to pause before
+the review stage, so the orchestrator stopped the workflow the moment the
+vaporwave re-critic and verifier started (they were killed within seconds and
+made nothing). Committed as `4fb2b69` (local, not yet pushed to PR #93).
+
+- **vw-fix-interact (done):** caption presses no longer start a drag; the
+  attract loop's grid is `minmax(0, 1fr)` so the kana and marquee stay in the
+  screen; the marble screensaver's sphere is about a third of the window;
+  the pipes are shaded 3D-looking tubes on the 2D canvas (Contact keeps one
+  WebGL canvas, the horizon); light-scheme stills. vitest 388, astro check
+  clean, test:dist 483; `verify-arrival-animates.mjs` passes.
+- **vw-fix-marble (done):** an object-space face mask keeps the veins off
+  the Venus's face in both qualities; the kiosk drum sized from the neck
+  footprint; the live canvas premultiplied and the drop shadow shared, so
+  the handoff changes 1.31% (dark) and 1.27% (light) of the bust's pixels;
+  `aria-hidden` moved onto the decorative children; DPR min(dpr, cap), glide
+  epsilon 0.02 rad/s, the dispose guard, no grab cursor before live, clean
+  context restore; `venus.glb` 132.7 KB, 30,000 triangles,
+  `KHR_mesh_quantization` required, VEC3 normals with a 4-byte stride.
+  Open: its context-loss film shows a black sky in the lost and restored
+  frames (it believes a compositor artefact of the probe).
+- **glass-fix-lens (work done, report lost):** the stop killed it while it
+  was reviewing its own films; its code, tests (vitest 388), probes and films
+  are on disk (`.out/stage3-b2/glass-fix-lens/verify-results.json`): the
+  lens canvas and hit control at z -1 with the orbs moved to -2 (so the lens
+  covers the orb it refracts); idle draws 0 and orb drift 0 over 4 s; 6 draws
+  over a 120 px scroll; production probes behind `?lensProbe=`; seam median
+  1 px, max 1 px; identity away from an orb max 1 level. To check in the
+  review: identity OVER an orb edge reads max 168 levels, 3% of pixels over
+  8 (the lens's orb copy may not match the page's orb exactly); the start is
+  "partial" at 1024 x 768 (under the hero window's edge) and at 390 x 844
+  (under the Control Centre, which glass-fix-ui reshapes); its hit probe
+  reports the hit control topmost at scroll positions where a pane covers
+  the lens centre, which needs a second look.
+- **Not run yet:** glass-fix-ui (the frost slider, the hero switch box,
+  Services, the location pill, the Control Centre as compact tiles, E12
+  contrast), then the re-critics and verifiers, then the gates.
