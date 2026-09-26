@@ -239,3 +239,100 @@ Workflow `wf_6f9da3c7-da4` (8 agents), reports in
   orchestrator's own look, the Stage 3 gates (`harness/stage-gates.mjs
   --before-dir stage3-before --after-label stage3-after`), the S3 side by
   side, founder sheets, the B2 report and the stop.
+
+## Round 4 (09-26-26): workflow 5, then STOPPED for the founder
+
+Workflow `wf_80f40fcf-631` (6 agents, about 45 minutes, every agent
+returned), reports in `.out/stage3-b2/w5-reports.json`. Committed as
+`c24c067`, pushed to #93. Founder's pre-launch answers: stop on a block,
+no pause before the reviews, run the gates regardless.
+
+- **glass-fix-r4 (Opus medium):** G1 fixed at the root: `orbs-clock.ts`
+  cleared `translate` to `''`, which put the stylesheet's -50% -50% back; it
+  now reads with `translate: none` (JS matches CSS `view()` within 0.1 px at
+  1440 and 390, scroll 0/200/400; was 17 to 65 px). Identity at the 1440
+  start 0.80% of disc pixels over 8 levels, all on the orb edge; seam median
+  0.18 px, max 1.18. G2: B1's phone hero back (min-height 0, 3.5rem top);
+  a new `cornerStart()` in `physics.ts` (6 unit tests) starts the lens half
+  under the window's lower corner across an orb on phones and portrait
+  tablets (390: right corner over peach, cover 0.48; 820: left corner over
+  pink); desktop and 1024 starts unchanged. Touch film: a drag on the
+  visible half moves the lens, a swipe on the covered half or the copy
+  scrolls the page. G3 needed no code: tiles clear the desktop switcher by
+  67 to 204 px at rest at 1440, 1280 and 1024.
+- **vw-fix-r4 (Sonnet xhigh):** pipes without the halo band, ball joints
+  drawn after each run's strokes; the phone attract content sits in the
+  on-screen part of the CRT with no scroll; `preventDefault` on caption
+  pointerdown (selection 0); the wrong "one grid cell" comment fixed.
+- **Glass re-critic (Opus high): BLOCKS 2.** (1) 820x1180 portrait tablet:
+  the lens jumps across the window on arrival (poster at the lower-right
+  corner 723,604, live lens at the lower-left 97,604; 10 of 12 hard loads
+  and every switcher arrival; 2 loads settle right, so the start varies).
+  Cause: `planLensStart`'s corner branch runs first in `home-boot` before
+  the orb clock has written any translate (static orb rects), then again at
+  lens mount with the clock's rects, and `cornerStart` ignores the poster's
+  spot. Phones pick the same corner both times, so they are steady but
+  fragile. (2) Desktop hero orbs are not at B1's hand-placed spots: the
+  Control Centre joined `.hero`, so the hero box is 167 to 263 px taller and
+  every %-placed orb resolves lower (1440: peach 796 to 977, pink 644 to
+  841; 1280 and 1024 lose two of four first-view orbs). Predates round 4;
+  round 4 restored B1's orb box on phones only. Fix hint: give `.hero >
+  .orbs` B1's box at every size.
+- **Glass verifier (Sonnet high):** 10 films, 0 failures (cases 1, 4 to 7,
+  14, 15, 18 to 24). It did not film 820 arrivals, so it missed blocker 1.
+- **Vaporwave re-critic (Opus high): PASSES.** Pipes "read as the Windows
+  3D Pipes screensaver"; caption selection fixed; no scroll on the attract
+  tap.
+- **Vaporwave verifier (Sonnet high):** 29 films; 1 failing case (16, a
+  dark line on the face "at yaw 60"). The orchestrator looked:
+  `vw-reverify-r4/case16-face-veins.jpg` shows a clean face in the "yaw 60"
+  frame, and the probe's yaw labels are off (its "yaw 0" is the back of the
+  head); marble code is untouched since round 3. Read as probe noise (brow
+  or nose shading), not a defect. Case 20's halo-band sub-metric reads
+  0.07 to 0.2 against 0.1 at small line widths (antialiasing); the crops
+  show no band.
+- **Orchestrator's own look:** confirmed glass blocker 1 in the critic's
+  820 arrival film (+317 ms right, +635 ms left) and blocker 2 in the
+  1440 B1-vs-round-4 first-view sheet (the pink and peach orbs at the
+  window's lower corners are gone); the phone first view matches B1 with the
+  lens at the lower-right corner; the pipes 2x crop and the phone attract
+  strip look right.
+
+- **Gates (`stage3-gates/gates.md`):** `npm run verify` clean (401, 0
+  errors, 483). Smoke, switcher (72/72 held), unname, wordmark (28/28) and
+  the 48 after-strips PASS. Timing FAIL on one transient
+  `net::ERR_NO_BUFFER_SPACE` loading quiet (desktop dark), not a number.
+  Numbers against Stage 2 (`harness/b2r4-timing-compare.mjs`): glass cold
+  and switcher-warm firstVisible +220 to +279 ms dark and mobile, +17 to
+  +28 desktop light; untouched schools +35 to +113 (machine drift), so glass
+  is about 150 to 200 ms beyond drift. Hover and warm unchanged. No freeze
+  in the arrival strips. A founder call (B1's was 20 to 70 ms).
+- **S3 side by side** (`harness/b2r4-s3-sheet.mjs`, `.out/stage3-b2-s3/`):
+  the boundary holds.
+- Report: `tier-b2-report.md`. Founder sheets:
+  `.out/stage3-b2/founder-r4/`.
+
+### Founder calls raised this round
+
+- Glass arrival timing (above): accept into the transitions phase, or
+  investigate the first paint now.
+
+- Phone lens: it sits almost concentric with the peach orb, so the visible
+  lower half shows the orb's lower edge inside the disc rather than an edge
+  crossing the rim. The look, or start further along the edge?
+- Portrait tablet: the Control Centre margin is 5rem and the tablet window
+  sits at 152 px, not B1's 290 (round 3 moved it). Accept?
+- Desktop arrival: the poster reads as a solid peach disc, then the clear
+  live lens about 850 ms after the click (same spot and size; predates
+  round 4). Match the poster to the lens, or accept?
+- Phone first view at rest: the portal switcher sits over the Control
+  Centre's second tile row. Fine at rest too?
+- Vaporwave attract: a tap with the button in the top ~200 px of a phone
+  viewport leaves under ~125 px of CRT on screen, so the loop plays mostly
+  off screen. Accept, echo it on the plaque or button, or clamp it?
+- Vaporwave desktop attract now centres in the visible band when the CRT's
+  top is scrolled off (byte-for-byte the same when the whole screen is in
+  view). Keep?
+- Pipes: a spawn point also gets a ball (the original does not); the drop
+  shadow's round cap shows as a thin crescent ahead of a growing head. Both
+  fine to keep?
