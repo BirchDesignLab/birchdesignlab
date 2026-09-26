@@ -171,6 +171,8 @@ const { copy, theme } = Astro.props;
        min-content (its Notepad menu bar) could push the page past a narrow
        viewport instead of shrinking with it. */
     .desk { grid-template-columns: minmax(0, 1fr); }
-    .side-scene { display: none; }
+    /* The screensaver window shows on phones too (founder, 09-25-26): the
+       old full scene was hidden here, but the window is compact enough to
+       stack under mail.txt. */
   }
 </style>
