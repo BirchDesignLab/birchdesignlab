@@ -373,3 +373,14 @@ with the first-pass sheets:
    check**.
 5. Do the fringe now, **hold the rest**, push, hand off (the context window
    is full).
+
+## Answers at the start of B2 round 4 (founder, 09-26-26)
+
+Round 4 plan: glass-fix-r4 (Opus 5.5 `medium`) and vw-fix-r4 (Sonnet 5
+`xhigh`) in parallel, then per school an Opus 5.5 `high` re-critic and a
+Sonnet 5 `high` verifier: 6 agents.
+
+1. If a round-4 critic still blocks: **stop and bring it to the founder** (no
+   automatic extra fix round).
+2. **No pause** before the review stages; run straight through.
+3. **Run the Stage 3 gates regardless** of the critics' verdicts.
