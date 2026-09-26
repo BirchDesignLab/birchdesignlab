@@ -80,12 +80,16 @@ const QUALITY = {
 
 const MARBLE_NOISE = /* glsl */ `
 varying vec3 vMarblePos;
+varying vec3 vObjectPos;
 uniform vec3 uBase;
 uniform vec3 uBase2;
 uniform vec3 uVein;
 uniform float uStrength;
 uniform float uSeed;
 uniform int uOctaves;
+uniform float uFaceMaskOn;
+uniform vec3 uFaceCenter;
+uniform vec3 uFaceRadius;
 float mHash(vec3 p) {
   p = fract(p * 0.3183099 + 0.1);
   p *= 17.0;
@@ -116,8 +120,18 @@ float mFbm(vec3 p) {
 `;
 
 /** @param {keyof MARBLE_TINTS} tintName
-    @param {{scale?: number, seed?: number, octaves?: number}} [opts] */
-export function marbleMaterial(tintName, { scale = 1, seed = 0, octaves = 6 } = {}) {
+    @param {{scale?: number, seed?: number, octaves?: number, faceMask?: {center: [number, number, number], radius: [number, number, number]} | null}} [opts]
+    `faceMask`: an object-space (mesh-local, pre-modelMatrix -- see `vObjectPos`
+    below) ellipsoid that attenuates vein strength toward zero at its centre,
+    fading back to full strength beyond its radius. Venus-only (B2 fix round,
+    "veins off the face": the founder rejected a primary vein crossing the
+    cheek like a crack). Object space, not `vMarblePos`'s world space: world
+    space is the mesh's position after modelMatrix, which bakes in the live
+    bust's yaw, so a world-space mask would drift across the surface (and in
+    and out of the face) as the bust turns, while `transformed` (the raw
+    per-vertex attribute, unrotated) stays glued to the geometry at every yaw,
+    in both the offline stills and the live bust. */
+export function marbleMaterial(tintName, { scale = 1, seed = 0, octaves = 6, faceMask = null } = {}) {
   const t = MARBLE_TINTS[tintName];
   const dark = tintName === 'black';
   const mat = new THREE.MeshPhysicalMaterial({
@@ -137,13 +151,16 @@ export function marbleMaterial(tintName, { scale = 1, seed = 0, octaves = 6 } = 
     uSeed: { value: seed },
     uScale: { value: scale },
     uOctaves: { value: octaves },
+    uFaceMaskOn: { value: faceMask ? 1 : 0 },
+    uFaceCenter: { value: new THREE.Vector3(...(faceMask?.center ?? [0, 0, 0])) },
+    uFaceRadius: { value: new THREE.Vector3(...(faceMask?.radius ?? [1, 1, 1])) },
   };
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vMarblePos;\nuniform float uScale;\nuniform float uSeed;')
+      .replace('#include <common>', '#include <common>\nvarying vec3 vMarblePos;\nvarying vec3 vObjectPos;\nuniform float uScale;\nuniform float uSeed;')
       .replace('#include <begin_vertex>',
-        '#include <begin_vertex>\nvMarblePos = (modelMatrix * vec4(transformed, 1.0)).xyz * uScale + vec3(uSeed * 3.1, uSeed * 1.7, uSeed * 5.3);');
+        '#include <begin_vertex>\nvObjectPos = transformed;\nvMarblePos = (modelMatrix * vec4(transformed, 1.0)).xyz * uScale + vec3(uSeed * 3.1, uSeed * 1.7, uSeed * 5.3);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\n' + MARBLE_NOISE)
       .replace('#include <color_fragment>', /* glsl */ `
@@ -161,6 +178,15 @@ export function marbleMaterial(tintName, { scale = 1, seed = 0, octaves = 6 } = 
         float mFine = 1.0 - smoothstep(0.0, 0.07, abs(sin(mT2)));
         mFine *= smoothstep(0.38, 0.7, mFbm(mp * 1.6 + 11.0));
         float marbleVein = clamp(mVein + mFine * 0.8, 0.0, 1.0);
+        // Face mask (Venus only, uFaceMaskOn=1): fades veins to zero inside
+        // the ellipsoid (nose/cheek/forehead/chin), full strength beyond it
+        // (hair, ears, neck, back), in mesh-local object space so the clean
+        // region stays glued to the face at every yaw.
+        if (uFaceMaskOn > 0.5) {
+          vec3 fd = (vObjectPos - uFaceCenter) / uFaceRadius;
+          float faceDist = length(fd);
+          marbleVein *= smoothstep(0.78, 1.0, faceDist);
+        }
         // Cloudy base.
         float mCloud = mFbm(mp * 2.1 + 3.0);
         vec3 mBase = mix(uBase, uBase2, smoothstep(0.18, 0.92, mCloud));
@@ -171,6 +197,11 @@ export function marbleMaterial(tintName, { scale = 1, seed = 0, octaves = 6 } = 
         roughnessFactor = mix(roughnessFactor, min(1.0, roughnessFactor * 1.7 + 0.04), marbleVein);
       `);
   };
+  // One cache key for every marbleMaterial call: onBeforeCompile emits the
+  // identical shader source every time (the face mask is a runtime branch on
+  // uFaceMaskOn, not a different program), so every tint and prop -- venus's
+  // face-masked material included -- shares one compiled program and differs
+  // only by its own uniform values, the normal three.js pattern.
   mat.customProgramCacheKey = () => 'bdl-marble-v1';
   return mat;
 }
@@ -262,6 +293,23 @@ export async function loadVenus(url) {
 }
 
 /* ---------------------------------------------------------------- props */
+
+/** The Venus's own face-mask ellipsoid, passed as marbleMaterial's
+    `faceMask` option (mesh-local/object space -- see that option's doc
+    comment). Measured against the loaded GLB with
+    scripts/themes/vaporwave/b2fix-vw-marble-measure.mjs (a per-height-band
+    profile of the mesh's own x half-width and z front extent): the nose
+    sits at object-space y about 0.0-0.1 where z peaks at 1.0 (the mesh's
+    frontmost point); the chin/jaw falls off below y about -0.4 (z drops from
+    about 0.83 to 0.45, the neck stub's own shallower front-to-back depth);
+    the brow/hairline sits above y about 0.7 (z falls from about 0.86 toward
+    0.63 at the crown); the ears sit near the widest point, x half-width 1.0
+    at y 0.2-0.4. The radii below sit inside the ears' x extent and cover
+    nose-to-forehead-to-chin in y, so the fix round's founder complaint (a
+    vein crossing the cheek like a crack) clears at every yaw the live
+    bust's drag and idle turn reach, while veins stay on the hair, neck and
+    back. B2 fix round 09-26-26, seat vw-fix-marble. */
+const VENUS_FACE_MASK = { center: [0, 0.15, 0.55], radius: [0.85, 0.85, 0.62] };
 
 /** A small marble drum (contrasting stone) for staging the bust off the
     live-bust canvas, e.g. the Home kiosk still. `radius` sizes it relative
@@ -381,7 +429,7 @@ const PROPS = {
     const g = new THREE.Group();
     const mesh = ctx.venusMesh.clone();
     mesh.geometry = ctx.venusMesh.geometry; // share geometry, not the material
-    mesh.material = marbleMaterial(tint, { scale: 2.4, seed: 61, octaves: ctx.octaves });
+    mesh.material = marbleMaterial(tint, { scale: 2.4, seed: 61, octaves: ctx.octaves, faceMask: VENUS_FACE_MASK });
     g.add(mesh);
     return g;
   },
@@ -389,18 +437,62 @@ const PROPS = {
   /** The Venus on a small marble drum, for the lobby/kiosk staging. */
   'venus-kiosk'(tint, ctx) {
     const g = PROPS.venus(tint, ctx);
+    const bustMesh = g.children[0];
     const bustPlinth = { white: 'black', pink: 'white', lavender: 'pink', black: 'white' }[tint] ?? 'black';
-    // Size the drum off the bust's own footprint (a "small" drum, not a
-    // fixed prop-scale one): a touch wider than the bust's half-width so it
-    // reads as a plinth, not a pin.
-    const bustBox = new THREE.Box3().setFromObject(g.children[0]);
-    const bustRadius = Math.max(bustBox.max.x - bustBox.min.x, bustBox.max.z - bustBox.min.z) / 2;
-    const drum = marbleDrum(bustPlinth, { ...ctx, radius: bustRadius * 0.6 });
+    // Size the drum off the bust's own NECK footprint, not its whole
+    // bounding box (fix round: "a head in a collar" -- the drum used to be
+    // 0.6x the head's own half-width, so it was narrower than the neck the
+    // bust actually stands on, and the wider head/shoulders above it
+    // overhung the drum's rim like a collar). Sample the mesh's own vertices
+    // within a thin band just above its base cut (object-space y in
+    // [0, 8% of height]) for their radial extent: that is the true neck
+    // footprint the drum's top face must clear, and it is reliably narrower
+    // than the head's own widest point (the ears, at mid-height) that the
+    // old measurement used instead.
+    // bustMesh.geometry's own attribute values are the mesh's RAW, still
+    //-quantized local coordinates (KHR_mesh_quantization's own [-1, 1]-ish
+    // normalized range) -- venus.glb's dequantization is a node transform
+    // (translation + non-uniform per-axis scale, process-venus.mjs's
+    // nodeExtra), applied by matrixWorld, not baked into the vertex buffer.
+    // Sampling the raw buffer directly (an earlier version of this fix did)
+    // measures in the wrong units entirely against `bustBox` below (which
+    // Box3.setFromObject computes correctly, through matrixWorld) -- a real
+    // mesh half-width around 0.12-0.17 real units read back as "0.8" of raw
+    // quantized range, ballooning the drum to several times the bust's own
+    // size. bustMesh.matrixWorld is just that dequant transform here (g has
+    // not been rotated or added to a scene yet), so applying it per sample
+    // brings the measurement into the same real units bustBox already uses.
+    const geoPos = bustMesh.geometry.attributes.position;
+    const bustBox = new THREE.Box3().setFromObject(bustMesh);
+    const height = bustBox.max.y - bustBox.min.y;
+    const band = bustBox.min.y + height * 0.08;
+    const v = new THREE.Vector3();
+    let neckRadius = 0;
+    for (let i = 0; i < geoPos.count; i++) {
+      v.fromBufferAttribute(geoPos, i).applyMatrix4(bustMesh.matrixWorld);
+      if (v.y < bustBox.min.y || v.y > band) continue;
+      const r = Math.hypot(v.x, v.z);
+      if (r > neckRadius) neckRadius = r;
+    }
+    if (neckRadius <= 0) neckRadius = Math.max(bustBox.max.x - bustBox.min.x, bustBox.max.z - bustBox.min.z) / 2;
+    // Clearly wider than the neck (fix round's own words), not a fixed
+    // fraction of the head: about 45% wider than the measured neck radius,
+    // so the neck's own ragged base-cut ring sits inside the drum's rim with
+    // margin at every tint (the tints share one mesh, so one measurement).
+    const drum = marbleDrum(bustPlinth, { ...ctx, radius: neckRadius * 1.45 });
     g.add(drum);
-    // The bust's own base (the flat cut at y=0 in its local space) sits on
-    // the drum's flat top.
+    // The bust's own base (the flat cut, at bustBox.min.y in its CURRENT
+    // position -- see the dequantization note above) sits on the drum's flat
+    // top. This must be an ADD to the mesh's existing position.y, not an
+    // overwrite: bustMesh.position.y already carries venus.glb's own
+    // dequantization translation (KHR_mesh_quantization's node transform,
+    // set by GLTFLoader), and overwriting it (an earlier version of this fix
+    // did) discards that translation's own contribution to where the base
+    // cut actually lands, sinking the bust into the drum by the very offset
+    // this line is trying to close (the fix round's "a head in a collar",
+    // still present after the radius fix alone).
     const box = new THREE.Box3().setFromObject(drum);
-    g.children[0].position.y = box.max.y;
+    bustMesh.position.y += box.max.y - bustBox.min.y;
     return g;
   },
 };
@@ -450,13 +542,32 @@ function blobTexture() {
     (offline and live each make exactly one; the offline harness makes at
     most two, one per quality, since it renders both the 'still' kiosk shot
     and the 'live' About poster).
-    @param {{quality?: 'still'|'live', canvas?: HTMLCanvasElement}} [opts]
+    @param {{quality?: 'still'|'live', canvas?: HTMLCanvasElement, readback?: boolean}} [opts]
     `canvas`: the live bust's own already-mounted <canvas> (B2, seat vw-4b);
-    omitted, three.js creates one internally, as every offline caller does. */
-export function createStage({ quality = 'still', canvas } = {}) {
+    omitted, three.js creates one internally, as every offline caller does.
+    `readback`: whether `render()` may read the drawing buffer back with
+    `toDataURL` (the offline harness's whole point -- it wants a PNG). Default
+    is `!canvas`: the live bust always passes its own canvas and never wants
+    the readback (B2 fix round: it was calling render() once, for the first
+    frame, and throwing the PNG away -- a synchronous GPU stall for nothing),
+    while every offline caller omits `canvas` and keeps the readback it needs.
+    Callers may still pass `readback` explicitly to override the default. */
+export function createStage({ quality = 'still', canvas, readback = !canvas } = {}) {
   const q = QUALITY[quality] ?? QUALITY.still;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+  // premultipliedAlpha: true (three.js's own default -- B2 fix round found it
+  // overridden to false here, which is the classic WebGL antialias+alpha
+  // pitfall: with alpha:true and antialias:true, MSAA's edge-pixel resolve
+  // produces colour values consistent with premultiplied semantics, so a
+  // context that is told those values are already "straight" (false) shows
+  // a dark, jagged rim wherever coverage is partial -- exactly the live
+  // bust's dark handoff rim the poster (rendered by this same module) never
+  // showed once compressed and shadowed. True fixes both the on-screen live
+  // canvas and any residual fringe in the offline PNG export (toDataURL
+  // correctly unpremultiplies for the exported PNG's straight alpha either
+  // way). preserveDrawingBuffer only matters for that same PNG export, so it
+  // tracks `readback` instead of always being on.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: readback, premultipliedAlpha: true });
   renderer.setPixelRatio(1);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -564,7 +675,10 @@ export function createStage({ quality = 'still', canvas } = {}) {
 
     renderer.render(scene, camera);
     if (q.shadow) renderer.render(scene, camera); // VSM settles on the second pass
-    return renderer.domElement.toDataURL('image/png');
+    // The live bust calls render() once, for its first frame, and never
+    // wants the PNG (it draws straight to its on-screen canvas); readback
+    // false skips the synchronous GPU readback entirely for that caller.
+    return readback ? renderer.domElement.toDataURL('image/png') : undefined;
   }
 
   function info() {

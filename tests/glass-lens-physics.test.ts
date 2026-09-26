@@ -11,6 +11,12 @@ import {
   stretchTarget,
   coverRect,
   viewProgress,
+  circleRectOverlaps,
+  circleRectGap,
+  crossesCircleEdge,
+  findStartPosition,
+  type RectLike,
+  type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
 
 describe('Lag2', () => {
@@ -169,5 +175,68 @@ describe('viewProgress', () => {
   it('is 0.5 at the midpoint of its pass through the viewport', () => {
     // span = 800 + 500 = 1300; progress 0.5 when elementTop = 800 - 650 = 150
     expect(viewProgress(150, 500, 800)).toBeCloseTo(0.5, 5);
+  });
+});
+
+describe('circleRectOverlaps / circleRectGap', () => {
+  const rect: RectLike = { left: 100, top: 100, right: 300, bottom: 200 };
+  it('overlaps when the circle centre is inside the rect', () => {
+    expect(circleRectOverlaps(200, 150, 10, rect)).toBe(true);
+    expect(circleRectGap(200, 150, 10, rect)).toBeLessThan(0);
+  });
+  it('overlaps when the circle only reaches the rect', () => {
+    expect(circleRectOverlaps(95, 150, 10, rect)).toBe(true); // 5px into the 10px radius
+  });
+  it('does not overlap when clear of the rect', () => {
+    expect(circleRectOverlaps(50, 150, 10, rect)).toBe(false);
+    expect(circleRectGap(50, 150, 10, rect)).toBeCloseTo(40, 5); // 50px away minus the 10px radius
+  });
+  it('touching counts as overlap (the fix hint: never graze a pane)', () => {
+    expect(circleRectOverlaps(90, 150, 10, rect)).toBe(false); // gap is exactly 0, strictly less-than
+    expect(circleRectGap(90, 150, 10, rect)).toBeCloseTo(0, 5);
+  });
+});
+
+describe('crossesCircleEdge', () => {
+  it('is true when the two circles genuinely intersect', () => {
+    expect(crossesCircleEdge(0, 0, 50, 80, 0, 50)).toBe(true); // 80px apart, radii 50 each
+  });
+  it('is false when one circle fully contains the other', () => {
+    expect(crossesCircleEdge(0, 0, 100, 10, 0, 20)).toBe(false); // small orb wholly inside the lens
+  });
+  it('is false when the two circles are fully separate', () => {
+    expect(crossesCircleEdge(0, 0, 50, 500, 0, 50)).toBe(false);
+  });
+});
+
+describe('findStartPosition', () => {
+  const bounds: Bounds = [0, 0, 1000, 800];
+  it('picks a point crossing an orb edge when the viewport is otherwise empty', () => {
+    const orbs = [{ cx: 500, cy: 400, r: 150 }];
+    const found = findStartPosition(bounds, 92, [], orbs);
+    expect(found.open).toBe(true);
+    expect(crossesCircleEdge(found.x, found.y, 92, orbs[0].cx, orbs[0].cy, orbs[0].r)).toBe(true);
+  });
+  it('avoids every obstruction it can, even with no orb to cross', () => {
+    const obstructions: RectLike[] = [{ left: 0, top: 0, right: 1000, bottom: 700 }];
+    const found = findStartPosition(bounds, 50, obstructions, []);
+    expect(found.open).toBe(true);
+    expect(circleRectOverlaps(found.x, found.y, 50, obstructions[0])).toBe(false);
+  });
+  it('reports open:false and still returns a point when nothing is open', () => {
+    const obstructions: RectLike[] = [{ left: -1000, top: -1000, right: 2000, bottom: 2000 }]; // covers the whole viewport
+    const found = findStartPosition(bounds, 92, obstructions, []);
+    expect(found.open).toBe(false);
+    expect(found.x).toBeGreaterThanOrEqual(bounds[0]);
+    expect(found.x).toBeLessThanOrEqual(bounds[2]);
+  });
+  it('prefers a fully open, orb-crossing point over a merely open one', () => {
+    // A pane fills the left half; an orb sits in the open right half.
+    const obstructions: RectLike[] = [{ left: 0, top: 0, right: 480, bottom: 800 }];
+    const orbs = [{ cx: 750, cy: 400, r: 150 }];
+    const found = findStartPosition(bounds, 60, obstructions, orbs);
+    expect(found.open).toBe(true);
+    expect(circleRectOverlaps(found.x, found.y, 60, obstructions[0])).toBe(false);
+    expect(crossesCircleEdge(found.x, found.y, 60, orbs[0].cx, orbs[0].cy, orbs[0].r)).toBe(true);
   });
 });

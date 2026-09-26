@@ -22,6 +22,19 @@
  * So each orb's untransformed document-relative top is measured once, with
  * its own scroll-linked `translate` cleared back to the stylesheet's static
  * `-50% -50%`, and cached; only `window.scrollY` is read every frame.
+ *
+ * B2 fix round: two things the glass critic measured and blocked on.
+ * - `onMove`, called only in the frame this loop actually writes a new
+ *   `translate` (i.e. `scrollY` or the viewport height changed since the
+ *   last frame): `home-boot.ts` wires this to the lens's own `invalidate()`,
+ *   so the lens redraws in the same frame the orbs move instead of never
+ *   redrawing at all (the critic's blocking #1: 0 lens draws while the
+ *   orbs moved 251-294 px on scroll).
+ * - When neither `scrollY` nor the viewport height changed, the frame does
+ *   no work at all: no `getBoundingClientRect`, no style write, no `onMove`
+ *   call (the nit: "rewrites every Home orb's translate each frame even
+ *   when scrollY is unchanged"). Idle time is now a bare comparison, not a
+ *   loop over every tracked orb.
  */
 
 interface TrackedOrb {
@@ -38,7 +51,9 @@ function parseRate(el: HTMLElement): number {
   return Number.isFinite(n) ? n : 0.45;
 }
 
-export function mountOrbClock(): (() => void) | void {
+/** `onMove` is called once per frame in which this loop actually repositions
+    an orb (never while idle): the lens's own redraw hook. */
+export function mountOrbClock(onMove?: () => void): (() => void) | void {
   const groups = document.querySelectorAll<HTMLElement>('.orbs[data-js-driven]');
   if (groups.length === 0) return;
 
@@ -70,10 +85,20 @@ export function mountOrbClock(): (() => void) | void {
   tracked.forEach((o) => ro.observe(o.el));
   window.addEventListener('orientationchange', measure);
 
+  let lastScrollY = NaN;
+  let lastVh = NaN;
   let raf = requestAnimationFrame(function frame() {
     raf = requestAnimationFrame(frame);
     const vh = window.innerHeight;
     const scrollY = window.scrollY;
+    // Idle: neither the scroll position nor the viewport height moved since
+    // the last frame, so every orb's progress is identical to what is
+    // already on screen. Skip the read/write pass entirely (a real cost
+    // saved, not just a draw skipped) and call nothing, so the lens does not
+    // redraw for a frame in which nothing actually moved.
+    if (scrollY === lastScrollY && vh === lastVh) return;
+    lastScrollY = scrollY;
+    lastVh = vh;
     for (const o of tracked) {
       if (!o.group.hasAttribute('data-live')) continue; // its section is off-screen (fx.ts's mountOrbs)
       const elementTop = o.docTop - scrollY;
@@ -82,6 +107,7 @@ export function mountOrbClock(): (() => void) | void {
       const px = o.rate * vh * progress;
       o.el.style.translate = `-50% calc(-50% - ${px.toFixed(2)}px)`;
     }
+    onMove?.();
   });
 
   return () => {

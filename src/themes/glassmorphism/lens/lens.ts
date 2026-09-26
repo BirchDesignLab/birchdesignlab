@@ -34,9 +34,42 @@
  *   drawn-ahead copy or with reduced transparency: those paths never run
  *   this script at all (drawn-ahead copies strip every `<script>`; a failed
  *   `mountLens()` call below leaves the poster exactly as the server
- *   rendered it).
+ *   rendered it). The same poster-first gate also covers a live scheme flip
+ *   (dawn/day/dusk, or light/dark): `loadTexture()` re-shows the poster and
+ *   hides the canvas the instant a new file starts loading, not only on the
+ *   very first mount, so the canvas never shows the OLD scheme's texture
+ *   against the NEW CSS wallpaper while the new file decodes.
+ *
+ * B2 fix round (the glass critic's blocking #1-#3 plus the verification
+ * gap):
+ * - Layering: the lens now sits between the orbs and the panes on Home
+ *   (`.orbs[data-js-driven]` moves to z-index -2 in theme.css, the lens
+ *   stays at -1), so it covers the orb it refracts instead of the orb
+ *   painting over it, and its hit control moves from z-index 2 (above every
+ *   pane) to -1 (the lens's own layer, under panes and text).
+ * - Redraw: a `scroll` listener invalidates every frame the page scrolls
+ *   (natural scroll moves `.orb` elements in the viewport with no JS
+ *   involved, so a redraw is all that is needed), and `orbs-clock.ts`'s
+ *   `onMove` hook invalidates whenever it actually repositions an orb.
+ *   `.orbs[data-js-driven] .orb`'s idle CSS wobble (`glass-drift`) is
+ *   dropped in theme.css, the source of the critic's 17-32 px of idle
+ *   drift with zero corresponding draws; the scroll-linked parallax is
+ *   still driven by `orbs-clock.ts`.
+ * - Start position: computed at mount from the live layout (every `.glass`
+ *   pane, the header, the portal switcher), not a fixed fraction of the
+ *   viewport (`physics.ts`'s `findStartPosition`), so it lands in open
+ *   wallpaper across an orb edge and adapts if another seat reshapes the
+ *   Control Centre.
+ * - The per-idle-frame `computeBounds()` call (two `getBoundingClientRect`s)
+ *   only runs when something has actually invalidated the frame, not on
+ *   every idle tick (the critic's nit on the loop's own idle cost).
+ * - Probes: `?lensProbe=identity` draws the model with no bending, rim,
+ *   tint or shadow (so it should vanish into the true page if the model
+ *   matches); `?lensProbe=seam` does the same, clipped to the left half, so
+ *   a vertical scan across the seam measures the offset while scrolling.
+ *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, type Bounds } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, findStartPosition, type Bounds, type RectLike } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbColorAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -62,6 +95,7 @@ uniform vec3 uOrbCol[8];
 uniform int uOrbN;
 uniform float uTint;
 uniform vec3 uVeil;
+uniform float uIdentity;
 
 vec3 backdrop(vec2 s) {
   vec2 uv = (s - uWallRect.xy) / uWallRect.zw;
@@ -82,6 +116,15 @@ void main() {
   float px = 1.0 / (uR * uDpr);
   float alpha = clamp((1.0 - r) / px + 0.5, 0.0, 1.0);
   if (alpha <= 0.0) { gl_FragColor = vec4(0.0); return; }
+  if (uIdentity > 0.5) {
+    // The seam/identity probes (lensProbe=identity|seam): the model's own
+    // backdrop, undisplaced, at the true world position p (not the bent,
+    // lens-relative q), so it can be diffed pixel for pixel against the
+    // true page with the lens hidden (identity) or scanned across a
+    // vertical seam against the real orbs beside it (seam, JS-side clip).
+    gl_FragColor = vec4(backdrop(p) * alpha, alpha);
+    return;
+  }
   float e = smoothstep(0.5, 1.0, r);
   float m = 0.8 + 0.5 * e * e;
   float disp = 0.03 * e;
@@ -135,14 +178,23 @@ export interface LensOptions {
   /** The lens's usable travel box in viewport coordinates: normally the
       whole viewport, narrowed to sit below the header bar and above the
       bottom chrome (README, "position: fixed ... bounded to the viewport
-      minus a small inset"). Re-read every frame; it is two
-      `getBoundingClientRect()` calls, well inside the proof's frame budget. */
+      minus a small inset"). Read only when a frame is already doing work
+      (an invalidate fired), never on an idle tick. */
   chromeInsets(): { top: number; bottom: number };
+  /** `?lensProbe=identity|seam` (README, item 5): draws the model with no
+      bending, rim, tint or shadow, so it can be measured against the true
+      page. Omit or `null` for normal operation; costs one float uniform. */
+  probe?: 'identity' | 'seam' | null;
 }
 
 export interface LensHandle {
   setTint(t: Tint): void;
   setTod(tod: TimeOfDay): void;
+  /** Forces a redraw on the next frame: `home-boot.ts` wires this to
+      `orbs-clock.ts`'s `onMove` hook and to this module's own `scroll`
+      listener, so the lens's copy of the orbs never goes stale while
+      something is actually moving them. */
+  invalidate(): void;
   destroy(): void;
 }
 
@@ -185,6 +237,41 @@ function resolveOrbs(centerX: number, centerY: number): ModelOrb[] {
     return da - db;
   });
   return all.slice(0, 8);
+}
+
+/** Every `.glass` pane plus the header and the portal switcher, in viewport
+    coordinates: the obstructions the lens's start position must clear
+    (`findStartPosition`). Run once, at mount. */
+function collectObstructions(): RectLike[] {
+  const out: RectLike[] = [];
+  const header = document.querySelector('.site-header');
+  if (header) {
+    const r = header.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) out.push(r);
+  }
+  const tail = document.querySelector('[data-portal-tail]');
+  if (tail) {
+    const r = tail.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) out.push(r);
+  }
+  for (const el of document.querySelectorAll<HTMLElement>('.glass')) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) out.push(r);
+  }
+  return out;
+}
+
+/** Every `.orb` on the page right now, as plain circles (no colour: the
+    start-position search only needs geometry). Unlike `resolveOrbs`, this is
+    not sorted or capped at 8: the search needs every orb that might be
+    crossable, not only the ones nearest an already-chosen centre. */
+function allOrbCircles(): { cx: number; cy: number; r: number }[] {
+  const out: { cx: number; cy: number; r: number }[] = [];
+  for (const el of document.querySelectorAll<HTMLElement>('.orb')) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0) out.push({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2 });
+  }
+  return out;
 }
 
 /** Reads a 1x1-wide probe element sized `height: 100lvh` to get the exact
@@ -249,7 +336,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     const aPos = gl!.getAttribLocation(prog, 'aPos');
     gl!.enableVertexAttribArray(aPos);
     gl!.vertexAttribPointer(aPos, 2, gl!.FLOAT, false, 0, 0);
-    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbN', 'uTint', 'uVeil']) {
+    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbN', 'uTint', 'uVeil', 'uIdentity']) {
       U[n] = gl!.getUniformLocation(prog, n);
     }
     tex = gl!.createTexture()!;
@@ -277,7 +364,6 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   let tod: TimeOfDay = opts.initialTod;
   let scheme: Scheme = opts.scheme();
   let textureReady = false;
-  let hasFirstFrame = false;
   let visible = !document.hidden;
   let onScreen = true;
   let destroyed = false;
@@ -303,13 +389,20 @@ export function mountLens(opts: LensOptions): LensHandle | null {
 
   function startPosition(): [number, number] {
     const bounds = computeBounds();
-    // Start in the hero's empty half, across an orb edge where bending
-    // shows (the proof's placement rule): the nearest orb to the box's
-    // right-of-centre point on desktop, or centred on a phone where the
-    // hero has no empty half to spare.
-    const cx = opts.phone ? (bounds[0] + bounds[2]) / 2 : bounds[0] + (bounds[2] - bounds[0]) * 0.68;
-    const cy = bounds[1] + (bounds[3] - bounds[1]) * 0.42;
-    return clampToBounds(cx, cy, bounds);
+    // Computed from the live layout, not a fixed fraction of the viewport
+    // (README, item 3): the widest point clear of every `.glass` pane and
+    // the portal chrome that also crosses an orb's edge, so the lens starts
+    // visible, in open wallpaper, showing the bend it exists for -- and
+    // keeps doing so if another seat reshapes the Control Centre, since this
+    // runs fresh at every mount. `host.dataset.lensStart` records which case
+    // was found ('open' or 'partial'), for a verify probe to read; a
+    // console note covers the case a probe was not watching for.
+    const found = findStartPosition(bounds, radius, collectObstructions(), allOrbCircles());
+    host.dataset.lensStart = found.open ? 'open' : 'partial';
+    if (!found.open) {
+      console.info('[glass lens] no fully open spot at this viewport; starting at the least-covered point.');
+    }
+    return clampToBounds(found.x, found.y, bounds);
   }
   [s.x, s.y] = startPosition();
 
@@ -324,10 +417,23 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
   let wallSample: ImageData | null = null;
 
+  /** Shows the poster and hides the canvas right away: the state to be in
+      while a texture is pending, whether that is the very first load or a
+      scheme/tod change on an already-mounted lens (the nit: "the lens keeps
+      the old scheme's texture until the new file decodes"). Idempotent, so
+      calling it on the initial load (when the canvas is already hidden by
+      the stylesheet's default) does nothing extra. */
+  function showPosterUntilReady() {
+    poster.style.removeProperty('display');
+    canvas.style.visibility = 'hidden';
+    shadowRest.style.visibility = shadowHeld.style.visibility = 'hidden';
+  }
+
   let textureEpoch = 0;
   async function loadTexture() {
     const epoch = ++textureEpoch;
     textureReady = false;
+    showPosterUntilReady();
     try {
       const img = await loadWallpaperImage(scheme, tod);
       if (destroyed || epoch !== textureEpoch || lost) return;
@@ -434,18 +540,15 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     ev.preventDefault();
     lost = true;
     textureReady = false;
-    poster.style.removeProperty('display');
-    canvas.style.visibility = 'hidden';
-    shadowRest.style.visibility = shadowHeld.style.visibility = 'hidden';
+    showPosterUntilReady();
   }
   function onContextRestored() {
     lost = false;
-    hasFirstFrame = false;
     setup();
+    // loadTexture() itself calls showPosterUntilReady(), so the canvas stays
+    // hidden (the poster still covers it) until the rebuilt context has
+    // actually decoded and bound a fresh texture and a real frame draws.
     void loadTexture();
-    // Stays hidden (the poster still covers it): the frame loop's own
-    // hasFirstFrame gate above reveals it again only once a genuine new
-    // frame has actually drawn on the rebuilt context.
     invalidate();
   }
   canvas.addEventListener('webglcontextlost', onContextLost, false);
@@ -463,9 +566,17 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   }
   document.addEventListener('visibilitychange', onVisibilityChange);
 
-  /* ---------- resize / scheme ---------- */
+  /* ---------- resize / scroll / scheme ---------- */
   function onResize() { invalidate(); }
   window.addEventListener('resize', onResize);
+  // Natural document scroll moves every `.orb` in the viewport with no JS
+  // involved (they are absolutely positioned, not fixed); the browser has
+  // already applied it by the time this fires, so a redraw is all that is
+  // needed (README, item 2: the critic measured 0 draws across a 200 px
+  // scroll). `orbs-clock.ts`'s own `onMove` hook (wired in home-boot.ts)
+  // covers the JS-driven parallax on top of that.
+  function onScroll() { invalidate(); }
+  window.addEventListener('scroll', onScroll, { passive: true });
   const schemeObserver = new MutationObserver(() => {
     const next = opts.scheme();
     if (next !== scheme) {
@@ -495,7 +606,12 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       const next = stepGlide(s.x, s.y, s.vx, s.vy, dt, bounds);
       s.x = next.x; s.y = next.y; s.vx = next.vx; s.vy = next.vy;
       invalidate();
-    } else if (!s.held) {
+    } else if (!s.held && dirty) {
+      // Only re-clamp when something already invalidated this frame (a
+      // resize, a scroll, an orb move, …): at rest this is dead weight, two
+      // getBoundingClientRect calls a frame for a clamp that never changes
+      // anything (the critic's nit on the loop's own idle cost). A resize
+      // still reaches here because `onResize` calls `invalidate()`.
       const bounds = computeBounds();
       [s.x, s.y] = clampToBounds(s.x, s.y, bounds);
     }
@@ -524,16 +640,24 @@ export function mountLens(opts: LensOptions): LensHandle | null {
 
     if (!textureReady) { dirty = false; return; } // poster still covers the gap
 
-    if (!hasFirstFrame) {
-      hasFirstFrame = true;
-      poster.style.display = 'none';
-      // An explicit 'visible', not '': clearing the inline value would fall
-      // back to the stylesheet's own default of `visibility: hidden`
-      // (theme.css declares it hidden until JS says otherwise), which is not
-      // the same as "no inline style at all".
-      canvas.style.visibility = 'visible';
-      shadowRest.style.visibility = shadowHeld.style.visibility = 'visible';
-    }
+    // Reveal every frame we actually draw, not once ever: a scheme/tod
+    // change hides the canvas again first (loadTexture -> showPosterUntil-
+    // Ready), so this has to run again on the next ready frame too, or the
+    // canvas would stay hidden behind its own poster forever after the
+    // first flip. Setting the same value twice is a no-op cost, and this
+    // whole function already returned above on every idle frame, so it
+    // never runs while nothing is happening.
+    poster.style.display = 'none';
+    // An explicit 'visible', not '': clearing the inline value would fall
+    // back to the stylesheet's own default of `visibility: hidden` (theme.css
+    // declares it hidden until JS says otherwise), which is not the same as
+    // "no inline style at all". The probes hide the shadow only (?lensProbe):
+    // the model itself must stay visible to be measured, but its shadow
+    // would just add noise to a pixel diff against the true page.
+    canvas.style.visibility = 'visible';
+    const probeActive = opts.probe === 'identity' || opts.probe === 'seam';
+    shadowRest.style.visibility = shadowHeld.style.visibility = probeActive ? 'hidden' : 'visible';
+    canvas.style.clipPath = opts.probe === 'seam' ? `inset(0 ${(s.box - (s.x - ox)).toFixed(2)}px 0 0)` : '';
 
     const lvhPx = lvh.read();
     const wall = coverRect(window.innerWidth, lvhPx, WALL_W, WALL_H);
@@ -575,8 +699,9 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     gl!.uniform4fv(U.uOrb, orbBuf);
     gl!.uniform3fv(U.uOrbCol, colBuf);
     gl!.uniform1i(U.uOrbN, orbs.length);
-    gl!.uniform1f(U.uTint, s.tintV);
+    gl!.uniform1f(U.uTint, probeActive ? 0 : s.tintV);
     gl!.uniform3f(U.uVeil, veil[0], veil[1], veil[2]);
+    gl!.uniform1f(U.uIdentity, probeActive ? 1 : 0);
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
     gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
@@ -605,6 +730,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       tod = next;
       void loadTexture();
     },
+    invalidate,
     destroy() {
       destroyed = true;
       cancelAnimationFrame(raf);
@@ -617,6 +743,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll);
       io.disconnect();
       schemeObserver.disconnect();
       endSelectionGuard();

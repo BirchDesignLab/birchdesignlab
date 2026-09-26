@@ -156,6 +156,100 @@ export function coverRect(boxW: number, boxH: number, imgW: number, imgH: number
   return { x: (boxW - w) / 2, y: (boxH - h) / 2, w, h };
 }
 
+/** A `DOMRect`-shaped rect: left/top/right/bottom in viewport coordinates.
+    Named separately from `DOMRect` so the geometry below stays DOM-free and
+    unit-testable with plain objects. */
+export interface RectLike { left: number; top: number; right: number; bottom: number }
+
+/** Whether a circle (cx, cy, r) overlaps an axis-aligned rect at all,
+    touching counts (a candidate flush against a pane's edge is rejected: the
+    lens should start in clearly open wallpaper, not grazing a pane). Used to
+    keep the lens's start position off every `.glass` pane and the portal
+    chrome (README, "fix hint": compute the start from the live layout). */
+export function circleRectOverlaps(cx: number, cy: number, r: number, rect: RectLike): boolean {
+  const nx = Math.min(Math.max(cx, rect.left), rect.right);
+  const ny = Math.min(Math.max(cy, rect.top), rect.bottom);
+  const dx = cx - nx;
+  const dy = cy - ny;
+  return dx * dx + dy * dy < r * r;
+}
+
+/** The gap between a circle (cx, cy, r) and an axis-aligned rect: negative
+    while overlapping (how far the circle's edge is buried past the rect's
+    edge), positive otherwise (how far the circle's edge is from the rect).
+    Used to rank candidate start positions by how much open wallpaper
+    surrounds them, and, failing that, by how little they overlap. */
+export function circleRectGap(cx: number, cy: number, r: number, rect: RectLike): number {
+  const nx = Math.min(Math.max(cx, rect.left), rect.right);
+  const ny = Math.min(Math.max(cy, rect.top), rect.bottom);
+  return Math.hypot(cx - nx, cy - ny) - r;
+}
+
+/** Whether a circle (cx, cy, r) genuinely crosses another circle's edge: the
+    two circles intersect without one fully containing the other. This is the
+    "across an orb edge" placement the founder approved (the crisp edge is
+    what makes the frosting legible; a lens fully inside or fully outside an
+    orb shows no bend at all). */
+export function crossesCircleEdge(cx: number, cy: number, r: number, ocx: number, ocy: number, orbR: number): boolean {
+  const d = Math.hypot(cx - ocx, cy - ocy);
+  return d < r + orbR && d > Math.abs(r - orbR);
+}
+
+export interface OrbCircle { cx: number; cy: number; r: number }
+
+export interface StartCandidate {
+  x: number;
+  y: number;
+  /** False when no candidate in `bounds` cleared every obstruction: (x, y)
+      is then the least-overlapping point found, and the caller should say
+      so (README, item 3: "if no open spot exists at a size, choose the best
+      partial spot and say so"). */
+  open: boolean;
+}
+
+/** Finds the lens's start position at mount: the point inside `bounds`
+    farthest from every obstruction (a `.glass` pane, the header, the portal
+    switcher) that also crosses an orb's edge, so the lens starts visible, in
+    open wallpaper, showing the bend it exists for (proofs/lens.md's
+    placement rule, "Placement"). A grid search, not a closed form: panes are
+    arbitrary rects, so there is no formula for "farthest open point" cheaper
+    than sampling, and this runs once at mount, never per frame.
+
+    Falls back in two steps if no such point exists at the current viewport:
+    first any fully open point (dropping the orb-edge requirement), then, if
+    every point in `bounds` overlaps something, the point that overlaps the
+    least (`open: false`). */
+export function findStartPosition(bounds: Bounds, radius: number, obstructions: RectLike[], orbs: OrbCircle[]): StartCandidate {
+  const [x0, y0, x1, y1] = bounds;
+  const w = Math.max(1, x1 - x0);
+  const h = Math.max(1, y1 - y0);
+  const cols = Math.max(1, Math.min(48, Math.round(w / 22)));
+  const rows = Math.max(1, Math.min(36, Math.round(h / 22)));
+
+  let bestOpenEdge: { x: number; y: number; score: number } | null = null;
+  let bestOpenAny: { x: number; y: number; score: number } | null = null;
+  let bestPartial: { x: number; y: number; score: number } | null = null;
+
+  for (let iy = 0; iy <= rows; iy++) {
+    const y = y0 + (h * iy) / rows;
+    for (let ix = 0; ix <= cols; ix++) {
+      const x = x0 + (w * ix) / cols;
+      let minGap = Infinity;
+      for (const rect of obstructions) minGap = Math.min(minGap, circleRectGap(x, y, radius, rect));
+      const open = minGap >= 0;
+      const crossesEdge = orbs.some((o) => crossesCircleEdge(x, y, radius, o.cx, o.cy, o.r));
+      if (open) {
+        if (crossesEdge && (!bestOpenEdge || minGap > bestOpenEdge.score)) bestOpenEdge = { x, y, score: minGap };
+        if (!bestOpenAny || minGap > bestOpenAny.score) bestOpenAny = { x, y, score: minGap };
+      } else if (!bestPartial || minGap > bestPartial.score) {
+        bestPartial = { x, y, score: minGap }; // least-negative gap = least overlap
+      }
+    }
+  }
+  const pick = bestOpenEdge ?? bestOpenAny ?? bestPartial ?? { x: (x0 + x1) / 2, y: (y0 + y1) / 2, score: 0 };
+  return { x: pick.x, y: pick.y, open: !!(bestOpenEdge || bestOpenAny) };
+}
+
 /** Progress (0 to 1) of an element's pass through the viewport, matching the
     default `view()` scroll-timeline range ("cover" 0% to 100%): 0% when the
     element's leading edge starts crossing the viewport's trailing edge (about

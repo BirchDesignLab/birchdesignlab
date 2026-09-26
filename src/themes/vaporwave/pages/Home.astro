@@ -385,10 +385,11 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     outline: 2px dotted currentColor; outline-offset: 4px;
     box-shadow: 0 0 0 2px var(--link);
   }
-  /* item 6 nit: cyan reads near-invisibly on the light pastel field (this
-     decorative label is aria-hidden, so parity is unaffected). --accent is
-     the light scheme's deep magenta, already contrast-checked against the
-     page field elsewhere in meta.ts. */
+  /* item 6 nit: cyan reads near-invisibly on the light pastel field. The
+     button is a real control (B2 vw-3 item 4); only its visible label sits
+     in an aria-hidden span (README), so recolouring it here does not touch
+     word parity. --accent is the light scheme's deep magenta, already
+     contrast-checked against the page field elsewhere in meta.ts. */
   :global([data-scheme='light']) .kiosk-touch { color: var(--accent); }
 
   /* B2 vw-3, item 4: the attract loop overlay. Covers the screen's real
@@ -397,14 +398,23 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      plays; JS toggles `.on` for a few seconds and removes it. */
   .crt-attract {
     position: absolute; inset: 0; z-index: 2; overflow: hidden;
-    display: grid; align-content: center; justify-items: center; gap: 1.4rem;
+    /* fix round: an explicit, capped column. Left as an implicit grid, the
+       track grew to the marquee's own max-content width (the nowrap
+       scroller's two copies, about 2008px in a 918px screen), so the loop's
+       centrepiece kana sat off-screen at the far right of that track and the
+       screen read as black. minmax(0, 1fr) ties the track to the available
+       width instead of the marquee's content. */
+    display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; gap: 1.4rem;
     background: var(--crt-bg);
     opacity: 0; pointer-events: none;
     transition: opacity 160ms ease;
   }
   .crt-attract.on { opacity: 1; }
   .attract-marquee {
-    display: flex; gap: 0; white-space: nowrap; width: 100%; margin: 0;
+    /* min-width: 0 and overflow: hidden clip the nowrap scroller to the
+       screen's own width instead of letting its intrinsic content width
+       (the grid item's default min-width: auto) push the column wider. */
+    display: flex; gap: 0; white-space: nowrap; width: 100%; min-width: 0; overflow: hidden; margin: 0;
     font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: 0.14em;
     color: var(--crt-phos); text-shadow: 0 0 8px color-mix(in srgb, var(--crt-phos) 60%, transparent);
   }
@@ -482,13 +492,16 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      .kiosk-stand's centre, so `right` at the same offset locks to the
      opposite edge the same way `left` does above - never two independent
      guesses). Its own translateY comes from measure-still-bbox.mjs --solid
-     against venus-kiosk-512.webp (18.6% bottom margin), not the sphere's
+     against venus-kiosk-512.webp (10.9% bottom margin, re-measured in the B2
+     fix round after the drum re-stage below fixed "a head in a collar" --
+     the new composition's bust-plus-drum silhouette sits differently in the
+     frame, so the old render's 18.6% no longer applies), not the sphere's
      25.8%: the two renders bake different amounts of transparent margin
      below the subject, so reusing the sphere's figure would either leave a
      gap above the floor line or sink the bust below it. */
   :global(.kiosk-prop-venus) {
     left: auto; right: calc(50% + 320px + 0.6rem);
-    transform: translateY(18.6%);
+    transform: translateY(10.9%);
   }
 
   /* ---------- closer ---------- */

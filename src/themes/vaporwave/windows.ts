@@ -70,6 +70,12 @@ export function mountWindowDrag(): (() => void) | void {
 
     const onPointerDown = (event: PointerEvent) => {
       bringToFront(win, bar);
+      // B2 fix round: a caption button (min/max/close) still brings its
+      // window forward on press (bringToFront above already ran), but never
+      // starts a drag. No pointer capture and no preventDefault, so :active
+      // still inverts the bevel (theme.css) and the press behaves like any
+      // other button press instead of moving the window underneath it.
+      if ((event.target as Element | null)?.closest('.vw-win-btns')) return;
       if (event.button !== 0 || !matchMedia(DESKTOP).matches) return;
       dragging = true;
       pointerId = event.pointerId;

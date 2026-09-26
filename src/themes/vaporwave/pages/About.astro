@@ -36,14 +36,24 @@ const [founderLead, ...founderRest] = copy.founder.body;
       viewport): it sits behind the poster in the identical box, already
       drawing the identical pose, before the poster fades to reveal it, so
       there is no visible jump. */}
-  <div class="centerpiece" aria-hidden="true">
+  {/* B2 fix round, item 4 (a11y): aria-hidden used to sit on this whole
+      .centerpiece wrapper, which hides everything under it from assistive
+      tech regardless of any descendant's own aria-hidden="false" -- so the
+      live canvas, once marble/live-bust.ts gives it a role, label and
+      tabindex 0, was a focusable control permanently hidden from AT (an
+      aria-hidden-focus fault; the W1 critic caught it). aria-hidden now sits
+      only on the decorative children (the poster, the stepped tiers); the
+      canvas keeps its OWN aria-hidden="true" + tabindex="-1" (set below,
+      live-bust.ts's setLiveA11y removes both once it takes over the canvas
+      itself) and is never inside an aria-hidden ancestor either way. */}
+  <div class="centerpiece">
     <div class="centerpiece-stage" data-marble-stage>
       <canvas class="centerpiece-canvas" data-marble-canvas aria-hidden="true" tabindex="-1"></canvas>
-      <div class="centerpiece-poster" data-marble-poster>
+      <div class="centerpiece-poster" data-marble-poster aria-hidden="true">
         <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} />
       </div>
     </div>
-    <div class="centerpiece-steps">
+    <div class="centerpiece-steps" aria-hidden="true">
       <div class="tier tier-top"><Marble id="cp-tier-top" seed={31} /><div class="tier-gloss"></div></div>
       <div class="tier tier-mid"><Marble id="cp-tier-mid" seed={37} /><div class="tier-gloss"></div></div>
       <div class="tier tier-base"><Marble id="cp-tier-base" seed={43} /><div class="tier-gloss"></div></div>
@@ -149,17 +159,30 @@ const [founderLead, ...founderRest] = copy.founder.body;
      <canvas> (vw-4b, marble/live-bust.ts) and the poster now share it
      exactly, canvas underneath, so the first live frame and the poster's
      pixels sit in the identical box with no reflow between them. */
+  /* The drop shadow lives here now, not on .centerpiece-prop (fix round,
+     item 3): it used to sit on the poster image alone, so the handoff to the
+     live canvas -- which carries no filter of its own -- dropped it outright,
+     one of the two causes behind the ~11% pixel change the W1 critic
+     measured. One filter on the wrapper both layers share gives the poster
+     and the live canvas the identical shadow at every moment, including
+     mid-fade when both are visible together. */
   .centerpiece-stage {
     width: 84%; position: relative; z-index: 2; aspect-ratio: 1 / 1;
     transform: translateY(22%);
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
   }
   .centerpiece-canvas {
     position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
     /* Decorative until marble/live-bust.ts hands it a live role (see its
        setLiveA11y): plain elements only, no focusable content, per the
-       README's "a control that does nothing" rule. */
-    cursor: grab; touch-action: pan-y; user-select: none;
+       README's "a control that does nothing" rule. cursor stays the
+       platform default until then (fix round, item 5: no grab cursor before
+       the bust is live) -- setLiveA11y's own aria-hidden toggle is the one
+       signal already available in CSS, so it doubles as the "is live" flag
+       here instead of a second class. */
+    cursor: default; touch-action: pan-y; user-select: none;
   }
+  .centerpiece-canvas:not([aria-hidden='true']) { cursor: grab; }
   .centerpiece-canvas.is-dragging { cursor: grabbing; }
   .centerpiece-poster {
     position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
@@ -167,7 +190,6 @@ const [founderLead, ...founderRest] = copy.founder.body;
   }
   :global(.centerpiece-prop) {
     width: 100%; height: 100%;
-    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
   }
   /* A real stepped plinth: three tiers of the same procedural, pastel-tinted
      marble the rune plaque is cut from (Marble.astro: SVG turbulence stone

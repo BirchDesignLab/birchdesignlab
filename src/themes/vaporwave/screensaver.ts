@@ -54,13 +54,39 @@ interface Bouncer {
 }
 
 interface Pipe {
+  /** Pixel position, in the canvas's own drawing-buffer coordinates. */
   x: number;
   y: number;
+  /** Unit direction, grid-aligned: exactly one of dx/dy is +/-1. */
   dx: number;
   dy: number;
   color: string;
+  /** Px travelled since the last grid vertex (where a pipe may turn). */
+  travelled: number;
+  /** Vertices turned since this pipe was last recoloured/relocated. */
   age: number;
 }
+
+/** B2 fix round, item 3: the visible sphere sits well inside the still's own
+    512x512 canvas (a transparent margin for its cast shadow), so drawing it
+    at a box "a third of the window" left the sphere itself reading smaller
+    still. Measured bbox (scripts/themes/vaporwave, sphere-white-512.webp):
+    280 of 512px tall. SPHERE_FILL backs that out so the drawn *sphere*, not
+    its transparent box, reads at about a third of the window's shorter side. */
+const SPHERE_VISIBLE_FRACTION = 280 / 512;
+const SPHERE_TARGET = 1 / 3;
+const SPHERE_BOX_SCALE = SPHERE_TARGET / SPHERE_VISIBLE_FRACTION;
+
+/* B2 fix round, item 4 (founder, 09-25-26: shaded 3D-looking tubes): the
+   Windows 3D Pipes look on a 2D canvas. Each pipe is a persistent grid
+   walker; every frame it draws only the new bit of tube behind it (a
+   shadow, then the tube's own colour, then a highlight and a shadow stroke
+   offset perpendicular to its direction of travel, the closest a flat
+   stroke gets to a cylinder's lit curve), and a shaded ball joint lands at
+   every grid vertex where a pipe may turn. Nothing here fades: the field
+   fills up solid, the way the original's pipework does, then the whole
+   canvas clears and a fresh set of pipes starts. */
+const PIPE_GEN_FRAMES = 480;
 
 /** One animated 2D-canvas loop, shared shape for the small preview and the
     full-window one. Each instance owns its own rAF, resize and visibility
@@ -75,6 +101,7 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
   let lastDrawn = 0;
   let bouncer: Bouncer | null = null;
   let pipes: Pipe[] = [];
+  let pipesAge = 0;
   let palette = readPalette();
   let lost = false;
 
@@ -90,7 +117,7 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
 
   const resetMarble = () => {
     if (!canvas.width || !canvas.height) return;
-    const size = Math.min(canvas.width, canvas.height) * 0.4;
+    const size = Math.min(canvas.width, canvas.height) * SPHERE_BOX_SCALE;
     bouncer = {
       x: canvas.width / 2,
       y: canvas.height / 2,
@@ -102,13 +129,21 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
 
   const resetPipes = () => {
     pipes = [];
+    const w = canvas.width || 1;
+    const h = canvas.height || 1;
+    const cell = Math.max(18, Math.min(w, h) / 14);
     for (let i = 0; i < 4; i++) {
+      // Snapped to the grid from the start, so the first segment a pipe
+      // draws is already a true grid step, not a fractional one.
+      const gx = Math.round((Math.random() * w) / cell);
+      const gy = Math.round((Math.random() * h) / cell);
       pipes.push({
-        x: Math.random() * (canvas.width || 1),
-        y: Math.random() * (canvas.height || 1),
+        x: gx * cell,
+        y: gy * cell,
         dx: Math.random() < 0.5 ? 1 : -1,
         dy: 0,
         color: palette[i % palette.length] ?? '#01cdfe',
+        travelled: 0,
         age: 0,
       });
     }
@@ -122,7 +157,7 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
     ctx.fillRect(0, 0, w, h);
     if (!bouncer) resetMarble();
     if (!bouncer || !sphere.complete || sphere.naturalWidth === 0) return;
-    const size = Math.min(w, h) * 0.4;
+    const size = Math.min(w, h) * SPHERE_BOX_SCALE;
     bouncer.x += bouncer.vx;
     bouncer.y += bouncer.vy;
     let bounced = false;
@@ -148,55 +183,133 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
     ctx.restore();
   };
 
+  /** Fills the canvas with the pipes' resting colour and starts a fresh set
+      of walkers: the loop's "clearing and starting again" moment. */
+  const startPipeGen = () => {
+    if (ctx) {
+      ctx.fillStyle = '#0a0220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    pipesAge = 0;
+    resetPipes();
+  };
+
   const drawPipes = () => {
     if (!ctx) return;
     const w = canvas.width;
     const h = canvas.height;
-    if (!pipes.length) resetPipes();
-    // A translucent wash instead of a hard clear: the elbow trail persists
-    // and fades, the shape of the classic screensaver's endless pipework.
-    ctx.fillStyle = 'rgba(10, 2, 32, 0.08)';
-    ctx.fillRect(0, 0, w, h);
-    const cell = Math.max(14, Math.min(w, h) / 18);
-    const lineW = Math.max(4, cell * 0.32);
+    if (!pipes.length) startPipeGen();
+    pipesAge += 1;
+    if (pipesAge > PIPE_GEN_FRAMES) {
+      startPipeGen();
+      return;
+    }
+    const cell = Math.max(18, Math.min(w, h) / 14);
+    const lineW = Math.max(6, cell * 0.42);
+    const jointR = lineW * 0.62;
+    const step = cell * 0.05;
+    const hi = 'rgba(255, 255, 255, 0.55)';
+    const lo = 'rgba(0, 0, 0, 0.55)';
     for (const pipe of pipes) {
       const fromX = pipe.x;
       const fromY = pipe.y;
-      pipe.age += 1;
-      // Turn onto the other axis every so often, elbow-jointed like Pipes.
-      if (pipe.age % 14 === 0 || fromX <= 0 || fromX >= w || fromY <= 0 || fromY >= h) {
-        if (pipe.dx !== 0) {
-          pipe.dx = 0;
-          pipe.dy = Math.random() < 0.5 ? 1 : -1;
-        } else {
-          pipe.dy = 0;
-          pipe.dx = Math.random() < 0.5 ? 1 : -1;
-        }
-        pipe.x = Math.min(Math.max(fromX, cell), w - cell);
-        pipe.y = Math.min(Math.max(fromY, cell), h - cell);
-      }
-      const toX = pipe.x + pipe.dx * cell;
-      const toY = pipe.y + pipe.dy * cell;
+      pipe.x += pipe.dx * step;
+      pipe.y += pipe.dy * step;
+      pipe.travelled += step;
+
+      // Depth cue: a soft dark shadow under every new bit of tube, offset
+      // toward the corner, so wherever two pipes cross, whichever one drew
+      // second visibly sits in front (a growing field naturally draws its
+      // newer pipes last).
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = lineW * 1.05;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(fromX + 3, fromY + 3);
+      ctx.lineTo(pipe.x + 3, pipe.y + 3);
+      ctx.stroke();
+      ctx.restore();
+
+      // The tube: a base stroke in the pipe's colour, then a highlight and a
+      // shadow stroke offset perpendicular to the direction of travel (the
+      // segment's own normal), so the width shades like a lit cylinder
+      // instead of reading as a flat neon line.
+      const nx = -pipe.dy;
+      const ny = pipe.dx;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.shadowColor = pipe.color;
+      ctx.shadowBlur = lineW * 0.5;
       ctx.strokeStyle = pipe.color;
       ctx.lineWidth = lineW;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.shadowColor = pipe.color;
-      ctx.shadowBlur = lineW;
       ctx.beginPath();
       ctx.moveTo(fromX, fromY);
-      ctx.lineTo(toX, toY);
+      ctx.lineTo(pipe.x, pipe.y);
       ctx.stroke();
-      pipe.x = toX;
-      pipe.y = toY;
-      if (pipe.age > 400) {
-        pipe.age = 0;
-        pipe.x = Math.random() * w;
-        pipe.y = Math.random() * h;
-        pipe.color = palette[Math.floor(Math.random() * palette.length)] ?? pipe.color;
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = hi;
+      ctx.lineWidth = lineW * 0.34;
+      ctx.beginPath();
+      ctx.moveTo(fromX + nx * lineW * 0.22, fromY + ny * lineW * 0.22);
+      ctx.lineTo(pipe.x + nx * lineW * 0.22, pipe.y + ny * lineW * 0.22);
+      ctx.stroke();
+      ctx.strokeStyle = lo;
+      ctx.lineWidth = lineW * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(fromX - nx * lineW * 0.26, fromY - ny * lineW * 0.26);
+      ctx.lineTo(pipe.x - nx * lineW * 0.26, pipe.y - ny * lineW * 0.26);
+      ctx.stroke();
+      ctx.restore();
+
+      // A grid vertex: maybe turn onto the other axis, ball-jointed like the
+      // Windows original, elbow shaded the same light-to-dark way the tube
+      // is (a small radial gradient stands in for the cylinder's curve).
+      if (pipe.travelled >= cell) {
+        pipe.travelled = 0;
+        const atEdge = pipe.x <= cell || pipe.x >= w - cell || pipe.y <= cell || pipe.y >= h - cell;
+        if (atEdge || Math.random() < 0.4) {
+          ctx.save();
+          const g = ctx.createRadialGradient(
+            pipe.x - lineW * 0.18, pipe.y - lineW * 0.18, lineW * 0.05,
+            pipe.x, pipe.y, jointR,
+          );
+          g.addColorStop(0, hi);
+          g.addColorStop(0.55, pipe.color);
+          g.addColorStop(1, lo);
+          ctx.fillStyle = g;
+          ctx.shadowColor = pipe.color;
+          ctx.shadowBlur = lineW * 0.4;
+          ctx.beginPath();
+          ctx.arc(pipe.x, pipe.y, jointR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          if (pipe.dx !== 0) {
+            pipe.dx = 0;
+            pipe.dy = Math.random() < 0.5 ? 1 : -1;
+          } else {
+            pipe.dy = 0;
+            pipe.dx = Math.random() < 0.5 ? 1 : -1;
+          }
+        }
+        pipe.x = Math.min(Math.max(pipe.x, cell), w - cell);
+        pipe.y = Math.min(Math.max(pipe.y, cell), h - cell);
+        pipe.age += 1;
+        // A pipe that has grown a long way relocates and repaints, the way
+        // the original starts a fresh pipe once one has run its course,
+        // without waiting for the whole field to clear.
+        if (pipe.age > 48) {
+          pipe.age = 0;
+          const gx = Math.round((Math.random() * w) / cell);
+          const gy = Math.round((Math.random() * h) / cell);
+          pipe.x = Math.min(Math.max(gx * cell, cell), w - cell);
+          pipe.y = Math.min(Math.max(gy * cell, cell), h - cell);
+          pipe.dx = Math.random() < 0.5 ? 1 : -1;
+          pipe.dy = 0;
+          pipe.color = palette[Math.floor(Math.random() * palette.length)] ?? pipe.color;
+        }
       }
     }
-    ctx.shadowBlur = 0;
   };
 
   const draw = () => {

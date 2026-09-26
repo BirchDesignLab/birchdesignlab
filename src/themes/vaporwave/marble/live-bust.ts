@@ -54,7 +54,13 @@ const IDLE_RESUME_MS = 4000; // resumes ~4s after the last input
 const IDLE_EASE_MS = 1200; // eases in over ~1.2s
 const RELEASE_TAU_S = 0.35; // exponential glide time constant
 const RELEASE_MAX_VEL = Math.PI * 2.2; // rad/s cap on a flicked release
-const YAW_VELOCITY_EPS = 0.0015; // rad/s below which the glide is "stopped"
+// rad/s below which the glide is "stopped". B2 fix round: 0.0015 let an
+// imperceptible tail keep the render loop alive for several extra seconds
+// after a flick (the W1 critic measured ~26 draws/s of motion nobody could
+// see); at the release cap of RELEASE_MAX_VEL and tau 0.35s, 0.02 rad/s is
+// still under a visible drift (about 1 degree over 1s) while stopping the
+// loop noticeably sooner.
+const YAW_VELOCITY_EPS = 0.02;
 const FADE_MS = 200;
 const KEY_STEP_RAD = THREE.MathUtils.degToRad(6);
 // Dragging the full canvas width turns the bust this many radians. Chosen so
@@ -92,7 +98,11 @@ export interface LiveBustHandle {
 
 const coarsePointer = () => matchMedia('(pointer: coarse)').matches;
 const narrowViewport = () => innerWidth < NARROW_VIEWPORT_PX;
-const devicePixelRatioCap = () => (coarsePointer() || narrowViewport() ? DPR_CAP_COARSE : DPR_CAP_FINE);
+// min(devicePixelRatio, cap): B2 fix round found this returning the cap
+// unconditionally, so a DPR-1 desktop rendered at 1.5x for nothing (the W1
+// critic measured a 327px drawing buffer for a 218 CSS px canvas). The cap
+// is still a ceiling for high-DPR/coarse-pointer devices, not a floor.
+const devicePixelRatioCap = () => Math.min(devicePixelRatio, coarsePointer() || narrowViewport() ? DPR_CAP_COARSE : DPR_CAP_FINE);
 
 const LIVE_LABEL =
   'The Venus bust in three dimensions, live. Drag to turn it, or use the left and right arrow keys.';
@@ -113,6 +123,13 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
   let raf = 0;
   let idleWakeTimer: ReturnType<typeof setTimeout> | undefined;
   let drawCount = 0;
+  // Set the instant initStage() calls createStage({ canvas }) (which itself
+  // calls canvas.getContext(...) synchronously). dispose()'s own
+  // WEBGL_lose_context probe uses this to avoid calling canvas.getContext()
+  // -- which creates a context on first call -- before any renderer has
+  // asked for one, e.g. a teardown that lands before the dynamic import of
+  // this module even resolves.
+  let contextCreated = false;
 
   let dragging = false;
   let activePointerId = -1;
@@ -321,15 +338,28 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
   canvas.addEventListener('webglcontextlost', onContextLost, false);
   canvas.addEventListener('webglcontextrestored', onContextRestored, false);
 
-  function disposeStage() {
+  // `skipGpuDispose`: on a real context loss, the GPU resources a stage's
+  // dispose() would delete are already invalid (the WebGL spec: every object
+  // from a lost context stops being renderable and must be recreated, not
+  // cleaned up). B2 fix round: calling stage.dispose() -> renderer.dispose()
+  // here anyway (three.js's own dispose forces a second, redundant context
+  // loss internally) produced the W1 critic's "delete: object does not
+  // belong to this context" console warnings on restore. Dropping the JS
+  // references without issuing GL delete calls avoids that noise; the real
+  // GPU memory was already freed by the loss itself.
+  function disposeStage(skipGpuDispose = false) {
     if (!stage) return;
-    stage.dispose();
+    if (!skipGpuDispose) stage.dispose();
     stage = null;
     group = null;
   }
 
   async function rebuildLive() {
-    disposeStage();
+    // contextLost is still true here (onContextRestored -> rebuildLive,
+    // before the next line resets it): the stage disposeStage() is about to
+    // drop belongs to the context that just loss/restored, so skip its GPU
+    // dispose calls (see disposeStage's own comment).
+    disposeStage(contextLost);
     contextLost = false;
     yawOffset = 0;
     yawVel = 0;
@@ -350,9 +380,24 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
   }
 
   async function initStage() {
-    const built = createStage({ quality: 'live', canvas });
+    // readback: false -- the live path never wants render()'s PNG (see
+    // scene.js's createStage doc comment); explicit here even though
+    // `!canvas` already defaults to it, since this call always passes a
+    // canvas and the point is worth stating at the call site.
+    const built = createStage({ quality: 'live', canvas, readback: false });
+    contextCreated = true;
+    // A dispose guard for an in-flight build (B2 fix round): dispose() can
+    // land while this function is still awaiting loadVenus (teardown during
+    // a view-transition swap races the dynamic import + GLB fetch that
+    // preceded this call). Finishing the build anyway would assign a fresh
+    // renderer/PMREM/env-map to the module-level `stage` after the module
+    // considers itself torn down -- a real GPU leak, since nothing then ever
+    // disposes it, and About.astro's contract promises teardown before the
+    // next body replaces this one. Bail and dispose what was already built.
+    if (disposed) { built.dispose(); return; }
     built.renderer.setPixelRatio(devicePixelRatioCap());
     const venusMesh = await loadVenus(venusUrl);
+    if (disposed) { built.dispose(); return; }
     built.setVenusMesh(venusMesh);
     const size = Math.max(1, canvas.clientWidth || canvas.clientHeight || 256);
     built.render({
@@ -424,12 +469,19 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
     canvas.removeEventListener('keydown', onKeyDown);
     canvas.removeEventListener('webglcontextlost', onContextLost, false);
     canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
-    disposeStage();
+    disposeStage(contextLost);
     // Release the context explicitly (the README's teardown rule), rather
-    // than leaving it to garbage collection.
-    const ext = canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')
-      ?? canvas.getContext('webgl')?.getExtension('WEBGL_lose_context');
-    ext?.loseContext();
+    // than leaving it to garbage collection -- but only probe for one if a
+    // renderer actually created it: canvas.getContext() creates a context on
+    // its first call, so calling it here unconditionally could hand a
+    // still-in-flight initStage() (see its own dispose guard) a context that
+    // was created with none of the attributes createStage() asks for, the
+    // instant this teardown races ahead of that build's first render.
+    if (contextCreated) {
+      const ext = canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')
+        ?? canvas.getContext('webgl')?.getExtension('WEBGL_lose_context');
+      ext?.loseContext();
+    }
   }
 
   return { dispose, setVisible };

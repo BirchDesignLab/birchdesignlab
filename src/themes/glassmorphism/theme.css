@@ -815,6 +815,19 @@
   pointer-events: none;
   z-index: 0;
 }
+/* B2 fix round, layering (the glass critic's blocking #1): Home is the only
+   page with the lens, and the lens needs to sit ABOVE its own page's orbs
+   (so it covers the orb it refracts) while staying BELOW every pane and all
+   text. Higher specificity than the base rule above (one extra attribute
+   selector), so it wins regardless of source order, and it only ever
+   matches `.orbs[data-js-driven]` -- Home's own marker for "this group is on
+   the lens clock" (Orbs.astro's jsDriven prop, Home.astro's only caller of
+   it) -- so every other glass page keeps its orbs at the base z-index 0,
+   B1's look untouched. See the .lens-canvas comment above for the full
+   stacking order this produces. */
+:where([data-theme='glassmorphism']) .orbs[data-js-driven] {
+  z-index: -2;
+}
 /* D7 = B: flat two-stop discs, crisp edges, no specular hotspot. The soft
    Big Sur forms live in the painted wallpaper now (E3); the orbs supply the
    crisp colour a pane's frosting can visibly bend. */
@@ -891,6 +904,25 @@
     animation: glass-drift var(--t) ease-in-out var(--delay) infinite alternate;
     animation-timeline: auto;
   }
+}
+/* B2 fix round, redraw (the glass critic's blocking #1, the second half):
+   dropping the scroll-timeline half above still left glass-drift's
+   time-based wobble running as `transform` on Home's orbs, unconditionally,
+   forever -- no browser event fires when a CSS animation frame advances, so
+   the lens's draw-on-change model had no way to know an orb it had already
+   drawn had quietly moved (the critic measured 17-32 px of idle drift
+   against 0 corresponding lens draws). Unconditional (outside the
+   @supports block above, so it also covers a browser without
+   `animation-timeline: view()` support, where Home's orbs would otherwise
+   fall through to the plain .orb rule's glass-drift), and higher
+   specificity than that plain rule, so it wins regardless of source order.
+   orbs-clock.ts still drives the scroll-linked parallax via `translate`,
+   composing with nothing now that `transform` is unset: at rest, an orb's
+   position genuinely does not change, so the lens's own draw-on-change
+   model can be correct AND idle can mean zero draws. Every other glass page
+   keeps the wobble; only `[data-js-driven]` (Home) drops it. */
+:where([data-theme='glassmorphism']) .orbs[data-js-driven] .orb {
+  animation: none;
 }
 @media (max-width: 720px) {
   :where([data-theme='glassmorphism']) .orb { left: var(--mx); top: var(--my); }
@@ -1076,9 +1108,24 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
    position: fixed and placed every frame by inline transforms (lens.ts), so
    they never move with the page's own scroll (the iOS momentum mitigation,
    proofs/lens.md section 7: the lens stays on the wallpaper plane, which is
-   fixed too). z-index sits with .lens-poster, under every pane and orb
-   (main's stacking context starts at 0; the poster and the lens both use -1
-   so text and panes always draw over either one, whichever is showing). */
+   fixed too).
+
+   B2 fix round, layering (the glass critic's blocking #1 and #3): the lens
+   must draw ABOVE the real .orb elements (so it covers the orb it refracts)
+   and BELOW every pane and text (so it never steals a click or a swipe).
+   main's stacking context starts at 0; below it, Home's orbs move to
+   z-index -2 (.orbs[data-js-driven], further down this file, scoped to Home
+   only -- every other glass page keeps its orbs at 0, B1's look untouched),
+   and the wallpaper/poster/lens/hit stay together at -1, painted in DOM
+   order (last wins ties), so on Home the paint order bottom to top is:
+   orbs (-2) -> wallpaper and lens (-1, lens last) -> every .glass pane and
+   all text (1). .lens-hit used to be z-index 2, ABOVE every pane
+   (blocking #3: a grab cursor over the hero heading, a phone swipe on the
+   hero copy dragging the lens instead of scrolling); it now sits at -1 with
+   the canvas, so wherever a pane or text visually covers the lens's screen
+   position, that pane or text is what actually receives the pointer, not
+   the invisible hit button underneath it. Grabbing the lens where it is
+   genuinely visible still works, because nothing else is on top there. */
 :where([data-theme='glassmorphism']) .lens-host { position: relative; }
 :where([data-theme='glassmorphism']) .lens-canvas {
   position: fixed;
@@ -1106,7 +1153,7 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
 :where([data-theme='glassmorphism']) .lens-hit {
   position: fixed;
   left: 0; top: 0;
-  z-index: 2;
+  z-index: -1;
   border: 0;
   border-radius: 50%;
   padding: 0;

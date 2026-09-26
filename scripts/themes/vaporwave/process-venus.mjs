@@ -319,16 +319,44 @@ async function writeGlb(g, outPath, { quantize }) {
   const gltfJson = {
     asset: { version: '2.0', generator: 'process-venus.mjs (birchdesignlab)' },
     extensionsUsed: quantize ? ['EXT_meshopt_compression', 'KHR_mesh_quantization'] : ['EXT_meshopt_compression'],
-    extensionsRequired: ['EXT_meshopt_compression'],
+    // B2 fix round (spec nit, W1 critic): KHR_mesh_quantization belongs in
+    // extensionsRequired too when it's used. A loader that ignores it would
+    // read the quantized SHORT positions and BYTE normals as if they were
+    // plain (unscaled) integers, with no idea it must also apply this node's
+    // translation/scale to get real units back -- garbage geometry, not a
+    // graceful fallback, so the spec's own requirement is "required" here.
+    extensionsRequired: quantize ? ['EXT_meshopt_compression', 'KHR_mesh_quantization'] : ['EXT_meshopt_compression'],
     buffers: [{ byteLength: binBuffer.length }],
     bufferViews: [
       { buffer: 0, byteOffset: posChunk.byteOffset, byteLength: uniqueCount * posStride, byteStride: posStride, target: 34962, extensions: { EXT_meshopt_compression: { buffer: 0, byteOffset: posChunk.byteOffset, byteLength: posChunk.byteLength, byteStride: posStride, count: uniqueCount, mode: 'ATTRIBUTES' } } },
-      { buffer: 0, byteOffset: nrmChunk.byteOffset, byteLength: uniqueCount * nrmStride, target: 34962, extensions: { EXT_meshopt_compression: { buffer: 0, byteOffset: nrmChunk.byteOffset, byteLength: nrmChunk.byteLength, byteStride: nrmStride, count: uniqueCount, mode: 'ATTRIBUTES', filter: quantize ? 'OCTAHEDRAL' : 'NONE' } } },
+      // byteStride here matters now that NORMAL's accessor type is VEC3 (see
+      // the accessors array below): a VEC3 BYTE accessor's own implied tight
+      // stride is 3 bytes, but the physically decoded buffer is 4 bytes/vertex
+      // (meshopt's octahedral filter always pads to a 4-byte-aligned stride).
+      // Without an explicit byteStride here, a loader reads every vertex's
+      // normal one byte short of where it actually lives -- a bug this fix
+      // round's re-render caught immediately (a shattered, faceted-glass look
+      // under specular light, from every vertex after the first reading a
+      // one-byte-shifted, garbled normal). The old code avoided this by
+      // declaring the accessor VEC4 instead (4 bytes tight = the real
+      // stride), which happened to read correctly but was not KHR_mesh_quantization-valid
+      // for NORMAL; VEC3 + this explicit byteStride is both valid and correct,
+      // exactly how POSITION already reads VEC3 out of its own padded stride.
+      { buffer: 0, byteOffset: nrmChunk.byteOffset, byteLength: uniqueCount * nrmStride, byteStride: nrmStride, target: 34962, extensions: { EXT_meshopt_compression: { buffer: 0, byteOffset: nrmChunk.byteOffset, byteLength: nrmChunk.byteLength, byteStride: nrmStride, count: uniqueCount, mode: 'ATTRIBUTES', filter: quantize ? 'OCTAHEDRAL' : 'NONE' } } },
       { buffer: 0, byteOffset: idxChunk.byteOffset, byteLength: dstIdx.length * 4, target: 34963, extensions: { EXT_meshopt_compression: { buffer: 0, byteOffset: idxChunk.byteOffset, byteLength: idxChunk.byteLength, byteStride: 4, count: dstIdx.length, mode: 'TRIANGLES' } } },
     ],
+    // NORMAL's accessor type is VEC3 whether quantized or not (B2 fix round,
+    // spec nit: this used to declare VEC4 when quantized). KHR_mesh_quantization
+    // restricts NORMAL to VEC3; the physical storage is still a 4-byte stride
+    // per vertex either way (meshopt's octahedral filter writes x, y, sign
+    // and a pad byte -- see encodeFilterOct above), but that stride lives on
+    // the bufferView, not the accessor. Declaring VEC3 here just means the
+    // accessor reads 3 of those 4 stored bytes per vertex and ignores the
+    // pad, exactly how POSITION already reads VEC3 out of its own padded
+    // VEC4 SHORT stride two lines up.
     accessors: [
       { bufferView: 0, componentType: posComponentType, normalized: quantize, count: uniqueCount, type: 'VEC3', min: posMin, max: posMax },
-      { bufferView: 1, componentType: quantize ? 5120 : 5126, normalized: quantize, count: uniqueCount, type: quantize ? 'VEC4' : 'VEC3' },
+      { bufferView: 1, componentType: quantize ? 5120 : 5126, normalized: quantize, count: uniqueCount, type: 'VEC3' },
       { bufferView: 2, componentType: 5125, count: dstIdx.length, type: 'SCALAR' },
     ],
     meshes: [{ primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, mode: 4 }] }],

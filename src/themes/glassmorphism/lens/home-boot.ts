@@ -25,6 +25,15 @@ function chromeInsets(): { top: number; bottom: number } {
   return { top: Math.max(0, top), bottom: Math.max(0, bottom) };
 }
 
+/** `?lensProbe=identity|seam` (README, item 5): a production-behind-a-flag
+    version of the Tier A proof's own `?probe=` (proofs/lens.md, "Probes for
+    the harness"). Anything else, including the parameter's absence, is
+    normal operation. */
+function probeParam(): 'identity' | 'seam' | null {
+  const v = new URLSearchParams(location.search).get('lensProbe');
+  return v === 'identity' || v === 'seam' ? v : null;
+}
+
 export function mountHomeGlass(): (() => void) | void {
   if (document.documentElement.dataset.theme !== 'glassmorphism') return;
   const host = document.getElementById('glass-lens-host');
@@ -95,9 +104,15 @@ export function mountHomeGlass(): (() => void) | void {
       initialTod: settings.tod,
       scheme,
       chromeInsets,
+      probe: probeParam(),
     });
   });
-  const stopOrbClock = mountOrbClock();
+  // orbs-clock.ts's own rAF loop drives Home's orbs; its onMove hook fires
+  // only in a frame it actually repositions one, invalidating the lens so
+  // it redraws in that same frame instead of going stale (README, item 2).
+  // `lens` is read through the closure, not passed by value, so this wiring
+  // is correct even though the lens itself mounts later, once idle.
+  const stopOrbClock = mountOrbClock(() => lens?.invalidate());
 
   return () => {
     stopIdle();
