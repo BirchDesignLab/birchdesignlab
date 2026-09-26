@@ -305,3 +305,7 @@ To `tier-b1-report.md`, "Calls for the founder":
 4. Home and Services: **keep the plain footer** (the lobby floor stops at the
    footer rule).
 5. **Push the branch and stop here**; B2 starts in a new session.
+
+Then: the Venus is downloaded (`scripts/themes/.out/meshes/venus/`, CC0 per
+its `license.txt`), and the founder's iPhone look at glass will happen **after
+deploy** ("i'll have to look at the glass on iphone after it get deployed").

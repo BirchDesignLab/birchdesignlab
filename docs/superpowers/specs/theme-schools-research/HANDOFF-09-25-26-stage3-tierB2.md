@@ -15,11 +15,16 @@ not started.
 - Founder sheets: `scripts/themes/.out/stage3-b1/glass-final/` and
   `vaporwave-final/` (each has an `index.md`). The before set is still
   `scripts/themes/.out/stage3-before` and `snap-stage3-base`.
-- **The Venus mesh:** the founder downloads it. Check
-  `scripts/themes/.out/meshes/venus/` first; if it is empty, remind the
-  founder (the glTF option at
-  https://sketchfab.com/3d-models/venus-dd50296725c54dc6a7dc68f2b9acc9d0,
-  unzipped there). Never sign in yourself.
+- **The Venus mesh is downloaded** (founder, 09-25-26) into
+  `scripts/themes/.out/meshes/venus/` (gitignored, 32 MB): `scene.gltf`,
+  `scene.bin` (7.5 MB), three PNG textures (26 MB, discarded by the pipeline)
+  and `license.txt` (CC0-1.0, "Credit is not mandatory. Commercial use is
+  allowed."). Two meshes, 126,294 and 73,700 triangles (199,994 together,
+  split at the 65,532-vertex limit), with normals, tangents and UVs; merge
+  them before simplifying.
+- **The founder's iPhone look at glass happens after deploy** (founder,
+  09-25-26), not before the PR: there is no branch preview today. Anything it
+  finds goes into a follow-up PR.
 
 ## Read first, in this order
 
@@ -82,7 +87,7 @@ Then the gates and a stop.
   the Venus note from `proofs/marble.md`.
 - **Then:** `harness/stage-gates.mjs --before-dir stage3-before --after-label
   stage3-after`, the S3 side by side, strips and sheets, a B2 report, and a
-  stop. Before the PR: the founder's iPhone look at glass (Safari's frosted
+  stop. After deploy: the founder's iPhone look at glass (Safari's frosted
   panes cannot be seen from Windows) and the lens's iOS scroll check.
 
 ## Lessons from B1
