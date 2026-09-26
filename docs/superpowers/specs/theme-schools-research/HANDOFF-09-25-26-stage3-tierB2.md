@@ -7,9 +7,17 @@ not started.
 
 ## Where things stand
 
-- Branch `feat/theme-schools-tier3-stage3` (from `main` at `87608f0`), pushed.
-  This session's commits: `33e5011` (WebKit lens run, the head sweep, the
-  plan), `519a5f2` (wave B1), then the B1 stop answers and this handoff.
+- **Merged:** Tier A and wave B1 shipped as PR #91 (merge `a38d44d`,
+  09-25-26), with the review's three fixes (`217b8a5`). The founder's iPhone
+  look at the live site: glass fine; vaporwave's screensaver window was
+  hidden on phones, fixed in PR `fix/vaporwave-screensaver-phone`. **B2
+  branches fresh from `main`** (for example `feat/theme-schools-tier3-stage3-b2`).
+  The merged `feat/theme-schools-tier3-stage3` branch still exists locally
+  and on the remote; delete it once the founder confirms (the auto-mode
+  guard blocked the delete).
+- Earlier commits on the merged branch: `33e5011` (WebKit lens run, the head
+  sweep, the plan), `519a5f2` (wave B1), then the B1 stop answers and this
+  handoff.
 - `npm run verify` clean at `519a5f2`: 347 unit tests, astro check 0 errors
   0 warnings, 483 built-site tests.
 - Founder sheets: `scripts/themes/.out/stage3-b1/glass-final/` and
