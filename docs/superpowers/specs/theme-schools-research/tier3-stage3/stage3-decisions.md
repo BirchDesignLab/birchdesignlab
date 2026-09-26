@@ -345,3 +345,12 @@ with the first-pass sheets:
    portal switcher, in the first view where it fits.
 4. Fix workflow 2 **as proposed (8 agents), but held** until the founder
    says go (other work running on the machine).
+
+## Answers on resuming B2 (founder, 09-26-26)
+
+1. The glass Control Centre tiles sit 58 to 158 px below the first view at
+   1440 x 900 and 1280 x 800 because the approved B1 hero window is 609 px
+   tall: **accept one scroll** (the hero stays as approved; the lens is in
+   the first view). The tiles must still clear the portal switcher.
+2. Continue B2: workflow 4 (the glass review, a glass fix only if it blocks,
+   the vaporwave fix round and its review).
