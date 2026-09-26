@@ -71,7 +71,7 @@
  */
 import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, findStartPosition, type Bounds, type RectLike } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
-import { orbColorAt } from '../fx';
+import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
 
 const VERT = `
@@ -92,18 +92,38 @@ uniform sampler2D uWall;
 uniform vec4 uWallRect;
 uniform vec4 uOrb[8];
 uniform vec3 uOrbCol[8];
+uniform vec3 uOrbHiCol[8];
 uniform int uOrbN;
 uniform float uTint;
 uniform vec3 uVeil;
 uniform float uIdentity;
+
+// theme.css's real .orb: background: linear-gradient(155deg, --hi 8%, --lo
+// 78%), not a flat fill (B2 fix round item A). GRAD_DIR is the CSS gradient
+// line's unit direction for a 155deg angle in DOM (y-down) coordinates:
+// (sin 155deg, -cos 155deg). GRAD_LEN_RATIO is that line's length divided by
+// the orb's radius for a square box at this angle: |sin| + |cos|, doubled
+// (the line spans corner to corner, i.e. 2x the box's half-extent in this
+// direction). Both are constants because every orb shares the same 155deg
+// angle (theme.css declares no per-hue variation).
+const vec2 GRAD_DIR = vec2(0.42261826, 0.90630779);
+const float GRAD_LEN_RATIO = 2.65784892;
+
+vec3 orbGradient(vec3 hi, vec3 lo, vec2 rel, float r) {
+  float t = 0.5 + dot(rel, GRAD_DIR) / (r * GRAD_LEN_RATIO);
+  t = clamp((t - 0.08) / 0.7, 0.0, 1.0); // stops at 8% and 78%, per theme.css
+  return mix(hi, lo, t);
+}
 
 vec3 backdrop(vec2 s) {
   vec2 uv = (s - uWallRect.xy) / uWallRect.zw;
   vec3 c = texture2D(uWall, clamp(uv, 0.0, 1.0)).rgb;
   for (int i = 0; i < 8; i++) {
     if (i >= uOrbN) break;
-    float d = length(s - uOrb[i].xy) - uOrb[i].z;
-    c = mix(c, uOrbCol[i], clamp(0.5 - d * uDpr, 0.0, 1.0));
+    vec2 rel = s - uOrb[i].xy;
+    float d = length(rel) - uOrb[i].z;
+    vec3 orbCol = orbGradient(uOrbHiCol[i], uOrbCol[i], rel, uOrb[i].z);
+    c = mix(c, orbCol, clamp(0.5 - d * uDpr, 0.0, 1.0));
   }
   return c;
 }
@@ -157,7 +177,7 @@ void main() {
 const KEY_STEP = 12; // px per arrow-key nudge
 const KEY_STEP_FAST = 48; // px with Shift
 
-interface ModelOrb { cx: number; cy: number; r: number; rgb: [number, number, number] }
+interface ModelOrb { cx: number; cy: number; r: number; rgb: [number, number, number]; hiRgb: [number, number, number] }
 
 interface Sample { t: number; x: number; y: number }
 
@@ -227,9 +247,9 @@ function resolveOrbs(centerX: number, centerY: number): ModelOrb[] {
   for (const el of els) {
     const r = el.getBoundingClientRect();
     if (r.width <= 0) continue;
-    const rgb = orbColorAt(el);
-    if (!rgb) continue;
-    all.push({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2, rgb });
+    const grad = orbGradientAt(el);
+    if (!grad) continue;
+    all.push({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2, rgb: grad.lo, hiRgb: grad.hi });
   }
   all.sort((a, b) => {
     const da = (a.cx - centerX) ** 2 + (a.cy - centerY) ** 2;
@@ -336,7 +356,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     const aPos = gl!.getAttribLocation(prog, 'aPos');
     gl!.enableVertexAttribArray(aPos);
     gl!.vertexAttribPointer(aPos, 2, gl!.FLOAT, false, 0, 0);
-    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbN', 'uTint', 'uVeil', 'uIdentity']) {
+    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbHiCol', 'uOrbN', 'uTint', 'uVeil', 'uIdentity']) {
       U[n] = gl!.getUniformLocation(prog, n);
     }
     tex = gl!.createTexture()!;
@@ -692,12 +712,15 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     gl!.uniform4fv(U.uWallRect, wallRect);
     const orbBuf = new Float32Array(32);
     const colBuf = new Float32Array(24);
+    const hiColBuf = new Float32Array(24);
     orbs.forEach((o, i) => {
       orbBuf.set([o.cx, o.cy, o.r, 0], i * 4);
       colBuf.set([o.rgb[0] / 255, o.rgb[1] / 255, o.rgb[2] / 255], i * 3);
+      hiColBuf.set([o.hiRgb[0] / 255, o.hiRgb[1] / 255, o.hiRgb[2] / 255], i * 3);
     });
     gl!.uniform4fv(U.uOrb, orbBuf);
     gl!.uniform3fv(U.uOrbCol, colBuf);
+    gl!.uniform3fv(U.uOrbHiCol, hiColBuf);
     gl!.uniform1i(U.uOrbN, orbs.length);
     gl!.uniform1f(U.uTint, probeActive ? 0 : s.tintV);
     gl!.uniform3f(U.uVeil, veil[0], veil[1], veil[2]);

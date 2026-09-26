@@ -20,9 +20,11 @@ import { fileURLToPath } from 'node:url';
 import { suppressPrompt } from '../lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '.out', 'stage3-b2', 'vw-critic');
-await mkdir(OUT, { recursive: true });
 const argOf = (n, f) => { const i = process.argv.indexOf(`--${n}`); return i === -1 ? f : process.argv[i + 1]; };
+// --out <folder under .out/stage3-b2/> (added 09-26-26 for the fix round's
+// re-critic, so a rerun does not overwrite workflow 1's evidence).
+const OUT = join(HERE, '..', '.out', 'stage3-b2', argOf('out', 'vw-critic'));
+await mkdir(OUT, { recursive: true });
 const base = argOf('base', 'http://127.0.0.1:4479');
 const only = (argOf('only', '') || '').split(',').filter(Boolean);
 const want = (k) => only.length === 0 || only.includes(k);

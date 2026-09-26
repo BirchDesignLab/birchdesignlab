@@ -95,9 +95,27 @@ async function composeStrip(frames, outPath, { title = '', perRow = 6, quality =
 }
 
 /** README, films: "the lens over an orb edge while scrolling (clear and
-    tinted, light and dark)". Real, continuous wheel scrolling; a frame
-    captured after each step, labelled with the actual elapsed ms and the
-    real scrollY reached. */
+    tinted, light and dark)", crop following the lens (open item D of the
+    fix round: the first run's strip scrolled 400px total -- far more than
+    the ~92px radius the lens can reach -- so the orb (moving at up to 0.55x
+    of page scroll, theme.css's --scroll-rate) travelled clean out of the
+    lens's crossing range by the third frame, and the strip's FIXED crop was
+    also centred on the pre-drag mouse TARGET (tx, ty) rather than the lens's
+    actual post-clamp resting spot, which can differ by tens of px (the
+    lens's travel bounds keep it clear of the header). Measured (this fix
+    round, `b2fix-glass-lens-verify.mjs`'s own hitOverPanes/layeringAndRedraw
+    checks and a live probe): the lens itself never moves on screen while the
+    page scrolls (`.lens-hit`'s getBoundingClientRect is bit-identical before
+    and after 400px of scroll -- it is genuinely `position: fixed`, not a
+    stale claim), so "losing the lens" was really "the orb it was bending
+    scrolled away, leaving a WebGL lens over plain wallpaper, which barely
+    shows without a crisp edge to bend" -- expected once the orb leaves, not
+    a positioning bug. The fix: (1) crop from the lens's REAL resting centre,
+    read from the DOM after the drag settles, not the pre-drag mouse target;
+    (2) scroll only as far as the redraw check already validates (120px,
+    matching layeringAndRedraw's own "6 draws over 120px scroll" and the
+    critic's original orbedge methodology), so the orb's ~66px of relative
+    travel at 0.55x stays inside the lens's 92px radius for every frame. */
 async function orbEdgeScrollFilm() {
   for (const scheme of ['light', 'dark']) {
     const { context, page } = await ctx({ scheme });
@@ -116,7 +134,14 @@ async function orbEdgeScrollFilm() {
     await page.mouse.move(sx, sy); await page.mouse.down();
     for (let i = 1; i <= 15; i++) { await page.mouse.move(sx + (tx - sx) * i / 15, sy + (ty - sy) * i / 15); await page.waitForTimeout(16); }
     await page.waitForTimeout(150); await page.mouse.up(); await page.waitForTimeout(500);
-    const crop = { x: Math.max(0, Math.round(tx - 210)), y: Math.max(0, Math.round(ty - 210)), width: 420, height: 420 };
+    await page.mouse.move(720, 20);
+    // The lens's ACTUAL resting centre (post-clamp), not the pre-drag mouse
+    // target: computeBounds() can pull the final position tens of px from
+    // (tx, ty) (the header inset, the wall inset), and since the lens never
+    // moves again on scroll, this one read is valid for the whole strip.
+    const restBox = await page.locator('.lens-hit').boundingBox();
+    const lcx = restBox.x + restBox.width / 2, lcy = restBox.y + restBox.height / 2;
+    const crop = { x: Math.max(0, Math.round(lcx - 210)), y: Math.max(0, Math.round(lcy - 210)), width: 420, height: 420 };
     for (const tint of ['clear', 'tinted']) {
       if (tint === 'tinted') { await page.click('.hero .switch'); await page.mouse.move(720, 20); await page.waitForTimeout(500); }
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -128,9 +153,12 @@ async function orbEdgeScrollFilm() {
         frames.push({ label, buf, w: crop.width, h: crop.height });
       };
       await shot(`t+${Date.now() - t0}ms sy=0`);
-      for (let step = 0; step < 5; step++) {
-        for (let i = 0; i < 4; i++) { await page.mouse.wheel(0, 20); await page.waitForTimeout(30); }
-        await page.waitForTimeout(70);
+      // 6 steps of 20px = 120px total (the redraw check's own scroll
+      // distance): far enough to show the orb sweep across the lens and the
+      // redraw keep up with it, not so far the orb leaves the lens's reach.
+      for (let step = 0; step < 6; step++) {
+        await page.mouse.wheel(0, 20);
+        await page.waitForTimeout(90);
         const sy = await page.evaluate(() => window.scrollY);
         await shot(`t+${Date.now() - t0}ms sy=${sy}`);
       }
@@ -142,6 +170,80 @@ async function orbEdgeScrollFilm() {
     }
     await context.close();
   }
+}
+
+/** README, films: "a 4x rim crop over an orb edge" (open item A's evidence:
+    proves whether the lens's own copy of the orb reads as a seam against the
+    true orb at the rim, at a size a founder can actually judge by eye). Drags
+    the lens onto the same orb edge the orb-edge-scroll film uses, then crops
+    a small square straddling the lens's rim where it crosses the orb's true
+    edge and upscales it 4x with nearest-neighbour sampling (no smoothing, so
+    the crop shows real pixels, not an interpolated blur that would hide or
+    invent a seam). Light and dark, Clear only (Tinted's frost intentionally
+    changes the rim's look; the seam check is about position, not tint). */
+async function rimCrop4xFilm() {
+  const frames = [];
+  for (const scheme of ['light', 'dark']) {
+    const { context, page } = await ctx({ scheme });
+    await page.goto(`${base}/t/glassmorphism/`, { waitUntil: 'networkidle' });
+    await mountWait(page);
+    await page.waitForTimeout(400);
+    const orb = await page.evaluate(() => {
+      const o = [...document.querySelectorAll('.hero .orb')].map((el) => el.getBoundingClientRect())
+        .sort((a, b) => a.top - b.top)[0];
+      return { cx: o.left + o.width / 2, cy: o.top + o.height / 2, r: o.width / 2 };
+    });
+    const hit = await page.$('.lens-hit');
+    const b = await hit.boundingBox();
+    const sx = b.x + b.width / 2, sy = b.y + b.height / 2;
+    const tx = orb.cx - orb.r * 0.8, ty = Math.min(orb.cy - orb.r * 0.8, 700);
+    await page.mouse.move(sx, sy); await page.mouse.down();
+    for (let i = 1; i <= 15; i++) { await page.mouse.move(sx + (tx - sx) * i / 15, sy + (ty - sy) * i / 15); await page.waitForTimeout(16); }
+    await page.waitForTimeout(150); await page.mouse.up(); await page.waitForTimeout(500);
+    await page.mouse.move(720, 20);
+    // The actual intersection of the two circles (the lens's own boundary
+    // and the orb's true edge): standard circle-circle intersection, not a
+    // guess along the centre line. This is the exact point where the lens's
+    // bent copy of the orb edge and the true, unbent orb edge outside the
+    // lens meet -- where a seam would genuinely show, if there is one.
+    const rimPoint = await page.evaluate((orbIn) => {
+      const h = document.querySelector('.lens-hit').getBoundingClientRect();
+      const lcx = h.left + h.width / 2, lcy = h.top + h.height / 2, lr = h.width / 2;
+      const dx = orbIn.cx - lcx, dy = orbIn.cy - lcy;
+      const d = Math.hypot(dx, dy);
+      const a = (lr * lr - orbIn.r * orbIn.r + d * d) / (2 * d);
+      const hh = Math.sqrt(Math.max(0, lr * lr - a * a));
+      const mx = lcx + (a * dx) / d, my = lcy + (a * dy) / d;
+      const rx = -dy / d, ry = dx / d;
+      // Either intersection point works (the circles are symmetric about
+      // the centre line); the +h one is fine.
+      return { x: mx + hh * rx, y: my + hh * ry };
+    }, orb);
+    const zoomSrc = 50; // px of source captured, then upscaled 4x
+    const crop = { x: Math.max(0, Math.round(rimPoint.x - zoomSrc / 2)), y: Math.max(0, Math.round(rimPoint.y - zoomSrc / 2)), width: zoomSrc, height: zoomSrc };
+    const buf = await page.screenshot({ clip: crop });
+    const img = await loadImage(buf);
+    const zoomed = createCanvas(zoomSrc * 4, zoomSrc * 4);
+    const zg = zoomed.getContext('2d');
+    zg.imageSmoothingEnabled = false; // nearest-neighbour: real pixels, no invented blur
+    zg.drawImage(img, 0, 0, zoomSrc * 4, zoomSrc * 4);
+    // A thin crosshair at the crop's centre, which is exactly the computed
+    // circle-circle intersection point: marks where to look for a seam
+    // without painting over the pixels being judged (a 1px line, 70%
+    // opaque, well clear of the centre itself).
+    const mid = (zoomSrc * 4) / 2;
+    zg.strokeStyle = 'rgba(0, 220, 120, 0.7)';
+    zg.lineWidth = 1;
+    zg.beginPath();
+    zg.moveTo(mid - 14, mid); zg.lineTo(mid - 5, mid);
+    zg.moveTo(mid + 5, mid); zg.lineTo(mid + 14, mid);
+    zg.moveTo(mid, mid - 14); zg.lineTo(mid, mid - 5);
+    zg.moveTo(mid, mid + 5); zg.lineTo(mid, mid + 14);
+    zg.stroke();
+    frames.push({ label: scheme, buf: zoomed.toBuffer('image/png'), w: zoomSrc * 4, h: zoomSrc * 4 });
+    await context.close();
+  }
+  await composeStrip(frames, join(OUT, 'film__rim-crop-4x.jpg'), { title: 'Rim, 4x, no smoothing: the lens boundary crossing the true orb edge (50px source)', perRow: 2 });
 }
 
 /** README, films: "first view at the five sizes above (stills)". */
@@ -270,6 +372,7 @@ async function crossSchoolArrivalFilm() {
 }
 
 if (want('orbedge')) await orbEdgeScrollFilm();
+if (want('rim')) await rimCrop4xFilm();
 if (want('sizes')) await firstViewStills();
 if (want('drag')) await dragFlingWallStopFilm();
 if (want('phone')) await phoneSwipeFilm();

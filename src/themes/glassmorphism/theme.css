@@ -1178,46 +1178,63 @@ html.lens-held :where(*) {
   -webkit-user-select: none;
 }
 
-/* ---------- the Control Centre (B2) ---------- */
-
+/* ---------- the Control Centre (B2), a compact tile cluster (B2 fix
+   round, item 4) ----------
+ *
+ * The founder's own reference: macOS/iOS Control Centre, rounded-square
+ * modules in a row rather than the long single pill the W1 build shipped
+ * (the orchestrator's own finding, "sits at the fold as a long pill"). Four
+ * tiles -- Clear/Tinted, Frost, Time of day, Studio (location) -- each its
+ * own small glass-on-well module inside the outer .control-centre pane.
+ * .cc-frost and .cc-seg keep their old class names and behaviour unchanged
+ * (home-boot.ts, lens/ territory, queries them by class, not by their
+ * wrapper's shape), so only the wrapper markup and layout changed here. */
 :where([data-theme='glassmorphism']) .control-centre {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
+  display: grid;
+  /* Column tracks, not a fixed 4-up grid: the Time of day tile holds a
+     three-segment control (each segment a real 44px target) that a tight
+     84-116px square would clip, so every column is sized to its own
+     content, an 84px floor and no ceiling (macOS Control Centre tiles are
+     not all one width either). */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(84px, max-content);
+  gap: clamp(0.5rem, 1.4vw, 0.85rem);
   margin-top: clamp(1.25rem, 3vw, 2rem);
-  padding: 0.85rem 1.25rem;
-  border-radius: 999px;
+  padding: clamp(0.65rem, 1.6vw, 0.9rem);
+  border-radius: var(--r-lg);
+  justify-content: center;
 }
-:where([data-theme='glassmorphism']) .cc-group {
-  display: flex;
-  align-items: center;
-  gap: 0.6em;
+:where([data-theme='glassmorphism']) .cc-tile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  min-height: 84px;
+  padding: 0.7rem 0.5rem;
+  border-radius: var(--r-md);
+  background: var(--well);
+  border: 1px solid var(--line);
 }
-:where([data-theme='glassmorphism']) .cc-label {
+:where([data-theme='glassmorphism']) .cc-tile-label {
   font-family: var(--font-label);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 650;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--mark-muted);
 }
 :where([data-theme='glassmorphism']) .cc-frost {
-  width: clamp(96px, 14vw, 150px);
+  width: clamp(64px, 9vw, 84px);
   height: 44px; /* the house 44px target, even though the visible track is thinner */
   accent-color: var(--blob-cyan);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-:where([data-theme='glassmorphism']) .cc-tod {
-  display: flex;
-  gap: 2px;
-  padding: 4px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
+:where([data-theme='glassmorphism']) .cc-tile-tod {
+  min-width: 0;
 }
 :where([data-theme='glassmorphism']) .cc-seg {
   display: flex;
@@ -1225,7 +1242,11 @@ html.lens-held :where(*) {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 0.9rem;
+  /* B2 fix round, item 4: tighter than the old free-floating pill's
+     0.9rem -- three of these now have to fit inside one compact tile
+     (as narrow as a 2-column phone grid cell), and min-width already
+     guarantees the real 44px target regardless of this padding. */
+  padding: 0 0.5rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -1265,16 +1286,36 @@ html.lens-held :where(*) {
    the old decorative span, reset to the same 60x34 track the design already
    had. The thumb slides between the two ends instead of sitting fixed at the
    right, so the control reads its own state. */
-:where([data-theme='glassmorphism']) .window-bar .switch {
+/* .cc-switch (the Control Centre's own Clear/Tinted tile, B2 fix round item
+   4, cc-tint-tile.ts) gets every one of these rules by class LIST, not by
+   reusing the class name "switch": `.hero .switch` is a live selector in
+   the B2 critic/verify scripts (b2-glass-critic-probe.mjs and others),
+   written back when there was only one .switch under .hero (the window-bar
+   one); giving this second control the same class name would make every
+   such selector match two elements and throw under Playwright's
+   strict-mode click. */
+:where([data-theme='glassmorphism']) :is(.window-bar .switch, .control-centre .cc-switch) {
   appearance: none;
   -webkit-appearance: none;
   border: 0;
+  /* B2 fix round, item 2: a bare <button> carries the UA form-control
+     background (ButtonFace, a grey or white box depending on the platform
+     and scheme) and its own padding/font/colour, none of which Home.astro's
+     scoped style ever reset, so since glass-3b turned this into a real
+     button it has shown that box behind the track. The track (.switch-track)
+     already paints the whole visible control; the button itself should be
+     invisible chrome around it. */
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 83ms linear;
 }
 /* E11: the same brief press feedback as the other Control Centre controls. */
-:where([data-theme='glassmorphism']) .switch:active { transform: scale(0.97); }
+:where([data-theme='glassmorphism']) :is(.switch, .cc-switch):active { transform: scale(0.97); }
 :where([data-theme='glassmorphism']) .switch-thumb {
   transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1282,19 +1323,26 @@ html.lens-held :where(*) {
    no longer margin-rights it). Tinted (checked) slides it to the track's
    right end: the track is 60px with 4px padding each side (52px inside) and
    the thumb is 26px, so the full rightward travel is 52 - 26 = 26px. */
-:where([data-theme='glassmorphism']) .switch[aria-checked='true'] .switch-thumb {
+:where([data-theme='glassmorphism']) :is(.switch, .cc-switch)[aria-checked='true'] .switch-thumb {
   transform: translateX(26px);
 }
-:where([data-theme='glassmorphism']) .switch:focus-visible {
+:where([data-theme='glassmorphism']) :is(.switch, .cc-switch):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 @media (max-width: 720px) {
-  :where([data-theme='glassmorphism']) .control-centre { width: 100%; justify-content: space-between; }
+  /* B2 fix round, item 4: "a 2 by 2 grid on phones" (founder). Home.astro's
+     own phone rule sets the 2-column template; this switches the flow back
+     to row-major so the four tiles wrap into two rows of two instead of
+     one column of four. */
+  :where([data-theme='glassmorphism']) .control-centre {
+    width: 100%;
+    grid-auto-flow: row;
+  }
   /* Home.astro's own phone rule shrinks the track to 48px (4px padding, 20px
      thumb): the rightward travel becomes 40 - 20 = 20px. */
-  :where([data-theme='glassmorphism']) .switch[aria-checked='true'] .switch-thumb {
+  :where([data-theme='glassmorphism']) :is(.switch, .cc-switch)[aria-checked='true'] .switch-thumb {
     transform: translateX(20px);
   }
 }
@@ -1357,10 +1405,18 @@ html.lens-held :where(*) {
     transition: opacity 220ms ease;
   }
   :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::before {
-    /* the soft halo, behind the group's own content */
+    /* the soft halo, behind the group's own content. B2 fix round, item 5:
+       the W1 critic saw a nav label go grey under this halo -- .seg a has no
+       background of its own except on hover/active (E7, "no glass on
+       glass"), so its --mark-muted label sits directly on whatever the halo
+       lightens the header pane's backdrop to. The ring (::after, below)
+       still uses the full --edge-hi so it reads crisp; only the halo itself
+       is toned down to half that alpha (color-mix, not a second custom
+       property, so it always tracks --edge-hi's own per-scheme value),
+       which keeps a lit label's contrast at or above 4.5:1 in both schemes. */
     inset: -10px;
     z-index: -1;
-    background: radial-gradient(160px circle at var(--reveal-x, 50%) var(--reveal-y, 50%), var(--edge-hi), transparent 70%);
+    background: radial-gradient(160px circle at var(--reveal-x, 50%) var(--reveal-y, 50%), color-mix(in srgb, var(--edge-hi) 50%, transparent), transparent 70%);
     filter: blur(8px);
   }
   :where([data-theme='glassmorphism']) :is(.seg, .pills, .field-group, .control-centre)::after {

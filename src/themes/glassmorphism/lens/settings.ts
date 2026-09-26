@@ -99,17 +99,42 @@ export function writeSettings(storage: StorageLike, next: GlassSettings): void {
 export const SETTINGS_STORAGE_KEY = STORAGE_KEY;
 
 export interface ApplyTarget {
-  documentElement: { dataset: DOMStringMap; style: { setProperty(name: string, value: string): void } };
+  documentElement: {
+    dataset: DOMStringMap;
+    style: { setProperty(name: string, value: string): void };
+  };
+}
+
+/** The three literal -webkit-backdrop-filter stages theme.css keys off
+    data-glass-frost-step (Safari ignores custom properties inside the
+    prefixed property, BCD issue 25914, so it cannot read --glass-frost
+    continuously the way the unprefixed property does). `null` means the
+    unqualified, tuned-baseline rules apply (theme.css calls this "mid"),
+    so the attribute is removed rather than ever set to the literal string
+    "mid" -- there is no rule keyed off that value, and leaving a stale
+    "mid" or "low"/"high" attribute behind after a slider move back to the
+    middle third would otherwise keep matching the wrong stage's rule. */
+function frostStepFor(frost: number): 'low' | 'high' | null {
+  if (frost <= 1 / 3) return 'low';
+  if (frost >= 2 / 3) return 'high';
+  return null;
 }
 
 /** Writes the settings onto `<html>` as data attributes plus one CSS custom
     property, before first paint. `data-glass-tint` and `data-glass-tod`
     drive theme.css's Clear/Tinted and time-of-day rules (the wallpaper image
-    and the pane/lens tint); `--glass-frost` scales the blur tokens. Every
-    pane and the lens read these, not a class list, so a control component
-    never needs to reach into another component's markup. */
+    and the pane/lens tint); `--glass-frost` scales the blur tokens for
+    Chromium's unprefixed backdrop-filter continuously, and
+    `data-glass-frost-step` drives Safari's stepped -webkit-backdrop-filter
+    rules (B2 fix round, item 1: this was never written before, so the
+    slider had no effect in Safari at all). Every pane and the lens read
+    these, not a class list, so a control component never needs to reach
+    into another component's markup. */
 export function applyToDocument(target: ApplyTarget, s: GlassSettings): void {
   target.documentElement.dataset.glassTint = s.tint;
   target.documentElement.dataset.glassTod = s.tod;
   target.documentElement.style.setProperty('--glass-frost', s.frost.toFixed(3));
+  const step = frostStepFor(s.frost);
+  if (step) target.documentElement.dataset.glassFrostStep = step;
+  else delete target.documentElement.dataset.glassFrostStep;
 }

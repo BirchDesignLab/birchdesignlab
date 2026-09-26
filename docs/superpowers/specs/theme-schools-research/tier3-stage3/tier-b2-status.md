@@ -134,3 +134,44 @@ made nothing). Committed as `4fb2b69` (local, not yet pushed to PR #93).
 - **Not run yet:** glass-fix-ui (the frost slider, the hero switch box,
   Services, the location pill, the Control Centre as compact tiles, E12
   contrast), then the re-critics and verifiers, then the gates.
+
+## Fix round, part 2 (09-26-26): HELD after glass-fix-ui
+
+Workflow `wf_ab11081a-f62`. The founder held everything after glass-fix-ui
+(high-priority work elsewhere); the orchestrator stopped the workflow the
+moment the glass re-critic and re-verifier started (killed at once, nothing
+made). Reports saved to `.out/stage3-b2/w3-reports.json`.
+
+- **glass-fix-lens rerun (done, report in):** confirmed the first run's work
+  and fixed six items (the orb gradient in the lens's model, the hit
+  control's layering under covering panes, the film crops). Still open: the
+  identity probe over an orb edge at the 1440 x 900 start reads 3.00% of
+  pixels over 8 levels (mean 2.9, max 182); the 1024 x 768 start overlaps the
+  hero window's edge.
+- **glass-fix-ui (done):** the frost slider live in Chromium (panes'
+  filters rewritten on change) and Safari (`data-glass-frost-step` written
+  wherever settings apply); the hero switch's browser box reset; Services'
+  off switches visible and every column's controls on one baseline; the
+  Control Centre as four rounded-square tiles (location, Clear/Tinted, frost,
+  time of day), the old absolute location pill retired into its tile; E12's
+  halo dimmed so the nav label holds contrast. Open: at 1440 x 900 and
+  1280 x 800 the tiles sit 58 to 158 px below the fold because the hero
+  window is 609 px tall (a founder call: shrink the hero's vertical rhythm,
+  or accept one scroll step); a small overlap between the Dusk segment and
+  the portal switcher's closed badge at 1440 x 900.
+- **vaporwave re-critic (done): still BLOCKS.** W1 blockers 1, 3, 5 fixed;
+  2 and 4 partly. New: (a) after a context loss and restore the About bust
+  renders over an opaque black square that never clears (a real regression,
+  not the probe); (b) while lost, a white broken-image box shows behind the
+  poster; (c) on phones the attract loop still reads black (its content is
+  centred in the tall CRT, above the viewport when the visitor taps); (d) the
+  phone handoff changes 3.64% of pixels at 390 (target under 2%), speckle in
+  the hair; (e) the pipes show fine ribbing across every tube and cartoon
+  "eyes" on each growing head, so they do not read as shaded tubes.
+- **vaporwave verifier (done, a real run):** 15 films, 16 of 18 cases pass.
+  Fails: a caption button stays pressed if the pointer leaves it while held;
+  the Venus-to-plinth gap could not be measured reliably (a probe gap).
+- **Not run:** the glass re-critic and re-verifier. Next, on the founder's
+  go: one fix round for both schools (the vaporwave blockers above, the glass
+  open items and anything the glass review finds), then the reviews, the
+  gates, the report and the stop.

@@ -164,8 +164,17 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   .settings-list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  /* B2 fix round, item 3: the switch and stepper used to sit right under
+     each row's copy (align-content: start, three auto-sized tracks), so a
+     shorter step's controls rode higher than a longer step's. The middle
+     track (the copy) now takes the explicit 1fr, absorbing whatever extra
+     height the grid gave this column (every .settings-row is stretched to
+     the tallest column's height by the outer grid's default align-items,
+     so they all have the same total height already); the icon and the
+     controls stay auto-sized top and bottom, so the controls land on one
+     shared baseline across all four (or two, or one) columns. */
   .settings-row {
-    display: grid; align-content: start; gap: 0.6rem;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 0.6rem;
     padding: clamp(1.1rem, 2.2vw, 1.6rem);
     border-left: 1px solid var(--line);
   }
@@ -179,12 +188,21 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
     margin-top: 0.35rem;
   }
+  /* B2 fix round, item 3: --well (translucent white) reads as nearly
+     invisible here, in both schemes -- it was tuned for a well sunk into a
+     frosted glass pane, not a fill sitting directly on .settings-pane's
+     opaque surface-solid. An iOS-style off track needs its own visible
+     grey fill plus a hairline, independent of --well's per-scheme white
+     recipe: color-mix keeps it a genuine grey-blue in light (mark-muted
+     over the cream field-raised) and a lighter grey in dark (mark-muted's
+     dark-scheme value, pale, over the dark field-raised). */
   .mini-switch {
     display: block;
     width: 34px; height: 20px; padding: 2px;
     border-radius: 999px;
-    background: var(--well);
-    box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
+    background: color-mix(in srgb, var(--mark-muted) 24%, var(--field-raised) 76%);
+    border: 1px solid var(--line);
+    box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.14);
   }
   .mini-switch-thumb {
     display: block;

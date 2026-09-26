@@ -49,6 +49,14 @@ const Body = { home: Home, about: About, services: Services, contact: Contact, s
         html.dataset.glassTint = tint;
         html.dataset.glassTod = tod;
         html.style.setProperty('--glass-frost', frost.toFixed(3));
+        // Mirrors settings.ts's frostStepFor (B2 fix round, item 1): Safari
+        // ignores custom properties inside -webkit-backdrop-filter, so
+        // theme.css keys its stepped rules off this attribute instead of
+        // --glass-frost. "mid" (the tuned baseline) is the absence of the
+        // attribute, never the literal string.
+        if (frost <= 1 / 3) html.dataset.glassFrostStep = 'low';
+        else if (frost >= 2 / 3) html.dataset.glassFrostStep = 'high';
+        else delete html.dataset.glassFrostStep;
       } catch (e) {
         /* Private mode, blocked storage, corrupt JSON: the defaults above
            already ran before the throw, or CSS's own unattributed rules

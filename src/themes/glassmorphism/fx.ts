@@ -169,6 +169,37 @@ export function orbColorAt(orb: HTMLElement): [number, number, number] | null {
   return [Math.round(Number(m[0])), Math.round(Number(m[1])), Math.round(Number(m[2]))];
 }
 
+/** Both of an orb's gradient stops (`--hi`, `--lo`), resolved the same way
+    orbColorAt resolves one. The lens (`lens/lens.ts`, B2 fix round item A)
+    needs both: `.orb`'s real background is `linear-gradient(155deg, --hi 8%,
+    --lo 78%)` (theme.css), not a flat fill, so a model that only reads `--lo`
+    disagrees with the true page across most of the orb's face (the 8-78%
+    transition band), not only at its rim -- measured as a 168-level identity
+    mismatch, 3.01% of pixels over 8, before this existed. Returns null the
+    same way orbColorAt does if either custom property is unset or fails to
+    resolve to an rgb() string. */
+export function orbGradientAt(orb: HTMLElement): { hi: [number, number, number]; lo: [number, number, number] } | null {
+  const cs = getComputedStyle(orb);
+  const hi = cs.getPropertyValue('--hi').trim();
+  const lo = cs.getPropertyValue('--lo').trim();
+  if (!hi || !lo) return null;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+  orb.appendChild(probe);
+  const resolve = (value: string): [number, number, number] | null => {
+    probe.style.color = value;
+    const resolved = getComputedStyle(probe).color;
+    const m = resolved.match(/[\d.]+/g);
+    if (!m || m.length < 3) return null;
+    return [Math.round(Number(m[0])), Math.round(Number(m[1])), Math.round(Number(m[2]))];
+  };
+  const hiRgb = resolve(hi);
+  const loRgb = resolve(lo);
+  probe.remove();
+  if (!hiRgb || !loRgb) return null;
+  return { hi: hiRgb, lo: loRgb };
+}
+
 /** Which blur token a pane's frosted list comes from, by class (theme.css:
     .glass is --blur, .glass.thin --blur-thin, .glass-strong and .glass.thick
     --blur-thick, the thick rule winning a tie on source order). Read as the
@@ -359,12 +390,21 @@ export function mountPanes(): (() => void) | void {
   contrastMq.addEventListener('change', rebuildAll);
   phoneMq.addEventListener('change', rebuildAll);
   /* A live scheme flip remaps the orb hues (dark's --blob-* set), so the
-     tint is read again too, not only the bevels (PR #91 review). */
-  const schemeObserver = new MutationObserver(() => {
+     tint is read again too, not only the bevels (PR #91 review).
+     The frost slider (B2 fix round, item 1): settings.ts's applyToDocument
+     writes --glass-frost onto <html>.style, which changes the *token's*
+     computed value but never touches an already-written inline
+     backdrop-filter (buildOne() reads the token once, at build time, and
+     bakes the resolved px amount into the string it writes). Watching
+     'style' here, alongside 'data-scheme', means every settings update
+     (session restore included, since updateSettings/applySettingsNow both
+     go through applyToDocument on the SAME element this observer watches)
+     rebuilds every bendable pane's bevel with the new blur amount. */
+  const settingsObserver = new MutationObserver(() => {
     rebuildAll();
     scheduleTint();
   });
-  schemeObserver.observe(html, { attributeFilter: ['data-scheme'] });
+  settingsObserver.observe(html, { attributeFilter: ['data-scheme', 'style'] });
 
   /* Adaptive tint: lean each pane's fill toward the largest orb it
      overlaps. Alpha is capped well under what meta.ts already proved
@@ -451,7 +491,7 @@ export function mountPanes(): (() => void) | void {
     rtMq.removeEventListener('change', rebuildAll);
     contrastMq.removeEventListener('change', rebuildAll);
     phoneMq.removeEventListener('change', rebuildAll);
-    schemeObserver.disconnect();
+    settingsObserver.disconnect();
     ro?.disconnect();
     svg?.remove();
     for (const el of panes) {

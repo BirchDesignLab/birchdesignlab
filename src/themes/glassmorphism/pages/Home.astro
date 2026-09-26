@@ -41,36 +41,71 @@ const icons = ['violet', 'cyan'];
     <p class="lead">{copy.opener.lead}</p>
     <p class="sub">{copy.opener.subline}</p>
   </div>
-  {/* The window's empty right third is the cyan orb's ground: a small glass
-      pill of the studio's own location, not filler, floats over it. */}
-  <div class="widget locale glass" aria-hidden="true">
-    <span class="dot"></span>{chrome.location}
-  </div>
-  {/* The Control Centre's other two live controls (B2, item 3): a frost
-      slider (every pane's blur) and a dawn/day/dusk segmented control (the
-      wallpaper, CSS and lens texture together). Visible labels sit under
-      aria-hidden spans and are named again as each control's aria-label
-      (README's rule: a new visible word would fail copy parity with quiet;
-      an aria-hidden one is exempt and the label is not lost, because the
-      control repeats it as its accessible name). Normal document flow, not
-      fixed: the portal's switcher already owns the fixed bottom edge (phone:
-      the whole width; desktop: the bottom-right corner), and this stays out
-      of both. */}
+  {/* The Control Centre (B2 fix round, item 4): a macOS/iOS-style compact
+      tile cluster in place of the old long pill, four rounded-square
+      modules in one row (a 2x2 grid on phones). Clear/Tinted rides in the
+      hero window bar (its own control, above) AND repeats here as its own
+      tile, the way a real Control Centre repeats a menu-bar toggle -- the
+      tile is a plain forwarding control (cc-tint-tile.ts) that clicks the
+      real switch and mirrors its state back, so there is exactly one source
+      of truth (session-hold.ts) and one place (home-boot.ts, lens/) that
+      ever calls updateSettings for tint. Frost and time-of-day are the same
+      live controls B2 already had, just re-homed into tiles; their class
+      names (.cc-frost, .cc-seg) are unchanged, so home-boot.ts's existing
+      queries keep working untouched (that file is lens/ territory, off
+      limits to this seat). The fourth tile carries the location pill's own
+      content: the standalone floating widget it replaces used to hide
+      behind the portal switcher at 1440x900; a tile in normal flow cannot.
+      Visible labels sit under aria-hidden spans and are named again as each
+      control's aria-label (README's rule: a new visible word would fail
+      copy parity with quiet; an aria-hidden one is exempt). Normal document
+      flow, not fixed: the portal's switcher already owns the fixed bottom
+      edge (phone: the whole width; desktop: the bottom-right corner), and
+      this stays out of both. */}
   <div class="control-centre glass" data-control-centre>
-    <div class="cc-group">
-      <span class="cc-label" aria-hidden="true">Frost</span>
+    {/* Studio (location) goes first, not last: the desktop portal switcher
+        anchors to the viewport's bottom-right corner (README/PortalLayout),
+        and the cluster itself is centred, so its LAST tile is the one whose
+        corner can coincide with the switcher's at the page's initial,
+        unscrolled position. This tile is the one item 4 requires to stay
+        visible (the pill it replaces hid behind the switcher for the same
+        geometric reason), so it takes the leftmost slot instead. */}
+    <div class="cc-tile cc-tile-locale" aria-hidden="true">
+      <span class="cc-tile-label" aria-hidden="true">Studio</span>
+      <span class="cc-locale-value"><span class="dot"></span>{chrome.location}</span>
+    </div>
+    <div class="cc-tile cc-tile-tint">
+      <span class="cc-tile-label" aria-hidden="true">Glass</span>
+      {/* cc-switch, not switch: `.hero .switch` is a live selector in the
+          B2 critic/verify scripts (b2-glass-critic-probe.mjs and others),
+          written when there was only one .switch under .hero. Reusing that
+          exact class name on this second control would make every such
+          selector match two elements and throw under Playwright's
+          strict-mode click. cc-switch gets the identical CSS (theme.css's
+          :is(.switch, .cc-switch) rules) without that collision. */}
+      <button type="button" class="cc-switch cc-tint-switch" role="switch" aria-checked="false" aria-label="Tinted glass">
+        <span class="switch-track" aria-hidden="true">
+          <i class="switch-thumb"></i>
+        </span>
+      </button>
+    </div>
+    <div class="cc-tile cc-tile-frost">
+      <span class="cc-tile-label" aria-hidden="true">Frost</span>
       <input type="range" class="cc-frost" min="0" max="100" step="1" value="50" aria-label="Frost amount" />
     </div>
-    <div class="cc-group cc-tod" role="radiogroup" aria-label="Time of day">
-      <button type="button" class="cc-seg" data-tod="dawn" role="radio" aria-checked="false" aria-label="Dawn">
-        <span aria-hidden="true">Dawn</span>
-      </button>
-      <button type="button" class="cc-seg" data-tod="day" role="radio" aria-checked="true" aria-label="Day">
-        <span aria-hidden="true">Day</span>
-      </button>
-      <button type="button" class="cc-seg" data-tod="dusk" role="radio" aria-checked="false" aria-label="Dusk">
-        <span aria-hidden="true">Dusk</span>
-      </button>
+    <div class="cc-tile cc-tile-tod" role="radiogroup" aria-label="Time of day">
+      <span class="cc-tile-label" aria-hidden="true">Time</span>
+      <div class="cc-seg-row">
+        <button type="button" class="cc-seg" data-tod="dawn" role="radio" aria-checked="false" aria-label="Dawn">
+          <span aria-hidden="true">Dawn</span>
+        </button>
+        <button type="button" class="cc-seg" data-tod="day" role="radio" aria-checked="true" aria-label="Day">
+          <span aria-hidden="true">Day</span>
+        </button>
+        <button type="button" class="cc-seg" data-tod="dusk" role="radio" aria-checked="false" aria-label="Dusk">
+          <span aria-hidden="true">Dusk</span>
+        </button>
+      </div>
     </div>
   </div>
   {/* The lens's poster (plain CSS, no script dependency): visible until the
@@ -153,8 +188,10 @@ const icons = ['violet', 'cyan'];
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { mountHomeGlass } from '../lens/home-boot';
+  import { mountCcTintTile } from '../cc-tint-tile';
 
   onMount(mountHomeGlass);
+  onMount(mountCcTintTile);
 </script>
 
 <style>
@@ -183,8 +220,11 @@ const icons = ['violet', 'cyan'];
      instead of floating loose over the corner. B2 item 4: the button
      (.switch) is the real hit target and stays unsized here (it takes the
      track's own size by default); .switch-track carries the track's look,
-     so a phone-width min-height on the button alone cannot stretch it. */
-  .switch {
+     so a phone-width min-height on the button alone cannot stretch it.
+     .cc-switch (the Control Centre's own Clear/Tinted tile, cc-tint-tile.ts)
+     shares this and every other .switch rule below by class list, never by
+     class name reuse -- see the tile's own markup comment for why. */
+  :is(.switch, .cc-switch) {
     display: flex; align-items: center; justify-content: center;
   }
   .switch-track {
@@ -194,7 +234,7 @@ const icons = ['violet', 'cyan'];
     background: var(--well);
     box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
   }
-  .switch i {
+  :is(.switch, .cc-switch) i {
     /* B2: no longer margin-left: auto (a fixed right anchor). The thumb now
        rests at the track's left end by default and theme.css's
        .switch[aria-checked='true'] rule slides it to the right, so Clear and
@@ -292,19 +332,26 @@ const icons = ['violet', 'cyan'];
     }
   }
 
-  .widget { position: absolute; z-index: 2; border-radius: 999px; }
-  .locale {
-    right: max(2%, calc(50% - 470px)); bottom: 14%;
-    display: flex; align-items: center; gap: 0.6em;
-    padding: 0.7em 1.2em;
+  /* B2 fix round, item 4: the floating .widget.locale pill (absolute,
+     right-anchored beside the window) is retired -- it hid behind the
+     portal switcher at 1440x900 (the orchestrator's own finding), and its
+     content now lives in the Control Centre's own location tile below, in
+     normal document flow where nothing else can sit on top of it. .dot's
+     recipe is reused there under .cc-locale-value. */
+
+  /* ---- the Control Centre: a compact tile cluster (B2 fix round, item 4)
+     ---- */
+  .cc-seg-row { display: flex; gap: 2px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); }
+  .cc-locale-value {
+    display: flex; align-items: center; gap: 0.5em;
     font-family: var(--font-label);
-    font-size: 0.8125rem; font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.03em;
     color: var(--mark-muted);
     white-space: nowrap;
   }
-  .locale .dot {
-    width: 0.6em; height: 0.6em; border-radius: 50%;
+  .cc-locale-value .dot {
+    width: 0.6em; height: 0.6em; border-radius: 50%; flex: none;
     background: linear-gradient(135deg, var(--blob-cyan), var(--blob-violet) 55%, var(--blob-pink));
   }
 
@@ -399,11 +446,6 @@ const icons = ['violet', 'cyan'];
     line-height: 1;
   }
 
-  /* The locale pill sits in the margin beside the window; below this width
-     that margin is gone and it would cover the subline. */
-  @media (max-width: 1140px) {
-    .locale { display: none; }
-  }
   @media (max-width: 860px) {
     .lab-panel { grid-template-columns: 1fr; }
   }
@@ -413,9 +455,13 @@ const icons = ['violet', 'cyan'];
     /* B2 item 4: the button (.switch) grows to the 44px minimum; the track
        stays its own compact 48x28, centred inside the larger real hit
        area, so the visible pill does not also grow. */
-    .switch { min-width: 44px; min-height: 44px; }
+    :is(.switch, .cc-switch) { min-width: 44px; min-height: 44px; }
     .switch-track { width: 48px; height: 28px; }
-    .switch i { width: 20px; height: 20px; }
+    :is(.switch, .cc-switch) i { width: 20px; height: 20px; }
     .ask { justify-items: center; text-align: center; }
+    /* B2 fix round, item 4: "a 2 by 2 grid on phones" (founder). theme.css's
+       .control-centre is a 4-column grid by default; only the column count
+       changes here. */
+    .control-centre { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
