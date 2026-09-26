@@ -294,8 +294,10 @@ export interface ChosenStart extends StartCandidate {
   /** The fraction of the disc under an obstruction (0 when open). */
   cover: number;
   /** 'poster' when the lens keeps the CSS poster's own spot (so the poster
-      and the live lens agree with no jump), 'search' when it moved. */
-  source: 'poster' | 'search';
+      and the live lens agree with no jump), 'search' when it moved,
+      'corner' for round 4's deliberate half-under-the-window phone start
+      (cornerStart). */
+  source: 'poster' | 'search' | 'corner';
 }
 
 /** Glass fix round 3 (the critic's arrival jump): the poster's CSS spot is
@@ -313,6 +315,37 @@ export function chooseStart(bounds: Bounds, radius: number, preferred: [number, 
   const foundCover = discCoverage(found.x, found.y, radius, obstructions);
   if (prefCover <= foundCover + 0.01) return { x: px, y: py, open: false, cover: prefCover, source: 'poster' };
   return { ...found, cover: foundCover, source: 'search' };
+}
+
+/** Round 4 (G2, founder): on phones and portrait tablets the lens STARTS half
+    under the hero window's lower corner, across an orb, where B1's hand-placed
+    orbs cluster (the founder's answer after B2 round 3), instead of in a gap
+    of open wallpaper. The disc's centre sits on the window's bottom edge, so
+    the window covers its upper half (less the rounded corner) and the visible
+    lower half is the grab. Candidates: each lower corner, the disc tangent to
+    the window's side, then slid inward along the edge by half and by one
+    radius. Clear of every OTHER obstruction (the Control Centre, the switcher,
+    the header) is required; crossing an orb edge comes next, then the least
+    slide, then the right corner (where B1's placeholder sat). Returns null
+    when no candidate is clear or the window's bottom is outside `bounds` (a
+    small phone whose window fills the first view): the caller then falls back
+    to `chooseStart`. */
+export function cornerStart(win: RectLike, radius: number, bounds: Bounds, others: RectLike[], orbs: OrbCircle[]): ChosenStart | null {
+  const [x0, y0, x1, y1] = bounds;
+  const y = win.bottom;
+  if (y < y0 || y > y1) return null;
+  let best: { x: number; score: number } | null = null;
+  for (const [side, dir, tangent] of [[0, -1, win.right - radius], [1, 1, win.left + radius]] as const) {
+    for (const k of [0, 0.5, 1]) {
+      const x = Math.min(x1, Math.max(x0, tangent + dir * k * radius));
+      if (!others.every((rect) => circleRectGap(x, y, radius, rect) >= 0)) continue;
+      const edge = orbs.some((o) => crossesCircleEdge(x, y, radius, o.cx, o.cy, o.r));
+      const score = (edge ? 10 : 0) - k * 2 - side;
+      if (!best || score > best.score) best = { x, score };
+    }
+  }
+  if (!best) return null;
+  return { x: best.x, y, open: false, cover: discCoverage(best.x, y, radius, [win, ...others]), source: 'corner' };
 }
 
 /** Progress (0 to 1) of an element's pass through the viewport, matching the

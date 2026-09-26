@@ -109,10 +109,28 @@ const SPHERE_BOX_SCALE = SPHERE_TARGET / SPHERE_VISIBLE_FRACTION;
    re-touching already-correct pixels every frame, but every colour is
    opaque, so redrawing them is a no-op (identical input, identical
    output); what does change is that there is now only ONE antialiasing
-   pass for the pipe's entire visible length, not one per frame. Runs reset
-   at every real turn and at relocation, so this never redraws more than
-   one grid cell's worth of frames' growth. `round` caps read as a single
-   smoothly shaded capsule at the tip, not the two-round-cap eyes above. */
+   pass for the pipe's entire visible length, not one per frame. A run
+   lasts until the next real turn (or a relocation), so it can span several
+   grid cells' worth of growth by the time it ends, not just one -- the
+   whole-run restroke costs re-touching that whole span every frame, which
+   is what the note above means by "already-correct pixels", not a bound on
+   the run's own length. `round` caps read as a single smoothly shaded
+   capsule at the tip, not the two-round-cap eyes above.
+
+   Fix round 4 (founder: crisp 3D pipes, no glow band): round 3's tube was
+   right but sat inside an opaque halo stroked at lineWidth*1.9 -- a flat
+   band of pipe colour wider than the shaded core, restroked every frame
+   from the run's own start (the last elbow), which covered that elbow's
+   ball joint one frame after every turn (the joint's radius, 0.62*lineW,
+   is smaller than the halo's own round-cap radius, 0.95*lineW). Elbows
+   then read as two capsule ends butted together, not one bent pipe, and
+   the 3px depth shadow sat almost entirely inside the halo too. The halo
+   is gone; a thin opaque silhouette rim (about 1.08x the tube's width,
+   mixed darker toward the canvas's own resting colour, not lighter toward
+   white) replaces it, giving the tube a defined edge without a glow band.
+   The ball joint is now redrawn every frame, AFTER the run's own strokes,
+   at the run's start point -- so a later frame's whole-run restroke can
+   never bury it again, whichever elbow it currently sits at. */
 const PIPE_GEN_FRAMES = 480;
 
 /** Mixes a `#rrggbb` colour toward an RGB target and returns an opaque
@@ -261,7 +279,12 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
       pipe.travelled += step;
       const lo = shadeTowards(pipe.color, PIPE_BG, 0.72);
       const hi = shadeTowards(pipe.color, [255, 255, 255], 0.62);
-      const haloColor = shadeTowards(pipe.color, [255, 255, 255], 0.12);
+      // Fix round 4: a darker silhouette rim, mixed TOWARD the canvas's own
+      // resting colour, not a lighter halo mixed toward white. Only about
+      // 1.08x the tube's own width (round 3's halo was 1.9x), so it reads
+      // as a thin defined edge, not a flat band of colour wider than the
+      // shaded core.
+      const rimColor = shadeTowards(pipe.color, PIPE_BG, 0.85);
 
       // Every layer below strokes the pipe's WHOLE current run, from
       // `runX, runY` (the last elbow, or its spawn point) to its current
@@ -276,8 +299,7 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
       // entire visible length. It costs re-touching already-correct pixels
       // every frame, but every colour here is opaque (see the file
       // header), so that is a no-op: identical input, identical output.
-      // Runs reset at every real turn (below) and at relocation, so this
-      // never redraws more than one grid cell's worth of frames' growth.
+      // Runs reset at every real turn (below) and at relocation.
       ctx.save();
       ctx.strokeStyle = PIPE_DEPTH_SHADOW;
       ctx.lineWidth = lineW * 1.05;
@@ -288,13 +310,16 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
       ctx.stroke();
       ctx.restore();
 
-      // A neon halo, under the tube: a plain wider opaque stroke, not
-      // `shadowBlur` (its Gaussian falloff is computed fresh per call too,
-      // which was the same per-frame-seam problem one layer out).
+      // The silhouette rim, under the tube: a thin (about 1.08x) opaque
+      // stroke, darker than the core's own darkest edge, so the tube reads
+      // as one crisp shaded cylinder against the canvas's resting colour
+      // instead of a neon glow band (round 3's 1.9x halo, dropped: it was
+      // wide enough to bury the elbow's ball joint every frame, see the
+      // file header).
       ctx.save();
       ctx.lineCap = 'round';
-      ctx.strokeStyle = haloColor;
-      ctx.lineWidth = lineW * 1.9;
+      ctx.strokeStyle = rimColor;
+      ctx.lineWidth = lineW * 1.08;
       ctx.beginPath();
       ctx.moveTo(pipe.runX, pipe.runY);
       ctx.lineTo(pipe.x, pipe.y);
@@ -332,30 +357,40 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
       ctx.stroke();
       ctx.restore();
 
-      // A grid vertex: maybe turn onto the other axis, ball-jointed like the
-      // Windows original, elbow shaded the same light-to-dark way the tube
-      // is (a small radial gradient stands in for the cylinder's curve).
+      // Fix round 4: the ball joint at the run's own start (the last real
+      // elbow, or the pipe's spawn point) is redrawn every frame, AFTER the
+      // three strokes above, so the run's own whole-run restroke (which
+      // starts exactly at this point) can never bury it again as the run
+      // grows -- round 3 drew this only once, at the instant a pipe turned,
+      // and every later frame's restroke covered it a frame afterward
+      // (jointR, 0.62*lineW, is smaller than round 3's halo round-cap
+      // radius, 0.95*lineW). Shaded the same light-to-dark way the tube is
+      // (a small radial gradient stands in for the cylinder's curve); no
+      // shadowBlur, to match "no glow" for the tubes themselves.
+      ctx.save();
+      const j = ctx.createRadialGradient(
+        pipe.runX - lineW * 0.18, pipe.runY - lineW * 0.18, lineW * 0.05,
+        pipe.runX, pipe.runY, jointR,
+      );
+      j.addColorStop(0, hi);
+      j.addColorStop(0.55, pipe.color);
+      j.addColorStop(1, lo);
+      ctx.fillStyle = j;
+      ctx.beginPath();
+      ctx.arc(pipe.runX, pipe.runY, jointR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // A grid vertex: maybe turn onto the other axis. The ball joint at
+      // the vertex it turns at is not drawn here -- it is drawn above,
+      // every frame, at `runX, runY`, which this block moves to the new
+      // elbow below once a turn actually happens.
       if (pipe.travelled >= cell) {
         pipe.travelled = 0;
         const atEdge = pipe.x <= cell || pipe.x >= w - cell || pipe.y <= cell || pipe.y >= h - cell;
         let turned = false;
         if (atEdge || Math.random() < 0.4) {
           turned = true;
-          ctx.save();
-          const g = ctx.createRadialGradient(
-            pipe.x - lineW * 0.18, pipe.y - lineW * 0.18, lineW * 0.05,
-            pipe.x, pipe.y, jointR,
-          );
-          g.addColorStop(0, hi);
-          g.addColorStop(0.55, pipe.color);
-          g.addColorStop(1, lo);
-          ctx.fillStyle = g;
-          ctx.shadowColor = pipe.color;
-          ctx.shadowBlur = lineW * 0.4;
-          ctx.beginPath();
-          ctx.arc(pipe.x, pipe.y, jointR, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
           if (pipe.dx !== 0) {
             pipe.dx = 0;
             pipe.dy = Math.random() < 0.5 ? 1 : -1;

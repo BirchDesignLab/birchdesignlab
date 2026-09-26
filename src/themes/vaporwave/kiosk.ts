@@ -23,29 +23,50 @@ export function mountKioskAttract(): (() => void) | void {
   let timer = 0;
   let playing = false;
 
+  // Fix round 4 (founder: no scroll): round 3 brought the screen toward the
+  // viewport's middle with `scrollIntoView`, which the founder rejected --
+  // `window.scrollY` must be exactly what it was before the tap. Instead,
+  // this positions the attract CONTENT (the marquee and the kana; not the
+  // scanline overlay, which still covers the whole screen box) within
+  // whichever part of the screen box is actually on screen, by setting
+  // `--attract-top`, a local (screen-relative) offset theme.css's
+  // `.attract-content` reads for its own vertical centring. On a phone,
+  // where the screen box is taller than the viewport and the visitor
+  // scrolled down to reach the button below it, that on-screen part is the
+  // screen's own bottom band -- right where the button (and the visitor's
+  // attention) already is. Falls back to 50% (theme.css's own default, the
+  // screen's true centre) whenever the whole box already fits the viewport
+  // (desktop, most tablets), so "the desktop loop as it is" is untouched.
+  const positionContent = () => {
+    const rect = screen.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    const visibleTop = Math.max(rect.top, 0);
+    const visibleBottom = Math.min(rect.bottom, innerHeight);
+    if (visibleBottom <= visibleTop) return; // Not on screen at all; leave the CSS default.
+    const localMid = (visibleTop + visibleBottom) / 2 - rect.top;
+    const clamped = Math.min(Math.max(localMid, 0), rect.height);
+    screen.style.setProperty('--attract-top', `${clamped}px`);
+  };
+
   const stop = () => {
     if (timer) window.clearTimeout(timer);
     timer = 0;
     playing = false;
     screen.classList.remove('on');
+    removeEventListener('scroll', positionContent);
+    removeEventListener('resize', positionContent);
   };
 
   const play = () => {
     if (playing) return;
     playing = true;
-    // B2 fix round 3: the attract content sits at the screen's own vertical
-    // centre (theme.css's align-content: center); on a phone the CRT's
-    // screen box is taller than the viewport, so a visitor who scrolled
-    // down to reach the button below it saw only a black sliver of the
-    // screen's own bottom edge, well below where the loop actually draws.
-    // Bring the screen toward the middle of the viewport on tap so the loop
-    // reads as attract mode from wherever the visitor is, at any width; an
-    // instant jump (not smooth), since this is the loop's own start, not an
-    // incidental scroll, and it keeps a screenshot taken right after the tap
-    // from landing mid-animation. A near no-op where the screen already
-    // fits the viewport (desktop, most tablets).
-    screen.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+    positionContent();
     screen.classList.add('on');
+    // A manual scroll or rotation during the ~5s loop (not the tap itself,
+    // which never scrolls) keeps the content following the visible band
+    // rather than freezing at a position that may have scrolled away.
+    addEventListener('scroll', positionContent, { passive: true });
+    addEventListener('resize', positionContent);
     timer = window.setTimeout(stop, ATTRACT_MS);
   };
 

@@ -89,11 +89,13 @@ const doorFiles = ['software.exe', 'web_design.htm'];
               from the keyboard/AT tree, so the specimens links and the
               lab link above stay reachable throughout. */}
           <div class="crt-attract" aria-hidden="true" data-kiosk-attract-screen>
-            <p class="attract-marquee" data-kiosk-marquee>
-              <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
-              <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
-            </p>
-            <p class="attract-kana">デザイン</p>
+            <div class="attract-content">
+              <p class="attract-marquee" data-kiosk-marquee>
+                <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
+                <span>インフォメーション・INFORMATION・B1 SOFTWARE・1F WEB・2F LAB・バーチ・デザイン・ラボ・</span>
+              </p>
+              <p class="attract-kana">デザイン</p>
+            </div>
             <div class="attract-scan"></div>
           </div>
         </div>
@@ -398,18 +400,30 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      plays; JS toggles `.on` for a few seconds and removes it. */
   .crt-attract {
     position: absolute; inset: 0; z-index: 2; overflow: hidden;
-    /* fix round: an explicit, capped column. Left as an implicit grid, the
-       track grew to the marquee's own max-content width (the nowrap
-       scroller's two copies, about 2008px in a 918px screen), so the loop's
-       centrepiece kana sat off-screen at the far right of that track and the
-       screen read as black. minmax(0, 1fr) ties the track to the available
-       width instead of the marquee's content. */
-    display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; gap: 1.4rem;
     background: var(--crt-bg);
     opacity: 0; pointer-events: none;
     transition: opacity 160ms ease;
   }
   .crt-attract.on { opacity: 1; }
+  /* Fix round 4 (founder: no scroll on the phone attract tap): the content
+     used to centre with `align-content: center` on this element's own full
+     (often off-screen-tall) box. It now lives in its own absolutely
+     positioned group, vertically placed at `--attract-top` (a LOCAL,
+     screen-relative offset kiosk.ts computes from the actual visible
+     viewport intersection on tap) instead of the box's geometric middle,
+     falling back to 50% -- the same true centre as before -- whenever the
+     variable is unset (desktop, or before any tap). See kiosk.ts. */
+  .attract-content {
+    position: absolute; inset-inline: 0;
+    top: var(--attract-top, 50%); transform: translateY(-50%);
+    /* fix round 3: an explicit, capped column. Left as an implicit grid, the
+       track grew to the marquee's own max-content width (the nowrap
+       scroller's two copies, about 2008px in a 918px screen), so the loop's
+       centrepiece kana sat off-screen at the far right of that track and the
+       screen read as black. minmax(0, 1fr) ties the track to the available
+       width instead of the marquee's content. */
+    display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 1.4rem;
+  }
   .attract-marquee {
     /* min-width: 0 and overflow: hidden clip the nowrap scroller to the
        screen's own width instead of letting its intrinsic content width

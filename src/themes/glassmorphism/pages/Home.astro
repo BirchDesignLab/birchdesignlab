@@ -332,13 +332,21 @@ const icons = ['violet', 'cyan'];
   @media (max-width: 1279px) {
     .lens-poster { width: 128px; left: 12px; top: 98px; }
   }
+  /* Round 4 (G2): portrait tablets start half under the window's lower-left
+     corner, across the pink orb (lens.ts cornerStart; home-boot.ts moves the
+     poster onto the real corner at mount). This is the stand-in, tuned to
+     820 x 1180. */
   @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
-    .lens-poster { left: calc(75% - 64px); top: calc(68% - 64px); }
+    .lens-poster { left: calc(4vw + 32px); top: calc(51% - 64px); }
   }
-  /* 70px keeps the disc 12px above the switcher's bar (bottom 12px, 46px
-     tall) at rest. */
+  /* Round 4 (G2): phones start the lens half under the hero window's lower
+     right corner, where B1's orbs cluster. The window's bottom depends on
+     how its copy wraps, so home-boot.ts places the poster on the real
+     corner at mount (planLensStart); this CSS spot is only the no-script
+     and drawn-ahead stand-in, tuned to 390 x 844 (the window's bottom at
+     about 60svh, its right edge 16px in). */
   @media (max-width: 720px) {
-    .lens-poster { left: calc(50% - 64px); top: auto; bottom: 70px; }
+    .lens-poster { left: calc(100% - 144px); top: calc(60svh - 64px); bottom: auto; }
   }
 
   /* B2 fix round, item 4: the floating .widget.locale pill (absolute,
@@ -462,27 +470,38 @@ const icons = ['violet', 'cyan'];
      switcher keeps its desktop width (about 290px left of it at 820), so
      the time segments stack and the location wraps, keeping the 2 x 2
      cluster near 235px wide (glass fix round 3). */
+  /* Round 4 (G2): portrait tablets start the lens half under the window's
+     lower corner too (lens.ts CORNER_START_MQ), so the Control Centre drops
+     far enough under the window (5rem) to clear the disc's visible lower
+     half; at the default 2rem it sat on the lower-left corner, where the
+     pink orb is. The hero's bottom padding gives back exactly what the
+     margin adds, so the hero keeps its height and its orbs (placed in % of
+     the hero) stay where they were. */
+  @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
+    .control-centre { margin-top: 5rem; }
+    .hero { padding-bottom: max(0.5rem, calc(clamp(3rem, 8vw, 6rem) - 5rem + clamp(1.25rem, 3vw, 2rem))); }
+  }
   @media (min-width: 721px) and (max-width: 943px) {
     .cc-seg-row { flex-direction: column; border-radius: 24px; }
     .cc-locale-value { white-space: normal; max-width: 8.5em; text-align: center; }
   }
   @media (max-width: 720px) {
-    /* Glass fix round 3, phones: the first view is the window, then a gap
-       of open wallpaper where the lens starts (the poster's phone spot),
-       and the Control Centre starts just below the fold (the founder
-       accepts the tiles one scroll down), so no tile sits under the portal
-       switcher in the first view. min-height = 100svh - the hero's top (74,
-       under the header) + its bottom padding (72) + the cluster's fixed
-       height (238, theme.css's phone rules) + 16 of air. The gap row never
-       shrinks below the lens's 128px plus a margin. */
+    /* Round 4 (G2, founder): B1's phone hero is back. Round 3 made the hero
+       252px taller to hold a gap of open wallpaper for the lens, which left
+       no orb in the phone first view. Now the window sits exactly where B1
+       put it (3.5rem down), with B1's 4.5rem of orb space under it, and the
+       hero's orbs are placed against that same B1 box: the .orbs layer stops
+       above the Control Centre (238px tall on phones, theme.css; 2rem of
+       bottom padding), so their percentages resolve as they did in B1. The
+       lens starts half under the window's lower corner, across an orb
+       (lens.ts, physics.ts cornerStart), and the Control Centre follows in
+       flow, 4.5rem under the window, clear of the lens's lower half. */
     .hero {
-      min-height: calc(100svh + 252px);
-      padding-block: 3.5rem 4.5rem;
-      grid-template-rows: auto minmax(152px, 1fr) auto;
+      min-height: 0;
+      padding-block: 3.5rem 2rem;
     }
-    .window { grid-row: 1; }
-    .lens-host { grid-row: 2; }
-    .control-centre { grid-row: 3; margin-top: 0; }
+    .hero > :global(.orbs) { bottom: calc(238px + 2rem); }
+    .control-centre { margin-top: 4.5rem; }
     .cc-seg-row { padding: 3px; gap: 1px; }
     .cc-locale-value { white-space: normal; text-align: center; }
     .window { border-radius: 30px; }

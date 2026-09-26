@@ -66,8 +66,15 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
   if (tracked.length === 0) return;
 
   function measure() {
+    // Round 4 (G1, the round-3 re-critic's blocker): CSS view() measures the
+    // UNTRANSFORMED layout box, and the stylesheet's static `translate:
+    // -50% -50%` is a transform. Clearing back to '' left that -50% in the
+    // rect, so every orb's docTop read h/2 too high and its progress ran
+    // ahead by (h/2)/(vh+h): 17 to 65 px above B1's view() placement at
+    // every scroll. `none` removes the translate for the read pass, so the
+    // rect is the layout box view() itself uses.
     for (const o of tracked) {
-      o.el.style.translate = ''; // back to the stylesheet's static -50% -50%
+      o.el.style.translate = 'none';
     }
     // A second pass: only after every orb's translate is cleared does each
     // rect reflect the untransformed layout (clearing one orb cannot move
@@ -77,6 +84,9 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
       const r = o.el.getBoundingClientRect();
       o.docTop = r.top + window.scrollY;
       o.height = r.height;
+    }
+    for (const o of tracked) {
+      o.el.style.translate = ''; // back to the stylesheet's static -50% -50% until the next frame writes
     }
     lastScrollY = NaN; // the translates were just cleared: rewrite them next frame
   }

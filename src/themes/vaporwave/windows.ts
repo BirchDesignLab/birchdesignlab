@@ -143,12 +143,28 @@ export function mountWindowDrag(): (() => void) | void {
     // This never starts a drag -- onPointerDown above already returns
     // early for any press inside `.vw-win-btns` -- and never touches
     // focusability (the spans stay aria-hidden, unchanged).
+    //
+    // Fix round 4: that early return also meant a caption's own pointerdown
+    // never reached the window bar's `event.preventDefault()` (the one that
+    // stops a drag's own text selection, above) -- so dragging off a held
+    // caption button, over nearby text, still ran the browser's normal
+    // drag-to-select. `onCapDown` now calls `preventDefault()` itself for
+    // mouse and pen (the pointer types that can drag-select text this way;
+    // the round-3 critic's own repro used a mouse), the same suppression
+    // and the same safety as the bar's own: these spans are decorative
+    // (aria-hidden, unfocusable, no click handler of their own), so it costs
+    // nothing real. Excluded for touch: `preventDefault` on a touch
+    // pointerdown also cancels that touch's default scroll, and these are
+    // small (22x20px) targets inside an otherwise normal scrolling page --
+    // a visitor whose thumb happens to land on one while meaning to scroll
+    // should still be able to.
     for (const cap of bar.querySelectorAll<HTMLElement>('.vw-win-btns span')) {
       let heldId = -1;
       const onCapDown = (event: PointerEvent) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
         heldId = event.pointerId;
         cap.classList.add('pressed');
+        if (event.pointerType !== 'touch') event.preventDefault();
       };
       const onCapLeave = (event: PointerEvent) => {
         if (event.pointerId !== heldId) return;

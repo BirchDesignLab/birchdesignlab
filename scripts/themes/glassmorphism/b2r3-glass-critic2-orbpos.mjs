@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { suppressPrompt } from '../lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '.out', 'stage3-b2', 'glass-recritic-r2', 'own');
+// PROBE_OUT (added by the round-4 re-critic): rerun into another seat's folder.
+const OUT = process.env.PROBE_OUT || join(HERE, '..', '.out', 'stage3-b2', 'glass-recritic-r2', 'own');
 const base = process.argv[process.argv.indexOf('--base') + 1] || 'http://127.0.0.1:4475';
 await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ['--hide-scrollbars', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });

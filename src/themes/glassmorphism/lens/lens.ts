@@ -69,7 +69,7 @@
  *   a vertical scan across the seam measures the offset while scrolling.
  *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, type Bounds, type RectLike, type ChosenStart } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, type Bounds, type RectLike, type ChosenStart } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -357,6 +357,12 @@ function boundsFor(radius: number, insets: { top: number; bottom: number }): Bou
   return [x0, Math.max(y0, insets.top + radius + 4), x1, Math.min(y1, window.innerHeight - insets.bottom - radius - 4)];
 }
 
+/** Where the lens starts half under the hero window's lower corner (round 4,
+    G2): phones, and portrait tablets, where the window runs nearly edge to
+    edge like a phone's. Matches Home.astro's phone and portrait poster
+    rules. */
+const CORNER_START_MQ = '(max-width: 720px), (min-width: 721px) and (max-width: 1279px) and (orientation: portrait)';
+
 /** Glass fix round 3: the one start-position decision, used both as soon as
     Home mounts (home-boot.ts moves the poster there at once, long before the
     lens itself mounts at idle) and again by the lens at its own mount (by
@@ -367,7 +373,21 @@ export function planLensStart(poster: HTMLElement, phone: boolean, insets: { top
   const radius = lensRadiusFor(poster, phone);
   const pr = poster.getBoundingClientRect();
   const preferred: [number, number] = pr.width > 0 ? [pr.left + pr.width / 2, pr.top + pr.height / 2] : [window.innerWidth / 2, window.innerHeight / 2];
-  const chosen = chooseStart(boundsFor(radius, insets), radius, preferred, collectObstructions(), allOrbCircles());
+  const bounds = boundsFor(radius, insets);
+  const obstructions = collectObstructions();
+  const orbs = allOrbCircles();
+  // Round 4 (G2): phones and portrait tablets start half under the hero
+  // window's lower corner (physics.ts cornerStart); every other size keeps
+  // round 3's search, which the founder accepted.
+  if (window.matchMedia(CORNER_START_MQ).matches) {
+    const win = rectOf(document.querySelector('.hero .window'));
+    if (win) {
+      const others = obstructions.filter((r) => !(r.left === win.left && r.top === win.top && r.right === win.right && r.bottom === win.bottom));
+      const corner = cornerStart(win, radius, bounds, others, orbs);
+      if (corner) return { ...corner, radius };
+    }
+  }
+  const chosen = chooseStart(bounds, radius, preferred, obstructions, orbs);
   return { ...chosen, radius };
 }
 
@@ -508,7 +528,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     host.dataset.lensStart = plan.open ? 'open' : 'partial';
     host.dataset.lensCover = plan.cover.toFixed(3);
     host.dataset.lensSource = plan.source;
-    if (!plan.open) {
+    if (!plan.open && plan.source !== 'corner') {
       console.info('[glass lens] no fully open spot at this viewport; starting at the least-covered point.');
     }
     return clampToBounds(plan.x, plan.y, computeBounds());

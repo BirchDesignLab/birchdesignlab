@@ -5,8 +5,8 @@
  * vaporwave verifier made 0 films, so nothing behavioural was independently
  * confirmed until this script runs.
  *
- * Round 3 (seat b2r3-vw-verify, this pass): re-runs every case against the
- * round-3 fixers' claims (vw-fix-marble3, vw-fix-interact3) --
+ * Round 3 (seat b2r3-vw-verify): re-runs every case against the round-3
+ * fixers' claims (vw-fix-marble3, vw-fix-interact3) --
  *   case 4  now also checks a re-entry while held (bevel presses again)
  *           after the leave-while-held check, still with no window move;
  *   case 7  now runs at 390 as well as desktop, taps the attract button
@@ -26,15 +26,36 @@
  *           width, and a sample ALONG a straight run is uniform (no
  *           ribbing: luminance varies by under 6 levels along the run).
  *
+ * Round 4 (seat vw-fix-r4's verifier, this pass): re-checks the round-4
+ * fixer's claims (crisp pipes with a ball joint, the no-scroll phone
+ * attract loop, the caption drag-off selection fix) --
+ *   case 4  now ALSO asserts document.getSelection().toString().length is
+ *           0 at every one of the 5 held-pointer steps (before, down, left
+ *           while held, re-entered while held, released away), on top of
+ *           the existing no-window-move / bevel-state checks;
+ *   case 7  now runs at 390, 820 AND desktop, both colour schemes (6
+ *           combos), taps TOUCH SCREEN TO BEGIN from where a visitor would
+ *           (scrolled to the button), asserts window.scrollY is unchanged
+ *           by the tap itself (within 1px), samples every 500ms that the
+ *           attract content is visible inside the part of the CRT screen
+ *           actually in the viewport, and confirms the loop returns and
+ *           the CRT's links stay reachable;
+ *   case 20 now ALSO requires a shaded ball joint visible ON TOP at an
+ *           elbow (its centre brighter than, and its outline reaching
+ *           beyond, the run's own silhouette) in at least 3 consecutive
+ *           frames after a turn, and the band outside the shaded core at
+ *           most 0.1x lineW wide (no halo band), in both the small window
+ *           and full-window Preview.
+ *
  * One script, stages selectable with --only, so it can be rerun on the next
  * fix round without editing it.
  *
  * Usage (serve a snap first):
- *   node scripts/themes/snap.mjs --name b2r3-vw-verify --port 4480 -- \
+ *   node scripts/themes/snap.mjs --name b2r4-vw-verify --port 4480 -- \
  *     node scripts/themes/vaporwave/verify-b2-vw.mjs --base http://127.0.0.1:4480 \
  *     [--only drag,phone,focus,caption,contact,preview,kiosk,arrive,bust,swap,network,seat,a11y,veins,hero]
  * (case 19 runs inside --only bust; case 20 runs inside --only contact)
- * Output: scripts/themes/.out/stage3-b2/vw-reverify-r3/{films,results.json}
+ * Output: scripts/themes/.out/stage3-b2/vw-reverify-r4/{films,results.json}
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -45,7 +66,7 @@ import { suppressPrompt } from '../lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argOf = (n, f) => { const i = process.argv.indexOf(`--${n}`); return i === -1 ? f : process.argv[i + 1]; };
-const OUT = join(HERE, '..', '.out', 'stage3-b2', 'vw-reverify-r3');
+const OUT = join(HERE, '..', '.out', 'stage3-b2', 'vw-reverify-r4');
 await mkdir(OUT, { recursive: true });
 const base = argOf('base', 'http://127.0.0.1:4480');
 const only = (argOf('only', '') || '').split(',').filter(Boolean);
@@ -180,6 +201,121 @@ function record(id, result, evidence) {
   console.log(`[${id}] ${result}: ${evidence}`);
 }
 
+/** Round 4: does a shaded ball joint sit ON TOP at an elbow, for several
+ * CONSECUTIVE frames after a turn, with no halo band around the tube?
+ * Bursts `frameCount` screenshots of `clip` at `intervalMs`, replicates
+ * screensaver.ts's own cell/lineW/jointR formula from the clip's own size,
+ * then per frame flags "corner" pixels: a bright centre with a bright run
+ * of length >= lineW*0.8 extending in BOTH a horizontal and a vertical
+ * direction from that point -- something only two runs meeting (an elbow)
+ * produces; a straight tube segment only ever extends in one axis. A
+ * corner's own (x,y) is the run's fixed start point for the rest of that
+ * run, so if the fix works it should be flagged at the same spot across
+ * many consecutive frames, not just once. */
+async function jointCheck(page, screenshotOpt, boxWH, label) {
+  const frames = [];
+  const t0 = Date.now();
+  for (let i = 0; i < 22; i++) {
+    frames.push(await page.screenshot(screenshotOpt));
+    await page.waitForTimeout(110);
+  }
+  const cell = Math.max(18, Math.min(boxWH.w, boxWH.h) / 14);
+  const lineW = Math.max(6, cell * 0.42);
+  const jointR = lineW * 0.62;
+  const ims = await Promise.all(frames.map((b) => imageDataOf(b)));
+  const BG = 30;
+  const lumAtIm = (im, x, y) => { const i = (y * im.width + x) * 4; return 0.3 * im.data[i] + 0.59 * im.data[i + 1] + 0.11 * im.data[i + 2]; };
+  const armLen = Math.max(3, Math.round(lineW * 0.8));
+  function isCorner(im, x, y) {
+    if (x < armLen + 1 || y < armLen + 1 || x >= im.width - armLen - 1 || y >= im.height - armLen - 1) return false;
+    if (lumAtIm(im, x, y) < 110) return false; // joint centre should read near "hi" (bright)
+    const runLen = (dx, dy) => { let n = 0; for (let s = 1; s <= armLen; s++) { if (lumAtIm(im, x + dx * s, y + dy * s) > BG) n++; else break; } return n; };
+    const horiz = Math.max(runLen(-1, 0), runLen(1, 0));
+    const vert = Math.max(runLen(0, -1), runLen(0, 1));
+    return horiz >= armLen * 0.7 && vert >= armLen * 0.7;
+  }
+  const cornersByFrame = ims.map((im) => {
+    const found = [];
+    for (let y = armLen + 1; y < im.height - armLen - 1; y += 3) {
+      for (let x = armLen + 1; x < im.width - armLen - 1; x += 3) {
+        if (isCorner(im, x, y)) found.push([x, y]);
+      }
+    }
+    return found;
+  });
+  // Longest run of CONSECUTIVE frames in which some corner sits within a
+  // small tolerance (+-5px, allowing the coarse 3px scan grid plus a little
+  // anti-aliasing drift) of the same location.
+  let bestRun = 0, bestLoc = null, bestStartFrame = -1;
+  for (let i = 0; i < cornersByFrame.length; i++) {
+    for (const [x, y] of cornersByFrame[i]) {
+      let run = 1, j = i + 1;
+      while (j < cornersByFrame.length && cornersByFrame[j].some(([x2, y2]) => Math.abs(x2 - x) <= 5 && Math.abs(y2 - y) <= 5)) { run++; j++; }
+      if (run > bestRun) { bestRun = run; bestLoc = [x, y]; bestStartFrame = i; }
+    }
+  }
+  const jointPersists3Frames = bestRun >= 3;
+  // Halo-band check: at the best joint's own location, probe a cross-
+  // section CLEAR of the joint disc itself (offset >= 1.3x its own radius
+  // in one of the 4 axis directions -- whichever has an actual attached
+  // tube body to read, not background). A short/freshly-spawned run may not
+  // yet reach a given offset in EVERY frame it is seen, so this searches
+  // every frame the joint was flagged in (latest first, since the run only
+  // grows with each further frame), not just the last one, and tries all
+  // four axis directions at increasing distances before giving up -- a
+  // probe that falls back to sampling the joint disc's own round falloff
+  // (mistaking its radial gradient for a "halo") is exactly the false
+  // reading this guards against.
+  // "Band outside the core" = pixels opaque (above a low, near-background
+  // threshold) but below a "solidly in the tube" threshold, on the
+  // profile's own far side from its peak; expressed as a fraction of
+  // lineW, must be <=0.1.
+  let bandRatio = null, probeFrame = -1, probeAxis = null;
+  if (bestLoc) {
+    const [jx, jy] = bestLoc;
+    const frameOrder = [];
+    for (let f = bestStartFrame + bestRun - 1; f >= bestStartFrame; f--) frameOrder.push(f);
+    const dists = [1.3, 1.6, 2.0, 2.5, 3.0].map((m) => Math.round(lineW * m));
+    let profile = null;
+    outer:
+    for (const f of frameOrder) {
+      const im = ims[f];
+      for (const d of dists) {
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const px = jx + dx * d, py = jy + dy * d;
+          if (px < 0 || py < 0 || px >= im.width || py >= im.height) continue;
+          if (lumAtIm(im, px, py) < 40) continue; // no tube body out here in this frame -- too short/wrong direction
+          const p = [];
+          const perp = dx === 0 ? [1, 0] : [0, 1]; // sample perpendicular to the offset axis (across the tube's width)
+          for (let s = -Math.round(lineW * 1.4); s <= Math.round(lineW * 1.4); s++) {
+            const x2 = px + perp[0] * s, y2 = py + perp[1] * s;
+            if (x2 < 0 || y2 < 0 || x2 >= im.width || y2 >= im.height) continue;
+            p.push(lumAtIm(im, x2, y2));
+          }
+          if (p.some((v) => v > 110)) { profile = p; probeFrame = f; probeAxis = [dx, dy]; break outer; }
+        }
+      }
+    }
+    if (profile) {
+      const coreThresh = 70, totalThresh = BG + 5;
+      const coreCount = profile.filter((v) => v > coreThresh).length;
+      const totalCount = profile.filter((v) => v > totalThresh).length;
+      bandRatio = totalCount > coreCount ? +(((totalCount - coreCount) / 2) / lineW).toFixed(3) : 0;
+    }
+  }
+  if (probeFrame === -1) probeFrame = bestStartFrame >= 0 ? bestStartFrame + bestRun - 1 : -1;
+  const noHaloBand = bandRatio !== null && bandRatio <= 0.1;
+  return {
+    label, framesCaptured: frames.length, cornerCountsByFrame: cornersByFrame.map((c) => c.length),
+    jointPersists3Frames, bestRunLengthFrames: bestRun, bestLoc, lineW: +lineW.toFixed(2), jointR: +jointR.toFixed(2),
+    bandRatio, noHaloBand, probeAxis, frames, probeFrame,
+  };
+}
+async function imageDataOf(buf) {
+  const im = await loadImage(buf); const c = createCanvas(im.width, im.height); const x = c.getContext('2d');
+  x.drawImage(im, 0, 0); return x.getImageData(0, 0, im.width, im.height);
+}
+
 const renderer = await gpuCheck();
 
 /* ---------- Case 1: window drag clamp, no selection, in-school swap ---------- */
@@ -280,12 +416,20 @@ if (want('caption')) {
     const cap = await page.evaluate(() => { const b = document.querySelector('.door-1 .vw-win-btns .min').getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
     const t0 = await page.evaluate(() => document.querySelector('.door-1').style.transform);
     const bevelBefore = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
+    const selLen = () => page.evaluate(() => { const s = document.getSelection(); return s ? s.toString().length : 0; });
     const capClip = await clipOf(page, '.door-1 .vw-win-bar', 12, 12);
     const before = await page.screenshot({ clip: capClip });
+    const selBefore = await selLen();
     await page.mouse.move(cap.x, cap.y); await page.mouse.down();
     await page.waitForTimeout(80);
     const bevelDown = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
     const down = await page.screenshot({ clip: capClip });
+    const selDown = await selLen();
+    // Round 4: drag the pointer 200px away OVER NEARBY TEXT while still
+    // held, still down -- the exact motion the round-3 critic measured as
+    // ~9 selected characters (windows.ts's onCapDown missed its own
+    // preventDefault). moved 30px first (round-3 shape kept), then the full
+    // round-4 200px-away probe below.
     await page.mouse.move(cap.x + 30, cap.y + 10, { steps: 4 });
     const tDuringMove = await page.evaluate(() => document.querySelector('.door-1').style.transform);
     // leave without releasing, still held -- bevel must restore (round 3 fix target)
@@ -294,16 +438,19 @@ if (want('caption')) {
     const bevelLeave = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
     const leaveShot = await page.screenshot({ clip: capClip });
     const tDuringLeave = await page.evaluate(() => document.querySelector('.door-1').style.transform);
+    const selLeave = await selLen();
     // round 3: re-enter the button while STILL held -- bevel must press again
     await page.mouse.move(cap.x, cap.y, { steps: 4 });
     await page.waitForTimeout(60);
     const bevelReenter = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
     const reenterShot = await page.screenshot({ clip: capClip });
     const tDuringReenter = await page.evaluate(() => document.querySelector('.door-1').style.transform);
+    const selReenter = await selLen();
     // release while over the button -- bevel restores
     await page.mouse.up();
     const bevelUp = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
     const after = await page.screenshot({ clip: capClip });
+    const selUp = await selLen();
     // press again, then release AWAY from the button (release-off-button case)
     await page.mouse.move(cap.x, cap.y, { steps: 2 });
     await page.mouse.down();
@@ -312,6 +459,9 @@ if (want('caption')) {
     await page.mouse.up();
     const bevelUpAway = await page.evaluate(() => getComputedStyle(document.querySelector('.door-1 .vw-win-btns .min')).borderTopColor);
     const tFinal = await page.evaluate(() => document.querySelector('.door-1').style.transform);
+    const selUpAway = await selLen();
+    const selectionByStep = { before: selBefore, down: selDown, leftWhileHeld: selLeave, reenteredStillHeld: selReenter, releasedOverButton: selUp, releasedAway: selUpAway };
+    const allSelectionZero = Object.values(selectionByStep).every((n) => n === 0);
     // aria-hidden lives on the ancestor `.vw-win-bar` (Win.astro), not on the
     // caption span itself -- check via closest(), the same way case 15 checks
     // every focusable element on the page. A direct getAttribute() here was a
@@ -330,8 +480,8 @@ if (want('caption')) {
     const pressedOnReenter = bevelReenter === bevelDown && bevelReenter !== bevelBefore;
     const restoredOnUp = bevelUp === bevelBefore;
     const restoredOnUpAway = bevelUpAway === bevelBefore;
-    const pass = noMove && bevelChanged && restoredOnLeave && pressedOnReenter && restoredOnUp && restoredOnUpAway && a11y.ariaHiddenAncestor && tabHits === 0;
-    record('4', pass ? 'pass' : 'fail', `noMove=${noMove} bevelChanged=${bevelChanged} restoredOnLeave=${restoredOnLeave} pressedOnReenter=${pressedOnReenter} restoredOnUp=${restoredOnUp} restoredOnUpAway=${restoredOnUpAway} a11y=${JSON.stringify(a11y)} tabHits=${tabHits} film=case04-caption-nodrag.jpg`);
+    const pass = noMove && bevelChanged && restoredOnLeave && pressedOnReenter && restoredOnUp && restoredOnUpAway && a11y.ariaHiddenAncestor && tabHits === 0 && allSelectionZero;
+    record('4', pass ? 'pass' : 'fail', `noMove=${noMove} bevelChanged=${bevelChanged} restoredOnLeave=${restoredOnLeave} pressedOnReenter=${pressedOnReenter} restoredOnUp=${restoredOnUp} restoredOnUpAway=${restoredOnUpAway} allSelectionLengthsZero=${allSelectionZero} selectionByStep=${JSON.stringify(selectionByStep)} a11y=${JSON.stringify(a11y)} tabHits=${tabHits} film=case04-caption-nodrag.jpg`);
     await context.close();
   } catch (e) { record('4', 'inconclusive', `error: ${e.message}`); }
 }
@@ -460,8 +610,39 @@ if (want('contact')) {
     }
     const longRunFound = best.len >= MIN_RUN;
     const noRibbing = alongRunVariation !== null && alongRunVariation < 6;
-    const pass20 = foundRiseFall && longRunFound && noRibbing;
-    record('20', pass20 ? 'pass' : ((foundRiseFall && longRunFound) ? 'fail' : 'inconclusive'), `tubeCrossSectionRiseFallFound=${foundRiseFall} longestStraightRunPx=${best.len} runAxis=${runAxis}@${best.at} alongRunLuminanceVariation=${alongRunVariation} (target <6) alongRunSamples=${JSON.stringify(alongRunSamples)} sample=case05-pipes-sample.png`);
+
+    // ---------- Round 4 addition: a shaded ball joint visible ON TOP at an
+    // elbow (brighter centre, outline reaching beyond the run's own
+    // silhouette) in >=3 consecutive frames after a turn, and no halo band
+    // (<=0.1x lineW), in BOTH the small Contact window and full-window
+    // Preview. Bursts screenshots over ~2.4s per venue (turns recur every
+    // run; 22 frames at 110ms covers several).
+    const jointWindow = await jointCheck(page, { clip: canvasClip ?? clip }, { w: (canvasClip ?? clip).width, h: (canvasClip ?? clip).height }, 'window');
+    let jointFilmWindow = null;
+    if (jointWindow.bestLoc) {
+      const idxs = [Math.max(0, jointWindow.probeFrame - 2), jointWindow.probeFrame - 1, jointWindow.probeFrame].map((i) => Math.max(0, Math.min(jointWindow.frames.length - 1, i)));
+      jointFilmWindow = 'case20-joint-window.jpg';
+      await strip(idxs.map((i) => jointWindow.frames[i]), idxs.map((i) => `frame ${i}`), jointFilmWindow, { maxW: 340 });
+    }
+    // Preview: open it, run the same burst on the fullscreen canvas, close it.
+    await page.click('[data-scr-preview-btn]'); await page.waitForTimeout(900);
+    const fsCanvasBox = await page.evaluate(() => { const c = document.querySelector('[data-scr-fs-canvas]'); if (!c) return null; const r = c.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+    let jointPreview = { jointPersists3Frames: false, noHaloBand: false, bandRatio: null, bestRunLengthFrames: 0 };
+    let jointFilmPreview = null;
+    if (fsCanvasBox) {
+      jointPreview = await jointCheck(page, { clip: { x: fsCanvasBox.x, y: fsCanvasBox.y, width: fsCanvasBox.w, height: fsCanvasBox.h } }, { w: fsCanvasBox.w, h: fsCanvasBox.h }, 'preview');
+      if (jointPreview.bestLoc) {
+        const idxs = [Math.max(0, jointPreview.probeFrame - 2), jointPreview.probeFrame - 1, jointPreview.probeFrame].map((i) => Math.max(0, Math.min(jointPreview.frames.length - 1, i)));
+        jointFilmPreview = 'case20-joint-preview.jpg';
+        await strip(idxs.map((i) => jointPreview.frames[i]), idxs.map((i) => `frame ${i}`), jointFilmPreview, { maxW: 460 });
+      }
+    }
+    await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+
+    const jointOk = jointWindow.jointPersists3Frames && jointPreview.jointPersists3Frames;
+    const haloOk = jointWindow.noHaloBand && jointPreview.noHaloBand;
+    const pass20 = foundRiseFall && longRunFound && noRibbing && jointOk && haloOk;
+    record('20', pass20 ? 'pass' : ((foundRiseFall && longRunFound) ? 'fail' : 'inconclusive'), `tubeCrossSectionRiseFallFound=${foundRiseFall} longestStraightRunPx=${best.len} runAxis=${runAxis}@${best.at} alongRunLuminanceVariation=${alongRunVariation} (target <6) alongRunSamples=${JSON.stringify(alongRunSamples)} jointWindow={persists3Frames:${jointWindow.jointPersists3Frames},bestRunFrames:${jointWindow.bestRunLengthFrames},bandRatio:${jointWindow.bandRatio}} jointPreview={persists3Frames:${jointPreview.jointPersists3Frames},bestRunFrames:${jointPreview.bestRunLengthFrames},bandRatio:${jointPreview.bandRatio}} (bandRatio target <=0.1) sample=case05-pipes-sample.png films=${[jointFilmWindow, jointFilmPreview].filter(Boolean).join(',') || 'none (no corner detected)'}`);
 
     // offscreen pause: scroll away, sample canvas via toDataURL twice
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -515,87 +696,108 @@ if (want('preview')) {
   } catch (e) { record('6', 'inconclusive', `error: ${e.message}`); }
 }
 
-/* ---------- Case 7: kiosk attract, kana visible IN THE VIEWPORT from where a visitor taps, loop returns, tab reach mid-loop ---------- */
+/* ---------- Case 7 (round 4): kiosk attract, NO SCROLL on the tap itself
+   (window.scrollY unchanged within 1px), content visible IN THE VIEWPORT
+   from where a visitor taps, loop returns, tab reach mid-loop -- at 390,
+   820 AND desktop, both colour schemes (6 combos). ---------- */
 if (want('kiosk')) {
   const allResults7 = {};
-  for (const [label, w, h, mobile] of [['desktop', 1440, 900, false], ['phone', 390, 844, true]]) {
-    try {
-      const { context, page } = await newPage({ width: w, height: h, mobile });
-      await page.goto(`${base}/t/vaporwave/`, { waitUntil: 'networkidle' });
-      // Scroll to the BUTTON itself (as a visitor about to tap it does),
-      // not to the CRT/kiosk centre -- on phone the button sits well below
-      // the tall CRT, which is the exact re-critic bug (screen above the
-      // viewport while the button is in view).
-      await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]')?.scrollIntoView({ block: 'center' }));
-      await page.waitForTimeout(500);
-      const preScroll = await page.evaluate(() => scrollY);
-      const preScreenRect = await page.evaluate(() => {
-        const s = document.querySelector('[data-kiosk-attract-screen]'); const r = s.getBoundingClientRect();
-        return [Math.round(r.top), Math.round(r.bottom)];
-      });
-      const f0 = await page.screenshot();
-      // Synthetic clicks (not page.click twice): Playwright's own click()
-      // auto-scrolls its target into view before clicking, and a SECOND
-      // page.click() right after the first would scroll the button back
-      // into view -- undoing the attract screen's own scrollIntoView from
-      // click 1 and reading as "never moved". A real fast double-tap does
-      // not re-scroll the page, so use the button's own click() twice.
-      await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]').click());
-      await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]').click()); // tap twice quickly: one loop, not restarted/stacked
-      const t0 = Date.now();
-      const frames = [f0]; const labels = ['before (scrolled to button)'];
-      const measurements = [];
-      // ATTRACT_MS is 5200 (kiosk.ts); sample every 500ms, past it, so
-      // "returns" is actually observed, and check visibility against the
-      // ACTUAL viewport (the part of the CRT screen currently on-screen),
-      // not just the screen's own box.
-      for (const t of [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 5800]) {
-        await page.waitForTimeout(Math.max(0, t - (Date.now() - t0)));
-        const m = await page.evaluate(() => {
-          const screen = document.querySelector('[data-kiosk-attract-screen]');
-          const kana = screen ? screen.querySelector('.attract-kana') : null;
-          const marquee = screen ? screen.querySelector('.attract-marquee') : null;
-          if (!screen) return null;
-          const sr = screen.getBoundingClientRect();
-          const vpTop = 0, vpBottom = innerHeight;
-          const visibleTop = Math.max(sr.top, vpTop), visibleBottom = Math.min(sr.bottom, vpBottom);
-          const screenVisiblePx = Math.max(0, visibleBottom - visibleTop);
-          const inViewport = (r) => r.bottom > vpTop && r.top < vpBottom && r.right > 0 && r.left < innerWidth;
-          const kr = kana ? kana.getBoundingClientRect() : null;
-          const mr = marquee ? marquee.getBoundingClientRect() : null;
-          return {
-            on: screen.classList.contains('on'),
-            screen: [Math.round(sr.top), Math.round(sr.bottom)],
-            screenVisiblePx: Math.round(screenVisiblePx),
-            kanaInViewport: kr ? inViewport(kr) : null,
-            marqueeInViewport: mr ? inViewport(mr) : null,
-          };
+  for (const [label, w, h, mobile] of [['390', 390, 844, true], ['820', 820, 1180, true], ['desktop', 1440, 900, false]]) {
+    for (const scheme of ['dark', 'light']) {
+      const id = `7-${scheme}-${label}`;
+      try {
+        const { context, page } = await newPage({ width: w, height: h, mobile, scheme });
+        await page.goto(`${base}/t/vaporwave/`, { waitUntil: 'networkidle' });
+        // Scroll to the BUTTON itself (as a visitor about to tap it does),
+        // not to the CRT/kiosk centre -- on phone the button sits well below
+        // the tall CRT, which is the exact re-critic bug (screen above the
+        // viewport while the button is in view).
+        await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]')?.scrollIntoView({ block: 'center' }));
+        await page.waitForTimeout(500);
+        const preScroll = await page.evaluate(() => scrollY);
+        const preScreenRect = await page.evaluate(() => {
+          const s = document.querySelector('[data-kiosk-attract-screen]'); const r = s.getBoundingClientRect();
+          return [Math.round(r.top), Math.round(r.bottom)];
         });
-        measurements.push({ t, ...m });
-        if ([0, 1000, 2500, 4000, 5000].includes(t)) { frames.push(await page.screenshot()); labels.push(`+${t}ms`); }
-      }
-      await strip(frames, labels, `case07-kiosk-attract__${label}.jpg`, { maxW: label === 'phone' ? 200 : 340 });
-      const loopEnded = measurements.some((m) => m.t >= 5300 && m.on === false);
-      const onSamples = measurements.filter((m) => m.on);
-      // "reads as attract mode from where the visitor tapped": while on,
-      // the screen itself must actually be visible in the viewport, AND at
-      // least one of kana/marquee must be visible in the viewport too.
-      const screenEverOnscreen = onSamples.every((m) => m.screenVisiblePx > 20);
-      const contentVisible = onSamples.length > 0 && onSamples.every((m) => m.kanaInViewport || m.marqueeInViewport);
-      // tab reach mid-loop
-      await page.click('[data-kiosk-attract-btn]');
-      await page.waitForTimeout(1500);
-      const reach = await page.evaluate(() => {
-        const links = [...document.querySelectorAll('.kiosk a')];
-        return links.map((a) => { a.focus(); return { text: a.textContent.trim().slice(0, 30), focused: document.activeElement === a }; });
-      });
-      const anyReachable = reach.length > 0 && reach.some((r) => r.focused);
-      const pass = contentVisible && screenEverOnscreen && loopEnded && anyReachable;
-      const id = `7-${label}`;
-      record(id, pass ? 'pass' : 'fail', `preScroll=${preScroll} preScreenRect=${JSON.stringify(preScreenRect)} screenEverOnscreen=${screenEverOnscreen} contentVisibleInViewport=${contentVisible} loopEnded=${loopEnded} tabReachMidLoop=${anyReachable} reach=${JSON.stringify(reach)} film=case07-kiosk-attract__${label}.jpg`);
-      allResults7[label] = measurements;
-      await context.close();
-    } catch (e) { record(`7-${label}`, 'inconclusive', `error: ${e.message}`); }
+        const f0 = await page.screenshot();
+        // Real single tap -- the round-4 target is specifically that THE
+        // TAP ITSELF never scrolls (round 3's scrollIntoView call, which
+        // this round removed). A click() through Playwright would
+        // auto-scroll its target into view first, masking exactly the bug
+        // being checked, so dispatch the button's own click() directly.
+        await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]').click());
+        const postTapScroll = await page.evaluate(() => scrollY);
+        const scrollUnchanged = Math.abs(postTapScroll - preScroll) <= 1;
+        // A second quick tap (double-tap): must not restart/stack the loop.
+        await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]').click());
+        const postDoubleTapScroll = await page.evaluate(() => scrollY);
+        const t0 = Date.now();
+        const frames = [f0]; const labels = ['before (scrolled to button)'];
+        const measurements = [];
+        // ATTRACT_MS is 5200 (kiosk.ts); sample every 500ms, past it, so
+        // "returns" is actually observed, and check visibility against the
+        // ACTUAL viewport (the part of the CRT screen currently on-screen),
+        // not just the screen's own box.
+        for (const t of [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 5800]) {
+          await page.waitForTimeout(Math.max(0, t - (Date.now() - t0)));
+          const m = await page.evaluate(() => {
+            const screen = document.querySelector('[data-kiosk-attract-screen]');
+            const content = document.querySelector('.attract-content');
+            const kana = screen ? screen.querySelector('.attract-kana') : null;
+            const marquee = screen ? screen.querySelector('.attract-marquee') : null;
+            if (!screen) return null;
+            const sr = screen.getBoundingClientRect();
+            const vpTop = 0, vpBottom = innerHeight;
+            const visibleTop = Math.max(sr.top, vpTop), visibleBottom = Math.min(sr.bottom, vpBottom);
+            const screenVisiblePx = Math.max(0, visibleBottom - visibleTop);
+            const inViewport = (r) => r.bottom > vpTop && r.top < vpBottom && r.right > 0 && r.left < innerWidth;
+            const kr = kana ? kana.getBoundingClientRect() : null;
+            const mr = marquee ? marquee.getBoundingClientRect() : null;
+            const cr = content ? content.getBoundingClientRect() : null;
+            return {
+              on: screen.classList.contains('on'),
+              scrollY: window.scrollY,
+              screen: [Math.round(sr.top), Math.round(sr.bottom)],
+              screenVisiblePx: Math.round(screenVisiblePx),
+              kanaInViewport: kr ? inViewport(kr) : null,
+              marqueeInViewport: mr ? inViewport(mr) : null,
+              contentInViewport: cr ? inViewport(cr) : null,
+            };
+          });
+          measurements.push({ t, ...m });
+          if ([0, 1000, 2500, 4000, 5000].includes(t)) { frames.push(await page.screenshot()); labels.push(`+${t}ms`); }
+        }
+        await strip(frames, labels, `case07-kiosk-attract__${scheme}__${label}.jpg`, { maxW: label === 'desktop' ? 300 : 200 });
+        const loopEnded = measurements.some((m) => m.t >= 5300 && m.on === false);
+        const scrollNeverMovedDuringLoop = measurements.every((m) => Math.abs(m.scrollY - preScroll) <= 1);
+        const onSamples = measurements.filter((m) => m.on);
+        // "reads as attract mode from where the visitor tapped": while on,
+        // the screen itself must actually be visible in the viewport, AND
+        // the attract-content wrapper (or at least one of kana/marquee)
+        // must be visible in the viewport too.
+        const screenEverOnscreen = onSamples.every((m) => m.screenVisiblePx > 20);
+        const contentVisible = onSamples.length > 0 && onSamples.every((m) => m.contentInViewport || m.kanaInViewport || m.marqueeInViewport);
+        // tab reach mid-loop, and the CRT's links stay reachable after the loop
+        await page.evaluate(() => document.querySelector('[data-kiosk-attract-btn]').click());
+        await page.waitForTimeout(1500);
+        const reachDuring = await page.evaluate(() => {
+          const links = [...document.querySelectorAll('.kiosk a, .specimens a, .crt-more')];
+          return links.map((a) => { a.focus(); return { text: a.textContent.trim().slice(0, 30), focused: document.activeElement === a }; });
+        });
+        await page.waitForTimeout(4200); // past the ~5.2s loop -> ended
+        const reachAfter = await page.evaluate(() => {
+          const links = [...document.querySelectorAll('.kiosk a, .specimens a, .crt-more')];
+          return links.map((a) => { a.focus(); return { text: a.textContent.trim().slice(0, 30), focused: document.activeElement === a }; });
+        });
+        const anyReachableDuring = reachDuring.length > 0 && reachDuring.some((r) => r.focused);
+        const anyReachableAfter = reachAfter.length > 0 && reachAfter.some((r) => r.focused);
+        const canvasCount = await page.evaluate(() => document.querySelectorAll('canvas').length);
+        const pass = contentVisible && screenEverOnscreen && loopEnded && scrollUnchanged && scrollNeverMovedDuringLoop && anyReachableDuring && anyReachableAfter && canvasCount <= 1;
+        record(id, pass ? 'pass' : 'fail', `preScroll=${preScroll} postTapScroll=${postTapScroll} scrollUnchanged=${scrollUnchanged} postDoubleTapScroll=${postDoubleTapScroll} scrollNeverMovedDuringLoop=${scrollNeverMovedDuringLoop} preScreenRect=${JSON.stringify(preScreenRect)} screenEverOnscreen=${screenEverOnscreen} contentVisibleInViewport=${contentVisible} loopEnded=${loopEnded} tabReachDuringLoop=${anyReachableDuring} tabReachAfterLoop=${anyReachableAfter} canvasCount=${canvasCount} film=case07-kiosk-attract__${scheme}__${label}.jpg`);
+        allResults7[`${scheme}-${label}`] = measurements;
+        await context.close();
+      } catch (e) { record(id, 'inconclusive', `error: ${e.message}`); }
+    }
   }
   await writeFile(join(OUT, 'case07-measurements.json'), JSON.stringify(allResults7, null, 1));
 }

@@ -17,6 +17,7 @@ import {
   findStartPosition,
   discCoverage,
   chooseStart,
+  cornerStart,
   type RectLike,
   type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
@@ -290,5 +291,38 @@ describe('chooseStart', () => {
   it('clamps the poster spot into the travel box', () => {
     const got = chooseStart([100, 100, 900, 700], 50, [0, 0], [], []);
     expect(got).toMatchObject({ x: 100, y: 100, source: 'poster' });
+  });
+});
+
+describe('cornerStart (round 4, G2)', () => {
+  // A 390 x 844 phone: the window 16..374 x 130..572 with 30px corners.
+  const win: RectLike = { left: 16, top: 130, right: 374, bottom: 572, radius: 30 };
+  const bounds: [number, number, number, number] = [76, 160, 314, 768];
+  it('centres the disc on the window bottom, tangent to its right side', () => {
+    const got = cornerStart(win, 64, bounds, [], [{ cx: 312, cy: 620, r: 65 }])!;
+    expect(got).toMatchObject({ x: 310, y: 572, open: false, source: 'corner' });
+    // about half under the window, less the rounded corner
+    expect(got.cover).toBeGreaterThan(0.35);
+    expect(got.cover).toBeLessThan(0.5);
+  });
+  it('takes the left corner when only it crosses an orb edge', () => {
+    const got = cornerStart(win, 64, bounds, [], [{ cx: 40, cy: 600, r: 65 }])!;
+    expect(got.x).toBe(80);
+  });
+  it('avoids a corner that runs into another obstruction', () => {
+    const cc: RectLike = { left: 200, top: 600, right: 374, bottom: 840 };
+    const got = cornerStart(win, 64, bounds, [cc], [])!;
+    expect(got.x).toBe(80);
+  });
+  it('slides inward along the edge to cross an orb near the corner', () => {
+    const got = cornerStart(win, 64, bounds, [], [{ cx: 150, cy: 650, r: 37 }])!;
+    expect(got.x).toBe(112);
+  });
+  it('gives up when every candidate runs into another obstruction', () => {
+    const sw: RectLike = { left: 0, top: 600, right: 390, bottom: 650 };
+    expect(cornerStart(win, 64, bounds, [sw], [])).toBeNull();
+  });
+  it('gives up when the window bottom is below the first view', () => {
+    expect(cornerStart({ ...win, bottom: 900 }, 64, bounds, [], [])).toBeNull();
   });
 });
