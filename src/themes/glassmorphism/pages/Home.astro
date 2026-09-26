@@ -184,7 +184,13 @@ const icons = ['violet', 'cyan'];
      B2's real lens will sit; z-index -1 keeps it on the wallpaper's own
      plane, under every pane and orb. Hidden once the layout stacks
      (min-width matches where the locale pill also drops, .hero's empty
-     half stops existing once the window is full width). */
+     half stops existing once the window is full width).
+     Safari 17's literal blur sits in its own @supports block ahead of the
+     rule, as theme.css does for every pane: beside the var() declaration
+     the build's minifier drops it (PR #91 review). */
+  @supports (-webkit-backdrop-filter: none) {
+    .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
+  }
   .lens-poster {
     position: fixed;
     z-index: -1;
@@ -198,7 +204,6 @@ const icons = ['violet', 'cyan'];
     border-radius: 50%;
     pointer-events: none;
     background: var(--mat-thin);
-    -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12);
     backdrop-filter: var(--blur-thin);
     border: 1px solid var(--edge-hi);
     box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);

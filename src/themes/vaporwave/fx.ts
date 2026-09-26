@@ -433,12 +433,16 @@ export function mountHorizon(): (() => void) | void {
   let lastDrawn = 0;
   // Defaulted so the one direct call (settle(), below, resuming after the
   // shader's link finishes) always draws its first frame at once; every
-  // later call is rAF's own callback, which always passes a timestamp.
+  // later call is rAF's own callback, which always passes a timestamp. The
+  // budget clock records performance.now() for that direct call, never the
+  // Infinity default: an Infinite lastDrawn made every later rAF tick fail
+  // the budget, so a hero reached from another school (the deferred-link
+  // path) froze on its first frame for the whole visit (PR #91 review).
   const tick = (t: number = Infinity) => {
     frame = 0;
     if (!scene || lost) return;
     if (t - lastDrawn >= FRAME_BUDGET - FRAME_TOLERANCE) {
-      lastDrawn = t;
+      lastDrawn = Number.isFinite(t) ? t : performance.now();
       scene.draw(now());
     }
     if (shouldAnimate()) frame = requestAnimationFrame(tick);

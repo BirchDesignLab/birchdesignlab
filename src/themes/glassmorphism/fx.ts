@@ -358,7 +358,12 @@ export function mountPanes(): (() => void) | void {
   rtMq.addEventListener('change', rebuildAll);
   contrastMq.addEventListener('change', rebuildAll);
   phoneMq.addEventListener('change', rebuildAll);
-  const schemeObserver = new MutationObserver(rebuildAll);
+  /* A live scheme flip remaps the orb hues (dark's --blob-* set), so the
+     tint is read again too, not only the bevels (PR #91 review). */
+  const schemeObserver = new MutationObserver(() => {
+    rebuildAll();
+    scheduleTint();
+  });
   schemeObserver.observe(html, { attributeFilter: ['data-scheme'] });
 
   /* Adaptive tint: lean each pane's fill toward the largest orb it
