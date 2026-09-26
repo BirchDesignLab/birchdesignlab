@@ -13,6 +13,13 @@ const args = process.argv.slice(2);
 const base = args[args.indexOf('--base') + 1] || 'http://127.0.0.1:4477';
 const browser = await chromium.launch({ args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const out = {};
+{ // GPU guard (added 09-26-26 for the B2 re-critic): abort on a software renderer.
+  const p = await browser.newPage();
+  out.renderer = await p.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl'); return gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL); });
+  await p.close();
+  console.log('renderer:', out.renderer);
+  if (/swiftshader|llvmpipe/i.test(out.renderer)) { await browser.close(); throw new Error('software renderer; abort'); }
+}
 for (const where of ['on-lens', 'beside-lens']) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
   await suppressPrompt(context);

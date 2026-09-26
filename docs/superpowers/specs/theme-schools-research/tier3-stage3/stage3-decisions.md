@@ -354,3 +354,22 @@ with the first-pass sheets:
    the first view). The tiles must still clear the portal switcher.
 2. Continue B2: workflow 4 (the glass review, a glass fix only if it blocks,
    the vaporwave fix round and its review).
+
+## Answers after B2 round 3 (founder, 09-26-26)
+
+1. Phone glass first view: **restore B1's phone hero** (round 3 made it
+   252 px taller for a lens gap, which left no orbs in the phone first view);
+   the phone lens starts half under the hero window's lower corner across an
+   orb, as B1's placeholder disc did, grabbable on its visible half.
+2. The pipes: **crisp 3D pipes** (shaded tubes, ball joints, no glow band).
+3. The phone kiosk attract tap: **no scroll**; on phones the attract content
+   fills the part of the CRT that is on screen near the button.
+4. Weighed one by one (time, effort, payoff, risk): the 1024 px lens
+   (smaller, top-left, about 20% under the window's corner) **accepted**;
+   static Home orbs (no idle drift on Home, zero redraws at rest)
+   **accepted**; the rim colour fringe **fixed now** (the split halved,
+   0.03 to 0.015 in `lens.ts`); the bust's seat on the tier edge and its
+   1.5x render with 2x supersampling **revisit after the founder's iPhone
+   check**.
+5. Do the fringe now, **hold the rest**, push, hand off (the context window
+   is full).

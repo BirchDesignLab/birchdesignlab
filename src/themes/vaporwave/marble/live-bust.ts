@@ -68,9 +68,13 @@ const KEY_STEP_RAD = THREE.MathUtils.degToRad(6);
 // asks for without needing the pointer to travel multiple screens for a
 // full turn.
 const DRAG_RADIANS_PER_WIDTH = Math.PI * 0.9;
-const DPR_CAP_FINE = 1.5;
-const DPR_CAP_COARSE = 1.25;
-const NARROW_VIEWPORT_PX = 700;
+// The README's cap, on every device. B2 fix round 3: phones and narrow
+// viewports used to cap lower (1.25), which drew the ~111 CSS px phone
+// canvas into a 138 px buffer upscaled 1.6x to the screen's 222 device px,
+// the main cause of the 3.64% phone handoff. At that size a 1.5 buffer
+// (166 px, supersampled 2x inside by createStage) costs about what the
+// desktop canvas does, so the lower phone cap bought nothing worth its look.
+const DPR_CAP = 1.5;
 // A flick's release velocity is measured over the pointer's last samples
 // within this window, so a drag that pauses before release (no flick
 // intended) reads as zero velocity rather than an average over the whole
@@ -96,13 +100,11 @@ export interface LiveBustHandle {
   setVisible(visible: boolean): void;
 }
 
-const coarsePointer = () => matchMedia('(pointer: coarse)').matches;
-const narrowViewport = () => innerWidth < NARROW_VIEWPORT_PX;
 // min(devicePixelRatio, cap): B2 fix round found this returning the cap
 // unconditionally, so a DPR-1 desktop rendered at 1.5x for nothing (the W1
 // critic measured a 327px drawing buffer for a 218 CSS px canvas). The cap
 // is still a ceiling for high-DPR/coarse-pointer devices, not a floor.
-const devicePixelRatioCap = () => Math.min(devicePixelRatio, coarsePointer() || narrowViewport() ? DPR_CAP_COARSE : DPR_CAP_FINE);
+const devicePixelRatioCap = () => Math.min(devicePixelRatio, DPR_CAP);
 
 const LIVE_LABEL =
   'The Venus bust in three dimensions, live. Drag to turn it, or use the left and right arrow keys.';
@@ -167,6 +169,10 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
   }
 
   function showPoster() {
+    // Instant, not the reveal's 200 ms fade (fix round 3): a lost canvas is
+    // hidden at once, so a fading-in poster would leave the bust half
+    // transparent for a few frames.
+    poster.style.transition = 'none';
     poster.style.opacity = '1';
   }
   function hidePosterSoon() {
@@ -202,7 +208,10 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
 
   function renderFrame() {
     if (!stage) return;
-    stage.renderer.render(stage.scene, stage.camera);
+    // draw(), not renderer.render(): the supersampled path (createStage's
+    // `supersample`, fix round 3) the first frame also took, so every frame
+    // after the handoff matches it.
+    stage.draw();
     drawCount++;
     drawCountAttr();
   }
@@ -324,7 +333,31 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
     cancelAnimationFrame(raf);
     raf = 0;
     clearTimeout(idleWakeTimer);
+    // B2 fix round 3: drop the lost stage NOW, while the context is still
+    // lost, with a full dispose(). Two reasons, both measured:
+    //  - three's renderer.dispose() is the only thing that removes the
+    //    renderer's OWN webglcontextlost/restored listeners. Round 2 skipped
+    //    it (to dodge "object does not belong to this context" warnings),
+    //    which left the old renderer attached: on restore its listener ran
+    //    AFTER ours had already built the new renderer, re-ran
+    //    initGLContext(), and its fresh WebGLState constructor issued
+    //    gl.clearColor(0, 0, 0, 1) behind the new renderer's state cache
+    //    (which still believed the clear was (0, 0, 0, 0)), so every later
+    //    clear painted an opaque black square (ctxprobe: COLOR_CLEAR_VALUE
+    //    [0,0,0,0] before the loss, [0,0,0,1] after the restore).
+    //  - GL delete calls on a LOST context are silent no-ops (the WebGL
+    //    spec), so disposing here, before the restore, produces none of the
+    //    warnings that disposing after the restore did (the old objects were
+    //    then deleted against the NEW context).
+    // Our listener was registered before any renderer's (mountLiveBust adds
+    // it synchronously; createStage runs later), so the renderer's own
+    // lost listener is removed mid-dispatch and never runs; nothing needs it.
+    disposeStage();
     setLiveA11y(false);
+    // A lost context's canvas paints as a white box with a broken-image
+    // glyph in Chromium, behind the returning poster; hide it (visibility,
+    // not removal: the restore event still fires on the same element).
+    canvas.style.visibility = 'hidden';
     showPoster();
   }
 
@@ -338,28 +371,18 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
   canvas.addEventListener('webglcontextlost', onContextLost, false);
   canvas.addEventListener('webglcontextrestored', onContextRestored, false);
 
-  // `skipGpuDispose`: on a real context loss, the GPU resources a stage's
-  // dispose() would delete are already invalid (the WebGL spec: every object
-  // from a lost context stops being renderable and must be recreated, not
-  // cleaned up). B2 fix round: calling stage.dispose() -> renderer.dispose()
-  // here anyway (three.js's own dispose forces a second, redundant context
-  // loss internally) produced the W1 critic's "delete: object does not
-  // belong to this context" console warnings on restore. Dropping the JS
-  // references without issuing GL delete calls avoids that noise; the real
-  // GPU memory was already freed by the loss itself.
-  function disposeStage(skipGpuDispose = false) {
+  function disposeStage() {
     if (!stage) return;
-    if (!skipGpuDispose) stage.dispose();
+    stage.dispose();
     stage = null;
     group = null;
   }
 
   async function rebuildLive() {
-    // contextLost is still true here (onContextRestored -> rebuildLive,
-    // before the next line resets it): the stage disposeStage() is about to
-    // drop belongs to the context that just loss/restored, so skip its GPU
-    // dispose calls (see disposeStage's own comment).
-    disposeStage(contextLost);
+    // onContextLost already disposed the lost stage (and with it the old
+    // renderer's own listeners); this is a no-op guard for a restore that
+    // arrives without a loss this module saw.
+    disposeStage();
     contextLost = false;
     yawOffset = 0;
     yawVel = 0;
@@ -367,6 +390,10 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
     lastInteraction = performance.now();
     try {
       await initStage();
+      if (disposed) return;
+      // The first rebuilt frame is already drawn: show the canvas again
+      // under the poster, then fade the poster exactly as a fresh mount does.
+      canvas.style.visibility = '';
       setLiveA11y(true);
       hidePosterSoon();
       onLive?.();
@@ -384,7 +411,7 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
     // scene.js's createStage doc comment); explicit here even though
     // `!canvas` already defaults to it, since this call always passes a
     // canvas and the point is worth stating at the call site.
-    const built = createStage({ quality: 'live', canvas, readback: false });
+    const built = createStage({ quality: 'live', canvas, readback: false, supersample: true });
     contextCreated = true;
     // A dispose guard for an in-flight build (B2 fix round): dispose() can
     // land while this function is still awaiting loadVenus (teardown during
@@ -469,7 +496,7 @@ export function mountLiveBust(opts: MountOptions): LiveBustHandle {
     canvas.removeEventListener('keydown', onKeyDown);
     canvas.removeEventListener('webglcontextlost', onContextLost, false);
     canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
-    disposeStage(contextLost);
+    disposeStage();
     // Release the context explicitly (the README's teardown rule), rather
     // than leaving it to garbage collection -- but only probe for one if a
     // renderer actually created it: canvas.getContext() creates a context on

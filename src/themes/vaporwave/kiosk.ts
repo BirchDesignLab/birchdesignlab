@@ -33,6 +33,18 @@ export function mountKioskAttract(): (() => void) | void {
   const play = () => {
     if (playing) return;
     playing = true;
+    // B2 fix round 3: the attract content sits at the screen's own vertical
+    // centre (theme.css's align-content: center); on a phone the CRT's
+    // screen box is taller than the viewport, so a visitor who scrolled
+    // down to reach the button below it saw only a black sliver of the
+    // screen's own bottom edge, well below where the loop actually draws.
+    // Bring the screen toward the middle of the viewport on tap so the loop
+    // reads as attract mode from wherever the visitor is, at any width; an
+    // instant jump (not smooth), since this is the loop's own start, not an
+    // incidental scroll, and it keeps a screenshot taken right after the tap
+    // from landing mid-animation. A near no-op where the screen already
+    // fits the viewport (desktop, most tablets).
+    screen.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
     screen.classList.add('on');
     timer = window.setTimeout(stop, ATTRACT_MS);
   };

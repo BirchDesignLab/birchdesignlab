@@ -542,7 +542,7 @@ function blobTexture() {
     (offline and live each make exactly one; the offline harness makes at
     most two, one per quality, since it renders both the 'still' kiosk shot
     and the 'live' About poster).
-    @param {{quality?: 'still'|'live', canvas?: HTMLCanvasElement, readback?: boolean}} [opts]
+    @param {{quality?: 'still'|'live', canvas?: HTMLCanvasElement, readback?: boolean, supersample?: boolean}} [opts]
     `canvas`: the live bust's own already-mounted <canvas> (B2, seat vw-4b);
     omitted, three.js creates one internally, as every offline caller does.
     `readback`: whether `render()` may read the drawing buffer back with
@@ -551,8 +551,18 @@ function blobTexture() {
     the readback (B2 fix round: it was calling render() once, for the first
     frame, and throwing the PNG away -- a synchronous GPU stall for nothing),
     while every offline caller omits `canvas` and keeps the readback it needs.
-    Callers may still pass `readback` explicitly to override the default. */
-export function createStage({ quality = 'still', canvas, readback = !canvas } = {}) {
+    Callers may still pass `readback` explicitly to override the default.
+    `supersample` (B2 fix round 3, the live bust only): draw every frame at
+    twice the drawing buffer's size into a multisampled half-float target,
+    then tone-map, encode and box-filter it down into the canvas (see
+    `draw()`). The README caps the canvas's devicePixelRatio at 1.5, so on a
+    DPR-2 phone the live canvas is upscaled by the compositor while the
+    poster (a 2048 px render averaged down) is not; the single-sample live
+    frame then aliased in the hair and along the eye creases and the handoff
+    jumped (3.64% of pixels at 390 px). Supersampling inside the capped
+    buffer brings the live frame's detail to the poster's averaged look.
+    Falls back to a plain render when the GPU cannot render to half float. */
+export function createStage({ quality = 'still', canvas, readback = !canvas, supersample = false } = {}) {
   const q = QUALITY[quality] ?? QUALITY.still;
 
   // premultipliedAlpha: true (three.js's own default -- B2 fix round found it
@@ -673,12 +683,90 @@ export function createStage({ quality = 'still', canvas, readback = !canvas } = 
     key.target.position.copy(sphere.center);
     key.position.copy(sphere.center).add(new THREE.Vector3(-3.5, 7, 4.5));
 
-    renderer.render(scene, camera);
-    if (q.shadow) renderer.render(scene, camera); // VSM settles on the second pass
+    draw();
+    if (q.shadow) draw(); // VSM settles on the second pass
     // The live bust calls render() once, for its first frame, and never
     // wants the PNG (it draws straight to its on-screen canvas); readback
     // false skips the synchronous GPU readback entirely for that caller.
     return readback ? renderer.domElement.toDataURL('image/png') : undefined;
+  }
+
+  // ---- the supersampled draw path (see the `supersample` option) ----
+  const SS = 2; // exactly 2: one output pixel = one 2x2 block of the target
+  const SS_MAX_SIDE = 1024; // cost ceiling for the target's longest side
+  const canSupersample = supersample
+    && renderer.capabilities.isWebGL2
+    && (renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float'));
+  let ssTarget = null;
+  let ssQuad = null;
+  const ssCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const bufSize = new THREE.Vector2();
+  function ensureSupersample(w, h) {
+    if (!ssTarget) {
+      ssTarget = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4, depthBuffer: true });
+      // The resolve pass: for each output pixel, the 2x2 block of linear,
+      // premultiplied (MSAA-resolved over a transparent clear) HDR texels is
+      // un-premultiplied, tone-mapped (three's Neutral, as the screen path
+      // uses), sRGB-encoded and re-premultiplied per texel, THEN averaged:
+      // the same order as the poster's path (tone-mapped and encoded at 2048,
+      // averaged down afterwards), so the two agree at edges too.
+      ssQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        uniforms: { tSrc: { value: ssTarget.texture }, uExposure: { value: renderer.toneMappingExposure } },
+        vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+        fragmentShader: /* glsl */ `
+          precision highp float;
+          uniform sampler2D tSrc;
+          uniform float uExposure;
+          out vec4 outColor;
+          vec3 neutral(vec3 color) {
+            const float StartCompression = 0.8 - 0.04;
+            const float Desaturation = 0.15;
+            color *= uExposure;
+            float x = min(color.r, min(color.g, color.b));
+            float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+            color -= offset;
+            float peak = max(color.r, max(color.g, color.b));
+            if (peak < StartCompression) return color;
+            float d = 1. - StartCompression;
+            float newPeak = 1. - d * d / (peak + d - StartCompression);
+            color *= newPeak / peak;
+            float g = 1. - 1. / (Desaturation * (peak - newPeak) + 1.);
+            return mix(color, vec3(newPeak), g);
+          }
+          vec3 srgb(vec3 v) {
+            return mix(pow(v, vec3(0.41666)) * 1.055 - vec3(0.055), v * 12.92, vec3(lessThanEqual(v, vec3(0.0031308))));
+          }
+          vec4 texel(ivec2 p) {
+            vec4 t = texelFetch(tSrc, p, 0);
+            if (t.a <= 0.0) return vec4(0.0);
+            vec3 c = srgb(clamp(neutral(max(t.rgb / t.a, 0.0)), 0.0, 1.0));
+            return vec4(c * t.a, t.a);
+          }
+          void main() {
+            ivec2 p = ivec2(gl_FragCoord.xy) * 2;
+            outColor = 0.25 * (texel(p) + texel(p + ivec2(1, 0)) + texel(p + ivec2(0, 1)) + texel(p + ivec2(1, 1)));
+          }`,
+        depthTest: false, depthWrite: false, blending: THREE.NoBlending, toneMapped: false,
+      }));
+      ssQuad.frustumCulled = false;
+    }
+    if (ssTarget.width !== w || ssTarget.height !== h) ssTarget.setSize(w, h);
+  }
+  /** Draws the current scene into the canvas: a plain render, or (with
+      `supersample`) the 2x path above. The live bust calls this per frame. */
+  function draw() {
+    renderer.getDrawingBufferSize(bufSize);
+    if (!canSupersample || Math.max(bufSize.x, bufSize.y) * SS > SS_MAX_SIDE) {
+      renderer.render(scene, camera);
+      return;
+    }
+    ensureSupersample(bufSize.x * SS, bufSize.y * SS);
+    renderer.setRenderTarget(ssTarget);
+    renderer.clear();
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(ssQuad, ssCamera);
   }
 
   function info() {
@@ -698,11 +786,15 @@ export function createStage({ quality = 'still', canvas, readback = !canvas } = 
   function dispose() {
     if (current) disposeGroup(current);
     envMap.dispose();
+    ssTarget?.dispose();
+    if (ssQuad) { ssQuad.geometry.dispose(); ssQuad.material.dispose(); }
     renderer.dispose();
   }
 
   return {
-    renderer, scene, camera, render, info, dispose,
+    renderer, scene, camera, render, draw, info, dispose,
+    /** Whether draw() is taking the supersampled path on this GPU. */
+    supersampling: () => canSupersample,
     setVenusMesh(mesh) { venusMesh = mesh; },
     // The live bust (B2, seat vw-4b) turns the standing prop by hand every
     // frame (group.rotation.y) instead of calling render() again, which

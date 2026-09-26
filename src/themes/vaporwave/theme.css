@@ -358,20 +358,21 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 [data-theme='vaporwave'] .vw-win-btns .close::after { transform: translate(-50%, -50%) rotate(-45deg); }
-/* B2 vw-3, item 2: a caption button presses. The bevel inverts on pointer
-   down and releases on up or leave (`:active` covers both: the browser ends
-   the active match itself when the pointer leaves the element while
-   pressed); the glyph shifts 1px to sell the sink. Decoration only (the
-   spans stay aria-hidden and unfocusable): this is a press animation, not a
-   new control. */
-[data-theme='vaporwave'] .vw-win-btns span:active {
+/* B2 vw-3, item 2 (fix round 3): a caption button presses. The bevel
+   inverts while a held pointer sits over it and releases on up or on leave.
+   `:active` alone did not reliably clear on leave (the B2 verifier's real
+   gap: dragging off a held button left the bevel stuck inverted), so
+   windows.ts now drives a `.pressed` class directly instead; the glyph
+   shifts 1px to sell the sink. Decoration only (the spans stay aria-hidden
+   and unfocusable): this is a press animation, not a new control. */
+[data-theme='vaporwave'] .vw-win-btns span.pressed {
   border-color: #3a1a66 #ffffff #ffffff #3a1a66;
 }
-[data-theme='vaporwave'] .vw-win-btns span:active::before,
-[data-theme='vaporwave'] .vw-win-btns .close:active::after {
+[data-theme='vaporwave'] .vw-win-btns span.pressed::before,
+[data-theme='vaporwave'] .vw-win-btns .close.pressed::after {
   translate: 1px 1px;
 }
-[data-theme='vaporwave'] .vw-win-btns .max:active::before { translate: 1px 1px; }
+[data-theme='vaporwave'] .vw-win-btns .max.pressed::before { translate: 1px 1px; }
 
 /* B2 vw-3, item 1: windows drag by their title bar on desktop. The bar shows
    a grab cursor only where a mouse drag makes sense; touch and coarse

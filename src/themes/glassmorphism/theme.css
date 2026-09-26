@@ -373,7 +373,13 @@
   position: fixed;
   inset: 0;
   height: 100lvh;
-  z-index: -1;
+  /* -3, the bottom of main's stacking context (glass fix round 3): Home's
+     lens-clock orbs sit at -2 and the lens at -1, so the order is wallpaper,
+     orbs, lens, panes. At -1 the wallpaper painted OVER Home's orbs at -2
+     and hid every one of them (the re-critic's blocker 1). Nothing on any
+     other glass page sits between -3 and 0, so their paint order is
+     unchanged. */
+  z-index: -3;
   pointer-events: none;
   background-image: -webkit-image-set(
     url('./wallpaper/light-day.avif') type('image/avif') 1x,
@@ -1113,19 +1119,23 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
    B2 fix round, layering (the glass critic's blocking #1 and #3): the lens
    must draw ABOVE the real .orb elements (so it covers the orb it refracts)
    and BELOW every pane and text (so it never steals a click or a swipe).
-   main's stacking context starts at 0; below it, Home's orbs move to
-   z-index -2 (.orbs[data-js-driven], further down this file, scoped to Home
-   only -- every other glass page keeps its orbs at 0, B1's look untouched),
-   and the wallpaper/poster/lens/hit stay together at -1, painted in DOM
-   order (last wins ties), so on Home the paint order bottom to top is:
-   orbs (-2) -> wallpaper and lens (-1, lens last) -> every .glass pane and
-   all text (1). .lens-hit used to be z-index 2, ABOVE every pane
+   main's stacking context starts at 0; below it, the wallpaper
+   (main::before) sits at -3, Home's orbs at -2 (.orbs[data-js-driven],
+   further down this file, scoped to Home only -- every other glass page
+   keeps its orbs at 0, B1's look untouched), and the poster/lens/hit at -1,
+   so on Home the paint order bottom to top is: wallpaper (-3) -> orbs (-2)
+   -> lens (-1) -> every .glass pane and all text (1). (Fix round 3: the
+   wallpaper used to share -1 with the lens, which put it over the orbs.) .lens-hit used to be z-index 2, ABOVE every pane
    (blocking #3: a grab cursor over the hero heading, a phone swipe on the
    hero copy dragging the lens instead of scrolling); it now sits at -1 with
    the canvas, so wherever a pane or text visually covers the lens's screen
    position, that pane or text is what actually receives the pointer, not
    the invisible hit button underneath it. Grabbing the lens where it is
-   genuinely visible still works, because nothing else is on top there. */
+   genuinely visible works because Home.astro turns pointer events off on
+   its section boxes (transparent, but in-flow and so above -1 for hit
+   testing) and back on for the panes, chips and buttons inside them; the
+   hit button, a descendant of .hero, turns them back on for itself below
+   (fix round 3: a drag on the visible lens used to select the headline). */
 :where([data-theme='glassmorphism']) .lens-host { position: relative; }
 :where([data-theme='glassmorphism']) .lens-canvas {
   position: fixed;
@@ -1158,6 +1168,7 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
   border-radius: 50%;
   padding: 0;
   background: transparent;
+  pointer-events: auto;
   cursor: grab;
   touch-action: none;
   -webkit-user-select: none;
@@ -1205,7 +1216,28 @@ html.lens-held :where(*) {
   padding: clamp(0.65rem, 1.6vw, 0.9rem);
   border-radius: var(--r-lg);
   justify-content: center;
+  /* Glass fix round 3 (the tiles under the portal switcher): the cluster
+     lines up with the hero window's LEFT edge instead of centring under it.
+     The switcher is fixed to the viewport's bottom-right corner, and a
+     cluster in the page's flow crosses the bottom band on every scroll, so
+     the only way to never sit under it is to stay left of its x range. The
+     margin is half the gap between .hero's width and the window's
+     (min(100%, 880px), Home.astro), so the two left edges agree. */
+  justify-self: start;
+  margin-inline-start: calc((100% - min(100%, 880px)) / 2);
 }
+/* Below 1400px one row of four (604px) no longer clears the switcher's left
+   edge (viewport - 488px) from the window's left edge; a 2 x 2 cluster
+   (about 390px) does down to about 900px. */
+@media (min-width: 721px) and (max-width: 1399px) {
+  :where([data-theme='glassmorphism']) .control-centre {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, max-content);
+  }
+}
+/* Tablet widths (721 to 943px) stack the time segments and wrap the
+   location: Home.astro's own scoped rules, where .cc-seg-row and
+   .cc-locale-value are declared (a scoped rule outranks this file's). */
 :where([data-theme='glassmorphism']) .cc-tile {
   position: relative;
   display: grid;
@@ -1336,10 +1368,26 @@ html.lens-held :where(*) {
      own phone rule sets the 2-column template; this switches the flow back
      to row-major so the four tiles wrap into two rows of two instead of
      one column of four. */
+  /* Glass fix round 3: fixed tile heights and paddings, so the cluster's
+     height is a known 238px (2 x 104 + 8 + 2 x 10 + 2 for the border), which
+     Home.astro's phone hero uses to start the cluster just below the first
+     view; and tighter insides, so the three 44px time segments fit their
+     tile at 390 (the re-critic saw the pill run past the tile's edge). */
   :where([data-theme='glassmorphism']) .control-centre {
     width: 100%;
     grid-auto-flow: row;
+    gap: 8px;
+    padding: 10px;
+    margin-inline-start: 0;
+    justify-self: stretch;
   }
+  :where([data-theme='glassmorphism']) .cc-tile {
+    height: 104px;
+    min-height: 0;
+    padding: 0.6rem 4px;
+  }
+  :where([data-theme='glassmorphism']) .cc-seg { padding: 0 3px; }
+  /* .cc-seg-row and .cc-locale-value's phone rules: Home.astro (scoped). */
   /* Home.astro's own phone rule shrinks the track to 48px (4px padding, 20px
      thumb): the rightward travel becomes 40 - 20 = 20px. */
   :where([data-theme='glassmorphism']) :is(.switch, .cc-switch)[aria-checked='true'] .switch-thumb {

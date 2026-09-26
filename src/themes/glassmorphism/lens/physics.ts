@@ -159,7 +159,25 @@ export function coverRect(boxW: number, boxH: number, imgW: number, imgH: number
 /** A `DOMRect`-shaped rect: left/top/right/bottom in viewport coordinates.
     Named separately from `DOMRect` so the geometry below stays DOM-free and
     unit-testable with plain objects. */
-export interface RectLike { left: number; top: number; right: number; bottom: number }
+export interface RectLike {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  /** Corner radius (a pane's own border-radius), optional: 0 is a plain
+      rect. Glass fix round 3: at 1024 x 768 the least-covered start sits
+      beside the hero window's rounded corner, and a square-cornered model
+      over-counts the cover there. */
+  radius?: number;
+}
+
+/** The distance from (x, y) to a (rounded) rect's filled shape: 0 inside. */
+function distToRoundedRect(x: number, y: number, rect: RectLike): number {
+  const rad = Math.max(0, Math.min(rect.radius ?? 0, (rect.right - rect.left) / 2, (rect.bottom - rect.top) / 2));
+  const nx = Math.min(Math.max(x, rect.left + rad), rect.right - rad);
+  const ny = Math.min(Math.max(y, rect.top + rad), rect.bottom - rad);
+  return Math.max(0, Math.hypot(x - nx, y - ny) - rad);
+}
 
 /** Whether a circle (cx, cy, r) overlaps an axis-aligned rect at all,
     touching counts (a candidate flush against a pane's edge is rejected: the
@@ -167,22 +185,39 @@ export interface RectLike { left: number; top: number; right: number; bottom: nu
     keep the lens's start position off every `.glass` pane and the portal
     chrome (README, "fix hint": compute the start from the live layout). */
 export function circleRectOverlaps(cx: number, cy: number, r: number, rect: RectLike): boolean {
-  const nx = Math.min(Math.max(cx, rect.left), rect.right);
-  const ny = Math.min(Math.max(cy, rect.top), rect.bottom);
-  const dx = cx - nx;
-  const dy = cy - ny;
-  return dx * dx + dy * dy < r * r;
+  return circleRectGap(cx, cy, r, rect) < 0;
 }
 
-/** The gap between a circle (cx, cy, r) and an axis-aligned rect: negative
-    while overlapping (how far the circle's edge is buried past the rect's
-    edge), positive otherwise (how far the circle's edge is from the rect).
-    Used to rank candidate start positions by how much open wallpaper
-    surrounds them, and, failing that, by how little they overlap. */
+/** The gap between a circle (cx, cy, r) and an axis-aligned (optionally
+    rounded) rect: negative while overlapping, positive otherwise (how far
+    the circle's edge is from the rect). Used to rank candidate start
+    positions by how much open wallpaper surrounds them. */
 export function circleRectGap(cx: number, cy: number, r: number, rect: RectLike): number {
-  const nx = Math.min(Math.max(cx, rect.left), rect.right);
-  const ny = Math.min(Math.max(cy, rect.top), rect.bottom);
-  return Math.hypot(cx - nx, cy - ny) - r;
+  const rad = Math.max(0, Math.min(rect.radius ?? 0, (rect.right - rect.left) / 2, (rect.bottom - rect.top) / 2));
+  const nx = Math.min(Math.max(cx, rect.left + rad), rect.right - rad);
+  const ny = Math.min(Math.max(cy, rect.top + rad), rect.bottom - rad);
+  return Math.hypot(cx - nx, cy - ny) - rad - r;
+}
+
+/** The fraction (0 to 1) of a disc's area that sits under any of `rects`,
+    sampled on a grid of about 150 points. The "partial" start's real measure
+    (glass fix round 3): the critic scored a start by how much of the visible
+    disc a pane hides, which a single penetration depth ranks wrongly beside a
+    rounded corner. */
+export function discCoverage(cx: number, cy: number, r: number, rects: RectLike[]): number {
+  const step = r / 7;
+  let n = 0;
+  let hit = 0;
+  for (let y = -r + step / 2; y < r; y += step) {
+    for (let x = -r + step / 2; x < r; x += step) {
+      if (x * x + y * y > r * r) continue;
+      n++;
+      for (const rect of rects) {
+        if (distToRoundedRect(cx + x, cy + y, rect) === 0) { hit++; break; }
+      }
+    }
+  }
+  return n ? hit / n : 0;
 }
 
 /** Whether a circle (cx, cy, r) genuinely crosses another circle's edge: the
@@ -241,13 +276,43 @@ export function findStartPosition(bounds: Bounds, radius: number, obstructions: 
       if (open) {
         if (crossesEdge && (!bestOpenEdge || minGap > bestOpenEdge.score)) bestOpenEdge = { x, y, score: minGap };
         if (!bestOpenAny || minGap > bestOpenAny.score) bestOpenAny = { x, y, score: minGap };
-      } else if (!bestPartial || minGap > bestPartial.score) {
-        bestPartial = { x, y, score: minGap }; // least-negative gap = least overlap
+      } else if (!bestOpenAny) {
+        // Least covered disc area wins (glass fix round 3), not the least
+        // penetration depth: the visitor sees area, and a corner spot can
+        // be deeper yet show more of the disc. Only scored while no open
+        // point has turned up, since any open point beats every partial one.
+        const cover = discCoverage(x, y, radius, obstructions);
+        if (!bestPartial || -cover > bestPartial.score) bestPartial = { x, y, score: -cover };
       }
     }
   }
   const pick = bestOpenEdge ?? bestOpenAny ?? bestPartial ?? { x: (x0 + x1) / 2, y: (y0 + y1) / 2, score: 0 };
   return { x: pick.x, y: pick.y, open: !!(bestOpenEdge || bestOpenAny) };
+}
+
+export interface ChosenStart extends StartCandidate {
+  /** The fraction of the disc under an obstruction (0 when open). */
+  cover: number;
+  /** 'poster' when the lens keeps the CSS poster's own spot (so the poster
+      and the live lens agree with no jump), 'search' when it moved. */
+  source: 'poster' | 'search';
+}
+
+/** Glass fix round 3 (the critic's arrival jump): the poster's CSS spot is
+    the lens's preferred start. It is kept whenever it is open, or when no
+    open point exists anywhere and it is covered no more than the search's
+    least-covered point; only otherwise does the lens (and the poster with
+    it) move to the search's point. */
+export function chooseStart(bounds: Bounds, radius: number, preferred: [number, number], obstructions: RectLike[], orbs: OrbCircle[]): ChosenStart {
+  const [px, py] = clampToBounds(preferred[0], preferred[1], bounds);
+  const prefCover = discCoverage(px, py, radius, obstructions);
+  const prefOpen = obstructions.every((rect) => circleRectGap(px, py, radius, rect) >= 0);
+  if (prefOpen) return { x: px, y: py, open: true, cover: 0, source: 'poster' };
+  const found = findStartPosition(bounds, radius, obstructions, orbs);
+  if (found.open) return { ...found, cover: 0, source: 'search' };
+  const foundCover = discCoverage(found.x, found.y, radius, obstructions);
+  if (prefCover <= foundCover + 0.01) return { x: px, y: py, open: false, cover: prefCover, source: 'poster' };
+  return { ...found, cover: foundCover, source: 'search' };
 }
 
 /** Progress (0 to 1) of an element's pass through the viewport, matching the

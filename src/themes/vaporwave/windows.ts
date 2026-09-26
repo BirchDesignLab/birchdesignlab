@@ -129,6 +129,53 @@ export function mountWindowDrag(): (() => void) | void {
       bar.removeEventListener('pointerup', endDrag);
       bar.removeEventListener('pointercancel', endDrag);
     });
+
+    // B2 fix round 3: a caption's "pressed" look lived in CSS `:active`
+    // alone, on the (wrong) assumption that the browser clears `:active`
+    // itself once the pointer leaves the element while still held. The B2
+    // verifier found a real gap: dragging the pointer 200px off a held
+    // caption button never restored the bevel, only releasing over the
+    // button did. JS now drives a `.pressed` class directly, one pointer
+    // per button: pressed on down, unpressed the moment that pointer
+    // leaves, pressed again on re-entry while the same pointer is still
+    // down, released on up anywhere (no capture is ever set for a caption
+    // press, so "anywhere" needs a document-level listener) or on cancel.
+    // This never starts a drag -- onPointerDown above already returns
+    // early for any press inside `.vw-win-btns` -- and never touches
+    // focusability (the spans stay aria-hidden, unchanged).
+    for (const cap of bar.querySelectorAll<HTMLElement>('.vw-win-btns span')) {
+      let heldId = -1;
+      const onCapDown = (event: PointerEvent) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        heldId = event.pointerId;
+        cap.classList.add('pressed');
+      };
+      const onCapLeave = (event: PointerEvent) => {
+        if (event.pointerId !== heldId) return;
+        cap.classList.remove('pressed');
+      };
+      const onCapEnter = (event: PointerEvent) => {
+        if (event.pointerId !== heldId || (event.buttons & 1) === 0) return;
+        cap.classList.add('pressed');
+      };
+      const onCapUp = (event: PointerEvent) => {
+        if (event.pointerId !== heldId) return;
+        heldId = -1;
+        cap.classList.remove('pressed');
+      };
+      cap.addEventListener('pointerdown', onCapDown);
+      cap.addEventListener('pointerleave', onCapLeave);
+      cap.addEventListener('pointerenter', onCapEnter);
+      document.addEventListener('pointerup', onCapUp);
+      document.addEventListener('pointercancel', onCapUp);
+      cleanups.push(() => {
+        cap.removeEventListener('pointerdown', onCapDown);
+        cap.removeEventListener('pointerleave', onCapLeave);
+        cap.removeEventListener('pointerenter', onCapEnter);
+        document.removeEventListener('pointerup', onCapUp);
+        document.removeEventListener('pointercancel', onCapUp);
+      });
+    }
   }
 
   return () => {

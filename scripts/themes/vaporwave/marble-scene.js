@@ -20,14 +20,18 @@
 import { createStage, loadVenus, DEFAULT_VENUS_VIEW } from '/marble/scene.js';
 
 const stages = {};
-function getStage(quality) {
-  if (!stages[quality]) {
-    const s = createStage({ quality });
+// `supersample` (B2 fix round 3): a separate stage built the way the live
+// bust builds its own (createStage's supersample path), for the handoff
+// estimator (b2r3-vw-fix-marble3-aa.mjs). The shipped stills never set it.
+function getStage(quality, supersample = false) {
+  const key = supersample ? `${quality}-ss` : quality;
+  if (!stages[key]) {
+    const s = createStage({ quality, supersample, readback: true });
     document.body.appendChild(s.renderer.domElement);
     s.renderer.domElement.style.display = 'none'; // only the active stage's canvas is read, via toDataURL
-    stages[quality] = s;
+    stages[key] = s;
   }
-  return stages[quality];
+  return stages[key];
 }
 
 const venusPromises = {};
@@ -38,7 +42,7 @@ async function ensureVenus(stage, url) {
 
 async function render(opts = {}) {
   const quality = opts.quality ?? 'still';
-  const stage = getStage(quality);
+  const stage = getStage(quality, Boolean(opts.supersample));
   const isVenus = opts.prop === 'venus' || opts.prop === 'venus-kiosk';
   // venusUrl lets a debug harness point at an intermediate (unsimplified)
   // mesh, e.g. process-venus.mjs's --debug output, without touching the

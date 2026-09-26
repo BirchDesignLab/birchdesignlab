@@ -148,7 +148,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
      25.7% for the old stand-in sphere. That measured figure still left a
      hairline gap once composited against the plinth's own rendered
      perspective (checked by eye, per fix round 2's own method); nudged to
-     22% closes it with no overlap at desktop, 820 and 390. translateY moves
+     22% was meant to close it (fix round 3 measured it overlapping; see below). translateY moves
      the box (paint only, not layout) down by that fraction, so the bust's
      own cut base - not the shadow's fading tail - lands flush on the tier
      below. z-index keeps the stage (and its shadow) painting over the tiers
@@ -166,9 +166,15 @@ const [founderLead, ...founderRest] = copy.founder.body;
      measured. One filter on the wrapper both layers share gives the poster
      and the live canvas the identical shadow at every moment, including
      mid-fade when both are visible together. */
+  /* Fix round 3: 22% sank the bust's cut base 4 to 8 px INTO the top tier
+     (b2r3-vw-fix-marble3-probe.mjs --only gap: the solid silhouette, alpha
+     >= 200/255 solved over black and white, from the poster and from the
+     live canvas, against .tier-top's top edge: -7.7 px at 1440, -5.1 at 820,
+     -4.1 at 390). 17.8% is close to the still's own measured 18.1% and
+     puts the base on the tier's top edge, 0 to 2 px above it, at all three. */
   .centerpiece-stage {
     width: 84%; position: relative; z-index: 2; aspect-ratio: 1 / 1;
-    transform: translateY(22%);
+    transform: translateY(17.8%);
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
   }
   .centerpiece-canvas {

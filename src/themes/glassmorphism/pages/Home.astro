@@ -114,8 +114,9 @@ const icons = ['violet', 'cyan'];
       portal's drawn-ahead copy (which strips every script, so lens.ts never
       runs there at all). .lens-host is where lens.ts appends the canvas, the
       hit control and the shadows once it mounts; empty and inert without
-      JS. Both sit on the wallpaper plane, under the content (z-index -1),
-      in the hero's empty right half, across the cyan orb's edge. */}
+      JS. Both sit on the wallpaper plane, above the orbs and under the
+      content (z-index -1). The poster's CSS spot and size are the lens's
+      own start (fix round 3; see the .lens-poster rule below). */}
   <div class="lens-poster" aria-hidden="true"></div>
   {/* Not aria-hidden: lens.ts mounts a real, focusable, aria-labelled
       button inside this container (the README forbids focusable content
@@ -195,7 +196,16 @@ const icons = ['violet', 'cyan'];
 </script>
 
 <style>
-  section { position: relative; }
+  /* Glass fix round 3 (the re-critic's grab blocker): the lens and its hit
+     button sit at z-index -1, under the page's content, and a section box
+     is transparent but still takes the pointer above them, so a drag on the
+     visible lens used to select the headline and a phone could not grab it
+     at all. Section boxes pass the pointer through; the panes, chips and
+     buttons in them take it back, so text, links and controls still win
+     wherever they cover the lens (theme.css's .lens-hit turns its own back
+     on). */
+  section { position: relative; pointer-events: none; }
+  section :is(.glass, .chip, .btn) { pointer-events: auto; }
 
   /* ---- hero: the window ---- */
   .hero {
@@ -291,15 +301,24 @@ const icons = ['violet', 'cyan'];
   @supports (-webkit-backdrop-filter: none) {
     .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
   }
+  /* Glass fix round 3 (the re-critic's arrival jump): this spot and width
+     ARE the lens's start and size now, not a rough stand-in. lens.ts reads
+     the poster's rect (planLensStart) and keeps it whenever it is open
+     wallpaper, or the least-covered spot when none is open; only otherwise
+     does it move the poster and the lens together, once, at mount. So these
+     values are tuned per size: 1280px and up, the left gutter beside the
+     hero window, across the violet orb's edge (x is the gutter's middle,
+     never less than the lens's wall stop, 105px); 721 to 1279px landscape,
+     the least-covered corner under the header at the lens's smaller size
+     (no open spot exists at 1024 x 768); portrait tablets, open wallpaper
+     right of the Control Centre; phones, the gap reserved under the window
+     (the hero rule below), just above the portal switcher. */
   .lens-poster {
     position: fixed;
     z-index: -1;
-    right: clamp(4%, 9vw, 12%);
-    /* Nudged down past the cyan orb's own placement (--y: 22% in the hero's
-       Orbs list): at the old 16-26% top the disc sat directly behind it and
-       read as a stray crescent rather than its own frosted shape. */
-    top: clamp(34%, 40vh, 48%);
-    width: clamp(160px, 19vw, 260px);
+    left: calc(max(105px, (100% - 880px) / 4) - 92px);
+    top: calc(46vh - 92px);
+    width: 184px;
     aspect-ratio: 1;
     border-radius: 50%;
     pointer-events: none;
@@ -308,28 +327,18 @@ const icons = ['violet', 'cyan'];
     border: 1px solid var(--edge-hi);
     box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
   }
-  /* B2: the lens must work on phones too (README, item 5), so the poster no
-     longer disappears once the window goes full width; it shrinks and moves
-     into the corner clear of the window's own text instead. lens.ts computes
-     the real lens's start position itself from the viewport (its `phone`
-     flag flips at 600px), independent of this static CSS spot; this is only
-     what a visitor sees before it mounts (or with reduced transparency, or
-     in a drawn-ahead copy), so the two do not need to match pixel for
-     pixel. */
-  @media (max-width: 1140px) {
-    .lens-poster {
-      top: auto;
-      right: clamp(4%, 6vw, 7%);
-      bottom: clamp(6%, 9vh, 12%);
-      width: clamp(140px, 30vw, 190px);
-    }
+  /* 64 + 11.4 = the smaller lens's wall stop; 162 = the header's bottom
+     (86) + 8 + 64 + 4, the lens's top stop. */
+  @media (max-width: 1279px) {
+    .lens-poster { width: 128px; left: 12px; top: 98px; }
   }
+  @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
+    .lens-poster { left: calc(75% - 64px); top: calc(68% - 64px); }
+  }
+  /* 70px keeps the disc 12px above the switcher's bar (bottom 12px, 46px
+     tall) at rest. */
   @media (max-width: 720px) {
-    .lens-poster {
-      width: 128px;
-      right: 16px;
-      bottom: 88px;
-    }
+    .lens-poster { left: calc(50% - 64px); top: auto; bottom: 70px; }
   }
 
   /* B2 fix round, item 4: the floating .widget.locale pill (absolute,
@@ -449,8 +458,33 @@ const icons = ['violet', 'cyan'];
   @media (max-width: 860px) {
     .lab-panel { grid-template-columns: 1fr; }
   }
+  /* Tablet widths: the window runs almost edge to edge while the portal
+     switcher keeps its desktop width (about 290px left of it at 820), so
+     the time segments stack and the location wraps, keeping the 2 x 2
+     cluster near 235px wide (glass fix round 3). */
+  @media (min-width: 721px) and (max-width: 943px) {
+    .cc-seg-row { flex-direction: column; border-radius: 24px; }
+    .cc-locale-value { white-space: normal; max-width: 8.5em; text-align: center; }
+  }
   @media (max-width: 720px) {
-    .hero { min-height: 0; padding-block: 3.5rem 4.5rem; }
+    /* Glass fix round 3, phones: the first view is the window, then a gap
+       of open wallpaper where the lens starts (the poster's phone spot),
+       and the Control Centre starts just below the fold (the founder
+       accepts the tiles one scroll down), so no tile sits under the portal
+       switcher in the first view. min-height = 100svh - the hero's top (74,
+       under the header) + its bottom padding (72) + the cluster's fixed
+       height (238, theme.css's phone rules) + 16 of air. The gap row never
+       shrinks below the lens's 128px plus a margin. */
+    .hero {
+      min-height: calc(100svh + 252px);
+      padding-block: 3.5rem 4.5rem;
+      grid-template-rows: auto minmax(152px, 1fr) auto;
+    }
+    .window { grid-row: 1; }
+    .lens-host { grid-row: 2; }
+    .control-centre { grid-row: 3; margin-top: 0; }
+    .cc-seg-row { padding: 3px; gap: 1px; }
+    .cc-locale-value { white-space: normal; text-align: center; }
     .window { border-radius: 30px; }
     /* B2 item 4: the button (.switch) grows to the 44px minimum; the track
        stays its own compact 48x28, centred inside the larger real hit

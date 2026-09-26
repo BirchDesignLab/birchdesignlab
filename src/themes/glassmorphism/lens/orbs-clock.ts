@@ -78,27 +78,40 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
       o.docTop = r.top + window.scrollY;
       o.height = r.height;
     }
+    lastScrollY = NaN; // the translates were just cleared: rewrite them next frame
   }
+  let lastScrollY = NaN;
   measure();
 
   const ro = new ResizeObserver(() => measure());
   tracked.forEach((o) => ro.observe(o.el));
   window.addEventListener('orientationchange', measure);
 
-  let lastScrollY = NaN;
   let lastVh = NaN;
+  let lastLive = '';
+  const groupList = [...groups];
   let raf = requestAnimationFrame(function frame() {
     raf = requestAnimationFrame(frame);
     const vh = window.innerHeight;
     const scrollY = window.scrollY;
-    // Idle: neither the scroll position nor the viewport height moved since
-    // the last frame, so every orb's progress is identical to what is
-    // already on screen. Skip the read/write pass entirely (a real cost
-    // saved, not just a draw skipped) and call nothing, so the lens does not
-    // redraw for a frame in which nothing actually moved.
-    if (scrollY === lastScrollY && vh === lastVh) return;
+    // Which groups are live (fx.ts's mountOrbs sets data-live from an
+    // IntersectionObserver, which reports AFTER this loop's first frame).
+    // Glass fix round 3: without this in the idle test, the first frame
+    // skipped every not-yet-live group and marked the scroll position done,
+    // so Home's orbs sat untranslated at rest and then jumped 200 to 300 px
+    // on the first scroll; a resize's measure() (which clears every
+    // translate) likewise left them untranslated until the next scroll.
+    let live = '';
+    for (const g of groupList) live += g.hasAttribute('data-live') ? '1' : '0';
+    // Idle: neither the scroll position, the viewport height nor the live
+    // set changed since the last frame, so every orb's progress is identical
+    // to what is already on screen. Skip the read/write pass entirely (a
+    // real cost saved, not just a draw skipped) and call nothing, so the
+    // lens does not redraw for a frame in which nothing actually moved.
+    if (scrollY === lastScrollY && vh === lastVh && live === lastLive) return;
     lastScrollY = scrollY;
     lastVh = vh;
+    lastLive = live;
     for (const o of tracked) {
       if (!o.group.hasAttribute('data-live')) continue; // its section is off-screen (fx.ts's mountOrbs)
       const elementTop = o.docTop - scrollY;

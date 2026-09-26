@@ -175,3 +175,67 @@ made). Reports saved to `.out/stage3-b2/w3-reports.json`.
   go: one fix round for both schools (the vaporwave blockers above, the glass
   open items and anything the glass review finds), then the reviews, the
   gates, the report and the stop.
+
+## Round 3 (09-26-26): workflow 4, then HELD
+
+Workflow `wf_6f9da3c7-da4` (8 agents), reports in
+`.out/stage3-b2/w4-reports.json`.
+
+- **Glass review round 1 (Opus high) blocked 5:** the lens-layering fix had
+  put Home's orbs at z -2, under the wallpaper (every Home orb hidden); the
+  hit control sat under the transparent hero section (the visible lens could
+  not be grabbed; a drag selected text); the poster and the live lens
+  disagreed on position and size (a jump on arrival); the Time tile under the
+  portal switcher; the phone lens 80% under the Control Centre, crossing no
+  orb.
+- **Glass fix round 3 (Opus medium, stepped up for lens and runtime):** 10
+  fixed: z order wallpaper -3, orbs -2, lens -1, panes 1; grab works on the
+  visible disc; poster and lens agree; the start searched from the live
+  layout.
+- **Glass review round 2 (Opus high) blocks 1:** Home's scroll-linked orbs
+  sit 17 to 65 px higher than B1's placement at every scroll position:
+  `orbs-clock.ts` measure() reads each orb's rect with the stylesheet's
+  `translate(-50% -50%)` still applied, while CSS `view()` uses the
+  untransformed box (fix: measure with `translate: none`, or add h/2; check
+  with `b2r3-glass-critic2-orbpos.mjs`, the JS and CSS rows within 1 px).
+  Its founder calls are answered in stage3-decisions.md ("Answers after B2
+  round 3").
+- **Glass verifier (Sonnet medium): 0 films again** (a third time at
+  medium); run verifiers at Sonnet high (the vaporwave one made 23 films).
+- **vw-fix-marble3 (Opus medium):** the black square after a context
+  restore fixed (round 2 never called `renderer.dispose()`, which is what
+  removes three's own context listeners): clear [0,0,0,0] after a restore, no
+  delta after a drag; the canvas hidden while lost (no broken-image box); the
+  handoff under 2% everywhere (390: 1.19%, 820: 1.06%, desktop: 0.76%) by a
+  1.5 cap with 2x supersampling; a solid-silhouette plinth gap probe (1440
+  +1.52 px, 820 +0.73, 390 +0.55).
+- **vw-fix-interact3 (Sonnet xhigh):** caption buttons pressed only while
+  the held pointer is over them; the phone attract loop scrolls the CRT into
+  view (the founder has since said no scroll); the pipes redrawn as one
+  continuous stroke per run (ribbing and eyes gone).
+- **Vaporwave re-critic round 3 (Opus high) blocks 1:** each pipe sits in an
+  opaque halo band 1.9x its width, restroked every frame over the elbow's
+  ball joint, so the tubes read as flat outlined capsules (fix: drop the halo
+  or keep it at most about 1.1x as a darker silhouette rim; draw the start
+  joint after the run's strokes). Nit: dragging off a held caption button
+  selects about 9 characters (preventDefault on the caption pointerdown).
+- **Vaporwave verifier (Sonnet high):** 23 films, 21 of 21 cases pass.
+- **The rim fringe (founder: fix):** the colour split halved in `lens.ts`
+  (0.03 to 0.015). Re-shot with `b2r3-glass-critic2-probe.mjs --only
+  orbedge,rim` (outputs `.out/stage3-b2/fringe-halved/`): no olive line at
+  1x; a faint 1 px green hint remains at 4x.
+
+### Next round (held; the founder's answers are in stage3-decisions.md)
+
+- Glass: the orbs-clock measure fix; restore B1's phone hero and start the
+  phone lens half under the window's lower corner across an orb; keep the
+  Time tile clear of the desktop portal switcher (the phone switcher spans
+  the width, so any flow content passes under it while scrolling: judge the
+  resting positions).
+- Vaporwave: crisp 3D pipes (no halo band, joints drawn last); the phone
+  attract loop with no scroll (content in the visible part of the CRT); the
+  caption drag-off text selection.
+- Then an Opus high re-critic per school and verifiers at Sonnet high, the
+  orchestrator's own look, the Stage 3 gates (`harness/stage-gates.mjs
+  --before-dir stage3-before --after-label stage3-after`), the S3 side by
+  side, founder sheets, the B2 report and the stop.

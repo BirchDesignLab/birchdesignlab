@@ -69,7 +69,7 @@
  *   a vertical scan across the seam measures the offset while scrolling.
  *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, findStartPosition, type Bounds, type RectLike } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, type Bounds, type RectLike, type ChosenStart } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -97,6 +97,14 @@ uniform int uOrbN;
 uniform float uTint;
 uniform vec3 uVeil;
 uniform float uIdentity;
+// The orbs' own box-shadow glow (theme.css --orb-glow: transparent in light,
+// a wide ember glow in dark), glass fix round 3: without it the model's
+// wallpaper beside a dark orb read up to 70 levels darker than the page
+// (identity probe, 22% of pixels over 8). rgb + alpha, then (sigma, spread):
+// CSS blurs a shadow with a Gaussian of standard deviation half the blur
+// radius, and the spread grows the disc first.
+uniform vec4 uGlow;
+uniform vec2 uGlowShape;
 
 // theme.css's real .orb: background: linear-gradient(155deg, --hi 8%, --lo
 // 78%), not a flat fill (B2 fix round item A). GRAD_DIR is the CSS gradient
@@ -115,6 +123,15 @@ vec3 orbGradient(vec3 hi, vec3 lo, vec2 rel, float r) {
   return mix(hi, lo, t);
 }
 
+// The standard normal CDF (a tanh fit, max error about 2e-4): a blurred
+// straight edge's profile, close enough for a disc of 100+ px radius.
+// (tanh itself is GLSL ES 3.0; WebGL 1 spells it with exp. Callers clamp x
+// to +-6, so exp stays far inside highp range.)
+float phi(float x) {
+  float t = exp(2.0 * 0.7978845608 * (x + 0.044715 * x * x * x));
+  return 0.5 * (1.0 + (t - 1.0) / (t + 1.0));
+}
+
 vec3 backdrop(vec2 s) {
   vec2 uv = (s - uWallRect.xy) / uWallRect.zw;
   vec3 c = texture2D(uWall, clamp(uv, 0.0, 1.0)).rgb;
@@ -122,6 +139,11 @@ vec3 backdrop(vec2 s) {
     if (i >= uOrbN) break;
     vec2 rel = s - uOrb[i].xy;
     float d = length(rel) - uOrb[i].z;
+    if (uGlow.a > 0.0) {
+      // Painted under this orb and over everything before it, as CSS
+      // paints an element's outer shadow just before its background.
+      c = mix(c, uGlow.rgb, uGlow.a * phi(clamp((uGlowShape.y - d) / uGlowShape.x, -6.0, 6.0)));
+    }
     vec3 orbCol = orbGradient(uOrbHiCol[i], uOrbCol[i], rel, uOrb[i].z);
     c = mix(c, orbCol, clamp(0.5 - d * uDpr, 0.0, 1.0));
   }
@@ -147,7 +169,9 @@ void main() {
   }
   float e = smoothstep(0.5, 1.0, r);
   float m = 0.8 + 0.5 * e * e;
-  float disp = 0.03 * e;
+  // Halved from 0.03 (founder, 09-26-26): the full split drew a thin dark
+  // olive line where an orb edge crossed the rim, visible at normal size.
+  float disp = 0.015 * e;
   vec2 sG = uCenter + uM * (q * m) * uR;
   vec2 sR = uCenter + uM * (q * m * (1.0 + disp)) * uR;
   vec2 sB = uCenter + uM * (q * m * (1.0 - disp)) * uR;
@@ -243,42 +267,108 @@ function link(gl: WebGLRenderingContext, vs: string, fs: string): WebGLProgram {
     `.orb` elements on Home). */
 function resolveOrbs(centerX: number, centerY: number): ModelOrb[] {
   const els = document.querySelectorAll<HTMLElement>('.orb');
-  const all: ModelOrb[] = [];
+  const all: (ModelOrb & { order: number })[] = [];
+  let order = 0;
   for (const el of els) {
+    order++;
     const r = el.getBoundingClientRect();
     if (r.width <= 0) continue;
     const grad = orbGradientAt(el);
     if (!grad) continue;
-    all.push({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2, rgb: grad.lo, hiRgb: grad.hi });
+    all.push({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2, rgb: grad.lo, hiRgb: grad.hi, order });
   }
   all.sort((a, b) => {
     const da = (a.cx - centerX) ** 2 + (a.cy - centerY) ** 2;
     const db = (b.cx - centerX) ** 2 + (b.cy - centerY) ** 2;
     return da - db;
   });
-  return all.slice(0, 8);
+  // The nearest 8, then back into document order (glass fix round 3): the
+  // shader paints them in array order, later over earlier, which must be the
+  // page's own paint order wherever two orbs overlap.
+  return all.slice(0, 8).sort((a, b) => a.order - b.order);
 }
 
-/** Every `.glass` pane plus the header and the portal switcher, in viewport
-    coordinates: the obstructions the lens's start position must clear
-    (`findStartPosition`). Run once, at mount. */
+interface Glow { rgb: [number, number, number]; alpha: number; sigma: number; spread: number }
+const NO_GLOW: Glow = { rgb: [0, 0, 0], alpha: 0, sigma: 1, spread: 0 };
+
+/** The orbs' shared box-shadow glow (theme.css --orb-glow), read off the
+    first `.orb`'s computed style: "rgba(r, g, b, a) 0px 0px B px S px", or
+    "none". Every orb shares the one token, so one read covers all. */
+function orbGlow(): Glow {
+  const el = document.querySelector<HTMLElement>('.orb');
+  if (!el) return NO_GLOW;
+  const bs = getComputedStyle(el).boxShadow;
+  const m = /rgba?\(([^)]+)\)\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px(?:\s+(-?[\d.]+)px)?/.exec(bs);
+  if (!m) return NO_GLOW;
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+  const alpha = parts.length > 3 ? parts[3] : 1;
+  if (!(alpha > 0)) return NO_GLOW;
+  const blur = Number(m[4]);
+  return { rgb: [parts[0] / 255, parts[1] / 255, parts[2] / 255], alpha, sigma: Math.max(0.5, blur / 2), spread: Number(m[5] ?? 0) };
+}
+
+function rectOf(el: Element | null): RectLike | null {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width <= 0 || r.height <= 0) return null;
+  const radius = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, radius };
+}
+
+/** Every `.glass` pane plus the header and the portal switcher (the
+    `bdl-switcher` host, fixed to the viewport's bottom edge), in viewport
+    coordinates, with their corner radii: the obstructions the lens's start
+    must clear. Glass fix round 3: this used to read `[data-portal-tail]`,
+    which is the 76 px spacer at the END of the document, not the switcher,
+    so the start search never saw the switcher at all. */
 function collectObstructions(): RectLike[] {
   const out: RectLike[] = [];
-  const header = document.querySelector('.site-header');
-  if (header) {
-    const r = header.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) out.push(r);
-  }
-  const tail = document.querySelector('[data-portal-tail]');
-  if (tail) {
-    const r = tail.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) out.push(r);
-  }
-  for (const el of document.querySelectorAll<HTMLElement>('.glass')) {
-    const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) out.push(r);
+  for (const el of [document.querySelector('.site-header'), document.querySelector('bdl-switcher'), ...document.querySelectorAll('.glass')]) {
+    const r = rectOf(el);
+    if (r) out.push(r);
   }
   return out;
+}
+
+/** The lens radius: half the poster's CSS width (Home.astro sizes the poster
+    per breakpoint), so the frosted stand-in and the live lens are always
+    the same size. Falls back to the old fixed sizes if the poster has no
+    width (it always has one in practice). */
+export function lensRadiusFor(poster: HTMLElement, phone: boolean): number {
+  const w = poster.getBoundingClientRect().width || parseFloat(getComputedStyle(poster).width);
+  return w > 0 ? w / 2 : phone ? 64 : 92;
+}
+
+/** Moves the poster so its disc is centred on (x, y) with radius r, in the
+    fixed viewport frame the lens uses. Inline left/top override the CSS
+    spot; right/bottom are cleared so they cannot fight it. */
+export function placePoster(poster: HTMLElement, x: number, y: number, r: number): void {
+  poster.style.left = `${(x - r).toFixed(1)}px`;
+  poster.style.top = `${(y - r).toFixed(1)}px`;
+  poster.style.right = 'auto';
+  poster.style.bottom = 'auto';
+  poster.style.width = `${(2 * r).toFixed(1)}px`;
+}
+
+/** The travel box for a lens of radius r, below the header bar and above
+    the bottom chrome (shared by the mount and the early poster placement). */
+function boundsFor(radius: number, insets: { top: number; bottom: number }): Bounds {
+  const [x0, y0, x1, y1] = lensBounds(radius, window.innerWidth, window.innerHeight);
+  return [x0, Math.max(y0, insets.top + radius + 4), x1, Math.min(y1, window.innerHeight - insets.bottom - radius - 4)];
+}
+
+/** Glass fix round 3: the one start-position decision, used both as soon as
+    Home mounts (home-boot.ts moves the poster there at once, long before the
+    lens itself mounts at idle) and again by the lens at its own mount (by
+    then the poster already sits on the chosen spot, so the answer holds and
+    nothing jumps). The poster's CSS spot is the preferred start
+    (physics.ts's chooseStart). */
+export function planLensStart(poster: HTMLElement, phone: boolean, insets: { top: number; bottom: number }): ChosenStart & { radius: number } {
+  const radius = lensRadiusFor(poster, phone);
+  const pr = poster.getBoundingClientRect();
+  const preferred: [number, number] = pr.width > 0 ? [pr.left + pr.width / 2, pr.top + pr.height / 2] : [window.innerWidth / 2, window.innerHeight / 2];
+  const chosen = chooseStart(boundsFor(radius, insets), radius, preferred, collectObstructions(), allOrbCircles());
+  return { ...chosen, radius };
 }
 
 /** Every `.orb` on the page right now, as plain circles (no colour: the
@@ -338,7 +428,10 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   host.appendChild(hit);
 
   const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-  const radius = opts.phone ? 64 : 92;
+  // Before the poster can be hidden: its spot and size are the lens's own
+  // (glass fix round 3, the critic's arrival jump).
+  const plan = planLensStart(poster, opts.phone, opts.chromeInsets());
+  const radius = plan.radius;
   const lvh = makeLvhProbe();
 
   let prog: WebGLProgram;
@@ -356,7 +449,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     const aPos = gl!.getAttribLocation(prog, 'aPos');
     gl!.enableVertexAttribArray(aPos);
     gl!.vertexAttribPointer(aPos, 2, gl!.FLOAT, false, 0, 0);
-    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbHiCol', 'uOrbN', 'uTint', 'uVeil', 'uIdentity']) {
+    for (const n of ['uBoxOrigin', 'uBoxSize', 'uDpr', 'uCenter', 'uR', 'uM', 'uMinv', 'uWall', 'uWallRect', 'uOrb', 'uOrbCol', 'uOrbHiCol', 'uOrbN', 'uTint', 'uVeil', 'uIdentity', 'uGlow', 'uGlowShape']) {
       U[n] = gl!.getUniformLocation(prog, n);
     }
     tex = gl!.createTexture()!;
@@ -402,29 +495,26 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   sizeCanvas();
 
   function computeBounds(): Bounds {
-    const [x0, y0, x1, y1] = lensBounds(radius, window.innerWidth, window.innerHeight);
-    const { top, bottom } = opts.chromeInsets();
-    return [x0, Math.max(y0, top + radius + 4), x1, Math.min(y1, window.innerHeight - bottom - radius - 4)];
+    return boundsFor(radius, opts.chromeInsets());
   }
 
   function startPosition(): [number, number] {
-    const bounds = computeBounds();
-    // Computed from the live layout, not a fixed fraction of the viewport
-    // (README, item 3): the widest point clear of every `.glass` pane and
-    // the portal chrome that also crosses an orb's edge, so the lens starts
-    // visible, in open wallpaper, showing the bend it exists for -- and
-    // keeps doing so if another seat reshapes the Control Centre, since this
-    // runs fresh at every mount. `host.dataset.lensStart` records which case
-    // was found ('open' or 'partial'), for a verify probe to read; a
-    // console note covers the case a probe was not watching for.
-    const found = findStartPosition(bounds, radius, collectObstructions(), allOrbCircles());
-    host.dataset.lensStart = found.open ? 'open' : 'partial';
-    if (!found.open) {
+    // Computed from the live layout (README, item 3), preferring the
+    // poster's own spot (planLensStart above): open wallpaper where there is
+    // any, else the least-covered point. `host.dataset.lensStart` records
+    // 'open' or 'partial' and `lensCover` the covered fraction, for the
+    // verify probes; a console note covers the case a probe was not
+    // watching for.
+    host.dataset.lensStart = plan.open ? 'open' : 'partial';
+    host.dataset.lensCover = plan.cover.toFixed(3);
+    host.dataset.lensSource = plan.source;
+    if (!plan.open) {
       console.info('[glass lens] no fully open spot at this viewport; starting at the least-covered point.');
     }
-    return clampToBounds(found.x, found.y, bounds);
+    return clampToBounds(plan.x, plan.y, computeBounds());
   }
   [s.x, s.y] = startPosition();
+  placePoster(poster, s.x, s.y, radius);
 
   /* ---------- wallpaper texture ---------- */
   // A small CPU-side copy of whichever wallpaper image is current, for the
@@ -444,6 +534,9 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       calling it on the initial load (when the canvas is already hidden by
       the stylesheet's default) does nothing extra. */
   function showPosterUntilReady() {
+    // Where the lens is now, not the CSS spot: a context loss or a time of
+    // day change after a drag must not show the stand-in somewhere else.
+    placePoster(poster, s.x, s.y, radius);
     poster.style.removeProperty('display');
     canvas.style.visibility = 'hidden';
     shadowRest.style.visibility = shadowHeld.style.visibility = 'hidden';
@@ -722,6 +815,9 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     gl!.uniform3fv(U.uOrbCol, colBuf);
     gl!.uniform3fv(U.uOrbHiCol, hiColBuf);
     gl!.uniform1i(U.uOrbN, orbs.length);
+    const glow = orbGlow();
+    gl!.uniform4f(U.uGlow, glow.rgb[0], glow.rgb[1], glow.rgb[2], glow.alpha);
+    gl!.uniform2f(U.uGlowShape, glow.sigma, glow.spread);
     gl!.uniform1f(U.uTint, probeActive ? 0 : s.tintV);
     gl!.uniform3f(U.uVeil, veil[0], veil[1], veil[2]);
     gl!.uniform1f(U.uIdentity, probeActive ? 1 : 0);

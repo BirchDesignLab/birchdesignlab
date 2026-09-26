@@ -65,6 +65,11 @@ interface Pipe {
   travelled: number;
   /** Vertices turned since this pipe was last recoloured/relocated. */
   age: number;
+  /** Where the CURRENT straight run began (the last elbow, or its spawn
+      point): see drawPipes' header for why the whole run redraws each
+      frame from here, not just the newest bit. */
+  runX: number;
+  runY: number;
 }
 
 /** B2 fix round, item 3: the visible sphere sits well inside the still's own
@@ -77,16 +82,55 @@ const SPHERE_VISIBLE_FRACTION = 280 / 512;
 const SPHERE_TARGET = 1 / 3;
 const SPHERE_BOX_SCALE = SPHERE_TARGET / SPHERE_VISIBLE_FRACTION;
 
-/* B2 fix round, item 4 (founder, 09-25-26: shaded 3D-looking tubes): the
+/* B2 fix round, item 4 (founder, 09-25-26: shaded 3D-looking tubes). The
    Windows 3D Pipes look on a 2D canvas. Each pipe is a persistent grid
-   walker; every frame it draws only the new bit of tube behind it (a
-   shadow, then the tube's own colour, then a highlight and a shadow stroke
-   offset perpendicular to its direction of travel, the closest a flat
-   stroke gets to a cylinder's lit curve), and a shaded ball joint lands at
-   every grid vertex where a pipe may turn. Nothing here fades: the field
-   fills up solid, the way the original's pipework does, then the whole
-   canvas clears and a fresh set of pipes starts. */
+   walker, ball-jointed at every grid vertex where it may turn. Nothing here
+   fades: the field fills up solid, the way the original's pipework does,
+   then the whole canvas clears and a fresh set of pipes starts.
+
+   Fix round 3 (three attempts before this one held): the original draw drew
+   only each frame's newest bit of tube, as three separate round-capped
+   strokes (a base colour, then a highlight and a shadow offset
+   perpendicular to travel) -- the B2 critic's "fine ribbing across every
+   tube" was those strokes' round caps compositing at every frame's own
+   seam, and its "cartoon eyes on each growing head" was the same two
+   strokes' own round caps sitting side by side at the tip.
+
+   Collapsing the three strokes into one gradient stroke, then making every
+   colour opaque, then pinning the gradient's own anchor so it does not
+   drift frame to frame, each removed one plausible cause and each still
+   rippled: canvas rasterises every stroke() call's antialiasing on its own,
+   so drawing a tube as many short abutting (or slightly overlapping)
+   per-frame segments leaves a seam at every call's own edge regardless of
+   colour, cap or anchor. The fix that actually held restrokes the pipe's
+   WHOLE current run every frame -- from `runX, runY` (the last elbow, or
+   its spawn point) to its current tip, as ONE call -- instead of adding
+   just the newest bit to what an earlier frame already drew. That costs
+   re-touching already-correct pixels every frame, but every colour is
+   opaque, so redrawing them is a no-op (identical input, identical
+   output); what does change is that there is now only ONE antialiasing
+   pass for the pipe's entire visible length, not one per frame. Runs reset
+   at every real turn and at relocation, so this never redraws more than
+   one grid cell's worth of frames' growth. `round` caps read as a single
+   smoothly shaded capsule at the tip, not the two-round-cap eyes above. */
 const PIPE_GEN_FRAMES = 480;
+
+/** Mixes a `#rrggbb` colour toward an RGB target and returns an opaque
+    `rgb()` string -- used for every pipe gradient/halo stop so none of
+    them carry any alpha (see the file header for why that matters here). */
+function shadeTowards(hex: string, target: readonly [number, number, number], amount: number): string {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  const [r, g, b] = m ? [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)] : [255, 255, 255];
+  const mix = (c: number, t: number) => Math.round(c + (t - c) * amount);
+  return `rgb(${mix(r, target[0])}, ${mix(g, target[1])}, ${mix(b, target[2])})`;
+}
+/** The pipes canvas's own resting fill (#0a0220), as the dark end of every
+    tube's shading mixes toward it, not toward flat black. */
+const PIPE_BG: readonly [number, number, number] = [10, 2, 32];
+/** The depth-cue shadow's colour: opaque for the same reason as the tube
+    and halo strokes (see the file header), so it does not depend on any
+    one pipe's own colour. */
+const PIPE_DEPTH_SHADOW = 'rgb(5, 1, 14)';
 
 /** One animated 2D-canvas loop, shared shape for the small preview and the
     full-window one. Each instance owns its own rAF, resize and visibility
@@ -145,6 +189,8 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
         color: palette[i % palette.length] ?? '#01cdfe',
         travelled: 0,
         age: 0,
+        runX: gx * cell,
+        runY: gy * cell,
       });
     }
   };
@@ -206,59 +252,83 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
     }
     const cell = Math.max(18, Math.min(w, h) / 14);
     const lineW = Math.max(6, cell * 0.42);
+    const halfW = lineW / 2;
     const jointR = lineW * 0.62;
     const step = cell * 0.05;
-    const hi = 'rgba(255, 255, 255, 0.55)';
-    const lo = 'rgba(0, 0, 0, 0.55)';
     for (const pipe of pipes) {
-      const fromX = pipe.x;
-      const fromY = pipe.y;
       pipe.x += pipe.dx * step;
       pipe.y += pipe.dy * step;
       pipe.travelled += step;
+      const lo = shadeTowards(pipe.color, PIPE_BG, 0.72);
+      const hi = shadeTowards(pipe.color, [255, 255, 255], 0.62);
+      const haloColor = shadeTowards(pipe.color, [255, 255, 255], 0.12);
 
-      // Depth cue: a soft dark shadow under every new bit of tube, offset
-      // toward the corner, so wherever two pipes cross, whichever one drew
-      // second visibly sits in front (a growing field naturally draws its
-      // newer pipes last).
+      // Every layer below strokes the pipe's WHOLE current run, from
+      // `runX, runY` (the last elbow, or its spawn point) to its current
+      // tip, as ONE call -- not the newest bit alone, added to what an
+      // earlier frame already drew. Two earlier cuts tried the
+      // per-frame-increment route and both still rippled: canvas
+      // rasterises every stroke() call's antialiasing on its own, so many
+      // short abutting (or slightly overlapping) segments always show a
+      // seam at each call's own edge, whatever colour or cap is used for
+      // it. Restroking the whole run fixes that at the root -- there is
+      // only ONE call, so only one antialiasing pass, for the pipe's
+      // entire visible length. It costs re-touching already-correct pixels
+      // every frame, but every colour here is opaque (see the file
+      // header), so that is a no-op: identical input, identical output.
+      // Runs reset at every real turn (below) and at relocation, so this
+      // never redraws more than one grid cell's worth of frames' growth.
       ctx.save();
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.strokeStyle = PIPE_DEPTH_SHADOW;
       ctx.lineWidth = lineW * 1.05;
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(fromX + 3, fromY + 3);
+      ctx.moveTo(pipe.runX + 3, pipe.runY + 3);
       ctx.lineTo(pipe.x + 3, pipe.y + 3);
       ctx.stroke();
       ctx.restore();
 
-      // The tube: a base stroke in the pipe's colour, then a highlight and a
-      // shadow stroke offset perpendicular to the direction of travel (the
-      // segment's own normal), so the width shades like a lit cylinder
-      // instead of reading as a flat neon line.
-      const nx = -pipe.dy;
-      const ny = pipe.dx;
+      // A neon halo, under the tube: a plain wider opaque stroke, not
+      // `shadowBlur` (its Gaussian falloff is computed fresh per call too,
+      // which was the same per-frame-seam problem one layer out).
       ctx.save();
       ctx.lineCap = 'round';
-      ctx.shadowColor = pipe.color;
-      ctx.shadowBlur = lineW * 0.5;
-      ctx.strokeStyle = pipe.color;
-      ctx.lineWidth = lineW;
+      ctx.strokeStyle = haloColor;
+      ctx.lineWidth = lineW * 1.9;
       ctx.beginPath();
-      ctx.moveTo(fromX, fromY);
+      ctx.moveTo(pipe.runX, pipe.runY);
       ctx.lineTo(pipe.x, pipe.y);
       ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = hi;
-      ctx.lineWidth = lineW * 0.34;
+      ctx.restore();
+
+      // The tube itself: a linear gradient perpendicular to the direction
+      // of travel, dark at both silhouette edges with a highlight band
+      // offset toward one side, so the width shades like a lit cylinder.
+      // The anchor sits at the run's own fixed start (`runX, runY`), which
+      // never moves during the run, so the gradient itself never drifts
+      // either -- the same reasoning as the whole-run stroke above, applied
+      // to the gradient's own inputs. `round` caps read as a smoothly
+      // shaded capsule at the tip (one gradient, one shape) rather than the
+      // separate highlight/shadow strokes' two round caps sitting side by
+      // side that the B2 critic read as cartoon eyes.
+      const nx = -pipe.dy;
+      const ny = pipe.dx;
+      const grad = ctx.createLinearGradient(
+        pipe.runX - nx * halfW, pipe.runY - ny * halfW,
+        pipe.runX + nx * halfW, pipe.runY + ny * halfW,
+      );
+      grad.addColorStop(0, lo);
+      grad.addColorStop(0.24, lo);
+      grad.addColorStop(0.5, pipe.color);
+      grad.addColorStop(0.72, hi);
+      grad.addColorStop(1, lo);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = lineW;
       ctx.beginPath();
-      ctx.moveTo(fromX + nx * lineW * 0.22, fromY + ny * lineW * 0.22);
-      ctx.lineTo(pipe.x + nx * lineW * 0.22, pipe.y + ny * lineW * 0.22);
-      ctx.stroke();
-      ctx.strokeStyle = lo;
-      ctx.lineWidth = lineW * 0.3;
-      ctx.beginPath();
-      ctx.moveTo(fromX - nx * lineW * 0.26, fromY - ny * lineW * 0.26);
-      ctx.lineTo(pipe.x - nx * lineW * 0.26, pipe.y - ny * lineW * 0.26);
+      ctx.moveTo(pipe.runX, pipe.runY);
+      ctx.lineTo(pipe.x, pipe.y);
       ctx.stroke();
       ctx.restore();
 
@@ -268,7 +338,9 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
       if (pipe.travelled >= cell) {
         pipe.travelled = 0;
         const atEdge = pipe.x <= cell || pipe.x >= w - cell || pipe.y <= cell || pipe.y >= h - cell;
+        let turned = false;
         if (atEdge || Math.random() < 0.4) {
+          turned = true;
           ctx.save();
           const g = ctx.createRadialGradient(
             pipe.x - lineW * 0.18, pipe.y - lineW * 0.18, lineW * 0.05,
@@ -294,6 +366,15 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
         }
         pipe.x = Math.min(Math.max(pipe.x, cell), w - cell);
         pipe.y = Math.min(Math.max(pipe.y, cell), h - cell);
+        // The run's own start moves up to the elbow just turned (its ball
+        // joint already covers the seam this would otherwise leave), but
+        // only when it actually turned: a vertex passed without turning is
+        // still one straight run, and redrawing it as ONE stroke all the
+        // way back to the last real elbow is exactly the point above.
+        if (turned) {
+          pipe.runX = pipe.x;
+          pipe.runY = pipe.y;
+        }
         pipe.age += 1;
         // A pipe that has grown a long way relocates and repaints, the way
         // the original starts a fresh pipe once one has run its course,
@@ -306,6 +387,8 @@ function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
           pipe.y = Math.min(Math.max(gy * cell, cell), h - cell);
           pipe.dx = Math.random() < 0.5 ? 1 : -1;
           pipe.dy = 0;
+          pipe.runX = pipe.x;
+          pipe.runY = pipe.y;
           pipe.color = palette[Math.floor(Math.random() * palette.length)] ?? pipe.color;
         }
       }

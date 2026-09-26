@@ -15,6 +15,8 @@ import {
   circleRectGap,
   crossesCircleEdge,
   findStartPosition,
+  discCoverage,
+  chooseStart,
   type RectLike,
   type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
@@ -238,5 +240,55 @@ describe('findStartPosition', () => {
     expect(found.open).toBe(true);
     expect(circleRectOverlaps(found.x, found.y, 60, obstructions[0])).toBe(false);
     expect(crossesCircleEdge(found.x, found.y, 60, orbs[0].cx, orbs[0].cy, orbs[0].r)).toBe(true);
+  });
+});
+
+describe('rounded rects (glass fix round 3)', () => {
+  const rect: RectLike = { left: 100, top: 100, right: 300, bottom: 300, radius: 40 };
+  it('a circle just off a rounded corner is clear, though it would touch the square corner', () => {
+    // 11.3 px diagonal from the square corner: inside the square's reach, outside the arc.
+    expect(circleRectOverlaps(92, 92, 12, { ...rect, radius: 0 })).toBe(true);
+    expect(circleRectOverlaps(92, 92, 12, rect)).toBe(false);
+  });
+  it('straight edges are unchanged by the radius', () => {
+    expect(circleRectGap(50, 200, 10, rect)).toBeCloseTo(40, 5);
+  });
+});
+
+describe('discCoverage', () => {
+  it('is 0 in the open, 1 fully inside, about half across a straight edge', () => {
+    const rect: RectLike = { left: 0, top: 0, right: 100, bottom: 1000 };
+    expect(discCoverage(500, 500, 50, [rect])).toBe(0);
+    expect(discCoverage(50, 500, 20, [rect])).toBe(1);
+    expect(discCoverage(100, 500, 50, [rect])).toBeGreaterThan(0.4);
+    expect(discCoverage(100, 500, 50, [rect])).toBeLessThan(0.6);
+  });
+});
+
+describe('chooseStart', () => {
+  const bounds: Bounds = [0, 0, 1000, 800];
+  it('keeps the poster spot when it is open, even if the search would pick elsewhere', () => {
+    const got = chooseStart(bounds, 50, [200, 200], [{ left: 400, top: 0, right: 1000, bottom: 800 }], [{ cx: 300, cy: 600, r: 100 }]);
+    expect(got).toMatchObject({ x: 200, y: 200, open: true, source: 'poster', cover: 0 });
+  });
+  it('moves to an open point when the poster spot is covered and an open one exists', () => {
+    const got = chooseStart(bounds, 50, [200, 200], [{ left: 0, top: 0, right: 500, bottom: 800 }], []);
+    expect(got.source).toBe('search');
+    expect(got.open).toBe(true);
+    expect(got.x).toBeGreaterThan(550);
+  });
+  it('keeps a partial poster spot when nothing is open and the search is no better', () => {
+    const obs: RectLike[] = [{ left: 60, top: 0, right: 1000, bottom: 800 }];
+    // The strip left of the pane is 60 px wide, a 50 px lens cannot fit; the
+    // poster sits flush with the viewport's left edge, the least covered.
+    const got = chooseStart([50, 50, 950, 750], 50, [50, 400], obs, []);
+    expect(got.open).toBe(false);
+    expect(got.source).toBe('poster');
+    expect(got.cover).toBeGreaterThan(0);
+    expect(got.cover).toBeLessThan(0.5);
+  });
+  it('clamps the poster spot into the travel box', () => {
+    const got = chooseStart([100, 100, 900, 700], 50, [0, 0], [], []);
+    expect(got).toMatchObject({ x: 100, y: 100, source: 'poster' });
   });
 });

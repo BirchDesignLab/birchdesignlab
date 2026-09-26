@@ -23,9 +23,11 @@ import { fileURLToPath } from 'node:url';
 import { suppressPrompt } from '../lib/portal-prompt.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '.out', 'stage3-b2', 'glass-critic');
 const args = process.argv.slice(2);
 const arg = (n, f) => { const i = args.indexOf(`--${n}`); return i === -1 ? f : args[i + 1]; };
+// --out <seat folder under .out/stage3-b2> (added 09-26-26 for the B2 re-critic,
+// so a rerun does not overwrite the W1 critic's own evidence).
+const OUT = join(HERE, '..', '.out', 'stage3-b2', arg('out', 'glass-critic'));
 const base = arg('base', 'http://127.0.0.1:4477');
 const only = arg('only', '');
 const want = (k) => !only || only.split(',').includes(k);

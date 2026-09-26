@@ -5,7 +5,7 @@
  * arrived and gone idle. Mounted from Home.astro's own `<script>` (onMount),
  * since Home is the only glass page with any of this.
  */
-import { mountLens, type LensHandle } from './lens';
+import { mountLens, planLensStart, placePoster, type LensHandle } from './lens';
 import { mountOrbClock } from './orbs-clock';
 import { afterArrivalIdle } from './idle-after-arrival';
 import { currentSettings, updateSettings } from './session-hold';
@@ -92,6 +92,20 @@ export function mountHomeGlass(): (() => void) | void {
     };
     todHandlers.set(b, handler);
     b.addEventListener('click', handler);
+  }
+
+  // Glass fix round 3 (the critic's arrival jump): settle the poster on the
+  // lens's real start now, at mount, not at the idle mount a few hundred ms
+  // later. Where the poster's CSS spot is already the start (every size the
+  // CSS is tuned for) nothing moves; elsewhere it moves once, here, early.
+  // The lens re-runs the same decision at its own mount and, finding the
+  // poster already on the chosen spot, keeps it.
+  try {
+    const plan = planLensStart(poster, window.innerWidth <= 600, chromeInsets());
+    const pr = poster.getBoundingClientRect();
+    if (Math.hypot(pr.left + pr.width / 2 - plan.x, pr.top + pr.height / 2 - plan.y) > 0.5) placePoster(poster, plan.x, plan.y, plan.radius);
+  } catch {
+    /* Geometry only: a failure leaves the CSS spot, exactly as before. */
   }
 
   const stopIdle = afterArrivalIdle(() => {
