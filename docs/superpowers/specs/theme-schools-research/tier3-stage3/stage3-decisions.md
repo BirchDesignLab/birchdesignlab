@@ -309,3 +309,22 @@ To `tier-b1-report.md`, "Calls for the founder":
 Then: the Venus is downloaded (`scripts/themes/.out/meshes/venus/`, CC0 per
 its `license.txt`), and the founder's iPhone look at glass will happen **after
 deploy** ("i'll have to look at the glass on iphone after it get deployed").
+
+## Answers at the start of B2 (founder, 09-25-26)
+
+To the B2 launch questions, on branch `feat/theme-schools-tier3-stage3-b2`
+(fresh from `main` at `29733fc`):
+
+1. The Venus's default tint: **white marble with pastel rims** (lavender-grey
+   veins; the pink and cyan rim light carries the vaporwave read). The
+   builder still renders every tint as a sheet for the B2 stop.
+2. Glass Control Centre settings (Clear/Tinted, frost, time of day) **hold
+   for the whole session, including after leaving glass and coming back**
+   (sessionStorage), applied before first paint on return. If the drawn-ahead
+   arrival cannot avoid a visible flip, the builder reports it rather than
+   shipping the flash.
+3. The merged branches `feat/theme-schools-tier3-stage3` and
+   `fix/vaporwave-screensaver-phone` are **deleted**, locally and on the
+   remote.
+4. The B2 model plan with split seats and Opus `high` critics (below, in
+   `tier-b-plan.md`, "Wave B2 as run"): **launch as proposed**.
