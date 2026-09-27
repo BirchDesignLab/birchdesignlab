@@ -317,35 +317,72 @@ export function chooseStart(bounds: Bounds, radius: number, preferred: [number, 
   return { ...found, cover: foundCover, source: 'search' };
 }
 
+/** The points where two circles' edges cross (none when they do not). */
+export function circleIntersections(ax: number, ay: number, ar: number, bx: number, by: number, br: number): [number, number][] {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const d = Math.hypot(dx, dy);
+  if (d >= ar + br || d <= Math.abs(ar - br) || d === 0) return [];
+  const a = (ar * ar - br * br + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, ar * ar - a * a));
+  const mx = ax + (a * dx) / d;
+  const my = ay + (a * dy) / d;
+  return [[mx + (h * dy) / d, my - (h * dx) / d], [mx - (h * dy) / d, my + (h * dx) / d]];
+}
+
 /** Round 4 (G2, founder): on phones and portrait tablets the lens STARTS half
     under the hero window's lower corner, across an orb, where B1's hand-placed
     orbs cluster (the founder's answer after B2 round 3), instead of in a gap
     of open wallpaper. The disc's centre sits on the window's bottom edge, so
     the window covers its upper half (less the rounded corner) and the visible
     lower half is the grab. Candidates: each lower corner, the disc tangent to
-    the window's side, then slid inward along the edge by half and by one
-    radius. Clear of every OTHER obstruction (the Control Centre, the switcher,
-    the header) is required; crossing an orb edge comes next, then the least
-    slide, then the right corner (where B1's placeholder sat). Returns null
-    when no candidate is clear or the window's bottom is outside `bounds` (a
-    small phone whose window fills the first view): the caller then falls back
-    to `chooseStart`. */
-export function cornerStart(win: RectLike, radius: number, bounds: Bounds, others: RectLike[], orbs: OrbCircle[]): ChosenStart | null {
+    the window's side, then slid inward along the edge by half, one and one
+    and a half radii. Clear of every OTHER obstruction (the Control Centre,
+    the switcher, the header) is required. Returns null when no candidate is
+    clear or the window's bottom is outside `bounds` (a small phone whose
+    window fills the first view): the caller then falls back to
+    `chooseStart`.
+
+    Ranking (round 5, R3, founder: "move it along the peach orb's edge so its
+    visible half shows the rim crossing the orb edge"): first a candidate
+    whose rim crosses an orb's edge on the VISIBLE lower half, at least 0.4
+    radii below the window's edge (so the crossing reads, not a sliver at the
+    pane's edge); then one that crosses an orb edge anywhere (round 4's rule,
+    which let the phone lens sit almost concentric with the peach orb, both
+    crossings under the pane); then none. Within a tier, the least slide,
+    then the right corner (where B1's placeholder sat).
+
+    `preferred` (round 5, R1): the poster's current centre. When it is still
+    one of the clear candidates it is returned as is, whatever the ranking
+    says now, so a re-plan (the lens's own mount, after home-boot placed the
+    poster) can never move a start the visitor has already seen. */
+export function cornerStart(win: RectLike, radius: number, bounds: Bounds, others: RectLike[], orbs: OrbCircle[], preferred?: [number, number] | null): ChosenStart | null {
   const [x0, y0, x1, y1] = bounds;
   const y = win.bottom;
   if (y < y0 || y > y1) return null;
+  const minDepth = 0.4 * radius;
   let best: { x: number; score: number } | null = null;
+  let kept: number | null = null;
   for (const [side, dir, tangent] of [[0, -1, win.right - radius], [1, 1, win.left + radius]] as const) {
-    for (const k of [0, 0.5, 1]) {
+    for (const k of [0, 0.5, 1, 1.5]) {
       const x = Math.min(x1, Math.max(x0, tangent + dir * k * radius));
       if (!others.every((rect) => circleRectGap(x, y, radius, rect) >= 0)) continue;
-      const edge = orbs.some((o) => crossesCircleEdge(x, y, radius, o.cx, o.cy, o.r));
-      const score = (edge ? 10 : 0) - k * 2 - side;
+      if (preferred && Math.abs(preferred[0] - x) <= 1 && Math.abs(preferred[1] - y) <= 1) kept = x;
+      let tier = 0;
+      for (const o of orbs) {
+        if (!crossesCircleEdge(x, y, radius, o.cx, o.cy, o.r)) continue;
+        tier = Math.max(tier, 10);
+        for (const [px, py] of circleIntersections(x, y, radius, o.cx, o.cy, o.r)) {
+          if (py - y >= minDepth && px >= win.left && px <= win.right) tier = 20;
+        }
+      }
+      const score = tier - k * 2 - side;
       if (!best || score > best.score) best = { x, score };
     }
   }
   if (!best) return null;
-  return { x: best.x, y, open: false, cover: discCoverage(best.x, y, radius, [win, ...others]), source: 'corner' };
+  const x = kept ?? best.x;
+  return { x, y, open: false, cover: discCoverage(x, y, radius, [win, ...others]), source: 'corner' };
 }
 
 /** Progress (0 to 1) of an element's pass through the viewport, matching the

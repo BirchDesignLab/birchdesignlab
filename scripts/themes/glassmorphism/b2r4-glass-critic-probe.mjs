@@ -175,31 +175,36 @@ async function pages() {
 }
 
 /* ---------------- compose ---------------- */
+// Round 5 re-critic: --cmp r4,r5 puts B1 beside each listed tag (default r4).
+const CMP = arg('cmp', 'r4').split(',');
+const tagLabel = (t) => (t === 'b1' ? 'B1' : t.replace(/^r(d+)$/, 'Round $1'));
 async function compose() {
+  const cmpName = CMP.join('-');
   for (const [w, h] of SIZES) {
     const rows = [];
     for (const scheme of ['light', 'dark']) {
-      const a = join(OUT, `page__b1__${w}x${h}__${scheme}.png`), b = join(OUT, `page__r4__${w}x${h}__${scheme}.png`);
-      if (!existsSync(a) || !existsSync(b)) continue;
-      rows.push([[`B1 approved (543520b snap, drift paused) ${scheme}`, await readFile(a)], [`Round 4 ${scheme}`, await readFile(b)]]);
+      const a = join(OUT, `page__b1__${w}x${h}__${scheme}.png`);
+      const bs = CMP.map((t) => [t, join(OUT, `page__${t}__${w}x${h}__${scheme}.png`)]);
+      if (!existsSync(a) || bs.some(([, b]) => !existsSync(b))) continue;
+      rows.push([[`B1 approved (543520b snap, drift paused) ${scheme}`, await readFile(a)], ...await Promise.all(bs.map(async ([t, b]) => [`${tagLabel(t)} ${scheme}`, await readFile(b)]))]);
     }
     if (!rows.length) continue;
     // cap the sheet near 9000 px tall
     const tallest = Math.max(...await Promise.all(rows.flat().map(async ([, b]) => (await loadImage(b)).height)));
     const scale = Math.min(w < 600 ? 0.8 : 0.5, 4200 / tallest);
-    await sheet(`sheet__page-b1-vs-r4-${w}x${h}.jpg`, rows.length === 2 ? [[rows[0][0], rows[0][1], rows[1][0], rows[1][1]]] : rows, { scale, title: `Home, whole page as read (viewport stacks), ${w}x${h}: B1 | round 4, light then dark` });
+    await sheet(`sheet__page-b1-vs-${cmpName}-${w}x${h}.jpg`, rows.length === 2 ? [[...rows[0], ...rows[1]]] : rows, { scale: CMP.length > 1 ? scale * 0.8 : scale, title: `Home, whole page as read (viewport stacks), ${w}x${h}: B1 | ${CMP.map(tagLabel).join(' | ')}, light then dark` });
   }
   // first-view side by side from the stacks (top h px)
   for (const [w, h] of SIZES) {
     const cells = [];
-    for (const scheme of ['light', 'dark']) for (const t of ['b1', 'r4']) {
+    for (const scheme of ['light', 'dark']) for (const t of ['b1', ...CMP]) {
       const f = join(OUT, `page__${t}__${w}x${h}__${scheme}.png`);
       if (!existsSync(f)) continue;
       const im = await loadImage(await readFile(f));
       const c = createCanvas(w, h); c.getContext('2d').drawImage(im, 0, 0, w, h, 0, 0, w, h);
-      cells.push([`${t === 'b1' ? 'B1' : 'Round 4'} ${scheme} first view`, c.toBuffer('image/png')]);
+      cells.push([`${tagLabel(t)} ${scheme} first view`, c.toBuffer('image/png')]);
     }
-    if (cells.length) await sheet(`sheet__firstview-b1-vs-r4-${w}x${h}.jpg`, [cells], { scale: w < 900 ? 0.6 : 0.4, title: `First view ${w}x${h}: B1 | round 4 (light), B1 | round 4 (dark)` });
+    if (cells.length) { const per = 1 + CMP.length; const rowsFv = cells.length > 4 ? [cells.slice(0, per), cells.slice(per)] : [cells]; await sheet(`sheet__firstview-b1-vs-${cmpName}-${w}x${h}.jpg`, rowsFv, { scale: w < 900 ? 0.6 : 0.4, title: `First view ${w}x${h}: B1 | ${CMP.map(tagLabel).join(' | ')} (light row, dark row)` }); }
   }
 }
 
@@ -278,9 +283,9 @@ async function touch() {
   R.touch = {};
   for (const [w, h] of [[390, 844], [820, 1180]]) {
     const rows = [];
-    for (const kind of ['lens-visible-half', 'lens-visible-half-near-edge', 'lens-covered-half', 'hero-copy']) {
-      const { context, page, cdp, errors } = await ctx({ w, h, scheme: 'light' });
-      await open(page, 'light');
+    for (const tsc of arg('touchschemes', 'light').split(',')) for (const kind of ['lens-visible-half', 'lens-visible-half-near-edge', 'lens-covered-half', 'hero-copy']) { // round 5: --touchschemes light,dark
+      const { context, page, cdp, errors } = await ctx({ w, h, scheme: tsc });
+      await open(page, tsc);
       const g = await geo(page);
       const dir = g.lens.cx > w / 2 ? -1 : 1;
       let from, to;
@@ -292,9 +297,10 @@ async function touch() {
       const frames = await touchFilm(page, cdp, from, to);
       const g2 = await geo(page);
       const sel = await page.evaluate(() => String(getSelection()));
-      R.touch[`${w}x${h}__${kind}`] = { from: from.map(Math.round), to: to.map(Math.round), startEl, lensBefore: g.lens, lensAfter: g2.lens, lensMoved: Math.round(Math.hypot(g2.lens.cx - g.lens.cx, g2.lens.cy - g.lens.cy)), scrollAfter: g2.scrollY, selection: sel, errors };
-      console.log(w, kind, JSON.stringify(R.touch[`${w}x${h}__${kind}`]));
-      rows.push(frames.map(([l, b]) => [`${kind}: ${l} ${l.includes('settled') ? `(scroll ${g2.scrollY}, lens moved ${R.touch[`${w}x${h}__${kind}`].lensMoved}px)` : ''}`, b]));
+      R.touch[`${w}x${h}__${tsc}__${kind}`] = { from: from.map(Math.round), to: to.map(Math.round), startEl, lensBefore: g.lens, lensAfter: g2.lens, lensMoved: Math.round(Math.hypot(g2.lens.cx - g.lens.cx, g2.lens.cy - g.lens.cy)), scrollAfter: g2.scrollY, selection: sel, errors };
+      const tk = R.touch[`${w}x${h}__${tsc}__${kind}`];
+      console.log(w, tsc, kind, JSON.stringify(tk));
+      rows.push(frames.map(([l, b]) => [`${tsc} ${kind}: ${l} ${l.includes('settled') ? `(scroll ${g2.scrollY}, lens moved ${tk.lensMoved}px)` : ''}`, b]));
       await context.close();
     }
     await sheet(`film__touch-${w}x${h}.jpg`, rows, { scale: w < 600 ? 0.62 : 0.32, title: `${w}x${h} touch (CDP): drag on the lens's visible half; near the window edge; swipe on its covered half; swipe on the hero copy` });
@@ -383,11 +389,11 @@ async function viaSwitcher(page, school) {
 async function arrival() {
   R.arrival = {};
   const rows = [];
-  const list = arg('arrivals', '390x844:tinted,1440x900:clear').split(',').map((s) => { const [wh, t] = s.split(':'); const [w, h] = wh.split('x').map(Number); return [w, h, t]; });
-  for (const [w, h, tint] of list) {
-    const { context, page, errors } = await ctx({ w, h, scheme: 'light' });
-    await open(page, 'light');
-    if (tint === 'tinted') { await page.tap('.hero .window-bar .switch'); await page.waitForTimeout(1200); }
+  const list = arg('arrivals', '390x844:tinted,1440x900:clear').split(',').map((s) => { const [wh, t, sc = 'light'] = s.split(':'); const [w, h] = wh.split('x').map(Number); return [w, h, t, sc]; }); // round 5: optional :dark
+  for (const [w, h, tint, sc] of list) {
+    const { context, page, errors } = await ctx({ w, h, scheme: sc });
+    await open(page, sc);
+    if (tint === 'tinted') { if (w < 900) await page.tap('.hero .window-bar .switch'); else await page.click('.hero .window-bar .switch'); await page.waitForTimeout(1200); } // round 5: desktop contexts have no touch
     const before = await geo(page);
     const tintBefore = await page.evaluate(() => document.querySelector('.hero .window-bar .switch').getAttribute('aria-checked'));
     await viaSwitcher(page, 'vaporwave');
@@ -406,14 +412,14 @@ async function arrival() {
     await page.waitForTimeout(1500);
     const after = await geo(page);
     frames.push([`+${Date.now() - t0} ms settled lens (${after.lens?.cx},${after.lens?.cy})`, await page.screenshot({ scale: 'css' })]);
-    R.arrival[`${w}x${h}__${tint}`] = { before: { lens: before.lens, tint: tintBefore }, after: { lens: after.lens, poster: after.poster }, frames: data, errors };
+    R.arrival[`${w}x${h}__${tint}__${sc}`] = { before: { lens: before.lens, tint: tintBefore }, after: { lens: after.lens, poster: after.poster }, frames: data, errors };
     console.log(w, tint, JSON.stringify(data.map((d) => [d.at, d.poster?.display, d.poster?.cx, d.poster?.cy, d.lens?.cx, d.lens?.cy, d.canvas, d.sw])));
     // keep at most 10 frames: every glass frame up to the lens taking over, then thin out
     const pick = frames.length <= 10 ? frames : frames.filter((_, i) => i % Math.ceil(frames.length / 10) === 0 || i === frames.length - 1);
     for (let i = 0; i < pick.length; i += 5) rows.push(pick.slice(i, i + 5).map(([l, b]) => [`${w}x${h} ${tint}: ${l}`, b]));
-    await writeFile(join(OUT, `arrival-frames__${w}x${h}.json`), JSON.stringify(data, null, 1));
+    await writeFile(join(OUT, `arrival-frames__${w}x${h}-${tint}-${sc}.json`), JSON.stringify(data, null, 1));
     // every frame of this arrival as its own strip, for the close look
-    await sheet(`film__arrival-${w}x${h}-${tint}__all.jpg`, Array.from({ length: Math.ceil(frames.length / 6) }, (_, i) => frames.slice(i * 6, i * 6 + 6)), { scale: Number(arg('arrscale', w < 600 ? '0.5' : '0.25')), title: `Arrival at glass Home via the real switcher, ${w}x${h}, ${tint} held (every frame captured)` });
+    await sheet(`film__arrival-${w}x${h}-${tint}-${sc}__all.jpg`, Array.from({ length: Math.ceil(frames.length / 6) }, (_, i) => frames.slice(i * 6, i * 6 + 6)), { scale: Number(arg('arrscale', w < 600 ? '0.5' : '0.25')), title: `Arrival at glass Home via the real switcher, ${w}x${h}, ${tint} held, ${sc} (every frame captured)` });
     await context.close();
   }
 }

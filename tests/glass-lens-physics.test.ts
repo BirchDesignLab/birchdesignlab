@@ -18,6 +18,7 @@ import {
   discCoverage,
   chooseStart,
   cornerStart,
+  circleIntersections,
   type RectLike,
   type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
@@ -299,7 +300,8 @@ describe('cornerStart (round 4, G2)', () => {
   const win: RectLike = { left: 16, top: 130, right: 374, bottom: 572, radius: 30 };
   const bounds: [number, number, number, number] = [76, 160, 314, 768];
   it('centres the disc on the window bottom, tangent to its right side', () => {
-    const got = cornerStart(win, 64, bounds, [], [{ cx: 312, cy: 620, r: 65 }])!;
+    // round 5: an orb whose edge the tangent disc crosses on its visible half
+    const got = cornerStart(win, 64, bounds, [], [{ cx: 340, cy: 640, r: 40 }])!;
     expect(got).toMatchObject({ x: 310, y: 572, open: false, source: 'corner' });
     // about half under the window, less the rounded corner
     expect(got.cover).toBeGreaterThan(0.35);
@@ -324,5 +326,66 @@ describe('cornerStart (round 4, G2)', () => {
   });
   it('gives up when the window bottom is below the first view', () => {
     expect(cornerStart({ ...win, bottom: 900 }, 64, bounds, [], [])).toBeNull();
+  });
+});
+
+describe('circleIntersections', () => {
+  it('finds both crossing points, each on both circles', () => {
+    const pts = circleIntersections(0, 0, 10, 12, 0, 8);
+    expect(pts).toHaveLength(2);
+    for (const [x, y] of pts) {
+      expect(Math.hypot(x, y)).toBeCloseTo(10, 6);
+      expect(Math.hypot(x - 12, y)).toBeCloseTo(8, 6);
+    }
+  });
+  it('is empty when the circles are apart or one holds the other', () => {
+    expect(circleIntersections(0, 0, 10, 30, 0, 8)).toEqual([]);
+    expect(circleIntersections(0, 0, 10, 1, 0, 3)).toEqual([]);
+  });
+});
+
+describe('cornerStart (round 5, R1 and R3)', () => {
+  // round 4's 390 x 844 first view: the window 16..374 x 130..589, the
+  // peach orb at (302, 557) r65 on the clock, the Control Centre from 661.
+  const win: RectLike = { left: 16, top: 130, right: 374, bottom: 589, radius: 30 };
+  const bounds: [number, number, number, number] = [76, 160, 314, 768];
+  const peach = { cx: 302, cy: 557, r: 65 };
+  const pink = { cx: 45, cy: 515, r: 35 };
+  const cc: RectLike = { left: 16, top: 661, right: 374, bottom: 899, radius: 24 };
+  it('slides along the peach edge until the rim crosses it on the visible half', () => {
+    // at the tangent (310, 589) the disc is almost concentric with peach and
+    // both crossings sit under the window (the round-4 critic's rim sheet)
+    const tangent = circleIntersections(310, 589, 64, peach.cx, peach.cy, peach.r);
+    expect(Math.max(...tangent.map(([, y]) => y - 589))).toBeLessThan(0.4 * 64);
+    const got = cornerStart(win, 64, bounds, [], [peach, pink])!;
+    expect(got.y).toBe(589);
+    expect(got.x).toBe(246);
+    const pts = circleIntersections(got.x, got.y, 64, peach.cx, peach.cy, peach.r);
+    expect(pts.some(([x, y]) => y - 589 >= 0.4 * 64 && x > 16 && x < 374)).toBe(true);
+  });
+  it('still falls back to any edge crossing when no crossing is visible', () => {
+    // an orb high under the window: every crossing is on the covered half
+    const got = cornerStart(win, 64, bounds, [], [{ cx: 300, cy: 540, r: 60 }])!;
+    expect(got.x).toBe(310);
+  });
+  it('keeps the preferred (poster) spot while it is still a clear candidate', () => {
+    // the right tangent is not the best spot any more, but the poster is on it
+    const got = cornerStart(win, 64, bounds, [], [peach, pink], [310, 589])!;
+    expect(got.x).toBe(310);
+    // the same plan with no preference picks the visible crossing
+    expect(cornerStart(win, 64, bounds, [], [peach, pink], null)!.x).toBe(246);
+  });
+  it('ignores a preferred spot that is no longer a candidate or no longer clear', () => {
+    // a poster left at the CSS stand-in, 83px above the corner
+    expect(cornerStart(win, 64, bounds, [], [peach, pink], [310, 506])!.x).toBe(246);
+    // a poster on a candidate that now runs into the Control Centre
+    const low: RectLike = { ...cc, top: 640 };
+    const got = cornerStart(win, 64, bounds, [low], [peach, pink], [310, 589]);
+    expect(got).toBeNull();
+  });
+  it('plans the same spot from the same orbs, whatever order it runs in', () => {
+    const a = cornerStart(win, 64, bounds, [cc], [peach, pink]);
+    const b = cornerStart(win, 64, bounds, [cc], [pink, peach]);
+    expect(a).toEqual(b);
   });
 });

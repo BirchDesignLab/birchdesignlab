@@ -930,6 +930,30 @@
 :where([data-theme='glassmorphism']) .orbs[data-js-driven] .orb {
   animation: none;
 }
+/* Round 5: until orbs-clock.ts takes a group over (it sets data-clock and
+   writes the same positions in one task), Home's orbs ride B1's own CSS
+   view() path, scroll half only (no glass-drift wobble, which the clock
+   would drop with a jump). So the first paint, the portal's drawn-ahead copy
+   (no scripts) and a script-less visit show every orb where the clock puts
+   it, instead of at the static unscrolled spot (the round-4 critic saw the
+   hero orbs sit there for up to 1.1 s on a cold load). Higher specificity
+   than the rule above (the :not() adds an attribute). */
+@supports (animation-timeline: view()) {
+  :where([data-theme='glassmorphism']) .orbs[data-js-driven]:not([data-clock]) .orb {
+    animation: glass-orb-scroll linear both;
+  }
+}
+/* The timeline lives in its own block: in one rule, lightningcss folds it
+   into the animation shorthand, which Chromium rejects, and the whole rule
+   dies (round-5 critic). Different @supports conditions keep the two rules
+   apart; same selector, later in order, so the timeline wins over the
+   shorthand's reset. */
+@supports (animation-range: 0 100%) {
+  :where([data-theme='glassmorphism']) .orbs[data-js-driven]:not([data-clock]) .orb {
+    animation-timeline: view();
+    animation-range: 0 100%;
+  }
+}
 @media (max-width: 720px) {
   :where([data-theme='glassmorphism']) .orb { left: var(--mx); top: var(--my); }
   /* Cheaper glass on phones: saturate() and a wide blur are the priciest

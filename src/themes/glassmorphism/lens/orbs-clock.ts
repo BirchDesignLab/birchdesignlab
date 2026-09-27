@@ -85,12 +85,36 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
       o.docTop = r.top + window.scrollY;
       o.height = r.height;
     }
-    for (const o of tracked) {
-      o.el.style.translate = ''; // back to the stylesheet's static -50% -50% until the next frame writes
-    }
-    lastScrollY = NaN; // the translates were just cleared: rewrite them next frame
+    // Round 5: write every orb's clock position straight back, in the same
+    // task, instead of clearing to the stylesheet's static -50% -50% until
+    // the next frame. A ResizeObserver callback runs after that frame's rAF
+    // callbacks, so a cleared translate used to paint one frame at the static
+    // spot; and at mount the lens's start plan (home-boot.ts, planLensStart)
+    // must read the clock's positions, not the static ones (the round-4
+    // critic's 820 jump: the first plan saw static orbs, the second the
+    // clock's).
+    writeAll(window.scrollY, window.innerHeight);
+    lastScrollY = NaN; // rewrite the live groups on the next frame anyway
+  }
+  function place(o: TrackedOrb, scrollY: number, vh: number) {
+    const elementTop = o.docTop - scrollY;
+    const span = vh + o.height;
+    const progress = span <= 0 ? 0 : Math.min(1, Math.max(0, (vh - elementTop) / span));
+    const px = o.rate * vh * progress;
+    o.el.style.translate = `-50% calc(-50% - ${px.toFixed(2)}px)`;
+  }
+  function writeAll(scrollY: number, vh: number) {
+    for (const o of tracked) place(o, scrollY, vh);
   }
   let lastScrollY = NaN;
+  // Round 5: the stylesheet keeps these orbs on CSS view() (B1's own
+  // driver, no wobble) until this marker lands, so the first paint, a
+  // drawn-ahead copy and a script-less visit all show the orbs where the
+  // clock will put them. The marker goes on BEFORE the first measure (an
+  // inline translate cannot override a running animation, so measure's
+  // `none` would read the animated box), and measure writes the clock's
+  // positions back in the same task, so nothing moves at the handover.
+  for (const g of groups) g.setAttribute('data-clock', '');
   measure();
 
   const ro = new ResizeObserver(() => measure());
@@ -124,11 +148,7 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
     lastLive = live;
     for (const o of tracked) {
       if (!o.group.hasAttribute('data-live')) continue; // its section is off-screen (fx.ts's mountOrbs)
-      const elementTop = o.docTop - scrollY;
-      const span = vh + o.height;
-      const progress = span <= 0 ? 0 : Math.min(1, Math.max(0, (vh - elementTop) / span));
-      const px = o.rate * vh * progress;
-      o.el.style.translate = `-50% calc(-50% - ${px.toFixed(2)}px)`;
+      place(o, scrollY, vh);
     }
     onMove?.();
   });
@@ -137,6 +157,7 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
     cancelAnimationFrame(raf);
     ro.disconnect();
     window.removeEventListener('orientationchange', measure);
+    for (const g of groups) g.removeAttribute('data-clock');
     for (const o of tracked) o.el.style.removeProperty('translate');
   };
 }

@@ -12,6 +12,12 @@ const [first, ...rest] = chrome.name.split(' ');
 const icons = ['violet', 'cyan'];
 ---
 <section class="hero wrap">
+  {/* Round 5 (R2, R4): the stage is B1's hero box exactly (its min-height,
+      its padding, the window centred in it), and it holds the hero orbs, so
+      every %-placed orb resolves against the same box B1's did at every
+      size, and the window sits where B1 put it (portrait tablets included).
+      The Control Centre follows the stage, outside the orbs' box. */}
+  <div class="hero-stage">
   <Orbs jsDriven orbs={[
     { hue: 'violet', x: '22%', y: '34%', mx: '16%', my: '7%', size: 'clamp(230px, 34vw, 480px)', drift: 1 },
     { hue: 'cyan', x: '86%', y: '22%', mx: '94%', my: '16%', size: 'clamp(150px, 22vw, 330px)', drift: 2 },
@@ -40,6 +46,7 @@ const icons = ['violet', 'cyan'];
     <h1 class="billboard"><span class="b1">{first}</span> <span class="b2">{rest.join(' ')}</span></h1>
     <p class="lead">{copy.opener.lead}</p>
     <p class="sub">{copy.opener.subline}</p>
+  </div>
   </div>
   {/* The Control Centre (B2 fix round, item 4): a macOS/iOS-style compact
       tile cluster in place of the old long pill, four rounded-square
@@ -208,11 +215,25 @@ const icons = ['violet', 'cyan'];
   section :is(.glass, .chip, .btn) { pointer-events: auto; }
 
   /* ---- hero: the window ---- */
+  /* Round 5 (R2, R4): .hero-stage is B1's .hero rule verbatim, and it is the
+     hero orbs' containing block, so they sit at B1's hand-placed spots at
+     every size (the Control Centre joining the hero had made the box 167 to
+     263px taller, pushing every orb down). The Control Centre follows it; its
+     negative margin (below) pulls it back up into the stage's bottom
+     padding, so it stays exactly where it was wherever the window's own
+     height sets the stage (desktop), a gap of clamp(1.25rem, 3vw, 2rem)
+     under the window. */
   .hero {
+    display: grid;
+    padding-block: 0 clamp(3rem, 8vw, 6rem);
+  }
+  .hero-stage {
+    position: relative;
     display: grid; place-items: center;
     min-height: min(86vh, 860px);
     padding-block: clamp(3rem, 8vw, 6rem);
   }
+  .control-centre { margin-top: calc(clamp(1.25rem, 3vw, 2rem) - clamp(3rem, 8vw, 6rem)); }
   .window {
     width: min(100%, 880px);
     padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 5vw, 4.25rem) clamp(2rem, 5vw, 4rem);
@@ -298,8 +319,22 @@ const icons = ['violet', 'cyan'];
      Safari 17's literal blur sits in its own @supports block ahead of the
      rule, as theme.css does for every pane: beside the var() declaration
      the build's minifier drops it (PR #91 review). */
+  /* Round 5 (R5, founder: "match the clear live lens, no style swap on
+     arrival"): the poster used to be a frosted --mat-thin disc (a solid
+     tinted/peach read at 1440) that swapped to the clear live lens about
+     850 ms after the click. It now draws what lens.ts's shader draws, as far
+     as CSS can: Clear is the backdrop itself, a touch brighter (the shader's
+     col *= 1.04), with the rim band lit strongly top-left and faintly
+     bottom-right (the shader's spec terms) and the rest shadow outside the
+     disc (the .lens-shadow-rest disc, blur 18px = a 36px box-shadow blur).
+     Tinted adds the shader's frost (an 8-tap ring 2.5 to 5.5px out, about a
+     4px blur) and its veil (34% toward a lightened mean, about a 22% white
+     wash; 28% here, tuned by eye against the live lens). What CSS cannot draw is the 1.25x magnification in the middle.
+     The -webkit- literals sit alone in @supports blocks (lightningcss drops a
+     prefixed declaration paired with its standard one). */
   @supports (-webkit-backdrop-filter: none) {
-    .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
+    .lens-poster { -webkit-backdrop-filter: brightness(1.04); }
+    :global(html[data-glass-tint='tinted']) .lens-poster { -webkit-backdrop-filter: blur(5px) brightness(1.04); }
   }
   /* Glass fix round 3 (the re-critic's arrival jump): this spot and width
      ARE the lens's start and size now, not a rough stand-in. lens.ts reads
@@ -310,9 +345,8 @@ const icons = ['violet', 'cyan'];
      hero window, across the violet orb's edge (x is the gutter's middle,
      never less than the lens's wall stop, 105px); 721 to 1279px landscape,
      the least-covered corner under the header at the lens's smaller size
-     (no open spot exists at 1024 x 768); portrait tablets, open wallpaper
-     right of the Control Centre; phones, the gap reserved under the window
-     (the hero rule below), just above the portal switcher. */
+     (no open spot exists at 1024 x 768); portrait tablets and phones, the
+     hero window's lower corner (the rules below). */
   .lens-poster {
     position: fixed;
     z-index: -1;
@@ -322,31 +356,84 @@ const icons = ['violet', 'cyan'];
     aspect-ratio: 1;
     border-radius: 50%;
     pointer-events: none;
-    background: var(--mat-thin);
-    backdrop-filter: var(--blur-thin);
-    border: 1px solid var(--edge-hi);
-    box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.05), transparent 45%, transparent 60%, rgb(20 10 40 / 0.05)),
+      transparent;
+    backdrop-filter: brightness(1.04);
+    box-shadow: 0 0 36px rgb(20 10 40 / 0.22);
+  }
+  /* The rim band: a ring 0.9 to 1.0 of the radius, lit by a top-left light. */
+  .lens-poster::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.95) 8%, rgb(255 255 255 / 0.4) 30%, rgb(255 255 255 / 0.1) 50%, rgb(255 255 255 / 0.12) 70%, rgb(255 255 255 / 0.35) 92%);
+    mask: radial-gradient(closest-side, transparent 88%, #000 96%, #000 99%, transparent 100%);
+  }
+  :global(html[data-glass-tint='tinted']) .lens-poster {
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.05), transparent 45%, transparent 60%, rgb(20 10 40 / 0.05)),
+      rgb(255 255 255 / 0.28);
+    backdrop-filter: blur(5px) brightness(1.04);
+  }
+  /* Dark: the veil's wash reads stronger over a dark backdrop; 22% matched
+     the live lens there (the poster-vs-live probe, mean diff 6 vs 10). */
+  :global(html[data-scheme='dark'][data-glass-tint='tinted']) .lens-poster {
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.05), transparent 45%, transparent 60%, rgb(20 10 40 / 0.05)),
+      rgb(255 255 255 / 0.22);
+  }
+  /* E10 (reduced transparency or more contrast): the canvas is off and the
+     poster stands in for good, so it keeps round 4's frosted disc there,
+     which reads without a see-through backdrop. */
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .lens-poster,
+    :global(html[data-glass-tint='tinted']) .lens-poster,
+    :global(html[data-scheme='dark'][data-glass-tint='tinted']) .lens-poster {
+      background: var(--mat-thin);
+      backdrop-filter: var(--blur-thin);
+      border: 1px solid var(--edge-hi);
+      box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-sm);
+    }
+    .lens-poster::before { content: none; }
+    @supports (-webkit-backdrop-filter: none) {
+      .lens-poster,
+      :global(html[data-glass-tint='tinted']) .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
+    }
   }
   /* 64 + 11.4 = the smaller lens's wall stop; 162 = the header's bottom
      (86) + 8 + 64 + 4, the lens's top stop. */
   @media (max-width: 1279px) {
     .lens-poster { width: 128px; left: 12px; top: 98px; }
   }
-  /* Round 4 (G2): portrait tablets start half under the window's lower-left
-     corner, across the pink orb (lens.ts cornerStart; home-boot.ts moves the
-     poster onto the real corner at mount). This is the stand-in, tuned to
-     820 x 1180. */
+  /* Round 4 (G2), round 5 (R1, R3): portrait tablets and phones start the
+     lens half under the hero window's lower corner (lens.ts cornerStart);
+     home-boot.ts puts the poster on the planned spot at mount. These rules
+     are the stand-in until then, and all there is in a drawn-ahead copy or
+     without scripts: anchored to the window's own lower-right corner (CSS
+     anchor positioning), at the planned slide along its bottom edge, so the
+     stand-in and the plan agree at the review sizes whatever the copy's
+     wrap does to the window's height (round 4's 60svh guess sat 83px above
+     the corner at 390). 820 x 1180: half a radius in from the right-side
+     tangent, across the peach orb; phones: one radius in, so the rim
+     crosses the peach orb's edge on the visible half. The viewport-unit
+     values are the fallback where anchor() is not supported, tuned to
+     820 x 1180 and 390 x 844. */
   @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
-    .lens-poster { left: calc(4vw + 32px); top: calc(51% - 64px); }
+    .lens-poster { left: calc(100% - 193px); top: calc(63svh - 64px); }
   }
-  /* Round 4 (G2): phones start the lens half under the hero window's lower
-     right corner, where B1's orbs cluster. The window's bottom depends on
-     how its copy wraps, so home-boot.ts places the poster on the real
-     corner at mount (planLensStart); this CSS spot is only the no-script
-     and drawn-ahead stand-in, tuned to 390 x 844 (the window's bottom at
-     about 60svh, its right edge 16px in). */
   @media (max-width: 720px) {
-    .lens-poster { left: calc(100% - 144px); top: calc(60svh - 64px); bottom: auto; }
+    .lens-poster { left: calc(100% - 208px); top: calc(68svh - 64px); bottom: auto; }
+  }
+  @supports (anchor-name: --a) {
+    .window { anchor-name: --glass-hero-window; }
+    @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
+      .lens-poster { position-anchor: --glass-hero-window; left: calc(anchor(right) - 160px); top: calc(anchor(bottom) - 64px); }
+    }
+    @media (max-width: 720px) {
+      .lens-poster { position-anchor: --glass-hero-window; left: calc(anchor(right) - 192px); top: calc(anchor(bottom) - 64px); }
+    }
   }
 
   /* B2 fix round, item 4: the floating .widget.locale pill (absolute,
@@ -470,17 +557,10 @@ const icons = ['violet', 'cyan'];
      switcher keeps its desktop width (about 290px left of it at 820), so
      the time segments stack and the location wraps, keeping the 2 x 2
      cluster near 235px wide (glass fix round 3). */
-  /* Round 4 (G2): portrait tablets start the lens half under the window's
-     lower corner too (lens.ts CORNER_START_MQ), so the Control Centre drops
-     far enough under the window (5rem) to clear the disc's visible lower
-     half; at the default 2rem it sat on the lower-left corner, where the
-     pink orb is. The hero's bottom padding gives back exactly what the
-     margin adds, so the hero keeps its height and its orbs (placed in % of
-     the hero) stay where they were. */
-  @media (min-width: 721px) and (max-width: 1279px) and (orientation: portrait) {
-    .control-centre { margin-top: 5rem; }
-    .hero { padding-bottom: max(0.5rem, calc(clamp(3rem, 8vw, 6rem) - 5rem + clamp(1.25rem, 3vw, 2rem))); }
-  }
+  /* Round 5 (R4): portrait tablets have B1's stage again (the window about
+     290px down, centred in min(86vh, 860px)), so the stage's own slack under
+     the window already keeps the Control Centre clear of the corner lens's
+     visible lower half; round 4's 5rem margin rule is gone. */
   @media (min-width: 721px) and (max-width: 943px) {
     .cc-seg-row { flex-direction: column; border-radius: 24px; }
     .cc-locale-value { white-space: normal; max-width: 8.5em; text-align: center; }
@@ -496,12 +576,13 @@ const icons = ['violet', 'cyan'];
        lens starts half under the window's lower corner, across an orb
        (lens.ts, physics.ts cornerStart), and the Control Centre follows in
        flow, 4.5rem under the window, clear of the lens's lower half. */
-    .hero {
-      min-height: 0;
-      padding-block: 3.5rem 2rem;
-    }
-    .hero > :global(.orbs) { bottom: calc(238px + 2rem); }
-    .control-centre { margin-top: 4.5rem; }
+    .hero { padding-block: 0 2rem; }
+    /* B1's phone hero rule, on the stage (round 5): the orbs' box is B1's
+       by construction, so round 4's `.orbs { bottom: 238px + 2rem }` patch
+       is gone. The Control Centre starts where the stage ends, B1's 4.5rem
+       under the window, exactly as round 4 had it. */
+    .hero-stage { min-height: 0; padding-block: 3.5rem 4.5rem; }
+    .control-centre { margin-top: 0; }
     .cc-seg-row { padding: 3px; gap: 1px; }
     .cc-locale-value { white-space: normal; text-align: center; }
     .window { border-radius: 30px; }
@@ -509,6 +590,12 @@ const icons = ['violet', 'cyan'];
        stays its own compact 48x28, centred inside the larger real hit
        area, so the visible pill does not also grow. */
     :is(.switch, .cc-switch) { min-width: 44px; min-height: 44px; }
+    /* Round 5 (R2): the window-bar switch's 44px target overhangs the bar by
+       8px above and below (into the window's padding and the bar's own
+       bottom margin, both empty) instead of growing the bar past the 28px
+       track. So the phone window is B1's height again (it had grown 16px),
+       and the hero orbs, placed in % of the stage, sit at B1's spots. */
+    .window-bar .switch { margin-block: -8px; }
     .switch-track { width: 48px; height: 28px; }
     :is(.switch, .cc-switch) i { width: 20px; height: 20px; }
     .ask { justify-items: center; text-align: center; }

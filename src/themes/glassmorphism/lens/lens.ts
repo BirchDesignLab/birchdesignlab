@@ -229,6 +229,10 @@ export interface LensOptions {
       bending, rim, tint or shadow, so it can be measured against the true
       page. Omit or `null` for normal operation; costs one float uniform. */
   probe?: 'identity' | 'seam' | null;
+  /** Round 5 (R1): the start home-boot.ts already planned and put the poster
+      on. The lens starts exactly there (a visitor has seen the poster at
+      that spot) instead of re-planning; omitted, it plans for itself. */
+  plan?: (ChosenStart & { radius: number }) | null;
 }
 
 export interface LensHandle {
@@ -369,7 +373,7 @@ const CORNER_START_MQ = '(max-width: 720px), (min-width: 721px) and (max-width: 
     then the poster already sits on the chosen spot, so the answer holds and
     nothing jumps). The poster's CSS spot is the preferred start
     (physics.ts's chooseStart). */
-export function planLensStart(poster: HTMLElement, phone: boolean, insets: { top: number; bottom: number }): ChosenStart & { radius: number } {
+export function planLensStart(poster: HTMLElement, phone: boolean, insets: { top: number; bottom: number }, keepPoster = true): ChosenStart & { radius: number } {
   const radius = lensRadiusFor(poster, phone);
   const pr = poster.getBoundingClientRect();
   const preferred: [number, number] = pr.width > 0 ? [pr.left + pr.width / 2, pr.top + pr.height / 2] : [window.innerWidth / 2, window.innerHeight / 2];
@@ -383,7 +387,12 @@ export function planLensStart(poster: HTMLElement, phone: boolean, insets: { top
     const win = rectOf(document.querySelector('.hero .window'));
     if (win) {
       const others = obstructions.filter((r) => !(r.left === win.left && r.top === win.top && r.right === win.right && r.bottom === win.bottom));
-      const corner = cornerStart(win, radius, bounds, others, orbs);
+      // Round 5 (R1): the corner start is planned ONCE, in home-boot.ts
+      // (keepPoster false: the poster's CSS stand-in spot must not bias the
+      // choice), after the orb clock has written its positions; the lens's
+      // own mount re-plans with keepPoster true, so while the poster's spot
+      // is still a clear corner candidate it stays exactly there.
+      const corner = cornerStart(win, radius, bounds, others, orbs, keepPoster && pr.width > 0 ? preferred : null);
       if (corner) return { ...corner, radius };
     }
   }
@@ -450,7 +459,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   const dpr = Math.min(1.5, window.devicePixelRatio || 1);
   // Before the poster can be hidden: its spot and size are the lens's own
   // (glass fix round 3, the critic's arrival jump).
-  const plan = planLensStart(poster, opts.phone, opts.chromeInsets());
+  const plan = opts.plan ?? planLensStart(poster, opts.phone, opts.chromeInsets());
   const radius = plan.radius;
   const lvh = makeLvhProbe();
 

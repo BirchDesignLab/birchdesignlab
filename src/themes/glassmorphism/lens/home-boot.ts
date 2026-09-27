@@ -94,14 +94,32 @@ export function mountHomeGlass(): (() => void) | void {
     b.addEventListener('click', handler);
   }
 
+  // orbs-clock.ts's own rAF loop drives Home's orbs; its onMove hook fires
+  // only in a frame it actually repositions one, invalidating the lens so
+  // it redraws in that same frame instead of going stale (README, item 2).
+  // `lens` is read through the closure, not passed by value, so this wiring
+  // is correct even though the lens itself mounts later, once idle.
+  // Round 5 (R1): mounted BEFORE the start is planned. mountOrbClock writes
+  // every orb's clock position synchronously, so the plan below reads the
+  // orbs where they really are; round 4 planned first, against the static
+  // unscrolled orbs, and the lens's mount then re-planned against the
+  // clock's and jumped 626 px across the 820 window.
+  const stopOrbClock = mountOrbClock(() => lens?.invalidate());
+
   // Glass fix round 3 (the critic's arrival jump): settle the poster on the
   // lens's real start now, at mount, not at the idle mount a few hundred ms
-  // later. Where the poster's CSS spot is already the start (every size the
-  // CSS is tuned for) nothing moves; elsewhere it moves once, here, early.
-  // The lens re-runs the same decision at its own mount and, finding the
-  // poster already on the chosen spot, keeps it.
+  // later. Where the poster's CSS spot is already the start nothing moves;
+  // elsewhere it moves once, here, early. The lens re-runs the decision at
+  // its own mount (the layout may have settled since: a web font, the
+  // viewport) and, finding the poster on a still-valid spot, keeps it
+  // (cornerStart's `preferred`, chooseStart's poster preference). If the
+  // visitor has scrolled in between, every candidate has moved with the
+  // window, so the lens takes this plan as is: it starts where the poster
+  // already sits.
+  let plan: ReturnType<typeof planLensStart> | null = null;
+  const planScrollY = window.scrollY;
   try {
-    const plan = planLensStart(poster, window.innerWidth <= 600, chromeInsets());
+    plan = planLensStart(poster, window.innerWidth <= 600, chromeInsets(), false);
     const pr = poster.getBoundingClientRect();
     if (Math.hypot(pr.left + pr.width / 2 - plan.x, pr.top + pr.height / 2 - plan.y) > 0.5) placePoster(poster, plan.x, plan.y, plan.radius);
   } catch {
@@ -119,15 +137,9 @@ export function mountHomeGlass(): (() => void) | void {
       scheme,
       chromeInsets,
       probe: probeParam(),
+      plan: Math.abs(window.scrollY - planScrollY) > 1 ? plan : null,
     });
   });
-  // orbs-clock.ts's own rAF loop drives Home's orbs; its onMove hook fires
-  // only in a frame it actually repositions one, invalidating the lens so
-  // it redraws in that same frame instead of going stale (README, item 2).
-  // `lens` is read through the closure, not passed by value, so this wiring
-  // is correct even though the lens itself mounts later, once idle.
-  const stopOrbClock = mountOrbClock(() => lens?.invalidate());
-
   return () => {
     stopIdle();
     lens?.destroy();
