@@ -410,3 +410,20 @@ to me"):
 9. Pipes' spawn ball and shadow crescent: **keep**.
 10. If round 5 passes, #93 merges after the founder's go (merge = deploy);
     the iPhone checks follow the deploy.
+
+## Answers at the round-5 stop (founder, 09-27-26)
+
+To the four round-5 calls in `tier-b2-report.md`; the founder took the
+orchestrator's opinion on each ("yeah that sounds like a good idea"):
+
+1. The 1440 poster-to-live step (the edge straight on the poster, bent
+   live): **accept**; a raster poster is not worth its fragility now. Parked
+   with glass's first paint for the transitions phase (`docs/lab-backlog.md`,
+   "Parked from Stage 3 wave B2").
+2. The phone lens's weak edge bend at rest: **accept** (the bend is the drag
+   payoff; B1's orbs stay).
+3. The tablet lens at the lower-right corner: **fine** (the same rule and
+   corner as the phone).
+4. The next section's violet orb lower on phones and tablets: **accept**
+   (the first view already holds the lens, the peach orb and the tiles).
+5. **Merge #93** ("let's get this thing in").

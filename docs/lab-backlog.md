@@ -58,10 +58,13 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Current handoff: Stage 3, pair B (glassmorphism and vaporwave),
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-24-26-stage3.md`
-(Tier 1 and 2 done; the founder's decisions are in
-`tier3-briefs/stage0-decisions.md`). Six tranche-1 schools built 09-23-26
+Current handoff: Stage 3, pair B (glassmorphism and vaporwave), wave B2
+merged in PR #93 09-27-26 (the glass lens and Control Centre, the live
+Venus, the vaporwave interactables); record in
+`docs/superpowers/specs/theme-schools-research/HANDOFF-09-26-26-stage3-tierB2-round4.md`
+and `tier3-stage3/tier-b2-report.md`. Owed: the founder's iPhone look after
+deploy. (Tier 1 and 2 done; the founder's decisions are in
+`tier3-briefs/stage0-decisions.md` and `tier3-stage3/stage3-decisions.md`.) Six tranche-1 schools built 09-23-26
 (vaporwave, grandmillennial, glassmorphism, cottagecore, bauhaus, swiss).
 Tier 3 Stage 1 (the portal) merged in PR #88 (BDL-010 is a working specimen
 in the Lab). Stage 2 (the defect sweep) merged in PR #89 09-24-26; its
@@ -93,6 +96,24 @@ Stage 2.** Four issues looked at together
 - Glassmorphism's plain fade: part of a wider pattern (four schools'
   in-school swaps converged on one safe fade shape). The transitions phase
   gives every school its own gesture, glass's material one first.
+
+**Parked from Stage 3 wave B2 (founder, 09-27-26), for the transitions
+phase.** Glass arrival polish, taken together:
+- The glass lens's CSS poster cannot refract, so at desktop the orb edge
+  inside the disc runs straight on the poster and bends when the live lens
+  takes over about 850 ms after the click (same spot, size and material).
+  A baked raster poster was weighed and rejected for now: the start spot
+  varies with viewport, tint, scheme and time of day.
+- Glass's first paint: the old page now holds until glass's first GPU
+  raster (one 198 ms task of Skia program compiles), then cuts, where B1
+  faded early into an empty dark frame. Glass is on screen at the same time
+  (`land90` within drift), so it is a feel issue, not a delay. The levers:
+  drawing glass ahead on cold clicks (portal-wide; the known glass
+  text-thinning risk) or fewer paint kinds in the first view
+  (`tier3-stage3/tier-b2-status.md`, "Round 5"; `.out/stage3-b2/glass-timing/`).
+- Read gate timing with `land90` beside `firstVisible`
+  (`scripts/themes/harness/b2r4-timing-compare.mjs --metric land90`):
+  `firstVisible` can fire on the old page's fade-out.
 
 **Parked from the Stage 2 start (09-23-26):**
 - Safari. The founder's iPhone 17 Pro Max test (Safari, private) found some
