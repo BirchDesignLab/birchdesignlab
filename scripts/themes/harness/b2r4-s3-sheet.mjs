@@ -43,7 +43,7 @@ for (const [vp, [w, h, thumbW]] of Object.entries(VIEWS)) {
   ctx.fillStyle = '#f4f0e6';
   ctx.font = '600 24px sans-serif';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`Stage 3 B2 round 4, S3 side by side (${vp}): glass beside vaporwave, dark then light`, PAD, PAD + 14);
+  ctx.fillText(`${label}, S3 side by side (${vp}): glass beside vaporwave, dark then light`, PAD, PAD + 14);
 
   let missing = 0;
   for (let r = 0; r < rows; r++) {

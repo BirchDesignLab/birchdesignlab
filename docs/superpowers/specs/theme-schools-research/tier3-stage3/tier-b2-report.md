@@ -1,31 +1,64 @@
 # Tier 3, Stage 3, wave B2 (the showpieces and interactables): report for the founder
 
-Written 09-26-26 at the round-4 stop. Branch
-`feat/theme-schools-tier3-stage3-b2`, draft PR #93 (not ready, not merged).
-The round-by-round record is `tier-b2-status.md`; every answer is in
-`stage3-decisions.md`.
+Written 09-26-26 at the round-4 stop; the top updated 09-27-26 at the
+round-5 stop. Branch `feat/theme-schools-tier3-stage3-b2`, draft PR #93
+(not ready, not merged). The round-by-round record is `tier-b2-status.md`;
+every answer is in `stage3-decisions.md`.
 
-## Where it stands
+## Where it stands (after round 5)
 
-- **Vaporwave: passes.** The round-4 Opus critic passed it with no blockers;
-  the Sonnet verifier made 29 films and passed every case but one, which the
-  orchestrator judged probe noise (below).
-- **Glass: blocks on 2**, both from the Opus critic, both confirmed by the
-  orchestrator's own look. Round 4's three items (the orbs clock, B1's phone
-  hero with the corner lens, the tiles clear of the switcher) are fixed.
-- **Gates:** smoke, switcher hold-still, the unname control, wordmark and the
-  48 after-strips pass. Timing is marked FAIL on one transient Windows socket
-  error (`net::ERR_NO_BUFFER_SPACE` loading quiet), not on a number; but the
-  numbers show glass arriving later (below).
-- **`npm run verify`:** clean (401 unit tests, astro check 0 errors, 483
-  built-site tests).
+- **Both schools pass.** Vaporwave passed at round 4. Glass passed at round
+  5: the Opus critic found no blockers, the Sonnet verifier made 13 films
+  and every case passed (steady lens starts over 36 loads, every hero orb
+  within 2 px of B1 at five sizes, the tablet window at B1's height, the
+  phone lens crossing the orb edge, the poster matching the live lens).
+- **Gates on the round-5 tree: all seven pass** (smoke, timing, switcher,
+  unname, wordmark, after-strips, sheets). `npm run verify` clean (410 unit
+  tests, astro check 0 errors, 483 built-site tests).
+- **Glass does not arrive later.** The round-4 number (+150 to +280 ms)
+  came from a measure that fires when the old page starts to fade. Measured
+  by when the glass page is actually on screen (`land90`), glass moved +12
+  to +88 ms against Stage 2, inside the machine drift of schools Stage 3
+  never touched (+34 to +131). What changed is that the old page now holds
+  still a little longer and then cuts, where B1 faded early into an empty
+  dark frame. Per your answer, nothing more is done now; the transitions
+  phase takes it, and the gates now read `land90` beside `firstVisible`.
+- **Next: your go to merge #93** (merging deploys), then your iPhone look.
+  Four small taste calls from round 5 are below; none blocks.
+
+## Calls from round 5 (none blocks)
+
+1. At 1440 the poster and the live lens are now the same material, but CSS
+   cannot bend the orb edge, so the edge inside the disc straightens on the
+   poster and bends at the swap about 850 ms in, and the rim brightens
+   (barely visible at 820 and 390). Accept, or a pre-rendered poster image
+   later? Sheet `founder-r5/07`.
+2. The phone lens's visible half crosses the peach orb's edge, but the peach
+   showing below the window is small, so the bend reads weakly; more would
+   move an orb or the lens off B1's spots. Accept? Sheet 08.
+3. The tablet lens now starts at the lower-right corner over peach (round 4
+   had lower-left over pink), where it crosses an orb edge with B1's window.
+   Fine?
+4. On phones and tablets, B1's first view had the next section's violet orb
+   by the window's corner; with the Control Centre in the hero it sits about
+   360 px lower. Accept?
+
+Round-5 sheets: `scripts/themes/.out/stage3-b2/founder-r5/` (`index.md`).
+
+## The round-4 stop (kept for the record; answered 09-26-26)
+
+At round 4 vaporwave passed and glass blocked on 2 (the 820 lens jump and
+the desktop orbs off B1's spots); both are fixed in round 5. The sections
+below are as written then.
 
 ## How B2 ran
 
-Five workflows: the build (10 agents), fix round parts 1 and 2, round 3 (8
-agents) and round 4 (6 agents: glass fixer Opus `medium`, vaporwave fixer
+Six workflows: the build (10 agents), fix round parts 1 and 2, round 3 (8
+agents), round 4 (6 agents: glass fixer Opus `medium`, vaporwave fixer
 Sonnet `xhigh`, then per school an Opus `high` critic and a Sonnet `high`
-verifier). What worked: Opus `medium` for lens and WebGL runtime fixes
+verifier) and round 5 (glass only, 4 agents: fixer Opus `medium`, a
+read-only timing investigator Opus `high`, critic Opus `high`, verifier
+Sonnet `high`). What worked: Opus `medium` for lens and WebGL runtime fixes
 (Sonnet fixers regressed them twice); Opus `high` critics (they found every
 real defect); verifiers at Sonnet `high` (at `medium` they filmed nothing).
 

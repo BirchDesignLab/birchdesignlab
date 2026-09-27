@@ -21,7 +21,28 @@ const after = arg('after', 'stage3-gates-timing');
 const metric = arg('metric', 'firstVisible');
 const TAGS = ['desktop-dark', 'desktop-light', 'mobile-dark', 'mobile-light'];
 
+// land90: when the new page is on screen, the first frame whose changed share
+// is at least 90% of the last frame's (b2r5-glass-timing-ab.mjs's rule). It is
+// not a summary column, so it is recomputed from each run's frame series.
+// firstVisible alone can fire on the old page's fade-out (round-5 finding).
+const median = (xs) => { const s = xs.filter((x) => x != null).sort((a, b) => a - b); return s.length ? s[Math.floor((s.length - 1) / 2)] : null; };
+async function loadLand90(dir, tag) {
+  const f = join(OUT, dir, `${tag}.runs.json`);
+  if (!existsSync(f)) return new Map();
+  const runs = new Map();
+  for (const r of JSON.parse(await readFile(f, 'utf8')).results) {
+    const s = r.series || [];
+    const fin = s.length ? s[s.length - 1][1] : 0;
+    const land = s.find((p) => p[1] >= 0.9 * fin && fin > 0.05);
+    const k = `${r.id}|${r.dir}|${r.condition}`;
+    if (!runs.has(k)) runs.set(k, []);
+    runs.get(k).push(land ? land[0] : null);
+  }
+  return new Map([...runs].map(([k, xs]) => [k, median(xs)]));
+}
+
 async function load(dir, tag) {
+  if (metric === 'land90') return loadLand90(dir, tag);
   const f = join(OUT, dir, `${tag}.summary.json`);
   if (!existsSync(f)) return new Map();
   const j = JSON.parse(await readFile(f, 'utf8'));

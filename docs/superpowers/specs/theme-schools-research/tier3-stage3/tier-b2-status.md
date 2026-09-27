@@ -336,3 +336,88 @@ no pause before the reviews, run the gates regardless.
 - Pipes: a spawn point also gets a ball (the original does not); the drop
   shadow's round cap shows as a thin crescent ahead of a growing head. Both
   fine to keep?
+
+(All answered 09-26-26: `stage3-decisions.md`, "Answers after B2 round 4".)
+
+## Round 5 (09-26-26 to 09-27-26): glass only, workflow 6, then STOPPED
+
+Workflow `wf_464546eb-ee9` (4 agents, about 61 minutes, every agent
+returned), reports in `.out/stage3-b2/w6-reports.json`. Committed as
+`78e5394`, pushed to #93.
+
+- **glass-fix-r5 (Opus medium):** R1: the orb clock mounts before the one
+  start plan and writes every orb's clock position in the same task;
+  `cornerStart` keeps the poster's spot when still clear; 36 of 36 hard
+  loads steady (820 at 691,742; 390 at 246,573; 1440 at 140,414); poster
+  and live lens share one spot in every arrival frame. R2: a `.hero-stage`
+  wrapper with B1's hero rule holds the orbs and the window, so every hero
+  orb is within 0.1 px of B1 at five sizes and three scroll positions; the
+  Control Centre stays where it was; round 4's phone orb patch removed. R3:
+  `cornerStart` prefers a rim crossing an orb edge at least 0.4 r below the
+  window; at 390 the rim crosses peach 27 px below the window. R4: the
+  tablet window top back at B1's 290 px. R5: the poster is a clear (or
+  tinted) CSS disc with the lens's rim and shadow; mean channel difference
+  to the live lens 5 to 6.5 at 1440, 1.8 to 3.4 at 820 and 390. The
+  no-script poster anchored to the window's corner. New tests:
+  `tests/glass-orbs-clock.test.ts`, 5 `cornerStart` tests.
+- **glass-timing (Opus high, read-only): glass does not land later.** The
+  gates' `firstVisible` (the first frame with over 0.4% change) caught B1's
+  old page starting its 83 ms fade, then an empty dark frame held about 250
+  ms before glass drew. Now the old page stays frozen until the new page's
+  first GPU raster (about 42 Skia program compiles, about 370 ms in both
+  builds, but now one 198 ms GPU task holding 21 of them, so no fade frame
+  is drawn in between; which way it goes is a race, B1 also froze in 1 of 5
+  desktop runs and all 5 mobile). `land90` (the first frame with 90% of the
+  final change) is unchanged on desktop (B1 560 vs now 557 from vaporwave)
+  and about +60 to +75 ms on mobile. No WebGL, image decode, session script
+  or font on the path to the first frame; newRender +20 ms (layout). No
+  small invisible fix exists (the layers variant measured 0); the levers are
+  drawing ahead on cold clicks (portal-wide, the known glass text-thinning
+  risk) or fewer paint kinds (visible). Recommendation, per the founder's
+  answer: leave it for the transitions phase, and read `land90` beside
+  `firstVisible` at the gates. Evidence `.out/stage3-b2/glass-timing/`
+  (about 317 MB of traces, gitignored, deletable).
+- **Glass re-critic (Opus high): PASSES.** Both round-4 blockers fixed.
+  Nits: the pre-clock CSS `view()` rule was dead in the build (lightningcss
+  folded the timeline into the `animation` shorthand, which Chromium
+  rejects; only no-JS visits and drawn-ahead copies were affected), fixed
+  by the orchestrator by moving the timeline into its own `@supports`
+  block (no-JS orbs now 235/3/796/644, identical to JS on;
+  `b2r5-glass-critic-nojs-orbs.mjs`); a faint ghost of the lens's covered
+  half through the window at the end of the arrival crossfade (the view
+  transition's snapshot ending; also over a resting poster); the 1440
+  poster rim duller than the live specular; the section orbs below the
+  hero sit lower than B1 since the Control Centre joined (round 3/4); the
+  tablet Control Centre's Dusk row below the fold.
+- **Glass verifier (Sonnet high):** 13 films, every case passes, including
+  the new 25 to 29 (startrace, orbs vs B1, the phone edge crossing, the
+  tablet window, poster vs live).
+- **Gates on `78e5394` (`.out/stage3-gates-r5/gates.md`): ALL PASS.**
+  `npm run verify` clean (410, 0 errors, 483). Wordmark first failed on
+  one capture miss ("no frame from before the trigger", bauhaus page dark
+  mobile); re-filmed alone, it passes, and `--reuse --steps wordmark`
+  rewrote the verdict. `land90` against Stage 2
+  (`b2r4-timing-compare.mjs --metric land90`, now reading each run's frame
+  series): glass cold and switcher-warm +12 to +88 ms, the untouched
+  schools +34 to +131 (drift). `firstVisible` still reads +65 to +292 for
+  glass, for the reason above.
+- **S3 side by side** re-shot on round 5 (`.out/stage3-b2-s3-r5/`): holds.
+- **Orchestrator's own look:** 1440, 1280 and 820 first views match B1's
+  orbs and window; the phone lens at the window's lower-right corner over
+  peach.
+
+### Founder calls raised in round 5
+
+- The 1440 poster-to-live step: same material now, but CSS cannot refract,
+  so the orb edge inside the disc runs straight on the poster and bends at
+  the swap, and the rim brightens (barely visible at 820 and 390). Accept,
+  or a raster poster?
+- The phone lens's edge crossing reads weakly (the peach cap below the
+  window is small); moving it more central would take an orb or the lens
+  off B1's spots. Accept?
+- The tablet lens now starts at the lower-RIGHT corner over peach (round 4:
+  lower-left over pink), where the visible half crosses an orb edge with
+  B1's window. Fine?
+- Phones and tablets: B1's first view showed the next section's violet orb
+  beside the window's corner; with the Control Centre in the hero it sits
+  about 360 px lower. Accept?
