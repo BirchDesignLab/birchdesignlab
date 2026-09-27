@@ -384,3 +384,29 @@ Sonnet 5 `high` verifier: 6 agents.
    automatic extra fix round).
 2. **No pause** before the review stages; run straight through.
 3. **Run the Stage 3 gates regardless** of the critics' verdicts.
+
+## Answers after B2 round 4 (founder, 09-26-26)
+
+To `tier-b2-report.md`; the founder took every recommendation ("sounds fine
+to me"):
+
+1. **Glass-only round 5, 4 agents:** a glass fixer (Opus 5.5 `medium`) for
+   both blockers (plan the 820 corner start once, from the orb clock's
+   positions, keeping the poster's spot when still valid; the hero orbs in
+   B1's box at every size), a read-only timing investigator in parallel
+   (Opus 5.5 `high`: what in glass's first paint costs about 150 ms, and
+   what a fix would take), then an Opus 5.5 `high` critic and a Sonnet 5
+   `high` verifier that film 820 arrivals. Rerun the gates after.
+2. Timing: **investigate now**; fix in a small follow-up only if cheap,
+   otherwise into the transitions phase.
+3. Phone lens: **move it along the peach orb's edge** so its visible half
+   shows the rim crossing the orb edge.
+4. Portrait tablet: **restore B1's window position** (290 px, not 152).
+5. The lens poster: **match the clear live lens** (no style swap on
+   arrival).
+6. Phone switcher over the tiles at rest: **accept**.
+7. Vaporwave attract tap near the top of a phone screen: **accept**.
+8. Desktop attract centring in the visible band: **keep**.
+9. Pipes' spawn ball and shadow crescent: **keep**.
+10. If round 5 passes, #93 merges after the founder's go (merge = deploy);
+    the iPhone checks follow the deploy.
