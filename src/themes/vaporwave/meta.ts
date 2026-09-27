@@ -58,6 +58,11 @@ export const meta: ThemeMeta = {
     { fg: '--inscription', bg: ['--marble-tint-pink', '--marble'], min: 4.5, note: 'inscription over the plinth pink-lit corner' },
     { fg: '--inscription', bg: ['--marble-tint-cyan', '--marble'], min: 4.5, note: 'inscription over the plinth cyan-lit corner' },
   ],
-  assets: { provenance: 'original-vector', note: 'Palms, columns, the beorc rune and the meander are drawn here; the marble is SVG turbulence.' },
+  /* Tier 3 stage 3, wave B2 (seat vw-4a): the head is now a CC0 3D scan, not
+     drawn, so provenance moves from 'original-vector'. */
+  assets: {
+    provenance: 'public-domain',
+    note: 'The head is a CC0 3D scan of a Roman marble head of Aphrodite (Knidian type, 1st century, from the Chiragan villa, Musée Saint-Raymond, Toulouse, Ra 52). Palms, columns, the beorc rune and the meander are drawn here; the marble is rendered.',
+  },
   order: 3,
 };

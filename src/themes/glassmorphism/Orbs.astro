@@ -8,10 +8,19 @@
 type Hue = 'violet' | 'cyan' | 'peach' | 'pink';
 export interface Orb { hue: Hue; x: string; y: string; mx?: string; my?: string; size: string; drift?: 1 | 2 | 3 }
 
-interface Props { orbs: Orb[] }
-const { orbs } = Astro.props;
+interface Props {
+  orbs: Orb[];
+  /** Home only (B2, "orbs on the lens clock"): moved by lens/orbs-clock.ts
+      from the lens's own requestAnimationFrame instead of theme.css's
+      `animation-timeline: view()`, so a co-located lens stays within about
+      0.3 px of the page while scrolling instead of lagging by 7 to 21 px
+      (proofs/lens.md, finding 2). Every other glass page omits this and
+      keeps the CSS scroll-timeline driver. */
+  jsDriven?: boolean;
+}
+const { orbs, jsDriven = false } = Astro.props;
 ---
-<div class="orbs" aria-hidden="true">
+<div class="orbs" aria-hidden="true" data-js-driven={jsDriven ? '' : undefined}>
   {orbs.map((o, i) => (
     <span class={`orb ${o.hue} d${o.drift ?? (i % 3) + 1}`} style={`--x:${o.x};--y:${o.y};--mx:${o.mx ?? o.x};--my:${o.my ?? o.y};--s:${o.size}`}></span>
   ))}

@@ -46,6 +46,7 @@ import sharp from 'sharp';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..', '..');
 const THREE_DIR = join(REPO, 'node_modules', 'three');
+const MARBLE_MODULE_DIR = join(REPO, 'src', 'themes', 'vaporwave', 'marble');
 const OUT = join(REPO, 'scripts', 'themes', '.out', 'stage3-proofs', 'marble');
 
 const argv = process.argv.slice(2);
@@ -67,12 +68,14 @@ const JOBS = [
   ['orb', 'chrome'], ['orb', 'pink'],
 ].filter(([p]) => !ONLY || p === ONLY);
 
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.glb': 'model/gltf-binary' };
 
 function serve(port) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    const [root, rel] = path.startsWith('/three/') ? [THREE_DIR, path.slice(7)] : [HERE, path.slice(1)];
+    const [root, rel] = path.startsWith('/three/') ? [THREE_DIR, path.slice(7)]
+      : path.startsWith('/marble/') ? [MARBLE_MODULE_DIR, path.slice(8)]
+      : [HERE, path.slice(1)];
     const file = normalize(join(root, rel));
     if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory()) {
       console.log(`render-marble: 404 ${path}`);

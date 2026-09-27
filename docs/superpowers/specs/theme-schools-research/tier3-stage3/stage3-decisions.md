@@ -309,3 +309,121 @@ To `tier-b1-report.md`, "Calls for the founder":
 Then: the Venus is downloaded (`scripts/themes/.out/meshes/venus/`, CC0 per
 its `license.txt`), and the founder's iPhone look at glass will happen **after
 deploy** ("i'll have to look at the glass on iphone after it get deployed").
+
+## Answers at the start of B2 (founder, 09-25-26)
+
+To the B2 launch questions, on branch `feat/theme-schools-tier3-stage3-b2`
+(fresh from `main` at `29733fc`):
+
+1. The Venus's default tint: **white marble with pastel rims** (lavender-grey
+   veins; the pink and cyan rim light carries the vaporwave read). The
+   builder still renders every tint as a sheet for the B2 stop.
+2. Glass Control Centre settings (Clear/Tinted, frost, time of day) **hold
+   for the whole session, including after leaving glass and coming back**
+   (sessionStorage), applied before first paint on return. If the drawn-ahead
+   arrival cannot avoid a visible flip, the builder reports it rather than
+   shipping the flash.
+3. The merged branches `feat/theme-schools-tier3-stage3` and
+   `fix/vaporwave-screensaver-phone` are **deleted**, locally and on the
+   remote.
+4. The B2 model plan with split seats and Opus `high` critics (below, in
+   `tier-b-plan.md`, "Wave B2 as run"): **launch as proposed**.
+
+## Answers after B2 workflow 1 (founder, 09-25-26)
+
+Both critics blocked workflow 1 (`tier-b2-status.md`). To the questions put
+with the first-pass sheets:
+
+1. The Venus: **keep the marble veins off the face** (the primary vein ran
+   across the cheek like a crack, which fails "pristine"); veins stay on the
+   hair, neck and back.
+2. Contact's 3D pipes screensaver: **shaded 3D-looking tubes** (cylinder
+   shading and ball joints, like the Win95 original), not flat neon lines.
+3. The glass Control Centre: **a compact tile cluster** (rounded-square
+   modules for Clear/Tinted, frost, time of day and the location, in the
+   macOS and iOS Control Centre manner), in flow below the hero, clear of the
+   portal switcher, in the first view where it fits.
+4. Fix workflow 2 **as proposed (8 agents), but held** until the founder
+   says go (other work running on the machine).
+
+## Answers on resuming B2 (founder, 09-26-26)
+
+1. The glass Control Centre tiles sit 58 to 158 px below the first view at
+   1440 x 900 and 1280 x 800 because the approved B1 hero window is 609 px
+   tall: **accept one scroll** (the hero stays as approved; the lens is in
+   the first view). The tiles must still clear the portal switcher.
+2. Continue B2: workflow 4 (the glass review, a glass fix only if it blocks,
+   the vaporwave fix round and its review).
+
+## Answers after B2 round 3 (founder, 09-26-26)
+
+1. Phone glass first view: **restore B1's phone hero** (round 3 made it
+   252 px taller for a lens gap, which left no orbs in the phone first view);
+   the phone lens starts half under the hero window's lower corner across an
+   orb, as B1's placeholder disc did, grabbable on its visible half.
+2. The pipes: **crisp 3D pipes** (shaded tubes, ball joints, no glow band).
+3. The phone kiosk attract tap: **no scroll**; on phones the attract content
+   fills the part of the CRT that is on screen near the button.
+4. Weighed one by one (time, effort, payoff, risk): the 1024 px lens
+   (smaller, top-left, about 20% under the window's corner) **accepted**;
+   static Home orbs (no idle drift on Home, zero redraws at rest)
+   **accepted**; the rim colour fringe **fixed now** (the split halved,
+   0.03 to 0.015 in `lens.ts`); the bust's seat on the tier edge and its
+   1.5x render with 2x supersampling **revisit after the founder's iPhone
+   check**.
+5. Do the fringe now, **hold the rest**, push, hand off (the context window
+   is full).
+
+## Answers at the start of B2 round 4 (founder, 09-26-26)
+
+Round 4 plan: glass-fix-r4 (Opus 5.5 `medium`) and vw-fix-r4 (Sonnet 5
+`xhigh`) in parallel, then per school an Opus 5.5 `high` re-critic and a
+Sonnet 5 `high` verifier: 6 agents.
+
+1. If a round-4 critic still blocks: **stop and bring it to the founder** (no
+   automatic extra fix round).
+2. **No pause** before the review stages; run straight through.
+3. **Run the Stage 3 gates regardless** of the critics' verdicts.
+
+## Answers after B2 round 4 (founder, 09-26-26)
+
+To `tier-b2-report.md`; the founder took every recommendation ("sounds fine
+to me"):
+
+1. **Glass-only round 5, 4 agents:** a glass fixer (Opus 5.5 `medium`) for
+   both blockers (plan the 820 corner start once, from the orb clock's
+   positions, keeping the poster's spot when still valid; the hero orbs in
+   B1's box at every size), a read-only timing investigator in parallel
+   (Opus 5.5 `high`: what in glass's first paint costs about 150 ms, and
+   what a fix would take), then an Opus 5.5 `high` critic and a Sonnet 5
+   `high` verifier that film 820 arrivals. Rerun the gates after.
+2. Timing: **investigate now**; fix in a small follow-up only if cheap,
+   otherwise into the transitions phase.
+3. Phone lens: **move it along the peach orb's edge** so its visible half
+   shows the rim crossing the orb edge.
+4. Portrait tablet: **restore B1's window position** (290 px, not 152).
+5. The lens poster: **match the clear live lens** (no style swap on
+   arrival).
+6. Phone switcher over the tiles at rest: **accept**.
+7. Vaporwave attract tap near the top of a phone screen: **accept**.
+8. Desktop attract centring in the visible band: **keep**.
+9. Pipes' spawn ball and shadow crescent: **keep**.
+10. If round 5 passes, #93 merges after the founder's go (merge = deploy);
+    the iPhone checks follow the deploy.
+
+## Answers at the round-5 stop (founder, 09-27-26)
+
+To the four round-5 calls in `tier-b2-report.md`; the founder took the
+orchestrator's opinion on each ("yeah that sounds like a good idea"):
+
+1. The 1440 poster-to-live step (the edge straight on the poster, bent
+   live): **accept**; a raster poster is not worth its fragility now. Parked
+   with glass's first paint for the transitions phase (`docs/lab-backlog.md`,
+   "Parked from Stage 3 wave B2").
+2. The phone lens's weak edge bend at rest: **accept** (the bend is the drag
+   payoff; B1's orbs stay).
+3. The tablet lens at the lower-right corner: **fine** (the same rule and
+   corner as the phone).
+4. The next section's violet orb lower on phones and tablets: **accept**
+   (the first view already holds the lens, the peach orb and the tiles).
+5. **Merge #93** ("let's get this thing in").

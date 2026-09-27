@@ -100,3 +100,27 @@ review later is Opus 5.5 `high` (the branch touches no sensitive code).
   pattern: 0, 60, 80, 95%).
 - Founder sheets: PNG or JPEG q90+, labels at least 20 px, same crops across
   columns; system ffmpeg for h264 frames.
+
+## Wave B2 as run (founder yes, 09-25-26)
+
+Amended from the table above: the two large seats split by file ownership,
+and the critics stepped up one notch, since B1's Opus `medium` critics passed
+four plainly unmet brief items (the step-up rule in `CLAUDE.md`).
+
+Workflow 1 (10 agents):
+
+| Stage | Seat | Model | Effort |
+|---|---|---|---|
+| Build | glass-3a: the production lens, orbs on the lens clock, the Control Centre, the session hold | Sonnet 5 | high |
+| Build | glass-3b (after 3a; shares `theme.css` and `fx.ts`): the Services settings pane, E11, E12, phone targets | Sonnet 5 | high |
+| Build | vw-3: window drag, the screensaver's Settings and Preview, the kiosk attract loop, caption presses (owns Home, Contact, `Win.astro`, `fx.ts`, `theme.css`) | Sonnet 5 | high |
+| Build | vw-4a (parallel with vw-3): the scene into `src/themes/vaporwave/marble/`, the meshoptimizer devDependency, the processing script, the Venus stills, the bbox re-measure, About's poster, `meta.ts` | Sonnet 5 | high |
+| Build | vw-4b (after 4a): the live About bust | Sonnet 5 | high |
+| Build | kiosk-swap (after vw-3 and 4a): the Venus still into the kiosk | Sonnet 5 | low |
+| Critic | one per school | Opus 5.5 | high |
+| Verify | one per school, adversarial cases, a films minimum, arrivals filmed | Sonnet 5 | medium |
+
+Then the orchestrator's own look at the sheets, then Workflow 2 (up to 4):
+a fixer per blocked school tiered by what failed (Sonnet 5 `high` by default,
+Opus 5.5 `high` for an arrival or portal-runtime bug) and an Opus 5.5 `high`
+re-critic. Then the gates, the S3 side by side, the report and the stop.

@@ -90,6 +90,13 @@ const { copy, theme } = Astro.props;
   </Win>
 </section>
 
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { mountWindowDrag } from '../windows';
+
+  onMount(mountWindowDrag);
+</script>
+
 <style>
   /* F1(b): a Win95 desktop, a tiled bitmap in the school's own tokens
      (a diamond weave, the classic desktop-pattern shape) rather than the

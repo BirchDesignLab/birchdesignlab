@@ -54,5 +54,9 @@ const { copy, theme } = Astro.props;
   }
   p { max-width: 44ch; color: var(--mark); font-size: 1.125rem; }
   .btn { margin-top: 0.5rem; }
-  .btn:hover .back { translate: -3px 0; }
+  /* E11: guarded so a tap on a touch device never leaves the arrow nudged
+     after navigation. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover .back { translate: -3px 0; }
+  }
 </style>

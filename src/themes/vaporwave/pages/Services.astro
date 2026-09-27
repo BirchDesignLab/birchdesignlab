@@ -70,6 +70,13 @@ const steps = copy.process.steps.length;
   <div class="ask-band"><Lobby class="ask-lobby" /></div>
 </section>
 
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { mountWindowDrag } from '../windows';
+
+  onMount(mountWindowDrag);
+</script>
+
 <style>
   /* ---------- intro ---------- */
   .intro {

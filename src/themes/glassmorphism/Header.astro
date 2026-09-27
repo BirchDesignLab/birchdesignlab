@@ -101,9 +101,22 @@ const [first, ...rest] = chrome.wordmark;
     font-weight: 550;
     color: var(--mark-muted);
     text-decoration: none;
-    transition: color 160ms ease, background-color 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 160ms ease, background-color 160ms ease, transform 83ms linear;
   }
-  .seg a:hover { color: var(--mark); }
+  /* E11: hover only where a hover truly means "pointing", never a tap that
+     leaves the state stuck (the mobile and tablet captures are touch
+     devices). */
+  @media (hover: hover) and (pointer: fine) {
+    .seg a:hover { color: var(--mark); }
+  }
+  /* E11: a brief press, on every segment, current page or not. */
+  .seg a:active {
+    color: var(--mark);
+    background: var(--thumb);
+    transform: scale(0.97);
+    transition: color 83ms linear, background-color 83ms linear, transform 83ms linear;
+  }
   .seg a[aria-current='page'] {
     color: var(--mark);
     background: var(--thumb);
