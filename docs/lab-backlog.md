@@ -161,7 +161,14 @@ everything up front, is acceptable. The measurements and the off-screen draw
 technique are in `theme-schools-research/tier3-stage1/p4-trace.md`.
 
 **Then tranche 2** (founder, 09-23-26: "very likely"). Candidates and the
-original ranking live in `theme-schools-research/`.
+original ranking live in `theme-schools-research/`. Founder, 10-02-26: add
+**TempleOS** to the pile as a possible tranche 2 school.
+
+**Order after B2 (founder, 10-02-26).** Steam through the plan in order (pair
+A swiss and bauhaus, pair C grandmillennial and cottagecore, the Stage 6 set
+re-review), then the transitions last; troubleshoot the nitpicks at the end,
+with the founder's iPhone pass. Parked for then: **glass on desktop "doesn't
+look right"** (founder, 10-02-26; specifics not yet given).
 
 **Sidenote, 09-23-26: the order after the schools.** The founder's plan:
 1. Ship the themes and the transitions.
