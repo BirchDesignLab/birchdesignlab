@@ -51,11 +51,20 @@ Rings sit on only two centres, (30,30) and (30,70). Two rings on those centres
 share one band (y 40 to 60), which is why 3, 5 and 8 close on a shared band.
 No diagonals, no tapering. Where two elements meet edge to edge (the half ring
 on the bar of 0, the quarter ring on the stem of 1, and the like) one runs
-about one unit under its neighbour (bars +1 unit, arcs +3 degrees), so
-antialiasing leaves no hairline seam; the overlap is hidden once the digit is
-solid. Checked on the 1x and 2x zoom shots (`zoom__`, `zoom2x__`): the column
-through the 1 of the doors, which read 68 against ink 20 before, now reads 20
-throughout.
+under its neighbour, so antialiasing leaves no hairline seam; the overlap
+is hidden once the digit is solid. The overlap is set in units, so on screen it
+shrinks with the numeral, and that is what round 1 got wrong: 1 unit is under
+a device pixel at the steps size (0.34 px/unit), and a seam was left there.
+It is now 4 units where an arc meets a bar (the arc end runs on along its
+tangent; the end edge is a straight line as wide as the bar, so the extension
+cannot leave the bar) and 12 degrees where an arc meets a concentric arc of the
+same radii. That is 1.4 px at the steps size and 3 px at the doors. Checked on
+the 1x and 2x zoom shots (`zoom__`, `zoom2x__`), doors, offering and steps, both
+schemes: the seam row through the 0 of the steps (row 22, light 43 against ink
+19, dark 216 against ink 239, before) now reads ink throughout, and the doors
+column through the 1 still reads 20. `seam-check.mjs` reports 0 to 2 thin-gap
+pixels per shot; those are the one-pixel gap between digits, not joins.
+`dump-px.mjs` prints a pixel window for inspection.
 
 Digits (centres in units; element lists are in `build-numerals.mjs`):
 

@@ -37,32 +37,48 @@ const ring = (cx, cy) => ({
      `M${cx - r} ${cy}A${r} ${r} 0 1 1 ${cx + r} ${cy}A${r} ${r} 0 1 1 ${cx - r} ${cy}Z`,
 });
 /* Sweep in screen angles (y down): 0 = right, 90 = down, 180 = left, 270 = up. */
-/* e0/e1: degrees the start/end edge runs on past its true angle, into the
-   neighbour it abuts, so antialiasing leaves no hairline seam. Hidden once solid. */
-const arc = (kind, cx, cy, s0, span, e0 = 0, e1 = 0) => {
-  const a0 = s0 - e0;
-  const a1 = s0 + span + e1;
+/* Overlap at the joins, so antialiasing leaves no hairline seam. It is set in
+   units, so on screen it is units x px-per-unit: at the steps size (0.34
+   px/unit) 4 units is 1.4px, which is why 1 unit (round 1) still left a seam
+   there. Hidden once the digit is solid. e0/e1 describe the start/end of an arc:
+     { b }  runs the end on B units along its tangent. The end edge is a
+            straight radial line on an axis, as wide as the bar it meets, so the
+            extension sits wholly inside that bar.
+     { d }  runs the end on D degrees along the ring into a concentric ring of
+            the same radii, which it cannot leave. */
+const B = 4, D = 12;
+const arc = (kind, cx, cy, s0, span, e0 = {}, e1 = {}) => {
+  const a0 = s0 - (e0.d || 0);
+  const a1 = s0 + span + (e1.d || 0);
   const large = a1 - a0 > 180 ? 1 : 0;
-  return {
-    kind, cx, cy,
-    d: `M${P(pt(cx, cy, a0, R))}A${R} ${R} 0 ${large} 1 ${P(pt(cx, cy, a1, R))}L${P(pt(cx, cy, a1, r))}A${r} ${r} 0 ${large} 0 ${P(pt(cx, cy, a0, r))}Z`,
-  };
+  const rad = (a) => (a * Math.PI) / 180;
+  /* direction of travel at angle a is (-sin a, cos a) */
+  const along = (a, L) => [n(-Math.sin(rad(a)) * L), n(Math.cos(rad(a)) * L)];
+  const add = ([x, y], [dx, dy]) => [n(x + dx), n(y + dy)];
+  const oS = pt(cx, cy, a0, R), iS = pt(cx, cy, a0, r), oE = pt(cx, cy, a1, R), iE = pt(cx, cy, a1, r);
+  const bS = e0.b ? along(a0, -e0.b) : null, bE = e1.b ? along(a1, e1.b) : null;
+  let d = bS ? `M${P(add(oS, bS))}L${P(oS)}` : `M${P(oS)}`;
+  d += `A${R} ${R} 0 ${large} 1 ${P(oE)}`;
+  if (bE) d += `L${P(add(oE, bE))}L${P(add(iE, bE))}`;
+  d += `L${P(iE)}A${r} ${r} 0 ${large} 0 ${P(iS)}`;
+  if (bS) d += `L${P(add(iS, bS))}`;
+  return { kind, cx, cy, d: d + 'Z' };
 };
 const half = (cx, cy, which, e0, e1) => arc('half', cx, cy, { upper: 180, lower: 0, left: 90, right: 270 }[which], 180, e0, e1);
 const quad = (cx, cy, which, e0, e1) => arc('quad', cx, cy, { ur: 270, lr: 0, ll: 90, ul: 180 }[which], 90, e0, e1);
-const X = 3; // overlap, degrees (about 1 unit at mid radius)
+const bb = { b: B }, dd = { d: D };
 
 const DIGITS = {
-  0: [half(30, 30, 'upper', X, X), bar(0, 30, 20, 40), bar(40, 30, 20, 40), half(30, 70, 'lower', X, X)],
-  1: [bar(40, 0, 20, 100), quad(40, 30, 'ul', 0, X)],
-  2: [half(30, 30, 'upper', 0, X), quad(30, 30, 'lr'), bar(0, 40, 31, 20), bar(0, 40, 20, 60), bar(0, 80, 60, 20)],
-  3: [half(30, 30, 'upper', 0, X), quad(30, 30, 'lr'), quad(30, 70, 'ur', 0, X), half(30, 70, 'lower')],
+  0: [half(30, 30, 'upper', bb, bb), bar(0, 30, 20, 40), bar(40, 30, 20, 40), half(30, 70, 'lower', bb, bb)],
+  1: [bar(40, 0, 20, 100), quad(40, 30, 'ul', undefined, bb)],
+  2: [half(30, 30, 'upper', undefined, dd), quad(30, 30, 'lr', undefined, bb), bar(0, 40, 31, 20), bar(0, 40, 20, 60), bar(0, 80, 60, 20)],
+  3: [half(30, 30, 'upper', undefined, dd), quad(30, 30, 'lr'), quad(30, 70, 'ur', undefined, dd), half(30, 70, 'lower')],
   4: [bar(0, 0, 20, 60), bar(0, 40, 60, 20), bar(40, 0, 20, 100)],
-  5: [bar(0, 0, 60, 20), bar(0, 0, 20, 60), bar(0, 40, 31, 20), quad(30, 70, 'ur', 0, X), half(30, 70, 'lower')],
-  6: [quad(30, 30, 'ul', X, 0), bar(0, 30, 20, 40), ring(30, 70)],
-  7: [bar(0, 0, 31, 20), quad(30, 30, 'ur', 0, X), bar(40, 30, 20, 70)],
+  5: [bar(0, 0, 60, 20), bar(0, 0, 20, 60), bar(0, 40, 31, 20), quad(30, 70, 'ur', bb, dd), half(30, 70, 'lower')],
+  6: [quad(30, 30, 'ul', bb), bar(0, 30, 20, 40), ring(30, 70)],
+  7: [bar(0, 0, 31, 20), quad(30, 30, 'ur', bb, bb), bar(40, 30, 20, 70)],
   8: [ring(30, 30), ring(30, 70)],
-  9: [ring(30, 30), bar(40, 30, 20, 40), quad(30, 70, 'lr', X, 0)],
+  9: [ring(30, 30), bar(40, 30, 20, 40), quad(30, 70, 'lr', bb)],
 };
 
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">\n`;
