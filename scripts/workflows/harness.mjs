@@ -254,7 +254,6 @@ await test('task: happy path is 5 agents with the default roles and a head from 
 })
 
 await test('task: one fix round is 10 agents and the re-critic, verifier and gate run beside each other', async () => {
-  let n = 0
   const r = await run(task, BASE, rsp({ critic: () => failWith(F('C1', 'blocker')) }))
   assert.deepEqual(r.calls.map((c) => c.label), [...COMPLETE_LABELS, 'fixer-r1', 'verify-head-r1', 're-critic-r1', 'verifier-r1', 'gate-r1'])
   assert.equal(r.res.status, 'complete')
@@ -268,7 +267,6 @@ await test('task: one fix round is 10 agents and the re-critic, verifier and gat
   assert.equal(r.res.findings.find((f) => f.id === 'critic:C1').state, 'fixed')
   assert.equal(r.res.head, hex40('fixer-r1-2'))
   assert.equal(r.res.commits.length, 2)
-  assert.ok(n === 0)
 })
 
 await test('task: findings still open after round 2 park, with the escalated fixer on round 2 (15 agents)', async () => {
@@ -334,13 +332,11 @@ await test('task: a round with no new commit stays open without a review block',
 })
 
 await test('task: a failed or unfilmed case is an important finding, re-filmed after the fix', async () => {
-  let round = 0
   const r = await run(task, BASE, rsp({ verifier: () => filmOf(['arrive-820', 'lens-390'], { 'arrive-820': 'fail' }) }))
   assert.match(r.text('fixer-r1'), /\[film:arrive-820\] IMPORTANT/)
   assert.match(r.text('verifier-r1'), /Re-film only[^]*- arrive-820: arrival at 820/)
   assert.equal(r.res.status, 'complete')
-  assert.ok(!r.labels.includes('re-critic-r1') === false, 'film-only findings still get the re-critic')
-  assert.ok(round === 0)
+  assert.ok(r.labels.includes('re-critic-r1'), 'film-only findings still get the re-critic')
   const missing = await run(task, BASE, rsp({ verifier: () => filmOf(['arrive-820']) }))
   assert.match(missing.text('fixer-r1'), /\[film:lens-390\][^]*was not filmed/)
   assert.deepEqual(missing.res.findings.map((f) => f.id), ['film:lens-390'])
@@ -353,7 +349,7 @@ await test('task: films that ran on a software renderer are a finding', async ()
 
 await test('task: a red gate-0 skips the re-critic when every open finding came from a gate', async () => {
   const r = await run(task, BASE, rsp({ 'gate-0': { ok: false, problems: ['npm run verify: astro check failed in a.astro'] } }))
-  assert.match(r.text('fixer-r1'), /\[gate-0:1\][^]*astro check failed/)
+  assert.match(r.text('fixer-r1'), /\[gate:1\][^]*astro check failed/)
   assert.deepEqual(r.calls.map((c) => c.label), [...COMPLETE_LABELS, 'fixer-r1', 'verify-head-r1', 'verifier-r1', 'gate-r1'])
   assert.equal(r.res.agents, 9)
   assert.equal(r.res.status, 'complete')
@@ -361,10 +357,64 @@ await test('task: a red gate-0 skips the re-critic when every open finding came 
   assert.equal(still.res.status, 'parked')
 })
 
+await test('task: a gate that stays red matches its earlier finding, escalates the fixer and is not counted as addressed', async () => {
+  const r = await run(task, BASE, rsp({ 'gate-*': { ok: false, problems: ['npm run verify: astro check failed in a.astro'] } }))
+  assert.equal(r.res.status, 'parked')
+  assert.equal(r.res.rounds, 2)
+  assert.deepEqual(r.calls.map((c) => c.label), [...COMPLETE_LABELS, 'fixer-r1', 'verify-head-r1', 'verifier-r1', 'gate-r1', 'fixer-r2', 'verify-head-r2', 'verifier-r2', 'gate-r2'])
+  assert.equal(`${r.find('fixer-r1').model}/${r.find('fixer-r1').effort}`, 'sonnet/medium')
+  assert.equal(`${r.find('fixer-r2').model}/${r.find('fixer-r2').effort}`, 'sonnet/high', 'a gate that is still red brings in the escalated fixer')
+  assert.match(r.text('fixer-r2'), /\[gate:1\]/)
+  assert.deepEqual(r.res.parked.map((p) => p.id), ['gate:1'])
+  assert.equal(r.res.findings.filter((f) => f.id.startsWith('gate')).length, 1, 'one stable id, not gate-0:1 then gate-r1:1')
+  assert.equal(r.res.findings.find((f) => f.id === 'gate:1').state, 'open')
+  assert.ok(r.res.ledgerLines.some((l) => /fix round 1\/2 \(0 addressed, 1 open/.test(l)), 'a red gate is not counted as addressed')
+  // A gate that goes green after the fix closes the finding.
+  let n = 0
+  const green = await run(task, BASE, rsp({ 'gate-0': { ok: false, problems: ['red'] }, 'gate-r1': () => { n++; return { ok: true, problems: [] } } }))
+  assert.equal(green.res.status, 'complete')
+  assert.equal(green.res.findings.find((f) => f.id === 'gate:1').state, 'fixed')
+  assert.equal(n, 1)
+})
+
+await test('task: the gate runs npm run verify under the render lock, never bare', async () => {
+  const r = await run(task, BASE, rsp())
+  const p = r.text('gate-0')
+  assert.match(p, /node scripts\/workflows\/verify-locked\.mjs --log C:\/s\/b3-t7\/gate-0\/verify\.log/)
+  assert.match(p, /never run npm run verify bare/)
+  assert.ok(!/Run npm run verify \(vitest/.test(p), 'the old bare instruction is gone')
+  const wrapper = fs.readFileSync(path.join(HERE, 'verify-locked.mjs'), 'utf8')
+  assert.match(wrapper, /import \{ acquireLock, releaseLock \} from '\.\.\/themes\/lib\/render-lock\.mjs'/)
+  assert.ok(wrapper.indexOf('await acquireLock(') < wrapper.indexOf('spawn(command.join'), 'the lock is taken before the build starts')
+  assert.match(wrapper, /process\.on\('exit', \(\) => releaseLock\(\)\)/)
+})
+
+await test('task: verify-locked.mjs holds the lock while the command runs, releases it after and passes the exit code on', async () => {
+  const lockDir = path.join(REPO_ROOT, 'scripts', 'themes', '.out', '.render-lock')
+  if (fs.existsSync(lockDir)) return // another build holds the real lock; the wrapper test would queue behind it
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bdl-wf-'))
+  try {
+    const log = path.join(dir, 'sub', 'verify.log')
+    const probe = `node -e "const fs=require('fs');console.log('HELD='+fs.existsSync(process.argv[1]));process.exit(Number(process.argv[2]))" "${lockDir}" `
+    const go = (code, ...extra) => spawnSync(process.execPath, [path.join(HERE, 'verify-locked.mjs'), ...extra, '--', `${probe}${code}`], { encoding: 'utf8', cwd: REPO_ROOT })
+    const ok = go(0, '--log', log)
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr)
+    assert.match(ok.stdout, /HELD=true/)
+    assert.match(fs.readFileSync(log, 'utf8'), /HELD=true/)
+    assert.ok(!fs.existsSync(lockDir), 'the lock is released after the command')
+    const red = go(3)
+    assert.equal(red.status, 3, 'the command exit code is the wrapper exit code')
+    assert.ok(!fs.existsSync(lockDir), 'the lock is released after a red command')
+    assert.equal(spawnSync(process.execPath, [path.join(HERE, 'verify-locked.mjs'), '--bogus'], { encoding: 'utf8' }).status, 2)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 await test('task: complete needs a green last gate and every film case passed', async () => {
   const r = await run(task, { ...BASE, maxRounds: 1 }, rsp({ critic: () => failWith(F('C1', 'blocker')), 'gate-r1': { ok: false, problems: ['red'] } }))
   assert.equal(r.res.status, 'parked')
-  assert.deepEqual(r.res.parked.map((p) => p.id), ['gate-r1:1'])
+  assert.deepEqual(r.res.parked.map((p) => p.id), ['gate:1'])
   const ok = await run(task, { ...BASE, films: [] }, rsp({}, newGit(), []))
   assert.equal(ok.res.status, 'complete')
 })
@@ -439,6 +489,7 @@ await test('task: implementer stop, and its answer reaches only implementer-cont
   assert.equal(r2.calls[0].cached, true)
   assert.equal(r2.labels[1], 'implementer-continue')
   assert.equal(r2.calls.filter((c) => c.prompt.includes('use clip A')).length, 1)
+  assert.equal(r2.res.answersUnconsumed, undefined, 'a consumed answer is marked used')
   assert.match(r2.text('implementer-continue'), /which clip\?/)
   assert.equal(`${r2.find('implementer-continue').model}/${r2.find('implementer-continue').effort}`, 'sonnet/medium')
   const unused = await run(task, { ...BASE, answers: ans }, rsp({}, newGit()))
@@ -477,6 +528,82 @@ await test('task: a plain precondition answer reaches only the first failure, ne
   assert.equal(r.res.stopPoint, 'precondition:verifyHead')
   assert.equal(r.calls.filter((c) => c.prompt.includes('looked at it')).length, 1)
   assert.deepEqual(r.calls.map((c) => c.label), ['implementer', 'implementer-retry', 'verify-head-impl'])
+})
+
+const trace = (r) => r.calls.map((c) => c.label + (c.cached ? '(c)' : '')).join(' ')
+
+await test('task: plain precondition answers resume across three runs, one per failing consumer in call order (implementer, then verifyHead)', async () => {
+  const cache = new Map()
+  const g = newGit()
+  // The implementer always reports a failed precondition; its retry commits, but fails the precondition again once HEAD has moved
+  // (a fresh re-run on a moved HEAD), so a retry whose cached prompt changed shows up as a stop. verify-head-impl fails until answered.
+  const over = {
+    implementer: () => work({ status: 'BLOCKED', preconditionFailed: 'dirty' }),
+    'implementer-retry': (p, c, l, gg, d) => (gg.head !== BASE_SHA ? work({ status: 'BLOCKED', preconditionFailed: 'HEAD is not base' }) : d()),
+    'verify-head-impl': { revParse: 'junk', catFile: 'MISSING', log: '' },
+  }
+  const P1 = { at: 'precondition', text: 'cleaned the tree' }
+  const P2 = { at: 'precondition', text: 'git is readable now' }
+  const r1 = await run(task, BASE, rsp(over, g), { cache })
+  assert.equal(r1.res.stopPoint, 'precondition:implementer')
+  const r2 = await run(task, { ...BASE, answers: [P1] }, rsp(over, g), { cache })
+  assert.equal(r2.res.stopPoint, 'precondition:verifyHead', trace(r2))
+  assert.equal(trace(r2), 'implementer(c) implementer-retry verify-head-impl')
+  const r3 = await run(task, { ...BASE, answers: [P1, P2] }, rsp(over, g), { cache })
+  assert.equal(r3.res.status, 'complete', `${r3.res.stopPoint} ${r3.res.problem} ${trace(r3)}`)
+  assert.ok(r3.calls.find((c) => c.label === 'implementer-retry').cached, 'the answer for the verifyHead stop was swallowed by the implementer retry')
+  assert.equal(r3.calls.filter((c) => c.prompt.includes('cleaned the tree')).length, 1)
+  assert.equal(r3.calls.filter((c) => c.prompt.includes('git is readable now')).length, 1)
+  assert.ok(r3.text('verify-head-impl-retry').includes('git is readable now'))
+  assert.ok(!r3.text('verify-head-impl-retry').includes('cleaned the tree'))
+  assert.equal(r3.res.answersUnconsumed, undefined)
+})
+
+await test('task: two verifyHead stops are answered in order across three runs, and the first retry replays from cache', async () => {
+  const cache = new Map()
+  const g = newGit()
+  const bad = { revParse: 'junk', catFile: 'MISSING', log: '' }
+  const over = { critic: () => failWith(F('C1', 'important')), 'verify-head-impl': bad, 'verify-head-r1': bad }
+  const V1 = { at: 'precondition:verifyHead', text: 'first answer' }
+  const V2 = { at: 'precondition:verifyHead', text: 'second answer' }
+  const r1 = await run(task, BASE, rsp(over, g), { cache })
+  assert.equal(r1.res.stopPoint, 'precondition:verifyHead')
+  const r2 = await run(task, { ...BASE, answers: [V1] }, rsp(over, g), { cache })
+  assert.equal(r2.res.stopPoint, 'precondition:verifyHead')
+  assert.equal(trace(r2), 'implementer(c) verify-head-impl(c) verify-head-impl-retry critic verifier gate-0 fixer-r1 verify-head-r1')
+  const r3 = await run(task, { ...BASE, answers: [V1, V2] }, rsp(over, g), { cache })
+  assert.equal(r3.res.status, 'complete', `${r3.res.stopPoint} ${trace(r3)}`)
+  assert.ok(r3.calls.find((c) => c.label === 'verify-head-impl-retry').cached, 'verify-head-impl-retry replays; it did not receive the second answer')
+  assert.ok(r3.text('verify-head-impl-retry').includes('first answer') && !r3.text('verify-head-impl-retry').includes('second answer'))
+  assert.ok(r3.text('verify-head-r1-retry').includes('second answer') && !r3.text('verify-head-r1-retry').includes('first answer'))
+  assert.equal(r3.calls.filter((c) => c.prompt.includes('first answer')).length, 1)
+  assert.equal(r3.calls.filter((c) => c.prompt.includes('second answer')).length, 1)
+  assert.equal(r3.res.rounds, 1)
+})
+
+await test('task: a retry that fails again takes the next answer as another attempt, with the earlier answers carried', async () => {
+  const cache = new Map()
+  const g = newGit()
+  const over = { 'verify-head-impl*': (p, c, l, gg, d) => (l === 'verify-head-impl-retry2' ? d() : { revParse: 'junk', catFile: 'MISSING', log: '' }) }
+  const A1 = { at: 'precondition:verifyHead', text: 'try one' }
+  const A2 = { at: 'precondition', text: 'try two' }
+  const r1 = await run(task, { ...BASE, answers: [A1] }, rsp(over, g), { cache })
+  assert.equal(r1.res.stopPoint, 'precondition:verifyHead')
+  assert.deepEqual(r1.labels, ['implementer'])
+  const r2 = await run(task, { ...BASE, answers: [A1, A2] }, rsp(over, g), { cache })
+  assert.equal(r2.res.status, 'complete')
+  assert.ok(r2.calls.find((c) => c.label === 'verify-head-impl-retry').cached)
+  assert.ok(r2.text('verify-head-impl-retry2').includes('try one') && r2.text('verify-head-impl-retry2').includes('try two'))
+  // The implementer does the same: a precondition that survives its retry is retried again with the next answer.
+  const dirty = () => work({ status: 'BLOCKED', preconditionFailed: 'still dirty' })
+  const over2 = { implementer: dirty, 'implementer-retry': dirty }
+  const s1 = await run(task, { ...BASE, answers: [{ at: 'precondition:implementer', text: 'a' }] }, rsp(over2, newGit()))
+  assert.equal(s1.res.stopPoint, 'precondition:implementer')
+  assert.deepEqual(s1.labels, ['implementer', 'implementer-retry'])
+  const s2 = await run(task, { ...BASE, answers: [{ at: 'precondition:implementer', text: 'a' }, { at: 'precondition', text: 'b' }] }, rsp(over2, newGit()))
+  assert.equal(s2.res.status, 'complete')
+  assert.deepEqual(s2.labels.slice(0, 3), ['implementer', 'implementer-retry', 'implementer-retry2'])
+  assert.ok(s2.text('implementer-retry2').includes('* (precondition:implementer) a') && s2.text('implementer-retry2').includes('* (precondition) b'))
 })
 
 await test('task: foreignPaths are named in the preconditions, and the Precondition line names owns', async () => {
@@ -662,7 +789,7 @@ await test('wave: tasks run in order, each base is the verified head, and the la
   assert.equal(r.find('verify-head-t1').effort, undefined)
   assert.equal(r.res.totals.agents, 3 * 5 + 2)
   assert.equal(r.res.totals.completed, 3)
-  assert.equal(r.childArgs[0].args.reportPath, 'C:\\w/task-1-report.md'.replace('\\', '\\'))
+  assert.equal(r.childArgs[0].args.reportPath, 'C:\\w/task-1-report.md')
   assert.equal(r.childArgs[1].args.runLabel, 'b3-t2')
   assert.ok(r.res.tasks.every((t) => !('ledgerLines' in t)))
   assert.equal(r.res.ledgerLines.filter((l) => /: complete \(commits/.test(l)).length, 3)
@@ -786,6 +913,13 @@ await test('wave: arguments are validated before any agent runs', async () => {
   await throwsAsync(() => run(wave, { ...WAVE, tasks: [WAVE.tasks[0], WAVE.tasks[0]] }, rsp()), /duplicate task 1/)
   await throwsAsync(() => run(wave, { ...WAVE, tasks: [{ ...WAVE.tasks[0], base: BASE_SHA }] }, rsp()), /set by the wave/)
   await throwsAsync(() => run(wave, { ...WAVE, tasks: [{ ...WAVE.tasks[0], owns: undefined }] }, rsp()), /owns/)
+  await throwsAsync(() => run(wave, { ...WAVE, tasks: [{ ...WAVE.tasks[0], task: 'A1' }] }, rsp(), { sub: task }), /run label "b3-tA1"/)
+  await throwsAsync(() => run(wave, { ...WAVE, tasks: [{ ...WAVE.tasks[0], task: '4.1' }] }, rsp(), { sub: task }), /run label "b3-t4\.1"/)
+  await throwsAsync(() => run(wave, { ...WAVE, wave: 'a'.repeat(21), tasks: [{ ...WAVE.tasks[0], task: 1234567 }] }, rsp(), { sub: task }), /at most 29/)
+  await throwsAsync(() => run(wave, { ...WAVE, tasks: [WAVE.tasks[0], { ...WAVE.tasks[1], runLabel: 'b3-t1' }] }, rsp(), { sub: task }), /repeats run label "b3-t1"/)
+  const odd = await run(wave, { ...WAVE, tasks: [{ ...WAVE.tasks[0], task: '4.1', runLabel: 'b3-t4-1' }] }, rsp(), { sub: task })
+  assert.equal(odd.res.status, 'complete', 'an explicit runLabel makes an odd task id usable')
+  assert.equal(odd.childArgs[0].args.runLabel, 'b3-t4-1')
   await throwsAsync(() => run(wave, { ...WAVE, base: 'abc' }, rsp()), /40-hex/)
   await throwsAsync(() => run(wave, { ...WAVE, ports: [] }, rsp()), /ports/)
   await throwsAsync(() => run(wave, { ...WAVE, carried: [1] }, rsp()), /list of strings/)
@@ -882,7 +1016,7 @@ await test('docs: the README names every required arg, stop point, role and the 
   for (const w of ['task', 'title', 'repoDir', 'branch', 'base', 'briefPath', 'reportPath', 'workDir', 'scratchRoot', 'runLabel', 'owns', 'ports', 'trailer', 'maxRounds', 'maxAgents', 'answers', 'implemented', 'runtime', 'layout', 'baseline', 'foreignPaths', 'films', 'carried', 'bdlTaskPath']) {
     assert.ok(readme.includes(`\`${w}\``), `README lacks \`${w}\``)
   }
-  for (const w of ['precondition:implementer', 'precondition:verifyHead', 'implementer-continue', 'implementer-retry', 'budget', 'review', 'verifyHead', 'tasteCalls', 'deferredMinors', 'ledgerLines', 'append-ledger.mjs', 'harness.mjs', 'resumeFromRunId', 'bdl-task-stub', 'reCritic', 'escalatedFixer']) {
+  for (const w of ['precondition:implementer', 'precondition:verifyHead', 'implementer-continue', 'implementer-retry', 'budget', 'review', 'verifyHead', 'tasteCalls', 'deferredMinors', 'ledgerLines', 'append-ledger.mjs', 'harness.mjs', 'resumeFromRunId', 'bdl-task-stub', 'reCritic', 'escalatedFixer', 'verify-locked.mjs', 'gate:<k>', 'implementer-retry2', 'foreignPaths']) {
     assert.ok(readme.includes(w), `README lacks ${w}`)
   }
   assert.ok(!readme.includes(String.fromCharCode(0x2014)), 'README has an em dash')

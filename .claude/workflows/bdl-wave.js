@@ -32,6 +32,8 @@ if (!/^[a-z0-9][a-z0-9-]{0,20}$/.test(String(A.wave))) fail('wave must be lowerc
 if (!Array.isArray(A.ports) || !A.ports.length) fail('ports is required (the ports the nested runs may serve on)')
 if (!Array.isArray(A.tasks) || !A.tasks.length) fail('tasks must be a non-empty list of task entries')
 const seen = new Set()
+const labels = new Set()
+const RUN_LABEL = /^[a-z0-9][a-z0-9-]{0,28}$/ // the same rule bdl-task applies to runLabel
 A.tasks.forEach((t, i) => {
   if (!t || typeof t !== 'object') fail(`tasks[${i}] is not an object`)
   for (const k of ['task', 'title', 'briefPath', 'owns']) if (blank(t[k])) fail(`tasks[${i}].${k} is missing or empty`)
@@ -39,6 +41,12 @@ A.tasks.forEach((t, i) => {
   const key = String(t.task)
   if (seen.has(key)) fail(`duplicate task ${key}`)
   seen.add(key)
+  // bdl-task names its snap builds from runLabel, so a task id that cannot make a valid label would
+  // throw inside the nested run and stop the wave; refuse it here, before any task runs.
+  const label = t.runLabel || `${A.wave}-t${t.task}`
+  if (!RUN_LABEL.test(String(label))) fail(`tasks[${i}] gives run label "${label}", which is not lowercase letters, digits and dashes (at most 29 characters); use a simple task id like 4 or a1, or set tasks[${i}].runLabel`)
+  if (labels.has(label)) fail(`tasks[${i}] repeats run label "${label}"`)
+  labels.add(label)
 })
 const ANSWERS = A.answers === undefined || A.answers === null ? {} : A.answers
 if (typeof ANSWERS !== 'object' || Array.isArray(ANSWERS)) fail('answers must be an object keyed by task')

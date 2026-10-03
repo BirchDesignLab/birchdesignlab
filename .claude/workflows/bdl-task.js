@@ -66,6 +66,8 @@ let MAX_AGENTS = intArg('maxAgents', DEFAULT_MAX_AGENTS, 1, 1000)
 
 // Answers: appended across re-runs, never edited. Each entry's text reaches exactly one agent, so
 // earlier calls replay from cache. budget: no agent, the cap rises by the default once per entry.
+// A precondition entry (plain, or typed for the implementer or verifyHead) buys one retry for the
+// next failing call, in call order; implementer entries all go to the one implementer-continue.
 const AT = ['implementer', 'precondition', 'precondition:implementer', 'precondition:verifyHead', 'budget']
 const ANSWERS = []
 if (A.answers !== undefined && A.answers !== null) {
@@ -78,11 +80,20 @@ if (A.answers !== undefined && A.answers !== null) {
     ANSWERS.push({ at, text: String(e.text).trim(), used: at === 'budget' })
   })
 }
-function takeAnswers(match) {
+// takeAll: every unused match (the implementer-continue takes all of its answers). takeOne: the next
+// unused match in list order, so each failing precondition consumer gets one entry and a later entry
+// is never swallowed by an earlier consumer (which would change its cached prompt on a resume).
+function takeAll(match) {
   const es = ANSWERS.filter((e) => !e.used && match(e.at))
   es.forEach((e) => { e.used = true })
-  return es.length ? ['Controller answers (binding):', ...es.map((e) => `* (${e.at}) ${e.text}`)].join(NL) : ''
+  return es
 }
+function takeOne(match) {
+  const e = ANSWERS.find((x) => !x.used && match(x.at))
+  if (e) e.used = true
+  return e || null
+}
+const answerText = (es) => (es.length ? ['Controller answers (binding):', ...es.map((e) => `* (${e.at}) ${e.text}`)].join(NL) : '')
 let IMPLEMENTED = null
 if (A.implemented !== undefined && A.implemented !== null) {
   const h = A.implemented && typeof A.implemented.head === 'string' ? A.implemented.head.trim() : ''
@@ -266,7 +277,8 @@ function sortCritic(list, prefix, into) {
     else { into.push(g); track(g, 'open') }
   }
 }
-const gateFindings = (g, tag) => (g.ok ? [] : (g.problems.length ? g.problems : ['gate not ok but no problem listed']).map((p, k) => mk(`${tag}:${k + 1}`, `gate: ${p}`, 'gate')))
+// Gate ids carry no round tag (gate:1, gate:2), so a gate still red after a fix matches its earlier id and counts as surviving.
+const gateFindings = (g) => (g.ok ? [] : (g.problems.length ? g.problems : ['gate not ok but no problem listed']).map((p, k) => mk(`gate:${k + 1}`, `gate: ${p}`, 'gate')))
 const expectedCases = () => FILMS.map((f) => f.id)
 
 // ---------- verifyHead ----------
@@ -294,11 +306,16 @@ async function verifyHead(label, since, exact) {
   const run = (p, l) => ask('verifyHead', l, 'Verify', VERIFY_HEAD, p)
   let v = await run(prompt, label)
   let r = parseHead(v)
-  if (!r) {
-    const ans = takeAnswers((at) => at === 'precondition:verifyHead' || at === 'precondition')
-    if (ans) { v = await run(`${prompt}${NL}${NL}${ans}`, `${label}-retry`); r = parseHead(v) }
+  // Each answer buys one more attempt (label-retry, label-retry2, ...) and carries the earlier ones, so a resume replays them.
+  const given = []
+  for (let k = 1; !r; k++) {
+    const e = takeOne((at) => at === 'precondition:verifyHead' || at === 'precondition')
+    if (!e) break
+    given.push(e)
+    v = await run(`${prompt}${NL}${NL}${answerText(given)}`, k === 1 ? `${label}-retry` : `${label}-retry${k}`)
+    r = parseHead(v)
   }
-  if (!r) halt('precondition', 'precondition:verifyHead', `verifyHead ${label} did not return a 40-hex sha that git confirmed (${v ? JSON.stringify({ revParse: String(v.revParse).slice(0, 60), catFile: String(v.catFile).slice(0, 60) }) : 'no result'}); check the repository in ${REPO}, then answer at precondition:verifyHead to re-run it once`)
+  if (!r) halt('precondition', 'precondition:verifyHead', `verifyHead ${label} did not return a 40-hex sha that git confirmed (${v ? JSON.stringify({ revParse: String(v.revParse).slice(0, 60), catFile: String(v.catFile).slice(0, 60) }) : 'no result'}); check the repository in ${REPO}, then answer at precondition:verifyHead to run it once more`)
   if (exact && r.head !== exact) halt('precondition', 'precondition:verifyHead', `implemented.head ${h7(exact)} is not git HEAD ${r.head} in ${REPO}; check out the named head or pass git's, then re-run`)
   return r
 }
@@ -334,17 +351,20 @@ async function implement() {
   const prompt = implementerPrompt()
   let impl = await ask('implementer', 'implementer', 'Implement', WORK, prompt)
   if (!impl) { S.questions.push('implementer returned no result'); halt('implementer', 'implementer', 'implementer returned no result') }
-  if (impl.preconditionFailed) {
-    const ans = takeAnswers((at) => at === 'precondition:implementer' || at === 'precondition')
-    if (!ans) halt('precondition', 'precondition:implementer', `implementer: ${impl.preconditionFailed}`)
-    log(`implement: precondition failure (${impl.preconditionFailed}); retrying with the controller answer`)
-    impl = await ask('implementer', 'implementer-retry', 'Implement', WORK, `${prompt}${NL}${NL}${ans}`)
-    if (!impl) halt('implementer', 'implementer', 'implementer-retry returned no result')
-    if (impl.preconditionFailed) halt('precondition', 'precondition:implementer', `implementer: ${impl.preconditionFailed}`)
+  // Each answer buys one more attempt (implementer-retry, implementer-retry2, ...) and carries the earlier ones.
+  const given = []
+  while (impl.preconditionFailed) {
+    const e = takeOne((at) => at === 'precondition:implementer' || at === 'precondition')
+    if (!e) halt('precondition', 'precondition:implementer', `implementer: ${impl.preconditionFailed}`)
+    given.push(e)
+    const lbl = given.length === 1 ? 'implementer-retry' : `implementer-retry${given.length}`
+    log(`implement: precondition failure (${impl.preconditionFailed}); running ${lbl} with the controller answer`)
+    impl = await ask('implementer', lbl, 'Implement', WORK, `${prompt}${NL}${NL}${answerText(given)}`)
+    if (!impl) halt('implementer', 'implementer', `${lbl} returned no result`)
   }
   if (impl.status === 'BLOCKED' || impl.status === 'NEEDS_CONTEXT') {
     S.questions.push(...impl.questions); S.concerns.push(...impl.concerns)
-    const ans = takeAnswers((at) => at === 'implementer')
+    const ans = answerText(takeAll((at) => at === 'implementer'))
     if (!ans) halt('implementer', 'implementer', `implementer ${impl.status}: ${impl.questions.join('; ') || 'see the report'}`)
     log(`implement: implementer ${impl.status}; running implementer-continue with the controller answers`)
     const cont = await ask('implementer', 'implementer-continue', 'Implement', WORK, continuePrompt(impl, ans))
@@ -411,7 +431,8 @@ function verifierPrompt(tag, head, refilm, from) {
 function gatePrompt(label, head) {
   return [
     `You are the independent gate for ${CONTEXT}`,
-    'Trust no earlier report. Run npm run verify (vitest, astro check, build) once in the repo, saving its full output under ' + scratch(label) + '.',
+    'Trust no earlier report. You run beside the critic and the verifier, whose snap builds hold the render lock, so never run npm run verify bare: it rewrites dist/ and .astro/ without the lock.',
+    `Run exactly once in ${REPO}: node scripts/workflows/verify-locked.mjs --log ${join(scratch(label), 'verify.log')} (it queues on the render lock, then runs npm run verify: vitest, astro check, build; a wait for the lock is normal; run it under one Monitor, since lock wait plus build can pass 10 minutes). Its exit code is the verify result.`,
     `Then check: git branch --show-current is ${A.branch}; git rev-parse HEAD equals ${head}; git status --porcelain shows nothing${foreignText}.`,
     'One line per failure in problems (command and first error lines, file paths and messages only); ok is true only with no problems.',
     READONLY, SHELL, rules(PORT.dev),
@@ -495,7 +516,7 @@ async function flow() {
   if (missing.length) halt('review', 'review', `no result from ${missing.join(', ')}; there is no clean verdict without all three, so re-run the review stages with implemented: { head }`)
   S.gateOk = rv[2].ok
   sortCritic(rv[0].findings, 'critic:', open)
-  for (const f of takeFilm(rv[1], 'r0').concat(gateFindings(rv[2], 'gate-0'))) { open.push(f); track(f, 'open') }
+  for (const f of takeFilm(rv[1], 'r0').concat(gateFindings(rv[2]))) { open.push(f); track(f, 'open') }
   log(`review: critic ${rv[0].verdict}, ${open.length} open, ${S.taste.length} taste, ${S.minors.length} minor`)
 
   // Fix loop.
@@ -552,8 +573,8 @@ async function flow() {
     const [rc, film, gate] = skipCritic ? [null, res[0], res[1]] : res
 
     const next = []
-    if (gate) { S.gateOk = gate.ok; next.push(...gateFindings(gate, `gate-r${r}`)) }
-    else { S.gateOk = false; next.push(mk(`gate-r${r}:0`, `gate-r${r} returned no result`, 'gate')) }
+    if (gate) { S.gateOk = gate.ok; next.push(...gateFindings(gate)) }
+    else { S.gateOk = false; next.push(mk('gate:0', `gate-r${r} returned no result`, 'gate')) }
     if (film) next.push(...takeFilm(film, `r${r}`))
     else next.push(...active.filter((f) => f.src === 'film'), mk(`film:r${r}`, `verifier-r${r} returned no result; nothing was re-filmed`, 'film'))
     const verdicts = new Map(((rc && rc.verdicts) || []).map((x) => [cleanId(x.id), x]))
@@ -567,7 +588,7 @@ async function flow() {
       next.push(...fresh)
     }
     for (const f of next) if (active.some((a) => a.id === f.id)) na[f.id] = (na[f.id] || 0) + 1
-    for (const f of next) if (!S.findings.has(f.id)) track(f, 'open')
+    for (const f of next) if (!S.findings.has(f.id) || f.src === 'gate') track(f, 'open') // a gate finding that survives shows the latest problem text
     for (const f of active) if (!next.some((n) => n.id === f.id)) setState(f.id, 'fixed')
     const closed = active.filter((f) => !next.some((n) => n.id === f.id)).length
     S.roundLog.push(`fix round ${r}/${MAX_ROUNDS} (${closed} addressed, ${next.length} open; head ${h7(S.head)})`)

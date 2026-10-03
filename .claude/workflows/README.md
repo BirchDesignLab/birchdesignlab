@@ -6,10 +6,11 @@ Saved, parameterized, harness-tested Workflow scripts for this repo's visual and
 |---|---|
 | `bdl-task.js` | One task: implement, verify the head from git, review (critic, film verifier, gate) in parallel, fix up to `maxRounds`, return |
 | `bdl-wave.js` | A wave: each task as a nested `bdl-task` in order, carries forward, stops at the first task that does not complete |
-| `smoke/bdl-task-stub.js` | Zero-agent stand-in for `bdl-task` (`bdlTaskPath`) to smoke `bdl-wave` in the real runtime |
+| `smoke/bdl-task-stub.js` | Stand-in for `bdl-task` that runs no agents (`bdlTaskPath`) to smoke `bdl-wave` in the real runtime; the wave's own Haiku `verifyHead` reads still run |
 | `../agents/<model>-<effort>.md` | Agent-tool definitions (`haiku`, `sonnet-low/medium/high`, `opus-low/medium/high`); the Agent tool has no effort setting |
 | `../../scripts/workflows/harness.mjs` | Mock harness: stubs `agent()` and `parallel()`, runs every scenario, exits 1 on a failure |
 | `../../scripts/workflows/mutants.mjs` | Breaks the scripts one rule at a time and proves the harness fails each time |
+| `../../scripts/workflows/verify-locked.mjs` | Runs `npm run verify` while holding the render lock; what the gate runs |
 | `../../scripts/workflows/append-ledger.mjs` | Appends a result's `ledgerLines` to a ledger file, skipping lines already there |
 
 ## Script facts
@@ -44,6 +45,8 @@ Workflow({ scriptPath: ".claude/workflows/bdl-task.js", args: {
 
 Required: `task`, `title`, `repoDir`, `branch`, `base` (full 40-hex sha), `briefPath`, `reportPath`, `workDir`, `scratchRoot`, `runLabel` (lowercase letters, digits, dashes, at most 29: it names the snap builds), `owns`, `ports` (three or more distinct, 4460 to 4480), `trailer`. A missing one throws before any agent runs.
 
+Keep `reportPath`, `workDir` and `scratchRoot` out of the clean-tree checks: put them outside the repo, under a gitignored path (`scripts/themes/.out/` is gitignored), or list them in `foreignPaths`. A report or review file that shows up as untracked and sits outside `owns` makes gate-0 report a dirty tree that no fixer may clear, and the task parks.
+
 Optional:
 
 - `school` or `schools`: named in the critic's prompt; each school's dossier and the brief sections the brief names are read.
@@ -77,7 +80,7 @@ Optional:
 3. **Review**, in parallel on the verified head:
    - **critic** (read-only): the diff `base..head` against the brief and the school's dossier. It does not wait for the verifier's sheets; it reads code and renders its own stills on its port. Findings `{ id, severity: blocker | important | minor | taste, file, line, summary, fix }`, ids prefixed `critic:`.
    - **verifier**: builds a snap (`scripts/themes/snap.mjs`, its own label and port), films every case at the sizes and schemes with GPU Chromium, writes founder sheets and an `index.md` to `<workDir>/<runLabel>/sheets/<r0, r1, ...>/`, and returns per case `{ id, result: pass | fail, evidence, sheet }` plus the WebGL `renderer` string. A fail is an important finding (`film:<id>`); so is a case it did not report, and so are films on a software renderer (`film:renderer`).
-   - **gate-0**: `npm run verify` once, then branch, HEAD equals the verified head, clean tree. Problems become important findings (`gate-0:<k>`).
+   - **gate-0**: `node scripts/workflows/verify-locked.mjs` once (it takes the render lock from `scripts/themes/lib/render-lock.mjs`, then runs `npm run verify`; a bare `npm run verify` would clean and rebuild `dist/` beside the verifier's and critic's snap builds, which hold that lock), then branch, HEAD equals the verified head, clean tree. Problems become important findings with stable ids `gate:<k>` (no round tag), so a gate that is still red after a fix is the same finding: it counts as surviving and brings in the `escalatedFixer`.
 4. **Sort.** `taste` findings never enter the fix loop: they go to `tasteCalls` for the founder. `minor` findings go to `deferredMinors`. Blockers and important findings are open.
 5. **Fix loop**, round r = 1..`maxRounds` while anything is open: the fixer (commits only `owns`, `npm run verify` before each commit, may decline a finding with a reason), verifyHead, then in parallel the `reCritic` over the fix diff (ADDRESSED or NOT ADDRESSED per finding, plus new breakage), the verifier re-filming the failed cases and any case the fix diff could move, and `gate-r<r>`. A round whose open findings all came from a gate skips the `reCritic`. A finding that survives a round brings in the `escalatedFixer`. A round with no new commit is not reviewed: the findings stay open with a `progress-r<r>` finding (unless every finding was declined, which parks).
 6. **Park** when findings are still open after round `maxRounds`, a finding was declined, or a fixer was blocked: status `parked`, the controller rules.
@@ -101,14 +104,18 @@ Optional:
 
 | `stopped` | `stopPoint` | Meaning | Consumer of `answers` |
 |---|---|---|---|
-| `implementer` | `implementer` | the implementer was BLOCKED, NEEDS_CONTEXT or returned nothing | `implementer-continue`, which finishes on top of the existing commits |
-| `precondition` | `precondition:implementer` | branch, HEAD or tree was not as stated; `problem` names the files | the implementer re-run once as `implementer-retry` |
-| `precondition` | `precondition:verifyHead` | git did not confirm a 40-hex sha, or `implemented.head` is not HEAD | verifyHead re-run once as `verify-head-<x>-retry` |
+| `implementer` | `implementer` | the implementer was BLOCKED or NEEDS_CONTEXT | every unused `implementer` entry, all in one `implementer-continue`, which finishes on top of the existing commits |
+| `implementer` | `implementer` | the implementer or a retry returned nothing (`problem` says so) | none: no answer applies; re-run the task (a resume replays what finished) |
+| `precondition` | `precondition:implementer` | branch, HEAD or tree was not as stated; `problem` names the files | the next `precondition:implementer` or plain `precondition` entry: the implementer re-run as `implementer-retry` |
+| `precondition` | `precondition:verifyHead` | git did not confirm a 40-hex sha | the next `precondition:verifyHead` or plain `precondition` entry: verifyHead re-run as `verify-head-<x>-retry` |
+| `precondition` | `precondition:verifyHead` | `implemented.head` is not git HEAD (`problem` names both) | none: no answer applies; check out the named head or pass git's, then re-run |
 | `verifyHead` | `verifyHead` | git HEAD is still the base: the implementer made no commit | none: start a fresh run |
 | `review` | `review` | the critic, verifier or gate-0 returned nothing, so there is no clean verdict | none: re-run the review stages with `implemented: { head }` |
 | `budget` | `budget` | the next call would pass `maxAgents` | none: each entry raises the cap by 14, once |
 
-`answers: [{ at, text }]` is appended across re-runs and never edited. `at` is one of `implementer`, `precondition:implementer`, `precondition:verifyHead`, `precondition` (the first precondition failure) or `budget`; an unknown value throws. Each entry's text reaches exactly one agent (a budget entry reaches none), so earlier calls replay from cache. Re-run with `resumeFromRunId` and the full args:
+`answers: [{ at, text }]` is appended across re-runs and never edited. `at` is one of `implementer`, `precondition:implementer`, `precondition:verifyHead`, `precondition` (any precondition failure) or `budget`; an unknown value throws. Each entry's text reaches exactly one agent (a budget entry reaches none; the `implementer` entries all reach the one `implementer-continue`), so earlier calls replay from cache.
+
+A precondition entry buys one more attempt for the next failing call, in the order the calls run, never more: with two stops answered by two plain `precondition` entries, the first goes to the first failing call and the second to the next, and the first call's retry replays unchanged. A retry that fails again takes the next entry as another attempt (`implementer-retry2`, `verify-head-<x>-retry2`, ...), carrying the earlier answers; with no entry left, it stops. Prefer the typed `at` when you know which stop you are answering. Re-run with `resumeFromRunId` and the full args:
 
 ```
 Workflow({ scriptPath: ".claude/workflows/bdl-task.js", resumeFromRunId: "<runId>", args: <same args + answers> })
@@ -156,13 +163,13 @@ Runs each task as a nested `bdl-task` (`workflow({ scriptPath })`, one level of 
   bdlTaskPath?: ".claude/workflows/bdl-task.js" }
 ```
 
-Required: `wave` (lowercase, digits, dashes), `repoDir`, `branch`, `base`, `workDir`, `scratchRoot`, `trailer`, `ports`, and a non-empty `tasks` list whose entries each have `task`, `title`, `briefPath` and `owns`. Task numbers are unique. A task entry never carries `base` or `answers`. Defaults per task: `reportPath` is `<workDir>/task-<n>-report.md`, `runLabel` is `<wave>-t<n>`. Options a task does not set are not passed.
+Required: `wave` (lowercase, digits, dashes), `repoDir`, `branch`, `base`, `workDir`, `scratchRoot`, `trailer`, `ports`, and a non-empty `tasks` list whose entries each have `task`, `title`, `briefPath` and `owns`. Task numbers are unique. A task entry never carries `base` or `answers`. Defaults per task: `reportPath` is `<workDir>/task-<n>-report.md`, `runLabel` is `<wave>-t<n>`. Options a task does not set are not passed. Every task's run label (default or its own `runLabel`) is checked before any task runs: lowercase letters, digits and dashes, at most 29 characters, unique. A task id like `A1` or `4.1` fails with a message; use `a1`, `4`, or set that task's `runLabel`. The same `reportPath` / `workDir` placement rule as `bdl-task` applies.
 
 On `complete`, the next task's `base` is the verified head (one Haiku `verifyHead` read between tasks, never a head the child reported) and its `carries` gain an "Earlier in this wave" block: each earlier task's taste calls and deferred minors by id (`<task>/<id>`, so a later critic does not re-raise them) and any `carried` line. Any other status stops the wave; later tasks never start.
 
 Returns `{ wave, status: "complete" | "stopped" | "parked", stoppedTask?, stop?, base, head, tasks, totals, carried, tasteCalls, ledgerLines }`. `totals.agents` sums the tasks' agents plus the verify reads. To answer a stop, keep every arg and add `answers["<task>"]`; earlier tasks replay from cache. A `parked` task, or a child that threw, has no stop point: rule on it, then run the remaining tasks as a new `bdl-wave` with `base` at the current HEAD and `carried` set to the returned `carried`.
 
-Smoke the nesting in the real runtime with no agents: add `bdlTaskPath: ".claude/workflows/smoke/bdl-task-stub.js"`. A title containing "park" parks. The `bdl-task-stub` commits nothing, so the wave logs that its head differs from git and uses git's.
+Smoke the nesting in the real runtime with no `bdl-task` agents (the N-1 between-task Haiku `verifyHead` reads still run): add `bdlTaskPath: ".claude/workflows/smoke/bdl-task-stub.js"`. A title containing "park" parks. The `bdl-task-stub` commits nothing, so the wave logs that its head differs from git and uses git's.
 
 ## Controller procedure
 
@@ -183,7 +190,7 @@ After:
 
 ## Harness
 
-`node scripts/workflows/harness.mjs` (repo root). It imports each script from a data URL with the body wrapped in an async function, stubs `agent()`, `parallel()`, `phase()`, `log()` and `workflow()`, plays git with a fixture and plays the runtime cache with a Map. The stub checks every call: model set, effort set unless Haiku, none on Haiku, no `xhigh` or `max`, no `undefined` in a prompt, the no-remote rule everywhere, the full rules list in every prompt but the git read, the read-only rule in every read-only role, every mock return valid against its schema. Scenarios cover the happy path, a fix round, the round cap, taste and minor routing, declines, budget stops and cache-stable answers, the implementer and precondition stops and their retries, `verifyHead` rejections, `implemented`, `runtime` roles, role validation, argument validation, every wave behaviour, `append-ledger.mjs`, LF-only files, the agent definitions and this README's coverage of the args and stop points.
+`node scripts/workflows/harness.mjs` (repo root). It imports each script from a data URL with the body wrapped in an async function, stubs `agent()`, `parallel()`, `phase()`, `log()` and `workflow()`, plays git with a fixture and plays the runtime cache with a Map. The stub checks every call: model set, effort set unless Haiku, none on Haiku, no `xhigh` or `max`, no `undefined` in a prompt, the no-remote rule everywhere, the full rules list in every prompt but the git read, the read-only rule in every read-only role, every mock return valid against its schema. Scenarios cover the happy path, a fix round, the round cap, taste and minor routing, declines, budget stops and cache-stable answers, the implementer and precondition stops and their retries (including three-run resumes with several answers), a gate that stays red, the render-lock wrapper, `verifyHead` rejections, `implemented`, `runtime` roles, role validation, argument validation, every wave behaviour, `append-ledger.mjs`, LF-only files, the agent definitions and this README's coverage of the args and stop points.
 
 `node scripts/workflows/mutants.mjs` copies the scripts, breaks one rule at a time (drops the no-remote rule, trusts an agent head, stops clamping, and so on) and checks that the harness fails the scenario that guards it. Run both after any change to a workflow.
 

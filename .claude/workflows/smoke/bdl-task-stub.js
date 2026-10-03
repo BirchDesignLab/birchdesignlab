@@ -5,7 +5,8 @@ export const meta = {
 }
 
 /*
- * Smoke test for bdl-wave in the real Workflow runtime, with no agents and no repo changes:
+ * Smoke test for bdl-wave in the real Workflow runtime, with no bdl-task agents and no repo changes
+ * (the wave's own Haiku verifyHead read between tasks still runs, N-1 reads for N tasks):
  *   Workflow({ scriptPath: ".claude/workflows/bdl-wave.js", args: { ...any valid wave args,
  *     bdlTaskPath: ".claude/workflows/smoke/bdl-task-stub.js" } })
  * Expect status "complete" if no title has "park" in it; the wave stops at the first one that does.
