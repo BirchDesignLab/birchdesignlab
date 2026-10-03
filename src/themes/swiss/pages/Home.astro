@@ -112,6 +112,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
      the side-by-side reset below. */
   @media (max-width: 639.98px) {
     .door + .door { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
+    /* The last door gives up its bottom padding so "How we build" hangs one
+       row gap under its body, as it does side by side. */
+    .door:last-child { padding-bottom: 0; }
   }
   .door-body { max-width: 32em; }
   .more { grid-column: 1 / -1; font-family: var(--font-display); font-weight: 700; justify-self: start; }
