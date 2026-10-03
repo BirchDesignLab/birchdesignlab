@@ -48,8 +48,14 @@ Four elements:
 - half ring and quarter ring: the same radii.
 
 Rings sit on only two centres, (30,30) and (30,70). Two rings on those centres
-share one band (y 40 to 60), which is why 3, 5 and 8 close without a join to
-draw. No diagonals, no tapering.
+share one band (y 40 to 60), which is why 3, 5 and 8 close on a shared band.
+No diagonals, no tapering. Where two elements meet edge to edge (the half ring
+on the bar of 0, the quarter ring on the stem of 1, and the like) one runs
+about one unit under its neighbour (bars +1 unit, arcs +3 degrees), so
+antialiasing leaves no hairline seam; the overlap is hidden once the digit is
+solid. Checked on the 1x and 2x zoom shots (`zoom__`, `zoom2x__`): the column
+through the 1 of the doors, which read 68 against ink 20 before, now reads 20
+throughout.
 
 Digits (centres in units; element lists are in `build-numerals.mjs`):
 
@@ -126,8 +132,13 @@ quality depends on weight (taste call below), not on legibility.
 - `numerals.svg` and `build-numerals.mjs` into `src/themes/bauhaus/parts/`
   (the generator's element list becomes a typed map in `Numeral.astro`).
 - `Numeral.astro`: renders the pattern above for a string of digits, inlining
-  the paths with `asm` classes, `--from` and `--d` per element, inside the
-  `data-reveal` the page already has. Parent keeps `aria-hidden`.
+  the paths with `asm` classes, `--from` and `--d` per element. Parent keeps
+  `aria-hidden`.
+- Reveal gate: the doors, offerings and steps have no `data-reveal` today (the
+  only ones are `Home.astro:54` and `:81`, `Services.astro:61`,
+  `Footer.astro:13`), so Tier B adds it, on `.door-top`, `.offering-head` and
+  `.step-top` or on the `Numeral.astro` root, so the numerals assemble when
+  scrolled to rather than on load below the fold (E3, `tier3-briefs/bauhaus.md:121`).
 - CSS: the `.num` and `.nm` block in `proof.css` replaces `theme.css:260-266`
   (`font-family`, `font-weight`, `letter-spacing`, `tabular-nums` go).
 - `.designation`: League Spartan 700 with `tabular-nums` (`Home.astro:215`).
@@ -146,4 +157,6 @@ quality depends on weight (taste call below), not on legibility.
 2. Gap between digits is 0.07em; the 1 carries open space on its left.
 3. Reduced motion: the existing `.asm` rule already shows finished numerals.
 4. Not seen in the proof: the real arrival through the switcher and the
-   reveal gate; only the elements' animation was stepped.
+   reveal gate; only the elements' animation was stepped. The reveal gate does
+   not exist on these parts yet; Tier B adds `data-reveal` (see What Tier B
+   lifts).

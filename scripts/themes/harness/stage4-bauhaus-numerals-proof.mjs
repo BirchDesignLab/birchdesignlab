@@ -220,7 +220,31 @@ async function capture() {
   }
   await writeFile(join(out, 'checks.json'), JSON.stringify(report, null, 2) + '\n');
   await assembly(browser);
+  await zoom2x(browser);
   await browser.close();
+}
+
+/* 2x zoom shots (deviceScaleFactor 2) of the first built numeral of each part,
+   so seams and joins can be inspected at two pixel densities (zoom__ is 1x). */
+async function zoom2x(browser) {
+  for (const scheme of SCHEMES) {
+    const { context, page } = await newCtx(browser, { w: 1440, h: 900, dpr: 2 }, scheme);
+    for (const [pname, route] of Object.entries(PAGES)) {
+      await prep(page, scheme, route, 'new');
+      for (const [part, [pp, sel]] of Object.entries(PARTS)) {
+        if (pp !== pname) continue;
+        const loc = page.locator(sel).first();
+        if (!(await loc.count())) continue;
+        await loc.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(250);
+        const numEl = loc.locator('.num').first();
+        if (!(await numEl.count())) continue;
+        const bb = await numEl.boundingBox();
+        await page.screenshot({ path: shot('zoom2x', part, 'new', scheme), clip: { x: Math.max(0, bb.x - 12), y: Math.max(0, bb.y - 12), width: bb.width + 24, height: bb.height + 24 } });
+      }
+    }
+    await context.close();
+  }
 }
 
 /* Assembly: the specimen's 0 to 4 with the existing .asm machinery, paused and

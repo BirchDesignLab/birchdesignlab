@@ -37,28 +37,32 @@ const ring = (cx, cy) => ({
      `M${cx - r} ${cy}A${r} ${r} 0 1 1 ${cx + r} ${cy}A${r} ${r} 0 1 1 ${cx - r} ${cy}Z`,
 });
 /* Sweep in screen angles (y down): 0 = right, 90 = down, 180 = left, 270 = up. */
-const arc = (kind, cx, cy, a0, span) => {
-  const a1 = a0 + span;
-  const large = span > 180 ? 1 : 0;
+/* e0/e1: degrees the start/end edge runs on past its true angle, into the
+   neighbour it abuts, so antialiasing leaves no hairline seam. Hidden once solid. */
+const arc = (kind, cx, cy, s0, span, e0 = 0, e1 = 0) => {
+  const a0 = s0 - e0;
+  const a1 = s0 + span + e1;
+  const large = a1 - a0 > 180 ? 1 : 0;
   return {
     kind, cx, cy,
     d: `M${P(pt(cx, cy, a0, R))}A${R} ${R} 0 ${large} 1 ${P(pt(cx, cy, a1, R))}L${P(pt(cx, cy, a1, r))}A${r} ${r} 0 ${large} 0 ${P(pt(cx, cy, a0, r))}Z`,
   };
 };
-const half = (cx, cy, which) => arc('half', cx, cy, { upper: 180, lower: 0, left: 90, right: 270 }[which], 180);
-const quad = (cx, cy, which) => arc('quad', cx, cy, { ur: 270, lr: 0, ll: 90, ul: 180 }[which], 90);
+const half = (cx, cy, which, e0, e1) => arc('half', cx, cy, { upper: 180, lower: 0, left: 90, right: 270 }[which], 180, e0, e1);
+const quad = (cx, cy, which, e0, e1) => arc('quad', cx, cy, { ur: 270, lr: 0, ll: 90, ul: 180 }[which], 90, e0, e1);
+const X = 3; // overlap, degrees (about 1 unit at mid radius)
 
 const DIGITS = {
-  0: [half(30, 30, 'upper'), bar(0, 30, 20, 40), bar(40, 30, 20, 40), half(30, 70, 'lower')],
-  1: [bar(40, 0, 20, 100), quad(40, 30, 'ul')],
-  2: [half(30, 30, 'upper'), quad(30, 30, 'lr'), bar(0, 40, 30, 20), bar(0, 40, 20, 60), bar(0, 80, 60, 20)],
-  3: [half(30, 30, 'upper'), quad(30, 30, 'lr'), quad(30, 70, 'ur'), half(30, 70, 'lower')],
+  0: [half(30, 30, 'upper', X, X), bar(0, 30, 20, 40), bar(40, 30, 20, 40), half(30, 70, 'lower', X, X)],
+  1: [bar(40, 0, 20, 100), quad(40, 30, 'ul', 0, X)],
+  2: [half(30, 30, 'upper', 0, X), quad(30, 30, 'lr'), bar(0, 40, 31, 20), bar(0, 40, 20, 60), bar(0, 80, 60, 20)],
+  3: [half(30, 30, 'upper', 0, X), quad(30, 30, 'lr'), quad(30, 70, 'ur', 0, X), half(30, 70, 'lower')],
   4: [bar(0, 0, 20, 60), bar(0, 40, 60, 20), bar(40, 0, 20, 100)],
-  5: [bar(0, 0, 60, 20), bar(0, 0, 20, 60), bar(0, 40, 30, 20), quad(30, 70, 'ur'), half(30, 70, 'lower')],
-  6: [quad(30, 30, 'ul'), bar(0, 30, 20, 40), ring(30, 70)],
-  7: [bar(0, 0, 30, 20), quad(30, 30, 'ur'), bar(40, 30, 20, 70)],
+  5: [bar(0, 0, 60, 20), bar(0, 0, 20, 60), bar(0, 40, 31, 20), quad(30, 70, 'ur', 0, X), half(30, 70, 'lower')],
+  6: [quad(30, 30, 'ul', X, 0), bar(0, 30, 20, 40), ring(30, 70)],
+  7: [bar(0, 0, 31, 20), quad(30, 30, 'ur', 0, X), bar(40, 30, 20, 70)],
   8: [ring(30, 30), ring(30, 70)],
-  9: [ring(30, 30), bar(40, 30, 20, 40), quad(30, 70, 'lr')],
+  9: [ring(30, 30), bar(40, 30, 20, 40), quad(30, 70, 'lr', X, 0)],
 };
 
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">\n`;
