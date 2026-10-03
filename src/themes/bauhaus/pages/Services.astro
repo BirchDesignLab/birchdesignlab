@@ -19,6 +19,9 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     <circle class="asm" cx="104" cy="112" r="104" fill="var(--blue)" style="--from: translateX(-60%) scale(0.3); --d: 0ms" />
     <rect class="asm" x="226" y="8" width="208" height="208" fill="var(--red)" style="--from: translateX(60%) rotate(90deg) scale(0.3); --d: 160ms" />
     <rect class="asm" x="0" y="212" width="440" height="8" fill="var(--mark)" style="--from: scaleX(0); --d: 320ms" />
+    <g transform="rotate(-45 217 110)">
+      <rect class="asm cross" x="67" y="102" width="300" height="16" fill="var(--mark)" style="--from: scaleX(0); --d: 480ms" />
+    </g>
   </svg>
   <div class="sublines">
     {copy.sublines.map((line) => <p>{line}</p>)}
@@ -133,6 +136,15 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     line-height: 1.2;
     letter-spacing: -0.01em;
     text-wrap: balance;
+  }
+  /* The printshop register: a small red square leads the first paragraph. */
+  .offering-body p:first-child::before {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    margin-right: 0.45em;
+    background: var(--red);
   }
 
   .process { background: var(--field-raised); border-top: var(--rule) solid var(--mark); padding-block: clamp(4rem, 8vw, 7rem); }

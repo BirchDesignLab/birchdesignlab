@@ -48,3 +48,28 @@ describe('bauhaus labels are lowercased by rule', () => {
     expect(block(read('src/themes/bauhaus/Footer.astro'), '.loc')).toMatch(/text-transform:\s*lowercase/);
   });
 });
+
+describe('bauhaus composition and printshop register (B2 task 2)', () => {
+  const page = (n: string) => read(`src/themes/bauhaus/pages/${n}.astro`);
+  it('services carries one 45 degree ink bar across the module', () => {
+    const s = page('Services');
+    expect(s.match(/rotate\(-45 /g)?.length).toBe(1);
+  });
+  it('contact focus is a red offset square, with a red rule on the panel', () => {
+    const c = page('Contact');
+    expect(c).toMatch(/8px 8px 0 2px var\(--red\)/);
+    expect(c).not.toContain("8px 8px 0 2px var(--blue)");
+    expect(c).toContain('form::before');
+  });
+  it('footer copyright row is lowercase by rule', () => {
+    const f = read('src/themes/bauhaus/Footer.astro');
+    const i = f.indexOf('.fine {');
+    expect(f.slice(i, f.indexOf('}', i))).toMatch(/text-transform:\s*lowercase/);
+  });
+  it('lab typophoto is decorative, lazy, grayscale and through astro:assets', () => {
+    const h = page('Home');
+    expect(h).toContain("from 'astro:assets'");
+    expect(h).toMatch(/<Image[^>]*alt=""[^>]*loading="lazy"/);
+    expect(h).toContain('grayscale(1)');
+  });
+});

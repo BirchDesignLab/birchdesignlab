@@ -96,6 +96,10 @@ const [lead, ...rest] = copy.founder.body;
     text-transform: lowercase;
   }
   .tree { width: 100%; max-width: 340px; height: auto; }
+  /* The tree panel rides along while the founder's text scrolls past. */
+  @media (min-width: 901px) {
+    .tree { position: sticky; top: 6rem; }
+  }
   .founder-body { grid-column: 7 / span 6; display: flex; flex-direction: column; gap: 1.4rem; font-size: 1.1875rem; }
   .founder-lead {
     font-family: var(--font-display);

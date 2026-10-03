@@ -40,7 +40,7 @@ const year = new Date().getFullYear();
        and the footer are both near-black; this rule is what separates
        them instead of a colour change. */
     border-top: var(--rule) solid var(--on-poster);
-    padding-block: clamp(3rem, 7vw, 5.5rem) 1.5rem;
+    padding-block: clamp(3rem, 7vw, 5.5rem) 0.75rem;
   }
   .site-footer a { color: var(--on-poster); }
   .corner {
@@ -93,6 +93,7 @@ const year = new Date().getFullYear();
     padding-top: 1rem;
     border-top: var(--rule-thin) solid var(--on-poster);
     font-size: 0.875rem;
+    text-transform: lowercase;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
