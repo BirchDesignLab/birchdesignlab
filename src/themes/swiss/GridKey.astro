@@ -58,15 +58,18 @@
 </script>
 
 <style>
-  /* The key: a 44px square on the frame's left margin line, bottom left, in
-     the strip the portal keeps free below the footer (the switcher is at the
-     bottom centre or right). Its face is three ink columns; held, it is an
-     ink block with paper columns (the school's inversion). */
+  /* The key: a 44px square in the footer's colophon, in flow on column 1's
+     left line, on a row of its own under the legal line. It is never fixed,
+     so it cannot meet the portal switcher (which floats over the bottom of
+     the viewport) or sit over body lines at any scroll position. Its face is
+     three ink columns; held, it is an ink block with paper columns (the
+     school's inversion). */
   .grid-key {
-    position: fixed;
-    z-index: 6;
-    left: var(--margin);
-    bottom: max(16px, env(safe-area-inset-bottom));
+    position: relative;
+    display: block;
+    grid-column: 1 / 2;
+    justify-self: start;
+    align-self: start;
     width: 44px;
     height: 44px;
     padding: 0;
@@ -74,6 +77,7 @@
     border-radius: 0;
     background: var(--field);
     cursor: pointer;
+    margin-top: calc(var(--u) * 0.5);
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;

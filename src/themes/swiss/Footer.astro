@@ -22,9 +22,9 @@ const year = new Date().getFullYear();
       ))}
     </nav>
     <p class="legal sw-meta sw-muted">&copy; {year} {chrome.name} <span aria-hidden="true">/</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
+    <GridKey />
   </div>
 </footer>
-<GridKey />
 
 <style>
   .foot {

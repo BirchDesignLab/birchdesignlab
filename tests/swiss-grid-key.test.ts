@@ -17,6 +17,11 @@ describe('swiss grid key', () => {
     expect(key).toMatch(/data-sw-guides hidden/);
     expect(footer).toContain('<GridKey />');
   });
+  it('sits in the footer flow, never fixed, so it cannot meet the portal switcher', () => {
+    const rule = key.slice(key.indexOf('.grid-key {'), key.indexOf('}', key.indexOf('.grid-key {')));
+    expect(rule).not.toMatch(/position:\s*fixed/);
+    expect(footer.indexOf('<GridKey />')).toBeLessThan(footer.indexOf('</footer>'));
+  });
   it('shows 12, 6 or 4 guides to match the school columns', () => {
     expect(key).toContain('repeat(var(--cols)');
     expect(key).toContain('nth-child(n + 7)');
