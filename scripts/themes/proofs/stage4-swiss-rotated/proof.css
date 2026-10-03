@@ -30,6 +30,15 @@ html[data-theme='swiss'] .sw-idx { display: none; }
   html[data-theme='swiss'] .founder-lead { grid-row: 2 / 4; }
   html[data-theme='swiss'] .founder-p1,
   html[data-theme='swiss'] .founder-p2 { grid-row: 4; }
+
+  /* Home and Services carry the same retired vertical kicker, so D2 gives
+     each a level place too: row 1 (the row the hidden index leaves empty),
+     on the column line the content already starts from. The content moves
+     down one row. */
+  html[data-theme='swiss'] .doors > .kicker { grid-column: 2 / 7; grid-row: 1; }
+  html[data-theme='swiss'] .doors > .door-list { grid-row: 2; }
+  html[data-theme='swiss'] .process > .kicker { grid-column: 2 / 7; grid-row: 1; }
+  html[data-theme='swiss'] .process > .steps { grid-row: 2; }
 }
 
 /* ---- The word ------------------------------------------------------------ */
@@ -66,39 +75,49 @@ html[data-theme='swiss'][data-proof-edge='right'] .sw-birch { right: 0; }
 html[data-theme='swiss'][data-proof-edge='off'] .sw-birch { display: none; }
 
 /* Fit: font size = H / (r * k), where H is the height of section 02, r is the
-   advance of "Birch" in ems and k = 0.9775 is ink over advance (the B's left
-   bearing and the h's right bearing sit inside the advance; probe). The word is
-   then nudged down by the B's bearing, 0.039em, so its ink runs from the
-   section's top edge to its bottom edge.
+   advance of "Birch" in ems and k is ink over advance (per band, below; the
+   bearings change with the axis). The word is then nudged down by --sw-ty so
+   its ink runs from the section's top edge to its bottom edge.
 
-   H is set by the text, not by the word. Between 1024 and 1440 it falls almost
-   linearly with the viewport (490, 459, 446 px at 1024, 1280, 1440), so it is
-   fitted as 575px - 9vw (within 7px over 1024 to 1440) and held at 430 to 500
-   beyond, where the frame stops growing (429.6 at 1920 and 2560).
+   H is set by the text, not by the word, and jumps 20 to 25px whenever the
+   text reflows, so no clamp of the viewport fits it. The harness injects a
+   ResizeObserver that writes the section's measured height to --sw-sec-h (the
+   Tier B rule). The clamp below is only the no-script fallback: right at its
+   anchors, off by up to about +6 / -23px between them.
 
    r depends on the width axis (weight 900; probe): 62 -> 1.725, 75 -> 2.064,
    105 -> 2.816. The axis steps open as the columns narrow, because the word's
    thickness (cap height, 0.737 of the font size) has to stay inside columns 1
    and 2 with a gutter-wide gap to the text that starts at column 3:
-     1440 and up: width 62, thickness 190, gap 39
-     1280 to 1439: width 75, thickness 164, gap 35 at 1280
-     1024 to 1279: width 105, thickness 128, gap 37 at 1024 */
+     1440 and up: width 62, thickness 196, gap 35
+     1280 to 1439: width 75, thickness 169, gap 34 at 1280
+     1024 to 1279: width 105, thickness 134, gap 29 at 1024 */
 html[data-theme='swiss'] .founder { --sw-sec-h: clamp(430px, 575px - 9vw, 500px); }
-html[data-theme='swiss'] .sw-birch { --sw-bwdth: 105; --sw-birch-r: 2.816; }
+html[data-theme='swiss'] .sw-birch { --sw-bwdth: 105; --sw-birch-r: 2.816; --sw-k: 0.9622; --sw-ty: 0.0777em; }
 @media (min-width: 1280px) {
-  html[data-theme='swiss'] .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; }
+  html[data-theme='swiss'] .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; }
 }
 @media (min-width: 1440px) {
-  html[data-theme='swiss'] .sw-birch { --sw-bwdth: 62; --sw-birch-r: 1.725; }
+  html[data-theme='swiss'] .sw-birch { --sw-bwdth: 62; --sw-birch-r: 1.725; --sw-k: 0.9775; --sw-ty: 0.039em; }
 }
 html[data-theme='swiss'] .sw-birch {
-  font-size: calc(var(--sw-sec-h) / (var(--sw-birch-r) * 0.9775));
-  translate: 0 0.039em;
+  font-size: calc(var(--sw-sec-h) / (var(--sw-birch-r) * var(--sw-k, 0.9775)));
+  translate: 0 var(--sw-ty, 0.039em);
 }
 
-/* Under 1024 the columns are too narrow to give the word its height (at 820
-   column 1 is 58px; the word would be 190px thick). The proof shows it at
-   full height there as evidence, and drops it as the answer. */
+/* 640 to 1023: column 1 is too narrow for the word (58px at 820), so the
+   word gets a gutter of its own. It takes the widest cut of the axis (125,
+   r 3.2211, the thinnest the face can be at a given height) and the text
+   steps right by --sw-tab-shift, so the gap between ink and text is the same
+   as on the laptop bands. */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  html[data-theme='swiss'] .sw-birch { --sw-bwdth: 125; --sw-birch-r: 3.2211; --sw-k: 0.9677; --sw-ty: 0.073em; }
+  html[data-theme='swiss'] .founder { --sw-tab-shift: max(0px, 162px - 15.43vw); }
+  html[data-theme='swiss'] .founder > .kicker { grid-column: 2 / -1; }
+  html[data-theme='swiss'] .founder > .kicker,
+  html[data-theme='swiss'] .founder-lead,
+  html[data-theme='swiss'] .founder-p { margin-left: var(--sw-tab-shift, 0px); }
+}
 
 /* Phones, the "run" variant: the word shrinks to a spine (font size 20vw,
    width 62, so about 58px thick and 134px long at 390) and the text makes

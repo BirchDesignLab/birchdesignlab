@@ -44,6 +44,7 @@ const SIZES = [
   { id: '1280', w: 1280, h: 800, dpr: 1 },
   { id: '1024', w: 1024, h: 768, dpr: 1 },
   { id: '820', w: 820, h: 1180, dpr: 1 },
+  { id: '768', w: 768, h: 1024, dpr: 1 },
   { id: '390', w: 390, h: 844, dpr: 2, mobile: true },
   { id: '360', w: 360, h: 800, dpr: 2, mobile: true },
 ];
@@ -56,7 +57,7 @@ const VARIANTS = {
   drop: ['off', 'drop'],
 };
 const variantsFor = (sz) => {
-  if (sz.w >= 640) return ['before', 'left', ...(sz.w >= 1280 ? ['right'] : []), ...(sz.w < 1024 ? ['drop'] : [])];
+  if (sz.w >= 640) return ['before', 'left', ...(sz.w >= 1280 ? ['right'] : [])];
   return ['before', 'run', 'drop'];
 };
 const only = (process.argv.find((a) => a.startsWith('--sizes=')) || '').slice(8).split(',').filter(Boolean);
@@ -103,8 +104,8 @@ async function newCtx(browser, sz, scheme) {
 }
 
 /** Load About; with a variant inject the face, sheet, markup and tags. */
-async function prep(page, scheme, variant, css) {
-  await page.goto(`${base}/t/swiss/about/`, { waitUntil: 'networkidle' });
+async function prep(page, scheme, variant, css, route = 'about') {
+  await page.goto(`${base}/t/swiss/${route}/`, { waitUntil: 'networkidle' });
   await page.addStyleTag({ content: COMP });
   const v = VARIANTS[variant];
   if (v) {
@@ -113,11 +114,15 @@ async function prep(page, scheme, variant, css) {
       root.dataset.proofEdge = edge;
       root.dataset.proofPhone = phone;
       const sec = document.querySelector('.founder');
+      if (!sec) return;
       const s = document.createElement('span');
       s.className = 'sw-birch';
       s.setAttribute('aria-hidden', 'true');
       s.textContent = 'Birch';
       sec.appendChild(s);
+      /* The Tier B fit: the section's own height, measured, written to
+         --sw-sec-h. The word is absolute, so it never feeds back into H. */
+      new ResizeObserver(() => sec.style.setProperty('--sw-sec-h', sec.getBoundingClientRect().height + 'px')).observe(sec);
     }, v);
     await page.addStyleTag({ content: FACE_CSS + '\n' + css });
   }
@@ -176,6 +181,74 @@ async function probe() {
     console.log(sz.id, JSON.stringify({ secH: +m.secH.toFixed(1), font: +m.font.toFixed(1), advance: +m.advance.toFixed(1), r: +(r.adv100 / 100).toFixed(4), thick100: r.thick100, vw: sz.w, ratioHvw: +(m.secH / sz.w).toFixed(4), boxL: +m.boxL.toFixed(1), boxR: +m.boxR.toFixed(1), secL: +m.secL.toFixed(1) }));
     await context.close();
   }
+  await browser.close();
+}
+
+/* --sweep=640:2560:16  Every width in the range on one page: section height,
+   the word's ink against it (pixels, from an ink-only shot), and the gap to
+   the nearest text. Writes sweep.json. */
+async function sweep(spec) {
+  const [lo, hi, step] = spec.split(':').map(Number);
+  const browser = await launch();
+  const css = await readFile(join(PROOF, 'proof.css'), 'utf8');
+  const { context, page } = await newCtx(browser, { w: lo, h: 900, dpr: 1 }, 'light');
+  await prep(page, 'light', 'left', css);
+  const rows = [];
+  for (let w = lo; w <= hi; w += step) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.waitForTimeout(350);
+    const m = await page.evaluate(() => {
+      const sec = document.querySelector('.founder');
+      const r = sec.getBoundingClientRect();
+      const items = [...sec.querySelectorAll('.kicker, .founder-lead, .founder-p')].map((e) => {
+        const g = document.createRange(); g.selectNodeContents(e); return g.getBoundingClientRect().left;
+      });
+      return { top: r.top + scrollY, h: r.height, left: r.left, textL: Math.min(...items), shown: getComputedStyle(document.querySelector('.sw-birch')).display !== 'none', scrollW: document.documentElement.scrollWidth };
+    });
+    const st = await page.addStyleTag({ content: 'body *{visibility:hidden!important} .sw-birch{visibility:visible!important} body,html{background:#fff!important}' });
+    const buf = await page.screenshot({ fullPage: true, clip: { x: 0, y: Math.max(0, m.top - 40), width: w, height: m.h + 80 } });
+    await st.evaluate((n) => n.remove());
+    const img = await loadImage(buf);
+    const cv = createCanvas(img.width, img.height); const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, img.width, img.height).data;
+    let x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1;
+    for (let y = 0; y < img.height; y++) for (let x = 0; x < img.width; x++) { if (d[(y * img.width + x) * 4] < 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    const pad = Math.min(40, m.top);
+    const row = { w, secH: +m.h.toFixed(1), inkTop: x1 < 0 ? null : +(y0 - pad).toFixed(1), inkBottom: x1 < 0 ? null : +(y1 + 1 - pad).toFixed(1), thick: x1 < 0 ? null : x1 + 1 - x0,
+      gap: x1 < 0 ? null : +(m.textL - (x1 + 1)).toFixed(1), textL: +(m.textL - m.left).toFixed(1), noOverflow: m.scrollW <= w };
+    rows.push(row);
+    console.log(JSON.stringify(row));
+  }
+  await writeFile(join(out, `sweep-${lo}-${hi}.json`), JSON.stringify(rows, null, 2) + '\n');
+  await context.close(); await browser.close();
+}
+
+/* --kickers  Home's doors and Services' process, frozen against the proof's
+   level kicker, at the sizes where the vertical rule applies and just below. */
+async function kickers() {
+  const browser = await launch();
+  const css = await readFile(join(PROOF, 'proof.css'), 'utf8');
+  const pages = [['home', '', '.doors'], ['services', 'services', '.process']];
+  const res = [];
+  for (const scheme of SCHEMES) for (const sz of SIZES.filter((z) => z.w >= 1024)) {
+    const { context, page } = await newCtx(browser, sz, scheme);
+    for (const [name, route, sel] of pages) for (const variant of ['before', 'left']) {
+      await prep(page, scheme, variant, css, route);
+      const loc = page.locator(sel).first();
+      await loc.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(150);
+      await loc.screenshot({ path: shot('kick', name, variant, scheme, sz.id) });
+      const k = await page.evaluate((s) => {
+        const e = document.querySelector(s + ' > .kicker'); const cs = getComputedStyle(e); const b = e.getBoundingClientRect();
+        const lh = parseFloat(cs.lineHeight) || 19;
+        return { writingMode: cs.writingMode, transform: cs.transform, lines: Math.round(b.height / lh), w: Math.round(b.width), h: Math.round(b.height), scrollW: document.documentElement.scrollWidth, clientW: document.documentElement.clientWidth };
+      }, sel);
+      res.push({ page: name, variant, scheme, size: sz.id, ...k });
+      console.log(`kick ${name} ${variant} ${scheme} ${sz.id} ${JSON.stringify(k)}`);
+    }
+    await context.close();
+  }
+  await writeFile(join(out, 'kickers.json'), JSON.stringify(res, null, 2) + '\n');
   await browser.close();
 }
 
@@ -276,8 +349,8 @@ async function sheets() {
   /* Section 02 crops across sizes: before against the word, per scheme. */
   for (const scheme of SCHEMES) {
     await sheet(join(out, `sec02-${scheme}.jpg`), `About section 02, ${scheme}: frozen build (left) against the word on the left edge (right)`,
-      ['1440', '1280', '1024', '820'], ['before', 'left edge'], 640,
-      (r, c) => img('crop', ['before', 'left'][c], scheme, ['1440', '1280', '1024', '820'][r]));
+      ['1440', '1280', '1024', '820', '768'], ['before', 'left edge'], 640,
+      (r, c) => img('crop', ['before', 'left'][c], scheme, ['1440', '1280', '1024', '820', '768'][r]));
     await sheet(join(out, `edges-${scheme}.jpg`), `Which edge, ${scheme}: left frame edge against column 12 (section 02 crops)`,
       ['1440', '1280'], ['left edge', 'right (col 12)'], 640,
       (r, c) => img('crop', ['left', 'right'][c], scheme, ['1440', '1280'][r]));
@@ -287,13 +360,19 @@ async function sheets() {
     await sheet(join(out, `phone-${scheme}.jpg`), `Phone section 02, ${scheme}: frozen, word running up the edge, word dropped`,
       ['390', '360'], ['before', 'run up the edge', 'dropped'], 360,
       (r, c) => img('crop', ['before', 'run', 'drop'][c], scheme, ['390', '360'][r]));
-    await sheet(join(out, `full-${scheme}.jpg`), `About whole page, the answer: word on the left edge from 1024, dropped at 820 and 390 (${scheme})`,
-      ['page'], ['1440', '1280', '1024', '820', '390'], 300,
-      (r, c) => img('full', ['left', 'left', 'left', 'drop', 'drop'][c], scheme, ['1440', '1280', '1024', '820', '390'][c]), null, 2200);
+    await sheet(join(out, `full-${scheme}.jpg`), `About whole page, the answer: word on the left edge from 640, dropped on phones (${scheme})`,
+      ['page'], ['1440', '1280', '1024', '820', '768', '390'], 270,
+      (r, c) => img('full', ['left', 'left', 'left', 'left', 'left', 'drop'][c], scheme, ['1440', '1280', '1024', '820', '768', '390'][c]), null, 2200);
+    await sheet(join(out, `kickers-${scheme}.jpg`), `Home doors and Services process, ${scheme}: vertical kicker (left) against the level kicker (right)`,
+      ['home 1440', 'home 1280', 'home 1024', 'services 1440', 'services 1280', 'services 1024'], ['before', 'level kicker'], 640,
+      (r, c) => img('kick', ['home', 'home', 'home', 'services', 'services', 'services'][r], ['before', 'left'][c], scheme, ['1440', '1280', '1024', '1440', '1280', '1024'][r]));
   }
 }
 
-if (process.argv.includes('--probe')) await probe();
+const swp = process.argv.find((a) => a.startsWith('--sweep='));
+if (swp) await sweep(swp.slice(8));
+else if (process.argv.includes('--kickers')) await kickers();
+else if (process.argv.includes('--probe')) await probe();
 else {
   if (!process.argv.includes('--sheets-only')) await capture();
   await sheets();
