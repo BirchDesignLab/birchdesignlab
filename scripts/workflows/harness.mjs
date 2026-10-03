@@ -149,7 +149,7 @@ const newGit = () => ({ head: BASE_SHA, n: 0 })
 const commit = (g, name) => {
   g.head = hex40(`${name}-${++g.n}`)
 }
-const work = (extra = {}) => ({ status: 'DONE', concerns: [], questions: [], ...extra })
+const work = (extra = {}) => ({ status: 'DONE', concerns: [], questions: [], report: 'did the task; npm run verify green', ...extra })
 const F = (id, severity, extra = {}) => ({ id, severity, file: 'src/a.css', line: '12', summary: `bad ${id}`, fix: 'do x', ...extra })
 const PASS = { verdict: 'pass', findings: [] }
 const failWith = (...fs) => ({ verdict: 'fail', findings: fs })
@@ -267,6 +267,19 @@ await test('task: one fix round is 10 agents and the re-critic, verifier and gat
   assert.equal(r.res.findings.find((f) => f.id === 'critic:C1').state, 'fixed')
   assert.equal(r.res.head, hex40('fixer-r1-2'))
   assert.equal(r.res.commits.length, 2)
+})
+
+await test('task: reports travel in the structured output, never only in a file', async () => {
+  const r = await run(task, BASE, rsp({
+    implementer: (p, c, l, g, next) => ({ ...next(), report: 'IMPL-REPORT-TEXT' }),
+    critic: () => failWith(F('C1', 'blocker')),
+    'fixer-r1': (p, c, l, g, next) => ({ ...next(), report: 'FIX-REPORT-TEXT' }),
+  }))
+  assert.match(r.text('critic'), /IMPL-REPORT-TEXT/, 'the critic sees the implementer report inline')
+  assert.match(r.text('fixer-r1'), /IMPL-REPORT-TEXT/, 'the fixer sees the report so far inline')
+  assert.match(r.res.report, /\[implementer\] IMPL-REPORT-TEXT/)
+  assert.match(r.res.report, /\[fixer-r1\] FIX-REPORT-TEXT/)
+  assert.match(r.text('implementer'), /if a tool refuses, skip the file/)
 })
 
 await test('task: findings still open after round 2 park, with the escalated fixer on round 2 (15 agents)', async () => {

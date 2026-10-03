@@ -75,7 +75,7 @@ Optional:
 
 ### Flow
 
-1. **Implement.** Precondition: branch is `branch`, HEAD is `base`, no tracked changes, no untracked files outside `foreignPaths`. The implementer reads the brief, changes only `owns`, runs `npm run verify` before each commit and never commits on red, writes `reportPath`, and returns `{ status, concerns, questions }`. A failed precondition, BLOCKED or NEEDS_CONTEXT stops the run.
+1. **Implement.** Precondition: branch is `branch`, HEAD is `base`, no tracked changes, no untracked files outside `foreignPaths`. The implementer reads the brief, changes only `owns`, runs `npm run verify` before each commit and never commits on red, and returns `{ status, concerns, questions, report }`. Reports travel in the structured output: workflow subagents can be refused when they write report files (seen on the port's own build, 10-02-26), so the script carries the implementer's and fixers' `report` text into the critic and fixer prompts and returns it as `report`; saving to `reportPath`, and the critics' review files and the verifier's `index.md`, are best effort. A failed precondition, BLOCKED or NEEDS_CONTEXT stops the run.
 2. **verifyHead** (Haiku): `git rev-parse HEAD`, `git cat-file -e <sha>^{commit}` (printing `EXISTS <sha>`) and `git log --oneline <since>..HEAD`. The script accepts only 40 hex that the second command confirmed. Every head the script uses (the review head, the gate head, the returned `head`, the commits list) comes from here, never from an agent's report. HEAD still at `base` stops the run.
 3. **Review**, in parallel on the verified head:
    - **critic** (read-only): the diff `base..head` against the brief and the school's dossier. It does not wait for the verifier's sheets; it reads code and renders its own stills on its port. Findings `{ id, severity: blocker | important | minor | taste, file, line, summary, fix }`, ids prefixed `critic:`.
@@ -92,7 +92,7 @@ Optional:
 { task, status: "complete" | "parked" | "stopped", base, head, commits, rounds,
   findings: [{ id, severity, file, line, summary, state: open | fixed | declined | deferred | taste }],
   parked: [{ ...finding, reason }], tasteCalls, deferredMinors,
-  sheets: [{ at, index, cases }], agents, questions, concerns, answersUnconsumed?,
+  sheets: [{ at, index, cases }], agents, questions, concerns, report, answersUnconsumed?,
   stopped?, stopPoint?, problem?, ledgerLines }
 ```
 

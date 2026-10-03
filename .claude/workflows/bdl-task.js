@@ -213,8 +213,9 @@ const WORK = {
     questions: { type: 'array', items: { type: 'string' } },
     preconditionFailed: { type: 'string', description: 'set (naming each file) only when the stated precondition does not hold; then change nothing' },
     declined: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, reason: { type: 'string' } }, required: ['id', 'reason'] }, description: 'fixer only: findings left unchanged on purpose, with the reason' },
+    report: { type: 'string', description: 'your report as plain text: what you did, files changed (file:line where useful), the npm run verify result' },
   },
-  required: ['status', 'concerns', 'questions'],
+  required: ['status', 'concerns', 'questions', 'report'],
 }
 const VERIFY_HEAD = {
   type: 'object',
@@ -258,7 +259,12 @@ const FILM = {
 const GATE = { type: 'object', properties: { ok: { type: 'boolean' }, problems: { type: 'array', items: { type: 'string' } } }, required: ['ok', 'problems'] }
 
 // ---------- state ----------
-const S = { head: A.base, commits: [], rounds: 0, findings: new Map(), parked: [], taste: [], minors: [], questions: [], concerns: [], roundLog: [], sheets: [], gateOk: false }
+const S = { head: A.base, commits: [], rounds: 0, findings: new Map(), parked: [], taste: [], minors: [], questions: [], concerns: [], roundLog: [], sheets: [], gateOk: false, report: [] }
+// Workflow subagents may be refused when they write report files, so reports travel in the
+// structured output: the script carries them into later prompts and returns them; the file copy is best effort.
+const addReport = (who, w) => { if (w && !blank(w.report)) S.report.push(`[${who}] ${String(w.report).trim()}`) }
+const reportText = () => (S.report.length ? S.report.join(NL + NL) : '(no report text returned)')
+const SAVE = `Also save the report to ${A.reportPath} if your tools allow it; if a tool refuses, skip the file: the returned report is what counts.`
 let open = []
 const cases = new Map() // film case id -> latest { id, result, evidence, sheet }
 const na = {} // finding id -> rounds it survived
@@ -330,21 +336,22 @@ function implementerPrompt() {
     `Precondition: git branch --show-current is ${A.branch}, git rev-parse HEAD is ${A.base}, and git status --porcelain shows no tracked change and no untracked file${foreignText}. If any is not so, change nothing, set preconditionFailed to what you found (name each file) and report BLOCKED.`,
     'Implement exactly what the brief specifies, nothing more. If it needs a decision the brief does not make, or you keep reading files without progress, stop with BLOCKED or NEEDS_CONTEXT and specific questions.',
     commitRule,
-    `Write your report to ${A.reportPath}: what you did, files changed, the npm run verify result, concerns.`,
+    `Return your report in report: what you did, files changed, the npm run verify result. ${SAVE}`,
     SHELL, rules(PORT.dev),
-    'Return: status, concerns, questions.',
+    'Return: status, concerns, questions, report.',
   ].join(NL)
 }
 function continuePrompt(impl, ans) {
   return [
     `You are continuing ${CONTEXT}`,
-    `An earlier implementer stopped with ${impl.status}; the controller has answered. Read the brief ${A.briefPath} and the report ${A.reportPath}. Check what is committed (git log --oneline ${A.base}..HEAD), build on it, and never reset or rewrite history.`,
+    `An earlier implementer stopped with ${impl.status}; the controller has answered. Read the brief ${A.briefPath}. Check what is committed (git log --oneline ${A.base}..HEAD), build on it, and never reset or rewrite history.`,
+    `Its report:${NL}${blank(impl.report) ? '(none returned)' : String(impl.report).trim()}`,
     impl.questions.length ? `Its questions:${NL}${impl.questions.map((q) => `- ${q}`).join(NL)}` : '',
     ans,
     commitRule,
-    `Append a "Continuation" section to ${A.reportPath}.`,
+    `Return your continuation report in report. ${SAVE}`,
     SHELL, rules(PORT.dev),
-    'Return: status, concerns, questions.',
+    'Return: status, concerns, questions, report.',
   ].filter(Boolean).join(NL)
 }
 async function implement() {
@@ -362,6 +369,7 @@ async function implement() {
     impl = await ask('implementer', lbl, 'Implement', WORK, `${prompt}${NL}${NL}${answerText(given)}`)
     if (!impl) halt('implementer', 'implementer', `${lbl} returned no result`)
   }
+  addReport(given.length ? `implementer-retry${given.length > 1 ? given.length : ''}` : 'implementer', impl)
   if (impl.status === 'BLOCKED' || impl.status === 'NEEDS_CONTEXT') {
     S.questions.push(...impl.questions); S.concerns.push(...impl.concerns)
     const ans = answerText(takeAll((at) => at === 'implementer'))
@@ -369,6 +377,7 @@ async function implement() {
     log(`implement: implementer ${impl.status}; running implementer-continue with the controller answers`)
     const cont = await ask('implementer', 'implementer-continue', 'Implement', WORK, continuePrompt(impl, ans))
     if (!cont) halt('implementer', 'implementer', 'implementer-continue returned no result')
+    addReport('implementer-continue', cont)
     if (cont.status === 'BLOCKED' || cont.status === 'NEEDS_CONTEXT') {
       S.questions.push(...cont.questions)
       halt('implementer', 'implementer', `implementer-continue ${cont.status}: ${cont.questions.join('; ') || 'see the report'}`)
@@ -390,11 +399,11 @@ function diffStep(from, to, file) {
 function criticPrompt(head) {
   return [
     `You are the critic for ${CONTEXT}`,
-    `Read the whole change adversarially against the brief: assume something is wrong and find it. Base ${A.base}, head ${head}. Treat the implementer report ${A.reportPath} as unverified claims.`,
+    `Read the whole change adversarially against the brief: assume something is wrong and find it. Base ${A.base}, head ${head}. The implementer's report below is unverified claims:${NL}${reportText()}`,
     diffStep(A.base, head, join(scratch('critic'), 'review.diff')),
     `You run beside the verifier, so you do not wait for its sheets: read code, and when it cannot answer a question render your own stills (node scripts/themes/snap.mjs --name ${A.runLabel}-critic --port ${PORT.critic} -- ...).`,
     SEVERITY,
-    `Write your full review to ${out('review-critic.md')}. Ids short and unique (C1, C2).`,
+    `Ids short and unique (C1, C2). Your returned findings are the review; also save the full review to ${out('review-critic.md')} if your tools allow it (skip it if a tool refuses).`,
     READONLY, SHELL, rules(PORT.critic),
     'verdict: pass only with no blocker or important finding.',
   ].join(NL)
@@ -407,7 +416,7 @@ function reCriticPrompt(findings, gateFindingsOpen, r, from, head) {
     gateFindingsOpen.length ? `Gate and film findings are verified by the gate and the verifier; leave them out of verdicts:${NL}${listText(gateFindingsOpen)}` : '',
     diffStep(from, head, join(scratch(`re-critic-r${r}`), 'fix.diff')),
     SEVERITY,
-    `Write your review to ${out(`re-critic-r${r}.md`)}.`,
+    `Your returned verdicts are the review; also save it to ${out(`re-critic-r${r}.md`)} if your tools allow it (skip it if a tool refuses).`,
     READONLY, SHELL, rules(PORT.critic),
     'Return one verdict per finding id exactly as given.',
   ].filter(Boolean).join(NL)
@@ -423,7 +432,7 @@ function verifierPrompt(tag, head, refilm, from) {
     `Head under test: ${head} (base ${A.base}). Sizes: ${SIZES.join(', ')}. Schemes: ${SCHEMES.join(', ')} (a case may narrow them).`,
     `Build and serve a frozen snap, then film inside it: node scripts/themes/snap.mjs --name ${A.runLabel}-${tag} --port ${PORT.verifier} -- <film command>. Read the headers of scripts/themes/snap.mjs, motion.mjs, render.mjs and contact-sheet.mjs for flags. Report the GPU renderer string in renderer.`,
     A.layout ? `This task changes layout or stacking: also write whole-page before and after sheets at every size, the before from the baseline snap (scripts/themes/.out/snap-${A.baseline}, serve it with snap.mjs --reuse on your port).` : '',
-    `Write the founder sheets and an index.md (one line per case: id, result, sheet path, evidence) to ${sheets}/. Return cases [{ id, result, evidence, sheet }], renderer and index (the index.md path).`,
+    `Write the founder sheets (the film and sheet scripts write the images) to ${sheets}/, and an index.md there (one line per case: id, result, sheet path, evidence) if your tools allow it. Return cases [{ id, result, evidence, sheet }], renderer and index (the index.md path, or an empty string when you could not write it).`,
     `Brief: ${A.briefPath}. A fail needs evidence a reader can check on the sheet (frame, size, scheme).`,
     READONLY, SHELL, rules(PORT.verifier),
   ].filter(Boolean).join(NL)
@@ -441,13 +450,14 @@ function gatePrompt(label, head) {
 function fixerPrompt(findings, r) {
   return [
     `You are fixing review findings, round ${r}, on ${CONTEXT}`,
-    `You are a fresh agent: read the brief and the reviews in ${join(A.workDir, A.runLabel)}/ as you need them.`,
+    `You are a fresh agent: read the brief, and any saved reviews in ${join(A.workDir, A.runLabel)}/, as you need them. The findings below are complete without them.`,
+    `Report so far:${NL}${reportText()}`,
     `Findings to fix:${NL}${listText(findings)}`,
     'Fix each at its cause. A finding that needs no change (say what you checked) goes in declined with its id and reason; never make an empty or cosmetic commit to satisfy a finding. Never weaken a test or a check to turn a gate green.',
     commitRule,
-    `Append a "Fix round ${r}" section to ${A.reportPath}: per finding id, what changed (file:line) and the verify result.`,
+    `Return a "Fix round ${r}" report in report: per finding id, what changed (file:line) and the verify result. ${SAVE.replace('Also save the report to', 'Also append it to')}`,
     SHELL, rules(PORT.dev),
-    'Use BLOCKED or NEEDS_CONTEXT with questions only when you cannot proceed at all. Return: status, concerns, questions, declined.',
+    'Use BLOCKED or NEEDS_CONTEXT with questions only when you cannot proceed at all. Return: status, concerns, questions, declined, report.',
   ].join(NL)
 }
 
@@ -483,7 +493,7 @@ function finish(status, extra) {
   const res = Object.assign({
     task: N, status, base: A.base, head: S.head, commits: S.commits, rounds: S.rounds,
     findings: [...S.findings.values()], parked: S.parked, tasteCalls: S.taste, deferredMinors: S.minors,
-    sheets: S.sheets, agents: used, questions: S.questions, concerns: S.concerns,
+    sheets: S.sheets, agents: used, questions: S.questions, concerns: S.concerns, report: reportText(),
   }, extra || {})
   const unused = ANSWERS.filter((e) => !e.used)
   if (unused.length) { res.answersUnconsumed = true; log(`answers not consumed: ${unused.map((e) => e.at).join(', ')}`) }
@@ -536,6 +546,7 @@ async function flow() {
       break
     }
     S.concerns.push(...fx.concerns)
+    addReport(`fixer-r${r}`, fx)
     const declinedIds = new Set()
     for (const d of fx.declined || []) {
       const f = open.find((o) => o.id === cleanId(d.id))
