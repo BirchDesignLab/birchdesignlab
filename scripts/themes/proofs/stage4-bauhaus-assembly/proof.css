@@ -1,0 +1,97 @@
+/*
+ * Stage 4 Tier A proof a5: bauhaus assembly feel behind one switch (F1).
+ *
+ * Tier B lifts this into src/themes/bauhaus/theme.css in place of the current
+ * `.asm` rule, `@keyframes bh-assemble` and the `--ease-land` token. Nothing
+ * here touches src/.
+ *
+ * ONE SWITCH: html[data-bh-assembly='a' | 'b' | 'c']. No attribute means the
+ * default, which is (b), the recommendation. Tier B's "one-line change" is
+ * the attribute (or, if the founder wants it fixed in CSS, which block the
+ * default values are copied from).
+ *
+ *   a  today: 820 ms, --ease-land (control point 1.12, a real peak of 3.0%
+ *      past the mark), opacity fades in, the hero ends about 1.58 s.
+ *   b  mechanical: solid from the first visible frame, no overshoot, the hero
+ *      in three beats, about 1.1 s.
+ *   c  middle: (b)'s solid shapes and beats with a 3.0% peak, the same peak
+ *      as (a) but reached at 80% of the way instead of 69%.
+ *
+ * The variables each feel sets (the "three variables" plus the two the beats
+ * need):
+ *   --bh-asm-dur      how long one shape travels
+ *   --bh-asm-ease     the curve it travels on
+ *   --bh-asm-name     bh-assemble (fades in) or bh-assemble-solid (opaque in
+ *                     about 5 ms, so a shape is never see-through)
+ *   --bh-d-scale      multiplies each shape's own inline --d (today's stagger)
+ *   --bh-beat-gap     the pause between beats, for shapes that carry --beat
+ *   --bh-sub-scale    1 turns on the small in-beat offset (--sub), 0 ignores it
+ * The beat shapes (the hero, About's B) are tagged below by :nth-child, which
+ * stands in for `--beat` and `--sub` written inline in the markup in Tier B.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Default and (b): mechanical. */
+  html[data-theme='bauhaus'] {
+    --bh-asm-name: bh-assemble-solid;
+    --bh-asm-dur: 480ms;
+    --bh-asm-ease: cubic-bezier(0.3, 0, 0.15, 1);
+    --bh-d-scale: 0.6;
+    --bh-beat-gap: 260ms;
+    --bh-sub-scale: 1;
+  }
+  /* (a): exactly today. The beat variables are inert. */
+  html[data-theme='bauhaus'][data-bh-assembly='a'] {
+    --bh-asm-name: bh-assemble;
+    --bh-asm-dur: 820ms;
+    --bh-asm-ease: cubic-bezier(0.2, 0.9, 0.25, 1.12);
+    --bh-d-scale: 1;
+    --bh-beat-gap: 0ms;
+    --bh-sub-scale: 0;
+  }
+  /* (c): (b) with a 3.0% peak. */
+  html[data-theme='bauhaus'][data-bh-assembly='c'] {
+    --bh-asm-ease: cubic-bezier(0.3, 0, 0.15, 1.235);
+  }
+
+  html[data-theme='bauhaus'] .asm {
+    animation: var(--bh-asm-name) var(--bh-asm-dur) var(--bh-asm-ease) both;
+    animation-delay: calc(
+      var(--d, 0ms) * var(--bh-d-scale) +
+      var(--beat, 0) * var(--bh-beat-gap) +
+      var(--sub, 0ms) * var(--bh-sub-scale)
+    );
+  }
+
+  /* Beat-tagged posters ignore --d under (b) and (c): their timing is the
+     beat and the small offset inside it. Under (a) --bh-d-scale stays 1 and
+     the beat terms are zero, so they run on --d as today. */
+  html[data-theme='bauhaus']:not([data-bh-assembly='a']) :is(.poster, .letter-b) .asm {
+    --bh-d-scale: 0;
+  }
+
+  /* Home hero (svg.poster): bar and stem; blue disc and red square; triangle,
+     ring and eye. Source order: bar, disc, square, triangle, stem, ring, eye. */
+  .poster .asm:nth-child(1) { --beat: 0; --sub: 0ms; }
+  .poster .asm:nth-child(5) { --beat: 0; --sub: 70ms; }
+  .poster .asm:nth-child(2) { --beat: 1; --sub: 0ms; }
+  .poster .asm:nth-child(3) { --beat: 1; --sub: 70ms; }
+  .poster .asm:nth-child(4) { --beat: 2; --sub: 0ms; }
+  .poster .asm:nth-child(6) { --beat: 2; --sub: 70ms; }
+  .poster .asm:nth-child(7) { --beat: 2; --sub: 140ms; }
+
+  /* About's constructed B (svg.letter-b): stem; the two bowls; the dot. */
+  .letter-b .asm:nth-child(1) { --beat: 0; --sub: 0ms; }
+  .letter-b .asm:nth-child(2) { --beat: 1; --sub: 0ms; }
+  .letter-b .asm:nth-child(3) { --beat: 1; --sub: 70ms; }
+  .letter-b .asm:nth-child(4) { --beat: 2; --sub: 0ms; }
+
+  @keyframes bh-assemble {
+    from { opacity: 0; transform: var(--from, scale(0)); }
+  }
+  /* Opaque by 1% (about 5 ms at 480): the shape moves, it never fades. */
+  @keyframes bh-assemble-solid {
+    0% { opacity: 0; transform: var(--from, scale(0)); }
+    1% { opacity: 1; }
+  }
+}
