@@ -35,7 +35,7 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
 
 {featured.length > 0 && (
   <section class="sw-row lab-wrap">
-    <div class="sw-ink lab sw-bleed">
+    <div class="sw-sheet lab sw-bleed">
       <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
       <p class="sw-lead pull">{copy.lab.pull}</p>
       <ul class="specimens" data-parity-skip>
@@ -134,7 +134,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     .more { grid-column: 9 / -1; grid-row: 2; }
   }
 
-  /* 03: the lab, printed in negative as a block inside the frame. */
+  /* 03: the lab, a full-bleed black sheet with paper type (red with white
+     type in dark). The block sits on the frame; its fill runs to the
+     viewport edges. */
   .lab-wrap { padding-bottom: calc(var(--u) * 4); }
   .lab {
     display: grid;
@@ -152,7 +154,7 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: subgrid;
-    border-top: 1px solid var(--ink-muted);
+    border-top: 1px solid var(--mark-muted);
     padding-block: calc(var(--u) * 0.5);
   }
   .designation {
@@ -161,10 +163,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     align-self: start;
     text-decoration-line: none;
   }
-  /* The designation links to its entry: bare at rest, the theme's rule
-     underline on hover and focus, in the red lifted to pass on the ink. */
-  .specimens .designation:hover, .specimens .designation:focus-visible { text-decoration-line: underline; color: var(--red-on-ink); }
-  .specimens .designation:focus-visible { outline-color: var(--red-on-ink); }
+  /* The designation links to its entry: bare at rest, underlined on hover
+     (thickened by the global rule) and on keyboard focus. */
+  .specimens .designation:focus-visible { text-decoration-line: underline; }
   .summary { grid-column: 1 / -1; color: var(--mark-muted); }
   .lab-more { justify-self: start; padding-inline: var(--u); min-width: 50%; }
 

@@ -31,7 +31,8 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
     margin-bottom: var(--u);
     margin-left: -0.04em;
   }
-  .stop { color: var(--accent); }
+  /* The page's one typographic mark, in the red field (never remapped). */
+  .stop { color: var(--red-field); }
   .body { max-width: 20em; }
   .back { font-family: var(--font-display); font-weight: 700; justify-self: start; }
   @media (min-width: 640px) {

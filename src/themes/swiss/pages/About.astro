@@ -40,8 +40,8 @@ const [founderLead, ...founderRest] = copy.founder.body;
     font-size: min(28.3cqw, 16rem);
     margin-top: calc(var(--u) * 3);
   }
-  /* The one strong phrase in the etymology ("to shine") is the page's red. */
-  .etym :global(strong) { color: var(--accent); }
+  /* The one strong phrase in the etymology ("to shine") is bold ink. */
+  .etym :global(strong) { font-weight: 700; }
   .etym :global(p:first-child) {
     font-family: var(--font-display);
     font-weight: 500;
@@ -72,7 +72,8 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .founder-p2 { grid-column: 8 / 12; grid-row: 2; }
   }
 
-  /* The manifesto, in the one red, as a block cut to the frame. */
+  /* The manifesto: a full-bleed red field (the image field of task 3), its
+     content on the frame's columns. */
   .manifesto-wrap { padding-bottom: calc(var(--u) * 4); }
   .manifesto {
     display: grid;

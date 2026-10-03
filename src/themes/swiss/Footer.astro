@@ -36,7 +36,9 @@ const year = new Date().getFullYear();
   .name { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
   nav { grid-column: 3 / -1; display: grid; justify-items: start; }
   nav a, .legal a { color: var(--mark); text-decoration: none; }
-  nav a:hover, .legal a:hover { color: var(--accent); text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover, .legal a:hover { text-decoration: underline; text-decoration-thickness: 0.16em; text-underline-offset: 0.2em; }
+  }
   .legal { grid-column: 1 / -1; }
   .legal a { font-family: var(--font-body); font-weight: 400; }
 

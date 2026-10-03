@@ -42,7 +42,12 @@ const { chrome, theme } = Astro.props;
     text-decoration: none;
   }
   .wordmark span { display: block; white-space: nowrap; }
-  .wordmark:hover { color: var(--accent); }
+  /* Hover thickens the underline; the current page is an ink field (below).
+     The two never look alike. */
+  @media (hover: hover) and (pointer: fine) {
+    .wordmark:hover { text-decoration-line: underline; text-decoration-thickness: 0.16em; text-underline-offset: 0.2em; }
+  }
+  .wordmark:active { background: var(--mark); color: var(--field); }
 
   /* The nav borrows the page's own columns (subgrid), so each link starts on
      a column line: two by two on a phone, one per column from tablet up. */
@@ -60,9 +65,23 @@ const { chrome, theme } = Astro.props;
     color: var(--mark);
     text-decoration: none;
     white-space: nowrap;
+    justify-self: start;
+    /* A small inline pad that the negative margin takes back, so the text
+       still starts on its column line when the ink field is drawn. */
+    padding-inline: 0.4em;
+    margin-inline: -0.4em;
   }
-  nav a:hover { color: var(--accent); }
-  nav a[aria-current='page'] { color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { text-decoration-line: underline; text-decoration-thickness: 0.16em; text-underline-offset: 0.2em; }
+  }
+  /* The current page, and a link while it is pressed: a one-line ink field
+     behind the text, centred in the link's box (which is taller than a line
+     on touch). */
+  nav a[aria-current='page'],
+  nav a:active {
+    color: var(--field);
+    background: linear-gradient(var(--mark), var(--mark)) center / 100% var(--u) no-repeat;
+  }
 
   /* Touch targets: a link in a tight 2x2 cluster is fiddly to tap. Each
      link is two lines (48px) tall, and the bar's padding is pulled in to

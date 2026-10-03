@@ -7,9 +7,10 @@
    shared edges), flush-left type at extreme scale contrast, and a single
    red. No ornament, no gradients, no shadows, no rounded corners. The type
    scale is three tokens (meta, body, lead) plus one giant per page, and
-   every vertical measure is a whole number of 24px lines. Dark is a straight
-   negative print of the same sheet: ink field, paper type, the red lifted
-   just enough to hold on black. */
+   every vertical measure is a whole number of 24px lines. Dark is the black
+   sheet: paper type on black, and the red intact (#da0016 with white type)
+   wherever it is a field. Red is spent only on fields, the page's one CTA
+   and at most one typographic mark; states are inversion, weight and rules. */
 
 :root[data-theme='swiss'] {
   color-scheme: light;
@@ -18,20 +19,27 @@
   --paper: #fafaf7;
   --paper-white: #ffffff;
   --ink: #0b0b0b;
-  --red: #da0016;
   --grey: #5a5a58;
   --grey-on-ink: #a6a6a2;
   --hairline: #e8e7e1;
-  /* The kicker stays red everywhere, including on the ink block; this is
-     the dark scheme's red, lifted so it still passes on black. */
-  --red-on-ink: #ff3b2e;
+  /* The three constants of colour-as-a-field. They are never remapped in
+     dark: the red keeps its hue, its type is white, and the black sheet is
+     black, whichever scheme the visitor is in. (--ink and --paper swap in
+     dark; these do not.) White on #da0016 is about 5.3:1. */
+  --red-field: #da0016;
+  --on-red: #ffffff;
+  --black: #0b0b0b;
 
   /* Semantic tokens (light is native, and what a no-JS visitor sees). */
   --field: var(--paper);
   --field-raised: var(--paper-white);
   --mark: var(--ink);
   --mark-muted: var(--grey);
-  --accent: var(--red);
+  /* The required text accent. Nothing sets type in it any more (red is for
+     fields, the one CTA and one typographic mark); it stays because the
+     contract needs it, and in dark it is lifted along red, not toward
+     orange, to hold 4.5:1 on black. */
+  --accent: var(--red-field);
   --link: var(--ink);
   --on-accent: var(--paper-white);
   /* Secondary type on the ink block (the sheet printed in negative). */
@@ -39,6 +47,17 @@
   /* The column guide colour, for the grid key that shows the guides on
      demand; nothing draws them at rest. */
   --guide: var(--hairline);
+  /* State colours, restated inside every field (.sw-red, .sw-sheet): the
+     focus ring, the pressed-link block, and the button's rest and
+     inverted fills. On paper the ring and the press block are ink and the
+     button is the red field. */
+  --ring: var(--mark);
+  --press-bg: var(--mark);
+  --press-fg: var(--field);
+  --btn-bg: var(--red-field);
+  --btn-fg: var(--on-red);
+  --btn-bg-alt: var(--mark);
+  --btn-fg-alt: var(--field);
 
   /* One family. Archivo carries display, body and metadata alike; the
      width axis (font-stretch) is what the phone giants use to fill the
@@ -80,17 +99,13 @@
   --paper: #0b0b0b;
   --paper-white: #161616;
   --ink: #f4f4ef;
-  --red: #ff3b2e;
+  --accent: #ff1a2b;
   --grey: #a3a3a0;
   --grey-on-ink: #55554f;
   /* Lifted from #1f1f1d (1.15:1, nearly invisible) to keep the negative
      print's grid as legible as the light sheet's. */
   --hairline: #2a2a27;
   --on-accent: #0b0b0b;
-  /* The ink block (--mark) is itself a double negative here: paper-toned,
-     since the whole sheet is already printed dark. The light scheme's red
-     is what holds against it. */
-  --red-on-ink: #da0016;
 }
 
 @media (min-width: 640px) {
@@ -144,9 +159,18 @@
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.2em;
 }
-[data-theme='swiss'] a:hover { color: var(--accent); }
-[data-theme='swiss'] ::selection { background: var(--accent); color: var(--on-accent); }
-[data-theme='swiss'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* States are Swiss, not red. Hover: the underline thickens from 0.08em to
+   0.16em, at once, colour unchanged (never an animated weight: it would
+   reflow the rag). Only where a real hover exists, so a tap on touch never
+   leaves a link stuck in its hover. Press: a hard block of the field's
+   opposite (--press-bg / --press-fg, set per field below). Focus: a 3px ring
+   in the field's own contrast colour (--ring). */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] a:hover { text-decoration-line: underline; text-decoration-thickness: 0.16em; }
+}
+[data-theme='swiss'] a:active { background: var(--press-bg); color: var(--press-fg); }
+[data-theme='swiss'] ::selection { background: var(--mark); color: var(--field); }
+[data-theme='swiss'] :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 [data-theme='swiss'] main:focus { outline: none; }
 [data-theme='swiss'] .skip { position: absolute; left: -100vw; top: 0; }
 [data-theme='swiss'] .skip:focus {
@@ -209,7 +233,8 @@
   font-size: var(--fs-body);
   line-height: var(--u);
   letter-spacing: -0.005em;
-  color: var(--accent);
+  /* Ink, whatever the field: red is for fields, the one CTA and one mark. */
+  color: inherit;
 }
 /* Lead: the largest size below the hero. Every display line that is not the
    page's giant is set at this size. */
@@ -236,51 +261,63 @@
 
 /* ---- Fills --------------------------------------------------------- */
 
-/* The one red, as a block. Type on it is --on-accent, links included. */
-[data-theme='swiss'] .sw-red {
-  background: var(--accent);
-  color: var(--on-accent);
+/* The one red, as a field. Type on it is --on-red (white, never remapped),
+   links included. Its state colours: a white ring, a black press block, and
+   a black button (never a paper box on red). */
+[data-theme='swiss'] .sw-red,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet {
+  background: var(--red-field);
+  color: var(--on-red);
+  --mark-muted: var(--on-red);
+  --ring: var(--on-red);
+  --press-bg: var(--black);
+  --press-fg: var(--on-red);
+  --btn-bg: var(--black);
+  --btn-fg: var(--on-red);
+  --btn-bg-alt: var(--on-red);
+  --btn-fg-alt: var(--black);
 }
-[data-theme='swiss'] .sw-red a { color: var(--on-accent); }
-[data-theme='swiss'] .sw-red a:hover { color: var(--on-accent); text-decoration-thickness: 0.16em; }
-[data-theme='swiss'] .sw-red :focus-visible { outline-color: var(--on-accent); }
+[data-theme='swiss'] :where(.sw-red, .sw-sheet) a { color: inherit; }
 
-/* The ink block: the sheet printed in negative. */
-[data-theme='swiss'] .sw-ink {
-  background: var(--mark);
-  color: var(--field);
+/* The sheet: a field printed in negative. Black with paper type in light;
+   in dark the black is the page itself, so the sheet is the red field above
+   instead (never a paper slab). */
+[data-theme='swiss'] .sw-sheet {
+  background: var(--black);
+  color: var(--paper);
   --mark-muted: var(--ink-muted);
+  --ring: var(--paper);
+  --press-bg: var(--paper);
+  --press-fg: var(--black);
+  --btn-bg-alt: var(--paper);
+  --btn-fg-alt: var(--black);
 }
-[data-theme='swiss'] .sw-ink a { color: var(--field); }
-/* The kicker is the school's one signal colour everywhere else; it stays
-   red here too, lifted to a value that still passes on the ink field. */
-[data-theme='swiss'] .sw-ink .sw-kicker { color: var(--red-on-ink); }
-[data-theme='swiss'] .sw-ink a:hover { color: var(--accent); }
 
-/* A fill block whose colour bleeds past the frame while its content stays
-   exactly on the column lines: pull the box out by the
-   local inset, then pad it back the same amount so children never move. */
+/* Colour is a field to the sheet's edge, never a card in the gutter. The
+   block sits on the frame's columns and its fill runs out to the viewport on
+   both sides (a spread shadow of its own fill, clipped to the box's height),
+   so its content never moves. --bleed-fill is set per field below. */
 [data-theme='swiss'] .sw-bleed {
-  margin-inline: calc(-1 * var(--margin));
-  padding-inline: var(--margin);
+  box-shadow: 0 0 0 100vw var(--bleed-fill);
+  clip-path: inset(0 -100vw);
 }
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-bleed {
-    margin-inline: calc(-1 * var(--gutter));
-    padding-inline: var(--gutter);
-  }
-}
+[data-theme='swiss'] .sw-red.sw-bleed { --bleed-fill: var(--red-field); }
+[data-theme='swiss'] .sw-sheet.sw-bleed { --bleed-fill: var(--black); }
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-bleed { --bleed-fill: var(--red-field); }
 
 /* The button: a rectangle on the grid with its label flush left, the way a
-   poster sets a block of colour with type in its corner. Red on paper; ink
-   when it sits inside the red. */
+   poster sets a block of colour with type in its corner. A red field with
+   white type on paper or black; a black field inside red (the fills come
+   from the field's --btn-* tokens). Hover (a real hover only), press and
+   keyboard focus all invert the fill to the field's alternate for as long as
+   they last: no scale, no fade. */
 [data-theme='swiss'] .sw-btn {
   display: flex;
   align-items: flex-start;
   min-height: calc(var(--u) * 3);
   padding: calc(var(--u) * 0.5) var(--u);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: 0;
   border-radius: 0;
   font-family: var(--font-display);
@@ -292,10 +329,11 @@
   text-decoration: none;
   cursor: pointer;
 }
-[data-theme='swiss'] .sw-btn:hover { background: var(--mark); color: var(--field); }
-[data-theme='swiss'] .sw-red .sw-btn { background: var(--mark); color: var(--field); }
-[data-theme='swiss'] .sw-red .sw-btn:hover { background: var(--field); color: var(--mark); }
-[data-theme='swiss'] .sw-ink .sw-btn:hover { background: var(--field); color: var(--mark); }
+[data-theme='swiss'] .sw-btn:active,
+[data-theme='swiss'] .sw-btn:focus-visible { background: var(--btn-bg-alt); color: var(--btn-fg-alt); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] .sw-btn:hover { background: var(--btn-bg-alt); color: var(--btn-fg-alt); text-decoration: none; }
+}
 
 /* ---- Arrival ------------------------------------------------------- */
 
@@ -381,10 +419,8 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
    the header also holds the skip link, parked a viewport off to the left,
    which would only widen the snapshot. The group is pinned (no morph), and
    with no duration its two pictures, the same but for the current page's
-   red link, trade in one step on the swap's first frame: the red moves to
-   the link just clicked as the old sheet starts to clear. Not later: once
-   the bar is named, its old picture comes out without the pointer's hover,
-   so holding it would turn the clicked link black before it turned red.
+   ink-field link, trade in one step on the swap's first frame: the field
+   moves to the link just clicked as the old sheet starts to clear.
    The old picture is hidden outright rather than left to the group: with
    the group's animation gone, the browser's fade on the two pictures
    inherits no fill either, so both would stay at full strength and add up
@@ -408,10 +444,6 @@ html[data-theme='swiss']::view-transition-new(swiss-header) {
   clip-path: inset(0 -100vw);
 }
 html[data-theme='swiss']::view-transition-old(swiss-header) { animation: none; opacity: 0; }
-/* Naming the bar costs the clicked link its hover for the one frame the old
-   page is still drawn, which would blink it black between its hover red and
-   its current-page red. The click left it focused, so hold the red on that. */
-html[data-theme='swiss'][data-to-theme='swiss'] .site-header nav a:focus { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='swiss']::view-transition-old(root),
   html[data-theme='swiss']::view-transition-new(root),
