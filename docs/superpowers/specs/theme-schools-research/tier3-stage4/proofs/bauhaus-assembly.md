@@ -86,13 +86,18 @@ If the founder wants beats there too, each gets `--beat` the same way.
 ## Tier B should lift
 
 1. Replace the `.asm` rule and `@keyframes bh-assemble` in `src/themes/bauhaus/theme.css`
-   with `proof.css` (both keyframes, the three variable blocks, the beat rule); keep
+   with `proof.css` (both keyframes, the three variable blocks, the beat rule). The
+   proof's `.asm` rule carries `transform-box: fill-box` and `transform-origin: center`
+   from the current rule; they must survive the swap or every shape turns about the
+   viewBox origin. Keep
    the reveal-gate pause rule and the reduced-motion rule as they are. `--ease-land`
    has no other user and can go.
 2. Add inline `--beat` and `--sub` to the hero shapes (`Home.astro:19-25`) and About's B
    (`About.astro:15-18`) and drop the `:nth-child` tags.
 3. Set `data-bh-assembly` on `<html>` only if the founder wants a runtime switch;
    otherwise the default block is the pick and (a) and (c) stay as commented blocks.
+   Each feel block sets `--bh-beat-d-scale` (0 for b and c, 1 for a), so copying any
+   block's values into the default block picks that feel with no attribute.
 
 ## For the founder
 

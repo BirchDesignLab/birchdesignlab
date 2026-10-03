@@ -2,7 +2,7 @@
  * Stage 4 Tier A proof a5: bauhaus assembly feel behind one switch (F1).
  *
  * Tier B lifts this into src/themes/bauhaus/theme.css in place of the current
- * `.asm` rule, `@keyframes bh-assemble` and the `--ease-land` token. Nothing
+ * `.asm` rule (which keeps transform-box and transform-origin), `@keyframes bh-assemble` and the `--ease-land` token. Nothing
  * here touches src/.
  *
  * ONE SWITCH: html[data-bh-assembly='a' | 'b' | 'c']. No attribute means the
@@ -24,6 +24,8 @@
  *   --bh-asm-name     bh-assemble (fades in) or bh-assemble-solid (opaque in
  *                     about 5 ms, so a shape is never see-through)
  *   --bh-d-scale      multiplies each shape's own inline --d (today's stagger)
+ *   --bh-beat-d-scale the same for the beat posters (hero, About's B): 0 when
+ *                     beats drive the timing, 1 for today's --d
  *   --bh-beat-gap     the pause between beats, for shapes that carry --beat
  *   --bh-sub-scale    1 turns on the small in-beat offset (--sub), 0 ignores it
  * The beat shapes (the hero, About's B) are tagged below by :nth-child, which
@@ -37,6 +39,7 @@
     --bh-asm-dur: 480ms;
     --bh-asm-ease: cubic-bezier(0.3, 0, 0.15, 1);
     --bh-d-scale: 0.6;
+    --bh-beat-d-scale: 0;
     --bh-beat-gap: 260ms;
     --bh-sub-scale: 1;
   }
@@ -46,6 +49,7 @@
     --bh-asm-dur: 820ms;
     --bh-asm-ease: cubic-bezier(0.2, 0.9, 0.25, 1.12);
     --bh-d-scale: 1;
+    --bh-beat-d-scale: 1;
     --bh-beat-gap: 0ms;
     --bh-sub-scale: 0;
   }
@@ -55,6 +59,10 @@
   }
 
   html[data-theme='bauhaus'] .asm {
+    /* Kept from the current theme.css rule: each shape turns about its own
+       centre, not the viewBox origin. */
+    transform-box: fill-box;
+    transform-origin: center;
     animation: var(--bh-asm-name) var(--bh-asm-dur) var(--bh-asm-ease) both;
     animation-delay: calc(
       var(--d, 0ms) * var(--bh-d-scale) +
@@ -63,11 +71,12 @@
     );
   }
 
-  /* Beat-tagged posters ignore --d under (b) and (c): their timing is the
-     beat and the small offset inside it. Under (a) --bh-d-scale stays 1 and
-     the beat terms are zero, so they run on --d as today. */
-  html[data-theme='bauhaus']:not([data-bh-assembly='a']) :is(.poster, .letter-b) .asm {
-    --bh-d-scale: 0;
+  /* Beat-tagged posters take their --d scale from --bh-beat-d-scale: 0 under
+     (b) and (c), where timing is the beat and the small offset inside it; 1
+     under (a), where the beat terms are zero and they run on --d as today.
+     Keyed on a variable, so copying a feel's block into the default works. */
+  html[data-theme='bauhaus'] :is(.poster, .letter-b) .asm {
+    --bh-d-scale: var(--bh-beat-d-scale);
   }
 
   /* Home hero (svg.poster): bar and stem; blue disc and red square; triangle,
