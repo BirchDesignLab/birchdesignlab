@@ -211,11 +211,11 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     .step { grid-column: span 6; }
   }
   /* Tablets and phones: the shapes lock to the band's bottom edge, about
-     140px, clipped at the right bleed; the band's own bottom padding runs
+     140px, clipped at the left bleed (the footer corner hangs at the right); the band's own bottom padding runs
      under them, so they cost no extra scroll. */
   @media (max-width: 900px) {
     .ask { padding-bottom: clamp(9rem, 26vw, 11rem); }
-    .ask-shapes { right: -28px; width: 140px; }
+    .ask-shapes { left: -28px; right: auto; width: 140px; }
     .pull, .ask .btn { grid-column: 1 / -1; }
   }
   /* Offering head takes 4 columns and the body 8 on tablets. */

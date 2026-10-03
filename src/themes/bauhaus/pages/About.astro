@@ -145,9 +145,9 @@ const [lead, ...rest] = copy.founder.body;
     .founder-side { flex-direction: row; justify-content: space-between; align-items: flex-end; }
     .tree { max-width: 160px; }
     .manifesto { padding-bottom: clamp(9rem, 26vw, 11rem); }
-    /* Locked to the band's bottom edge, about 140px, clipped at the right
+    /* Locked to the band's bottom-left (the footer corner hangs at the right, so they never stack), about 140px, clipped at the left
        bleed; the band's bottom padding runs under it. */
-    .manifesto-shapes { top: auto; bottom: 0; right: -28px; translate: none; width: 140px; }
+    .manifesto-shapes { top: auto; bottom: 0; left: -28px; right: auto; translate: none; width: 140px; }
     .manifesto-text, .manifesto .btn { grid-column: 1 / -1; }
   }
   @media (max-width: 640px) {
