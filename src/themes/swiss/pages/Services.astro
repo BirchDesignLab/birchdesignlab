@@ -1,6 +1,7 @@
 ---
-/** Swiss services: the claim at poster scale, each offering as a row of a
-    table (title against text), the process as four numbered columns. */
+/** Swiss services: the claim at poster scale, the two offerings as equal
+    fields side by side, the process as four numerals cut as wide as their
+    columns (the page's second giant), and the ask in the red. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
@@ -13,14 +14,16 @@ const { copy, theme } = Astro.props;
   {copy.sublines.map((line, i) => <p class={`subline subline${i + 1}`}>{line}</p>)}
 </section>
 
-{copy.offerings.map((offering) => (
-  <section class="sw-row sw-sec offering">
-    <h2 class="sw-lead offering-title">{offering.heading}</h2>
-    <div class="sw-body offering-body">
-      {offering.body.map((para) => <p>{para}</p>)}
+<section class="sw-row sw-sec offerings">
+  {copy.offerings.map((offering) => (
+    <div class="offering">
+      <h2 class="sw-lead offering-title">{offering.heading}</h2>
+      <div class="sw-body offering-body">
+        {offering.body.map((para) => <p>{para}</p>)}
+      </div>
     </div>
-  </section>
-))}
+  ))}
+</section>
 
 <section class="sw-row sw-sec process">
   <h2 class="sw-kicker kicker">{copy.process.heading}</h2>
@@ -67,20 +70,27 @@ const { copy, theme } = Astro.props;
     .subline2 { grid-column: 10 / -1; grid-row: 3; }
   }
 
+  /* The offerings: two equal fields, each a title at lead size over its body.
+     Stacked on a phone, side by side from 640 on three columns each (six
+     from 1024). */
+  .offering { grid-column: 1 / -1; display: grid; row-gap: var(--u); align-content: start; }
   .offering-title { max-width: 14em; }
   @media (min-width: 640px) {
-    .offering-body { grid-column: 3 / -1; }
+    .offering:nth-child(1) { grid-column: 1 / 4; }
+    .offering:nth-child(2) { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .offering-title { grid-column: 1 / 7; grid-row: 1; }
-    .offering-body { grid-column: 8 / -1; grid-row: 1; }
+    .offering:nth-child(1) { grid-column: 1 / 7; }
+    .offering:nth-child(2) { grid-column: 7 / -1; }
   }
 
-  /* The process: one numeral per column, cut large (the one place below the
-     hero where type passes lead size); the title and text hang from the
-     same column line beneath it. */
-  .steps { display: grid; grid-template-columns: subgrid; row-gap: calc(var(--u) * 2); }
-  .step { grid-column: 1 / -1; }
+  /* The process: the second giant. One numeral per column, each cut as wide
+     as its field (the step is a size container, so cqw is the field's own
+     width); the title and text hang from the same column line beneath it.
+     The kicker sits level above the row. */
+  .kicker { grid-column: 1 / -1; }
+  .steps { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: calc(var(--u) * 2); }
+  .step { grid-column: 1 / -1; container-type: inline-size; }
   .step + .step { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
   .num {
     font-family: var(--font-display);
@@ -96,14 +106,17 @@ const { copy, theme } = Astro.props;
     /* Two to a row here, so every step carries its own rule. */
     .step { grid-column: span 3; }
     .step, .step + .step { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
+    .num {
+      font-size: min(100cqw, 16rem);
+      line-height: 0.8;
+      line-height: round(up, 0.8em, var(--u));
+    }
   }
   @media (min-width: 1024px) {
-    /* The numeral is a giant, not a text line: the kicker hangs from the top. */
-    .process { align-items: start; }
-    .kicker { grid-column: 1 / 3; grid-row: 1; }
-    .steps { grid-column: 3 / -1; grid-row: 1; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--gutter); }
+    .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--gutter); }
     .step { grid-column: auto; }
     .step, .step + .step { border-top: 0; padding-top: 0; }
+    .num { font-size: 150cqw; }
   }
 
   .close-wrap { padding-bottom: calc(var(--u) * 4); }

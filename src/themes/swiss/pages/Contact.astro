@@ -1,13 +1,14 @@
 ---
-/** Swiss contact: the invitation at poster scale, the form as a ruled table
-    on the left columns, the direct address in the red on the right. */
+/** Swiss contact: one sheet. The invitation at poster scale on a full-bleed
+    black sheet (in both schemes), the form beneath on the paper, the direct
+    address in the red on the right. */
 import ContactHidden from '../../portal/ContactHidden.astro';
 import type { CopyData } from '../../../lib/copy';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section class="sw-row hero">
+<section class="sw-row hero sw-black sw-bleed">
   <p class="sw-kicker hero-kicker">{copy.kicker}</p>
   <h1 class="sw-display title">{copy.heading}</h1>
   <p class="sw-lead subline">{copy.subline}</p>
@@ -64,6 +65,8 @@ const { copy, theme } = Astro.props;
   }
 
   .body { align-items: start; }
+  /* The form starts two lines below the black sheet. */
+  .form-col { padding-top: calc(var(--u) * 2); }
   form { display: grid; row-gap: var(--u); }
   .field { display: grid; row-gap: calc(var(--u) * 0.5); }
   label {

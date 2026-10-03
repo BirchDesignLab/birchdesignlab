@@ -29,6 +29,10 @@
   --red-field: #da0016;
   --on-red: #ffffff;
   --black: #0b0b0b;
+  /* Type on the black sheet that stays black whatever the scheme (--paper
+     and --grey-on-ink swap in dark). */
+  --paper-fixed: #fafaf7;
+  --grey-on-black: #a6a6a2;
 
   /* Semantic tokens (light is native, and what a no-JS visitor sees). */
   --field: var(--paper);
@@ -294,6 +298,22 @@
   --btn-bg-alt: var(--black);
   --btn-fg-alt: var(--paper);
 }
+/* The black sheet that stays black in both schemes (Contact's hero): paper
+   type on black, where .sw-sheet turns red in dark. It restates the field
+   tokens so everything inside it reads as on a black page. */
+[data-theme='swiss'] .sw-black {
+  background: var(--black);
+  color: var(--paper-fixed);
+  --field: var(--black);
+  --mark: var(--paper-fixed);
+  --mark-muted: var(--grey-on-black);
+  --ring: var(--paper-fixed);
+  --press-bg: var(--paper-fixed);
+  --press-fg: var(--black);
+}
+[data-theme='swiss'] .sw-black a { color: inherit; }
+[data-theme='swiss'] .sw-black.sw-bleed { --bleed-fill: var(--black); }
+
 /* Paper button on the black sheet: its alternate is black with a paper keyline,
    so the inversion reads on a black ground. Never a second red CTA. */
 [data-theme='swiss'] .sw-sheet .sw-btn:active,

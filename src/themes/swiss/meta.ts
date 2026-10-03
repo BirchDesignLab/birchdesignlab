@@ -24,6 +24,8 @@ export const meta: ThemeMeta = {
     { fg: '--on-red', bg: ['--black'], min: 4.5, note: 'a button inside the red field' },
     { fg: '--black', bg: ['--on-red'], min: 4.5, note: 'a button inside the red field, inverted' },
     { fg: '--field', bg: ['--mark'], min: 4.5, note: 'type on the ink block' },
+    { fg: '--paper-fixed', bg: ['--black'], min: 4.5, note: 'type on the black sheet that stays black in dark (Contact hero)' },
+    { fg: '--grey-on-black', bg: ['--black'], min: 4.5, note: 'secondary type on that black sheet' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a form field' },
     { fg: '--ink-muted', bg: ['--mark'], min: 4.5, note: 'secondary type on the ink block' },
     { fg: '--red-field', bg: ['--black'], min: 3, note: 'the Sent full stop (large type) on the black page' },
