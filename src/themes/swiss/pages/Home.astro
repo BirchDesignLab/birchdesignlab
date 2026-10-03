@@ -52,9 +52,11 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   </section>
 )}
 
-<section class="sw-row sw-sec closer">
-  <p class="sw-lead closer-lead">{copy.closer.lead}</p>
-  <a class="sw-btn closer-cta" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+<section class="sw-row closer-wrap">
+  <div class="sw-red closer sw-bleed">
+    <p class="sw-lead closer-lead">{copy.closer.lead}</p>
+    <a class="sw-btn closer-cta" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+  </div>
 </section>
 
 <style>
@@ -206,7 +208,16 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     .lab-more { grid-column: 10 / -1; }
   }
 
-  /* 04: the ask, at lead size. */
+  /* 04: the ask, at lead size inside a full-bleed red field, the button the
+     field's one block (black inside red), as on Services. */
+  .closer-wrap { padding-bottom: calc(var(--u) * 4); }
+  .closer {
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: calc(var(--u) * 2);
+    padding-block: var(--u);
+  }
+  :where(.closer) > * { grid-column: 1 / -1; }
   .closer-lead { max-width: 18em; }
   @media (min-width: 640px) {
     .closer-cta { grid-column: 4 / -1; }

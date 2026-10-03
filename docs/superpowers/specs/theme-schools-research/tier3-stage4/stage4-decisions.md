@@ -149,6 +149,19 @@ To `tier-a-report.md`, "Questions at this stop":
    once the founder picks.
 5. **Push the branch as a draft PR.**
 
+## Answers at the B1 stop (founder, 10-03-26)
+
+To `tier-b1-report.md`, "Calls for you": calls 1, 3 and 4 "for sure"
+(Home's closer as a full-bleed red field with the button inside; the tree
+re-rendered sharp at the proof's three-quarter angle; the Services numerals
+down to about one and a half times the title). Call 6, the grid key, moves
+into the header on the wordmark's line, gains hold-G on a keyboard, and
+draws red hairlines at the column edges plus faint 24px baselines instead of
+shaded columns ("sounds good"). Calls 2 and 5 follow from 1 and the
+recommendation (one red field and no red button on light Home; About's
+button stays on the left beside the tree). All done inline by the
+controller.
+
 ## Tier A proofs (proposed)
 
 Only the risky items get a proof before the build; everything else goes

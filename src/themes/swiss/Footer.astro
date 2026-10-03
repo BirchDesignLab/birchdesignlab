@@ -3,7 +3,6 @@
     on the same column lines as everything above it, their last baselines on
     one line (the legal line sits on the baseline of the last nav link). */
 import { hrefFor } from '../paths';
-import GridKey from './GridKey.astro';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
@@ -22,7 +21,6 @@ const year = new Date().getFullYear();
       ))}
     </nav>
     <p class="legal sw-meta sw-muted">&copy; {year} {chrome.name} <span aria-hidden="true">/</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
-    <GridKey />
   </div>
 </footer>
 

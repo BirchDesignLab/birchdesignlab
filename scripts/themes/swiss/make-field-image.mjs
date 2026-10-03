@@ -6,7 +6,7 @@
  * (mapping B): luminance of the tree, stretched between its 2nd and 98th
  * percentile, runs from #da0016 (shadows, the moss) to #fafaf7 (highlights,
  * the bark). Two changes from the proof: the source is the large GPU render
- * (render-tree-still.mjs, 1597x2622, no upscale), and the output keeps the
+ * (render-tree-still.mjs, 1477x2547 at a three-quarter turn, no upscale), and the output keeps the
  * tree's alpha instead of flattening onto red, so no lossy-WebP edge can
  * show against the field's CSS red.
  *

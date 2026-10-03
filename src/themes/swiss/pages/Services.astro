@@ -88,10 +88,11 @@ const { copy, theme } = Astro.props;
     .offering:nth-child(2) { grid-column: 7 / -1; }
   }
 
-  /* The process: the second giant. One numeral per column, each cut as wide
-     as its field (the step is a size container, so cqw is the field's own
-     width); the title and text hang from the same column line beneath it.
-     The kicker sits level above the row. */
+  /* The process: the second giant, about one and a half times the title so
+     the title stays the page's first giant (founder, 10-03-26). Sized from
+     the step (a size container, so cqw is the field's own width); the title
+     and text hang from the same column line beneath it. The kicker sits
+     level above the row. */
   .kicker { grid-column: 1 / -1; }
   .steps { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: calc(var(--u) * 2); }
   .step { grid-column: 1 / -1; container-type: inline-size; }
@@ -111,7 +112,7 @@ const { copy, theme } = Astro.props;
     .step { grid-column: span 3; }
     .step, .step + .step { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
     .num {
-      font-size: min(100cqw, 16rem);
+      font-size: min(48cqw, 16rem);
       line-height: 0.8;
       line-height: round(up, 0.8em, var(--u));
     }
@@ -120,7 +121,7 @@ const { copy, theme } = Astro.props;
     .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--gutter); }
     .step { grid-column: auto; }
     .step, .step + .step { border-top: 0; padding-top: 0; }
-    .num { font-size: 150cqw; }
+    .num { font-size: min(80cqw, 19.5rem); }
   }
 
   .close-wrap { padding-bottom: calc(var(--u) * 4); }

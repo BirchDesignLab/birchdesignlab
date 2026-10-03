@@ -30,6 +30,9 @@ const REPO = join(HERE, '..', '..', '..');
 const OUT = join(REPO, 'scripts', 'themes', '.out', 'stage4');
 const snap = process.argv[2] ? join(REPO, process.argv[2]) : join(REPO, 'scripts', 'themes', '.out', 'snap-stage4-base');
 const PORT = 4460;
+// Arrow presses from yaw 0 for the shipped still: a three-quarter view like the
+// proof's still.png, which the founder approved (10-03-26); picked from a sweep.
+const DEFAULT_YAW = -5;
 await mkdir(OUT, { recursive: true });
 
 if (process.env.BDL_GPU !== '1') { console.error('BDL_GPU=1 is required'); process.exit(2); }
@@ -57,6 +60,29 @@ try {
   await page.evaluate(() => document.querySelector('[data-stage]').scrollIntoView());
   await page.waitForSelector('.stage.is-live', { timeout: 60000 });
   await page.waitForTimeout(2500);
+  // The scene idles through a slow turn, so the angle depended on timing (the
+  // first large render came out front-on). Take keyboard control instead:
+  // Home eases the model back to yaw 0, then each arrow press turns it 0.12
+  // rad and stops the idle turn, so the angle is fixed and repeatable.
+  // TREE_YAW (presses, negative turns left) picks the angle; TREE_SWEEP
+  // ("-8,-4,0,4,8") writes one raw capture per value and stops, for choosing.
+  const canvas = page.locator('canvas.scene');
+  const turnTo = async (presses) => {
+    await canvas.focus();
+    await page.keyboard.press('Home');
+    await page.waitForTimeout(2500);
+    for (let k = 0; k < Math.abs(presses); k++) await page.keyboard.press(presses < 0 ? 'ArrowLeft' : 'ArrowRight');
+    await page.waitForTimeout(1500);
+  };
+  if (process.env.TREE_SWEEP) {
+    for (const v of process.env.TREE_SWEEP.split(',').map(Number)) {
+      await turnTo(v);
+      await canvas.screenshot({ path: join(OUT, `tree-sweep__${v}.png`), omitBackground: true });
+      console.log(`sweep ${v} written`);
+    }
+    process.exit(0);
+  }
+  await turnTo(Number(process.env.TREE_YAW ?? DEFAULT_YAW));
   const size = await page.evaluate(() => { const c = document.querySelector('canvas.scene'); return [c.width, c.height]; });
   console.log(`canvas ${size[0]}x${size[1]}`);
   const raw = join(OUT, 'tree-raw.png');
