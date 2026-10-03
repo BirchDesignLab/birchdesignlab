@@ -133,7 +133,9 @@
 /* Ragged right, never justified, never hyphenated: the rag is part of the
    composition, so it is left to break on words. */
 [data-theme='swiss'] p { text-wrap: pretty; hyphens: manual; }
-[data-theme='swiss'] em { font-style: italic; }
+/* No Archivo italic is loaded (font-synthesis is none), so emphasis is
+   weight, which reads as more Swiss than a slant would anyway. */
+[data-theme='swiss'] em { font-style: normal; font-weight: 700; }
 [data-theme='swiss'] strong { font-weight: 700; }
 
 [data-theme='swiss'] a {
@@ -198,6 +200,8 @@
   border-top: 1px solid var(--mark);
   padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
   row-gap: var(--u);
+  /* Side-by-side blocks share their first baseline (kicker, lead, body). */
+  align-items: first baseline;
 }
 [data-theme='swiss'] .sw-kicker {
   font-family: var(--font-display);

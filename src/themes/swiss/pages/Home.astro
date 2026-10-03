@@ -112,6 +112,7 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     grid-template-columns: subgrid;
     grid-column: 1 / -1;
     row-gap: calc(var(--u) * 0.5);
+    align-items: first baseline;
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 2);
   }
   /* The section rule opens the first door; the rest are ruled between. */

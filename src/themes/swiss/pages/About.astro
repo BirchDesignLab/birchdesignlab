@@ -49,17 +49,14 @@ const [founderLead, ...founderRest] = copy.founder.body;
     line-height: calc(var(--u) * 1.5);
     letter-spacing: -0.02em;
   }
-  /* No Archivo italic is loaded, so a browser-synthesized oblique would
-     show on the lead's *Birch* / *beorc* / *bright*; mark the emphasis by
-     weight instead, which reads as more Swiss than a slant would anyway. */
-  .etym :global(p:first-child em) { font-style: normal; font-weight: 700; }
   .etym :global(p + p) { margin-top: var(--u); }
 
   @media (min-width: 640px) {
     .etym { grid-column: 3 / -1; }
   }
   @media (min-width: 1024px) {
-    .title { grid-row: 1; grid-column: 1 / 9; }
+    /* 'shining' is ~3.17em wide: sized to hold cols 1-8, clear of the etymology. */
+    .title { grid-row: 1; grid-column: 1 / 9; font-size: min(20.5cqw, 16rem); }
     .etym { grid-row: 1; grid-column: 9 / -1; align-self: end; }
   }
 
