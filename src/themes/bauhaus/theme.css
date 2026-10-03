@@ -183,6 +183,7 @@
   font-size: 1rem;
   line-height: 1.2;
   letter-spacing: 0.01em;
+  text-transform: lowercase;
   color: var(--accent);
 }
 [data-theme='bauhaus'] .kicker::before {
@@ -213,6 +214,7 @@
   font-size: 1.25rem;
   line-height: 1;
   letter-spacing: 0;
+  text-transform: lowercase;
   text-decoration: none;
   border: 0;
   cursor: pointer;
@@ -240,6 +242,7 @@
   font-weight: 700;
   font-size: 1.25rem;
   letter-spacing: 0;
+  text-transform: lowercase;
   text-decoration: none;
   padding-block: 0.4rem;
   border-bottom: var(--rule-thin) solid currentColor;
