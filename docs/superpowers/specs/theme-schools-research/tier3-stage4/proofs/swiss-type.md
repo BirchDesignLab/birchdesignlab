@@ -35,8 +35,9 @@ into the frozen build `scripts/themes/.out/snap-stage4-base/`.
   tall x-height, more software than poster.
 - `phone-first-390-*.jpg`, `phone-first-360-*.jpg`: before is the frozen build
   (giants at 60 to 105px, a ragged right edge, 12 to 33px of unused measure).
-  After, every title runs to the right margin and the first 844px is the
-  header, one giant and its field. Services becomes four lines
+  After, every title runs to the right margin. The first screen is not yet
+  a clean poster: on Home the subline (body type) starts at y=768 at 390x844
+  and y=739 at 360x800, inside the first screen. Services becomes four lines
   ("Two / things, / done / properly."), the tallest poster.
 - `phone-full-390.jpg`: the pages whole.
 
@@ -65,8 +66,12 @@ Services 332.0, Contact 345.7.
    font file. One small cost: Archivo's word spacing is tight at 17px.
    If the founder finds it cramped, `word-spacing: 0.04em` on body fixes it
    without leaving the family (not proved).
-2. **Yes, the phone poster works with the width axis at 85 for all four
-   giants.** At ~30vw "Design" is about 98% of the measure at width 100 (it
+2. **The fill works; the poster does not yet.** The width axis at 85 fills
+   the measure for all four giants. Brief item 9 also wants body type at or
+   below the fold, and on Home the subline starts at y=768 (390x844) and
+   y=739 (360x800), so that half is not met. Open Tier B item: a Home phone
+   rule holding the subline at or below the fold (for example a hero
+   min-height to the fold); not proved here. At ~30vw "Design" is about 98% of the measure at width 100 (it
    only just overflows at 1.018), so the brief's 30vw needs almost no
    condensing. Taking the width to 85 lets the type go to 37.5% of the
    measure (34.5vw), a taller poster for the same fill. Contact cannot go
@@ -99,6 +104,8 @@ Services 332.0, Contact 345.7.
 
 ## Not covered
 
+- Poster half of item 9: body type below the fold on Home (see answer 2).
+  Other pages' first screens were not measured for this.
 - The header (still the 2x2 cluster in these images) belongs to the header
   and phone-structure work in brief item 9; this proof is the giants only.
 - Item 8's full 24px grid beyond body and `.sw-body` gaps is not proved here.
