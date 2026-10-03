@@ -97,8 +97,13 @@ const [lead, ...rest] = copy.founder.body;
   }
   .tree { width: 100%; max-width: 340px; height: auto; }
   /* The tree panel rides along while the founder's text scrolls past. */
+  /* The heading takes its own row so the tree's grid area is the body's
+     height (not the column's): sticky then has real room to travel. */
   @media (min-width: 901px) {
-    .tree { position: sticky; top: 6rem; }
+    .founder-side { display: contents; }
+    .founder-side h2 { grid-column: 1 / span 5; grid-row: 1; }
+    .tree { grid-column: 1 / span 5; grid-row: 2; align-self: start; max-width: 300px; position: sticky; top: 6rem; }
+    .founder-body { grid-row: 2; }
   }
   .founder-body { grid-column: 7 / span 6; display: flex; flex-direction: column; gap: 1.4rem; font-size: 1.1875rem; }
   .founder-lead {
