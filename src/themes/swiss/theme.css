@@ -2,9 +2,12 @@
    Imported by src/pages/t/swiss/[...page].astro only. Every rule is scoped
    under [data-theme='swiss']. See src/themes/README.md.
 
-   The school is a 1960s Zurich poster: one grotesk voice, a modular grid you
-   can see, flush-left type at extreme scale contrast, and a single red. No
-   ornament, no gradients, no shadows, no rounded corners. Dark is a straight
+   The school is a 1960s Zurich poster: one grotesk voice, a modular grid
+   that organises the sheet without being drawn on it (structure shows through
+   shared edges), flush-left type at extreme scale contrast, and a single
+   red. No ornament, no gradients, no shadows, no rounded corners. The type
+   scale is three tokens (meta, body, lead) plus one giant per page, and
+   every vertical measure is a whole number of 24px lines. Dark is a straight
    negative print of the same sheet: ink field, paper type, the red lifted
    just enough to hold on black. */
 
@@ -33,12 +36,21 @@
   --on-accent: var(--paper-white);
   /* Secondary type on the ink block (the sheet printed in negative). */
   --ink-muted: var(--grey-on-ink);
-  /* The visible column grid: present, never louder than the type. */
+  /* The column guide colour, for the grid key that shows the guides on
+     demand; nothing draws them at rest. */
   --guide: var(--hairline);
 
+  /* One family. Archivo carries display, body and metadata alike; the
+     width axis (font-stretch) is what the phone giants use to fill the
+     measure. */
   --font-display: 'Archivo Variable', 'Archivo Variable fallback', 'Helvetica Neue', Arial, sans-serif;
-  --font-body: 'Public Sans Variable', 'Public Sans Variable fallback', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'IBM Plex Mono fallback', 'Courier New', monospace;
+  --font-body: var(--font-display);
+
+  /* The type scale: three sizes and the page's giant (sized per page from
+     the hero's own width). Metadata, body and lead each sit on the line. */
+  --fs-meta: 0.875rem;
+  --fs-body: 1.0625rem;
+  --fs-lead: clamp(1.5rem, 1rem + 1.4vw, 2rem);
 
   /* The grid. Margins and gutters scale with the sheet; the column count
      steps 4 / 6 / 12 (see the media queries below). */
@@ -46,8 +58,9 @@
   --margin: clamp(16px, 4vw, 72px);
   --gutter: clamp(12px, 1.4vw, 24px);
   --frame: min(100% - 2 * var(--margin), 1760px);
-  /* One baseline unit; every vertical space is a multiple of it. */
-  --u: 8px;
+  /* One line: the 24px body leading. Every vertical space (section padding,
+     row gaps, block heights) is a whole number of lines, or a half. */
+  --u: 1.5rem;
 
   /* The swap's panels (see Arrival): --div of them, each a whole number of
      columns, their edges on real column lines. --edge is where the frame
@@ -100,15 +113,15 @@
   background: var(--field);
   color: var(--mark);
   font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.45;
+  font-size: var(--fs-body);
+  line-height: var(--u);
+  font-weight: 400;
+  font-stretch: 100%;
   font-kerning: normal;
   -webkit-font-smoothing: antialiased;
   /* A missing face should fail visibly during development, not draw a
      synthesized oblique or bold the school never approved. */
   font-synthesis: none;
-  /* Anchors the column guides to the whole sheet, not just the viewport. */
-  position: relative;
   text-rendering: optimizeLegibility;
   /* Wide display type is sized to the frame, never past it; this is the
      guarantee against a stray pixel of sideways scroll on a phone. */
@@ -137,7 +150,7 @@
 [data-theme='swiss'] .skip:focus {
   left: var(--margin); z-index: 10;
   background: var(--mark); color: var(--field);
-  padding: var(--u) calc(var(--u) * 2);
+  padding: calc(var(--u) * 0.5) var(--u);
   font-family: var(--font-display); font-weight: 700; text-decoration: none;
 }
 [data-theme='swiss'] img,
@@ -158,35 +171,19 @@
 /* Zero specificity, so a component's own placement always wins. */
 :where([data-theme='swiss'] .sw-row) > * { grid-column: 1 / -1; min-width: 0; }
 
-/* The column guides, drawn behind the page as hairlines: the grid is not
-   hidden scaffolding here, it is the picture. They run the full height of
-   the sheet; blocks with their own fill simply cover them. */
-[data-theme='swiss'] .sw-guides {
-  position: absolute; inset: 0; z-index: -1;
-  pointer-events: none;
-}
-[data-theme='swiss'] .sw-guides .sw-row { height: 100%; border-right: 1px solid var(--guide); }
-[data-theme='swiss'] .sw-guides .sw-row > span { grid-column: auto; border-left: 1px solid var(--guide); }
-[data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: none; }
-/* Below 640px the guides would otherwise run straight through the single
-   reading column; keep only the frame edges and the col-2 line the hero
-   block and subline hang from. */
-@media (max-width: 639px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(3),
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(4) { display: none; }
-}
-@media (min-width: 640px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: block; }
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: none; }
-}
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: block; }
-}
+/* The grid is not drawn. The column lines are still the ones every band
+   hangs from, and structure shows through the shared edges: type and
+   blocks start on the same line, and the rules, fills and bleeds stop on
+   it. (Showing the guides on demand is the grid key's job; --guide is the
+   colour it will use.) */
 
 /* ---- Type roles ---------------------------------------------------- */
 
-/* Display: one grotesk, set tight. Sizes are per use, in vw against the
-   frame, so the longest word of each headline always fits its measure. */
+/* Display: one grotesk, set tight, used for the page's giant only. The
+   giant is sized per page from its hero's own width (the container query
+   unit cqw: the frame, not the viewport), so the longest word always fits
+   its measure. */
+[data-theme='swiss'] .sw-row.hero { container-type: inline-size; }
 [data-theme='swiss'] .sw-display {
   font-family: var(--font-display);
   font-weight: 700;
@@ -196,47 +193,41 @@
 /* One word per line where a headline is set as a stack. */
 [data-theme='swiss'] .sw-display > .ln { display: block; }
 
-/* A section's opening: an ink rule across the frame, the mono index on it. */
+/* A section's opening: an ink rule across the frame. */
 [data-theme='swiss'] .sw-sec {
   border-top: 1px solid var(--mark);
-  padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
-  row-gap: calc(var(--u) * 4);
-}
-[data-theme='swiss'] .sw-idx {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-  color: var(--mark);
+  padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
+  row-gap: var(--u);
 }
 [data-theme='swiss'] .sw-kicker {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1rem;
-  line-height: 1.2;
+  font-size: var(--fs-body);
+  line-height: var(--u);
   letter-spacing: -0.005em;
   color: var(--accent);
 }
-/* Section labels run up the first column on wide sheets, the way a spine
-   label runs up a poster's edge; on narrow ones they sit level. */
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-vert {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    justify-self: start;
-    align-self: start;
-  }
-}
+/* Lead: the largest size below the hero. Every display line that is not the
+   page's giant is set at this size. */
 [data-theme='swiss'] .sw-lead {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.375rem, 2.2vw, 2.125rem);
-  line-height: 1.12;
+  font-size: var(--fs-lead);
+  line-height: calc(var(--u) * 1.5);
   letter-spacing: -0.02em;
 }
+/* Metadata: designations, the footer's legal line, the form's trust line.
+   Archivo, tabular figures, a touch of tracking for the small size. */
+[data-theme='swiss'] .sw-meta {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  line-height: var(--u);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
 [data-theme='swiss'] .sw-body { max-width: 34em; }
-[data-theme='swiss'] .sw-body > p + p { margin-top: 0.9em; }
+[data-theme='swiss'] .sw-body > p + p { margin-top: var(--u); }
 [data-theme='swiss'] .sw-muted { color: var(--mark-muted); }
 
 /* ---- Fills --------------------------------------------------------- */
@@ -246,8 +237,7 @@
   background: var(--accent);
   color: var(--on-accent);
 }
-[data-theme='swiss'] .sw-red a,
-[data-theme='swiss'] .sw-red .sw-idx { color: var(--on-accent); }
+[data-theme='swiss'] .sw-red a { color: var(--on-accent); }
 [data-theme='swiss'] .sw-red a:hover { color: var(--on-accent); text-decoration-thickness: 0.16em; }
 [data-theme='swiss'] .sw-red :focus-visible { outline-color: var(--on-accent); }
 
@@ -257,15 +247,14 @@
   color: var(--field);
   --mark-muted: var(--ink-muted);
 }
-[data-theme='swiss'] .sw-ink a,
-[data-theme='swiss'] .sw-ink .sw-idx { color: var(--field); }
+[data-theme='swiss'] .sw-ink a { color: var(--field); }
 /* The kicker is the school's one signal colour everywhere else; it stays
    red here too, lifted to a value that still passes on the ink field. */
 [data-theme='swiss'] .sw-ink .sw-kicker { color: var(--red-on-ink); }
 [data-theme='swiss'] .sw-ink a:hover { color: var(--accent); }
 
 /* A fill block whose colour bleeds past the frame while its content stays
-   exactly on the guide lines drawn behind it: pull the box out by the
+   exactly on the column lines: pull the box out by the
    local inset, then pad it back the same amount so children never move. */
 [data-theme='swiss'] .sw-bleed {
   margin-inline: calc(-1 * var(--margin));
@@ -284,16 +273,16 @@
 [data-theme='swiss'] .sw-btn {
   display: flex;
   align-items: flex-start;
-  min-height: calc(var(--u) * 9);
-  padding: calc(var(--u) * 1.5) calc(var(--u) * 2) calc(var(--u) * 1.75);
+  min-height: calc(var(--u) * 3);
+  padding: calc(var(--u) * 0.5) var(--u);
   background: var(--accent);
   color: var(--on-accent);
   border: 0;
   border-radius: 0;
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: var(--fs-body);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: var(--u);
   letter-spacing: -0.01em;
   text-align: left;
   text-decoration: none;
@@ -401,8 +390,7 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
    the viewport over the old page's scrolled body type until its panel
    cleared. The field runs out to both sides of the viewport (a spread
    shadow, clipped to the bar's height), so a bleed block's fill cannot show
-   in the margins either. The cost is the column guides in the header band,
-   gone for the swap. The wordmark keeps its own group above the bar's,
+   in the margins either. The wordmark keeps its own group above the bar's,
    except on a swap from a scrolled page, where the portal unnames it and
    it rides the bar's picture (README, "The wordmark"). */
 html[data-theme='swiss']:is([data-to-theme='swiss'], [data-from-theme='swiss']:not([data-to-theme])) .site-header > .bar {

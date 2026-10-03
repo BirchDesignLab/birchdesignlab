@@ -9,7 +9,6 @@ const { copy, theme } = Astro.props;
 const [founderLead, ...founderRest] = copy.founder.body;
 ---
 <section class="sw-row hero">
-  <p class="sw-idx" aria-hidden="true">01</p>
   <h1 class="sw-display title">
     {copy.heading.split(' ').map((word, i) => <>{i > 0 && ' '}<span class="ln">{word}</span></>)}
   </h1>
@@ -19,88 +18,79 @@ const [founderLead, ...founderRest] = copy.founder.body;
 </section>
 
 <section class="sw-row sw-sec founder">
-  <p class="sw-idx" aria-hidden="true">02</p>
-  <h2 class="sw-kicker sw-vert kicker">{copy.founder.heading}</h2>
+  <h2 class="sw-kicker kicker">{copy.founder.heading}</h2>
   <p class="sw-lead founder-lead">{founderLead}</p>
   {founderRest.map((para, i) => <p class={`founder-p founder-p${i + 1}`}>{para}</p>)}
 </section>
 
 <section class="sw-row manifesto-wrap">
   <div class="sw-red manifesto sw-bleed">
-    <p class="sw-idx" aria-hidden="true">03</p>
-    <p class="sw-display manifesto-text">{copy.manifesto}</p>
+    <p class="sw-lead manifesto-text">{copy.manifesto}</p>
     <a class="sw-btn cta" href={hrefFor('contact', theme)}>{copy.cta}</a>
   </div>
 </section>
 
 <style>
   .hero {
-    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
-    row-gap: calc(var(--u) * 5);
+    padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
+    row-gap: calc(var(--u) * 2);
     align-items: start;
   }
   .title {
-    font-size: min(26vw, 16rem);
-    margin-top: calc(var(--u) * 5);
+    font-size: min(28.3cqw, 16rem);
+    margin-top: calc(var(--u) * 3);
   }
-  .etym { font-size: 1.125rem; }
   /* The one strong phrase in the etymology ("to shine") is the page's red. */
   .etym :global(strong) { color: var(--accent); }
   .etym :global(p:first-child) {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(1.375rem, 2vw, 1.875rem);
-    line-height: 1.15;
+    font-size: var(--fs-lead);
+    line-height: calc(var(--u) * 1.5);
     letter-spacing: -0.02em;
   }
   /* No Archivo italic is loaded, so a browser-synthesized oblique would
      show on the lead's *Birch* / *beorc* / *bright*; mark the emphasis by
      weight instead, which reads as more Swiss than a slant would anyway. */
   .etym :global(p:first-child em) { font-style: normal; font-weight: 700; }
-  .etym :global(p + p) { margin-top: 1.25em; }
+  .etym :global(p + p) { margin-top: var(--u); }
 
   @media (min-width: 640px) {
     .etym { grid-column: 3 / -1; }
   }
   @media (min-width: 1024px) {
-    .title { grid-row: 2; grid-column: 1 / 9; }
-    .etym { grid-row: 2; grid-column: 9 / -1; align-self: end; }
+    .title { grid-row: 1; grid-column: 1 / 9; }
+    .etym { grid-row: 1; grid-column: 9 / -1; align-self: end; }
   }
 
-  .founder-lead { max-width: 20em; }
+  .founder-lead { max-width: 24em; }
   .founder-p { max-width: 32em; }
   @media (min-width: 640px) {
     .founder-lead, .founder-p { grid-column: 2 / -1; }
   }
   @media (min-width: 1024px) {
-    .founder > .sw-idx { grid-row: 1; }
-    .kicker { grid-column: 1 / 2; grid-row: 2 / 4; }
-    .founder-lead { grid-column: 3 / 12; grid-row: 1 / 3; }
-    .founder-p1 { grid-column: 3 / 7; grid-row: 3; }
-    .founder-p2 { grid-column: 8 / 12; grid-row: 3; }
+    .kicker { grid-column: 1 / 3; grid-row: 1; }
+    .founder-lead { grid-column: 3 / 12; grid-row: 1; }
+    .founder-p1 { grid-column: 3 / 7; grid-row: 2; }
+    .founder-p2 { grid-column: 8 / 12; grid-row: 2; }
   }
 
   /* The manifesto, in the one red, as a block cut to the frame. */
-  .manifesto-wrap { padding-bottom: calc(var(--u) * 12); }
+  .manifesto-wrap { padding-bottom: calc(var(--u) * 4); }
   .manifesto {
     display: grid;
     grid-template-columns: subgrid;
-    row-gap: calc(var(--u) * 6);
-    padding-block: calc(var(--u) * 1.5) var(--gutter);
+    row-gap: calc(var(--u) * 2);
+    padding-block: calc(var(--u) * 0.5) var(--u);
   }
   :where(.manifesto) > * { grid-column: 1 / -1; }
-  .manifesto-text {
-    font-size: clamp(2.5rem, 7vw, 7.5rem);
-    line-height: 0.92;
-    letter-spacing: -0.045em;
-    max-width: 10em;
-  }
-  .cta { padding-inline: calc(var(--u) * 2); }
+  .manifesto-text { max-width: 20em; }
+  .cta { padding-inline: var(--u); }
   @media (min-width: 640px) {
     .cta { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .manifesto-text { grid-column: 1 / 11; }
+    .manifesto-text { grid-column: 1 / 10; }
     .cta { grid-column: 10 / -1; }
   }
 </style>

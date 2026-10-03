@@ -1,15 +1,12 @@
 ---
 /** Swiss header: the wordmark and the nav set on the column grid, one link
-    per column, over the hairline guides that run the whole sheet. */
+    per column. */
 import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
 ---
-<div class="sw-guides" aria-hidden="true">
-  <div class="sw-row">{Array.from({ length: 12 }, () => <span></span>)}</div>
-</div>
 <header class="site-header">
   <a class="skip" href="#main">{chrome.skip}</a>
   <div class="sw-row bar">
@@ -27,8 +24,10 @@ const { chrome, theme } = Astro.props;
 </header>
 
 <style>
+  /* The bar: a line above, a line and a half below (the wordmark's two
+     lines are a line and a half), so the bar is a whole number of lines. */
   .bar {
-    padding-block: calc(var(--u) * 2) calc(var(--u) * 2.5);
+    padding-block: var(--u) calc(var(--u) * 1.5);
     border-bottom: 1px solid var(--mark);
     align-items: start;
   }
@@ -36,8 +35,8 @@ const { chrome, theme } = Astro.props;
     grid-column: 1 / 3;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.0625rem;
-    line-height: 1.05;
+    font-size: var(--fs-body);
+    line-height: calc(var(--u) * 0.75);
     letter-spacing: -0.02em;
     color: var(--mark);
     text-decoration: none;
@@ -46,18 +45,17 @@ const { chrome, theme } = Astro.props;
   .wordmark:hover { color: var(--accent); }
 
   /* The nav borrows the page's own columns (subgrid), so each link starts on
-     a guide line: two by two on a phone, one per column from tablet up. */
+     a column line: two by two on a phone, one per column from tablet up. */
   nav {
     grid-column: 3 / -1;
     display: grid;
     grid-template-columns: subgrid;
-    row-gap: calc(var(--u) * 0.5);
   }
   nav a {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.9375rem;
-    line-height: 1.1;
+    font-size: var(--fs-body);
+    line-height: var(--u);
     letter-spacing: -0.01em;
     color: var(--mark);
     text-decoration: none;
@@ -66,18 +64,17 @@ const { chrome, theme } = Astro.props;
   nav a:hover { color: var(--accent); }
   nav a[aria-current='page'] { color: var(--accent); }
 
-  /* Touch targets: a 15px link in a tight 2x2 cluster is fiddly to tap.
-     Grow the row, and pull the bar's own padding in by the same amount so
-     the header's visual height barely moves. */
+  /* Touch targets: a link in a tight 2x2 cluster is fiddly to tap. Each
+     link is two lines (48px) tall, and the bar's padding is pulled in to
+     half a line so the header's height stays a whole number of lines. */
   @media (pointer: coarse), (max-width: 639px) {
     nav a {
       display: flex;
       align-items: center;
-      min-height: 44px;
-      padding-block: calc(var(--u) * 1.25);
+      min-height: calc(var(--u) * 2);
     }
     .bar {
-      padding-block: calc(var(--u) * 0.75) calc(var(--u) * 1.25);
+      padding-block: calc(var(--u) * 0.5);
     }
   }
 

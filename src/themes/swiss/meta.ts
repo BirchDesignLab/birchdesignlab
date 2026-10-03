@@ -1,6 +1,5 @@
 import type { ThemeMeta } from '../types';
-import archivo from '@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2?url';
-import publicSans from '@fontsource-variable/public-sans/files/public-sans-latin-wght-normal.woff2?url';
+import archivo from '@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2?url';
 
 /** Swiss: the International Typographic Style, set as a Zurich poster. */
 export const meta: ThemeMeta = {
@@ -13,8 +12,6 @@ export const meta: ThemeMeta = {
   nativeScheme: 'light',
   fonts: [
     { family: 'Archivo Variable', role: 'heading', preload: [archivo] },
-    { family: 'Public Sans Variable', role: 'body', preload: [publicSans] },
-    { family: 'IBM Plex Mono', role: 'mono' },
   ],
   /* Beyond the required pairs, text sits on two fills: the red poster block
      (--on-accent, required) and the ink block, which is the page printed in
