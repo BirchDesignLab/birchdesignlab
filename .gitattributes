@@ -1,0 +1,3 @@
+# Workflow({ scriptPath }) rejects CRLF as control characters, and this repo
+# runs with core.autocrlf=true, so pin the saved workflow scripts to LF.
+.claude/workflows/** text eol=lf

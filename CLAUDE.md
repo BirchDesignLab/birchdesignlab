@@ -139,3 +139,7 @@ Current queue and the reasoning behind it live in `docs/lab-backlog.md`.
 ## AR card
 
 WebAR business card system: read `docs/ar-card/HANDOFF.md` first; work items live in `docs/lab-backlog.md` under "AR card".
+
+## Execution: saved workflows
+
+Multi-agent work runs through the saved workflows `bdl-task` and `bdl-wave`, not one-off scripts: `.claude/workflows/README.md` has the args, roles, stop points and controller procedure. After any edit to them run `node scripts/workflows/harness.mjs`.
