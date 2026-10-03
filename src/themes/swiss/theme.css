@@ -289,8 +289,17 @@
   --ring: var(--paper);
   --press-bg: var(--paper);
   --press-fg: var(--black);
-  --btn-bg-alt: var(--paper);
-  --btn-fg-alt: var(--black);
+  --btn-bg: var(--paper);
+  --btn-fg: var(--black);
+  --btn-bg-alt: var(--black);
+  --btn-fg-alt: var(--paper);
+}
+/* Paper button on the black sheet: its alternate is black with a paper keyline,
+   so the inversion reads on a black ground. Never a second red CTA. */
+[data-theme='swiss'] .sw-sheet .sw-btn:active,
+[data-theme='swiss'] .sw-sheet .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--paper); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] .sw-sheet .sw-btn:hover { box-shadow: inset 0 0 0 2px var(--paper); }
 }
 
 /* Colour is a field to the sheet's edge, never a card in the gutter. The
