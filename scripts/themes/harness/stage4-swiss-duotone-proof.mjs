@@ -115,7 +115,13 @@ async function capture() {
           const r = el.getBoundingClientRect();
           const cs = getComputedStyle(el);
           const doc = document.documentElement;
+          /* Text-on-text collision and CTA height (contrast sampling hides the type). */
+          const ib = el.querySelector('.sw-idx').getBoundingClientRect();
+          const tb = el.querySelector('.manifesto-text').getBoundingClientRect();
+          const cb = el.querySelector('.cta').getBoundingClientRect();
+          const ov = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
           return {
+            idxTextOverlapPx2: Math.round(ov(ib, tb)), idxLeft: ib.left, textLeft: tb.left, ctaHeight: cb.height, ctaWidth: cb.width,
             left: r.left, right: r.right, top: r.top + scrollY, height: r.height, vw: doc.clientWidth,
             bgSize: cs.backgroundSize, bgPos: cs.backgroundPosition, bg: cs.backgroundColor, color: cs.color,
             overflowX: doc.scrollWidth - doc.clientWidth,
@@ -167,7 +173,7 @@ async function capture() {
           });
         }
         contrast.push(...rows.map((r) => ({ ...r, geo })));
-        console.log(`ok about ${map} ${scheme} ${sz.id} bleed L${geo.left.toFixed(1)} R${(geo.vw - geo.right).toFixed(1)} ovfX${geo.overflowX}  contrast ` +
+        console.log(`ok about ${map} ${scheme} ${sz.id} bleed L${geo.left.toFixed(1)} R${(geo.vw - geo.right).toFixed(1)} ovfX${geo.overflowX} idxOverlap${geo.idxTextOverlapPx2} idxL${geo.idxLeft.toFixed(0)} textL${geo.textLeft.toFixed(0)} ctaH${geo.ctaHeight.toFixed(0)}  contrast ` +
           rows.map((r) => `${r.tag}: worst ${r.lightestWorst} p99.9 ${r.p999Worst}`).join(' | '));
 
         /* Home, first screen: frozen build (before) and with the proof (after). */

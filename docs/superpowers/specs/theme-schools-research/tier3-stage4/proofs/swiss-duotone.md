@@ -87,6 +87,13 @@ lead and the subline, no red anywhere on the first screen. Word parity holds.
   already all under `html[data-theme='swiss']`. Use the new `--red-field` and
   `--on-red` tokens from item 4 where it hardcodes `#da0016` and `#ffffff`.
 - The CTA stays the existing ink button on the red (black in light, paper in
-  dark); nothing was changed there.
+  dark), same 72px height. From 1024 up it moves from the shipped columns
+  10 to end (which sit under the tree) to columns 1 to 4, on the text's left
+  edge. The field's `align-content: start` keeps free height under the stack
+  instead of stretching the CTA row.
+- The "03" index stays in the grid flow on the frame line above the type; it
+  is not absolutely positioned (that first version put it at twice the margin,
+  over the first line of type). The harness now records index/type overlap
+  (0 at every size) and CTA height (72 at every size).
 - Not checked here: the portal swap through this section, and Lighthouse.
   Sheets load About directly with the switcher hidden.

@@ -32,13 +32,10 @@ html[data-theme='swiss'] .manifesto-wrap .manifesto {
 }
 html[data-theme='swiss'] .manifesto-wrap .manifesto .sw-idx,
 html[data-theme='swiss'] .manifesto-wrap .manifesto .manifesto-text { color: var(--sw-on-red); }
-/* The index sits on the tree at the top of the stack; keep it on red by
-   moving it to the frame's left edge (it already is) and over flat red. */
-html[data-theme='swiss'] .manifesto-wrap .manifesto .sw-idx {
-  position: absolute;
-  top: calc(var(--u) * 1.5);
-  left: calc(50vw - 50%);
-}
+/* The index stays in the grid flow (first row, grid line 1) so it sits on the
+   frame line above the type. It is not positioned: an absolute left taken from
+   50vw - 50% resolves against the grid area, not the viewport, and collided
+   with the first line of the manifesto. */
 
 @media (min-width: 640px) {
   html[data-theme='swiss'] .manifesto-wrap .manifesto {
@@ -53,6 +50,9 @@ html[data-theme='swiss'] .manifesto-wrap .manifesto .sw-idx {
   html[data-theme='swiss'] .manifesto-wrap .manifesto {
     padding-top: calc(var(--u) * 1.5);
     min-height: clamp(640px, 54vw, 1000px);
+    /* The extra height is free space under the stack, not stretched rows:
+       the CTA keeps its own height. */
+    align-content: start;
     background-size: auto 100%;
     background-position: right 3vw top 0;
   }
@@ -60,6 +60,8 @@ html[data-theme='swiss'] .manifesto-wrap .manifesto .sw-idx {
     grid-column: 1 / 7;
     font-size: clamp(2.5rem, 5.2vw, 6.5rem);
   }
+  /* The CTA moves from the shipped 10/-1 (which sits under the tree) to the
+     text's left edge, four columns wide, on flat red. */
   html[data-theme='swiss'] .manifesto-wrap .manifesto .cta {
     grid-column: 1 / 5;
   }
