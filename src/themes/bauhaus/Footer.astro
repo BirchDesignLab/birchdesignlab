@@ -86,7 +86,9 @@ const year = new Date().getFullYear();
     text-decoration: none;
     padding-block: 0.2rem;
   }
-  nav a:hover { text-decoration: underline; text-decoration-thickness: 3px; }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { text-decoration: underline; text-decoration-thickness: 3px; }
+  }
   .fine {
     position: relative;
     margin-top: clamp(3rem, 6vw, 5rem);

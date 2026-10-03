@@ -12,10 +12,10 @@ const [lead, ...rest] = copy.founder.body;
 <section class="wrap grid12 intro">
   <h1>{copy.heading}</h1>
   <svg class="letter-b" viewBox="0 0 320 420" aria-hidden="true" focusable="false">
-    <rect class="asm" x="20" y="10" width="84" height="400" fill="var(--mark)" style="--from: scaleY(0); --d: 0ms" />
-    <path class="asm" d="M104 10 A96 96 0 0 1 104 202 Z" fill="var(--red)" style="--from: translateX(-40%) rotate(-180deg); --d: 220ms" />
-    <path class="asm" d="M104 202 A104 104 0 0 1 104 410 Z" fill="var(--blue)" style="--from: translateX(-40%) rotate(180deg); --d: 360ms" />
-    <polygon class="asm" points="272,10 314,94 230,94" fill="var(--yellow)" style="--from: scale(0); --d: 560ms" />
+    <rect class="asm" x="20" y="10" width="84" height="400" fill="var(--mark)" style="--from: scaleY(0); --d: 0ms; --beat: 0; --sub: 0ms" />
+    <path class="asm" d="M104 10 A96 96 0 0 1 104 202 Z" fill="var(--red)" style="--from: translateX(-40%) rotate(-180deg); --d: 220ms; --beat: 1; --sub: 0ms" />
+    <path class="asm" d="M104 202 A104 104 0 0 1 104 410 Z" fill="var(--blue)" style="--from: translateX(-40%) rotate(180deg); --d: 360ms; --beat: 1; --sub: 70ms" />
+    <polygon class="asm" points="272,10 314,94 230,94" fill="var(--yellow)" style="--from: scale(0); --d: 560ms; --beat: 2; --sub: 0ms" />
   </svg>
   <div class="etymology">
     {copy.etymology.map((para, i) => <p class={`etym etym-${i}`} set:html={rich(para)} />)}

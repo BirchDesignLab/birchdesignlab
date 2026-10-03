@@ -47,7 +47,6 @@
   --gutter: clamp(16px, 4vw, 56px);
   --gap: clamp(16px, 2vw, 28px);
   --ease-snap: cubic-bezier(0.7, 0, 0.2, 1);
-  --ease-land: cubic-bezier(0.2, 0.9, 0.25, 1.12);
 }
 
 /* Dark is the same poster pinned to a black wall: near-black field, paper
@@ -115,7 +114,11 @@
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
 }
-[data-theme='bauhaus'] a:hover { text-decoration-thickness: 4px; }
+/* Every :hover rule is fenced to a real hover pointer, so a tap on a phone
+   never leaves a stuck hover. Touch gets the :active press instead. */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] a:hover { text-decoration-thickness: 4px; }
+}
 /* The ring is keyed to --mark, never to an element's own text colour: a
    button's text can match its own background (paper .btn text on a paper
    field in dark), which made the old currentColor ring disappear. Inside a
@@ -235,11 +238,17 @@
   background: var(--red);
   transition: transform 260ms var(--ease-snap), border-radius 260ms var(--ease-snap);
 }
-[data-theme='bauhaus'] .btn:hover { background: var(--red); color: var(--on-red); }
-[data-theme='bauhaus'] .btn:hover::after { background: var(--on-red); border-radius: 50%; transform: translateX(4px); }
-/* On a red block the red hover would vanish, so the slab turns yellow. */
-[data-theme='bauhaus'] .block-red .btn:hover { background: var(--yellow); color: var(--on-yellow); }
-[data-theme='bauhaus'] .block-red .btn:hover::after { background: var(--on-yellow); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] .btn:hover { background: var(--red); color: var(--on-red); }
+  [data-theme='bauhaus'] .btn:hover::after { background: var(--on-red); border-radius: 50%; transform: translateX(4px); }
+  /* On a red block the red hover would vanish, so the slab turns yellow. */
+  [data-theme='bauhaus'] .block-red .btn:hover { background: var(--yellow); color: var(--on-yellow); }
+  [data-theme='bauhaus'] .block-red .btn:hover::after { background: var(--on-yellow); }
+}
+/* Pressed: the slab drops 2px and the square is a circle at once (no
+   transition), for a mouse, a finger or a key. */
+[data-theme='bauhaus'] .btn:active { transform: translateY(2px); }
+[data-theme='bauhaus'] .btn:active::after { border-radius: 50%; transition: none; }
 
 /* The quieter "more" links: lowercase on a rule, led off by a triangle. */
 [data-theme='bauhaus'] .more {
@@ -264,8 +273,12 @@
   border-bottom: 0.36em solid transparent;
   transition: transform 200ms var(--ease-snap);
 }
-[data-theme='bauhaus'] .more:hover { text-decoration: none; }
-[data-theme='bauhaus'] .more:hover::after { transform: translateX(5px); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] .more:hover { text-decoration: none; }
+  [data-theme='bauhaus'] .more:hover::after { transform: translateX(5px); }
+}
+/* Pressed: the triangle jumps 8px along the rule. */
+[data-theme='bauhaus'] .more:active::after { transform: translateX(8px); }
 
 /* Big numerals: ornament, always aria-hidden in markup (parts/Numeral.astro).
    The real digits sit in .num-t, clipped out of sight; the built forms are
@@ -309,21 +322,130 @@
 /* ---------- assembly on load ---------- */
 
 /* Poster shapes fly in from off their marks and land. Each shape sets its
-   own --from and --d; reduced motion gets the finished poster. */
-[data-theme='bauhaus'] .asm {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: bh-assemble 820ms var(--ease-land) both;
-  animation-delay: var(--d, 0ms);
-}
-@keyframes bh-assemble {
-  from { opacity: 0; transform: var(--from, scale(0)); }
+   own --from and --d; reduced motion gets the finished poster.
+
+   Three feels sit behind html[data-bh-assembly] (Stage 4 F1, proof a5). No
+   attribute is (a), today's feel and the founder's pick for the default.
+   (b) and (c) are reached by ?bh-assembly=b or =c (AssemblySwitch.astro, a
+   temporary comparison switch that leaves once the founder picks).
+     a  820 ms, a 3.0% overshoot, fades in, the hero ends about 1.58 s
+     b  mechanical: solid from the first frame, no overshoot, three beats
+     c  (b) with the same 3.0% peak as (a), reached later
+   The variables each feel sets: --bh-asm-name/-dur/-ease are the animation,
+   --bh-d-scale multiplies a shape's own --d, --bh-beat-d-scale is the same
+   for the beat posters (hero, About's B), --bh-beat-gap and --bh-sub-scale
+   turn on the beats (inline --beat and --sub on those shapes). Under (a) the
+   beat terms are zero, so (a) is the old rule exactly. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme='bauhaus'] {
+    --bh-asm-name: bh-assemble;
+    --bh-asm-dur: 820ms;
+    --bh-asm-ease: cubic-bezier(0.2, 0.9, 0.25, 1.12);
+    --bh-d-scale: 1;
+    --bh-beat-d-scale: 1;
+    --bh-beat-gap: 0ms;
+    --bh-sub-scale: 0;
+    --bh-land: 0.45;
+  }
+  html[data-theme='bauhaus']:is([data-bh-assembly='b'], [data-bh-assembly='c']) {
+    --bh-asm-name: bh-assemble-solid;
+    --bh-asm-dur: 480ms;
+    --bh-asm-ease: cubic-bezier(0.3, 0, 0.15, 1);
+    --bh-d-scale: 0.6;
+    --bh-beat-d-scale: 0;
+    --bh-beat-gap: 260ms;
+    --bh-sub-scale: 1;
+    --bh-land: 0.8;
+  }
+  html[data-theme='bauhaus'][data-bh-assembly='c'] { --bh-asm-ease: cubic-bezier(0.3, 0, 0.15, 1.235); --bh-land: 0.6; }
+
+  /* transform-box and transform-origin stay: every shape turns about its own
+     centre, not the viewBox origin. */
+  html[data-theme='bauhaus'] .asm {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: var(--bh-asm-name) var(--bh-asm-dur) var(--bh-asm-ease) both;
+    animation-delay: calc(
+      var(--d, 0ms) * var(--bh-d-scale) +
+      var(--beat, 0) * var(--bh-beat-gap) +
+      var(--sub, 0ms) * var(--bh-sub-scale)
+    );
+  }
+  html[data-theme='bauhaus'] :is(.poster, .letter-b) .asm { --bh-d-scale: var(--bh-beat-d-scale); }
+
+  @keyframes bh-assemble {
+    from { opacity: 0; transform: var(--from, scale(0)); }
+  }
+  /* Opaque by 1% (about 5 ms at 480): the shape moves, it never fades. */
+  @keyframes bh-assemble-solid {
+    0% { opacity: 0; transform: var(--from, scale(0)); }
+    1% { opacity: 1; }
+  }
+
+  /* The see-saw (Home closer, E10). The plank and the two shapes on it are
+     one rigid group that pivots on the triangle's apex (200,178). When the
+     circle lands the beam tips about 8 degrees toward it; when the square
+     lands it returns level. Two stops, no overshoot (the school's snap
+     curve). The rotate property, so it never fights the shapes' own
+     transform animation. The delays are when the circle and the square
+     visually settle on the plank (their own start plus --bh-land of the
+     travel: each feel's curve gets there at a different point), so the
+     tip meets the landing instead of trailing it. The two shapes land one
+     stagger apart, so the tip is a quick rock, not a hold. */
+  html[data-theme='bauhaus'] .beam {
+    transform-box: view-box;
+    transform-origin: 200px 178px;
+    animation:
+      bh-tip calc(110ms * var(--bh-d-scale)) var(--ease-snap) both,
+      bh-level calc(160ms * var(--bh-d-scale)) var(--ease-snap) forwards;
+    animation-delay:
+      calc(320ms * var(--bh-d-scale) + var(--bh-asm-dur) * var(--bh-land)),
+      calc(460ms * var(--bh-d-scale) + var(--bh-asm-dur) * var(--bh-land));
+  }
+  @keyframes bh-tip { from { rotate: 0deg; } to { rotate: -8deg; } }
+  @keyframes bh-level { from { rotate: -8deg; } to { rotate: 0deg; } }
+
+  /* Sent: the circle rolls (E12). It appears at the top of the triangle's
+     hypotenuse, rolls down the slope, then across into the square. Three
+     nested groups: the outer takes a drag, the middle travels, the inner
+     turns about the circle's centre (392,252), the paper dot showing the
+     turn. A rolling circle turns by distance over radius: 254 degrees down
+     the slope (291 units) and the rest across (122 units). It waits for the
+     triangle, its slope, to land. */
+  html[data-theme='bauhaus'] .roll-go {
+    animation: bh-roll-go calc(var(--bh-asm-dur) * 1.2) linear both;
+    animation-delay: var(--bh-asm-dur);
+  }
+  html[data-theme='bauhaus'] .roll-turn {
+    transform-box: view-box;
+    transform-origin: 392px 252px;
+    animation: bh-roll-turn calc(var(--bh-asm-dur) * 1.2) linear both;
+    animation-delay: var(--bh-asm-dur);
+  }
+  @keyframes bh-roll-go {
+    0% { translate: -325px -167px; opacity: 0; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.7); }
+    2% { opacity: 1; }
+    62% { translate: -116px 36px; animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1); }
+    100% { translate: 0 0; opacity: 1; }
+  }
+  @keyframes bh-roll-turn {
+    0% { rotate: 0deg; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.7); }
+    62% { rotate: 254deg; animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1); }
+    100% { rotate: 360deg; }
+  }
 }
 /* Below the fold a composition waits, parked on its first frame, until the
    shared reveal observer (src/lib/reveal.ts, run by the portal) settles it.
    The gate is .reveal-on, which only script sets, so without JS every
    poster simply assembles on load. */
-[data-theme='bauhaus'].reveal-on [data-reveal]:not(.is-settled) .asm { animation-play-state: paused; }
+[data-theme='bauhaus'].reveal-on [data-reveal]:not(.is-settled) :is(.asm, .beam) { animation-play-state: paused; }
+
+/* The loose shapes (E-interactable): the Home hero's circle, square and
+   triangle, and Sent's trio, can be picked up (parts/loose.ts). touch-action
+   keeps a vertical swipe scrolling the page unless the touch starts on one. */
+[data-theme='bauhaus'] .loose { cursor: grab; touch-action: none; }
+[data-theme='bauhaus'] .loose[data-held] { cursor: grabbing; }
+[data-theme='bauhaus'] svg.is-carrying { position: relative; z-index: 2; overflow: visible; }
 @media (prefers-reduced-motion: reduce) {
   [data-theme='bauhaus'] .asm { animation: none; }
   [data-theme='bauhaus'] .btn,

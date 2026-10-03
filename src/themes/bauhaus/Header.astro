@@ -70,7 +70,11 @@ const { chrome, theme } = Astro.props;
     color: var(--mark);
     padding: 0.7rem 0.85rem 0.55rem;
   }
-  nav a:hover { box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { box-shadow: inset 0 calc(-1 * var(--rule)) 0 var(--mark); }
+  }
+  /* Pressed: the link fills to the red block at once. */
+  nav a:active { background: var(--red); color: var(--on-red); box-shadow: none; }
   nav a[aria-current='page'] { background: var(--red); color: var(--on-red); box-shadow: none; }
   .skip {
     position: absolute; left: -100vw; top: 0;

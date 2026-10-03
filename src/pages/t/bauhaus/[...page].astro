@@ -10,6 +10,7 @@ import '../../../themes/bauhaus/theme.css';
 import PortalLayout from '../../../themes/portal/PortalLayout.astro';
 import Header from '../../../themes/bauhaus/Header.astro';
 import Footer from '../../../themes/bauhaus/Footer.astro';
+import AssemblySwitch from '../../../themes/bauhaus/AssemblySwitch.astro';
 import Home from '../../../themes/bauhaus/pages/Home.astro';
 import About from '../../../themes/bauhaus/pages/About.astro';
 import Services from '../../../themes/bauhaus/pages/Services.astro';
@@ -29,6 +30,7 @@ const copy = await getCopy(page);
 const Body = { home: Home, about: About, services: Services, contact: Contact, sent: Sent }[page];
 ---
 <PortalLayout theme={meta} page={page} title={copy.title} description={copy.description}>
+  <AssemblySwitch slot="head" />
   <Header slot="header" chrome={chrome} theme={meta.id} />
   <Body copy={copy as never} chrome={chrome} theme={meta.id} />
   <Footer slot="footer" chrome={chrome} theme={meta.id} />

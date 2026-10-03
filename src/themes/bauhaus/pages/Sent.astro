@@ -9,10 +9,20 @@ const { copy, theme } = Astro.props;
 ---
 <section class="wrap grid12 sent">
   <h1>{copy.heading}</h1>
-  <svg class="landed" viewBox="0 0 520 352" aria-hidden="true" focusable="false">
-    <polygon class="asm" points="0,352 250,352 0,110" fill="var(--yellow)" style="--from: scaleX(0); --d: 0ms" />
-    <rect class="asm" x="292" y="152" width="200" height="200" fill="var(--red)" style="--from: translateY(40%) scale(0.2); --d: 160ms" />
-    <circle class="asm" cx="392" cy="252" r="64" fill="var(--blue)" style="--from: translate(-420px, -220px); --d: 420ms" />
+  <svg class="landed" viewBox="0 0 520 352" role="group" aria-label="Poster shapes" focusable="false">
+    <polygon class="asm loose" data-loose role="button" tabindex="0" aria-label="Yellow triangle, drag to move" points="0,352 250,352 0,110" fill="var(--yellow)" style="--from: scaleX(0); --d: 0ms" />
+    <rect class="asm loose" data-loose role="button" tabindex="0" aria-label="Red square, drag to move" x="292" y="152" width="200" height="200" fill="var(--red)" style="--from: translateY(40%) scale(0.2); --d: 160ms" />
+    {/* The circle rolls (E12): the outer group takes a drag, .roll-go travels
+        from the top of the hypotenuse, down the slope and across into the
+        square, .roll-turn turns it, and the paper dot shows the turn. */}
+    <g class="loose" data-loose role="button" tabindex="0" aria-label="Blue circle, drag to move">
+      <g class="roll-go">
+        <g class="roll-turn">
+          <circle cx="392" cy="252" r="64" fill="var(--blue)" />
+          <circle cx="366" cy="226" r="9" fill="var(--paper)" />
+        </g>
+      </g>
+    </g>
   </svg>
   <div class="note">
     <p>{copy.body}</p>
@@ -58,3 +68,11 @@ const { copy, theme } = Astro.props;
     .landed { max-width: 300px; justify-self: end; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initLoose } from '../parts/loose';
+
+  // Sent's triangle, square and circle can be picked up (parts/loose.ts).
+  onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.landed')));
+</script>

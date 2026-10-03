@@ -17,14 +17,14 @@ const doorShape = ['circle', 'square'] as const;
     <h1 class="billboard">
       {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class={`w w${i}`}>{word}</span></>)}
     </h1>
-    <svg class="poster" viewBox="0 0 600 700" aria-hidden="true" focusable="false">
-      <rect class="asm" x="0" y="410" width="600" height="22" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms" />
-      <circle class="asm" cx="390" cy="215" r="185" fill="var(--blue)" style="--from: translateY(-70%) scale(0.4); --d: 160ms" />
-      <rect class="asm" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms" />
-      <polygon class="asm" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms" />
-      <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms" />
-      <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms" />
-      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--field)" stroke-width="6" style="--from: scale(0); --d: 760ms" />
+    <svg class="poster" viewBox="0 0 600 700" role="group" aria-label="Poster shapes" focusable="false">
+      <rect class="asm" x="0" y="410" width="600" height="22" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms; --beat: 0; --sub: 0ms" />
+      <circle class="asm loose" data-loose role="button" tabindex="0" aria-label="Blue circle, drag to move" cx="390" cy="215" r="185" fill="var(--blue)" style="--from: translateY(-70%) scale(0.4); --d: 160ms; --beat: 1; --sub: 0ms" />
+      <rect class="asm loose" data-loose role="button" tabindex="0" aria-label="Red square, drag to move" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms; --beat: 1; --sub: 70ms" />
+      <polygon class="asm loose" data-loose role="button" tabindex="0" aria-label="Yellow triangle, drag to move" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms; --beat: 2; --sub: 0ms" />
+      <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms; --beat: 0; --sub: 70ms" />
+      <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms; --beat: 2; --sub: 70ms" />
+      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--field)" stroke-width="6" style="--from: scale(0); --d: 760ms; --beat: 2; --sub: 140ms" />
     </svg>
   </div>
 </section>
@@ -86,9 +86,11 @@ const doorShape = ['circle', 'square'] as const;
   <svg class="seesaw" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-reveal>
     <rect x="0" y="290" width="400" height="10" fill="var(--mark)" />
     <polygon class="asm" points="200,178 262,290 138,290" fill="var(--yellow)" style="--from: translateY(40%) scale(0.2); --d: 0ms" />
-    <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
-    <circle class="asm" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
-    <rect class="asm" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
+    <g class="beam">
+      <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
+      <circle class="asm" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
+      <rect class="asm" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
+    </g>
   </svg>
 </section>
 
@@ -232,7 +234,10 @@ const doorShape = ['circle', 'square'] as const;
   }
   /* The link shows itself the Bauhaus way: the theme's hover weight of
      underline, on hover and on focus (the ring is the theme's --mark ring). */
-  .designation:hover, .designation:focus-visible { text-decoration: underline; text-decoration-thickness: 4px; }
+  .designation:focus-visible { text-decoration: underline; text-decoration-thickness: 4px; }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover { text-decoration: underline; text-decoration-thickness: 4px; }
+  }
   .summary { font-size: 1.0625rem; line-height: 1.5; }
   /* Typophoto, a trial: a grayscale, high-contrast square crop of the
      study's hero beside its row. Decorative, and off on phones. */
@@ -278,3 +283,11 @@ const doorShape = ['circle', 'square'] as const;
     .seesaw { width: 78%; justify-self: end; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initLoose } from '../parts/loose';
+
+  // The hero's circle, square and triangle can be picked up (parts/loose.ts).
+  onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.poster')));
+</script>
