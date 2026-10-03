@@ -117,6 +117,20 @@ Defaults from the brief:
    prove both in Tier A and pick on the sheet yourself at the end-of-pair
    stop only if the critic cannot.
 
+## Answers (founder, 10-02-26)
+
+1. F1: **yes**, build the variable and show (a), (b) and (c) strips ("i do
+   like it. having comparisons doesn't hurt anything"); (b) ships until the
+   founder picks.
+2. E4 lesson line: **leave it for the copy pass**.
+3. Interactables: **yes**, the swiss grid key and the bauhaus loose shapes
+   this stage; the width dial and the questionnaire card as stretch items.
+4. Swiss body type: **yes**, prove Archivo against Inter; the critic picks,
+   the founder only if it cannot.
+5. Pauses: **three hard stops**, each one needing the founder's go to start
+   the next segment: after the Tier A proofs, after wave B1 (swiss), and
+   after wave B2 (bauhaus) plus the gates (the end-of-pair stop).
+
 ## Tier A proofs (proposed)
 
 Only the risky items get a proof before the build; everything else goes
