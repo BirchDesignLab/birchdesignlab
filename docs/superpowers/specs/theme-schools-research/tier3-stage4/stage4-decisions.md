@@ -131,6 +131,24 @@ Defaults from the brief:
    the next segment: after the Tier A proofs, after wave B1 (swiss), and
    after wave B2 (bauhaus) plus the gates (the end-of-pair stop).
 
+## Answers at the Tier A stop (founder, 10-02-26)
+
+To `tier-a-report.md`, "Questions at this stop":
+1. The red tree field: **fine** as proved (red-and-paper, type beside the
+   image), but "i might rather a different logo used there". Build the field
+   so its image is one swappable asset; Tier B re-renders a larger Shining
+   Tree still as the default and the founder may name another image or mark
+   later.
+2. The rotated "Birch" opening wider below 1440 and dropped on phones:
+   **yes**.
+3. Numerals: **yes, the constructed ones, taller** (0.9em, not 0.78em).
+4. Assembly: **the founder must see it live**. "i do like what we have so
+   it's going to have to be better to convince me." So (a), today's feel,
+   stays the default; (b) and (c) ship behind a URL switch
+   (`?bh-assembly=b` or `c`) for the founder's live look, and the switch goes
+   once the founder picks.
+5. **Push the branch as a draft PR.**
+
 ## Tier A proofs (proposed)
 
 Only the risky items get a proof before the build; everything else goes
