@@ -156,13 +156,27 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     text-transform: lowercase;
     max-width: 12ch;
   }
-  .steps { list-style: none; padding: 0; margin-top: clamp(2.5rem, 5vw, 4rem); row-gap: 3rem; }
-  .step { grid-column: span 3; display: flex; flex-direction: column; gap: 1rem; padding-top: 1.25rem; border-top: 14px solid var(--bar); }
+  .steps { list-style: none; padding: 0; margin-top: clamp(2.5rem, 5vw, 4rem); row-gap: 0; }
+  /* Each step spans three rows of the steps grid (top, title, body) as a
+     subgrid, so a title that wraps to two lines in one column still leaves
+     every body starting on the same line across the row. */
+  .step {
+    grid-column: span 3;
+    grid-row: span 3;
+    display: grid;
+    grid-template-rows: subgrid;
+    row-gap: 1rem;
+    padding-top: 1.25rem;
+    padding-bottom: 3rem;
+    border-top: 14px solid var(--bar);
+    align-content: start;
+  }
   .step-0 { --bar: var(--blue); }
   .step-1 { --bar: var(--red); }
   .step-2 { --bar: var(--yellow); }
   .step-3 { --bar: var(--mark); }
   .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+  .step h3 { align-self: start; }
   .step :global(.num) { font-size: 2.75rem; }
   .mini { width: 34px; height: 34px; flex: none; }
   .mini.circle { background: var(--blue); border-radius: 50%; }
@@ -170,7 +184,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
   .mini.triangle { background: var(--yellow); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
   .mini.ring { border: 8px solid var(--mark); border-radius: 50%; }
   .step h3 { font-size: 2rem; text-transform: lowercase; letter-spacing: -0.03em; }
-  .step p { color: var(--mark-muted); font-size: 1.0625rem; }
+  .step p { font-size: 1.125rem; text-wrap: pretty; }
 
   .ask { position: relative; overflow: hidden; padding-block: clamp(4.5rem, 9vw, 8rem); }
   .ask-shapes {
@@ -196,10 +210,18 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
   @media (max-width: 1000px) {
     .step { grid-column: span 6; }
   }
+  /* Tablets and phones: the shapes lock to the band's bottom edge, about
+     140px, clipped at the right bleed; the band's own bottom padding runs
+     under them, so they cost no extra scroll. */
   @media (max-width: 900px) {
-    .ask { padding-bottom: 0; display: flex; flex-direction: column; }
-    .ask-shapes { order: 2; position: static; align-self: flex-end; width: 220px; margin: 3rem var(--gutter) 0 0; }
+    .ask { padding-bottom: clamp(9rem, 26vw, 11rem); }
+    .ask-shapes { right: -28px; width: 140px; }
     .pull, .ask .btn { grid-column: 1 / -1; }
+  }
+  /* Offering head takes 4 columns and the body 8 on tablets. */
+  @media (min-width: 761px) and (max-width: 900px) {
+    .offering-head { grid-column: 1 / span 4; }
+    .offering-body { grid-column: 5 / span 8; }
   }
   @media (max-width: 760px) {
     h1, .two { grid-column: 1 / -1; }
@@ -207,7 +229,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     .sublines p:first-child, .sublines p:last-child { grid-column: 1 / -1; }
     .sublines { row-gap: 1.25rem; }
     .offering-head, .offering-body { grid-column: 1 / -1; }
-    .offering-body { border-left: 0; padding-left: 0; }
+    .offering-body { padding-left: 14px; }
     .step { grid-column: 1 / -1; }
   }
 </style>

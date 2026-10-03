@@ -144,10 +144,10 @@ const [lead, ...rest] = copy.founder.body;
     .founder-side, .founder-body { grid-column: 1 / -1; }
     .founder-side { flex-direction: row; justify-content: space-between; align-items: flex-end; }
     .tree { max-width: 160px; }
-    .manifesto { padding-bottom: 0; display: flex; flex-direction: column; }
-    /* flex-start plus a margin-bottom keeps this clear of the footer's red
-       corner square below, instead of two red shapes meeting at the seam. */
-    .manifesto-shapes { order: 2; position: static; translate: none; align-self: flex-start; width: 220px; margin: 3rem 0 clamp(2rem, 8vw, 3rem) var(--gutter); }
+    .manifesto { padding-bottom: clamp(9rem, 26vw, 11rem); }
+    /* Locked to the band's bottom edge, about 140px, clipped at the right
+       bleed; the band's bottom padding runs under it. */
+    .manifesto-shapes { top: auto; bottom: 0; right: -28px; translate: none; width: 140px; }
     .manifesto-text, .manifesto .btn { grid-column: 1 / -1; }
   }
   @media (max-width: 640px) {

@@ -259,8 +259,8 @@ const doorShape = ['circle', 'square'] as const;
      they drop beneath it instead of behind it. */
   @media (max-width: 900px) {
     .door { grid-column: 1 / -1; }
-    .lab { display: flex; flex-direction: column; padding-bottom: 0; }
-    .lab-shapes { order: 2; position: static; width: min(80%, 420px); align-self: flex-end; margin: 3rem -4rem 0 0; }
+    .lab { padding-bottom: clamp(9rem, 26vw, 11rem); }
+    .lab-shapes { right: -28px; width: 140px; }
     .lab-body { grid-column: 2 / -1; }
   }
   @media (max-width: 640px) {

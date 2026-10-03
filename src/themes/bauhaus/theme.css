@@ -23,6 +23,11 @@
 
   --field: var(--paper);
   --field-raised: #e6e1d6;
+  /* Jost at 400 renders thin on black, so dark body text is heavier. Text
+     under 16px takes --w-small in both schemes; the two never fall below
+     450 on the small sizes. */
+  --w-body: 400;
+  --w-small: 450;
   --mark: var(--ink);
   --mark-muted: #474541;
   --accent: var(--ink);
@@ -59,7 +64,10 @@
   --blue: #3a57d8;
   --yellow: #f7c61a;
   --field: #121212;
-  --field-raised: #1f1f1e;
+  /* Clearly lifted off the #121212 wall (was #1f1f1e, which all but vanished). */
+  --field-raised: #262523;
+  --w-body: 460;
+  --w-small: 470;
   --mark: var(--paper);
   --mark-muted: #b9b4aa;
   --accent: var(--paper);
@@ -80,7 +88,7 @@
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.0625rem;
-  font-weight: 400;
+  font-weight: var(--w-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
