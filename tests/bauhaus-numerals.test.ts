@@ -33,3 +33,18 @@ describe('bauhaus one lowercase voice', () => {
     for (const f of files) expect(read(f), f).not.toMatch(/text-transform:\s*uppercase/);
   });
 });
+
+describe('bauhaus labels are lowercased by rule', () => {
+  const block = (src: string, sel: string) => {
+    const i = src.indexOf(sel + ' {');
+    expect(i, sel).toBeGreaterThan(-1);
+    return src.slice(i, src.indexOf('}', i));
+  };
+  it.each(['.kicker', '.btn', '.more'])('%s sets text-transform: lowercase', (s) => {
+    expect(block(css, `[data-theme='bauhaus'] ${s}`)).toMatch(/text-transform:\s*lowercase/);
+  });
+  it('contact labels and footer location are lowercase', () => {
+    expect(block(read('src/themes/bauhaus/pages/Contact.astro'), 'label')).toMatch(/text-transform:\s*lowercase/);
+    expect(block(read('src/themes/bauhaus/Footer.astro'), '.loc')).toMatch(/text-transform:\s*lowercase/);
+  });
+});
