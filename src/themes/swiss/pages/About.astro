@@ -117,7 +117,8 @@ const [founderLead, ...founderRest] = copy.founder.body;
   /* The rotated word: the page's own capital, set heavy and turned up the
      frame edge so it runs the height of section 02. Decorative. Its size is
      height over (advance x ink ratio), both per width cut, from the proof
-     (proofs/swiss-rotated.md); --sw-ty drops it so the ink, not the
+     (proofs/swiss-rotated.md); --sw-ty drops it and --sw-tx shifts it right by the
+     measured left bearing (scripts/themes/swiss/measure-birch-ink.mjs), so the ink, not the
      bearing, sits on the section's edges. Dropped under 640, where a spine
      is a stub, not a word that runs the height of anything. */
   .sw-birch {
@@ -141,16 +142,16 @@ const [founderLead, ...founderRest] = copy.founder.body;
     user-select: none;
     overflow: visible;
     font-size: calc(var(--sw-sec-h) / (var(--sw-birch-r) * var(--sw-k)));
-    translate: 0 var(--sw-ty);
+    translate: var(--sw-tx) var(--sw-ty);
   }
   /* Width cuts of the axis (weight 900): r is the advance of "Birch" in ems,
      k the ink over advance, ty the drop. */
   .founder { --sw-sec-h: clamp(430px, 575px - 9vw, 500px); }
-  .sw-birch { --sw-bwdth: 105; --sw-birch-r: 2.816; --sw-k: 0.9622; --sw-ty: 0.0777em; }
+  .sw-birch { --sw-bwdth: 105; --sw-birch-r: 2.816; --sw-k: 0.9622; --sw-ty: 0.0777em; --sw-tx: 0.032em; }
   @media (min-width: 640px) and (max-width: 1023.98px) {
     /* Column 1 is too narrow for the word: it gets a gutter of its own, the
        widest cut, and the text steps right by --sw-tab-shift. */
-    .sw-birch { display: block; --sw-bwdth: 125; --sw-birch-r: 3.2211; --sw-k: 0.9677; --sw-ty: 0.073em; }
+    .sw-birch { display: block; --sw-bwdth: 125; --sw-birch-r: 3.2211; --sw-k: 0.9677; --sw-ty: 0.073em; --sw-tx: 0.025em; }
     .founder { --sw-tab-shift: max(0px, 162px - 15.43vw); }
     .kicker, .founder-lead, .founder-p { margin-left: var(--sw-tab-shift); }
   }
@@ -158,10 +159,10 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .sw-birch { display: block; }
   }
   @media (min-width: 1280px) {
-    .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; }
+    .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; --sw-tx: 0.030em; }
   }
   @media (min-width: 1440px) {
-    .sw-birch { --sw-bwdth: 62; --sw-birch-r: 1.725; --sw-k: 0.9775; --sw-ty: 0.039em; }
+    .sw-birch { --sw-bwdth: 62; --sw-birch-r: 1.725; --sw-k: 0.9775; --sw-ty: 0.039em; --sw-tx: 0.028em; }
   }
 
   /* The manifesto: a true viewport-bleed red field. Its content keeps to the
@@ -219,9 +220,6 @@ const [founderLead, ...founderRest] = copy.founder.body;
     }
     .manifesto-text {
       grid-column: 1 / 7;
-      font-size: clamp(2.5rem, 5.2vw, 6.5rem);
-      line-height: 1;
-      line-height: round(up, 1.02em, var(--u));
     }
     .cta { grid-column: 1 / 5; }
   }
@@ -229,7 +227,6 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .manifesto :global(.field-img) { top: -2%; height: 108%; }
     .manifesto-text {
       grid-column: 1 / 8;
-      font-size: clamp(2.5rem, 6vw, 6.5rem);
     }
   }
 </style>

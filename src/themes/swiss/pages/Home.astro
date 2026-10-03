@@ -108,15 +108,18 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     align-content: start;
     padding-block: 0 calc(var(--u) * 2);
   }
-  /* Stacked (phones): ruled between. */
-  .door + .door { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
+  /* Stacked (phones): ruled between. Scoped to phones so it cannot outrank
+     the side-by-side reset below. */
+  @media (max-width: 639.98px) {
+    .door + .door { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
+  }
   .door-body { max-width: 32em; }
   .more { grid-column: 1 / -1; font-family: var(--font-display); font-weight: 700; justify-self: start; }
 
   @media (min-width: 640px) {
     .doors { grid-template-rows: auto auto 1fr; }
     .door:nth-child(1) { grid-column: 1 / 4; grid-row: 2 / 4; }
-    .door:nth-child(2) { grid-column: 4 / -1; grid-row: 2; border-top: 0; padding-block: 0; }
+    .door:nth-child(2) { grid-column: 4 / -1; grid-row: 2; padding-block: 0; }
     .more { grid-column: 4 / -1; grid-row: 3; align-self: start; }
   }
   @media (min-width: 1024px) {
