@@ -328,7 +328,7 @@ async function verifyHead(label, since, exact) {
 
 // ---------- implement ----------
 const foreignText = FOREIGN.length ? ` (paths another session owns, ignore these: ${FOREIGN.join(', ')})` : ''
-const commitRule = `Run npm run verify (vitest, astro check, build) before each commit and never commit on red. Commit only files in owns (git add <paths>, never git add -A). ${TRAILER}`
+const commitRule = `Run npm run verify (vitest, astro check, build) before each commit and never commit on red. Commit only files in owns (git add <paths>, never git add -A, never git add -f). Never commit the report (${A.reportPath}) or anything under ${fwd(A.workDir)} or ${fwd(A.scratchRoot)}: they are scratch, not deliverables. ${TRAILER}`
 function implementerPrompt() {
   return [
     `You are implementing ${CONTEXT}`,
