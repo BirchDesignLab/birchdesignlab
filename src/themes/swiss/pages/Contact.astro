@@ -56,6 +56,10 @@ const { copy, theme } = Astro.props;
     max-width: 7em;
   }
   .subline { max-width: 18em; }
+  /* Phones: "conversation" fills the measure, cut condensed. */
+  @media (max-width: 639.98px) {
+    .title { font-size: calc(20.15cqw); font-stretch: 85%; max-width: none; }
+  }
   @media (min-width: 640px) {
     .subline { grid-column: 3 / -1; }
   }
@@ -84,7 +88,7 @@ const { copy, theme } = Astro.props;
     width: 100%;
   }
   textarea { resize: vertical; min-height: calc(var(--u) * 8); }
-  .submit { justify-self: start; min-width: 50%; margin-top: calc(var(--u) * 0.5); }
+  .submit { margin-top: calc(var(--u) * 0.5); }
   .trust {
     margin-top: var(--u);
     color: var(--mark-muted);
@@ -107,21 +111,32 @@ const { copy, theme } = Astro.props;
 
   @media (min-width: 640px) {
     .form-col { grid-column: 1 / 5; }
-    .direct { grid-column: 3 / -1; }
+    /* The tablet sheet: the address is a full-width red field under the form
+       (it runs to both viewport edges), its text hung from column 3. */
+    .direct { grid-column: 1 / -1; grid-template-columns: subgrid; }
+    .direct > * { grid-column: 3 / -1; }
   }
   @media (min-width: 1024px) {
-    .form-col { grid-column: 3 / 9; grid-row: 1; }
+    .form-col { grid-column: 2 / 8; grid-row: 1; }
     /* A full-bleed right field: from column 10 out to the viewport edge, its
        top exactly on the section's rule (the section's half-line padding
        pulled back), its text a gutter inside the field's edge. The fill runs
        right only: a left spread would cover the form. */
     .sw-bleed.direct {
-      grid-column: 10 / -1;
+      display: grid;
+      grid-template-columns: none;
+      grid-column: 9 / -1;
       grid-row: 1;
       margin-top: calc(var(--u) * -0.5);
       padding-inline: var(--gutter);
       box-shadow: 100vw 0 0 100vw var(--bleed-fill);
       clip-path: inset(0 -200vw 0 0);
     }
+    .direct > * { grid-column: auto; }
+  }
+  @media (min-width: 1280px) {
+    /* Room for the address on one line in a three-column field. */
+    .form-col { grid-column: 3 / 9; }
+    .sw-bleed.direct { grid-column: 10 / -1; }
   }
 </style>

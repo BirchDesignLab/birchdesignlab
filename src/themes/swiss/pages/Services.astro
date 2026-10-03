@@ -60,6 +60,10 @@ const { copy, theme } = Astro.props;
     margin-bottom: var(--u);
   }
   .subline { max-width: 26em; }
+  /* Phones: "properly." fills the measure, cut condensed. */
+  @media (max-width: 639.98px) {
+    .title { font-size: calc(30.6cqw); font-stretch: 85%; max-width: none; }
+  }
   @media (min-width: 640px) {
     .title { font-size: min(15.2cqw, 13rem); }
     .subline { grid-column: 3 / -1; }
@@ -128,12 +132,11 @@ const { copy, theme } = Astro.props;
   }
   :where(.close) > * { grid-column: 1 / -1; }
   .pull { max-width: 20em; }
-  .cta { padding-inline: var(--u); }
   @media (min-width: 640px) {
     .cta { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
     .pull { grid-column: 1 / 10; }
-    .cta { grid-column: 10 / -1; }
+    .cta { grid-column: 10 / -1; align-self: end; }
   }
 </style>

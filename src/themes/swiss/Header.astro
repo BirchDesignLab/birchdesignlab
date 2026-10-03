@@ -83,9 +83,9 @@ const { chrome, theme } = Astro.props;
     background: linear-gradient(var(--mark), var(--mark)) center / 100% var(--u) no-repeat;
   }
 
-  /* Touch targets: a link in a tight 2x2 cluster is fiddly to tap. Each
-     link is two lines (48px) tall, and the bar's padding is pulled in to
-     half a line so the header's height stays a whole number of lines. */
+  /* Touch targets: each link is two lines (48px) tall on touch and below 640px,
+     and the bar's padding is pulled in to half a line so the header's height
+     stays a whole number of lines. */
   @media (pointer: coarse), (max-width: 639px) {
     nav a {
       display: flex;
@@ -97,8 +97,25 @@ const { chrome, theme } = Astro.props;
     }
   }
 
+  /* Phones: one flush-left band. The wordmark is one line over a row of
+     four links, one per column of the 4-column grid, at metadata size. */
+  @media (max-width: 639.98px) {
+    .bar { row-gap: 0; }
+    .wordmark { grid-column: 1 / -1; line-height: var(--u); }
+    .wordmark span { display: inline; }
+    nav { grid-column: 1 / -1; }
+    nav a { font-size: var(--fs-meta); }
+  }
+
   @media (min-width: 1024px) {
     .wordmark { grid-column: 1 / 4; }
+    /* Twelve narrow columns: a link is wider than one, so below 1280 each
+       takes two and "Services" never meets "Lab". */
+    nav { grid-column: 5 / -1; }
+    nav a { grid-column: span 2; }
+  }
+  @media (min-width: 1280px) {
     nav { grid-column: 9 / -1; }
+    nav a { grid-column: auto; }
   }
 </style>

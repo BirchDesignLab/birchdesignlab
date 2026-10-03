@@ -48,8 +48,8 @@
   --on-accent: var(--paper-white);
   /* Secondary type on the ink block (the sheet printed in negative). */
   --ink-muted: var(--grey-on-ink);
-  /* The column guide colour, for the grid key that shows the guides on
-     demand; nothing draws them at rest. */
+  /* Kept for the contract; the grid key's overlay is a white difference
+     blend (so it reads on paper, black and red alike), not this colour. */
   --guide: var(--hairline);
   /* State colours, restated inside every field (.sw-red, .sw-sheet): the
      focus ring, the pressed-link block, and the button's rest and
@@ -186,6 +186,10 @@
 [data-theme='swiss'] img,
 [data-theme='swiss'] svg,
 [data-theme='swiss'] canvas { max-width: 100%; display: block; }
+
+/* The portal's strip below the footer (room for its switcher) is the sheet's
+   own paper, so the colophon runs to the true bottom of the page. */
+[data-theme='swiss'] [data-portal-tail] { background: var(--field); }
 
 /* ---- The grid ------------------------------------------------------ */
 
@@ -334,17 +338,23 @@
 [data-theme='swiss'] .sw-sheet.sw-bleed { --bleed-fill: var(--black); }
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-bleed { --bleed-fill: var(--red-field); }
 
-/* The button: a rectangle on the grid with its label flush left, the way a
-   poster sets a block of colour with type in its corner. A red field with
-   white type on paper or black; a black field inside red (the fills come
-   from the field's --btn-* tokens). Hover (a real hover only), press and
-   keyboard focus all invert the fill to the field's alternate for as long as
-   they last: no scale, no fade. */
+/* The button: one rule. A field two lines tall (48px) with its label bottom
+   left, on the baseline of the lower line, the way a poster sets a block of
+   colour with type in its corner. Width is the page's to place (one rule per
+   viewport: the full measure on phones, the columns from 4 to the edge on a
+   tablet, cols 10 to 12 on a desktop, the form's own column for "Send it"),
+   and it always stretches to the cell it is given. Colour comes from the
+   field's --btn-* tokens: a red field with white type on paper; a paper
+   field with black type on the black sheet (never a second red button); a
+   black field inside red (never a paper box on red). Hover (a real hover
+   only), press and keyboard focus all invert the fill to the field's
+   alternate for as long as they last: no scale, no fade. */
 [data-theme='swiss'] .sw-btn {
   display: flex;
-  align-items: flex-start;
-  min-height: calc(var(--u) * 3);
-  padding: calc(var(--u) * 0.5) var(--u);
+  align-items: flex-end;
+  justify-self: stretch;
+  min-height: calc(var(--u) * 2);
+  padding: 0 calc(var(--u) * 0.5);
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 0;
