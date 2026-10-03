@@ -1,7 +1,7 @@
 ---
 /** Bauhaus footer: the inverse band (ink in light, paper in dark), set on
-    the twelve-column grid, with a quarter circle and a square parked on its
-    edge like the corner of a poster. */
+    the twelve-column grid, with a red square and a yellow triangle hung from
+    its top rule like the corner of a poster. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
 
@@ -10,9 +10,9 @@ const { chrome, theme } = Astro.props;
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
-  <svg class="corner" viewBox="0 0 240 240" aria-hidden="true" focusable="false" data-reveal>
-    <circle class="asm" cx="240" cy="0" r="200" fill="var(--red)" style="--from: scale(0.2); --d: 0ms" />
-    <rect class="asm" x="96" y="150" width="64" height="64" fill="var(--yellow)" style="--from: rotate(-180deg) scale(0); --d: 220ms" />
+  <svg class="corner" viewBox="0 0 240 150" aria-hidden="true" focusable="false" data-reveal>
+    <rect class="asm" x="30" y="0" width="110" height="110" fill="var(--red)" style="--from: rotate(-90deg) scale(0); --d: 0ms" />
+    <polygon class="asm" points="150,0 240,0 195,128" fill="var(--yellow)" style="--from: translateY(-70%) scale(0.2); --d: 220ms" />
   </svg>
   <div class="wrap grid12 cols">
     <div class="ident">
@@ -63,10 +63,9 @@ const year = new Date().getFullYear();
   }
   .loc {
     margin-top: 1.25rem;
+    font-family: var(--font-body);
     font-weight: 500;
-    font-size: 0.8125rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    font-size: 0.95rem;
   }
   nav {
     grid-column: 8 / span 3;

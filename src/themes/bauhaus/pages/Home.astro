@@ -4,6 +4,7 @@
     a red lab band, and a see-saw that balances the closing ask. */
 import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Numeral from '../parts/Numeral.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -22,7 +23,7 @@ const doorShape = ['circle', 'square'] as const;
       <polygon class="asm" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms" />
       <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms" />
       <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms" />
-      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--yellow)" stroke-width="6" style="--from: scale(0); --d: 760ms" />
+      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--field)" stroke-width="6" style="--from: scale(0); --d: 760ms" />
     </svg>
   </div>
 </section>
@@ -38,7 +39,7 @@ const doorShape = ['circle', 'square'] as const;
     {copy.doors.items.map((door, i) => (
       <article class={`door${i % 2 ? ' block-yellow' : ''}`}>
         <div class="door-top" aria-hidden="true">
-          <span class="num">{String(i + 1).padStart(2, '0')}</span>
+          <Numeral value={String(i + 1).padStart(2, '0')} />
           <span class={`shape ${doorShape[i % 2]}`}></span>
         </div>
         <h3>{door.title}</h3>
@@ -52,8 +53,8 @@ const doorShape = ['circle', 'square'] as const;
 {featured.length > 0 && (
   <section class="lab block-red">
     <svg class="lab-shapes" viewBox="0 0 600 600" aria-hidden="true" focusable="false" data-reveal>
-      <circle class="asm" cx="380" cy="260" r="240" fill="var(--yellow)" style="--from: scale(0); --d: 0ms" />
-      <polygon class="asm" points="120,600 300,290 480,600" fill="var(--ink)" style="--from: translateY(70%); --d: 220ms" />
+      <circle class="asm" cx="380" cy="260" r="240" fill="var(--ink)" style="--from: scale(0); --d: 0ms" />
+      <polygon class="asm" points="120,600 300,290 480,600" fill="var(--yellow)" style="--from: translateY(70%); --d: 220ms" />
     </svg>
     <div class="wrap grid12 lab-grid">
       <p class="kicker is-triangle lab-kicker">{copy.lab.kicker}</p>
@@ -150,7 +151,6 @@ const doorShape = ['circle', 'square'] as const;
     width: 100%;
     padding-top: 1rem;
     border-top: var(--rule) solid var(--mark);
-    font-family: var(--font-body);
   }
   .door-grid { margin-top: 2rem; row-gap: var(--gap); }
   .door {
@@ -163,7 +163,7 @@ const doorShape = ['circle', 'square'] as const;
   }
   .door.block-yellow { border-color: var(--yellow); }
   .door-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-  .door .num { font-size: clamp(4rem, 7vw, 6.5rem); }
+  .door :global(.num) { font-size: clamp(4rem, 7vw, 6.5rem); }
   .shape { width: clamp(56px, 6vw, 84px); aspect-ratio: 1; flex: none; }
   .shape.circle { background: var(--blue); border-radius: 50%; }
   .shape.square { background: var(--red); }
@@ -213,8 +213,9 @@ const doorShape = ['circle', 'square'] as const;
     border-bottom: var(--rule-thin) solid var(--on-red);
   }
   .designation {
-    font-family: var(--font-num);
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
     font-size: 0.875rem;
     letter-spacing: 0.02em;
     padding-top: 0.25rem;

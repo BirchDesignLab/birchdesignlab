@@ -14,7 +14,6 @@ export const meta: ThemeMeta = {
   fonts: [
     { family: 'League Spartan Variable', role: 'heading', preload: [spartan] },
     { family: 'Jost Variable', role: 'body', preload: [jost] },
-    { family: 'Unbounded Variable', role: 'accent' },
   ],
   /* The primaries are poster blocks, never text on the paper (blue on black
      is 2.44:1, yellow on white 1.07:1). Text only ever sits on a block whose

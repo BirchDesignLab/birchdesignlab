@@ -10,8 +10,8 @@
   color-scheme: light;
 
   /* Primitives. Kandinsky's 1923 questionnaire paired yellow with the
-     triangle, red with the square and blue with the circle; the shapes on
-     every page keep that pairing. */
+     triangle, red with the square and blue with the circle. Free-standing
+     primary shapes keep that pairing; ink and paper are outside the triad. */
   --paper: #f3efe6;
   --ink: #141414;
   --red: #d42a1e;
@@ -31,12 +31,11 @@
   --poster: var(--ink);
   --on-poster: var(--paper);
   /* The one part of the hero poster allowed to react to the wall it hangs
-     on; see the dark-scheme override below. */
+     on (ring and beam); see the dark-scheme override below. */
   --poster-mark: var(--mark);
 
   --font-display: 'League Spartan Variable', 'League Spartan Variable fallback', system-ui, sans-serif;
   --font-body: 'Jost Variable', 'Jost Variable fallback', system-ui, sans-serif;
-  --font-num: 'Unbounded Variable', 'Unbounded Variable fallback', system-ui, sans-serif;
 
   --rule: 6px;
   --rule-thin: 2px;
@@ -51,8 +50,10 @@
    it holds its own against black. Two deliberately dark-only decisions:
    the inverse band stays ink-on-black instead of flipping to a bright
    paper slab (so the page doesn't end on a jarring bright band), and the
-   hero poster's ring and beam swap from ink to red, since ink-on-black
-   would just vanish into the field. */
+   hero poster's ring and beam swap from ink to paper, since ink-on-black
+   would just vanish into the field. Paper, not red: ink and paper are
+   outside the triad, while a red ring would be a circle in the wrong
+   colour. */
 :root[data-theme='bauhaus'][data-scheme='dark'] {
   color-scheme: dark;
   --blue: #3a57d8;
@@ -66,7 +67,7 @@
   --on-accent: var(--ink);
   --poster: var(--field);
   --on-poster: var(--paper);
-  --poster-mark: var(--red);
+  --poster-mark: var(--paper);
 }
 
 :where([data-theme='bauhaus']) *,
@@ -170,18 +171,18 @@
   -webkit-box-decoration-break: clone;
 }
 
-/* Kicker: small spaced capitals led by a solid primary shape. The colour is
-   carried by the shape; the words stay ink. */
+/* Kicker: a small lowercase label led by a solid primary shape. Hierarchy is
+   weight, size, the shape and the rule; the colour is carried by the shape
+   and the words stay ink. */
 [data-theme='bauhaus'] .kicker {
   display: inline-flex;
   align-items: center;
   gap: 0.75em;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.8125rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
   line-height: 1.2;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--accent);
 }
 [data-theme='bauhaus'] .kicker::before {
@@ -209,10 +210,9 @@
   color: var(--btn-fg, var(--on-accent));
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   text-decoration: none;
   border: 0;
   cursor: pointer;
@@ -231,16 +231,15 @@
 [data-theme='bauhaus'] .block-red .btn:hover { background: var(--yellow); color: var(--on-yellow); }
 [data-theme='bauhaus'] .block-red .btn:hover::after { background: var(--on-yellow); }
 
-/* The quieter "more" links: capitals on a rule, led off by a triangle. */
+/* The quieter "more" links: lowercase on a rule, led off by a triangle. */
 [data-theme='bauhaus'] .more {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.0625rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 1.25rem;
+  letter-spacing: 0;
   text-decoration: none;
   padding-block: 0.4rem;
   border-bottom: var(--rule-thin) solid currentColor;
@@ -257,13 +256,37 @@
 [data-theme='bauhaus'] .more:hover { text-decoration: none; }
 [data-theme='bauhaus'] .more:hover::after { transform: translateX(5px); }
 
-/* Big numerals: ornament, always aria-hidden in markup. */
+/* Big numerals: ornament, always aria-hidden in markup (parts/Numeral.astro).
+   The real digits sit in .num-t, clipped out of sight; the built forms are
+   the .nm svgs after it. The numeral takes the font-size of the page that
+   places it, so each page's own size steers it. Colour is currentColor, so a
+   numeral on a yellow door is ink and one on the field follows the mark.
+   --nm-h is 0.9em: taller than the proof's 0.78em, for weight. Bars and
+   rings overlap at their joins in the path data, so no seam shows. */
 [data-theme='bauhaus'] .num {
-  font-family: var(--font-num);
-  font-weight: 800;
-  line-height: 0.8;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--nm-gap, 0.07em);
+  line-height: 0;
+  letter-spacing: 0;
+}
+[data-theme='bauhaus'] .num .num-t {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-theme='bauhaus'] .num .nm {
+  display: block;
+  flex: none;
+  height: var(--nm-h, 0.9em);
+  aspect-ratio: 3 / 5;
+  width: auto;
+  fill: currentColor;
+  overflow: visible;
 }
 
 /* Vertical labels read bottom to top, the way they run up a poster's edge. */

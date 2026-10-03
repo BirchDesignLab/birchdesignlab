@@ -1,5 +1,5 @@
 ---
-/** Bauhaus contact: the heading and two circles meeting on a line (a
+/** Bauhaus contact: the heading, a circle and a square meeting on a line (a
     conversation, drawn), the form as a ruled panel with square fields, and
     the email route on a yellow slab. */
 import ContactHidden from '../../portal/ContactHidden.astro';
@@ -17,7 +17,7 @@ const { copy, theme } = Astro.props;
     <svg class="talk" viewBox="0 0 420 200" aria-hidden="true" focusable="false">
       <rect class="asm" x="0" y="192" width="420" height="8" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms" />
       <circle class="asm" cx="96" cy="96" r="96" fill="var(--blue)" style="--from: translateX(-80%); --d: 160ms" />
-      <circle class="asm" cx="288" cy="96" r="96" fill="var(--red)" style="--from: translateX(80%); --d: 160ms" />
+      <rect class="asm" x="192" y="0" width="192" height="192" fill="var(--red)" style="--from: translateX(80%); --d: 160ms" />
       <polygon class="asm" points="192,40 238,112 146,112" fill="var(--yellow)" style="--from: translateY(-160%) scale(0); --d: 420ms" />
     </svg>
   </div>
@@ -76,10 +76,10 @@ const { copy, theme } = Astro.props;
   }
   .field { display: flex; flex-direction: column; gap: 0.5rem; }
   label {
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.8125rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 0;
   }
   input, textarea {
     width: 100%;

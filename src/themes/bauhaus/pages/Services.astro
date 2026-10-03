@@ -4,6 +4,7 @@
     coloured bars, and the closing ask on a blue slab. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Numeral from '../parts/Numeral.astro';
 
 interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -28,7 +29,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
   <section class="offering">
     <div class="wrap grid12 offering-grid">
       <div class="offering-head">
-        <span class="num" aria-hidden="true">{pad(i + 1)}</span>
+        <Numeral value={pad(i + 1)} />
         <span class={`shape ${offeringShape[i % 2]}`} aria-hidden="true"></span>
         <h2>{offering.heading}</h2>
       </div>
@@ -46,7 +47,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
       {copy.process.steps.map((step, i) => (
         <li class={`step step-${i}`}>
           <div class="step-top" aria-hidden="true">
-            <span class="num">{pad(i + 1)}</span>
+            <Numeral value={pad(i + 1)} step={35} />
             <span class={`mini ${stepShape[i % 4]}`}></span>
           </div>
           <h3>{step.title}</h3>
@@ -103,7 +104,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     gap: 2rem 1.25rem;
     align-content: start;
   }
-  .offering-head .num { font-size: clamp(3.5rem, 6vw, 5.5rem); }
+  .offering-head :global(.num) { font-size: clamp(3.5rem, 6vw, 5.5rem); }
   .shape { width: clamp(44px, 4.4vw, 68px); aspect-ratio: 1; }
   .shape.circle { background: var(--blue); border-radius: 50%; }
   .shape.square { background: var(--red); }
@@ -150,7 +151,7 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
   .step-2 { --bar: var(--yellow); }
   .step-3 { --bar: var(--mark); }
   .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-  .step .num { font-size: 2.75rem; }
+  .step :global(.num) { font-size: 2.75rem; }
   .mini { width: 34px; height: 34px; flex: none; }
   .mini.circle { background: var(--blue); border-radius: 50%; }
   .mini.square { background: var(--red); }

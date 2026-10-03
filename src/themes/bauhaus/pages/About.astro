@@ -15,7 +15,7 @@ const [lead, ...rest] = copy.founder.body;
     <rect class="asm" x="20" y="10" width="84" height="400" fill="var(--mark)" style="--from: scaleY(0); --d: 0ms" />
     <path class="asm" d="M104 10 A96 96 0 0 1 104 202 Z" fill="var(--red)" style="--from: translateX(-40%) rotate(-180deg); --d: 220ms" />
     <path class="asm" d="M104 202 A104 104 0 0 1 104 410 Z" fill="var(--blue)" style="--from: translateX(-40%) rotate(180deg); --d: 360ms" />
-    <circle class="asm" cx="272" cy="52" r="42" fill="var(--yellow)" style="--from: scale(0); --d: 560ms" />
+    <polygon class="asm" points="272,10 314,94 230,94" fill="var(--yellow)" style="--from: scale(0); --d: 560ms" />
   </svg>
   <div class="etymology">
     {copy.etymology.map((para, i) => <p class={`etym etym-${i}`} set:html={rich(para)} />)}
@@ -28,7 +28,7 @@ const [lead, ...rest] = copy.founder.body;
       <h2>{copy.founder.heading}</h2>
       <svg class="tree" viewBox="0 0 240 320" aria-hidden="true" focusable="false" data-reveal>
         <rect x="0" y="0" width="240" height="320" fill="var(--blue)" />
-        <circle class="asm" cx="178" cy="70" r="38" fill="var(--yellow)" style="--from: scale(0); --d: 200ms" />
+        <circle class="asm" cx="178" cy="70" r="38" fill="var(--paper)" style="--from: scale(0); --d: 200ms" />
         <rect class="asm" x="78" y="36" width="36" height="284" fill="var(--paper)" style="--from: scaleY(0) translateY(40%); --d: 0ms" />
         <rect x="78" y="112" width="18" height="6" fill="var(--ink)" />
         <rect x="96" y="176" width="18" height="6" fill="var(--ink)" />
@@ -137,7 +137,7 @@ const [lead, ...rest] = copy.founder.body;
     .tree { max-width: 160px; }
     .manifesto { padding-bottom: 0; display: flex; flex-direction: column; }
     /* flex-start plus a margin-bottom keeps this clear of the footer's red
-       corner circle below, instead of two red shapes meeting at the seam. */
+       corner square below, instead of two red shapes meeting at the seam. */
     .manifesto-shapes { order: 2; position: static; translate: none; align-self: flex-start; width: 220px; margin: 3rem 0 clamp(2rem, 8vw, 3rem) var(--gutter); }
     .manifesto-text, .manifesto .btn { grid-column: 1 / -1; }
   }
