@@ -288,16 +288,78 @@ async function runPointer(browser) {
       const { context, page } = await open(browser, { scheme: 'light', sz, path: '', mode: 'proof', hooks: true });
       await page.mouse.move(2, 2);
       let m = null;
-      for (let i = 0; i < 480 && !m; i++) {
-        m = await page.evaluate(({ w, h, bare: bs }) => {
+      /* On a phone the text columns leave little open cloth in the first
+         screen, so scroll to the viewport position with the most clear cloth
+         (bare, and 40 px from any text) before looking for a seed. */
+      if (touch) {
+        const best = await page.evaluate(async ({ w, h, bare: bs }) => {
           const bare = (0, eval)('(' + bs + ')');
           const st = window.__ccFloatersProbe.get();
-          const c = st.seeds.map((s, i) => ({ i, x: s.x, y: s.y, cover: s.cover })).filter((s) => s.cover > 0.9 && s.x > Math.min(200, w / 5) && s.x < w - Math.min(200, w / 5) && s.y > 130 && s.y < h - 130 && bare(s.x, s.y));
-          return c[0] || null;
+          const docH = document.documentElement.scrollHeight;
+          let top = { y: 0, n: -1 };
+          for (let y = 0; y <= docH - h; y += 80) {
+            window.scrollTo(0, y);
+            let n = 0;
+            for (let gx = 20; gx < w; gx += 30) for (let gy = 40; gy < h - 40; gy += 30) {
+              if (!bare(gx, gy)) continue;
+              if (st.textRects.every((r) => gx + 40 < r.l || gx - 40 > r.r || gy + y + 40 < r.t || gy + y - 40 > r.b)) n++;
+            }
+            if (n > top.n) top = { y, n };
+          }
+          window.scrollTo(0, top.y);
+          return top;
         }, { w: sz.w, h: sz.h, bare: BARE.toString() });
+        console.log(`light ${sz.id}: scrolled to ${best.y}, ${best.n} clear grid points`);
+        await page.waitForTimeout(400);
+      }
+      /* A seed whose whole sprite box (nine samples across +/-60 px) is bare
+         cloth, with no text rect within `air` px of it. `side` is the way a tap
+         should land to push it toward the roomier side (-1 left, +1 right).
+         The air shrinks if nothing qualifies after a while (phone widths). */
+      for (let i = 0; i < 960 && !m; i++) {
+        const air = i < 240 ? 130 : i < 360 ? 90 : i < 480 ? 60 : i < 720 ? 30 : 15;
+        const half = i < 480 ? 60 : i < 720 ? 36 : 24;
+        m = await page.evaluate(({ w, h, bare: bs, air, half }) => {
+          const bare = (0, eval)('(' + bs + ')');
+          const st = window.__ccFloatersProbe.get();
+          const sy = window.scrollY;
+          const boxBare = (x, y) => { for (const dx of [-half, 0, half]) for (const dy of [-half, 0, half]) if (!bare(x + dx, y + dy)) return false; return true; };
+          const room = (x, y, dir) => {
+            let best = 1e4;
+            for (const r of st.textRects) {
+              if (y + 60 < r.t - sy || y - 60 > r.b - sy) continue;
+              const d = dir > 0 ? r.l - x : x - r.r;
+              if (d > -60 && d < best) best = d;
+            }
+            return best;
+          };
+          const clear = (x, y) => st.textRects.every((r) => x + air < r.l || x - air > r.r || y + sy + air < r.t || y + sy - air > r.b);
+          const mx = air >= 60 ? Math.min(200, w / 5) : 50;
+          const my = air >= 60 ? 130 : 70;
+          const c = st.seeds.map((s, i) => ({ i, x: s.x, y: s.y, cover: s.cover })).filter((s) => s.cover > 0.9 && s.x > mx && s.x < w - mx && s.y > my && s.y < h - my && clear(s.x, s.y) && boxBare(s.x, s.y));
+          if (!c.length && air <= 30) {
+            /* Nothing drifted into open cloth: set the seed with the most
+               cover down on the clearest grid point and let the breeze have it. */
+            let top = null;
+            for (let gx = 110; gx < w - 110; gx += 10) for (let gy = 120; gy < h - 120; gy += 10) {
+              if (!boxBare(gx, gy)) continue;
+              let dmin = 1e4;
+              for (const r of st.textRects) {
+                const dx = Math.max(r.l - gx, 0, gx - r.r), dy = Math.max(r.t - (gy + sy), 0, gy + sy - r.b);
+                dmin = Math.min(dmin, Math.hypot(dx, dy));
+              }
+              if (!top || dmin > top.d) top = { x: gx, y: gy, d: dmin };
+            }
+            if (top) { const q = st.seeds[0]; q.x = top.x; q.y = top.y; q.vx = 21; q.vy = -11; q.cover = 1; const l = Math.min(room(q.x, q.y, -1), q.x), rr = Math.min(room(q.x, q.y, 1), w - q.x); return { i: 0, x: q.x, y: q.y, cover: 1, side: l >= rr ? -1 : 1, staged: true, air, roomL: Math.round(l), roomR: Math.round(rr) }; }
+          }
+          if (!c.length) return null;
+          const k = c[0];
+          const left = Math.min(room(k.x, k.y, -1), k.x), right = Math.min(room(k.x, k.y, 1), w - k.x);
+          return { ...k, side: left >= right ? -1 : 1, air, roomL: Math.round(left), roomR: Math.round(right) };
+        }, { w: sz.w, h: sz.h, bare: BARE.toString(), air, half });
         if (!m) await page.waitForTimeout(250);
       }
-      if (!m) { console.warn(`no clear seed at ${sz.id}`); delete measures.pointer[`light-${sz.id}`]; await context.close(); break light; }
+      if (!m) { console.warn(`no clear seed at ${sz.id}`, JSON.stringify(await page.evaluate(() => { const st = window.__ccFloatersProbe.get(); return { rects: st.textRects.length, seeds: st.seeds.map((q) => [Math.round(q.x), Math.round(q.y), +q.cover.toFixed(2)]) }; }))); delete measures.pointer[`light-${sz.id}`]; await context.close(); break light; }
       const R = 130;
       const t0 = performance.now();
       const rows = [];
@@ -307,9 +369,9 @@ async function runPointer(browser) {
       const grab = async (label) => {
         const p = await seedNow();
         const a = performance.now();
-        const x = Math.max(0, Math.round(start.x - R)), y = Math.max(0, Math.round(start.y - R * 1.3));
+        const x = Math.max(0, Math.round(start.x - R - 70)), y = Math.max(0, Math.round(start.y - R * 1.3));
         const file = `pointer-light-${sz.id}__${rows.length}.png`;
-        await page.screenshot({ path: join(clips, file), clip: { x, y, width: 2 * R + 60, height: Math.round(2.6 * R) } });
+        await page.screenshot({ path: join(clips, file), clip: { x, y, width: 2 * R + 160, height: Math.round(2.6 * R) } });
         const b = performance.now();
         const tt = ((a + b) / 2 - tStart) / 1000;
         rows.push({ file, t: +(((a + b) / 2 - t0) / 1000).toFixed(2), label, seed: { x: +p.x.toFixed(1), y: +p.y.toFixed(1) }, offTrack: +Math.hypot(p.x - (start.x + start.vx * tt), p.y - (start.y + start.vy * tt)).toFixed(1) });
@@ -317,17 +379,17 @@ async function runPointer(browser) {
       };
       await grab('before: no pointer');
       let p = await seedNow();
-      if (touch) await page.touchscreen.tap(p.x - 36, p.y + 30);
+      if (touch) await page.touchscreen.tap(p.x + m.side * -36, p.y + 8);
       else {
-        await page.mouse.move(p.x - 150, p.y + 10, { steps: 3 });
+        await page.mouse.move(p.x - m.side * 150 + 0, p.y + 10, { steps: 3 });
         for (let k = 0; k < 14; k++) {
           p = await seedNow();
-          await page.mouse.move(p.x - 90 + k * 9, p.y + 6, { steps: 2 });
+          await page.mouse.move(p.x - m.side * (90 - k * 9), p.y + 6, { steps: 2 });
           if (k % 3 === 0) await grab(k === 0 ? 'cursor sweeping toward the seed' : '');
         }
       }
       for (let i = 0; i < 6; i++) { await grab(i === 0 ? (touch ? 'tap beside the seed' : 'cursor has passed') : ''); await page.waitForTimeout(160); }
-      measures.pointer[`light-${sz.id}`] = { how: touch ? 'tap' : 'cursor', rows, peakOffTrack: Math.max(...rows.map((r) => r.offTrack)) };
+      measures.pointer[`light-${sz.id}`] = { how: touch ? 'tap' : 'cursor', pick: { staged: !!m.staged, air: m.air, roomL: m.roomL, roomR: m.roomR, side: m.side }, rows, peakOffTrack: Math.max(...rows.map((r) => r.offTrack)) };
       await context.close();
       console.log(`pointer light ${sz.id}: ${rows.length} clips, peak off-track ${measures.pointer[`light-${sz.id}`].peakOffTrack}px`);
     }
@@ -488,6 +550,31 @@ async function runStats(browser) {
       console.log(`stats seeds ${name} ${sz.id}:`, JSON.stringify(measures.stats[`seeds-${name}-${sz.id}`]));
       await context.close();
     }
+  }
+  /* resume: sit in light (or hide the tab), flip to dark, and count how many
+     motes are lit at once and how many first flashes share a start time. */
+  for (const sz of SIZES) {
+    const { context, page } = await open(browser, { scheme: 'light', sz, path: '', mode: 'proof', hooks: true });
+    await page.waitForTimeout(10000);
+    const res = await page.evaluate(() => new Promise((done) => {
+      const t0 = performance.now();
+      document.documentElement.dataset.scheme = 'dark';
+      const starts = []; let maxLit = 0; const seen = [];
+      const step = () => {
+        const st = window.__ccFloatersProbe.get();
+        let lit = 0;
+        st.fireflies.forEach((m, i) => { if (m.flashes.length) { lit++; if (seen[i] !== m.flashes[0]) { seen[i] = m.flashes[0]; starts.push(Math.round(m.flashes[0].start)); } } });
+        maxLit = Math.max(maxLit, lit);
+        if (performance.now() - t0 < 9000) requestAnimationFrame(step); else {
+          const same = {}; for (const v of starts) same[v] = (same[v] || 0) + 1;
+          done({ motes: st.fireflies.length, maxLitAtOnce: maxLit, firstBursts: starts.length, biggestSharedStart: Math.max(0, ...Object.values(same)) });
+        }
+      };
+      requestAnimationFrame(step);
+    }));
+    measures.stats[`resume-light-to-dark-${sz.id}`] = res;
+    console.log(`resume ${sz.id}:`, JSON.stringify(res));
+    await context.close();
   }
   await saveMeasures();
 }

@@ -54,8 +54,9 @@ const FIREFLY = {
   /** Fully dark between bursts (ms). */
   darkMin: 4000,
   darkMax: 8000,
-  /** Peak alpha of the lit core. The halo sprite keeps its own 0.42 peak. */
-  coreAlpha: 0.6,
+  /** Peak alpha of the lit core: today's own peak (0.35 + 0.6). The halo
+      sprite's centre stop is lifted from 0.42 to 0.6 (brief item 12). */
+  coreAlpha: 0.95,
   /** A cursor this close (px) flashes a mote; a finger gets more room. */
   hoverRadius: 26,
   tapRadius: 44,
@@ -159,7 +160,7 @@ function buildHaloSprite(): HTMLCanvasElement {
   const sctx = sprite.getContext('2d')!;
   const r = HALO_SPRITE_SIZE / 2;
   const g = sctx.createRadialGradient(r, r, 0, r, r, r);
-  g.addColorStop(0, 'rgba(255, 214, 130, 0.42)');
+  g.addColorStop(0, 'rgba(255, 214, 130, 0.6)');
   g.addColorStop(0.25, 'rgba(240, 170, 80, 0.16)');
   g.addColorStop(1, 'rgba(240, 165, 80, 0)');
   sctx.fillStyle = g;
@@ -305,6 +306,8 @@ export function mountFireflies(): void {
     let lastSy = window.scrollY;
     let textRects: TextRect[] = [];
     let nextGust = 0;
+    let lastFireflyT = -1e9;
+    let lastSeedT = -1e9;
     let gustStart = -1e9;
 
     /* Pointer: written by the listeners, read by the tick. */
@@ -405,6 +408,16 @@ export function mountFireflies(): void {
 
     /* ----- fireflies ----- */
     const drawFireflies = (t: number, still: boolean, sy: number, dsy: number) => {
+      // The burst clock is absolute rAF time, so after a gap (light scheme,
+      // hidden tab) every rest has passed and the whole swarm would flash on
+      // the same frame. Re-stagger each mote whenever the branch resumes.
+      if (t - lastFireflyT > FRAME_MS * 3) {
+        for (const m of fireflies) {
+          m.flashes = [];
+          m.rest = t + rand(0, FIREFLY.darkMax);
+        }
+      }
+      lastFireflyT = t;
       for (const m of fireflies) {
         if (!still) {
           m.wander += (Math.random() - 0.5) * 0.08;
@@ -462,6 +475,11 @@ export function mountFireflies(): void {
     /* ----- dandelions ----- */
     const drawDandelions = (t: number, dt: number, still: boolean, sy: number, dsy: number) => {
       let gust = 0;
+      if (t - lastSeedT > FRAME_MS * 3) {
+        nextGust = 0;
+        gustStart = -1e9;
+      }
+      lastSeedT = t;
       if (!still) {
         if (!nextGust) nextGust = t + rand(SEED.gustEveryMin, SEED.gustEveryMax) * 1000 * 0.5;
         if (t >= nextGust) {

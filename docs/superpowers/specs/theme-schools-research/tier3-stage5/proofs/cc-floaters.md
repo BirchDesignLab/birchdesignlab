@@ -27,8 +27,9 @@ Fireflies (dark), the numbers used:
 - Burst: 2 to 4 flashes, start to start 500 ms (jitter +/- 70), rise 120 to 180 ms,
   fall 250 ms, then fully dark for 4 to 8 s. Each mote has its own random first
   rest, so they never line up.
-- Peak core alpha 0.6 (was up to 0.95 with a 0.35 resting ember). Halo sprite
-  unchanged (0.42 peak). Between bursts a mote is fully dark; the old always-on
+- Peak core alpha stays at today's 0.95 (0.35 + 0.6 at full pulse), and the halo
+  sprite's centre stop is lifted from 0.42 to 0.6 (brief item 12), so a flash is
+  brighter than today's peak, not dimmer. Between bursts a mote is fully dark; the old always-on
   ember is gone. That follows the brief ("then 4 to 8 s dark") and is the one
   visible change to what people see; say so if the founder wants an ember kept.
 - Hover (cursor within 26 px) or tap (within 44 px) starts a 2-flash burst now,
@@ -85,8 +86,22 @@ Strips are 36 real frames per film, timestamped; each sheet shows six.
   clips, lit by the third; the rise, a flash and the fall are all in frame) and
   `sheet-pointer-dark-390.jpg` (a tap).
 - `sheet-pointer-light-1440.jpg` (cursor sweeping toward a seed) and
-  `sheet-pointer-light-390.jpg` (a tap beside a seed). The seed leaves its path:
-  114 px off track at 1440 and 124 px at 390 within about 1.2 s.
+  `sheet-pointer-light-390.jpg` (a tap beside a seed). The seed is chosen with a
+  bare 3 x 3 sample box and clear air around it, so what the clips show is the
+  seed answering: about 105 px off track at 1440 and 135 px at 390 within about
+  1.2 s (peak figures in measures.json). On a phone the text columns leave almost
+  no open cloth, so the 390 clip stages one seed onto the clearest spot of the
+  viewport; even there the seed fades toward the nearby heading as it moves. A tap
+  on a phone often makes a seed fade out rather than drift away, because the
+  kick sends it toward text and the look-ahead fade takes it. That is the intended
+  keep-off-the-text rule winning over the push.
+
+Resume: the burst clock is re-staggered whenever the dark branch restarts after a
+gap (light to dark flip, hidden tab), and the gust clock is reset the same way.
+Before this, a 10 s stay in light and a flip to dark lit 11 of 18 motes at once on
+one frame (14 of 18 shared one start time). Now, after the same 10 s in light and a
+flip, over 9 s: at most 7 of 18 lit at once at 1440 (4 of 7 at 390), 20 first bursts
+and no two with the same start time (`resume-light-to-dark-*` in measures.json).
 - `shots/*__fullpage.png`: whole-page stills (the fixed canvas paints the first
   viewport only).
 
@@ -96,25 +111,24 @@ Bursts, 70 s per size, read from the live state:
 
 | | 1440 (18 motes) | 390 (7 motes) |
 |---|---|---|
-| bursts seen | 172 | 65 |
-| flashes per burst (2, 3, 4) | 56, 50, 66 | 21, 24, 20 |
-| gap start to start | 430 to 570 ms, mean 499 | 431 to 570, mean 502 |
+| bursts seen | 173 | 64 |
+| flashes per burst (2, 3, 4) | 64, 58, 51 | 23, 19, 22 |
+| gap start to start | 430 to 570 ms, mean 502 | 431 to 570, mean 503 |
 | rise | 120 to 180 ms | 121 to 180 |
-| dark rest | 4.07 to 7.99 s, mean 5.97 | 4.03 to 8.00, mean 6.20 |
-| most lit at once | 9 of 18 (mean 1.7) | 3 of 7 (mean 0.4) |
+| dark rest | 4.05 to 8.05 s, mean 5.98 | 4.04 to 7.95, mean 6.29 |
+| most lit at once | 6 of 18 (mean 1.6) | 3 of 7 (mean 0.3) |
 | frames with every mote lit | 0 | 0 |
-| frames with none lit | 21% | 71% |
+| frames with none lit | 20% | 69% |
 
 Text, same independent rects, three slow sweeps up and down the page, every drawn
 halo centre or seed:
 
-- Fireflies at 1440: 14 of 2683 visible draws with the centre on text (1 of them above
-  alpha 0.15); today's fireflies, same test, same scroll: 1824 of 13854 (1020 above 0.15).
-  At 390: 8 of 564 (0 above 0.15) against 1067 of 4705 (536).
+- Fireflies at 1440: 12 of 2524 visible draws with the centre on text (0 above
+  alpha 0.15); today's fireflies, same test, same scroll: 1468 of 14250 (885 above 0.15).
+  At 390: 6 of 537 (0 above 0.15) against 1174 of 4847 (571).
 - Seeds, 60 s each: centre on text 0 in all four runs (Home and About, 1440 and 390).
-  Drawn extent touching text: 7 of 5007 at Home 1440 (alpha 5 above 0.15, worst alpha
-  0.30), 0 About 1440, 0 Home 390, 2 About 390 (worst alpha 0.19). Nearest centre to
-  any text 32 to 40 px.
+  Drawn extent touching text: 0 at Home and About 1440; 2 at Home 390 (worst alpha
+  0.21) and 2 at About 390 (worst alpha 0.14). Nearest centre to any text 31 to 40 px.
 
 Cost (12 s idle, then a 5 s scroll; CDP Performance deltas and rAF callback timing):
 
