@@ -42,6 +42,10 @@
   --foot-mark: #f3ead6;
   --foot-muted: #cfc4a4;
   --foot-link: #f3ead6;
+  /* The Lab band's catalogue cards: the band, a shade deeper, so the hung labels read as cards on it. */
+  --band-card: #0d2e63;
+  /* The thin porcelain-blue band under the footer valance (B1 item 18). */
+  --foot-band: #5d86c2;
 
   /* Ornament only: never text. */
   --rule: var(--gold);
@@ -75,7 +79,8 @@
   --bark-edge: #cfc6b4;
   --catkin: #8f7a4a;
   /* The envelope's flap, distinct from the writing paper it lies beside. */
-  --flap: var(--paper);
+  /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12). */
+  --flap: #dfdcd6;
 
   /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
      Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
@@ -128,8 +133,10 @@
   --font-display: 'Playfair Display Variable', 'Playfair Display Variable fallback', Georgia, serif;
   --font-body: 'Cormorant Garamond Variable', 'Cormorant Garamond Variable fallback', Georgia, serif;
   --font-script: 'Pinyon Script', 'Pinyon Script fallback', Georgia, cursive;
+  /* Engraved small capitals for kickers, the nav, the footer name and the form labels (B1 item 17). */
+  --font-sc: 'Cormorant SC', 'Cormorant SC fallback', Georgia, serif;
 
-  --measure: 36em;
+  --measure: 30em;
   --wrap: 72rem;
   --gutter: clamp(1.1rem, 4vw, 2.5rem);
 }
@@ -157,6 +164,7 @@
   --foot-mark: #f2e8d2;
   --foot-muted: #d9b896;
   --foot-link: #e2c67f;
+  --band-card: #3e0512;
 
   --rule: #c9a95c;
   --ornament: #c9a95c;
@@ -293,13 +301,12 @@
   margin-inline: auto;
 }
 
-/* Kicker: letterspaced capitals in oxblood (gold in the lacquered room). */
+/* Kicker: letterspaced small capitals (Cormorant SC) in oxblood (gold in the lacquered room). */
 [data-theme='grandmillennial'] .gm-kicker {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+  font-family: var(--font-sc);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
   color: var(--accent);
 }
 /* A kicker set between two gold rules, each ending in a bead. */
@@ -402,6 +409,9 @@
 /* Sent's room runs straight into the valance: no leftover strip of plain
    field between its gold double rule and the skirted table. */
 [data-theme='grandmillennial'] body:has(.sent) .site-footer { margin-top: 0; }
+/* Contact's chintz wall also ends at the valance (its last band is the page's
+   last block), so no plain strip of field lies between the two. */
+[data-theme='grandmillennial'] body:has(.gm-wall--chintz) .site-footer { margin-top: 0; }
 
 /* ---------- Papered walls (B1 item 2, decision F) ---------- */
 

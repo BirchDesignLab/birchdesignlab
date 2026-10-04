@@ -1,15 +1,24 @@
 ---
-/** Double gilt rule with a scroll at each corner: the frame every framed
-    thing in this school hangs in. `tag` keeps the semantics with the caller. */
+/** The frames of this school (B1 item 11). `border="gilt"` (the default) is a
+    double gilt rule with a scroll at each corner. `border="chintz"` is a strip of
+    the chintz meander (parts/Defs.astro #gm-chintz) laid round the card, ending
+    in a thin porcelain-blue band against the paper, and a gold hairline outside.
+    A page keeps the corner scrolls on one element and the chintz border on
+    another. `tag` keeps the semantics with the caller. */
 import Corner from './Corner.astro';
+import Chintz from './Chintz.astro';
 
-interface Props { tag?: 'div' | 'section' | 'article' | 'aside' | 'figure'; class?: string; tone?: 'field' | 'raised' | 'paper' }
-const { tag: Tag = 'div', class: cls, tone = 'raised' } = Astro.props;
+interface Props { tag?: 'div' | 'section' | 'article' | 'aside' | 'figure'; class?: string; tone?: 'field' | 'raised' | 'paper'; border?: 'gilt' | 'chintz' }
+const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro.props;
 ---
-<Tag class:list={['gm-framed', `tone-${tone}`, cls]}>
-  <span class="corners" aria-hidden="true">
-    <Corner class="c tl" /><Corner class="c tr" /><Corner class="c bl" /><Corner class="c br" />
-  </span>
+<Tag class:list={['gm-framed', `tone-${tone}`, { 'is-chintz': border === 'chintz' }, cls]}>
+  {border === 'chintz' ? (
+    <span class="strip" aria-hidden="true"><Chintz /></span>
+  ) : (
+    <span class="corners" aria-hidden="true">
+      <Corner class="c tl" /><Corner class="c tr" /><Corner class="c bl" /><Corner class="c br" />
+    </span>
+  )}
   <slot />
 </Tag>
 
@@ -27,6 +36,26 @@ const { tag: Tag = 'div', class: cls, tone = 'raised' } = Astro.props;
   .tone-raised { background: var(--field-raised); }
   .tone-field { background: var(--field); }
   .tone-paper { background: var(--paper); }
+  /* The chintz border: the strip lies under the card (z -1 in the stacking context
+     the card sits in, so the card's own paper paints over its middle) and shows 1.6rem round it; the blue band is the card's
+     own outline, 3px against the paper, and the gold hairline closes the strip
+     on the outside. The gilt rule and its outline give way to it. */
+  .is-chintz {
+    --strip: 1.6rem;
+    margin: calc(7px + var(--strip));
+    border: 0;
+    outline: 3px solid var(--c-blue);
+    outline-offset: 0;
+  }
+  .strip {
+    position: absolute; z-index: -1;
+    inset: calc(-1 * var(--strip) - 3px);
+    overflow: hidden;
+    /* Its own cloth, so it reads as a border even on a papered wall of the same chintz. */
+    background: var(--field);
+    box-shadow: 0 0 0 1px var(--rule), 0 0 0 5px var(--field), 0 0 0 6px var(--rule);
+    pointer-events: none;
+  }
   .corners { position: absolute; inset: -11px; pointer-events: none; }
   .corners :global(.c) { position: absolute; }
   .corners :global(.tl) { top: 0; left: 0; }
@@ -37,7 +66,8 @@ const { tag: Tag = 'div', class: cls, tone = 'raised' } = Astro.props;
   /* On a phone the outline offset and corner inset otherwise put gold scrolls
      within a thumb's width of the glass. */
   @media (max-width: 480px) {
-    .gm-framed { outline-offset: 4px; }
+    .is-chintz { --strip: 1.1rem; }
+    .gm-framed:not(.is-chintz) { outline-offset: 4px; }
     .corners { inset: -8px; }
   }
 </style>

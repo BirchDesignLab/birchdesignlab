@@ -1,5 +1,6 @@
 import type { ThemeMeta } from '../types';
 import playfair from '@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2?url';
+import cormorantSc from '@fontsource/cormorant-sc/files/cormorant-sc-latin-600-normal.woff2?url';
 import cormorant from '@fontsource-variable/cormorant-garamond/files/cormorant-garamond-latin-wght-normal.woff2?url';
 
 /** Grandmillennial: the parlour revival. Light-native; dark is a lacquered room. */
@@ -16,6 +17,7 @@ export const meta: ThemeMeta = {
   fonts: [
     { family: 'Playfair Display Variable', role: 'heading', preload: [playfair] },
     { family: 'Cormorant Garamond Variable', role: 'body', preload: [cormorant] },
+    { family: 'Cormorant SC', role: 'accent', preload: [cormorantSc] },
     { family: 'Pinyon Script', role: 'accent' },
   ],
   /* Surfaces beyond the field that carry text: the porcelain (light) or
@@ -38,6 +40,8 @@ export const meta: ThemeMeta = {
     { fg: '--accent', bg: ['--lacquer-yellow'], min: 4.5, note: 'process band kicker on the lacquer yellow' },
     { fg: '--mark', bg: ['--oval'], min: 4.5, note: 'billboard inside the portrait oval' },
     { fg: '--accent', bg: ['--oval'], min: 4.5, note: 'billboard second line inside the oval' },
+    { fg: '--band-mark', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' summaries" },
+    { fg: '--band-accent', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' BDL numbers" },
   ],
   assets: {
     provenance: 'original-vector',

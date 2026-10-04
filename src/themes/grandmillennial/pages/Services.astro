@@ -16,7 +16,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   <p class="gm-kicker ruled">{copy.kicker}</p>
   <h1>{copy.heading}</h1>
   <div class="sublines">
-    {copy.sublines.map((line) => <p>{line}</p>)}
+    {copy.sublines.map((line, i) => <p class={i === 0 ? 'lede' : undefined}>{line}</p>)}
   </div>
 </section>
 
@@ -65,7 +65,8 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 <style>
   .intro {
     display: grid; justify-items: center; text-align: center;
-    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(3rem, 6vw, 4.5rem);
+    /* The gap to the first offering is about 30% tighter than it was (B1 item 8). */
+    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.1rem, 4.2vw, 3.15rem);
   }
   .intro h1 {
     font-style: italic;
@@ -80,33 +81,49 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     font-size: 1.35rem;
     color: var(--mark-muted);
   }
+  /* The first sentence is the lede: Playfair italic in the full mark colour. */
+  .sublines .lede {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.3;
+    color: var(--mark);
+    text-wrap: balance;
+  }
 
   /* ---------- Sample-book spreads ---------- */
+  /* Cuttings laid on a table (B1 item 13): the swatch is about a third of the
+     row (34%, counting the part that hangs past the card), turned a couple of
+     degrees and overhanging the card's edge onto the wall; the heading's cap
+     height sits on the swatch's top edge. */
   .offering {
+    --pad: clamp(1.5rem, 4vw, 3.5rem);
+    --hang: calc(var(--pad) + 1.25rem);
     display: grid;
-    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
-    gap: clamp(2rem, 6vw, 5rem);
-    align-items: center;
-    padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3.5rem);
+    grid-template-columns: calc(34% - 0.32 * var(--pad) - 1.25rem) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+    padding: clamp(2.5rem, 5vw, 3.5rem) var(--pad);
     /* Text sits on paper, never on the toile: each offering is a card on the wall. */
     background: var(--field-raised);
     border: 1px solid var(--rule);
   }
   .offering + .offering { margin-top: clamp(2.25rem, 5vw, 3.5rem); }
-  .offering.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); }
-  .offering.flip .swatch-hang { order: 2; }
+  .offering.flip { grid-template-columns: minmax(0, 1fr) calc(34% - 0.32 * var(--pad) - 1.25rem); }
+  .offering.flip .swatch-hang { order: 2; margin-left: 0; margin-right: calc(-1 * var(--hang)); rotate: 1.8deg; }
   /* The shadow is a drop-shadow on the hanger so it follows the pinked cut. */
   .swatch-hang {
     position: relative;
-    width: min(100%, 22rem);
-    justify-self: center;
+    width: calc(100% + var(--hang));
+    margin-left: calc(-1 * var(--hang));
+    rotate: -2deg;
     filter: drop-shadow(0 10px 12px rgb(40 22 8 / 0.28));
   }
   /* Pinking shears: both long edges zigzag, cut with two intersected
      conic masks (one tooth every 18px). */
   .swatch {
     position: relative;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1;
     -webkit-mask:
       conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
       conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
@@ -136,6 +153,9 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     font-style: italic;
     color: var(--accent);
     margin-bottom: 1.4rem;
+    /* The first line's cap height, not its leading, is what meets the swatch's top. */
+    text-box-trim: trim-start;
+    text-box-edge: cap alphabetic;
   }
   .offer-text p { max-width: var(--measure); }
   .offer-text p + p { margin-top: 1rem; }
@@ -149,13 +169,19 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
        hunter text (the trellis lies over it). */
     background-color: var(--lacquer-yellow);
   }
+  /* One axis per step (B1 item 8): the medallion, the title and the text all hang
+     from the left. Each step is three rows of a shared grid (subgrid), so the
+     paragraph tops line up across the four columns whatever the titles do. */
   .steps {
     list-style: none; padding: 0;
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(1.75rem, 3vw, 2.75rem);
+    column-gap: clamp(1.75rem, 3vw, 2.75rem); row-gap: 0;
     margin-top: 3rem;
   }
-  .steps li { display: grid; justify-items: center; align-content: start; text-align: center; gap: 0.75rem; }
+  .steps li {
+    display: grid; grid-row: span 3; grid-template-rows: subgrid;
+    justify-items: start; align-content: start; text-align: left; row-gap: 0.75rem;
+  }
   .cameo {
     display: grid; place-items: center;
     width: 4.6rem; height: 5.8rem;
@@ -171,7 +197,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     color: var(--plate);
   }
   .steps h3 { font-size: 1.6rem; font-style: italic; }
-  .steps p { text-align: left; hyphens: auto; max-width: 17em; margin-inline: auto; font-size: 1.2rem; }
+  .steps p { text-wrap: pretty; max-width: 17em; font-size: 1.2rem; }
 
   /* ---------- The ask ---------- */
   .ask {
@@ -190,12 +216,16 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   }
 
   @media (max-width: 980px) {
-    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 3rem; }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps li:nth-child(-n + 2) { padding-bottom: 3rem; }
   }
   @media (max-width: 720px) {
     .offering, .offering.flip { grid-template-columns: 1fr; gap: 2.75rem; }
-    .offering.flip .swatch-hang { order: 0; }
+    .offering .swatch-hang, .offering.flip .swatch-hang { order: 0; width: 100%; margin: 0; rotate: -1.2deg; }
+    .offering.flip .swatch-hang { rotate: 1.2deg; }
     .swatch { aspect-ratio: 16 / 9; }
-    .steps { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; row-gap: 2.5rem; }
+    .steps li { grid-row: auto; grid-template-rows: none; }
+    .steps li:nth-child(-n + 2) { padding-bottom: 0; }
   }
 </style>

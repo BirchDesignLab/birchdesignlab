@@ -45,9 +45,19 @@ const year = new Date().getFullYear();
   .foot {
     background: var(--foot);
     color: var(--foot-mark);
-    padding-block: 2.5rem 3rem;
+    /* The skirt below the copyright is trimmed (B1 item 18); the 76px portal tail
+       under it stays painted. */
+    padding-block: 0 1.25rem;
     border-top: 1px solid color-mix(in srgb, var(--rule), transparent 50%);
   }
+  /* The thin porcelain-blue band under the valance, inside the gold rule above. */
+  .foot::before {
+    content: '';
+    display: block;
+    height: 6px;
+    background: linear-gradient(var(--foot-band) 0 5px, var(--rule) 5px 6px);
+  }
+  .inner { padding-top: 2.25rem; }
   .inner { display: grid; justify-items: center; text-align: center; gap: 0.35rem; }
   .cartouche {
     display: grid; place-items: center;
@@ -66,11 +76,11 @@ const year = new Date().getFullYear();
     translate: -0.06em 0.12em;
   }
   .name {
-    font-family: var(--font-display);
-    font-size: 1.05rem;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    padding-left: 0.32em;
+    font-family: var(--font-sc);
+    font-weight: 600;
+    font-size: 1.4rem;
+    letter-spacing: 0.16em;
+    padding-left: 0.16em;
   }
   .loc { font-style: italic; color: var(--foot-muted); }
   nav {

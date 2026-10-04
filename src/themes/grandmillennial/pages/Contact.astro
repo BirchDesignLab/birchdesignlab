@@ -21,7 +21,7 @@ const { copy, theme } = Astro.props;
 <div class="gm-wall-room">
 <div class="desk gm-wrap">
   <section class="write">
-    <Framed tone="raised" class="stationery">
+    <Framed tone="raised" border="chintz" class="stationery">
       <span class="letterhead" aria-hidden="true">B</span>
       <form method="post" action="/api/contact" data-astro-reload>
         <div class="pair">
@@ -53,7 +53,7 @@ const { copy, theme } = Astro.props;
     </div>
   </section>
 
-  <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}{part}</>)}</p>
+  <p class="trust wall-card">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}{part}</>)}</p>
 </div>
 </div>
 <div class="gm-wall-band" aria-hidden="true"></div>
@@ -77,9 +77,10 @@ const { copy, theme } = Astro.props;
   }
 
   .desk {
+    --gap: clamp(2.5rem, 5vw, 4.5rem);
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: clamp(2.5rem, 5vw, 4.5rem);
+    gap: var(--gap);
     align-items: center;
   }
 
@@ -99,10 +100,10 @@ const { copy, theme } = Astro.props;
   .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; }
   .field { display: grid; gap: 0.35rem; }
   label {
-    font-weight: 700;
-    font-size: 0.82rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    font-family: var(--font-sc);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
     color: var(--accent);
   }
   input, textarea {
@@ -147,17 +148,23 @@ const { copy, theme } = Astro.props;
     padding: 0.7rem 1.75rem 0.8rem;
     background: var(--field-raised);
     border: 1px solid var(--rule);
-    box-shadow: 0 12px 22px -14px rgb(30 16 6 / 0.5);
+    /* Its shadow and (in the lacquer) lit edge come from the wall-card rule in theme.css. */
   }
   .sep { font-style: normal; color: var(--rule); padding-inline: 0.35rem; }
 
   /* ---------- The envelope ---------- */
+  /* Contact's one off-axis move (B1 item 12): the envelope is laid on the desk
+     at a slight angle, its left edge over the form's chintz border and a hand's
+     width into the card (the card's margin box is the frame's 7px plus the
+     1.6rem strip), above it in the stack. */
+  .write { position: relative; z-index: 1; }
   .envelope {
-    position: relative;
-    margin-top: 1rem;
+    position: relative; z-index: 2;
+    justify-self: end;
+    width: calc(100% + var(--gap) + 3.2rem);
+    rotate: 2.2deg;
     background: var(--field-raised);
     border: 1px solid var(--rule);
-    box-shadow: 0 18px 30px -18px rgb(40 22 8 / 0.45);
   }
   .flap {
     position: relative;
@@ -188,7 +195,7 @@ const { copy, theme } = Astro.props;
 
   @media (max-width: 860px) {
     .desk { grid-template-columns: 1fr; }
-    .envelope { width: min(100%, 28rem); justify-self: center; }
+    .envelope { width: min(100%, 28rem); justify-self: center; rotate: 1.4deg; }
   }
   @media (max-width: 560px) {
     .pair { grid-template-columns: 1fr; }
