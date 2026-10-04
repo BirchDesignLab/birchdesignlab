@@ -73,8 +73,10 @@ html[data-theme='cottagecore'][data-scheme='dark']:root :is(.cc-paper, .cc-board
 }
 /* The hero sprigs held by gum strips, reusing the About twig's strip drawing
    (Pressed.astro: a gummed parallelogram laid across the stem). Markup lives
-   in mount.js; the class rule is the existing `.pressed .gum-strip`. */
-html[data-theme='cottagecore'][data-scheme='dark']:root .cc-board .gum {
+   in mount.js; the class rule is the existing `.pressed .gum-strip`. The
+   geometry is scheme-agnostic on purpose: the strips are markup in Home.astro
+   for both schemes, so light must size them too. */
+html[data-theme='cottagecore'] .sheet .gum {
   position: absolute;
   width: 9.5%;
   height: auto;

@@ -89,7 +89,7 @@ async function newPage(browser, sz) {
 }
 
 /* Open a page in a variant. motes: leave the firefly canvas on. */
-async function open(page, path, v, { motes = false } = {}) {
+async function open(page, path, v, { motes = false, fixed = null } = {}) {
   await page.goto(`${base}/t/cottagecore/${path}`, { waitUntil: 'networkidle' });
   await page.addStyleTag({ content: HIDE + (motes ? '' : NOMOTES) });
   let strips = [];
@@ -99,7 +99,7 @@ async function open(page, path, v, { motes = false } = {}) {
     await page.addScriptTag({ content: css.mount });
   }
   await page.evaluate(async () => { await document.fonts.ready; });
-  if (v !== 'a') strips = await page.evaluate(() => window.__ccMount({ strips: !!document.querySelector('.hero .sheet') }));
+  if (v !== 'a') strips = await page.evaluate((fx) => window.__ccMount({ strips: !!document.querySelector('.hero .sheet'), fixed: fx }), fixed);
   await page.waitForTimeout(500);
   const got = await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, scheme: document.documentElement.dataset.scheme }));
   if (got.theme !== 'cottagecore' || got.scheme !== scheme) console.warn(`WARN theme=${got.theme} scheme=${got.scheme} (wanted ${scheme})`);
@@ -225,7 +225,7 @@ async function capture() {
   /* whole pages */
   for (const sz of SIZES) for (const [name, path] of PAGES) for (const v of VARIANTS) {
     const { context, page } = await newPage(browser, sz);
-    const strips = await open(page, path, v);
+    const strips = await open(page, path, v, { fixed: name === 'home' && sz.id !== '1440' ? (measures.strips['1440'] || null) : null });
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: shotPath(name, v, sz.id), fullPage: true });
     if (name === 'home' && v === 'c') measures.strips[sz.id] = strips;
@@ -240,9 +240,11 @@ async function capture() {
     const s = measures.strips;
     const base1 = s['1440'] || [];
     let drift = 0;
-    for (const k of ['820', '390']) (s[k] || []).forEach((t, i) => { if (base1[i]) drift = Math.max(drift, Math.abs(t.left - base1[i].left), Math.abs(t.top - base1[i].top)); });
+    for (const k of ['820', '390']) (s[k] || []).forEach((t, i) => { if (base1[i] && t.t !== null && base1[i].t !== null && base1[i].sprig === t.sprig && base1[i].t === t.t) drift = Math.max(drift, Math.abs(t.left - base1[i].left), Math.abs(t.top - base1[i].top)); });
     measures.stripDriftPercent = +drift.toFixed(2);
-    await writeFile(join(PROOF, 'strips.json'), JSON.stringify({ note: 'percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path', strips: base1 }, null, 2) + '\n');
+    measures.stripAllClearAtEverySize = Object.values(s).flat().every((t) => t.t === null || t.clear);
+    measures.stripSameSet = ['820', '390'].every((k) => JSON.stringify((s[k] || []).map((t) => [t.sprig, t.t])) === JSON.stringify(base1.filter((t) => t.t !== null).map((t) => [t.sprig, t.t])));
+    await writeFile(join(PROOF, 'strips.json'), JSON.stringify({ note: 'percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path; each strip is placed where a hit test finds bare stem under it, so a sprig can carry fewer than two', strips: base1.filter((t) => t.t !== null) }, null, 2) + '\n');
   }
 
   /* 2x crops at 1440 */

@@ -86,7 +86,7 @@ the Astro-scoped rules); in `theme.css` the `html` and `:root` can go.
 |---|---|
 | `--press-shadow-mounted` | `none` on anything in `.cc-paper`, `.cc-board`, `.note` (hairline alternative in the comment: `drop-shadow(0 0.5px 0 rgba(58,42,31,0.12))`) |
 | `--press-shadow` (loose sprigs: strays, closer pair, letter rose and fern) | `drop-shadow(0 1.5px 2px rgba(0,0,0,0.3))`, lighter than today's `0 2px 3px` at 0.45 |
-| hero gum strips | 2 per sprig on 4 sprigs, `<svg class="pressed gum" viewBox="0 0 34 12">` with the twig's `gum-strip` class; width 9.5% of the sheet, rotated across the stem, placed at 0.30 and 0.64 along each stem path |
+| hero gum strips | 6 strips: 2 each on the fern, rose and daisy, none on the lavender. `<svg class="pressed gum" viewBox="0 0 34 12">` with the twig's `gum-strip` class; width 9.5% of the sheet, rotated across the stem. Each is placed at the nearest point to 0.30 and 0.64 along the stem path where a hit test finds only bare board, the sprig's own stem, leaf, frond or vein, or a crossing stem under the strip's footprint (with a 20% margin), never a bloom, bud or petal. The lavender stem is under the daisy or its buds everywhere a strip would fit, so it carries none |
 | petals on mounted sheets | light palette (drawn for cream paper), petal fills 10% less saturated: `--cc-petal-back #efe6d4`, `--cc-rose-petal #e5b1ad`, `--cc-blush #fef4e5`, `--cc-lav #a596c9` (`--cc-petal` is already near white and does not move) |
 | `--cc-gum-strip` | `#ece0c4` (was `#4a3b2c`, invisible on cream) |
 
@@ -135,18 +135,19 @@ postcard, stamp and Sent page were not proofed. (c) does not touch them.
 
 ## What Tier B lifts, for (c)
 
-1. `shared.css` into `theme.css` dark: the cloth tokens and the two scallop-rim
+1. `shared.css` into `theme.css` dark (except the `.gum` geometry rule, which
+   goes in the scheme-agnostic part, see step 3): the cloth tokens and the two scallop-rim
    rules, the `auto` size override, `--press-shadow` and `--press-shadow-mounted`
    and the mounted rule. The dashed `--gingham-texture` and `--field-texture`
    SVGs are deleted.
 2. `paper-c.css` into `theme.css` dark: `--board*` tokens, the `.cc-board` rule
    and its `::after`.
 3. Markup: class `cc-board` beside `cc-paper` on `.sheet` in `Home.astro` and
-   `About.astro`; the hero's eight gum strips in `Home.astro` as in `mount.js`,
+   `About.astro`; the hero's six gum strips in `Home.astro` as in `mount.js`,
    at the percentages in `strips.json` (they are the same at every size,
-   drift 0.1 point).
+   drift 0 points, each strip clear of blooms and buds at all three sizes).
 4. `meta.ts`: the `--board*` entries from `contrast-entries.txt`.
-5. The light scheme is untouched by all of it. The mounted-sheet petal
+5. The strip markup is in both schemes, so its geometry rule (`html[data-theme='cottagecore'] .sheet .gum`: absolute, 9.5% wide, centred) is not gated to dark in `shared.css`; probed in light, the strips render 40 to 42px at 1440, as in dark. Everything else here is dark only, and the rest of the light scheme is untouched. The mounted-sheet petal
    desaturation, the pale gum strip and the strips themselves are worth showing
    in light too (brief item 3 asks for visible strips in the light hero); that is
    not proofed here, since this task is dark only.
@@ -158,5 +159,5 @@ postcard, stamp and Sent page were not proofed. (c) does not touch them.
 - The hoop cloth stays dark in both. Making it cream aida in (b) is possible
   but was not drawn.
 - The cloth check strength: 0.18 as shown; 0.14 is quieter.
-- Eight strips on the hero is a lot at 390 (they are 9.5% of a narrow sheet);
+- Six strips on the hero is a lot at 390 (they are 9.5% of a narrow sheet);
   one per sprig is the quieter setting.
