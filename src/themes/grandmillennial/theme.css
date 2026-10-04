@@ -565,15 +565,16 @@
   /* In-school swaps on a phone: Home's one-line mark and the stacked mark on
      the other pages differ in size, so Astro's default crossfade (both
      pictures at once on the 300ms group clock) showed two wordmarks
-     together. Same split as the room: the old one is gone by 45%, the new
-     one starts at 40%, so the two are never legible together. Above 760px
+     together. A hard cut at the midpoint of the group's clock: the old mark
+     is fully drawn until then and the new one fully drawn after, so the header
+     is never empty and the two are never legible together. Above 760px
      the marks are identical and the plain crossfade stays. */
   @media (max-width: 760px) {
     html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(wordmark) {
-      animation-name: gm-leave;
+      animation-name: gm-mark-out;
     }
     html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-new(wordmark) {
-      animation-name: gm-enter;
+      animation-name: gm-mark-in;
     }
   }
 }
@@ -589,6 +590,8 @@
   from, to { opacity: 1; }
 }
 @keyframes gm-leave { 45%, 100% { opacity: 0; } }
+@keyframes gm-mark-out { 0% { opacity: 1; animation-timing-function: step-end; } 50%, 100% { opacity: 0; } }
+@keyframes gm-mark-in { 0% { opacity: 0; animation-timing-function: step-end; } 50%, 100% { opacity: 1; } }
 @keyframes gm-enter { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes grandmillennial-wordmark-out { 50%, 100% { opacity: 0; } }
 @keyframes grandmillennial-wordmark-in { 0%, 20% { opacity: 0; } 100% { opacity: 1; } }
