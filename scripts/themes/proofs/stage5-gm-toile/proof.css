@@ -1,0 +1,48 @@
+/* Stage 5 proof a1: the grandmillennial toile. Injected into a frozen build;
+   nothing under src/ changes. Tier B lifts these rules into
+   src/themes/grandmillennial/theme.css (the tokens) and parts/Defs.astro (the
+   two classes), and the pattern markup (toile-defs.svg.html) into Defs.astro.
+
+   One ink per scheme through one custom property:
+     light   --toile-ink = oxblood (the madder-red toile of Huet, the dossier's
+             C5), or porcelain blue as the alternate (data-toile-ink='porcelain')
+     dark    --toile-ink = gold-light line on a hunter ground
+   The ground is the raised cream in light and the dark raised field in dark,
+   so a swatch or a wall reads as a sheet of cotton on the room. */
+
+html[data-theme='grandmillennial'] {
+  --toile-ground: var(--field-raised);
+  --toile-ink: var(--oxblood);
+}
+html[data-theme='grandmillennial'][data-toile-ink='porcelain'] {
+  --toile-ink: var(--porcelain-ink);
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] {
+  --toile-ground: var(--hunter);
+  --toile-ink: var(--gold-light);
+}
+html[data-theme='grandmillennial'][data-scheme='dark'][data-toile-ground='field'] {
+  --toile-ground: var(--field-raised);
+}
+
+/* The pattern's strokes: one ink, round ends, no fill. Fine hatching carries a
+   stroke-width attribute of .55 on its own path, which beats this inherited .9. */
+.k-toile { fill: none; stroke: var(--toile-ink); stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
+.k-toile-ground { fill: var(--toile-ground); stroke: none; }
+
+/* Swatch: Services No. 2. The panel is the same svg as parts/Toile.astro; only
+   the fill moved from #gm-porcelaine to #gm-toile. */
+html[data-theme='grandmillennial'] .swatch.porcelain { background: var(--toile-ground); }
+
+/* Proof-only: the full-bleed wall and a faux raised card, for item 2 and a2. */
+#proof-wall { position: fixed; inset: 0; z-index: 2147483000; }
+#proof-wall svg { width: 100%; height: 100%; display: block; }
+#proof-wall .card {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  width: min(34rem, 80vw); padding: 2.2rem 2rem;
+  background: var(--field-raised); border: 1px solid var(--rule);
+  box-shadow: 0 10px 28px rgb(40 22 8 / 0.22);
+}
+#proof-wall .card i { display: block; height: 0.6rem; margin: 0 0 0.9rem; background: var(--mark-muted); opacity: 0.35; border-radius: 1px; }
+#proof-wall .card i:nth-child(3n) { width: 70%; }
+#proof-wall .card i.h { height: 1.4rem; width: 55%; background: var(--accent); opacity: 0.7; margin-bottom: 1.4rem; }
