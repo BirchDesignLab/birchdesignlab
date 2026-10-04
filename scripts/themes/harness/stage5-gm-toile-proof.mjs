@@ -23,7 +23,8 @@
  *     node scripts/themes/harness/stage5-gm-toile-proof.mjs
  *   --sheets-only   rebuild the sheets and index from existing shots
  *   --skip-paint    skip the paint-cost measure
- *   --swatch-tf "translate(-40 -20) scale(0.9)"   patternTransform for the swatch
+ *   (the swatch cuttings are the gm-toile-swatch patterns in toile-defs.svg.html,
+ *   from find-swatch-frames.mjs)
  */
 import { chromium } from 'playwright';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -46,7 +47,6 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i === -1 ? fallback : process.argv[i + 1];
 };
-const swatchTf = arg('swatch-tf', '');
 
 const SIZES = [
   { id: '1440', w: 1440, h: 900, dpr: 1 },
@@ -89,22 +89,18 @@ async function openServices(page, scheme, inject) {
   await page.addStyleTag({ content: comp });
   if (inject) {
     await page.addStyleTag({ content: inject.css });
-    await page.evaluate(({ defs, attrs, tf }) => {
+    await page.evaluate(({ defs, attrs }) => {
       const doc = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${defs}</svg>`, 'image/svg+xml');
       const target = document.querySelector('.gm-defs defs');
       for (const n of [...doc.documentElement.childNodes]) target.appendChild(document.importNode(n, true));
       for (const [k, v] of Object.entries(attrs)) document.documentElement.setAttribute(k, v);
-      let id = 'gm-toile';
-      if (tf) {
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
-        p.setAttribute('id', 'gm-toile-swatch');
-        p.setAttribute('href', '#gm-toile');
-        p.setAttribute('patternTransform', tf);
-        target.appendChild(p);
-        id = 'gm-toile-swatch';
-      }
-      document.querySelectorAll('.swatch.porcelain rect').forEach((r) => r.setAttribute('fill', `url(#${id})`));
-    }, { defs: inject.defs, attrs: inject.attrs, tf: swatchTf });
+      /* The swatch rect moves into a nested svg anchored at the swatch centre, so the
+         gm-toile-swatch cutting frames the same at every swatch size (the CSS in
+         proof.css picks the 16:9 cutting on a phone). */
+      document.querySelectorAll('.swatch.porcelain > svg').forEach((svg) => {
+        svg.innerHTML = '<svg x="50%" y="50%" overflow="visible"><rect class="toile-fill" x="-1000" y="-1000" width="2000" height="2000"/></svg>';
+      });
+    }, { defs: inject.defs, attrs: inject.attrs });
   }
   await page.evaluate(async () => { await document.fonts.ready; });
   await page.waitForTimeout(900);

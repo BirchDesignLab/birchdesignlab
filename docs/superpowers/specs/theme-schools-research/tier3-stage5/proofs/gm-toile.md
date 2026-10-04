@@ -60,11 +60,16 @@ The usual half-drop zigzag is the only rhythm.
 ## Inks (one custom property per scheme)
 
 ```css
-html[data-theme='grandmillennial'] { --toile-ground: var(--field-raised); --toile-ink: var(--oxblood); }
+html[data-theme='grandmillennial'] { --toile-ground: var(--field); --toile-ink: var(--oxblood); }
 html[data-theme='grandmillennial'][data-scheme='dark'] { --toile-ground: var(--hunter); --toile-ink: var(--gold-light); }
 .k-toile { fill: none; stroke: var(--toile-ink); stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
 .k-toile-ground { fill: var(--toile-ground); stroke: none; }
 ```
+
+**Light ground: `--field`, as the brief says.** The first pass used
+`--field-raised` and the card on the wall was the same paper as the wall,
+separated by shadow and border only. On `--field` the raised card is the paler
+sheet (`sheet-wall-1440.jpg`, light rows). The toile ink on `--field` holds.
 
 **Light: oxblood reads better than porcelain blue.** Same drawing, both inks
 (`sheet-swatch.jpg`, `sheet-wall-*.jpg`). Oxblood `#7d1f2b` has the weight to
@@ -82,8 +87,8 @@ comparison only.
 
 ## Size and cost
 
-- Markup: **41,081 bytes raw, 12,876 gzipped**, 22 `<use>` placements, one
-  pattern. Paths are all relative with dropped separators.
+- Markup: **41,285 bytes raw, 12,924 gzipped**, 22 `<use>` placements, one
+  pattern plus two inheriting swatch patterns. Paths are all relative with dropped separators.
 - Paint, cold first paint of a full 1440x900 wall, median of 7, GPU Chromium
   (`measures.json`):
 
@@ -104,18 +109,37 @@ comparison only.
 
 ## Swatch framing
 
-The Services swatch is 352 x 440 and the tile is 704 x 800, so the swatch
-shows a fragment. At scale 1 it shows one vignette and mostly bare ground, which
-reads as empty. A cutting should show several scenes, so the swatch uses a
-second pattern that inherits the first:
+The Services swatch is not one size: 353 x 441 at 1440 and 1280, 321 x 402 at
+1024, 258 x 322 at 820, and 353 x 199 (16:9) on a phone. A pattern fill is
+anchored to the top-left of the svg holding it, so one fixed
+`patternTransform` cannot frame all of them (the first version used one, and
+at 1440 and 390 it cut the grove, parasol and urn at the edges). Fix: the swatch
+rect sits in a nested svg anchored at the swatch centre, so the cutting frames
+the same at every size, and two cuttings cover the two aspects:
 
 ```html
-<pattern id="gm-toile-swatch" href="#gm-toile" patternTransform="translate(14 -29) scale(0.72)"/>
+<svg x="50%" y="50%" overflow="visible"><rect x="-1000" y="-1000" width="2000" height="2000" fill="url(#gm-toile-swatch)"/></svg>
+<pattern id="gm-toile-swatch" href="#gm-toile" patternTransform="translate(-19 -402) scale(0.72)"/>
+<pattern id="gm-toile-swatch-wide" href="#gm-toile" patternTransform="translate(-375 -60) scale(0.66)"/>
 ```
 
-and the `<rect>` in `parts/Toile.astro` fills with `url(#gm-toile-swatch)`.
-At 0.72 the swatch shows five or six scenes (grove, urn, reader, shrub, grove2,
-a sliver of the next) and the hatching is still visible. Walls use
+Portrait is the default; the wide cutting is used at max-width 720px (CSS
+`fill` on the rect, as in proof.css). The transforms come from
+`find-swatch-frames.mjs`, which scores every size a shape takes. What the
+swatch actually shows, with no island count claimed beyond what is in the shots:
+
+- Portrait (1440, 1280, 1024, 820): the reader beside the ruined arch in the
+  upper half, and below it the grove with its desk and chair, both whole at 1440
+  and 1280; smaller windows trim the margins around them. Small birds, a
+  butterfly and a shrub fill the gaps, and the edges carry slivers of the
+  neighbouring urn and grove. The lower edge is cut by the "No. 2" tag and a
+  part of the next grove, as a cutting would be. Hatching is visible at 0.72.
+- Wide (390, 353 x 199): the parasol lady whole at left, a grove pair with its
+  bench filling the right (the right-hand tree is cut by the pinked edge), and
+  the top of the urn at the bottom edge, partly under the tag. Three scenes, not
+  more; the empty centre of the first version is gone.
+
+In Tier B, `parts/Toile.astro` builds the nested svg, and walls use
 `url(#gm-toile)` at scale 1.
 
 ## What the images show
@@ -153,12 +177,13 @@ Founder note: the sheets to look at first are `sheet-swatch.jpg` and
    and `#gm-porcelaine` (keep `.gm-defs`). The pattern id stays `gm-toile`.
 2. The two classes `.k-toile` and `.k-toile-ground` into Defs.astro's style
    block (drop `.k-porc*`), and the `--toile-ground` / `--toile-ink` tokens into
-   `theme.css` for both schemes (light oxblood on `--field-raised`, dark
+   `theme.css` for both schemes (light oxblood on `--field`, as the brief says: not `--field-raised`, which is the card paper, so cards on the wall separate by paper as well as shadow; dark
    `--gold-light` on `--hunter`). Drop `--porcelain-ground` and
    `--porcelain-ink` once nothing else reads them (grep first: Plate and Jar
    may).
-3. `parts/Toile.astro`: fill `url(#gm-toile-swatch)`, add the inheriting
-   `<pattern>` above next to the main one; `.swatch.porcelain` background to
+3. `parts/Toile.astro`: the nested centre-anchored svg above, fill
+   `url(#gm-toile-swatch)` (wide cutting under 720px); the two inheriting
+   `<pattern>`s ship in the drop-in markup; `.swatch.porcelain` background to
    `var(--toile-ground)` in `pages/Services.astro`. `meta.ts` `assets.note`
    should name the toile.
 4. Walls (item 2): `<rect fill="url(#gm-toile)">` full bleed; text on raised
@@ -171,4 +196,5 @@ Founder note: the sheets to look at first are `sheet-swatch.jpg` and
 Regenerating: edit `build-toile.mjs` and rerun; the harness reads the output
 files, so `BDL_GPU=1 node scripts/themes/snap.mjs --name stage5-base --reuse
 --port 4460 -- node scripts/themes/harness/stage5-gm-toile-proof.mjs
---swatch-tf "translate(14 -29) scale(0.72)"` reshoots everything.
+--skip-paint` reshoots everything (the swatch cuttings are in
+`toile-defs.svg.html`; `find-swatch-frames.mjs` re-derives their transforms).

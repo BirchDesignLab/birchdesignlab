@@ -360,7 +360,15 @@ const pattern =
   `<rect class="k-toile-ground" width="${TW}" height="${TH}"/>` +
   `<g class="k-toile">${useEls.join('')}</g></pattern>`;
 
-const markup = `<g class="k-toile" aria-hidden="true">${defs.join('')}</g>\n${pattern}\n`;
+/* The swatch cuttings. The swatch rect sits in a nested <svg x="50%" y="50%"
+   overflow="visible">, so these patterns are anchored at the swatch centre
+   whatever its size. The transforms come from find-swatch-frames.mjs. */
+const SWATCH_TF = { portrait: 'translate(-19 -402) scale(0.72)', wide: 'translate(-375 -60) scale(0.66)' };
+const swatchPatterns =
+  `<pattern id="gm-toile-swatch" href="#gm-toile" patternTransform="${SWATCH_TF.portrait}"/>` +
+  `<pattern id="gm-toile-swatch-wide" href="#gm-toile" patternTransform="${SWATCH_TF.wide}"/>`;
+
+const markup = `<g class="k-toile" aria-hidden="true">${defs.join('')}</g>\n${pattern}\n${swatchPatterns}\n`;
 writeFileSync(join(HERE, 'toile-defs.svg.html'), markup);
 
 const stats = {

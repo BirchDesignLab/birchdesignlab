@@ -7,11 +7,12 @@
      light   --toile-ink = oxblood (the madder-red toile of Huet, the dossier's
              C5), or porcelain blue as the alternate (data-toile-ink='porcelain')
      dark    --toile-ink = gold-light line on a hunter ground
-   The ground is the raised cream in light and the dark raised field in dark,
-   so a swatch or a wall reads as a sheet of cotton on the room. */
+   The ground is --field in light (the brief: toile on --field, so a raised card
+   on the wall separates from it by its own paper, not only a shadow) and
+   hunter in dark, so a swatch or a wall reads as a sheet of cotton on the room. */
 
 html[data-theme='grandmillennial'] {
-  --toile-ground: var(--field-raised);
+  --toile-ground: var(--field);
   --toile-ink: var(--oxblood);
 }
 html[data-theme='grandmillennial'][data-toile-ink='porcelain'] {
@@ -33,6 +34,11 @@ html[data-theme='grandmillennial'][data-scheme='dark'][data-toile-ground='field'
 /* Swatch: Services No. 2. The panel is the same svg as parts/Toile.astro; only
    the fill moved from #gm-porcelaine to #gm-toile. */
 html[data-theme='grandmillennial'] .swatch.porcelain { background: var(--toile-ground); }
+/* The swatch rect sits in a nested svg anchored at the swatch centre (the harness
+   builds it; Toile.astro does the same in Tier B), so the cutting frames the same
+   whatever the swatch size. Portrait by default, the 16:9 cutting on a phone. */
+.swatch.porcelain rect.toile-fill { fill: url(#gm-toile-swatch); }
+@media (max-width: 720px) { .swatch.porcelain rect.toile-fill { fill: url(#gm-toile-swatch-wide); } }
 
 /* Proof-only: the full-bleed wall and a faux raised card, for item 2 and a2. */
 #proof-wall { position: fixed; inset: 0; z-index: 2147483000; }
