@@ -30,6 +30,7 @@ html[data-theme='grandmillennial'] {
   --sc-hill1: #d6dcc6;
   --sc-hill2: #cbd3b8;
   --sc-line: #3d4a3b;
+  --sc-lent: #3d4a3b;
   --sc-trunk: #f4efe0;
   --sc-shade: #d8d0b7;
   --sc-limb: #5b4d3d;
@@ -59,6 +60,7 @@ html[data-theme='grandmillennial'][data-scheme='dark'] {
   --sc-hill1: #11301f;
   --sc-hill2: #15382a;
   --sc-line: #d9c58d;
+  --sc-lent: #1d1b15;
   --sc-trunk: #cfc6a6;
   --sc-shade: #a89e80;
   --sc-limb: #7a6342;
@@ -90,9 +92,9 @@ html[data-theme='grandmillennial'][data-scheme='dark'] {
 .sc-ground { fill: var(--sc-ground2); }
 .sc-trunk { fill: var(--sc-trunk); }
 .sc-shade { fill: var(--sc-shade); opacity: 0.8; }
-.sc-lent { fill: none; stroke: var(--sc-line); stroke-width: 2.8; stroke-linecap: round; }
+.sc-lent { fill: none; stroke: var(--sc-lent); stroke-width: 2.8; stroke-linecap: round; }
 .sc-curl { fill: var(--sc-curl); stroke: var(--sc-line); stroke-width: 0.8; stroke-linejoin: round; }
-.sc-eye2 { fill: var(--sc-line); }
+.sc-eye2 { fill: var(--sc-lent); }
 .sc-limb { fill: var(--sc-limb); stroke: var(--sc-line); stroke-width: 0.8; stroke-linejoin: round; }
 .sc-hl { fill: none; stroke: var(--sc-hl); stroke-width: 1; stroke-linecap: round; opacity: 0.8; }
 .sc-twig { fill: none; stroke: var(--sc-limb); stroke-width: 1.5; stroke-linecap: round; }
