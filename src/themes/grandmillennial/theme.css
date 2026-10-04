@@ -447,10 +447,16 @@
 /* A diagonal specular band across the viewport, on a fixed pseudo-element so it
    stays put while the room scrolls under it, like a window's reflection on
    lacquer. Faint enough to leave every text contrast alone; nothing moves.
-   The edge vignette is --vignette (fixed body::before, viewport-sized), the lit edges are --edge-hi. */
+   The edge vignette is --vignette (fixed body::before, viewport-sized), the lit edges are --edge-hi.
+   The layer lies UNDER the content (z-index -1, above the body background the
+   canvas carries): the lacquer is the room's green, so it darkens the field
+   and never the type, the cards or the papered walls on it. Over the content it
+   cut muted and footer text below AA in the corners, and every view-transition
+   group (the wordmark) escaped it and popped brighter mid-swap (Stage 5 B1
+   task 1, the controller's ruling). */
 [data-theme='grandmillennial'][data-scheme='dark'] body::before {
   content: '';
-  position: fixed; inset: 0; z-index: 30;
+  position: fixed; inset: 0; z-index: -1;
   pointer-events: none;
   background: var(--vignette), var(--sheen);
 }
@@ -548,32 +554,17 @@ html[data-theme='grandmillennial']:is([data-to-theme='grandmillennial'], [data-f
 html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header),
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
 html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
+/* In the lacquer the fixed body::before (vignette and specular band) lies
+   under the canopy's content on the page, so the picture's background carries
+   the same two layers beneath --lamp and --field's paint, sized to the
+   viewport so they land where the body's do (the canopy is at the viewport's
+   top left in the new state). Light sets both to none. */
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
-  background: var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
-}
-/* In the lacquer the fixed body::before (vignette and specular band) lies over
-   the canopy on the page, but a captured element is painted without anything
-   that lies over it, so for the length of an in-school swap the canopy's
-   picture would lose its lit streak and corner shade. The same two layers are
-   therefore painted on the canopy itself, sized to the viewport so they land
-   exactly where the body's do (the canopy is at the viewport's top left in
-   the new state). Only in the new state of the swap: data-to-theme is set on
-   the live old page a frame or so before the transition captures it, and an
-   overlay keyed on it would show doubled on that live frame (measured: one
-   frame at about 100 ms, 66% of the header's pixels over 6 levels off).
-   After the swap the new page carries data-from-theme and no data-to-theme,
-   and the attribute is cleared when the transition finishes, so the settled
-   page has only the body's. */
-html[data-theme='grandmillennial'][data-scheme='dark'][data-from-theme='grandmillennial']:not([data-to-theme]) .site-header > .canopy {
-  position: relative;
-}
-html[data-theme='grandmillennial'][data-scheme='dark'][data-from-theme='grandmillennial']:not([data-to-theme]) .site-header > .canopy::after {
-  content: '';
-  position: absolute; inset: 0; z-index: 30;
-  pointer-events: none;
-  background: var(--vignette), var(--sheen);
-  background-size: 100vw 100vh;
-  background-repeat: no-repeat;
+  background:
+    var(--vignette) 0 0 / 100vw 100vh no-repeat,
+    var(--sheen) 0 0 / 100vw 100vh no-repeat,
+    var(--lamp) 0 0 / 100% 3000px no-repeat,
+    var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),
