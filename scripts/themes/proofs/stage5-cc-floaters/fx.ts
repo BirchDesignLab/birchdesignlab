@@ -57,6 +57,17 @@ const FIREFLY = {
   /** Peak alpha of the lit core: today's own peak (0.35 + 0.6). The halo
       sprite's centre stop is lifted from 0.42 to 0.6 (brief item 12). */
   coreAlpha: 0.95,
+  /** Halo radius in mote radii: 7 when barely lit, growing by 7 more at the
+      peak of a flash (it was a fixed 9). Core radius: 0.7 growing by 0.8 at
+      the peak (it was 0.7 growing by 0.3). A flash has to register at page
+      scale at a glance, not only in a close crop (brief item 12's verify). */
+  haloMin: 7,
+  haloGrow: 7,
+  coreMin: 0.7,
+  coreGrow: 0.8,
+  /** Clear air (px) kept between a mote's centre and any text; the larger
+      halo needs a little more than the 8 it had. */
+  textPad: 12,
   /** A cursor this close (px) flashes a mote; a finger gets more room. */
   hoverRadius: 26,
   tapRadius: 44,
@@ -88,7 +99,7 @@ const SEED = {
   /** Pointer: a passing cursor pushes inside pushRadius (px/s^2 at the
       cursor), a tap kicks inside tapRadius (px/s at the tap). */
   pushRadius: 120,
-  pushAccel: 340,
+  pushAccel: 600,
   tapRadius: 170,
   tapKick: 230,
   /** A parked cursor stops pushing after this long (ms). */
@@ -451,7 +462,7 @@ export function mountFireflies(): void {
         }
         // Keep motes out of the reading column: fade toward invisible, on an
         // ease rather than a hard cut, while one sits over a text block.
-        const target = inAnyRect(m.x, m.y + sy, textRects, 8) || inAnyRect(m.x, m.y + sy + dsy, textRects, 8) ? 0 : 1;
+        const target = inAnyRect(m.x, m.y + sy, textRects, FIREFLY.textPad) || inAnyRect(m.x, m.y + sy + dsy, textRects, FIREFLY.textPad) ? 0 : 1;
         m.cover = still ? target : m.cover + (target - m.cover) * (target < m.cover ? FIREFLY.fadeOut : FIREFLY.fadeIn);
         let env = 0;
         if (still) env = 0.7;
@@ -461,13 +472,13 @@ export function mountFireflies(): void {
         }
         const lit = env * m.cover;
         if (lit < 0.01) continue;
-        const haloR = m.r * 9;
+        const haloR = m.r * (FIREFLY.haloMin + FIREFLY.haloGrow * env);
         ctx.globalAlpha = lit;
         ctx.drawImage(halo, m.x - haloR, m.y - haloR, haloR * 2, haloR * 2);
         ctx.globalAlpha = 1;
         ctx.fillStyle = `rgba(255, 238, 190, ${Math.min(1, FIREFLY.coreAlpha * lit)})`;
         ctx.beginPath();
-        ctx.arc(m.x, m.y, m.r * (0.7 + 0.3 * env), 0, Math.PI * 2);
+        ctx.arc(m.x, m.y, m.r * (FIREFLY.coreMin + FIREFLY.coreGrow * env), 0, Math.PI * 2);
         ctx.fill();
       }
     };

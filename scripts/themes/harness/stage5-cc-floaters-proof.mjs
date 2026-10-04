@@ -5,9 +5,14 @@
  * Bundles scripts/themes/proofs/stage5-cc-floaters/fx.ts with esbuild (the real
  * src/lib/lifecycle.ts resolves through the relative import), injects it into
  * the frozen build (nothing under src/ changes), and:
- *   - films timestamped strips: dark Home, light Home and About, at 1440 and 390;
+ *   - films timestamped strips: dark Home, light Home and About, at 1440 and 390
+ *     (the dark films wait for a flash before each frame, and the sheets pick the
+ *     frames with the brightest flash as measured in the pixels);
  *   - films pointer strips: a cursor (1440) or a tap (390) on a firefly and on a
- *     seed, as tight clips taken back to back;
+ *     seed, as tight clips taken back to back. What can be seen is read from the
+ *     browser (the canvas painted magenta, a cell counts where it still shows), the
+ *     mote or seed is set down in the roomiest open cloth, and each take is checked
+ *     (glow in the pixels; a seed whole and moving off track) or retried;
  *   - measures, in-page, from hooks on the 2D context: the burst numbers (flashes
  *     per burst, gap, rise, dark rest), how many motes are lit at once, and, for
  *     every visible draw of a floater, whether it overlaps text (rects taken
@@ -163,6 +168,7 @@ async function open(browser, { scheme, sz, path, mode, hooks }) {
 const BARE = (x, y) => {
   const e = document.elementFromPoint(x, y);
   if (!e || e.closest('svg,img,picture,canvas,video')) return false;
+  if (e.closest('a,button,input,textarea,select,label,summary')) return false;
   if (e === document.body || e === document.documentElement) return true;
   const cs = getComputedStyle(e);
   const bg = cs.backgroundColor;
@@ -180,20 +186,56 @@ async function pageNowOffset(page) {
 }
 
 /* Take n viewport frames, every `every` ms (best effort), stamped on the page's clock. */
-async function film(page, { n, every, prefix }) {
+/* Wait (up to ms) until some firefly that is on show is at or near the peak of a
+   flash, so the next screenshot lands on a flash. The 30 fps loop and a
+   screenshot's latency make an unaimed strip catch mostly dark frames. */
+async function waitForFlash(page, ms) {
+  const t = performance.now();
+  while (performance.now() - t < ms) {
+    const ok = await page.evaluate(() => {
+      const st = window.__ccFloatersProbe.get();
+      const now = performance.now();
+      for (const m of st.fireflies) {
+        if (m.cover < 0.6) continue;
+        let env = 0;
+        for (const f of m.flashes) {
+          const u = now - f.start;
+          if (u <= 0) continue;
+          if (u < f.rise) { const k = u / f.rise; env = Math.max(env, k * k * (3 - 2 * k)); continue; }
+          const d = (u - f.rise) / 250;
+          if (d < 1) env = Math.max(env, (1 - d) * (1 - d));
+        }
+        if (env > 0.45) return true;
+      }
+      return false;
+    });
+    if (ok) return true;
+    await page.waitForTimeout(10);
+  }
+  return false;
+}
+
+async function film(page, { n, every, prefix, aimed }) {
   const off = await pageNowOffset(page);
   const t0 = performance.now();
   const rows = [];
   for (let i = 0; i < n; i++) {
-    const want = t0 + i * every;
-    const wait = want - performance.now();
-    if (wait > 0) await page.waitForTimeout(wait);
+    if (aimed) {
+      /* at least `every` ms after the last, then the next flash that comes */
+      const gap = (i ? rows[i - 1].tEnd : t0) + every - performance.now();
+      if (gap > 0) await page.waitForTimeout(gap);
+      await waitForFlash(page, 1800);
+    } else {
+      const want = t0 + i * every;
+      const wait = want - performance.now();
+      if (wait > 0) await page.waitForTimeout(wait);
+    }
     const a = performance.now();
     const file = `${prefix}__${i}.png`;
     await page.screenshot({ path: join(frames, file) });
     const b = performance.now();
     const mid = (a + b) / 2;
-    rows.push({ file, t: +((mid - t0) / 1000).toFixed(2), pageT: mid + off });
+    rows.push({ file, t: +((mid - t0) / 1000).toFixed(2), pageT: mid + off, tEnd: b });
   }
   const fr = await page.evaluate(() => window.__ccP.frames.map((f) => ({ t: f.t, d: f.d.map((x) => ({ a: x.a, args: x.args })) })));
   for (const r of rows) {
@@ -202,6 +244,7 @@ async function film(page, { n, every, prefix }) {
     r.lit = best && Math.abs(best.t - r.pageT) < 150 ? lit(best) : null;
     r.drawn = best ? best.d.filter((x) => x.a > 0.03).length : null;
     delete r.pageT;
+    delete r.tEnd;
   }
   return rows;
 }
@@ -210,14 +253,14 @@ async function runFilms(browser) {
   measures.films = measures.films || {};
   const plan = [];
   for (const sz of SIZES) {
-    plan.push({ id: `dark-home-${sz.id}`, scheme: 'dark', page: 'home', path: '', sz, n: 36, every: 330 });
+    plan.push({ id: `dark-home-${sz.id}`, scheme: 'dark', page: 'home', path: '', sz, n: 36, every: 330, aimed: true });
     for (const [name, path] of PAGES) plan.push({ id: `light-${name}-${sz.id}`, scheme: 'light', page: name, path, sz, n: 36, every: 700 });
   }
   for (const p of plan) {
     const { context, page } = await open(browser, { scheme: p.scheme, sz: p.sz, path: p.path, mode: 'proof', hooks: true });
     await page.waitForTimeout(p.scheme === 'light' ? 2500 : 4000);
     await page.evaluate(() => { window.__ccP.frames.length = 0; });
-    const rows = await film(page, { n: p.n, every: p.every, prefix: p.id });
+    const rows = await film(page, { n: p.n, every: p.every, prefix: p.id, aimed: !!p.aimed });
     measures.films[p.id] = rows;
     /* a whole-page still for the sheet (the fixed canvas paints in the first viewport) */
     await page.screenshot({ path: join(shots, `${p.id}__fullpage.png`), fullPage: true });
@@ -228,170 +271,356 @@ async function runFilms(browser) {
 }
 
 /* ---------- pointer strips ---------- */
+
+/* What can be seen. The canvas sits under the sheets, cards, tapes and text, so
+   a floater only shows where nothing paints over the cloth, and elementFromPoint
+   cannot tell (a transparent host with a painted ::before still answers "bare").
+   So ask the browser: paint the canvas solid magenta, screenshot, and call a
+   lattice cell visible where at least 92% of its pixels are still magenta. */
+const LAT = 10;
+async function visibleMask(page, sz) {
+  const set = (on) => page.evaluate((on) => {
+    const c = document.querySelector('[data-cc-motes]');
+    c.style.background = on ? 'rgb(255, 0, 255)' : '';
+  }, on);
+  await set(true);
+  const buf = await page.screenshot();
+  await set(false);
+  const im = await loadImage(buf);
+  const cv = createCanvas(im.width, im.height);
+  const g = cv.getContext('2d');
+  g.drawImage(im, 0, 0);
+  const d = g.getImageData(0, 0, im.width, im.height).data;
+  const sc = im.width / sz.w;
+  const cols = Math.floor(sz.w / LAT), rows = Math.floor(sz.h / LAT);
+  const vis = new Uint8Array(cols * rows);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    let n = 0, mag = 0;
+    for (let py = Math.round(j * LAT * sc); py < Math.round((j + 1) * LAT * sc); py += 2) {
+      for (let px = Math.round(i * LAT * sc); px < Math.round((i + 1) * LAT * sc); px += 2) {
+        const o = (py * im.width + px) * 4;
+        n++;
+        if (d[o] > 235 && d[o + 1] < 25 && d[o + 2] > 235) mag++;
+      }
+    }
+    vis[j * cols + i] = mag / n >= 0.92 ? 1 : 0;
+  }
+  /* and where a tap would do something: a link, a control, or a pointer cursor */
+  const tapOk = await page.evaluate(({ cols, rows, lat }) => {
+    const memo = new Map();
+    const safe = (e) => {
+      if (!e) return true;
+      if (memo.has(e)) return memo.get(e);
+      const v = !e.closest('a,button,input,textarea,select,label,summary,[role=button],[onclick],bdl-switcher') && getComputedStyle(e).cursor !== 'pointer';
+      memo.set(e, v);
+      return v;
+    };
+    const out = new Array(cols * rows);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) out[j * cols + i] = safe(document.elementFromPoint(i * lat + lat / 2, j * lat + lat / 2)) ? 1 : 0;
+    return out;
+  }, { cols, rows, lat: LAT });
+  return { vis, tapOk, cols, rows };
+}
+/* a tap at (x, y) and the cells around it do nothing */
+function tapSafe(m, x, y) {
+  const i = Math.floor(x / LAT), j = Math.floor(y / LAT);
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+    const ii = i + di, jj = j + dj;
+    if (ii < 0 || jj < 0 || ii >= m.cols || jj >= m.rows || !m.tapOk[jj * m.cols + ii]) return false;
+  }
+  return true;
+}
+/* every lattice cell under the box [x0,x1] x [y0,y1] (viewport px) is visible */
+function boxVisible(m, x0, y0, x1, y1) {
+  const i0 = Math.floor(x0 / LAT), i1 = Math.floor(x1 / LAT), j0 = Math.floor(y0 / LAT), j1 = Math.floor(y1 / LAT);
+  if (i0 < 0 || j0 < 0 || i1 >= m.cols || j1 >= m.rows) return false;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) if (!m.vis[j * m.cols + i]) return false;
+  return true;
+}
+/* Walk the page in 60 px steps; at each, hand fn the visibility mask and the
+   text rects (document space). fn returns something to stop on. */
+async function eachScroll(page, sz, fn) {
+  const info = await page.evaluate(() => ({ docH: document.documentElement.scrollHeight, rects: window.__ccFloatersProbe.get().textRects }));
+  const top = Math.max(0, info.docH - sz.h);
+  for (let y0 = 0; y0 <= top; y0 += 60) {
+    await page.evaluate((y) => window.scrollTo(0, y), y0);
+    await page.waitForTimeout(120);
+    const sy = await page.evaluate(() => window.scrollY);
+    const mask = await visibleMask(page, sz);
+    const got = fn({ sy, mask, rects: info.rects });
+    if (got) return { ...got, scroll: sy };
+  }
+  return null;
+}
+const dist2Text = (rects, x, y, sy) => {
+  let dmin = 1e4;
+  for (const r of rects) {
+    const dx = Math.max(r.l - x, 0, x - r.r), dy = Math.max(r.t - (y + sy), 0, y + sy - r.b);
+    dmin = Math.min(dmin, Math.hypot(dx, dy));
+  }
+  return dmin;
+};
+
+/* The roomiest spot for a firefly. The ideal is a visible 3 x 3 box of +/-40 px
+   (the peak halo reaches ~34) with 50 px of clear air to any text; on a phone
+   there is less cloth, so the ideal steps down (box, air) until one exists.
+   Returns the strictest level found, with the spot furthest from text. */
+const FF_LEVELS = [[40, 50], [34, 36], [30, 24], [26, 18]];
+async function findFireflySpot(page, sz) {
+  const best = FF_LEVELS.map(() => null);
+  await eachScroll(page, sz, ({ sy, mask, rects }) => {
+    FF_LEVELS.forEach(([half, air], lv) => {
+      for (let gx = 70; gx < sz.w - 70; gx += LAT) for (let gy = 70; gy < sz.h - 70; gy += LAT) {
+        if (!boxVisible(mask, gx - half, gy - half, gx + half, gy + half)) continue;
+        const d = dist2Text(rects, gx, gy, sy);
+        if (d >= air && (!best[lv] || d > best[lv].d) && tapSafe(mask, gx, gy)) best[lv] = { x: gx, y: gy, d, scroll: sy, half, air };
+      }
+    });
+    return null;
+  });
+  return best.find(Boolean) || null;
+}
+
+/* The longest straight run of visible cloth a seed can be sent along. A spot is
+   ok when the seed's whole drawn box (fan 40k to each side, 42k up, 70k down at
+   scale k) is visible and `pad` px clear of text in every direction (the loop
+   adds 12 px and looks 0.7 s ahead, so a seed with less is faded out before it
+   moves); from each ok spot try 16 directions and count ok cells. The tap point,
+   behind the seed along the kick, must be visible too. The ideal is a 340 px
+   run with 34 px of air; a phone steps down until one exists. */
+const SEED_LEVELS = [[340, 34], [260, 30], [200, 24], [160, 18], [130, 14], [100, 12]];
+async function findCorridor(page, sz, k) {
+  const hx = Math.ceil(40 * k), up = Math.ceil(42 * k), dn = Math.ceil(70 * k);
+  const best = SEED_LEVELS.map(() => null);
+  await eachScroll(page, sz, ({ sy, mask, rects }) => {
+    const { cols, rows } = mask;
+    /* distance from each cell's centre to the nearest text, so a run down a
+       narrow gutter scores below one through open cloth */
+    const dmap = new Float32Array(cols * rows);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) dmap[j * cols + i] = dist2Text(rects, i * LAT + LAT / 2, j * LAT + LAT / 2, sy);
+    SEED_LEVELS.forEach(([run, pad], lv) => {
+      const steps = Math.round(run / LAT);
+      const ok = new Uint8Array(cols * rows);
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        const x = i * LAT + LAT / 2, y = j * LAT + LAT / 2;
+        if (x < 50 || x > sz.w - 50 || y < 60 || y > sz.h - 60) continue;
+        if (!boxVisible(mask, x - hx, y - up, x + hx, y + dn)) continue;
+        const l = x - hx - pad, r = x + hx + pad, t = y + sy - up - pad, b = y + sy + dn + pad;
+        let hit = false;
+        for (const q of rects) if (l < q.r && r > q.l && t < q.b && b > q.t) { hit = true; break; }
+        if (!hit) ok[j * cols + i] = 1;
+      }
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        if (!ok[j * cols + i]) continue;
+        const x = i * LAT + LAT / 2, y = j * LAT + LAT / 2;
+        for (let dd = 0; dd < 16; dd++) {
+          const th = (dd / 16) * Math.PI * 2;
+          const cx = Math.cos(th), cy = Math.sin(th);
+          let n = 0, score = dmap[j * cols + i];
+          for (; n < steps; n++) {
+            const ii = Math.floor((x + cx * (n + 1) * LAT) / LAT), jj = Math.floor((y + cy * (n + 1) * LAT) / LAT);
+            if (ii < 0 || jj < 0 || ii >= cols || jj >= rows || !ok[jj * cols + ii]) break;
+            score = Math.min(score, dmap[jj * cols + ii]);
+          }
+          const len = n * LAT;
+          if (len < steps * LAT || (best[lv] && score <= best[lv].score)) continue;
+          /* The kick is (1 - d/170) * 230 px/s at distance d from the tap and the
+             seed then coasts about 1.1 s, so tap far enough back that the drift
+             is about the run. It adds 0.15 of itself upward, so the
+             tap-to-seed unit is bent down to make the kick land along (cx, cy). */
+          const v = (1.0 * len) / 1.1;
+          const dTap = Math.max(20, Math.min(150, 170 * (1 - v / 230)));
+          const m = (-0.3 * cy + Math.sqrt(0.09 * cy * cy + 3.91)) / 2;
+          const nx = m * cx, ny = m * cy + 0.15;
+          const tx = x - nx * dTap, ty = y - ny * dTap;
+          if (tx < 12 || ty < 12 || tx > sz.w - 12 || ty > sz.h - 12 || !boxVisible(mask, tx - 4, ty - 4, tx + 4, ty + 4) || !tapSafe(mask, tx, ty)) continue;
+          best[lv] = { len, score, run, pad, x, y, cx, cy, tx, ty, dTap: Math.round(dTap), scroll: sy };
+        }
+      }
+    });
+    return null;
+  });
+  return best.find(Boolean) || null;
+}
+
+/* Brightest increase over a reference clip, 0-255 (luminance), so "the flash
+   registers" is read off the image rather than off the model. */
+async function glowAgainst(refFile, file) {
+  const [a, b] = await Promise.all([loadImage(refFile), loadImage(file)]);
+  const w = Math.min(a.width, b.width), h = Math.min(a.height, b.height);
+  const read = (im) => { const cv = createCanvas(w, h); const g = cv.getContext('2d'); g.drawImage(im, 0, 0); return g.getImageData(0, 0, w, h).data; };
+  const A = read(a), B = read(b);
+  let max = 0;
+  for (let i = 0; i < A.length; i += 4) {
+    const la = 0.2126 * A[i] + 0.7152 * A[i + 1] + 0.0722 * A[i + 2];
+    const lb = 0.2126 * B[i] + 0.7152 * B[i + 1] + 0.0722 * B[i + 2];
+    if (lb - la > max) max = lb - la;
+  }
+  return Math.round(max);
+}
+const envAt = (flashes, t) => {
+  let env = 0;
+  for (const f of flashes) {
+    const u = t - f.start;
+    if (u <= 0) continue;
+    if (u < f.rise) { const k = u / f.rise; env = Math.max(env, k * k * (3 - 2 * k)); continue; }
+    const d = (u - f.rise) / 250;
+    if (d < 1) env = Math.max(env, (1 - d) * (1 - d));
+  }
+  return env;
+};
+
+async function pointerDark(browser, sz, touch) {
+  const { context, page } = await open(browser, { scheme: 'dark', sz, path: '', mode: 'proof', hooks: true });
+  try {
+    await page.mouse.move(2, 2);
+    /* Set mote 0 down in the roomiest open cloth (visible, clear of text),
+       scrolled into view; the flash code that runs is the real one. */
+    const spot = await findFireflySpot(page, sz);
+    if (!spot) { console.warn(`no clear spot for a firefly at ${sz.id}`); return null; }
+    await page.evaluate((y) => window.scrollTo(0, y), spot.scroll);
+    await page.waitForTimeout(300);
+    await page.evaluate(({ spot }) => {
+      const q = window.__ccFloatersProbe.get().fireflies[0];
+      q.x = spot.x; q.y = spot.y; q.vx = 0; q.vy = 0; q.cover = 1; q.flashes = []; q.rest = performance.now() + 120000; q.touched = -1e9;
+    }, { spot });
+    const R = 90;
+    const clip = { x: Math.max(0, Math.round(spot.x - R)), y: Math.max(0, Math.round(spot.y - R)), width: 2 * R, height: 2 * R };
+    const posNow = () => page.evaluate(() => { const f = window.__ccFloatersProbe.get().fireflies[0]; return { x: f.x, y: f.y }; });
+    const off = await pageNowOffset(page);
+    const t0 = performance.now();
+    const rows = [];
+    const grab = async (label) => {
+      const file = `pointer-dark-${sz.id}__${rows.length}.png`;
+      const a = performance.now();
+      await page.screenshot({ path: join(clips, file), clip });
+      const b = performance.now();
+      rows.push({ file, t: +(((a + b) / 2 - t0) / 1000).toFixed(2), pageT: (a + b) / 2 + off, label });
+    };
+    await grab('before: no pointer, mote dark');
+    await grab('before: no pointer, mote dark');
+    let p = await posNow();
+    if (touch) await page.touchscreen.tap(p.x, p.y);
+    else {
+      await page.mouse.move(p.x - 160, p.y, { steps: 4 });
+      p = await posNow();
+      await page.mouse.move(p.x, p.y, { steps: 8 });
+    }
+    const hitAt = +((performance.now() - t0) / 1000).toFixed(2);
+    await page.waitForTimeout(40);
+    const flashes = await page.evaluate(() => window.__ccFloatersProbe.get().fireflies[0].flashes.map((f) => ({ start: f.start, rise: f.rise })));
+    for (let i = 0; i < 14; i++) await grab(i === 0 ? (touch ? 'tap lands' : 'cursor on the mote') : '');
+    let peakGlow = 0;
+    for (const r of rows) {
+      r.env = +envAt(flashes, r.pageT).toFixed(2);
+      r.glow = await glowAgainst(join(clips, rows[0].file), join(clips, r.file));
+      peakGlow = Math.max(peakGlow, r.glow);
+      delete r.pageT;
+    }
+    const res = { how: touch ? 'tap' : 'cursor', spot: { x: spot.x, y: spot.y, scroll: spot.scroll, clearOfTextPx: Math.round(spot.d), visibleBoxHalfPx: spot.half, wantedAirPx: spot.air }, hitAt, peakGlow, clip, rows };
+    console.log(`pointer dark ${sz.id}: ${rows.length} clips, peak glow +${peakGlow}`);
+    return res;
+  } finally {
+    await context.close();
+  }
+}
+
+async function pointerLight(browser, sz, touch) {
+  const { context, page } = await open(browser, { scheme: 'light', sz, path: '', mode: 'proof', hooks: true });
+  try {
+    await page.mouse.move(2, 2);
+    /* A seed needs a run of visible cloth to be seen drifting along. On a phone
+       the text and sheets leave little, so look through the whole page for the
+       longest run, scroll there and set one seed down at its start. */
+    const k = touch ? 0.5 : 0.62;
+    const cor = await findCorridor(page, sz, k);
+    if (!cor) { console.warn(`no corridor of bare cloth at ${sz.id}`); return null; }
+    await page.evaluate((y) => window.scrollTo(0, y), cor.scroll);
+    await page.waitForTimeout(300);
+    const tapOk = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return !e || !e.closest('a,button,input,textarea,select,label,summary'); }, { x: cor.tx, y: cor.ty });
+    if (touch && !tapOk) console.warn(`tap point at ${sz.id} is on a link or control`);
+    await page.evaluate(({ cor, size }) => {
+      const q = window.__ccFloatersProbe.get().seeds[0];
+      q.x = cor.x; q.y = cor.y; q.vx = 21; q.vy = -11; q.cover = 1; q.size = size; q.alpha = 0.78; q.sprite = 0;
+    }, { cor, size: k / 0.62 });
+    const endX = cor.x + cor.cx * Math.min(cor.len + 60, 340), endY = cor.y + cor.cy * Math.min(cor.len + 60, 340);
+    const x0 = Math.max(0, Math.round(Math.min(cor.x, endX) - 80)), y0 = Math.max(0, Math.round(Math.min(cor.y, endY) - 90));
+    const x1 = Math.min(sz.w, Math.round(Math.max(cor.x, endX) + 80)), y1 = Math.min(sz.h, Math.round(Math.max(cor.y, endY) + 110));
+    const clip = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+    const seedNow = () => page.evaluate(() => {
+      const s = window.__ccFloatersProbe.get().seeds[0];
+      const w = window.innerWidth, h = window.innerHeight;
+      const edge = Math.min(1, Math.max(0, Math.min(s.x + 30, w + 30 - s.x, s.y + 30, h + 30 - s.y) / 70));
+      return { x: s.x, y: s.y, vx: s.vx, vy: s.vy, a: s.alpha * s.cover * edge };
+    });
+    const rows = [];
+    await page.waitForTimeout(120);
+    const start = await seedNow();
+    const tStart = performance.now();
+    const grab = async (label) => {
+      const p = await seedNow();
+      const a = performance.now();
+      const file = `pointer-light-${sz.id}__${rows.length}.png`;
+      await page.screenshot({ path: join(clips, file), clip });
+      const b = performance.now();
+      const tt = ((a + b) / 2 - tStart) / 1000;
+      const inClip = p.x > clip.x + 20 && p.x < clip.x + clip.width - 20 && p.y > clip.y + 20 && p.y < clip.y + clip.height - 20;
+      rows.push({
+        file, t: +(tt).toFixed(2), label, seed: { x: +p.x.toFixed(1), y: +p.y.toFixed(1) }, alpha: +p.a.toFixed(2), shown: p.a > 0.3 && inClip,
+        offTrack: +Math.hypot(p.x - (start.x + start.vx * tt), p.y - (start.y + start.vy * tt)).toFixed(1),
+      });
+    };
+    await grab('before: no pointer');
+    await grab('before: no pointer');
+    if (touch) await page.touchscreen.tap(cor.tx, cor.ty);
+    else {
+      await page.mouse.move(start.x - cor.cx * 150, start.y - cor.cy * 150, { steps: 3 });
+      /* a hand takes about a second to carry the cursor through */
+      for (let i = 0; i < 14; i++) {
+        const p = await seedNow();
+        await page.mouse.move(p.x - cor.cx * (90 - i * 9), p.y - cor.cy * (90 - i * 9), { steps: 2 });
+        await grab(i === 0 ? 'cursor sweeping toward the seed' : '');
+        await page.waitForTimeout(50);
+      }
+    }
+    for (let i = 0; i < (touch ? 12 : 8); i++) { await grab(i === 0 ? (touch ? 'tap behind the seed' : 'cursor has passed') : ''); await page.waitForTimeout(touch ? 130 : 60); }
+    /* 40 px off the breeze track at 1440; a phone's run of cloth is a third of that, so 30 */
+    const minPx = touch ? 30 : 40;
+    const shownRows = rows.filter((r) => r.shown);
+    const res = {
+      how: touch ? 'tap' : 'cursor', corridorPx: cor.len, airPx: cor.pad, tapDistancePx: cor.dTap, seedScale: k, scrolledTo: cor.scroll, clip,
+      shownClips: shownRows.length, shownClipsOverMinPx: shownRows.filter((r) => r.offTrack >= minPx).length, minPx,
+      peakOffTrackWhileShown: Math.max(0, ...shownRows.map((r) => r.offTrack)), peakOffTrackAnywhere: Math.max(...rows.map((r) => r.offTrack)), rows,
+    };
+    console.log(`pointer light ${sz.id}: corridor ${cor.len}px at scroll ${cor.scroll}; ${shownRows.length}/${rows.length} clips show the seed whole, ${res.shownClipsOverMinPx} of them ${minPx}+ px off track, peak while shown ${res.peakOffTrackWhileShown}px`);
+    return res;
+  } finally {
+    await context.close();
+  }
+}
+
 async function runPointer(browser) {
   measures.pointer = measures.pointer || {};
   /* clips are 2x at every size so the seed and the flash can be read */
   for (const sz0 of SIZES) {
     const sz = { ...sz0, dpr: 2 };
     const touch = !!sz.mobile;
-    /* --- dark: a cursor on a firefly, or a tap --- */
-    dark: {
-      const { context, page } = await open(browser, { scheme: 'dark', sz, path: '', mode: 'proof', hooks: true });
-      await page.mouse.move(2, 2);
-      const pick = async () => {
-        for (let i = 0; i < 400; i++) {
-          const s = await page.evaluate(({ w, h, bare: bs }) => {
-            const bare = (0, eval)('(' + bs + ')');
-            const st = window.__ccFloatersProbe.get();
-            const c = st.fireflies.map((m, i) => ({ i, x: m.x, y: m.y, cover: m.cover, n: m.flashes.length })).filter((m) => m.cover > 0.97 && m.n === 0 && m.x > 80 && m.x < w - 80 && m.y > 80 && m.y < h - 80 && bare(m.x, m.y));
-            return c[0] || null;
-          }, { w: sz.w, h: sz.h, bare: BARE.toString() });
-          if (s) return s;
-          await page.waitForTimeout(250);
-        }
-        return null;
-      };
-      const m = await pick();
-      if (!m) { console.warn(`no clear firefly at ${sz.id}`); delete measures.pointer[`dark-${sz.id}`]; await context.close(); break dark; }
-      const R = 90;
-      const posNow = () => page.evaluate((i) => { const f = window.__ccFloatersProbe.get().fireflies[i]; return { x: f.x, y: f.y, n: f.flashes.length }; }, m.i);
-      const off = await pageNowOffset(page);
-      const t0 = performance.now();
-      const rows = [];
-      const grab = async (label) => {
-        const p = await posNow();
-        const a = performance.now();
-        const x = Math.max(0, Math.round(p.x - R)), y = Math.max(0, Math.round(p.y - R));
-        const file = `pointer-dark-${sz.id}__${rows.length}.png`;
-        await page.screenshot({ path: join(clips, file), clip: { x, y, width: 2 * R, height: 2 * R } });
-        const b = performance.now();
-        rows.push({ file, t: +(((a + b) / 2 - t0) / 1000).toFixed(2), label, flashes: p.n });
-      };
-      await grab('before: no pointer, mote dark');
-      await grab('before: no pointer, mote dark');
-      let p = await posNow();
-      if (touch) await page.touchscreen.tap(p.x, p.y);
-      else {
-        await page.mouse.move(p.x - 160, p.y, { steps: 4 });
-        p = await posNow();
-        await page.mouse.move(p.x, p.y, { steps: 8 });
+    for (const scheme of ['dark', 'light']) {
+      const key = `${scheme}-${sz.id}`;
+      let res = null;
+      /* up to three takes: the check is that the clips show it, so a take
+         that does not is not kept as evidence */
+      for (let attempt = 1; attempt <= 3 && !res; attempt++) {
+        const r = scheme === 'dark' ? await pointerDark(browser, sz, touch) : await pointerLight(browser, sz, touch);
+        if (!r) break;
+        const pass = scheme === 'dark' ? r.peakGlow >= 90 : r.shownClipsOverMinPx >= 3;
+        r.attempt = attempt;
+        r.pass = pass;
+        if (pass || attempt === 3) res = r;
+        else console.warn(`pointer ${key}: take ${attempt} did not show it, retrying`);
       }
-      const hitAt = ((performance.now() - t0) / 1000).toFixed(2);
-      for (let i = 0; i < 12; i++) await grab(i === 0 ? (touch ? 'tap lands' : 'cursor on the mote') : '');
-      measures.pointer[`dark-${sz.id}`] = { how: touch ? 'tap' : 'cursor', hitAt: +hitAt, rows };
-      await context.close();
-      console.log(`pointer dark ${sz.id}: ${rows.length} clips`);
-      void off;
-    }
-    /* --- light: a cursor sweeps through a seed, or a tap beside it --- */
-    light: {
-      const { context, page } = await open(browser, { scheme: 'light', sz, path: '', mode: 'proof', hooks: true });
-      await page.mouse.move(2, 2);
-      let m = null;
-      /* On a phone the text columns leave little open cloth in the first
-         screen, so scroll to the viewport position with the most clear cloth
-         (bare, and 40 px from any text) before looking for a seed. */
-      if (touch) {
-        const best = await page.evaluate(async ({ w, h, bare: bs }) => {
-          const bare = (0, eval)('(' + bs + ')');
-          const st = window.__ccFloatersProbe.get();
-          const docH = document.documentElement.scrollHeight;
-          let top = { y: 0, n: -1 };
-          for (let y = 0; y <= docH - h; y += 80) {
-            window.scrollTo(0, y);
-            let n = 0;
-            for (let gx = 20; gx < w; gx += 30) for (let gy = 40; gy < h - 40; gy += 30) {
-              if (!bare(gx, gy)) continue;
-              if (st.textRects.every((r) => gx + 40 < r.l || gx - 40 > r.r || gy + y + 40 < r.t || gy + y - 40 > r.b)) n++;
-            }
-            if (n > top.n) top = { y, n };
-          }
-          window.scrollTo(0, top.y);
-          return top;
-        }, { w: sz.w, h: sz.h, bare: BARE.toString() });
-        console.log(`light ${sz.id}: scrolled to ${best.y}, ${best.n} clear grid points`);
-        await page.waitForTimeout(400);
-      }
-      /* A seed whose whole sprite box (nine samples across +/-60 px) is bare
-         cloth, with no text rect within `air` px of it. `side` is the way a tap
-         should land to push it toward the roomier side (-1 left, +1 right).
-         The air shrinks if nothing qualifies after a while (phone widths). */
-      for (let i = 0; i < 960 && !m; i++) {
-        const air = i < 240 ? 130 : i < 360 ? 90 : i < 480 ? 60 : i < 720 ? 30 : 15;
-        const half = i < 480 ? 60 : i < 720 ? 36 : 24;
-        m = await page.evaluate(({ w, h, bare: bs, air, half }) => {
-          const bare = (0, eval)('(' + bs + ')');
-          const st = window.__ccFloatersProbe.get();
-          const sy = window.scrollY;
-          const boxBare = (x, y) => { for (const dx of [-half, 0, half]) for (const dy of [-half, 0, half]) if (!bare(x + dx, y + dy)) return false; return true; };
-          const room = (x, y, dir) => {
-            let best = 1e4;
-            for (const r of st.textRects) {
-              if (y + 60 < r.t - sy || y - 60 > r.b - sy) continue;
-              const d = dir > 0 ? r.l - x : x - r.r;
-              if (d > -60 && d < best) best = d;
-            }
-            return best;
-          };
-          const clear = (x, y) => st.textRects.every((r) => x + air < r.l || x - air > r.r || y + sy + air < r.t || y + sy - air > r.b);
-          const mx = air >= 60 ? Math.min(200, w / 5) : 50;
-          const my = air >= 60 ? 130 : 70;
-          const c = st.seeds.map((s, i) => ({ i, x: s.x, y: s.y, cover: s.cover })).filter((s) => s.cover > 0.9 && s.x > mx && s.x < w - mx && s.y > my && s.y < h - my && clear(s.x, s.y) && boxBare(s.x, s.y));
-          if (!c.length && air <= 30) {
-            /* Nothing drifted into open cloth: set the seed with the most
-               cover down on the clearest grid point and let the breeze have it. */
-            let top = null;
-            for (let gx = 110; gx < w - 110; gx += 10) for (let gy = 120; gy < h - 120; gy += 10) {
-              if (!boxBare(gx, gy)) continue;
-              let dmin = 1e4;
-              for (const r of st.textRects) {
-                const dx = Math.max(r.l - gx, 0, gx - r.r), dy = Math.max(r.t - (gy + sy), 0, gy + sy - r.b);
-                dmin = Math.min(dmin, Math.hypot(dx, dy));
-              }
-              if (!top || dmin > top.d) top = { x: gx, y: gy, d: dmin };
-            }
-            if (top) { const q = st.seeds[0]; q.x = top.x; q.y = top.y; q.vx = 21; q.vy = -11; q.cover = 1; const l = Math.min(room(q.x, q.y, -1), q.x), rr = Math.min(room(q.x, q.y, 1), w - q.x); return { i: 0, x: q.x, y: q.y, cover: 1, side: l >= rr ? -1 : 1, staged: true, air, roomL: Math.round(l), roomR: Math.round(rr) }; }
-          }
-          if (!c.length) return null;
-          const k = c[0];
-          const left = Math.min(room(k.x, k.y, -1), k.x), right = Math.min(room(k.x, k.y, 1), w - k.x);
-          return { ...k, side: left >= right ? -1 : 1, air, roomL: Math.round(left), roomR: Math.round(right) };
-        }, { w: sz.w, h: sz.h, bare: BARE.toString(), air, half });
-        if (!m) await page.waitForTimeout(250);
-      }
-      if (!m) { console.warn(`no clear seed at ${sz.id}`, JSON.stringify(await page.evaluate(() => { const st = window.__ccFloatersProbe.get(); return { rects: st.textRects.length, seeds: st.seeds.map((q) => [Math.round(q.x), Math.round(q.y), +q.cover.toFixed(2)]) }; }))); delete measures.pointer[`light-${sz.id}`]; await context.close(); break light; }
-      const R = 130;
-      const t0 = performance.now();
-      const rows = [];
-      const seedNow = () => page.evaluate((i) => { const s = window.__ccFloatersProbe.get().seeds[i]; return { x: s.x, y: s.y, vx: s.vx, vy: s.vy }; }, m.i);
-      const start = await seedNow();
-      const tStart = performance.now();
-      const grab = async (label) => {
-        const p = await seedNow();
-        const a = performance.now();
-        const x = Math.max(0, Math.round(start.x - R - 70)), y = Math.max(0, Math.round(start.y - R * 1.3));
-        const file = `pointer-light-${sz.id}__${rows.length}.png`;
-        await page.screenshot({ path: join(clips, file), clip: { x, y, width: 2 * R + 160, height: Math.round(2.6 * R) } });
-        const b = performance.now();
-        const tt = ((a + b) / 2 - tStart) / 1000;
-        rows.push({ file, t: +(((a + b) / 2 - t0) / 1000).toFixed(2), label, seed: { x: +p.x.toFixed(1), y: +p.y.toFixed(1) }, offTrack: +Math.hypot(p.x - (start.x + start.vx * tt), p.y - (start.y + start.vy * tt)).toFixed(1) });
-        return p;
-      };
-      await grab('before: no pointer');
-      let p = await seedNow();
-      if (touch) await page.touchscreen.tap(p.x + m.side * -36, p.y + 8);
-      else {
-        await page.mouse.move(p.x - m.side * 150 + 0, p.y + 10, { steps: 3 });
-        for (let k = 0; k < 14; k++) {
-          p = await seedNow();
-          await page.mouse.move(p.x - m.side * (90 - k * 9), p.y + 6, { steps: 2 });
-          if (k % 3 === 0) await grab(k === 0 ? 'cursor sweeping toward the seed' : '');
-        }
-      }
-      for (let i = 0; i < 6; i++) { await grab(i === 0 ? (touch ? 'tap beside the seed' : 'cursor has passed') : ''); await page.waitForTimeout(160); }
-      measures.pointer[`light-${sz.id}`] = { how: touch ? 'tap' : 'cursor', pick: { staged: !!m.staged, air: m.air, roomL: m.roomL, roomR: m.roomR, side: m.side }, rows, peakOffTrack: Math.max(...rows.map((r) => r.offTrack)) };
-      await context.close();
-      console.log(`pointer light ${sz.id}: ${rows.length} clips, peak off-track ${measures.pointer[`light-${sz.id}`].peakOffTrack}px`);
+      if (res) measures.pointer[key] = res; else delete measures.pointer[key];
+      if (res && !res.pass) console.warn(`pointer ${key}: FAILED its own check after 3 takes`);
     }
   }
   await saveMeasures();
@@ -677,17 +906,77 @@ function pickFrames(rows, k, byLit) {
   return [...chosen].sort((a, b) => a - b).slice(0, k);
 }
 
+/* How much light a firefly flash adds, read off the frames themselves. Flashes
+   only add light, so the darkest value each pixel takes across a film is the
+   page without any firefly; a frame's flash is its largest rise over that. */
+async function flashScores(files, scale) {
+  const lum = async (f) => {
+    const im = await loadImage(f);
+    const cv = createCanvas(im.width, im.height);
+    const g = cv.getContext('2d');
+    g.drawImage(im, 0, 0);
+    const d = g.getImageData(0, 0, im.width, im.height).data;
+    const L = new Uint8Array(im.width * im.height);
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) L[p] = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    return { L, w: im.width, h: im.height };
+  };
+  let min = null, w = 0, hgt = 0;
+  for (const f of files) {
+    const { L, w: ww, h: hh } = await lum(f);
+    if (!min) { min = Uint8Array.from(L); w = ww; hgt = hh; } else for (let i = 0; i < min.length; i++) if (L[i] < min[i]) min[i] = L[i];
+  }
+  const out = [];
+  for (const f of files) {
+    const { L } = await lum(f);
+    let peak = 0, at = 0, glow = 0;
+    for (let i = 0; i < L.length; i++) {
+      const dv = L[i] - min[i];
+      if (dv >= 20) glow++;
+      if (dv > peak) { peak = dv; at = i; }
+    }
+    out.push({ peak, glowPx: Math.round(glow / (scale * scale)), x: Math.round((at % w) / scale), y: Math.round(Math.floor(at / w) / scale) });
+  }
+  return { out, w, h: hgt };
+}
+
 async function runSheets() {
   const lines = [];
   for (const sz of SIZES) {
     const dark = measures.films?.[`dark-home-${sz.id}`];
     if (dark) {
-      const pick = pickFrames(dark, 6, true);
+      /* frames chosen by the flash measured in the pixels: the five brightest,
+         and the quietest, in time order */
+      const dpr = sz.dpr;
+      const sc = await flashScores(dark.map((r) => join(frames, r.file)), dpr);
+      dark.forEach((r, i) => Object.assign(r, { flashPeak: sc.out[i].peak, flashGlowPx: sc.out[i].glowPx, flashAt: { x: sc.out[i].x, y: sc.out[i].y } }));
+      const order = dark.map((_, i) => i).sort((p, q) => dark[q].flashPeak - dark[p].flashPeak);
+      const chosen = new Set();
+      for (const i of order) { if ([...chosen].every((c) => Math.abs(dark[c].t - dark[i].t) >= 1.0)) chosen.add(i); if (chosen.size === 5) break; }
+      chosen.add(order[order.length - 1]);
+      const pick = [...chosen].sort((p, q) => p - q);
       await strip(join(out, `sheet-fireflies-${sz.id}.jpg`), `Fireflies, dark Home at ${sz.id}: burst flash`,
-        'Six of 36 frames, in time order, the busiest and a fully dark one among them; t is seconds into the film, "lit" the motes drawn at that instant (of the whole page count).',
-        pick.map((i) => ({ file: join(frames, dark[i].file), top: `t = ${dark[i].t.toFixed(2)} s`, bottom: `lit motes: ${dark[i].lit ?? 'n/a'}` })),
+        'Whole-page frames from the 36-frame film: the five with the brightest flash (measured in the pixels) and the quietest. t is seconds into the film; "peak" is the greatest rise in brightness over the page without fireflies (0-255).',
+        pick.map((i) => ({ file: join(frames, dark[i].file), top: `t = ${dark[i].t.toFixed(2)} s`, bottom: `flash peak +${dark[i].flashPeak}, ${dark[i].flashGlowPx} px glowing` })),
         sz.mobile ? { cols: 3, cellW: 560 } : { cols: 2, cellW: 960 });
-      lines.push(`- sheet-fireflies-${sz.id}.jpg: dark Home at ${sz.id}, six timestamped frames (burst flashes; most motes dark)`);
+      lines.push(`- sheet-fireflies-${sz.id}.jpg: dark Home at ${sz.id}, the five brightest flash frames and the quietest`);
+      /* and a 2x crop of the brightest spot in each of the chosen frames */
+      const items = [];
+      let n = 0;
+      for (const i of pick) {
+        const im = await loadImage(join(frames, dark[i].file));
+        const R = 110;
+        const cx = Math.min(Math.max(dark[i].flashAt.x, R), sz.w - R), cy = Math.min(Math.max(dark[i].flashAt.y, R), sz.h - R);
+        const cv = createCanvas(4 * R, 4 * R);
+        const g = cv.getContext('2d');
+        g.drawImage(im, (cx - R) * dpr, (cy - R) * dpr, 2 * R * dpr, 2 * R * dpr, 0, 0, 4 * R, 4 * R);
+        const file = join(frames, `crop-fireflies-${sz.id}__${n++}.png`);
+        await writeFile(file, cv.toBuffer('image/png'));
+        items.push({ file, top: `t = ${dark[i].t.toFixed(2)} s`, bottom: `peak +${dark[i].flashPeak}, spot (${dark[i].flashAt.x}, ${dark[i].flashAt.y})` });
+      }
+      await strip(join(out, `sheet-fireflies-crops-${sz.id}.jpg`), `Fireflies, dark Home at ${sz.id}: the same frames, brightest spot at 2x`,
+        'A 220 px square around the brightest spot of each frame on the sheet before, shown at 2x.',
+        items, { cols: 3, cellW: 440 });
+      lines.push(`- sheet-fireflies-crops-${sz.id}.jpg: the brightest spot of each of those frames, 2x`);
     }
     for (const [name] of PAGES) {
       const light = measures.films?.[`light-${name}-${sz.id}`];
@@ -703,14 +992,28 @@ async function runSheets() {
       const pr = measures.pointer?.[`${sc}-${sz.id}`];
       if (!pr) continue;
       const rows = pr.rows;
-      const pick = rows.length <= 8 ? rows.map((_, i) => i) : [0, 2, 3, 4, 5, 6, 8, 10, 12].filter((i) => i < rows.length).slice(0, 8);
-      await strip(join(out, `sheet-pointer-${sc}-${sz.id}.jpg`), `Pointer, ${sc} at ${sz.id}: ${pr.how} ${sc === 'dark' ? 'on a firefly' : 'beside a seed'}`,
-        sc === 'dark' ? 'Tight clips taken back to back; the first two are before the pointer, then the mote is hovered or tapped.' : 'Tight clips taken back to back around the seed; the off-track figure is how far it is from where the breeze alone would have put it.',
-        pick.map((i) => ({ file: join(clips, rows[i].file), top: `t = ${rows[i].t.toFixed(2)} s`, bottom: sc === 'dark' ? `${rows[i].label || ''} flashes queued: ${rows[i].flashes}` : `${rows[i].label || ''} off track ${rows[i].offTrack}px` })),
-        { cols: Math.min(4, pick.length), cellW: sc === 'dark' ? 300 : 340 });
+      let pick;
+      if (sc === 'dark') {
+        /* the clip before the pointer, then the clips that glow, up to six, and the last */
+        const glowing = rows.map((r, i) => i).filter((i) => rows[i].glow >= 25);
+        const step = Math.max(1, Math.ceil(glowing.length / 6));
+        pick = [0, ...glowing.filter((_, k) => k % step === 0).slice(0, 6), rows.length - 1].filter((v, k, arr) => arr.indexOf(v) === k);
+      } else {
+        /* the clip before the pointer, then evenly through the stretch in which the seed is on show, and the first after it leaves */
+        const lastShown = rows.map((r) => r.shown).lastIndexOf(true);
+        const upto = Math.min(rows.length - 1, lastShown + 1);
+        const idx = Array.from({ length: upto }, (_, i) => i + 1);
+        const step = Math.max(1, Math.ceil(idx.length / 7));
+        pick = [0, ...idx.filter((_, k) => k % step === 0)].slice(0, 8);
+      }
+      await strip(join(out, `sheet-pointer-${sc}-${sz.id}.jpg`), `Pointer, ${sc} at ${sz.id}: ${pr.how} ${sc === 'dark' ? 'on a firefly' : 'behind a seed'}`,
+        sc === 'dark' ? 'Tight clips (2x) taken back to back; the first is before the pointer, then the mote is hovered or tapped. "glow" is the greatest rise in brightness over the first clip, measured in the pixels (0-255).' : 'Clips (2x) taken back to back over the seed run of open cloth; "off track" is how far the seed is from where the breeze alone would have put it.',
+        pick.map((i) => ({ file: join(clips, rows[i].file), top: `t = ${rows[i].t.toFixed(2)} s`, bottom: sc === 'dark' ? `${rows[i].label || ''} glow +${rows[i].glow}` : `${rows[i].label || ''} off track ${rows[i].offTrack}px ${rows[i].shown ? '' : '(not on show)'}` })),
+        { cols: Math.min(4, pick.length), cellW: sc === 'dark' ? 300 : (sz.mobile ? 300 : 260) });
       lines.push(`- sheet-pointer-${sc}-${sz.id}.jpg: ${sc} ${pr.how} strip at ${sz.id}`);
     }
   }
+  await saveMeasures();
   await writeFile(join(out, 'index.md'), ['# cc-floaters proof images', '', `Renderer: ${existsSync(join(out, 'renderer.txt')) ? (await readFile(join(out, 'renderer.txt'), 'utf8')).trim() : 'unknown'}`, '', ...lines, '', '- frames/*.png: every viewport frame of every film (36 per film)', '- clips/*.png: pointer clips', '- shots/*__fullpage.png: whole-page stills taken after each film (the fixed canvas paints in the first viewport)', '- measures.json: all numbers', '- fx.bundle.js: the bundle that was injected', ''].join('\n'));
 }
 
