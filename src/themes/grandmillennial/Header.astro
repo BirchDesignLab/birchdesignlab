@@ -130,7 +130,14 @@ const { chrome, theme } = Astro.props;
     width: 28px;
     pointer-events: none;
   }
-  .bell-pull svg { display: block; width: 100%; height: auto; overflow: visible; }
+  /* touch-action must sit on the svg element: Chromium ignores it on SVG
+     children, and the browser then cancels the touch drag into a scroll. */
+  .bell-pull svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: none; }
+  /* Between the phone and wide layouts the nav row runs close to the right
+     edge, so the pull tucks into the corner and clears the last link. */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .bell-pull { right: 0.5rem; width: 20px; }
+  }
   .bp-boss { fill: var(--rule); stroke: var(--ornament-deep); stroke-width: 0.8; }
   .bp-boss-eye { fill: var(--ornament-deep); }
   .bp-cord { stroke: var(--rule); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 3 0.8; }
@@ -139,7 +146,7 @@ const { chrome, theme } = Astro.props;
   .bp-skirt { fill: var(--stripe-a); stroke: var(--ornament-deep); stroke-width: 0.6; }
   .bp-band { fill: var(--rule); }
   .bp-fringe { fill: none; stroke: var(--stripe-a); stroke-width: 1.7; stroke-linecap: round; }
-  .bp-hit { fill: transparent; pointer-events: all; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .bp-hit { fill: transparent; pointer-events: all; cursor: grab; -webkit-tap-highlight-color: transparent; }
   .bp-hit:active { cursor: grabbing; }
 
   nav {

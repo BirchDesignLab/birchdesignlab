@@ -111,13 +111,13 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   }
   .offering + .offering { margin-top: clamp(2.25rem, 5vw, 3.5rem); }
   .offering.flip { grid-template-columns: minmax(0, 1fr) calc(34% - 0.32 * var(--pad) - 1.25rem); }
-  .offering.flip .swatch-hang { order: 2; margin-left: 0; margin-right: calc(-1 * var(--hang)); rotate: 1.8deg; }
+  .offering.flip .swatch-hang { order: 2; margin-left: 0; margin-right: calc(-1 * var(--hang)); --rot: 1.8deg; }
   /* The shadow is a drop-shadow on the hanger so it follows the pinked cut. */
   .swatch-hang {
     position: relative;
     width: calc(100% + var(--hang));
     margin-left: calc(-1 * var(--hang));
-    rotate: -2deg;
+    rotate: var(--rot, -2deg);
     filter: drop-shadow(0 10px 12px rgb(40 22 8 / 0.28));
     --lift-rot: -0.6deg;
     transition: translate 200ms ease, rotate 200ms ease, filter 200ms ease;
@@ -152,7 +152,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
       radial-gradient(circle at 50% 50%, var(--d1) 0 2.6px, transparent 3px) 0 50% / 22px 100% repeat-x,
       radial-gradient(circle at 50% 50%, var(--d2) 0 2.6px, transparent 3px) 11px 50% / 44px 100% repeat-x,
       radial-gradient(circle at 50% 50%, var(--d3) 0 2.6px, transparent 3px) 33px 50% / 66px 100% repeat-x,
-      var(--field-raised);
+      color-mix(in srgb, var(--rule) 38%, var(--field-raised));
     --d1: var(--c-rose); --d2: var(--c-leaf); --d3: var(--c-blue);
     -webkit-mask:
       conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%,
@@ -268,8 +268,8 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   }
   @media (max-width: 720px) {
     .offering, .offering.flip { grid-template-columns: 1fr; gap: 2.75rem; }
-    .offering .swatch-hang, .offering.flip .swatch-hang { order: 0; width: 100%; margin: 0; rotate: -1.2deg; }
-    .offering.flip .swatch-hang { rotate: 1.2deg; }
+    .offering .swatch-hang, .offering.flip .swatch-hang { order: 0; width: 100%; margin: 0; --rot: -1.2deg; --lift-rot: -0.4deg; }
+    .offering.flip .swatch-hang { --rot: 1.2deg; --lift-rot: 0.4deg; }
     .swatch { aspect-ratio: 16 / 9; }
     .steps { grid-template-columns: 1fr; row-gap: 2.5rem; }
     .steps li { grid-row: auto; grid-template-rows: none; }
