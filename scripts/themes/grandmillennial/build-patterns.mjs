@@ -142,12 +142,17 @@ const W = 928, H = 544;
 // the pattern block only (the vine's own floret use sits inside <g id="gm-wall-vine">)
 const patternBlock = wallSrc.slice(wallSrc.indexOf('<pattern id="gm-chintz-wall"'));
 const placed = [...patternBlock.matchAll(/<use href="#([a-z-]+)" transform="([^"]+)" \/>|<circle class="k-dot" ([^>]*)\/>/g)];
-let roseCount = 0;
 const ROSES = ['gm-rose', 'gm-rose-b', 'gm-rose-c'];
 const wallInk = placed.map((m) => {
   if (m[3] !== undefined) return `<circle class="k-dot" ${m[3].trim()}/>`;
   let id = m[1];
-  if (id === 'gm-rose') id = ROSES[roseCount++ % 3];
+  if (id === 'gm-rose') {
+    // Variant keyed on the position wrapped to the tile, so a rose cut by the
+    // tile edge and its wrap copy are the same bloom (no seam).
+    const t = /translate\(\s*(-?[\d.]+)[ ,]+(-?[\d.]+)/.exec(m[2]);
+    const wx = Math.round((((+t[1] % W) + W) % W) * 10) % (W * 10), wy = Math.round((((+t[2] % H) + H) % H) * 10) % (H * 10);
+    id = ROSES[(wx * 31 + wy * 17) % 3];
+  }
   return printed(id, m[2]);
 }).join('');
 

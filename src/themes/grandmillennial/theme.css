@@ -147,9 +147,9 @@
      two never drift apart. */
   --lamp: radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%);
   /* Lacquer, B1 item 6 (static, hunter hue unchanged): the room falls away
-     toward its edges. Sized like the lamp, so the canopy's swap picture at the
-     foot of this file can carry it too. */
-  --vignette: radial-gradient(135% 105% at 50% 38%, transparent 52%, rgb(0 0 0 / 0.36) 100%);
+     toward its edges. Painted on the fixed body::before (viewport-sized) so the sides darken;
+     not a body background, which would span the whole document. */
+  --vignette: radial-gradient(120% 110% at 50% 45%, transparent 45%, rgb(0 0 0 / 0.42) 100%);
   /* The top-left edge of anything framed catches the lamp: a hairline of light
      inside the frame's top and left, and a soft one under it. */
   --edge-hi: inset 1px 1px 0 rgb(255 238 196 / 0.3), inset 3px 3px 5px -2px rgb(255 238 196 / 0.1);
@@ -201,7 +201,7 @@
 
 [data-theme='grandmillennial'] body {
   margin: 0;
-  background: var(--vignette), var(--lamp), var(--field);
+  background: var(--lamp), var(--field);
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.25rem;
@@ -438,12 +438,12 @@
 /* A diagonal specular band across the viewport, on a fixed pseudo-element so it
    stays put while the room scrolls under it, like a window's reflection on
    lacquer. Faint enough to leave every text contrast alone; nothing moves.
-   The edge vignette is --vignette (body), the lit edges are --edge-hi. */
+   The edge vignette is --vignette (fixed body::before, viewport-sized), the lit edges are --edge-hi. */
 [data-theme='grandmillennial'][data-scheme='dark'] body::before {
   content: '';
   position: fixed; inset: 0; z-index: 30;
   pointer-events: none;
-  background: linear-gradient(112deg, transparent 30%, rgb(255 244 214 / 0.028) 41%, rgb(255 244 214 / 0.07) 47%, rgb(255 244 214 / 0.07) 49%, rgb(255 244 214 / 0.028) 55%, transparent 66%);
+  background: var(--vignette), linear-gradient(112deg, transparent 30%, rgb(255 244 214 / 0.028) 41%, rgb(255 244 214 / 0.07) 47%, rgb(255 244 214 / 0.07) 49%, rgb(255 244 214 / 0.028) 55%, transparent 66%);
 }
 
 /* ---------- Arrival: the drapes part ---------- */
@@ -540,7 +540,7 @@ html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
 html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
-  background: var(--vignette) 0 0 / 100% 3000px no-repeat, var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
+  background: var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),
