@@ -4,6 +4,7 @@
     a red lab band, and a see-saw that balances the closing ask. */
 import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Numeral from '../parts/Numeral.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -15,14 +16,14 @@ const doorShape = ['circle', 'square'] as const;
     <h1 class="billboard">
       {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class={`w w${i}`}>{word}</span></>)}
     </h1>
-    <svg class="poster" viewBox="0 0 600 700" aria-hidden="true" focusable="false">
-      <rect class="asm" x="0" y="410" width="600" height="22" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms" />
-      <circle class="asm" cx="390" cy="215" r="185" fill="var(--blue)" style="--from: translateY(-70%) scale(0.4); --d: 160ms" />
-      <rect class="asm" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms" />
-      <polygon class="asm" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms" />
-      <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms" />
-      <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms" />
-      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--yellow)" stroke-width="6" style="--from: scale(0); --d: 760ms" />
+    <svg class="poster" viewBox="0 0 600 700" role="group" aria-label="Poster shapes" focusable="false">
+      <rect class="asm" x="0" y="410" width="600" height="22" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms; --beat: 0; --sub: 0ms" />
+      <circle class="asm loose" data-loose role="button" tabindex="0" aria-label="Blue circle, drag to move" cx="390" cy="215" r="185" fill="var(--blue)" style="--from: translateY(-70%) scale(0.4); --d: 160ms; --beat: 1; --sub: 0ms" />
+      <rect class="asm loose" data-loose role="button" tabindex="0" aria-label="Red square, drag to move" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms; --beat: 1; --sub: 70ms" />
+      <polygon class="asm loose" data-loose role="button" tabindex="0" aria-label="Yellow triangle, drag to move" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms; --beat: 2; --sub: 0ms" />
+      <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms; --beat: 0; --sub: 70ms" />
+      <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms; --beat: 2; --sub: 70ms" />
+      <circle class="asm" cx="110" cy="118" r="20" fill="var(--field)" stroke="var(--field)" stroke-width="6" style="--from: scale(0); --d: 760ms; --beat: 2; --sub: 140ms" />
     </svg>
   </div>
 </section>
@@ -38,7 +39,7 @@ const doorShape = ['circle', 'square'] as const;
     {copy.doors.items.map((door, i) => (
       <article class={`door${i % 2 ? ' block-yellow' : ''}`}>
         <div class="door-top" aria-hidden="true">
-          <span class="num">{String(i + 1).padStart(2, '0')}</span>
+          <Numeral value={String(i + 1).padStart(2, '0')} />
           <span class={`shape ${doorShape[i % 2]}`}></span>
         </div>
         <h3>{door.title}</h3>
@@ -52,8 +53,8 @@ const doorShape = ['circle', 'square'] as const;
 {featured.length > 0 && (
   <section class="lab block-red">
     <svg class="lab-shapes" viewBox="0 0 600 600" aria-hidden="true" focusable="false" data-reveal>
-      <circle class="asm" cx="380" cy="260" r="240" fill="var(--yellow)" style="--from: scale(0); --d: 0ms" />
-      <polygon class="asm" points="120,600 300,290 480,600" fill="var(--ink)" style="--from: translateY(70%); --d: 220ms" />
+      <circle class="asm" cx="380" cy="260" r="240" fill="var(--ink)" style="--from: scale(0); --d: 0ms" />
+      <polygon class="asm" points="120,600 300,290 480,600" fill="var(--yellow)" style="--from: translateY(70%); --d: 220ms" />
     </svg>
     <div class="wrap grid12 lab-grid">
       <p class="kicker is-triangle lab-kicker">{copy.lab.kicker}</p>
@@ -81,9 +82,11 @@ const doorShape = ['circle', 'square'] as const;
   <svg class="seesaw" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-reveal>
     <rect x="0" y="290" width="400" height="10" fill="var(--mark)" />
     <polygon class="asm" points="200,178 262,290 138,290" fill="var(--yellow)" style="--from: translateY(40%) scale(0.2); --d: 0ms" />
-    <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
-    <circle class="asm" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
-    <rect class="asm" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
+    <g class="beam">
+      <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
+      <circle class="asm" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
+      <rect class="asm" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
+    </g>
   </svg>
 </section>
 
@@ -108,6 +111,10 @@ const doorShape = ['circle', 'square'] as const;
     position: relative;
     z-index: 1;
   }
+  /* The h1 box spans column 7, over the poster's red square. Let presses fall
+     through to the loose shapes (the type is not interactive). Phones stack
+     the two, so the heading stays selectable there. */
+  @media (min-width: 641px) { .billboard { pointer-events: none; } }
   .w { display: block; }
   /* The last word steps right, past the descender of the word above, so the
      stack reads as a staircase instead of a centred block. In em so the step
@@ -124,7 +131,7 @@ const doorShape = ['circle', 'square'] as const;
   }
 
   /* ---------- opener ---------- */
-  .opener { padding-block: clamp(4rem, 9vw, 8rem); row-gap: 2.5rem; align-items: start; }
+  .opener { padding-block: clamp(4rem, 9vw, 8rem) 5rem; row-gap: 2.5rem; align-items: start; }
   .lead {
     grid-column: 1 / span 10;
     font-family: var(--font-display);
@@ -135,8 +142,11 @@ const doorShape = ['circle', 'square'] as const;
     text-transform: lowercase;
     text-wrap: balance;
   }
+  /* The lede's rule runs from column 1 to 11 at full weight; the line of
+     text under it still starts on column 7 (6/11 of the area plus its gaps). */
   .sub {
-    grid-column: 7 / span 5;
+    grid-column: 1 / span 11;
+    padding-left: calc(6 / 11 * 100% + 6 / 11 * var(--gap));
     padding-top: 1.1rem;
     border-top: var(--rule) solid var(--mark);
     font-size: 1.25rem;
@@ -150,7 +160,6 @@ const doorShape = ['circle', 'square'] as const;
     width: 100%;
     padding-top: 1rem;
     border-top: var(--rule) solid var(--mark);
-    font-family: var(--font-body);
   }
   .door-grid { margin-top: 2rem; row-gap: var(--gap); }
   .door {
@@ -163,7 +172,7 @@ const doorShape = ['circle', 'square'] as const;
   }
   .door.block-yellow { border-color: var(--yellow); }
   .door-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-  .door .num { font-size: clamp(4rem, 7vw, 6.5rem); }
+  .door :global(.num) { font-size: clamp(4rem, 7vw, 6.5rem); }
   .shape { width: clamp(56px, 6vw, 84px); aspect-ratio: 1; flex: none; }
   .shape.circle { background: var(--blue); border-radius: 50%; }
   .shape.square { background: var(--red); }
@@ -213,8 +222,9 @@ const doorShape = ['circle', 'square'] as const;
     border-bottom: var(--rule-thin) solid var(--on-red);
   }
   .designation {
-    font-family: var(--font-num);
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
     font-size: 0.875rem;
     letter-spacing: 0.02em;
     padding-top: 0.25rem;
@@ -224,7 +234,10 @@ const doorShape = ['circle', 'square'] as const;
   }
   /* The link shows itself the Bauhaus way: the theme's hover weight of
      underline, on hover and on focus (the ring is the theme's --mark ring). */
-  .designation:hover, .designation:focus-visible { text-decoration: underline; text-decoration-thickness: 4px; }
+  .designation:focus-visible { text-decoration: underline; text-decoration-thickness: 4px; }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover { text-decoration: underline; text-decoration-thickness: 4px; }
+  }
   .summary { font-size: 1.0625rem; line-height: 1.5; }
   .lab .more { margin-top: 2.5rem; }
 
@@ -238,8 +251,8 @@ const doorShape = ['circle', 'square'] as const;
      they drop beneath it instead of behind it. */
   @media (max-width: 900px) {
     .door { grid-column: 1 / -1; }
-    .lab { display: flex; flex-direction: column; padding-bottom: 0; }
-    .lab-shapes { order: 2; position: static; width: min(80%, 420px); align-self: flex-end; margin: 3rem -4rem 0 0; }
+    .lab { padding-bottom: clamp(9rem, 26vw, 11rem); }
+    .lab-shapes { right: -28px; width: 140px; }
     .lab-body { grid-column: 2 / -1; }
   }
   @media (max-width: 640px) {
@@ -247,6 +260,7 @@ const doorShape = ['circle', 'square'] as const;
     .poster { grid-column: 1 / -1; grid-row: 1; max-height: none; width: 86%; justify-self: end; margin-bottom: 0; }
     .billboard { grid-column: 1 / -1; grid-row: 2; font-size: 25vw; padding-bottom: 1.75rem; }
     .lead, .sub { grid-column: 1 / -1; }
+    .sub { padding-left: 0; }
     .lab-kicker { grid-column: 1 / -1; writing-mode: horizontal-tb; transform: none; margin-bottom: 1.5rem; }
     .lab-body { grid-column: 1 / -1; }
     .specimens li { grid-template-columns: 1fr; gap: 0.35rem; }
@@ -254,3 +268,11 @@ const doorShape = ['circle', 'square'] as const;
     .seesaw { width: 78%; justify-self: end; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initLoose } from '../parts/loose';
+
+  // The hero's circle, square and triangle can be picked up (parts/loose.ts).
+  onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.poster')));
+</script>

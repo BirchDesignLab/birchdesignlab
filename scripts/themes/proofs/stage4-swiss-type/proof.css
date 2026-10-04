@@ -1,0 +1,74 @@
+/* Stage 4 proof a2 (swiss items 7 and 9): one family, and the phone poster.
+   Injected into the frozen build; every rule is under :root[data-theme='swiss']
+   (or html[data-theme='swiss']) so Tier B lifts it into src/themes/swiss/theme.css.
+
+   The harness declares the faces ahead of this sheet:
+     'Archivo Variable' from archivo-latin-standard-normal.woff2 (wght 100-900,
+        wdth 62-125; declared last, so it replaces the frozen build's wght-only
+        face for Latin. Tier B gets the same by importing
+        @fontsource-variable/archivo/standard.css in place of the wght import.)
+     'Inter Variable' (proof only, the fallback face under test).
+
+   The body face is one variable. Archivo is the default; the class
+   sw-body-inter on <html> flips it to Inter for the side-by-side. */
+
+/* ---- Item 7: one family ------------------------------------------- */
+
+:root[data-theme='swiss'] {
+  --font-body: 'Archivo Variable', 'Archivo Variable fallback', 'Helvetica Neue', Arial, sans-serif;
+  /* The mono role is retired: designations, the footer legal line and the
+     Contact trust line fall back to the display family. */
+  --font-mono: 'Archivo Variable', 'Archivo Variable fallback', 'Helvetica Neue', Arial, sans-serif;
+}
+:root[data-theme='swiss'].sw-body-inter {
+  --font-body: 'Inter Variable', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Section indices are aria-hidden decoration: dropped (brief item 7). */
+html[data-theme='swiss'] .sw-idx { display: none; }
+
+/* Body: standard axes, weight 400, width 100, on the 24px line (item 8). */
+html[data-theme='swiss'] body {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+  font-stretch: 100%;
+}
+html[data-theme='swiss'] .sw-body > p + p { margin-top: 1.5rem; }
+
+/* Metadata in Archivo: tabular figures, a touch of tracking for the small
+   size, no mono. */
+html[data-theme='swiss'] .designation,
+html[data-theme='swiss'] .legal,
+html[data-theme='swiss'] .trust {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Item 9: phone giants ------------------------------------------ */
+
+/* Under 640px each page's title is one giant whose longest word fills the
+   measure (the frame between the margins). One rule for all four: Archivo at
+   width 85 (the width axis, font-stretch), the font size a fraction of the
+   measure rather than of the viewport, so it holds exactly at 390 and 360.
+   --sw-k is that fraction, solved per giant from the widest word:
+     Home "Design" .375, About .363, Services .306, Contact "conversation" .2015.
+   The data-proof-page attribute is the proof's stand-in for "this page's
+   own <style>": Tier B puts each --sw-k in its page file's phone rule. */
+@media (max-width: 639.98px) {
+  :root[data-theme='swiss'] {
+    --sw-measure: calc(100vw - 2 * var(--margin));
+    --sw-wdth: 85;
+  }
+  html[data-theme='swiss'] :is(.billboard, .hero .title) {
+    font-size: calc(var(--sw-measure) * var(--sw-k));
+    font-stretch: calc(var(--sw-wdth) * 1%);
+    max-width: none;
+  }
+  html[data-proof-page='home'] .billboard { --sw-k: 0.375; }
+  html[data-proof-page='about'] .hero .title { --sw-k: 0.363; }
+  html[data-proof-page='services'] .hero .title { --sw-k: 0.306; }
+  html[data-proof-page='contact'] .hero .title { --sw-k: 0.2015; }
+}

@@ -9,11 +9,20 @@ const { copy, theme } = Astro.props;
 ---
 <section class="wrap grid12 sent">
   <h1>{copy.heading}</h1>
-  <svg class="landed" viewBox="0 0 520 360" aria-hidden="true" focusable="false">
-    <polygon class="asm" points="0,352 250,352 0,110" fill="var(--yellow)" style="--from: scaleX(0); --d: 0ms" />
-    <rect class="asm" x="292" y="152" width="200" height="200" fill="var(--red)" style="--from: translateY(40%) scale(0.2); --d: 160ms" />
-    <rect x="0" y="352" width="520" height="8" fill="var(--mark)" />
-    <circle class="asm" cx="392" cy="252" r="64" fill="var(--blue)" style="--from: translate(-420px, -220px); --d: 420ms" />
+  <svg class="landed" viewBox="0 0 520 352" role="group" aria-label="Poster shapes" focusable="false">
+    <polygon class="asm loose" data-loose role="button" tabindex="0" aria-label="Yellow triangle, drag to move" points="0,352 250,352 0,110" fill="var(--yellow)" style="--from: scaleX(0); --d: 0ms" />
+    <rect class="asm loose" data-loose role="button" tabindex="0" aria-label="Red square, drag to move" x="292" y="152" width="200" height="200" fill="var(--red)" style="--from: translateY(40%) scale(0.2); --d: 160ms" />
+    {/* The circle rolls (E12): the outer group takes a drag, .roll-go travels
+        from the top of the hypotenuse, down the slope and across into the
+        square, .roll-turn turns it, and the paper dot shows the turn. */}
+    <g class="loose" data-loose role="button" tabindex="0" aria-label="Blue circle, drag to move">
+      <g class="roll-go">
+        <g class="roll-turn">
+          <circle cx="392" cy="252" r="64" fill="var(--blue)" />
+          <circle cx="366" cy="226" r="9" fill="var(--paper)" />
+        </g>
+      </g>
+    </g>
   </svg>
   <div class="note">
     <p>{copy.body}</p>
@@ -26,7 +35,7 @@ const { copy, theme } = Astro.props;
     min-height: min(78vh, 820px);
     padding-block: clamp(3rem, 6vw, 5rem) clamp(4rem, 8vw, 7rem);
     align-content: center;
-    row-gap: 3rem;
+    row-gap: 0;
   }
   h1 {
     grid-column: 1 / span 7;
@@ -38,8 +47,10 @@ const { copy, theme } = Astro.props;
     text-transform: lowercase;
   }
   .landed { grid-column: 8 / span 5; align-self: end; width: 100%; height: auto; }
+  /* The composition's ground, carried across the full grid: the rule the
+     shapes stand on is the rule above the note. */
   .note {
-    grid-column: 1 / span 6;
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -49,10 +60,19 @@ const { copy, theme } = Astro.props;
     font-size: 1.3125rem;
     line-height: 1.5;
   }
+  .note p { max-width: 36ch; }
   @media (max-width: 760px) {
-    .sent { min-height: 0; row-gap: 2rem; }
+    .sent { min-height: 0; }
     h1, .landed, .note { grid-column: 1 / -1; }
-    h1 { font-size: 34vw; }
+    h1 { font-size: 34vw; margin-bottom: 2rem; }
     .landed { max-width: 300px; justify-self: end; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initLoose } from '../parts/loose';
+
+  // Sent's triangle, square and circle can be picked up (parts/loose.ts).
+  onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.landed')));
+</script>

@@ -1,7 +1,9 @@
 ---
 /** Swiss home: the name as a poster, set flush left at the full width of the
-    sheet with one red block in the free corner, then numbered sections on
-    the same twelve columns. */
+    sheet, its lead and subline hung as one block from a single column line on
+    the baseline of its last word; then two equal door fields, the lab as a
+    black sheet and the ask. The name is the page's one giant; nothing below
+    it is larger than lead. */
 import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 
@@ -10,24 +12,21 @@ const { copy, chrome, theme } = Astro.props;
 const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 ---
 <section class="sw-row hero">
-  <p class="sw-idx hero-idx" aria-hidden="true">01</p>
   <h1 class="sw-display billboard">
     {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class="ln">{word}</span></>)}
   </h1>
-  <div class="sw-red block">
-    <p class="lead">{copy.opener.lead}</p>
+  <div class="lede">
+    <p class="sw-lead lead">{copy.opener.lead}</p>
+    <p class="subline">{copy.opener.subline}</p>
   </div>
-  <p class="subline">{copy.opener.subline}</p>
 </section>
 
 <section class="sw-row sw-sec doors">
-  <p class="sw-idx" aria-hidden="true">02</p>
-  <h2 class="sw-kicker sw-vert kicker">{copy.doors.kicker}</h2>
+  <h2 class="sw-kicker kicker">{copy.doors.kicker}</h2>
   <div class="door-list">
-    {copy.doors.items.map((door, i) => (
+    {copy.doors.items.map((door) => (
       <article class="door">
-        <p class="sw-idx door-n" aria-hidden="true">{`2.${i + 1}`}</p>
-        <h3 class="sw-display door-title">{door.title}</h3>
+        <h3 class="sw-lead door-title">{door.title}</h3>
         <p class="door-body">{door.body}</p>
       </article>
     ))}
@@ -37,14 +36,13 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
 
 {featured.length > 0 && (
   <section class="sw-row lab-wrap">
-    <div class="sw-ink lab sw-bleed">
-      <p class="sw-idx" aria-hidden="true">03</p>
+    <div class="sw-sheet lab sw-bleed">
       <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
-      <p class="sw-display pull">{copy.lab.pull}</p>
+      <p class="sw-lead pull">{copy.lab.pull}</p>
       <ul class="specimens" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li>
-            <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
+            <a class="sw-meta designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
             <span class="summary">{entry.data.summary}</span>
           </li>
         ))}
@@ -54,172 +52,178 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   </section>
 )}
 
-<section class="sw-row sw-sec closer">
-  <p class="sw-idx" aria-hidden="true">04</p>
-  <p class="sw-display closer-lead">{copy.closer.lead}</p>
-  <a class="sw-btn closer-cta" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+<section class="sw-row closer-wrap">
+  <div class="sw-red closer sw-bleed">
+    <p class="sw-lead closer-lead">{copy.closer.lead}</p>
+    <a class="sw-btn closer-cta" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
+  </div>
 </section>
 
 <style>
-  /* The poster. The billboard size is one variable so the red block can be
-     cut to exactly two lines of it. */
+  /* The poster. The billboard size is one variable. cqw is the hero row's
+     own width, which is the frame (the sheet between its margins), not the
+     viewport. */
   .hero {
-    --bb: min(27vw, 17.5rem);
-    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 10);
-    row-gap: calc(var(--u) * 3);
+    --bb: min(29.4cqw, 17.5rem);
+    padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
+    row-gap: var(--u);
     align-items: start;
   }
-  .hero-idx { grid-row: 1; }
   .billboard {
-    grid-row: 2;
+    grid-row: 1;
     font-size: var(--bb);
-    margin-top: calc(var(--u) * 6);
+    margin-top: calc(var(--u) * 4);
   }
-  .block {
-    grid-row: 3;
+  /* The lead and the subline are one block, so they share one column line. */
+  .lede {
+    grid-row: 2;
     grid-column: 2 / -1;
-    display: flex;
-    align-items: flex-end;
-    min-height: calc(var(--u) * 22);
-    padding: calc(var(--u) * 1.5) var(--gutter) calc(var(--u) * 2);
+    display: grid;
+    row-gap: var(--u);
   }
-  .lead {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(1.625rem, 2.6vw, 2.5rem);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
-    max-width: 11em;
-  }
-  .subline { grid-row: 4; grid-column: 2 / -1; max-width: 30em; }
+  .lead { max-width: 14em; }
+  .subline { max-width: 30em; }
 
+  /* Phones: the first screen is a poster. The name is cut condensed (the
+     width axis) to fill the measure; the lead has its own row under it and
+     is as tall as the rest of the first screen (the screen less the header,
+     the hero's half-line of padding, the billboard's margin and its three
+     lines, and the row gaps), so the subline (body type) starts at the fold.
+     The lead sits at the foot of that block, lifted clear of the portal
+     switcher bar; on a short screen the block just stops shrinking and the
+     rows stack, so billboard and lead can never overlap. */
+  @media (max-width: 639.98px) {
+    .hero {
+      --bb: calc(37.5cqw);
+      grid-template-rows: auto auto auto;
+      padding-bottom: calc(var(--u) * 4);
+    }
+    .billboard { font-stretch: 85%; margin-top: calc(var(--u) * 2); }
+    .lede { display: contents; }
+    .lead {
+      grid-row: 2;
+      grid-column: 2 / -1;
+      display: grid;
+      align-content: end;
+      min-height: max(0px, calc(100svh - var(--u) * 8.5 - 1px - var(--bb) * 2.58));
+      padding-bottom: calc(var(--u) * 2.5);
+    }
+    .subline { grid-row: 3; grid-column: 2 / -1; }
+  }
   @media (min-width: 640px) {
-    .hero { --bb: min(19vw, 17.5rem); }
-    .block { grid-column: 4 / -1; }
-    .subline { grid-column: 4 / -1; }
+    /* The tablet sheet: "Design" spans the frame (about 32cqw), the lead and
+       subline hung from column 4. */
+    .hero { --bb: min(32.4cqw, 17.5rem); }
+    .lede { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    /* Name bottom left, red block top right, the reading text tucked beside
-       the short last line: one asymmetric sheet, nothing centred. */
-    .hero { --bb: min(15.5vw, 17.5rem); padding-bottom: calc(var(--u) * 14); }
-    .billboard { grid-row: 2 / 4; margin-top: calc(var(--u) * 8); }
-    /* Aligned to the billboard's own cap height and baseline, not just two
-       line boxes of it: the half-leading plus ascender gap pushed down,
-       one line plus a cap height tall. */
-    .block {
-      grid-row: 2;
-      grid-column: 9 / -1;
-      height: calc(var(--bb) * (0.86 + 0.72));
-      margin-top: calc(var(--u) * 8 + var(--bb) * 0.12);
-    }
-    .subline { grid-row: 3; grid-column: 7 / 11; align-self: end; }
+    /* Name flush left, the block hung from column 8 on the baseline of the
+       name's last word ("Lab"): last baselines align across the two items. */
+    .hero { --bb: min(16.8cqw, 17.5rem); padding-bottom: calc(var(--u) * 5); }
+    .billboard { grid-row: 1; grid-column: 1 / -1; align-self: last baseline; }
+    .lede { grid-row: 1; grid-column: 8 / -1; align-self: last baseline; }
   }
 
-  /* 02: the two doors as rows of a table, title against text. */
+  /* 02: the doors, two equal fields side by side, each with its title at
+     lead size above its body. "How we build" hangs directly under the right
+     body, on its column line. The wrapper steps aside so the doors place on
+     the section's own columns; the left door spans the link's row too, so the
+     right body and the link stay together whichever body is taller. */
   .kicker { grid-column: 1 / -1; }
-  .door-list { display: grid; grid-template-columns: subgrid; }
+  .door-list { display: contents; }
   .door {
     display: grid;
-    grid-template-columns: subgrid;
     grid-column: 1 / -1;
-    row-gap: calc(var(--u) * 2);
-    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 5);
+    row-gap: calc(var(--u) * 0.5);
+    align-content: start;
+    padding-block: 0 calc(var(--u) * 2);
   }
-  /* The section rule opens the first door; the rest are ruled between. */
-  .door + .door { border-top: 1px solid var(--mark); }
-  .door:first-child { padding-top: 0; }
-  .door-n { grid-column: 1 / -1; }
-  .door-title {
-    grid-column: 1 / -1;
-    font-size: clamp(2.75rem, 6.4vw, 7rem);
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+  /* Stacked (phones): ruled between. Scoped to phones so it cannot outrank
+     the side-by-side reset below. */
+  @media (max-width: 639.98px) {
+    .door + .door { border-top: 1px solid var(--mark); padding-top: calc(var(--u) * 0.5); }
+    /* The last door gives up its bottom padding so "How we build" hangs one
+       row gap under its body, as it does side by side. */
+    .door:last-child { padding-bottom: 0; }
   }
-  .door-body { grid-column: 1 / -1; max-width: 32em; }
-  .more { grid-column: 1 / -1; font-family: var(--font-display); font-weight: 700; font-size: 1.125rem; justify-self: start; }
+  .door-body { max-width: 32em; }
+  .more { grid-column: 1 / -1; font-family: var(--font-display); font-weight: 700; justify-self: start; }
 
   @media (min-width: 640px) {
-    .door-n { grid-column: 1 / 2; }
-    .door-title { grid-column: 2 / -1; }
-    .door-body { grid-column: 3 / -1; }
-    .more { grid-column: 3 / -1; }
+    .doors { grid-template-rows: auto auto 1fr; }
+    .door:nth-child(1) { grid-column: 1 / 4; grid-row: 2 / 4; }
+    .door:nth-child(2) { grid-column: 4 / -1; grid-row: 2; padding-block: 0; }
+    .more { grid-column: 4 / -1; grid-row: 3; align-self: start; }
   }
   @media (min-width: 1024px) {
-    .doors > .sw-idx { grid-row: 1; }
-    .kicker { grid-column: 1 / 2; grid-row: 2 / 4; }
-    .door-list { grid-column: 2 / -1; grid-row: 1 / 3; }
-    .door-n { grid-column: 1 / 2; }
-    .door-title { grid-column: 2 / 7; }
-    .door-body { grid-column: 8 / -1; padding-top: 0.35em; }
-    .more { grid-column: 8 / -1; grid-row: 3; }
+    .door:nth-child(1) { grid-column: 1 / 7; }
+    .door:nth-child(2) { grid-column: 7 / -1; }
+    .more { grid-column: 7 / -1; }
   }
 
-  /* 03: the lab, printed in negative as a block inside the frame. */
-  .lab-wrap { padding-bottom: calc(var(--u) * 12); }
+  /* 03: the lab, a full-bleed black sheet with paper type (red with white
+     type in dark). The block sits on the frame; its fill runs to the
+     viewport edges. */
+  .lab-wrap { padding-bottom: calc(var(--u) * 4); }
   .lab {
     display: grid;
     grid-template-columns: subgrid;
-    row-gap: calc(var(--u) * 3);
-    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 4);
+    row-gap: var(--u);
+    padding-block: calc(var(--u) * 0.5) calc(var(--u) * 2);
   }
   :where(.lab) > * { grid-column: 1 / -1; min-width: 0; }
   .pull {
-    font-size: clamp(2.25rem, 6vw, 6.75rem);
-    line-height: 0.92;
-    letter-spacing: -0.04em;
-    margin-top: calc(var(--u) * 5);
-    max-width: 12em;
+    margin-top: calc(var(--u) * 2);
+    max-width: 20em;
   }
-  .specimens { margin-top: calc(var(--u) * 3); display: grid; grid-template-columns: subgrid; }
+  .specimens { margin-top: var(--u); display: grid; grid-template-columns: subgrid; }
   .specimens li {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: subgrid;
-    row-gap: calc(var(--u) * 0.5);
-    border-top: 1px solid var(--ink-muted);
-    padding-block: calc(var(--u) * 1.25) calc(var(--u) * 1.75);
+    border-top: 1px solid var(--mark-muted);
+    padding-block: calc(var(--u) * 0.5);
   }
   .designation {
     grid-column: 1 / -1;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
     justify-self: start;
     align-self: start;
     text-decoration-line: none;
   }
-  /* The designation links to its entry: bare mono at rest, the theme's rule
-     underline on hover and focus, in the red lifted to pass on the ink. */
-  .specimens .designation:hover, .specimens .designation:focus-visible { text-decoration-line: underline; color: var(--red-on-ink); }
-  .specimens .designation:focus-visible { outline-color: var(--red-on-ink); }
+  /* The designation links to its entry: bare at rest, underlined on hover
+     (thickened by the global rule) and on keyboard focus. */
+  .specimens .designation:focus-visible { text-decoration-line: underline; }
   .summary { grid-column: 1 / -1; color: var(--mark-muted); }
-  .lab-more { justify-self: start; padding-inline: calc(var(--u) * 2); min-width: 50%; }
+  .lab-more { grid-column: 1 / -1; }
 
   @media (min-width: 640px) {
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / -1; }
+    .lab-more { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .lab > .sw-idx { grid-row: 1; grid-column: 1 / 3; }
-    .lab-kicker { grid-row: 1; grid-column: 3 / 7; }
+    .lab-kicker { grid-row: 1; grid-column: 1 / 7; }
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / 9; }
-    .lab-more { grid-column: 10 / -1; min-width: 0; justify-self: stretch; }
+    .lab-more { grid-column: 10 / -1; }
   }
 
-  /* 04: the ask, as large as the name. */
-  .closer-lead {
-    font-size: min(15vw, 12rem);
-    letter-spacing: -0.05em;
-    max-width: 7em;
-    margin-top: calc(var(--u) * 4);
+  /* 04: the ask, at lead size inside a full-bleed red field, the button the
+     field's one block (black inside red), as on Services. */
+  .closer-wrap { padding-bottom: calc(var(--u) * 4); }
+  .closer {
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: calc(var(--u) * 2);
+    padding-block: var(--u);
   }
-  .closer-cta { justify-self: stretch; }
+  :where(.closer) > * { grid-column: 1 / -1; }
+  .closer-lead { max-width: 18em; }
   @media (min-width: 640px) {
     .closer-cta { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .closer-lead { grid-row: 2; grid-column: 1 / 10; font-size: min(11vw, 12rem); }
-    .closer-cta { grid-row: 2; grid-column: 10 / -1; align-self: end; }
+    .closer-lead { grid-row: 1; grid-column: 1 / 10; }
+    .closer-cta { grid-row: 1; grid-column: 10 / -1; align-self: end; }
   }
 </style>

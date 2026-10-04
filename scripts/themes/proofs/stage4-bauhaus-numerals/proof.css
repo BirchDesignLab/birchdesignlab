@@ -1,0 +1,44 @@
+/* Stage 4 proof a4: constructed numerals (E3). Every rule is under
+   html[data-theme='bauhaus'] so Tier B can lift this block into theme.css.
+
+   Pattern: .num stays the one element, aria-hidden by its page as today. Its
+   digits stay in the DOM as text in .num-t (word parity, copy, find in page),
+   clipped out of sight; the built forms are .nm svgs after it. The numeral
+   inherits the page's font-size on .num, so the existing per-page sizes
+   (Home doors clamp(4rem, 7vw, 6.5rem), Services offerings and steps) keep
+   steering it. Colour is currentColor: it follows the block pair, so a yellow
+   door gives ink digits and a plain door gives the page ink. */
+html[data-theme='bauhaus'] .num {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--nm-gap, 0.07em);
+  font-family: var(--font-display);
+  line-height: 0;
+  letter-spacing: 0;
+}
+html[data-theme='bauhaus'] .num .num-t {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-theme='bauhaus'] .num .nm {
+  display: block;
+  flex: none;
+  height: var(--nm-h, 0.78em);
+  aspect-ratio: 3 / 5;
+  width: auto;
+  fill: currentColor;
+  overflow: visible;
+}
+
+/* BDL designations (the lab band): one face, tabular figures. They are real
+   text and a real link, so they are not constructed. */
+html[data-theme='bauhaus'] .designation {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

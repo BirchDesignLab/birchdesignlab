@@ -1,0 +1,40 @@
+---
+/** TEMPORARY comparison switch for the assembly feel (Stage 4 F1). Founder's
+    answer: (a), today's feel, is the default. ?bh-assembly=b or =c on any
+    bauhaus page sets data-bh-assembly on <html> so the founder can compare
+    live; ?bh-assembly=a clears it. It is remembered for the session and
+    re-applied to each incoming page on an in-school swap (Astro's swap
+    replaces <html> attributes). Inline in the head so it lands before first
+    paint. No visible control.
+
+    To remove it once the founder picks: delete this file, its one line in
+    src/pages/t/bauhaus/[...page].astro, and the b and c blocks in
+    theme.css (the html[data-bh-assembly] rules under "assembly on load"). */
+---
+<script is:inline>
+  (function () {
+    var KEY = 'bdl:bauhaus:assembly';
+    function pick(search) {
+      var v = null;
+      try { v = new URLSearchParams(search).get('bh-assembly'); } catch (e) { /* no params */ }
+      try {
+        if (v === 'a') sessionStorage.removeItem(KEY);
+        else if (v === 'b' || v === 'c') sessionStorage.setItem(KEY, v);
+        else v = sessionStorage.getItem(KEY);
+      } catch (e) { /* storage blocked: the URL still applies to this page */ }
+      return v === 'b' || v === 'c' ? v : null;
+    }
+    function apply(html, v) {
+      if (v) html.setAttribute('data-bh-assembly', v);
+      else html.removeAttribute('data-bh-assembly');
+    }
+    apply(document.documentElement, pick(location.search));
+    if (window.__bhAssemblySwitch) return;
+    window.__bhAssemblySwitch = true;
+    document.addEventListener('astro:before-swap', function (e) {
+      var next = e.newDocument.documentElement;
+      if (next.getAttribute('data-theme') !== 'bauhaus') return;
+      apply(next, pick(e.to ? e.to.search : ''));
+    });
+  })();
+</script>

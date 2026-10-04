@@ -328,7 +328,7 @@ async function verifyHead(label, since, exact) {
 
 // ---------- implement ----------
 const foreignText = FOREIGN.length ? ` (paths another session owns, ignore these: ${FOREIGN.join(', ')})` : ''
-const commitRule = `Run npm run verify (vitest, astro check, build) before each commit and never commit on red. Commit only files in owns (git add <paths>, never git add -A). ${TRAILER}`
+const commitRule = `Run npm run verify (vitest, astro check, build) before each commit and never commit on red. Commit only files in owns (git add <paths>, never git add -A, never git add -f). Never commit the report (${A.reportPath}) or anything under ${fwd(A.workDir)} or ${fwd(A.scratchRoot)}: they are scratch, not deliverables. ${TRAILER}`
 function implementerPrompt() {
   return [
     `You are implementing ${CONTEXT}`,
@@ -441,9 +441,9 @@ function gatePrompt(label, head) {
   return [
     `You are the independent gate for ${CONTEXT}`,
     'Trust no earlier report. You run beside the critic and the verifier, whose snap builds hold the render lock, so never run npm run verify bare: it rewrites dist/ and .astro/ without the lock.',
-    `Run exactly once in ${REPO}: node scripts/workflows/verify-locked.mjs --log ${join(scratch(label), 'verify.log')} (it queues on the render lock, then runs npm run verify: vitest, astro check, build; a wait for the lock is normal; run it under one Monitor, since lock wait plus build can pass 10 minutes). Its exit code is the verify result.`,
+    `Run exactly once in ${REPO}, in the FOREGROUND with the Bash tool's timeout at its maximum (600000 ms): node scripts/workflows/verify-locked.mjs --log ${join(scratch(label), 'verify.log')}. It queues on the render lock, then runs npm run verify (vitest, astro check, build, test:dist); a wait for the lock is normal. Never run it in the background, under a Monitor, or with a sleep loop, and do not reply until it has exited: its exit code is the verify result, and a reply without that exit code is worthless. If the call itself times out, run the same command once more in the foreground and use that exit code.`,
     `Then check: git branch --show-current is ${A.branch}; git rev-parse HEAD equals ${head}; git status --porcelain shows nothing${foreignText}.`,
-    'One line per failure in problems (command and first error lines, file paths and messages only); ok is true only with no problems.',
+    'problems lists FAILURES ONLY, one line each (command and first error lines, file paths and messages only); never list a check that passed. ok is true only with no problems; when everything passed, problems is an empty list.',
     READONLY, SHELL, rules(PORT.dev),
   ].join(NL)
 }

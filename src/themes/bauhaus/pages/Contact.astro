@@ -1,5 +1,5 @@
 ---
-/** Bauhaus contact: the heading and two circles meeting on a line (a
+/** Bauhaus contact: the heading, a circle and a square meeting on a line (a
     conversation, drawn), the form as a ruled panel with square fields, and
     the email route on a yellow slab. */
 import ContactHidden from '../../portal/ContactHidden.astro';
@@ -13,11 +13,11 @@ const { copy, theme } = Astro.props;
     <p class="kicker is-circle">{copy.kicker}</p>
     <h1>{copy.heading}</h1>
     <p class="subline">{copy.subline}</p>
-    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="dot" aria-hidden="true"></span> </>}<span>{part}</span></>)}</p>
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</p>
     <svg class="talk" viewBox="0 0 420 200" aria-hidden="true" focusable="false">
       <rect class="asm" x="0" y="192" width="420" height="8" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms" />
       <circle class="asm" cx="96" cy="96" r="96" fill="var(--blue)" style="--from: translateX(-80%); --d: 160ms" />
-      <circle class="asm" cx="288" cy="96" r="96" fill="var(--red)" style="--from: translateX(80%); --d: 160ms" />
+      <rect class="asm" x="192" y="0" width="192" height="192" fill="var(--red)" style="--from: translateX(80%); --d: 160ms" />
       <polygon class="asm" points="192,40 238,112 146,112" fill="var(--yellow)" style="--from: translateY(-160%) scale(0); --d: 420ms" />
     </svg>
   </div>
@@ -65,8 +65,13 @@ const { copy, theme } = Astro.props;
   .subline { font-size: 1.25rem; line-height: 1.5; max-width: 34ch; }
   .talk { width: 100%; max-width: 420px; height: auto; padding-top: 0.5rem; }
 
-  .panel { grid-column: 8 / span 5; align-self: start; }
+  /* The panel stretches to the row, and the illustration is pushed to the
+     lede's foot, so its base rule lands on the form panel's bottom edge. */
+  .talk { margin-top: auto; }
+  .panel { grid-column: 8 / span 5; }
   form {
+    position: relative;
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -74,12 +79,24 @@ const { copy, theme } = Astro.props;
     border: var(--rule) solid var(--mark);
     background: var(--field-raised);
   }
+  /* The printshop register: a red 6px rule across the panel's top edge,
+     inside the ink border. */
+  form::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: var(--rule);
+    background: var(--red);
+  }
   .field { display: flex; flex-direction: column; gap: 0.5rem; }
+  .field:has(textarea) { flex: 1 0 auto; }
+  .field textarea { flex: 1 0 auto; }
   label {
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.8125rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 0;
+    text-transform: lowercase;
   }
   input, textarea {
     width: 100%;
@@ -92,11 +109,11 @@ const { copy, theme } = Astro.props;
     padding: 0.8rem 0.9rem;
   }
   textarea { resize: vertical; min-height: 10rem; }
-  /* Focus is a thicker black frame plus a blue square in the corner: shape
+  /* Focus is a thicker black frame plus a red square in the corner: shape
      and weight, so it does not rely on colour alone. */
   input:focus-visible, textarea:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--mark), 8px 8px 0 2px var(--blue);
+    box-shadow: 0 0 0 2px var(--mark), 8px 8px 0 2px var(--red);
   }
   form .btn { align-self: flex-start; margin-top: 0.5rem; }
   /* Now in .lede, under the subline: fills the gap above the illustration
@@ -109,7 +126,10 @@ const { copy, theme } = Astro.props;
     font-weight: 500;
     font-size: 0.9375rem;
   }
-  .dot { width: 0.6rem; height: 0.6rem; background: var(--red); }
+  /* A red square leads every item, so a wrapped line never dangles a
+     separator at its end. */
+  .trust span { display: inline-flex; align-items: center; gap: 0.55rem; }
+  .trust span::before { content: ''; flex: none; width: 0.6rem; height: 0.6rem; background: var(--red); }
 
   .direct { padding-block: clamp(3.5rem, 7vw, 6rem); }
   .direct-grid { align-items: start; row-gap: 2rem; }

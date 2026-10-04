@@ -1,0 +1,96 @@
+/* Stage 4 proof a1 (swiss D1): the red duotone Shining Tree as About's
+   full-bleed manifesto field, and the Home red rectangle dropped.
+   Injected into the frozen build; every rule is under html[data-theme='swiss']
+   so Tier B lifts it into src/themes/swiss/theme.css as is.
+
+   The harness defines --sw-tree (the image url) ahead of this sheet. Tier B
+   replaces it with the astro:assets URL.
+
+   The field is #da0016 with white type in BOTH schemes (brief item 4: the
+   red field and --on-red do not remap in dark), so it does not use
+   --accent / --on-accent, which dark flips to coral and black. */
+
+/* ---- About: the manifesto field ------------------------------------ */
+
+html[data-theme='swiss'] .manifesto-wrap .manifesto {
+  --sw-red-field: #da0016;
+  --sw-on-red: #ffffff;
+  position: relative;
+  /* True viewport bleed. The content stays on its grid lines: the padding
+     gives back exactly what the negative margin takes. */
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50%);
+  background-color: var(--sw-red-field);
+  background-image: var(--sw-tree);
+  background-repeat: no-repeat;
+  color: var(--sw-on-red);
+  /* Phone and tablet: the tree is a band across the top of the field and the
+     manifesto sits on flat red below it. */
+  padding-top: calc(min(100vw, 560px) * 1.38);
+  background-size: min(100vw, 560px) auto;
+  background-position: 62% 0;
+}
+html[data-theme='swiss'] .manifesto-wrap .manifesto .sw-idx,
+html[data-theme='swiss'] .manifesto-wrap .manifesto .manifesto-text { color: var(--sw-on-red); }
+/* The index stays in the grid flow (first row, grid line 1) so it sits on the
+   frame line above the type. It is not positioned: an absolute left taken from
+   50vw - 50% resolves against the grid area, not the viewport, and collided
+   with the first line of the manifesto. */
+
+@media (min-width: 640px) {
+  html[data-theme='swiss'] .manifesto-wrap .manifesto {
+    background-position: 78% 0;
+  }
+}
+
+/* Desktop: the tree stands on the right, cropped by the sheet edge; the
+   manifesto keeps to the left columns, on flat red. Six columns until the
+   sheet is wide enough for seven. */
+@media (min-width: 1024px) {
+  html[data-theme='swiss'] .manifesto-wrap .manifesto {
+    padding-top: calc(var(--u) * 1.5);
+    min-height: clamp(640px, 54vw, 1000px);
+    /* The extra height is free space under the stack, not stretched rows:
+       the CTA keeps its own height. */
+    align-content: start;
+    background-size: auto 100%;
+    background-position: right 3vw top 0;
+  }
+  html[data-theme='swiss'] .manifesto-wrap .manifesto .manifesto-text {
+    grid-column: 1 / 7;
+    font-size: clamp(2.5rem, 5.2vw, 6.5rem);
+  }
+  /* The CTA moves from the shipped 10/-1 (which sits under the tree) to the
+     text's left edge, four columns wide, on flat red. */
+  html[data-theme='swiss'] .manifesto-wrap .manifesto .cta {
+    grid-column: 1 / 5;
+  }
+}
+@media (min-width: 1280px) {
+  html[data-theme='swiss'] .manifesto-wrap .manifesto {
+    background-size: auto 118%;
+    background-position: right 3vw top 40%;
+  }
+  html[data-theme='swiss'] .manifesto-wrap .manifesto .manifesto-text {
+    grid-column: 1 / 8;
+    font-size: clamp(2.5rem, 6vw, 6.5rem);
+  }
+}
+
+/* ---- Home: the red rectangle goes ---------------------------------- */
+
+/* The lead is copy, so it stays: ink type on the paper, no block. */
+html[data-theme='swiss'] .hero .sw-red.block {
+  background: none;
+  color: var(--mark);
+  min-height: 0;
+  height: auto;
+  padding: 0;
+}
+html[data-theme='swiss'] .hero .sw-red.block .lead { color: var(--mark); }
+@media (min-width: 1024px) {
+  html[data-theme='swiss'] .hero .sw-red.block {
+    align-self: start;
+    margin-top: calc(var(--u) * 8 + var(--bb, 15.5vw) * 0.12);
+  }
+}

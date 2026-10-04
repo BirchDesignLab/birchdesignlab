@@ -2,11 +2,15 @@
    Imported by src/pages/t/swiss/[...page].astro only. Every rule is scoped
    under [data-theme='swiss']. See src/themes/README.md.
 
-   The school is a 1960s Zurich poster: one grotesk voice, a modular grid you
-   can see, flush-left type at extreme scale contrast, and a single red. No
-   ornament, no gradients, no shadows, no rounded corners. Dark is a straight
-   negative print of the same sheet: ink field, paper type, the red lifted
-   just enough to hold on black. */
+   The school is a 1960s Zurich poster: one grotesk voice, a modular grid
+   that organises the sheet without being drawn on it (structure shows through
+   shared edges), flush-left type at extreme scale contrast, and a single
+   red. No ornament, no gradients, no shadows, no rounded corners. The type
+   scale is three tokens (meta, body, lead) plus one giant per page, and
+   every vertical measure is a whole number of 24px lines. Dark is the black
+   sheet: paper type on black, and the red intact (#da0016 with white type)
+   wherever it is a field. Red is spent only on fields, the page's one CTA
+   and at most one typographic mark; states are inversion, weight and rules. */
 
 :root[data-theme='swiss'] {
   color-scheme: light;
@@ -15,30 +19,61 @@
   --paper: #fafaf7;
   --paper-white: #ffffff;
   --ink: #0b0b0b;
-  --red: #da0016;
   --grey: #5a5a58;
   --grey-on-ink: #a6a6a2;
   --hairline: #e8e7e1;
-  /* The kicker stays red everywhere, including on the ink block; this is
-     the dark scheme's red, lifted so it still passes on black. */
-  --red-on-ink: #ff3b2e;
+  /* The three constants of colour-as-a-field. They are never remapped in
+     dark: the red keeps its hue, its type is white, and the black sheet is
+     black, whichever scheme the visitor is in. (--ink and --paper swap in
+     dark; these do not.) White on #da0016 is about 5.3:1. */
+  --red-field: #da0016;
+  --on-red: #ffffff;
+  --black: #0b0b0b;
+  /* Type on the black sheet that stays black whatever the scheme (--paper
+     and --grey-on-ink swap in dark). */
+  --paper-fixed: #fafaf7;
+  --grey-on-black: #a6a6a2;
 
   /* Semantic tokens (light is native, and what a no-JS visitor sees). */
   --field: var(--paper);
   --field-raised: var(--paper-white);
   --mark: var(--ink);
   --mark-muted: var(--grey);
-  --accent: var(--red);
+  /* The required text accent. Nothing sets type in it any more (red is for
+     fields, the one CTA and one typographic mark); it stays because the
+     contract needs it, and in dark it is lifted along red, not toward
+     orange, to hold 4.5:1 on black. */
+  --accent: var(--red-field);
   --link: var(--ink);
   --on-accent: var(--paper-white);
   /* Secondary type on the ink block (the sheet printed in negative). */
   --ink-muted: var(--grey-on-ink);
-  /* The visible column grid: present, never louder than the type. */
+  /* Kept for the contract; the grid key's overlay is a white difference
+     blend (so it reads on paper, black and red alike), not this colour. */
   --guide: var(--hairline);
+  /* State colours, restated inside every field (.sw-red, .sw-sheet): the
+     focus ring, the pressed-link block, and the button's rest and
+     inverted fills. On paper the ring and the press block are ink and the
+     button is the red field. */
+  --ring: var(--mark);
+  --press-bg: var(--mark);
+  --press-fg: var(--field);
+  --btn-bg: var(--red-field);
+  --btn-fg: var(--on-red);
+  --btn-bg-alt: var(--mark);
+  --btn-fg-alt: var(--field);
 
+  /* One family. Archivo carries display, body and metadata alike; the
+     width axis (font-stretch) is what the phone giants use to fill the
+     measure. */
   --font-display: 'Archivo Variable', 'Archivo Variable fallback', 'Helvetica Neue', Arial, sans-serif;
-  --font-body: 'Public Sans Variable', 'Public Sans Variable fallback', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'IBM Plex Mono fallback', 'Courier New', monospace;
+  --font-body: var(--font-display);
+
+  /* The type scale: three sizes and the page's giant (sized per page from
+     the hero's own width). Metadata, body and lead each sit on the line. */
+  --fs-meta: 0.875rem;
+  --fs-body: 1.0625rem;
+  --fs-lead: clamp(1.5rem, 1rem + 1.4vw, 2rem);
 
   /* The grid. Margins and gutters scale with the sheet; the column count
      steps 4 / 6 / 12 (see the media queries below). */
@@ -46,8 +81,9 @@
   --margin: clamp(16px, 4vw, 72px);
   --gutter: clamp(12px, 1.4vw, 24px);
   --frame: min(100% - 2 * var(--margin), 1760px);
-  /* One baseline unit; every vertical space is a multiple of it. */
-  --u: 8px;
+  /* One line: the 24px body leading. Every vertical space (section padding,
+     row gaps, block heights) is a whole number of lines, or a half. */
+  --u: 1.5rem;
 
   /* The swap's panels (see Arrival): --div of them, each a whole number of
      columns, their edges on real column lines. --edge is where the frame
@@ -67,17 +103,13 @@
   --paper: #0b0b0b;
   --paper-white: #161616;
   --ink: #f4f4ef;
-  --red: #ff3b2e;
+  --accent: #ff1a2b;
   --grey: #a3a3a0;
   --grey-on-ink: #55554f;
   /* Lifted from #1f1f1d (1.15:1, nearly invisible) to keep the negative
      print's grid as legible as the light sheet's. */
   --hairline: #2a2a27;
   --on-accent: #0b0b0b;
-  /* The ink block (--mark) is itself a double negative here: paper-toned,
-     since the whole sheet is already printed dark. The light scheme's red
-     is what holds against it. */
-  --red-on-ink: #da0016;
 }
 
 @media (min-width: 640px) {
@@ -100,15 +132,15 @@
   background: var(--field);
   color: var(--mark);
   font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.45;
+  font-size: var(--fs-body);
+  line-height: var(--u);
+  font-weight: 400;
+  font-stretch: 100%;
   font-kerning: normal;
   -webkit-font-smoothing: antialiased;
   /* A missing face should fail visibly during development, not draw a
      synthesized oblique or bold the school never approved. */
   font-synthesis: none;
-  /* Anchors the column guides to the whole sheet, not just the viewport. */
-  position: relative;
   text-rendering: optimizeLegibility;
   /* Wide display type is sized to the frame, never past it; this is the
      guarantee against a stray pixel of sideways scroll on a phone. */
@@ -120,7 +152,9 @@
 /* Ragged right, never justified, never hyphenated: the rag is part of the
    composition, so it is left to break on words. */
 [data-theme='swiss'] p { text-wrap: pretty; hyphens: manual; }
-[data-theme='swiss'] em { font-style: italic; }
+/* No Archivo italic is loaded (font-synthesis is none), so emphasis is
+   weight, which reads as more Swiss than a slant would anyway. */
+[data-theme='swiss'] em { font-style: normal; font-weight: 700; }
 [data-theme='swiss'] strong { font-weight: 700; }
 
 [data-theme='swiss'] a {
@@ -129,20 +163,33 @@
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.2em;
 }
-[data-theme='swiss'] a:hover { color: var(--accent); }
-[data-theme='swiss'] ::selection { background: var(--accent); color: var(--on-accent); }
-[data-theme='swiss'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* States are Swiss, not red. Hover: the underline thickens from 0.08em to
+   0.16em, at once, colour unchanged (never an animated weight: it would
+   reflow the rag). Only where a real hover exists, so a tap on touch never
+   leaves a link stuck in its hover. Press: a hard block of the field's
+   opposite (--press-bg / --press-fg, set per field below). Focus: a 3px ring
+   in the field's own contrast colour (--ring). */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] a:hover { text-decoration-line: underline; text-decoration-thickness: 0.16em; }
+}
+[data-theme='swiss'] a:active { background: var(--press-bg); color: var(--press-fg); }
+[data-theme='swiss'] ::selection { background: var(--mark); color: var(--field); }
+[data-theme='swiss'] :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 [data-theme='swiss'] main:focus { outline: none; }
 [data-theme='swiss'] .skip { position: absolute; left: -100vw; top: 0; }
 [data-theme='swiss'] .skip:focus {
   left: var(--margin); z-index: 10;
   background: var(--mark); color: var(--field);
-  padding: var(--u) calc(var(--u) * 2);
+  padding: calc(var(--u) * 0.5) var(--u);
   font-family: var(--font-display); font-weight: 700; text-decoration: none;
 }
 [data-theme='swiss'] img,
 [data-theme='swiss'] svg,
 [data-theme='swiss'] canvas { max-width: 100%; display: block; }
+
+/* The portal's strip below the footer (room for its switcher) is the sheet's
+   own paper, so the colophon runs to the true bottom of the page. */
+[data-theme='swiss'] [data-portal-tail] { background: var(--field); }
 
 /* ---- The grid ------------------------------------------------------ */
 
@@ -158,35 +205,19 @@
 /* Zero specificity, so a component's own placement always wins. */
 :where([data-theme='swiss'] .sw-row) > * { grid-column: 1 / -1; min-width: 0; }
 
-/* The column guides, drawn behind the page as hairlines: the grid is not
-   hidden scaffolding here, it is the picture. They run the full height of
-   the sheet; blocks with their own fill simply cover them. */
-[data-theme='swiss'] .sw-guides {
-  position: absolute; inset: 0; z-index: -1;
-  pointer-events: none;
-}
-[data-theme='swiss'] .sw-guides .sw-row { height: 100%; border-right: 1px solid var(--guide); }
-[data-theme='swiss'] .sw-guides .sw-row > span { grid-column: auto; border-left: 1px solid var(--guide); }
-[data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: none; }
-/* Below 640px the guides would otherwise run straight through the single
-   reading column; keep only the frame edges and the col-2 line the hero
-   block and subline hang from. */
-@media (max-width: 639px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(3),
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(4) { display: none; }
-}
-@media (min-width: 640px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 5) { display: block; }
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: none; }
-}
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-guides .sw-row > span:nth-child(n + 7) { display: block; }
-}
+/* The grid is not drawn. The column lines are still the ones every band
+   hangs from, and structure shows through the shared edges: type and
+   blocks start on the same line, and the rules, fills and bleeds stop on
+   it. (Showing the guides on demand is the grid key's job; --guide is the
+   colour it will use.) */
 
 /* ---- Type roles ---------------------------------------------------- */
 
-/* Display: one grotesk, set tight. Sizes are per use, in vw against the
-   frame, so the longest word of each headline always fits its measure. */
+/* Display: one grotesk, set tight, used for the page's giant only. The
+   giant is sized per page from its hero's own width (the container query
+   unit cqw: the frame, not the viewport), so the longest word always fits
+   its measure. */
+[data-theme='swiss'] .sw-row.hero { container-type: inline-size; }
 [data-theme='swiss'] .sw-display {
   font-family: var(--font-display);
   font-weight: 700;
@@ -196,113 +227,152 @@
 /* One word per line where a headline is set as a stack. */
 [data-theme='swiss'] .sw-display > .ln { display: block; }
 
-/* A section's opening: an ink rule across the frame, the mono index on it. */
+/* A section's opening: an ink rule across the frame. */
 [data-theme='swiss'] .sw-sec {
   border-top: 1px solid var(--mark);
-  padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
-  row-gap: calc(var(--u) * 4);
-}
-[data-theme='swiss'] .sw-idx {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-  color: var(--mark);
+  padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
+  row-gap: var(--u);
+  /* Side-by-side blocks share their first baseline (kicker, lead, body). */
+  align-items: first baseline;
 }
 [data-theme='swiss'] .sw-kicker {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1rem;
-  line-height: 1.2;
+  font-size: var(--fs-body);
+  line-height: var(--u);
   letter-spacing: -0.005em;
-  color: var(--accent);
+  /* Ink, whatever the field: red is for fields, the one CTA and one mark. */
+  color: inherit;
 }
-/* Section labels run up the first column on wide sheets, the way a spine
-   label runs up a poster's edge; on narrow ones they sit level. */
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-vert {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    justify-self: start;
-    align-self: start;
-  }
-}
+/* Lead: the largest size below the hero. Every display line that is not the
+   page's giant is set at this size. */
 [data-theme='swiss'] .sw-lead {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.375rem, 2.2vw, 2.125rem);
-  line-height: 1.12;
+  font-size: var(--fs-lead);
+  line-height: calc(var(--u) * 1.5);
   letter-spacing: -0.02em;
 }
+/* Metadata: designations, the footer's legal line, the form's trust line.
+   Archivo, tabular figures, a touch of tracking for the small size. */
+[data-theme='swiss'] .sw-meta {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  line-height: var(--u);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
 [data-theme='swiss'] .sw-body { max-width: 34em; }
-[data-theme='swiss'] .sw-body > p + p { margin-top: 0.9em; }
+[data-theme='swiss'] .sw-body > p + p { margin-top: var(--u); }
 [data-theme='swiss'] .sw-muted { color: var(--mark-muted); }
 
 /* ---- Fills --------------------------------------------------------- */
 
-/* The one red, as a block. Type on it is --on-accent, links included. */
-[data-theme='swiss'] .sw-red {
-  background: var(--accent);
-  color: var(--on-accent);
+/* The one red, as a field. Type on it is --on-red (white, never remapped),
+   links included. Its state colours: a white ring, a black press block, and
+   a black button (never a paper box on red). */
+[data-theme='swiss'] .sw-red,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet {
+  background: var(--red-field);
+  color: var(--on-red);
+  --mark-muted: var(--on-red);
+  --ring: var(--on-red);
+  --press-bg: var(--black);
+  --press-fg: var(--on-red);
+  --btn-bg: var(--black);
+  --btn-fg: var(--on-red);
+  --btn-bg-alt: var(--on-red);
+  --btn-fg-alt: var(--black);
 }
-[data-theme='swiss'] .sw-red a,
-[data-theme='swiss'] .sw-red .sw-idx { color: var(--on-accent); }
-[data-theme='swiss'] .sw-red a:hover { color: var(--on-accent); text-decoration-thickness: 0.16em; }
-[data-theme='swiss'] .sw-red :focus-visible { outline-color: var(--on-accent); }
+[data-theme='swiss'] :where(.sw-red, .sw-sheet) a { color: inherit; }
 
-/* The ink block: the sheet printed in negative. */
-[data-theme='swiss'] .sw-ink {
-  background: var(--mark);
-  color: var(--field);
+/* The sheet: a field printed in negative. Black with paper type in light;
+   in dark the black is the page itself, so the sheet is the red field above
+   instead (never a paper slab). */
+[data-theme='swiss'] .sw-sheet {
+  background: var(--black);
+  color: var(--paper);
   --mark-muted: var(--ink-muted);
+  --ring: var(--paper);
+  --press-bg: var(--paper);
+  --press-fg: var(--black);
+  --btn-bg: var(--paper);
+  --btn-fg: var(--black);
+  --btn-bg-alt: var(--black);
+  --btn-fg-alt: var(--paper);
 }
-[data-theme='swiss'] .sw-ink a,
-[data-theme='swiss'] .sw-ink .sw-idx { color: var(--field); }
-/* The kicker is the school's one signal colour everywhere else; it stays
-   red here too, lifted to a value that still passes on the ink field. */
-[data-theme='swiss'] .sw-ink .sw-kicker { color: var(--red-on-ink); }
-[data-theme='swiss'] .sw-ink a:hover { color: var(--accent); }
+/* The black sheet that stays black in both schemes (Contact's hero): paper
+   type on black, where .sw-sheet turns red in dark. It restates the field
+   tokens so everything inside it reads as on a black page. */
+[data-theme='swiss'] .sw-black {
+  background: var(--black);
+  color: var(--paper-fixed);
+  --field: var(--black);
+  --mark: var(--paper-fixed);
+  --mark-muted: var(--grey-on-black);
+  --ring: var(--paper-fixed);
+  --press-bg: var(--paper-fixed);
+  --press-fg: var(--black);
+}
+[data-theme='swiss'] .sw-black a { color: inherit; }
+[data-theme='swiss'] .sw-black.sw-bleed { --bleed-fill: var(--black); }
 
-/* A fill block whose colour bleeds past the frame while its content stays
-   exactly on the guide lines drawn behind it: pull the box out by the
-   local inset, then pad it back the same amount so children never move. */
+/* Paper button on the black sheet: its alternate is black with a paper keyline,
+   so the inversion reads on a black ground. Never a second red CTA. */
+[data-theme='swiss'] .sw-sheet .sw-btn:active,
+[data-theme='swiss'] .sw-sheet .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--paper); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] .sw-sheet .sw-btn:hover { box-shadow: inset 0 0 0 2px var(--paper); }
+}
+
+/* Colour is a field to the sheet's edge, never a card in the gutter. The
+   block sits on the frame's columns and its fill runs out to the viewport on
+   both sides (a spread shadow of its own fill, clipped to the box's height),
+   so its content never moves. --bleed-fill is set per field below. */
 [data-theme='swiss'] .sw-bleed {
-  margin-inline: calc(-1 * var(--margin));
-  padding-inline: var(--margin);
+  box-shadow: 0 0 0 100vw var(--bleed-fill);
+  clip-path: inset(0 -100vw);
 }
-@media (min-width: 1024px) {
-  [data-theme='swiss'] .sw-bleed {
-    margin-inline: calc(-1 * var(--gutter));
-    padding-inline: var(--gutter);
-  }
-}
+[data-theme='swiss'] .sw-red.sw-bleed { --bleed-fill: var(--red-field); }
+[data-theme='swiss'] .sw-sheet.sw-bleed { --bleed-fill: var(--black); }
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-bleed { --bleed-fill: var(--red-field); }
 
-/* The button: a rectangle on the grid with its label flush left, the way a
-   poster sets a block of colour with type in its corner. Red on paper; ink
-   when it sits inside the red. */
+/* The button: one rule. A field two lines tall (48px) with its label bottom
+   left, on the baseline of the lower line, the way a poster sets a block of
+   colour with type in its corner. Width is the page's to place (one rule per
+   viewport: the full measure on phones, the columns from 4 to the edge on a
+   tablet, cols 10 to 12 on a desktop, the form's own column for "Send it"),
+   and it always stretches to the cell it is given. Colour comes from the
+   field's --btn-* tokens: a red field with white type on paper; a paper
+   field with black type on the black sheet (never a second red button); a
+   black field inside red (never a paper box on red). Hover (a real hover
+   only), press and keyboard focus all invert the fill to the field's
+   alternate for as long as they last: no scale, no fade. */
 [data-theme='swiss'] .sw-btn {
   display: flex;
-  align-items: flex-start;
-  min-height: calc(var(--u) * 9);
-  padding: calc(var(--u) * 1.5) calc(var(--u) * 2) calc(var(--u) * 1.75);
-  background: var(--accent);
-  color: var(--on-accent);
+  align-items: flex-end;
+  justify-self: stretch;
+  min-height: calc(var(--u) * 2);
+  padding: 0 calc(var(--u) * 0.5);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: 0;
   border-radius: 0;
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: var(--fs-body);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: var(--u);
   letter-spacing: -0.01em;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
 }
-[data-theme='swiss'] .sw-btn:hover { background: var(--mark); color: var(--field); }
-[data-theme='swiss'] .sw-red .sw-btn { background: var(--mark); color: var(--field); }
-[data-theme='swiss'] .sw-red .sw-btn:hover { background: var(--field); color: var(--mark); }
-[data-theme='swiss'] .sw-ink .sw-btn:hover { background: var(--field); color: var(--mark); }
+[data-theme='swiss'] .sw-btn:active,
+[data-theme='swiss'] .sw-btn:focus-visible { background: var(--btn-bg-alt); color: var(--btn-fg-alt); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'] .sw-btn:hover { background: var(--btn-bg-alt); color: var(--btn-fg-alt); text-decoration: none; }
+}
 
 /* ---- Arrival ------------------------------------------------------- */
 
@@ -388,10 +458,8 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
    the header also holds the skip link, parked a viewport off to the left,
    which would only widen the snapshot. The group is pinned (no morph), and
    with no duration its two pictures, the same but for the current page's
-   red link, trade in one step on the swap's first frame: the red moves to
-   the link just clicked as the old sheet starts to clear. Not later: once
-   the bar is named, its old picture comes out without the pointer's hover,
-   so holding it would turn the clicked link black before it turned red.
+   ink-field link, trade in one step on the swap's first frame: the field
+   moves to the link just clicked as the old sheet starts to clear.
    The old picture is hidden outright rather than left to the group: with
    the group's animation gone, the browser's fade on the two pictures
    inherits no fill either, so both would stay at full strength and add up
@@ -401,8 +469,7 @@ html[data-theme='swiss']::view-transition-new(wordmark) { animation-name: sw-wor
    the viewport over the old page's scrolled body type until its panel
    cleared. The field runs out to both sides of the viewport (a spread
    shadow, clipped to the bar's height), so a bleed block's fill cannot show
-   in the margins either. The cost is the column guides in the header band,
-   gone for the swap. The wordmark keeps its own group above the bar's,
+   in the margins either. The wordmark keeps its own group above the bar's,
    except on a swap from a scrolled page, where the portal unnames it and
    it rides the bar's picture (README, "The wordmark"). */
 html[data-theme='swiss']:is([data-to-theme='swiss'], [data-from-theme='swiss']:not([data-to-theme])) .site-header > .bar {
@@ -416,10 +483,6 @@ html[data-theme='swiss']::view-transition-new(swiss-header) {
   clip-path: inset(0 -100vw);
 }
 html[data-theme='swiss']::view-transition-old(swiss-header) { animation: none; opacity: 0; }
-/* Naming the bar costs the clicked link its hover for the one frame the old
-   page is still drawn, which would blink it black between its hover red and
-   its current-page red. The click left it focused, so hold the red on that. */
-html[data-theme='swiss'][data-to-theme='swiss'] .site-header nav a:focus { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='swiss']::view-transition-old(root),
   html[data-theme='swiss']::view-transition-new(root),

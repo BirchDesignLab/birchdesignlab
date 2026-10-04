@@ -14,7 +14,6 @@ export const meta: ThemeMeta = {
   fonts: [
     { family: 'League Spartan Variable', role: 'heading', preload: [spartan] },
     { family: 'Jost Variable', role: 'body', preload: [jost] },
-    { family: 'Unbounded Variable', role: 'accent' },
   ],
   /* The primaries are poster blocks, never text on the paper (blue on black
      is 2.44:1, yellow on white 1.07:1). Text only ever sits on a block whose
@@ -25,6 +24,7 @@ export const meta: ThemeMeta = {
     { fg: '--on-yellow', bg: ['--yellow'], min: 4.5, note: 'text on a yellow block' },
     { fg: '--on-blue', bg: ['--blue'], min: 4.5, note: 'text on a blue block' },
     { fg: '--on-poster', bg: ['--poster'], min: 4.5, note: 'text on the inverse band' },
+    { fg: '--mark', bg: ['--field-raised'], min: 4.5, note: 'text on a raised panel (process band, contact panel)' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a raised panel' },
   ],
   order: 1,

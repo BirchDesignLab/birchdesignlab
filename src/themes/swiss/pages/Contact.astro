@@ -1,21 +1,20 @@
 ---
-/** Swiss contact: the invitation at poster scale, the form as a ruled table
-    on the left columns, the direct address in the red on the right. */
+/** Swiss contact: one sheet. The invitation at poster scale on a full-bleed
+    black sheet (in both schemes), the form beneath on the paper, the direct
+    address in the red on the right. */
 import ContactHidden from '../../portal/ContactHidden.astro';
 import type { CopyData } from '../../../lib/copy';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section class="sw-row hero">
-  <p class="sw-idx" aria-hidden="true">01</p>
+<section class="sw-row hero sw-black sw-bleed">
   <p class="sw-kicker hero-kicker">{copy.kicker}</p>
   <h1 class="sw-display title">{copy.heading}</h1>
   <p class="sw-lead subline">{copy.subline}</p>
 </section>
 
 <section class="sw-row sw-sec body">
-  <p class="sw-idx" aria-hidden="true">02</p>
   <div class="form-col">
     <form method="post" action="/api/contact" data-astro-reload>
       <div class="field">
@@ -33,44 +32,50 @@ const { copy, theme } = Astro.props;
       <ContactHidden theme={theme} label={copy.labels.honeypot} />
       <button class="sw-btn submit" type="submit">{copy.submit}</button>
     </form>
-    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">/</span> </>}{part}</>)}</p>
+    <p class="sw-meta trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span aria-hidden="true">/</span> </>}{part}</>)}</p>
   </div>
   <aside class="sw-red direct sw-bleed">
-    <p class="invite">{copy.invite}</p>
+    <p class="sw-lead invite">{copy.invite}</p>
     <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
-    <p class="fine">{copy.fine}</p>
+    <p class="sw-meta fine">{copy.fine}</p>
   </aside>
 </section>
 
 <style>
   .hero {
-    padding-block: calc(var(--u) * 1.5) calc(var(--u) * 12);
-    row-gap: calc(var(--u) * 3);
+    padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
+    row-gap: var(--u);
     align-items: start;
   }
-  .hero-kicker { margin-top: calc(var(--u) * 8); }
-  /* Sized so "conversation" holds one line of the frame at every width. */
+  .hero-kicker { margin-top: calc(var(--u) * 3); }
+  /* Sized so "conversation" holds one line of the frame at every width;
+     cqw is the hero row's own width, the frame. */
   .title {
-    font-size: min(15.5vw, 12.5rem);
-    margin-bottom: calc(var(--u) * 3);
+    font-size: min(16.9cqw, 12.5rem);
+    margin-bottom: var(--u);
     max-width: 7em;
   }
   .subline { max-width: 18em; }
+  /* Phones: "conversation" fills the measure, cut condensed. */
+  @media (max-width: 639.98px) {
+    .title { font-size: calc(20.15cqw); font-stretch: 85%; max-width: none; }
+  }
   @media (min-width: 640px) {
     .subline { grid-column: 3 / -1; }
   }
   @media (min-width: 1024px) {
-    .title { font-size: min(14vw, 12.5rem); }
+    .title { font-size: min(15.2cqw, 12.5rem); }
     .subline { grid-column: 7 / -1; }
   }
 
   .body { align-items: start; }
-  form { display: grid; row-gap: calc(var(--u) * 3); }
-  .field { display: grid; row-gap: calc(var(--u) * 0.75); }
+  /* The form starts two lines below the black sheet. */
+  .form-col { padding-top: calc(var(--u) * 2); }
+  form { display: grid; row-gap: var(--u); }
+  .field { display: grid; row-gap: calc(var(--u) * 0.5); }
   label {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.9375rem;
     letter-spacing: -0.005em;
   }
   input, textarea {
@@ -79,54 +84,59 @@ const { copy, theme } = Astro.props;
     background: var(--field-raised);
     border: 1px solid var(--mark);
     border-radius: 0;
-    padding: calc(var(--u) * 1.25) calc(var(--u) * 1.5);
+    padding: calc(var(--u) * 0.5);
     width: 100%;
   }
-  textarea { resize: vertical; min-height: calc(var(--u) * 22); }
-  input:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: -2px;
-    border-color: var(--accent);
-  }
-  .submit { justify-self: start; min-width: 50%; margin-top: calc(var(--u) * 1); }
+  textarea { resize: vertical; min-height: calc(var(--u) * 8); }
+  .submit { margin-top: calc(var(--u) * 0.5); }
   .trust {
-    margin-top: calc(var(--u) * 3);
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    letter-spacing: 0.01em;
+    margin-top: var(--u);
     color: var(--mark-muted);
   }
 
   .direct {
     display: grid;
     align-content: start;
-    row-gap: calc(var(--u) * 3);
-    padding-block: calc(var(--u) * 2) calc(var(--u) * 3);
-    margin-top: calc(var(--u) * 5);
-  }
-  .invite {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(1.625rem, 2.4vw, 2.25rem);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
+    row-gap: var(--u);
+    padding-block: var(--u);
+    margin-top: calc(var(--u) * 2);
   }
   .mail {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.125rem;
     overflow-wrap: anywhere;
     justify-self: start;
   }
-  .fine { font-size: 0.9375rem; line-height: 1.4; max-width: 22em; }
+  .fine { max-width: 22em; font-weight: 400; letter-spacing: 0; }
 
   @media (min-width: 640px) {
     .form-col { grid-column: 1 / 5; }
-    .direct { grid-column: 3 / -1; }
+    /* The tablet sheet: the address is a full-width red field under the form
+       (it runs to both viewport edges), its text hung from column 3. */
+    .direct { grid-column: 1 / -1; grid-template-columns: subgrid; }
+    .direct > * { grid-column: 3 / -1; }
   }
   @media (min-width: 1024px) {
-    .form-col { grid-column: 3 / 9; grid-row: 1 / 3; }
-    .direct { grid-column: 10 / -1; grid-row: 1 / 3; margin-top: 0; }
-    .body > .sw-idx { grid-column: 1 / 2; grid-row: 1; }
+    .form-col { grid-column: 2 / 8; grid-row: 1; }
+    /* A full-bleed right field: from column 10 out to the viewport edge, its
+       top exactly on the section's rule (the section's half-line padding
+       pulled back), its text a gutter inside the field's edge. The fill runs
+       right only: a left spread would cover the form. */
+    .sw-bleed.direct {
+      display: grid;
+      grid-template-columns: none;
+      grid-column: 9 / -1;
+      grid-row: 1;
+      margin-top: calc(var(--u) * -0.5);
+      padding-inline: var(--gutter);
+      box-shadow: 100vw 0 0 100vw var(--bleed-fill);
+      clip-path: inset(0 -200vw 0 0);
+    }
+    .direct > * { grid-column: auto; }
+  }
+  @media (min-width: 1280px) {
+    /* Room for the address on one line in a three-column field. */
+    .form-col { grid-column: 3 / 9; }
+    .sw-bleed.direct { grid-column: 10 / -1; }
   }
 </style>
