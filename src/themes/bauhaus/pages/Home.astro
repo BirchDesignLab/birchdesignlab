@@ -115,6 +115,10 @@ const doorShape = ['circle', 'square'] as const;
     position: relative;
     z-index: 1;
   }
+  /* The h1 box spans column 7, over the poster's red square. Let presses fall
+     through to the loose shapes (the type is not interactive). Phones stack
+     the two, so the heading stays selectable there. */
+  @media (min-width: 641px) { .billboard { pointer-events: none; } }
   .w { display: block; }
   /* The last word steps right, past the descender of the word above, so the
      stack reads as a staircase instead of a centred block. In em so the step
