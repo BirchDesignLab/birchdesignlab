@@ -1,0 +1,101 @@
+---
+/** The wall's one live bird (Stage 5 B1 task 2, call 5): a perched bird of the
+    painted scene, drawn over the wall file, that takes off when the pointer
+    comes to it (or when it is tapped), flies a short arc to another branch and
+    settles; tapped again, it flies back. Decorative: aria-hidden, not focusable.
+    The layer shares the wall's coordinate system (1600 x 1300, the same
+    cover-and-anchor the CSS background uses, `par`), so a home or an away point
+    is a point ON the painted branch. The wall file itself carries no bird at
+    either point.
+    home and away are [x, y, scale, facing] (facing 1 looks right, -1 left); y is
+    where the feet are. */
+interface Props { home: [number, number, number, number]; away: [number, number, number, number]; par: string; colour?: 'A' | 'B'; class?: string }
+const { home, away, par, colour = 'A', class: cls } = Astro.props;
+const at = (p: [number, number, number, number]) => p.join(' ');
+---
+<svg class:list={['wall-bird-layer', cls]} viewBox="0 0 1600 1300" preserveAspectRatio={par} aria-hidden="true" focusable="false">
+  <g class="wb" data-home={at(home)} data-away={at(away)} style={`transform: translate(${home[0]}px, ${home[1]}px)`}>
+    <g class="wb-body" transform={`scale(${home[3] * home[2]} ${home[2]})`}>
+      <use href="#sc-pb" class:list={['wb-perch', `sc-bird${colour}`]} />
+      <use href="#sc-fb" class:list={['wb-fly', `sc-bird${colour}`]} transform="translate(8 -30)" />
+    </g>
+    <rect class="wb-hit" x="-70" y="-90" width="150" height="110" />
+  </g>
+</svg>
+
+<style>
+  .wall-bird-layer {
+    position: absolute; inset: 0; z-index: 2;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .wb-hit { fill: transparent; pointer-events: all; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .wb-fly { display: none; }
+  .wb.flying .wb-perch { display: none; }
+  .wb.flying .wb-fly { display: inline; }
+  .wb { will-change: transform; }
+</style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+
+  /* Takes off on hover (a mouse) or on a tap, flies a quadratic arc and settles.
+     Mellow: a sine ease in and out, a small lift, no overshoot. Only the landing
+     settles (a 2-unit dip and back). Nothing runs unless the bird is touched. */
+  type Spot = [number, number, number, number];
+  const parse = (s: string | undefined): Spot => (s ?? '0 0 1 1').split(' ').map(Number) as Spot;
+  const ease = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+
+  function setup(g: SVGGElement): () => void {
+    const home = parse(g.dataset.home), away = parse(g.dataset.away);
+    const body = g.querySelector<SVGGElement>('.wb-body');
+    if (!body) return () => {};
+    let at: 'home' | 'away' = 'home';
+    let busy = false;
+    const place = (x: number, y: number) => { g.style.transform = `translate(${x}px, ${y}px)`; };
+    const face = (f: number, s: number) => body.setAttribute('transform', `scale(${f * s} ${s})`);
+
+    function fly(to: Spot) {
+      const from = at === 'home' ? home : away;
+      busy = true;
+      const dir = Math.sign(to[0] - from[0]) || 1;
+      const lift = Math.min(48, 16 + Math.hypot(to[0] - from[0], to[1] - from[1]) * 0.1);
+      const cx = (from[0] + to[0]) / 2, cy = Math.min(from[1], to[1]) - lift;
+      g.classList.add('flying');
+      const dur = 1150;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const k = Math.min(1, (now - t0) / dur), t = ease(k), u = 1 - t;
+        const x = u * u * from[0] + 2 * u * t * cx + t * t * to[0];
+        const y = u * u * from[1] + 2 * u * t * cy + t * t * to[1];
+        const s = from[2] + (to[2] - from[2]) * t;
+        face(dir, s);
+        place(x, y);
+        if (k < 1) { requestAnimationFrame(step); return; }
+        g.classList.remove('flying');
+        face(to[3], to[2]);
+        at = at === 'home' ? 'away' : 'home';
+        // the landing settles: a small dip and back
+        const l0 = performance.now();
+        const settle = (n: number) => {
+          const q = Math.min(1, (n - l0) / 260);
+          place(to[0], to[1] + Math.sin(q * Math.PI) * 2.4);
+          if (q < 1) requestAnimationFrame(settle); else busy = false;
+        };
+        requestAnimationFrame(settle);
+      };
+      requestAnimationFrame(step);
+    }
+    const toggle = () => { if (!busy) fly(at === 'home' ? away : home); };
+    const hit = g.querySelector('.wb-hit');
+    const enter = (e: Event) => { if ((e as PointerEvent).pointerType === 'mouse' && at === 'home') toggle(); };
+    hit?.addEventListener('pointerenter', enter);
+    hit?.addEventListener('click', toggle);
+    return () => { hit?.removeEventListener('pointerenter', enter); hit?.removeEventListener('click', toggle); };
+  }
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    const stops = [...document.querySelectorAll<SVGGElement>('.wb')].map(setup);
+    return () => stops.forEach((stop) => stop());
+  });
+</script>

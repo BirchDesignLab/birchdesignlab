@@ -102,7 +102,28 @@
   --toile-ground: var(--field);
   --toile-wall: var(--field);
   --band-pin: var(--oxblood);
+  /* The one saturated anchor of Services (B1 item 5, B): a buttery lacquer yellow
+     under "How a project runs", hunter text on it. Used once. */
+  --lacquer-yellow: #f0d77f;
   --tick-ink: var(--porcelain);
+
+  /* About's chinoiserie wall (B1 task 2). The inks the INLINE pieces use (the
+     perched and flying birds, the second frame's bough): the wall itself is the
+     external file assets/chinoiserie-<colourway>.svg with the same inks baked
+     (scripts/themes/grandmillennial/chinoiserie-palettes.json; tests/gm-chinoiserie.test.ts
+     keeps the two in step). --sc-ground is the day parlour's wall, --sc-room the
+     hunter lacquer room that holds the founder's letter (item 5, B). */
+  --sc-ground: #e2e6d3;
+  --sc-room: #163b2a;
+  --sc-line: #3d4a3b;
+  --sc-trunk: #f4efe0;
+  --sc-limb: #5b4d3d;
+  --sc-lf: #7c986f;
+  --sc-lf2: #a6bb93;
+  --sc-cat: #c6a65f;
+  --sc-oxb: #ad505a;
+  --sc-blue: #587ab0;
+  --sc-gold: #b8933f;
 
   --font-display: 'Playfair Display Variable', 'Playfair Display Variable fallback', Georgia, serif;
   --font-body: 'Cormorant Garamond Variable', 'Cormorant Garamond Variable fallback', Georgia, serif;
@@ -201,7 +222,23 @@
   /* The a2 minor: the accent is gold in the lacquer, and a gold pinstripe on
      the cream stripe was 1.1 to 1. A lacquer-dark oxblood shows. */
   --band-pin: #3b0d16;
+  /* Its dark equivalent stays an anchor: a burnished amber lacquer, cream text. */
+  --lacquer-yellow: #3f300d;
   --tick-ink: #6e1a29;
+
+  /* The dark scheme's wall (chinoiserie-dark.svg): gold-cream line on hunter, the
+     wall darker than the cards. The founder's room is the same file. */
+  --sc-ground: #0b1f15;
+  --sc-room: #0b1f15;
+  --sc-line: #d9c58d;
+  --sc-trunk: #cfc6a6;
+  --sc-limb: #7a6342;
+  --sc-lf: #2e6a49;
+  --sc-lf2: #4a8660;
+  --sc-cat: #b99a55;
+  --sc-oxb: #b8505e;
+  --sc-blue: #6f94c9;
+  --sc-gold: #c9a95c;
 }
 
 :where([data-theme='grandmillennial']) *,

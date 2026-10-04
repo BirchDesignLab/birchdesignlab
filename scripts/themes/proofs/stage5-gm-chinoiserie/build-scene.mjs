@@ -78,44 +78,61 @@ const poly = (pts, close = true) => new Path().poly(pts, close).d();
 
 reseed(1750);
 
-/** A serrated birch leaf (ovate, pointed), length L, with a bend. */
-function leafShape(L, wmax, teeth, bend, phase) {
-  const K = teeth;
-  const hw = (u) => wmax * Math.pow(Math.max(0, u), 0.5) * Math.pow(Math.max(0, 1 - u), 0.85) * 2.1;
-  const top = [], bot = [];
-  for (let k = 0; k <= K; k++) {
-    const u = k / K;
-    const bendY = (v) => Math.sin(v * PI * 0.9) * bend;
-    top.push([u * L, -hw(u) + bendY(u)]);
-    bot.push([u * L, hw(u) + bendY(u)]);
-    if (k < K && u > 0.06) {
-      const m = (k + 0.5 + phase) / K, tip = 1.6 + 0.5 * Math.sin(k * 2.1);
-      top.push([Math.min(L, m * L + 1.1), -hw(m) - tip + bendY(m)]);
-      bot.push([Math.min(L, (m + 0.03) * L + 1.1), hw(m) + tip + bendY(m)]);
+/**
+ * A true birch leaf (Betula pendula), after Stage 5 B1 task 2 / call 4:
+ * triangular-ovate, the base flat (truncate), widest in the lower quarter,
+ * drawn out to a long point, the margin finely DOUBLE-toothed (each large
+ * tooth leans toward the tip and carries a small one on its long edge). The
+ * leaf's base is the origin, its axis +x; the old pass drew a plain lens.
+ * `L` length, `hw0` the half-width at the widest, `K` large teeth a side,
+ * `bend` a gentle curl of the axis, `phase` offsets the teeth (so no two
+ * shapes teeth alike).
+ */
+function leafShape(L, hw0, K, bend, phase) {
+  const wide = 0.27;
+  const g = (u) => (u < wide ? 0.62 + 0.38 * Math.sin((u / wide) * PI / 2) : Math.pow((1 - u) / (1 - wide), 1.12));
+  const bendY = (v) => Math.sin(v * PI * 0.9) * bend;
+  const first = 0.1, step = (0.93 - first) / K;
+  const side = (sgn) => {
+    const pts = [];
+    const m = (u, out) => [u * L, sgn * (hw0 * g(u) + out) + bendY(u)];
+    pts.push(m(0, 0));
+    for (let k = 0; k < K; k++) {
+      const ua = first + (k + phase * 0.3) * step;
+      const hh = hw0 * g(Math.min(0.95, ua + step));
+      const t1 = Math.max(0.5, Math.min(2.1, hh * 0.3));
+      pts.push(m(ua, 0));
+      pts.push(m(ua + step * 0.36, t1 * 0.5));
+      pts.push(m(ua + step * 0.47, t1 * 0.18));
+      pts.push(m(ua + step * 0.9, t1));
     }
-  }
-  const pts = [...top, ...bot.reverse()];
+    pts.push([L, bendY(1)]);
+    return pts;
+  };
+  const top = side(-1), bot = side(1).reverse();
+  const pts = [...top, ...bot];
   const veins = new Path();
-  veins.M(0, 0).Q(L * 0.5, bend * 0.6, L * 0.96, bend * 0.1);
-  for (let i = 1; i <= 4; i++) {
-    const u = 0.14 + i * 0.17;
-    const y = Math.sin(u * PI * 0.9) * bend * 0.6;
-    veins.M(u * L, y).L((u + 0.12) * L, y - hw(u + 0.1) * 0.78);
-    veins.M(u * L, y).L((u + 0.12) * L, y + hw(u + 0.1) * 0.78);
+  veins.M(-4.5, 0).L(0, 0).Q(L * 0.5, bend * 0.6, L * 0.97, bendY(0.97));
+  for (let i = 0; i < 5; i++) {
+    const u = 0.12 + i * 0.15, y = bendY(u) * 0.6;
+    const hh = hw0 * g(u + 0.1) * 0.78;
+    veins.M(u * L, y).L((u + 0.1) * L, y - hh);
+    veins.M(u * L, y).L((u + 0.1) * L, y + hh);
   }
   return { body: poly(pts), veins: veins.d() };
 }
-const lf1 = leafShape(24, 4.6, 7, 1.2, 0.1);
-const lf2 = leafShape(20, 4.2, 6, -1.6, 0.5);
+const lf1 = leafShape(22, 8.4, 6, 1.2, 0.1);
+const lf2 = leafShape(18, 6.9, 5, -1.4, 0.55);
 
-/** A hanging catkin: a stem and a slim scaled bean. */
+/** A hanging male catkin: a short stem and a slender tassel, scaled and
+    tapering to a blunt tip (the old bean was too stout to read as one). */
 function catkinDef() {
   const b = new Path();
-  b.M(0, 0).L(0, 3);
+  b.M(0, 0).Q(0.7, 2, 0.3, 4.5);
   const body = new Path();
-  body.M(0, 3).C(2.8, 5, 3.4, 12, 1.6, 21).Q(0, 22.5, -1.6, 21).C(-3.4, 12, -2.8, 5, 0, 3).d();
+  body.M(0.3, 4.5).C(1.9, 8, 2.9, 20, 2.5, 34).Q(1.6, 36.5, 0.7, 34).C(0.1, 20, -0.9, 8, 0.3, 4.5).d();
   const ticks = new Path();
-  for (let y = 6; y < 20; y += 2.6) { ticks.M(-2.6 + y * 0.02, y).L(2.6 - y * 0.02, y + 1.3); }
+  for (let y = 8; y < 33; y += 3.1) { const x = 0.3 + (y / 33) * 1.9; ticks.M(x - 1.2, y).L(x + 1.2, y + 0.9); }
   return { stem: b.d(), body: body.d(), ticks: ticks.d() };
 }
 const ck = catkinDef();
@@ -147,6 +164,8 @@ const flyingBird = `
 
 const used = { leaves: 0, birds: 0, catkins: 0 };
 const out = { far: [], farT: [], ground: [], rocks: [], trunks: [], limbs: [], twigs: [], leaves: [], catkins: [], birds: [] };
+/** Every limb's centreline, sampled (the packer and the bird probe look for perches on them). */
+const limbLines = [];
 
 const uw = (id, x, y, rot, s, cls = '') =>
   `<use href="#${id}" transform="translate(${Math.round(x)} ${Math.round(y)})${rot ? ` rotate(${Math.round(rot)})` : ''}${s !== 1 ? ` scale(${tk(Math.round(s * 10) / 10)})` : ''}"${cls ? ` class="${cls}"` : ''}/>`;
@@ -154,6 +173,7 @@ const uw = (id, x, y, rot, s, cls = '') =>
 /** Tapering painted limb; returns its centreline sampler. */
 function limb(p, w0, w1, layer = 'limbs') {
   const pts = []; for (let i = 0; i <= 14; i++) pts.push(bez(p, i / 14));
+  limbLines.push(pts.map(([x, y]) => [Math.round(x), Math.round(y)]));
   const rb = ribbon(pts, (t) => w0 + (w1 - w0) * Math.pow(t, 0.8));
   out[layer].push(`<path class="sc-limb" d="${poly(rb.poly)}"/>`);
   // a pale highlight along the upper edge, broken in two
@@ -379,13 +399,18 @@ out.ground.push(`<path class="sc-ground" d="M0 1118C120 1096 220 1112 360 1100C5
 }
 
 // rocks
-rock(445, 1186, 150, 250, 3);
-rock(1005, 1238, 230, 120, 1);
+/* Composed around the cards (a3 minor C5). On About at 1440 the founder's letter
+   covers drawing x 410..1190 of the lower room and the story card x 757..1430 of
+   the upper, so the scholar's rocks and the big flyer sit in the open wall:
+   the pierced rocks at the flanks of the lower room, the big bird in the strip
+   between the portrait and the story. */
+rock(350, 1190, 120, 230, 3);
+rock(1295, 1240, 190, 110, 1);
 rock(1525, 1190, 130, 200, 2);
-rock(120, 1250, 150, 110, 1);
-for (const [x, y, l, a] of [[540, 1200, 90, -1.2], [380, 1190, 80, -1.9], [1080, 1215, 76, -1.35], [1470, 1200, 84, -1.7], [860, 1240, 70, -1.1], [210, 1230, 74, -1.6]]) fern(x, y, l, a);
-for (const [x, y] of [[300, 1206], [700, 1216], [905, 1250], [1260, 1190], [1390, 1210], [610, 1260], [1180, 1262]]) { grass(x, y, 5, 26); }
-for (const [x, y, s] of [[320, 1226, 1], [335, 1218, 0.8], [690, 1232, 1.1], [1230, 1212, 0.9], [1245, 1222, 1], [880, 1262, 1], [1180, 1236, 0.9]]) flower(x, y, s);
+rock(95, 1250, 130, 105, 1);
+for (const [x, y, l, a] of [[420, 1205, 80, -1.2], [215, 1222, 74, -1.9], [1215, 1215, 76, -1.35], [1470, 1200, 84, -1.7], [1400, 1240, 70, -1.1], [185, 1235, 70, -1.6]]) fern(x, y, l, a);
+for (const [x, y] of [[300, 1206], [640, 1216], [905, 1250], [1260, 1190], [1390, 1210], [610, 1260], [1180, 1262]]) { grass(x, y, 5, 26); }
+for (const [x, y, s] of [[300, 1226, 1], [312, 1218, 0.8], [690, 1232, 1.1], [1230, 1212, 0.9], [1245, 1222, 1], [880, 1262, 1], [1180, 1236, 0.9]]) flower(x, y, s);
 
 // trunks and limbs
 const T1 = trunk([[255, 1190], [286, 1010], [236, 830], [214, 640], [250, 420], [268, 200], [226, -60]], 80, 42, { eyes: [0.52, 0.62, 0.78, 0.9, 0.34], curls: 8 });
@@ -425,8 +450,8 @@ const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" trans
   pb(f1[0] - 6, f1[1] + 2, 1.25, 1, 'sc-birdA'); pb(f1[0] + 68, f1[1] - 6, 1.05, -1, 'sc-birdB');
   pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
   pb(f3[0] - 8, f3[1] + 3, 1.0, 1, 'sc-birdA');
-  fb(780, 190, 1.35, -8, 1, 'sc-birdA'); fb(870, 130, 1.0, -12, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
-  fb(720, 520, 0.95, 10, -1, 'sc-birdB'); fb(1330, 300, 0.9, -6, -1, 'sc-birdA'); fb(560, 850, 0.75, -10, 1, 'sc-birdA');
+  fb(680, 255, 1.35, -8, 1, 'sc-birdA'); fb(870, 130, 1.0, -12, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
+  fb(1330, 300, 0.9, -6, -1, 'sc-birdA'); fb(330, 800, 0.75, -10, 1, 'sc-birdA');
   fb(1260, 900, 0.8, 8, -1, 'sc-birdB');
 }
 
@@ -451,6 +476,7 @@ ${sceneG}
 <svg class="gm-scene-art panel-b" viewBox="860 0 740 1300" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false"><use href="#gm-scene"/></svg>
 `;
 writeFileSync(join(HERE, 'scene-defs.svg.html'), defsHtml);
+writeFileSync(join(HERE, 'scene.json'), JSON.stringify({ defs, sceneG, perchedBird: perchedBird.trim(), flyingBird: flyingBird.trim(), limbs: limbLines }) + String.fromCharCode(10));
 
 /* ---------- the oval's birch ---------- */
 
@@ -534,7 +560,7 @@ reseed(2210);
   o.ground.push(`<path class="bb-stone" d="M158 274Q160 265 169 264Q178 264 181 274Z"/><path class="bb-stone" d="M30 275Q32 269 39 269Q45 269 46 275Z"/>`);
 
   const birchDefs = (() => {
-    const A = leafShape(24, 5.1, 8, 1.4, 0.2), B = leafShape(21, 4.6, 7, -1.6, 0.6);
+    const A = leafShape(24, 9.2, 6, 1.4, 0.2), B = leafShape(20, 7.6, 5, -1.6, 0.6);
     return `<g id="bb-l1"><path class="bb-lf" d="${A.body}"/><path class="bb-vein" d="${A.veins}"/></g>
 <g id="bb-l2"><path class="bb-lf2" d="${B.body}"/><path class="bb-vein" d="${B.veins}"/></g>
 <g id="bb-ck"><path class="bb-ln" d="${ck.stem}"/><path class="bb-cat" d="${ck.body}"/><path class="bb-ln2" d="${ck.ticks}"/></g>`;

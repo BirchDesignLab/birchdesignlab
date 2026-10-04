@@ -1,0 +1,24 @@
+{
+  "_": "The chinoiserie wall's three colourways (Stage 5 B1 task 2). Read by build-chinoiserie.mjs, which bakes them into assets/chinoiserie-<name>.svg. light = the day parlour (celadon, muted inks); hunter = the lacquered room that holds the founder's letter in the LIGHT scheme (item 5, B: one saturated anchor per page); dark = the dark scheme's room (also behind the letter in dark, where the page is already a hunter room). The keys that theme.css repeats (the ones the inline birds and the second frame use) are checked against this file by tests/gm-chinoiserie.test.ts.",
+  "light": {
+    "ground": "#e2e6d3", "ground2": "#d4dbc2", "hill1": "#d6dcc6", "hill2": "#cbd3b8",
+    "line": "#3d4a3b", "lent": "#3d4a3b", "trunk": "#f4efe0", "shade": "#d8d0b7",
+    "limb": "#5b4d3d", "hl": "#9a8a70", "lf": "#7c986f", "lf2": "#a6bb93", "cat": "#c6a65f",
+    "oxb": "#ad505a", "blue": "#587ab0", "gold": "#b8933f", "rock": "#cdd2bd", "rockshade": "#b6bea4",
+    "curl": "#faf6ea"
+  },
+  "hunter": {
+    "ground": "#163b2a", "ground2": "#1d4a35", "hill1": "#1b4531", "hill2": "#21503a",
+    "line": "#d9c58d", "lent": "#10251a", "trunk": "#cfc6a6", "shade": "#a89e80",
+    "limb": "#7a6342", "hl": "#e6d6a0", "lf": "#3a8a5c", "lf2": "#6aa882", "cat": "#c9a95c",
+    "oxb": "#c0606c", "blue": "#7ea0d2", "gold": "#c9a95c", "rock": "#285c42", "rockshade": "#1d4733",
+    "curl": "#e4dcc0"
+  },
+  "dark": {
+    "ground": "#0b1f15", "ground2": "#102a1c", "hill1": "#11301f", "hill2": "#15382a",
+    "line": "#d9c58d", "lent": "#1d1b15", "trunk": "#cfc6a6", "shade": "#a89e80",
+    "limb": "#7a6342", "hl": "#e6d6a0", "lf": "#2e6a49", "lf2": "#4a8660", "cat": "#b99a55",
+    "oxb": "#b8505e", "blue": "#6f94c9", "gold": "#c9a95c", "rock": "#1d3a2b", "rockshade": "#15301f",
+    "curl": "#e4dcc0"
+  }
+}
