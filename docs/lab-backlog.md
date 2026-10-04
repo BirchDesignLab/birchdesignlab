@@ -180,6 +180,11 @@ look right"** (founder, 10-02-26; specifics not yet given).
   press states on iOS Safari, the swiss grid key held by touch.
 - The bauhaus `?bh-assembly=` URL switch is temporary: remove it once the
   founder picks the feel live.
+- End-of-run nitpicks: the bauhaus Services diagonal reads as a slash between
+  the circle and square rather than a cross through them; swiss dark Home
+  has two red bands close together (the lab sheet turns red in dark, then the
+  red closer). The bauhaus lab-band typophoto trial was dropped (10-03-26)
+  until a case study has a real photograph.
 
 **Sidenote, 09-23-26: the order after the schools.** The founder's plan:
 1. Ship the themes and the transitions.

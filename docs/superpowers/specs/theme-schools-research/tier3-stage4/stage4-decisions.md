@@ -162,6 +162,14 @@ recommendation (one red field and no red button on light Home; About's
 button stays on the left beside the tree). All done inline by the
 controller.
 
+## Answers at the end-of-pair stop (founder, 10-03-26)
+
+To `stage4-report.md`, "Calls for you": "sounds good", taken as every
+recommendation: the assembly feel is picked live after the merge (a stays
+default); the typophoto trial is dropped; the Services diagonal and swiss
+dark Home's two red bands go to the end-of-run nitpick list; Sent's paper dot
+stays; the stretch items are parked. Then mark #95 ready and merge.
+
 ## Tier A proofs (proposed)
 
 Only the risky items get a proof before the build; everything else goes

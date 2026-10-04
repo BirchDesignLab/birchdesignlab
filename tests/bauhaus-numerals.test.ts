@@ -66,10 +66,9 @@ describe('bauhaus composition and printshop register (B2 task 2)', () => {
     const i = f.indexOf('.fine {');
     expect(f.slice(i, f.indexOf('}', i))).toMatch(/text-transform:\s*lowercase/);
   });
-  it('lab typophoto is decorative, lazy, grayscale and through astro:assets', () => {
+  it('the lab typophoto trial was dropped (founder, 10-03-26)', () => {
     const h = page('Home');
-    expect(h).toContain("from 'astro:assets'");
-    expect(h).toMatch(/<Image[^>]*alt=""[^>]*loading="lazy"/);
-    expect(h).toContain('grayscale(1)');
+    expect(h).not.toContain("from 'astro:assets'");
+    expect(h).not.toContain('grayscale(1)');
   });
 });
