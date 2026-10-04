@@ -79,6 +79,16 @@ named below against the briefs.
    on the first phone screen**, without crossing text. The fireflies' flash
    reads, small and warm. Keep it.
 
+## Answers (founder, 10-04-26)
+
+"i made sure to look at the pictures first to get my own impression of
+everything. i worked my way down your reply and sure enough we agree on
+everything. please continue on": every recommendation in "Calls for you" is
+taken (1 push the hatching, 2 external SVG per scheme, 3 wall shows on
+phones, 4 true birch leaves and catkins, 5 the About bird, 6 wider hands and
+wetness steps, 7 check at 0.14 and light tapes on the cream boards, 8 bigger
+seeds, two or three on the first phone screen), and wave B1 starts.
+
 ## Next
 
 Wave B1, grandmillennial, five tasks (`stage5-decisions.md`, "How it runs"),
