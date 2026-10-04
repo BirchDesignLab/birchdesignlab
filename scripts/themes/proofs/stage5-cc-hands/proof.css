@@ -1,0 +1,99 @@
+/* Stage 5 proof a4: cottagecore, three hands and three wetnesses.
+   Every rule is under html[data-theme='cottagecore'], so Tier B lifts the
+   whole file into src/themes/cottagecore/theme.css (tokens into the two
+   token blocks, the rules into "type voices"). Specificity is one element
+   above the pages' Astro-scoped rules, which is why each selector leads with
+   `html`; in theme.css, where the scoped rules are replaced or edited, the
+   `html` can go.
+
+   1. Hands. One script font (Caveat Variable, wght 400 to 700), three roles,
+      each a weight, an ink, a size step and a tilt. */
+
+html[data-theme='cottagecore'] {
+  /* kicker: the loud one, written first and underlined */
+  --hand-kicker-wght: 650;
+  --hand-kicker-ink: var(--accent); /* rose-deep light, amber dark */
+  --hand-kicker-size: clamp(1.7rem, 2.5vw, 2.1rem);
+  --hand-kicker-tilt: -1.5deg;
+  /* margin note: added later in another pen, a touch larger to make up for
+     the thinner stroke */
+  --hand-note-wght: 450;
+  --hand-note-ink: #74502f; /* sepia, the ink-brown family; NEW */
+  --hand-note-size: 1.85rem;
+  --hand-note-tilt: 1deg;
+  /* label: the neat one, upright, filled in on forms and numbered cards */
+  --hand-label-wght: 400;
+  --hand-label-ink: var(--link); /* sage-dark light, sage-light dark */
+  --hand-label-size: 1.5rem;
+  --hand-label-tilt: 0deg;
+}
+html[data-theme='cottagecore'][data-scheme='dark'] {
+  --hand-note-ink: #dcbd96; /* tan lamplit sepia; NEW */
+}
+
+/* kicker hand */
+html[data-theme='cottagecore'] :is(.cc-hand, .lead, .letter h2) {
+  font-weight: var(--hand-kicker-wght);
+  color: var(--hand-kicker-ink);
+  rotate: var(--hand-kicker-tilt);
+  transform-origin: left center;
+}
+html[data-theme='cottagecore'] .cc-hand { font-size: var(--hand-kicker-size); }
+/* Home's lead keeps its billboard-supporting size; only the voice changes. */
+html[data-theme='cottagecore'] .lead { font-weight: var(--hand-kicker-wght); }
+
+/* margin-note hand */
+html[data-theme='cottagecore'] :is(.cc-note-link, .f-loc) {
+  font-weight: var(--hand-note-wght);
+  font-size: var(--hand-note-size);
+  color: var(--hand-note-ink);
+  rotate: var(--hand-note-tilt);
+  transform-origin: left center;
+}
+html[data-theme='cottagecore'] .f-loc { font-size: 1.55rem; }
+/* The mobile nav keeps its hand and stitched seam and takes this voice. */
+@media (max-width: 640px) {
+  html[data-theme='cottagecore'] .cc-chrome nav a {
+    font-weight: var(--hand-note-wght);
+    font-size: 1.6rem;
+    color: var(--hand-note-ink);
+  }
+  html[data-theme='cottagecore'] .cc-chrome nav a:hover,
+  html[data-theme='cottagecore'][data-to-theme='cottagecore'] .cc-chrome nav a:focus { color: var(--accent); }
+}
+
+/* label hand */
+html[data-theme='cottagecore'] :is(.field label, .no, .num) {
+  font-weight: var(--hand-label-wght);
+  color: var(--hand-label-ink);
+  rotate: var(--hand-label-tilt);
+}
+html[data-theme='cottagecore'] .field label { font-size: var(--hand-label-size); }
+/* The numerals sit a little heavier than the form labels so a 24px hand
+   still holds up inside its ring and against a card's corner. */
+html[data-theme='cottagecore'] :is(.no, .num) { font-weight: 500; }
+
+/* 2. Fraunces wetness by role (SOFT 0 dry to 100 wet; WONK on for display). */
+
+/* wettest: the billboard "Birch", every page's h1 ("Sent." included), the
+   wordmark, the footer name */
+html[data-theme='cottagecore'] :is(h1, .wm-name, .f-name) {
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+}
+/* sheet titles */
+html[data-theme='cottagecore'] h2 { font-variation-settings: 'SOFT' 50, 'WONK' 1; }
+/* card titles: crisp, no wonk */
+html[data-theme='cottagecore'] h3 { font-variation-settings: 'SOFT' 0, 'WONK' 0; }
+
+/* italic pull quotes. PICK: Sharp (SOFT 0, WONK 1), the first rule below, so
+   the quotes read drier than the wet billboard. The two data-pull rules after
+   it are for the comparison sheet only and are not lifted. */
+html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) {
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+}
+html[data-theme='cottagecore'][data-pull='supersoft'] :is(.pull, .closer-lead, .invite, .manifesto) {
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+}
+html[data-theme='cottagecore'][data-pull='sharp'] :is(.pull, .closer-lead, .invite, .manifesto) {
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+}
