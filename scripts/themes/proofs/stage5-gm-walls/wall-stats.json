@@ -1,0 +1,19 @@
+{
+  "tile": [
+    464,
+    544
+  ],
+  "halfDrop": "heroes at x=116 (y=114, 386) and x=348 (y=250, 522), second column dropped 136 (a quarter tile, half the 272 spacing)",
+  "items": 35,
+  "byType": {
+    "vine": 4,
+    "leafpair": 8,
+    "rose": 6,
+    "bloom": 4,
+    "sprig": 6,
+    "bud": 7
+  },
+  "dots": 18,
+  "useElements": 63,
+  "bytes": 8486
+}

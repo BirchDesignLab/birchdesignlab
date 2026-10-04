@@ -1,0 +1,85 @@
+/* Stage 5 proof a2: the chintz wall on Contact. Every rule is under
+   html[data-theme='grandmillennial'] so Tier B can lift it unchanged.
+
+   Markup (the harness builds it; Contact.astro would):
+     <div class="gm-wall">
+       <div class="gm-wall-band" aria-hidden="true"></div>
+       <svg class="gm-wall-art" aria-hidden="true" focusable="false">
+         <rect width="100%" height="100%" fill="url(#gm-chintz-wall)" />
+       </svg>
+       <div class="gm-wall-room"> ...the .desk, unchanged... </div>
+       <div class="gm-wall-band" aria-hidden="true"></div>
+     </div>
+   The intro (kicker, h1, subline) stays above the wall on --field. */
+
+/* ---------- The wall's two tokens ---------- */
+
+/* Loudness: the opacity of the ink layer over a solid ground. 0.6 is the
+   recommendation; data-wall on <html> picks 1, 0.6 or 0.4 for the proof only. */
+html[data-theme='grandmillennial'] {
+  --wall-ground: var(--c-ground);
+  --wall-ink: 0.6;
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] {
+  /* Darker than --field-raised (#183426), so a card on the wall is a card
+     lying on a darker room, never a hole. */
+  --wall-ground: color-mix(in srgb, var(--field), #000 24%);
+}
+html[data-theme='grandmillennial'][data-wall='100'] { --wall-ink: 1; }
+html[data-theme='grandmillennial'][data-wall='60'] { --wall-ink: 0.6; }
+html[data-theme='grandmillennial'][data-wall='40'] { --wall-ink: 0.4; }
+
+html[data-theme='grandmillennial'] .k-wall-ground { fill: var(--wall-ground); }
+html[data-theme='grandmillennial'] .k-wall-ink { opacity: var(--wall-ink); }
+
+/* ---------- The wall ---------- */
+
+html[data-theme='grandmillennial'] .gm-wall {
+  position: relative;
+  isolation: isolate;
+  margin-top: 0;
+}
+html[data-theme='grandmillennial'] .gm-wall-art {
+  position: absolute; inset: 0; z-index: -1;
+  width: 100%; height: 100%;
+}
+html[data-theme='grandmillennial'] .gm-wall-room {
+  padding-block: clamp(2.75rem, 6vw, 4.75rem);
+}
+
+/* The border band: an awning-wide stripe with a narrow oxblood pinstripe down
+   the cream, between two gold rules. Ticking and stripe in one, so the wall
+   meets a stripe at the top and bottom of the viewport. */
+html[data-theme='grandmillennial'] .gm-wall-band {
+  position: relative; z-index: 1;
+  height: 1.6rem;
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 1.38rem, var(--accent) 1.38rem calc(1.38rem + 1px), transparent calc(1.38rem + 1px) 1.8rem),
+    repeating-linear-gradient(90deg, var(--stripe-a) 0 0.9rem, var(--stripe-b) 0.9rem 1.8rem);
+}
+html[data-theme='grandmillennial'] .gm-wall-band:first-child { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38); }
+html[data-theme='grandmillennial'] .gm-wall-band:last-child { box-shadow: 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
+
+/* ---------- Cards on the wall ---------- */
+
+/* Everything that holds text on the wall is --field-raised paper, lifted off
+   the cloth by a soft shadow. The envelope and the stationery already are;
+   the trust line becomes a small card of its own. No word changes. */
+html[data-theme='grandmillennial'] .gm-wall .gm-framed,
+html[data-theme='grandmillennial'] .gm-wall .envelope {
+  box-shadow: 0 22px 36px -20px rgb(30 16 6 / 0.55), 0 2px 0 rgb(0 0 0 / 0.06);
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .gm-framed,
+html[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .envelope {
+  box-shadow: 0 22px 36px -18px rgb(0 0 0 / 0.75), 0 2px 0 rgb(0 0 0 / 0.2);
+}
+html[data-theme='grandmillennial'] .gm-wall .trust {
+  justify-self: center;
+  margin-top: 0.75rem;
+  padding: 0.7rem 1.75rem 0.8rem;
+  background: var(--field-raised);
+  border: 1px solid var(--rule);
+  box-shadow: 0 12px 22px -14px rgb(30 16 6 / 0.5);
+}

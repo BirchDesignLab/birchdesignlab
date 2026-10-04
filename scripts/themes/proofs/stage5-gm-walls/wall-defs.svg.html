@@ -1,0 +1,110 @@
+<!-- Stage 5 proof a2: the chintz wall. Appends to the defs of parts/Defs.astro,
+     after gm-rose, gm-bud, gm-sprig and gm-leafpair. Needs two classes in its
+     style block: k-wall-ground (fill from the wall-ground token) and k-wall-ink
+     (opacity from the wall-ink token, 0.6 by default). -->
+<g id="gm-wall-bloom">
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(0)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(40)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(80)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(120)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(160)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(200)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(240)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(280)" />
+      <ellipse class="k-rose-lt" cx="0" cy="-17" rx="8.5" ry="15" transform="rotate(320)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(20)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(60)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(100)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(140)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(180)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(220)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(260)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(300)" />
+      <ellipse class="k-rose" cx="0" cy="-12" rx="6.5" ry="12" transform="rotate(340)" />
+      <path class="k-line" d="M-12-8A13 13 0 0 1 4-14M13-6A13 13 0 0 1 8 10M-4 13A13 13 0 0 1-14 3" />
+      <circle class="k-rose-dk" r="3.4" />
+      <circle class="k-dot" r="1.7" />
+      <circle class="k-dot" cx="5" cy="-2" r="0.9" />
+      <circle class="k-dot" cx="-4" cy="4" r="0.9" />
+      <circle class="k-dot" cx="1" cy="6" r="0.9" />
+</g>
+<g id="gm-wall-vine">
+      <path class="k-stem" d="M-52 22C-34-8-12 30 6 2S40-22 54-4" />
+      <path class="k-leaf" d="M-34 4C-42-6-36-16-26-16C-26-8-28-2-34 4Z" />
+      <path class="k-leaf-lt" d="M-20 18C-14 28-4 28 2 22C-4 16-12 14-20 18Z" />
+      <path class="k-leaf" d="M6 2C0-8 4-18 14-18C14-10 12-4 6 2Z" />
+      <path class="k-leaf-lt" d="M22-8C28 2 38 2 44-4C38-10 30-12 22-8Z" />
+      <path class="k-leaf" d="M-50 22C-58 18-60 10-56 4C-50 8-48 14-50 22Z" />
+      <path class="k-vein" d="M-33 3C-31-3-29-8-26-15M-19 18C-12 24-6 24 1 22M7 1C5-6 7-12 13-17" />
+      <path class="k-stem" d="M54-4C60-8 66-4 63 1C60 5 55 2 57-1" />
+      <use href="#gm-floret" transform="translate(-52 22)" />
+      <use href="#gm-floret" transform="translate(20 -14) scale(0.8)" />
+</g>
+    <pattern id="gm-chintz-wall" width="464" height="544" patternUnits="userSpaceOnUse">
+      <rect class="k-wall-ground" width="464" height="544" />
+      <g class="k-wall-ink">
+      <use href="#gm-wall-vine" transform="translate(181.1 260.3) rotate(248.9) scale(1.2)" />
+      <use href="#gm-wall-vine" transform="translate(265.8 92.4) rotate(189.4) scale(1)" />
+      <use href="#gm-wall-vine" transform="translate(130.1 -12.9) rotate(95.3) scale(1.15)" />
+      <use href="#gm-wall-vine" transform="translate(130.1 531.1) rotate(95.3) scale(1.15)" />
+      <use href="#gm-wall-vine" transform="translate(-30.1 312.9) rotate(122.1) scale(0.95)" />
+      <use href="#gm-wall-vine" transform="translate(433.9 312.9) rotate(122.1) scale(0.95)" />
+      <use href="#gm-leafpair" transform="translate(351.2 363.5) rotate(269.1) scale(1.1)" />
+      <use href="#gm-leafpair" transform="translate(197.8 446.7) rotate(347.9) scale(0.95)" />
+      <use href="#gm-leafpair" transform="translate(428.3 489.5) rotate(39.4) scale(0.85)" />
+      <use href="#gm-leafpair" transform="translate(32.4 374.5) rotate(175.7) scale(1)" />
+      <use href="#gm-leafpair" transform="translate(26.3 69.8) rotate(282) scale(0.9)" />
+      <use href="#gm-leafpair" transform="translate(338.5 158.6) rotate(9) scale(0.8)" />
+      <use href="#gm-leafpair" transform="translate(202.3 157.4) rotate(133) scale(1.05)" />
+      <use href="#gm-leafpair" transform="translate(89.6 209) rotate(152.4) scale(0.9)" />
+      <use href="#gm-rose" transform="translate(116 114.2) rotate(15.8) scale(1.55)" />
+      <use href="#gm-rose" transform="translate(116 386.2) rotate(151.1) scale(1.3)" />
+      <use href="#gm-rose" transform="translate(348 250.2) rotate(-63) scale(1.45)" />
+      <use href="#gm-rose" transform="translate(269.6 395.2) rotate(211.6) scale(1.25)" />
+      <use href="#gm-rose" transform="translate(-39 407.8) rotate(50.8) scale(1.1)" />
+      <use href="#gm-rose" transform="translate(425 407.8) rotate(50.8) scale(1.1)" />
+      <use href="#gm-rose" transform="translate(-54.3 103.3) rotate(354.6) scale(1.35)" />
+      <use href="#gm-rose" transform="translate(409.7 103.3) rotate(354.6) scale(1.35)" />
+      <use href="#gm-wall-bloom" transform="translate(348 -21.8) rotate(74.2) scale(1.5)" />
+      <use href="#gm-wall-bloom" transform="translate(348 522.2) rotate(74.2) scale(1.5)" />
+      <use href="#gm-wall-bloom" transform="translate(36.6 267.8) rotate(177.5) scale(1.1)" />
+      <use href="#gm-wall-bloom" transform="translate(40.7 513.5) rotate(301.6) scale(0.95)" />
+      <use href="#gm-wall-bloom" transform="translate(217.3 -11.9) rotate(143.8) scale(1)" />
+      <use href="#gm-wall-bloom" transform="translate(217.3 532.1) rotate(143.8) scale(1)" />
+      <use href="#gm-sprig" transform="translate(13.7 182.9) rotate(354.8) scale(1.1)" />
+      <use href="#gm-sprig" transform="translate(477.7 182.9) rotate(354.8) scale(1.1)" />
+      <use href="#gm-sprig" transform="translate(-17.5 8.2) rotate(161.5) scale(0.9)" />
+      <use href="#gm-sprig" transform="translate(-17.5 552.2) rotate(161.5) scale(0.9)" />
+      <use href="#gm-sprig" transform="translate(446.5 8.2) rotate(161.5) scale(0.9)" />
+      <use href="#gm-sprig" transform="translate(446.5 552.2) rotate(161.5) scale(0.9)" />
+      <use href="#gm-sprig" transform="translate(43.1 441.3) rotate(318.2) scale(1)" />
+      <use href="#gm-sprig" transform="translate(270.8 495.9) rotate(340.1) scale(0.85)" />
+      <use href="#gm-sprig" transform="translate(270.9 192.1) rotate(225.1) scale(1.05)" />
+      <use href="#gm-sprig" transform="translate(347 443.4) rotate(273.7) scale(0.8)" />
+      <use href="#gm-bud" transform="translate(60.6 326.6) rotate(88.4) scale(1)" />
+      <use href="#gm-bud" transform="translate(298.8 322.5) rotate(104.8) scale(0.85)" />
+      <use href="#gm-bud" transform="translate(429.6 229.1) rotate(249.9) scale(0.95)" />
+      <use href="#gm-bud" transform="translate(343.9 54.7) rotate(189.3) scale(0.8)" />
+      <use href="#gm-bud" transform="translate(193.2 371.2) rotate(68.9) scale(0.9)" />
+      <use href="#gm-bud" transform="translate(187.1 62.1) rotate(80.6) scale(1.1)" />
+      <use href="#gm-bud" transform="translate(24.1 123.7) rotate(67.2) scale(0.75)" />
+      <circle class="k-dot" cx="269.1" cy="258.8" r="1.4" />
+      <circle class="k-dot" cx="404" cy="182.2" r="1.4" />
+      <circle class="k-dot" cx="246.7" cy="319.5" r="2" />
+      <circle class="k-dot" cx="289.7" cy="15.6" r="1.7" />
+      <circle class="k-dot" cx="48.3" cy="23.4" r="1.8" />
+      <circle class="k-dot" cx="139.4" cy="188.2" r="1.6" />
+      <circle class="k-dot" cx="90.5" cy="258" r="1.4" />
+      <circle class="k-dot" cx="105.6" cy="455.2" r="1.4" />
+      <circle class="k-dot" cx="196.3" cy="490.1" r="2" />
+      <circle class="k-dot" cx="397.3" cy="28.9" r="1.7" />
+      <circle class="k-dot" cx="125.5" cy="317.2" r="1.6" />
+      <circle class="k-dot" cx="453.3" cy="457.8" r="1.6" />
+      <circle class="k-dot" cx="387.2" cy="469" r="1.3" />
+      <circle class="k-dot" cx="151.3" cy="460.5" r="1.4" />
+      <circle class="k-dot" cx="339.1" cy="119.6" r="1.5" />
+      <circle class="k-dot" cx="300.2" cy="455.7" r="1.9" />
+      <circle class="k-dot" cx="250.5" cy="22.2" r="2" />
+      <circle class="k-dot" cx="187.6" cy="109.6" r="1.8" />
+      </g>
+    </pattern>
