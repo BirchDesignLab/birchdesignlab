@@ -148,7 +148,13 @@ during this project". The swatch lift and the tape corners are in scope, not
 stretch, and every later stage of the Portal treats its interactable stretch
 items the same way.
 
-The bauhaus assembly pick from the live site is still owed.
+Follow-ups the same day (10-03 to 10-04-26):
+- Stage 4's parked interactables (the swiss width dial, the bauhaus
+  questionnaire card) are owed under the same rule: "fold them into 6",
+  so they are built in Stage 6, the set re-review.
+- The bauhaus assembly pick stays **open**: "i still haven't locked in a
+  bauhaus pick, let's keep that option open please". The `?bh-assembly=b|c`
+  switch stays live, and (a) stays the default until the founder picks.
 
 ## Tier A proofs (proposed)
 

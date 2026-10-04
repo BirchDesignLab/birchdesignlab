@@ -174,7 +174,8 @@ look right"** (founder, 10-02-26; specifics not yet given).
 `theme-schools-research/tier3-stage4/stage4-report.md`. Parked from it:
 - Stretch interactables not built: the swiss width dial (drag "Design" to
   change Archivo's width) and the bauhaus questionnaire card (pair the three
-  shapes and colours).
+  shapes and colours). **Built in Stage 6** (founder, 10-03-26: "fold them
+  into 6"; interactable stretch items are always in scope for the Portal).
 - End-of-run iPhone pass adds: bauhaus shape dragging by touch, bauhaus
   press states on iOS Safari, the swiss grid key held by touch.
 - The bauhaus `?bh-assembly=` URL switch is temporary: remove it once the
