@@ -29,6 +29,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
       <div class:list={['swatch', i % 2 ? 'porcelain' : 'floral']}>
         {i % 2 === 0 ? <Chintz swatch /> : <Toile />}
       </div>
+      <span class="selvedge" aria-hidden="true"></span>
       <span class="tag">No. {i + 1}</span>
     </div>
     <div class="offer-text">
@@ -118,7 +119,52 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     margin-left: calc(-1 * var(--hang));
     rotate: -2deg;
     filter: drop-shadow(0 10px 12px rgb(40 22 8 / 0.28));
+    --lift-rot: -0.6deg;
+    transition: translate 200ms ease, rotate 200ms ease, filter 200ms ease;
+    -webkit-tap-highlight-color: transparent;
   }
+  .offering.flip .swatch-hang { --lift-rot: 0.5deg; }
+  /* Picked up off the table (B1 task 5): a small lift, a deeper shadow, the
+     rotation straightening a little, and the cloth's selvedge slides out
+     beneath. Pressed on any pointer, hovered on fine ones. Laid back on release. */
+  .swatch-hang.lifted {
+    translate: 0 -8px; rotate: var(--lift-rot);
+    filter: drop-shadow(0 20px 16px rgb(40 22 8 / 0.34));
+  }
+  .swatch-hang.lifted .selvedge { translate: 0 0; opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    .swatch-hang:hover {
+      translate: 0 -8px; rotate: var(--lift-rot);
+      filter: drop-shadow(0 20px 16px rgb(40 22 8 / 0.34));
+    }
+    .swatch-hang:hover .selvedge { translate: 0 0; opacity: 1; }
+  }
+  /* The selvedge: a strip of the same cloth with pinked long edges, printed
+     with the register dots (the colours the cloth was printed in), tucked
+     under the swatch until it is lifted. No words. */
+  .selvedge {
+    position: absolute; left: 3%; right: 3%; top: calc(100% - 0.35rem);
+    height: 1.5rem;
+    z-index: -1;
+    translate: 0 -1rem; opacity: 0;
+    transition: translate 200ms ease, opacity 200ms ease;
+    background:
+      radial-gradient(circle at 50% 50%, var(--d1) 0 2.6px, transparent 3px) 0 50% / 22px 100% repeat-x,
+      radial-gradient(circle at 50% 50%, var(--d2) 0 2.6px, transparent 3px) 11px 50% / 44px 100% repeat-x,
+      radial-gradient(circle at 50% 50%, var(--d3) 0 2.6px, transparent 3px) 33px 50% / 66px 100% repeat-x,
+      var(--field-raised);
+    --d1: var(--c-rose); --d2: var(--c-leaf); --d3: var(--c-blue);
+    -webkit-mask:
+      conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%,
+      conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+    -webkit-mask-composite: source-in;
+    mask:
+      conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%,
+      conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+    mask-composite: intersect;
+  }
+  /* The toile is printed in one ink on its cloth: dots of that ink and the gilt. */
+  .swatch-hang:has(.porcelain) .selvedge { --d1: var(--accent); --d2: var(--rule); --d3: var(--accent); }
   /* Pinking shears: both long edges zigzag, cut with two intersected
      conic masks (one tooth every 18px). */
   .swatch {
@@ -147,6 +193,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     line-height: 1.2;
     color: var(--mark);
     white-space: nowrap;
+    z-index: 1;
   }
   .offer-text h2 {
     font-size: clamp(2.2rem, 4.4vw, 3.2rem);
@@ -229,3 +276,29 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     .steps li:nth-child(-n + 2) { padding-bottom: 0; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+
+  /* Pressing a swatch lifts it (the hover lift is pure CSS, for fine pointers);
+     touch and pen have no hover, so the press sets a class and release lays the
+     swatch back. Inert: the swatches are aria-hidden, not focusable. */
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    const stops = [...document.querySelectorAll<HTMLElement>('.swatch-hang')].map((el) => {
+      const on = () => el.classList.add('lifted');
+      const off = () => el.classList.remove('lifted');
+      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointercancel', off);
+      el.addEventListener('pointerleave', off);
+      return () => {
+        el.removeEventListener('pointerdown', on);
+        el.removeEventListener('pointerup', off);
+        el.removeEventListener('pointercancel', off);
+        el.removeEventListener('pointerleave', off);
+      };
+    });
+    return () => stops.forEach((stop) => stop());
+  });
+</script>

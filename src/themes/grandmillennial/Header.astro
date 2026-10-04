@@ -18,6 +18,20 @@ const { chrome, theme } = Astro.props;
   <Defs />
   <div class="canopy">
     <div class="awning-hang" aria-hidden="true"><div class="awning gm-scallop-b"></div></div>
+    <div class="bell-pull" aria-hidden="true">
+      <svg viewBox="0 0 28 112" focusable="false">
+        <circle class="bp-boss" cx="14" cy="6" r="6" /><circle class="bp-boss-eye" cx="14" cy="6" r="2.4" />
+        <line class="bp-cord" x1="14" y1="6" x2="14" y2="58" />
+        <g class="bp-tassel" transform="translate(14 58)">
+          <circle class="bp-head" cx="0" cy="5" r="4.6" />
+          <rect class="bp-neck" x="-3" y="9" width="6" height="3.2" rx="1" />
+          <path class="bp-skirt" d="M-4 12.2h8c2.4 6 4.6 11 6.4 20h-20.8c1.8-9 4-14 6.4-20z" />
+          <path class="bp-band" d="M-8.2 21h16.4v2.6h-16.4z" />
+          <path class="bp-fringe" d="M-10.4 32.2v9M-7.8 32.2v11M-5.2 32.2v12M-2.6 32.2v12.6M0 32.2v13M2.6 32.2v12.6M5.2 32.2v12M7.8 32.2v11M10.4 32.2v9" />
+          <rect class="bp-hit" x="-14" y="-4" width="28" height="52" />
+        </g>
+      </svg>
+    </div>
     <div class="masthead gm-wrap">
       <a class="wordmark" href={hrefFor('home', theme)} transition:name="wordmark">
         {chrome.wordmark.map((part, i) => <>{i > 0 && ' '}<span class={i === 0 ? 'wm-first' : 'wm-rest'}>{part}</span></>)}
@@ -94,8 +108,39 @@ const { chrome, theme } = Astro.props;
     padding-left: 0.42em;
   }
   .swash { width: 7.5rem; margin-top: 0.4rem; overflow: visible; }
-  .swash path { fill: none; stroke: var(--rule); stroke-width: 1.2; stroke-linecap: round; }
-  .swash circle { fill: var(--rule); }
+  .swash path { fill: none; stroke: var(--rule); stroke-width: 1.2; stroke-linecap: round; transition: stroke 180ms ease; }
+  .swash circle { fill: var(--rule); transition: fill 180ms ease; }
+  /* Tactile (B1 task 5): the wordmark's focus ring is an oval that follows the
+     monogram, drawn outside the box so the masthead never shifts; on hover and
+     focus the swash and its bead take the accent. */
+  .wordmark:focus-visible { outline-offset: 4px; border-radius: 50% / 45%; }
+  .wordmark:focus-visible .swash path { stroke: var(--accent); }
+  .wordmark:focus-visible .swash circle { fill: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .wordmark:hover .swash path { stroke: var(--accent); }
+    .wordmark:hover .swash circle { fill: var(--accent); }
+  }
+
+  /* The bell pull: a tasselled cord hung from the awning's edge. Inert and
+     hidden from assistive tech; the pointer can tug it. It sits in the canopy,
+     so it is part of the picture that holds still between rooms. */
+  .bell-pull {
+    position: absolute; z-index: 2;
+    top: 50px; right: clamp(1rem, 4vw, 4rem);
+    width: 28px;
+    pointer-events: none;
+  }
+  .bell-pull svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .bp-boss { fill: var(--rule); stroke: var(--ornament-deep); stroke-width: 0.8; }
+  .bp-boss-eye { fill: var(--ornament-deep); }
+  .bp-cord { stroke: var(--rule); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 3 0.8; }
+  .bp-head { fill: var(--rule); stroke: var(--ornament-deep); stroke-width: 0.7; }
+  .bp-neck { fill: var(--rule); stroke: var(--ornament-deep); stroke-width: 0.6; }
+  .bp-skirt { fill: var(--stripe-a); stroke: var(--ornament-deep); stroke-width: 0.6; }
+  .bp-band { fill: var(--rule); }
+  .bp-fringe { fill: none; stroke: var(--stripe-a); stroke-width: 1.7; stroke-linecap: round; }
+  .bp-hit { fill: transparent; pointer-events: all; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .bp-hit:active { cursor: grabbing; }
 
   nav {
     display: flex; align-items: center; justify-content: center;
@@ -134,6 +179,8 @@ const { chrome, theme } = Astro.props;
     .masthead { display: flex; flex-direction: column; gap: 1rem; min-height: 0; padding-block: 1.1rem 1.25rem; }
     .wordmark { position: static; translate: none; width: auto; }
     .wm-first { font-size: 2.3rem; }
+    /* A shorter pull on phones, tucked into the corner so the nav row is clear. */
+    .bell-pull { top: 28px; right: 0.9rem; width: 20px; }
     nav { gap: 0.9rem; font-size: 1.05rem; letter-spacing: 0.1em; }
     nav a:nth-child(2), nav a:nth-child(3) { margin: 0; }
     nav a { padding: 0.75rem 0.4rem; }
@@ -156,3 +203,86 @@ const { chrome, theme } = Astro.props;
     .site-header[data-home] .swash { display: none; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../lib/lifecycle';
+
+  /* The bell pull: drag or tug it down and it stretches a little, then springs
+     back with one damped swing (it hangs, so a small overshoot is allowed). A
+     click or tap is a short tug. Inert: nothing here is focusable or announced.
+     Nothing runs unless the pull is touched. Units are the SVG's own (28 x 112). */
+  const REST = 58, MAX = 26, TUG = 9;
+  const DECAY = 7, OMEGA = 14, K = DECAY * DECAY + OMEGA * OMEGA, C = 2 * DECAY;
+
+  function setup(root: SVGSVGElement): () => void {
+    const tassel = root.querySelector<SVGGElement>('.bp-tassel');
+    const cord = root.querySelector<SVGLineElement>('.bp-cord');
+    const hit = root.querySelector<SVGRectElement>('.bp-hit');
+    if (!tassel || !cord || !hit) return () => {};
+    let raf = 0;
+    const show = (d: number) => {
+      tassel.setAttribute('transform', `translate(14 ${REST + d})`);
+      cord.setAttribute('y2', String(REST + d));
+      cord.style.strokeWidth = String(2.2 * (1 - 0.18 * Math.max(0, d) / MAX));
+    };
+    const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
+    /* Released at displacement x0: x'' = -K x - C x', stepped in small slices. */
+    function spring(x0: number, v0 = 0) {
+      stop();
+      let x = x0, v = v0, last = performance.now();
+      const step = (now: number) => {
+        let dt = Math.min(0.032, (now - last) / 1000);
+        last = now;
+        while (dt > 0) {
+          const h = Math.min(dt, 0.004);
+          v += (-K * x - C * v) * h;
+          x += v * h;
+          dt -= h;
+        }
+        if (Math.abs(x) < 0.04 && Math.abs(v) < 0.6) { show(0); raf = 0; return; }
+        show(x);
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    let drag: { id: number; y0: number; d: number; moved: boolean; scale: number } | null = null;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      stop();
+      const box = root.getBoundingClientRect();
+      drag = { id: e.pointerId, y0: e.clientY, d: 0, moved: false, scale: 112 / (box.height || 112) };
+      hit.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dy = (e.clientY - drag.y0) * drag.scale;
+      if (Math.abs(dy) > 3) drag.moved = true;
+      drag.d = MAX * Math.tanh(Math.max(0, dy) / MAX);
+      show(drag.d);
+    };
+    const up = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const was = drag;
+      drag = null;
+      if (hit.hasPointerCapture(e.pointerId)) hit.releasePointerCapture(e.pointerId);
+      spring(was.moved ? was.d : TUG);
+    };
+    hit.addEventListener('pointerdown', down);
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerup', up);
+    hit.addEventListener('pointercancel', up);
+    return () => {
+      stop();
+      hit.removeEventListener('pointerdown', down);
+      hit.removeEventListener('pointermove', move);
+      hit.removeEventListener('pointerup', up);
+      hit.removeEventListener('pointercancel', up);
+    };
+  }
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    const stops = [...document.querySelectorAll<SVGSVGElement>('.bell-pull svg')].map(setup);
+    return () => stops.forEach((stop) => stop());
+  });
+</script>

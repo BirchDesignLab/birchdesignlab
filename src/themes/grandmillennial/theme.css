@@ -346,9 +346,18 @@
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
-[data-theme='grandmillennial'] .gm-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 3px 0 var(--ornament-deep);
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] .gm-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 3px 0 var(--ornament-deep);
+  }
+}
+/* Pressed: the cushion sinks into its seat (B1 task 5): down a pixel, the
+   shadow shallower, and quick (60ms) so it feels like a press. Any pointer. */
+[data-theme='grandmillennial'] .gm-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 1px 0 var(--ornament-deep);
+  transition-duration: 60ms;
 }
 [data-theme='grandmillennial'] .gm-btn:focus-visible { outline-offset: 4px; }
 [data-theme='grandmillennial'] .gm-btn .fleuron { font-style: normal; font-size: 0.9em; }
@@ -359,7 +368,12 @@
   font-style: italic;
   font-size: 1.2rem;
 }
-[data-theme='grandmillennial'] .gm-more .curl { display: inline-block; margin-left: 0.35em; text-decoration: none; }
+[data-theme='grandmillennial'] .gm-more .curl { display: inline-block; margin-left: 0.35em; text-decoration: none; transition: translate 220ms ease; }
+/* The curl nudges 0.18em along on focus, and on hover for a mouse: no rotation, no bounce. */
+[data-theme='grandmillennial'] .gm-more:focus-visible .curl { translate: 0.18em 0; }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] .gm-more:hover .curl { translate: 0.18em 0; }
+}
 
 /* Trellis wallpaper: the lattice drawn once in assets/trellis.svg and inked
    per scheme through a mask, so the same vector serves the day parlour and
