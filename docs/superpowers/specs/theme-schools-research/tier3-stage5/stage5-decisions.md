@@ -155,6 +155,8 @@ Follow-ups the same day (10-03 to 10-04-26):
 - The bauhaus assembly pick stays **open**: "i still haven't locked in a
   bauhaus pick, let's keep that option open please". The `?bh-assembly=b|c`
   switch stays live, and (a) stays the default until the founder picks.
+- During wave B1 (10-04-26): the dark toile wall on a ground darker than
+  hunter, so the cards read raised: "the darker wall ground is fine".
 
 ## Tier A proofs (proposed)
 
