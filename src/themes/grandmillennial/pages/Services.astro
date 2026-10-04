@@ -4,7 +4,7 @@
     process as four cameos on trellis wallpaper, and the ask tied with a bow. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
-import Bow from '../parts/Bow.astro';
+import Rosette from '../parts/Rosette.astro';
 import Chintz from '../parts/Chintz.astro';
 import Toile from '../parts/Toile.astro';
 
@@ -57,7 +57,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 </section>
 
 <section class="ask gm-wrap">
-  <Bow class="ask-bow" />
+  <Rosette class="ask-bow" />
   <p class="pull">{copy.pull}</p>
   <a class="gm-btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
 </section>
@@ -205,7 +205,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     text-align: center;
     padding-top: clamp(4rem, 8vw, 6rem);
   }
-  .ask :global(.ask-bow) { width: 7rem; }
+  .ask :global(.ask-bow) { width: 6rem; }
   .pull {
     font-family: var(--font-display);
     font-style: italic;

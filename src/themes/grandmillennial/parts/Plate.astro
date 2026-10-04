@@ -1,8 +1,12 @@
 ---
 /** A blue-and-white plate for the plate wall, drawn for this school: a
-    scalloped rim, a border of lotus petals, and a peony in the well. */
-interface Props { class?: string; turn?: number }
-const { class: cls, turn = 0 } = Astro.props;
+    scalloped rim, a lotus border and a painted well. Three wells so a hung
+    group never repeats: the peony, a bamboo and prunus spray, and a
+    star-lattice medallion with a crane's-foot flower. Each is brushed with
+    two inks, a pale wash laid first and the dark line over it, the way
+    underglaze cobalt pools and thins. */
+interface Props { class?: string; turn?: number; well?: 'peony' | 'bamboo' | 'medallion'; lotus?: number }
+const { class: cls, turn = 0, well = 'peony', lotus: lotusCount = 16 } = Astro.props;
 
 const pt = (deg: number, r: number) => {
   const a = ((deg - 90) * Math.PI) / 180;
@@ -11,9 +15,10 @@ const pt = (deg: number, r: number) => {
 /* Scalloped rim: 24 shallow arcs round a 47-unit circle. */
 const scallops = 24;
 const rim = `M${pt(0, 47)}` + Array.from({ length: scallops }, (_, i) => ` A7 7 0 0 1 ${pt(((i + 1) * 360) / scallops, 47)}`).join('') + 'Z';
-const lotus = Array.from({ length: 16 }, (_, i) => i * 22.5);
+const lotus = Array.from({ length: lotusCount }, (_, i) => (i * 360) / lotusCount);
 const peony = Array.from({ length: 8 }, (_, i) => i * 45);
 const PETAL = 'M0 0C-7-6-8-16 0-20 8-16 7-6 0 0Z';
+const star = Array.from({ length: 8 }, (_, i) => i * 45);
 ---
 <svg class:list={['gm-plate', cls]} viewBox="-52 -52 104 104" aria-hidden="true" focusable="false">
   <path class="body rim" d={rim} />
@@ -21,21 +26,65 @@ const PETAL = 'M0 0C-7-6-8-16 0-20 8-16 7-6 0 0Z';
   <circle class="ink-line thin" r="42.4" />
   {lotus.map((a) => (
     <g transform={`rotate(${a})`}>
+      <path class="wash" d="M0-41.6C4.4-39 4.4-35.6 0-32.6-4.4-35.6-4.4-39 0-41.6Z" />
       <path class="ink" d="M0-41C3.4-39 3.4-36 0-33.5-3.4-36-3.4-39 0-41Z" />
-      <circle class="ink" cx="0" cy="-37" r="0.9" transform="rotate(11.25)" />
+      <path class="hair" d="M0-39.5V-35.5" />
+      <circle class="ink" cx="0" cy="-37" r="0.9" transform={`rotate(${180 / lotusCount})`} />
     </g>
   ))}
   <circle class="ink-line" r="32" />
   <circle class="ink-line thin" r="30.5" />
+  <circle class="wash" r="29.8" style="--o:0.1" />
   <g transform={`rotate(${turn})`}>
-    <path class="ink" transform="rotate(135)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
-    <path class="ink" transform="rotate(-45)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
-    <path class="ink-line" transform="rotate(45)" d="M0-19C4-22 3-26 0-26" />
-    <path class="ink-line" transform="rotate(225)" d="M0-19C4-22 3-26 0-26" />
-    {peony.map((a) => <path class="ink" transform={`rotate(${a})`} d={PETAL} />)}
-    {peony.map((a) => <path class="petal-in" transform={`rotate(${a + 22.5}) scale(0.62)`} d={PETAL} />)}
-    <circle class="ink" r="4" />
-    {peony.map((a) => <circle class="body" r="1" transform={`rotate(${a}) translate(0 -6.6)`} />)}
+    {well === 'peony' && <>
+      <circle class="wash" r="20" style="--o:0.16" />
+      <path class="wash" transform="rotate(135) scale(1.12)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
+      <path class="wash" transform="rotate(-45) scale(1.12)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
+      <path class="ink" transform="rotate(135)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
+      <path class="ink" transform="rotate(-45)" d="M0-18C6-22 8-28 4-29-2-28-3-22 0-18Z" />
+      <path class="ink-line" transform="rotate(45)" d="M0-19C4-22 3-26 0-26" />
+      <path class="ink-line" transform="rotate(225)" d="M0-19C4-22 3-26 0-26" />
+      {peony.map((a) => <path class="wash" transform={`rotate(${a}) scale(1.14)`} d={PETAL} />)}
+      {peony.map((a) => <path class="ink" transform={`rotate(${a})`} d={PETAL} />)}
+      {peony.map((a) => <path class="hair-pale" transform={`rotate(${a})`} d="M0-3C-1.5-9 -1-14 0-17" />)}
+      {peony.map((a) => <path class="petal-in" transform={`rotate(${a + 22.5}) scale(0.62)`} d={PETAL} />)}
+      <circle class="ink" r="4" />
+      {peony.map((a) => <circle class="body" r="1" transform={`rotate(${a}) translate(0 -6.6)`} />)}
+    </>}
+    {well === 'bamboo' && <>
+      <circle class="wash" r="22" style="--o:0.14" />
+      <g class="stalk">
+        <path class="wash-line" d="M-14 26C-13 8-14-8-13-26" />
+        <path class="ink-line" d="M-12 26C-11 8-12-8-11-26" />
+        <path class="ink-line" d="M-1 27C0 8-1-10 0-27" />
+        <path class="wash-line" d="M10 26C11 6 10-8 11-25" />
+        <path class="ink-line" d="M12 26C13 6 12-8 13-25" />
+        <path class="hair" d="M-14.5 8H-9.5M-3 6H2M10 4H15M-14 -10H-9M-3 -12H2M10.5 -12H15.5" />
+      </g>
+      <path class="wash" d="M-11-18C-18-20-24-16-27-10-20-11-14-13-11-18Z" />
+      <path class="ink" d="M-11-18C-17-19-22-16-25-12-19-12-14-14-11-18Z" />
+      <path class="ink" d="M0 2C6-1 12-1 16 3 10 5 4 5 0 2Z" />
+      <path class="ink" d="M13-4C19-8 25-6 27-1 21-1 16-1 13-4Z" />
+      <path class="wash" d="M-11 10C-17 12-22 17-22 22-17 20-12 16-11 10Z" />
+      {[[-7, -22], [6, -20], [-20, 4], [20, 12]].map(([x, y]) => (
+        <g transform={`translate(${x} ${y})`}>
+          {[0, 72, 144, 216, 288].map((a) => <circle class="ink" cx="0" cy="-2.1" r="1.5" transform={`rotate(${a})`} />)}
+          <circle class="body" r="0.7" />
+        </g>
+      ))}
+    </>}
+    {well === 'medallion' && <>
+      <circle class="wash" r="26" style="--o:0.12" />
+      {star.map((a) => <path class="hair" transform={`rotate(${a})`} d="M0-27V-18" />)}
+      <path class="ink-line" d="M0-26L7-7 26 0 7 7 0 26-7 7-26 0-7-7Z" />
+      <path class="ink-line thin" d="M0-21L5-5 21 0 5 5 0 21-5 5-21 0-5-5Z" />
+      <circle class="ink-line" r="12" />
+      <circle class="wash" r="11" style="--o:0.28" />
+      {[0, 60, 120, 180, 240, 300].map((a) => <path class="ink" transform={`rotate(${a})`} d="M0-1C-3-4-3-9 0-11 3-9 3-4 0-1Z" />)}
+      <circle class="body" r="2.2" />
+      <circle class="ink" r="1.2" />
+      {[45, 135, 225, 315].map((a) => <circle class="ink" r="1.7" transform={`rotate(${a}) translate(0 -23)`} />)}
+    </>}
   </g>
 </svg>
 
@@ -44,7 +93,11 @@ const PETAL = 'M0 0C-7-6-8-16 0-20 8-16 7-6 0 0Z';
   .body { fill: var(--plate); }
   .rim { stroke: var(--plate-ink); stroke-width: 0.8; stroke-opacity: 0.45; }
   .ink { fill: var(--plate-ink); }
-  .petal-in { fill: var(--plate); stroke: var(--plate-ink); stroke-width: 1.2; }
-  .ink-line { fill: none; stroke: var(--plate-ink); stroke-width: 1.2; stroke-linecap: round; }
+  .wash { fill: var(--plate-ink); opacity: var(--o, 0.34); }
+  .wash-line { fill: none; stroke: var(--plate-ink); stroke-width: 3.4; opacity: 0.28; stroke-linecap: round; }
+  .petal-in { fill: var(--plate); stroke: var(--plate-ink); stroke-width: 1; }
+  .ink-line { fill: none; stroke: var(--plate-ink); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
   .thin { stroke-width: 0.6; }
+  .hair { fill: none; stroke: var(--plate-ink); stroke-width: 0.45; stroke-linecap: round; }
+  .hair-pale { fill: none; stroke: var(--plate); stroke-width: 0.5; stroke-linecap: round; opacity: 0.8; }
 </style>

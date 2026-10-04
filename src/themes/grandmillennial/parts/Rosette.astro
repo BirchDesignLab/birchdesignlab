@@ -1,0 +1,30 @@
+---
+/** A pleated rosette, drawn for this school: three rings of knife pleats
+    round a covered button, in the bow's two reds. It takes the ribbon bow's
+    place on Services' ask (B1 task 4, decision C: Home's and Sent's bows
+    stay, this one is trimmed). */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const ring = (n: number, r0: number, r1: number, w: number) =>
+  Array.from({ length: n }, (_, i) => (i * 360) / n).map((a) => ({ a, d: `M${-w} ${-r0}L0 ${-r1}L${w} ${-r0}Z` }));
+const outer = ring(20, 14, 38, 6.2);
+const mid = ring(16, 10, 28, 5.4);
+const inner = ring(12, 6, 18, 4.2);
+---
+<svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 84" aria-hidden="true" focusable="false">
+  <circle class="disc" r="30" />
+  {outer.map((p) => <path class="pleat deep" transform={`rotate(${p.a})`} d={p.d} />)}
+  {mid.map((p) => <path class="pleat" transform={`rotate(${p.a + 9})`} d={p.d} />)}
+  {inner.map((p) => <path class="pleat deep" transform={`rotate(${p.a})`} d={p.d} />)}
+  <circle class="button" r="5.6" />
+  <circle class="shine" cx="-1.6" cy="-1.8" r="1.6" />
+</svg>
+
+<style>
+  .gm-rosette { overflow: visible; filter: drop-shadow(0 3px 3px rgb(40 10 10 / 0.25)); }
+  .disc { fill: var(--bow-deep); }
+  .pleat { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 0.7; stroke-linejoin: round; }
+  .pleat.deep { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 45%); }
+  .button { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1.2; }
+  .shine { fill: rgb(255 235 235 / 0.55); }
+</style>
