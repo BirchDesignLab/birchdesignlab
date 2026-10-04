@@ -86,7 +86,7 @@ the Astro-scoped rules); in `theme.css` the `html` and `:root` can go.
 |---|---|
 | `--press-shadow-mounted` | `none` on anything in `.cc-paper`, `.cc-board`, `.note` (hairline alternative in the comment: `drop-shadow(0 0.5px 0 rgba(58,42,31,0.12))`) |
 | `--press-shadow` (loose sprigs: strays, closer pair, letter rose and fern) | `drop-shadow(0 1.5px 2px rgba(0,0,0,0.3))`, lighter than today's `0 2px 3px` at 0.45 |
-| hero gum strips | 6 strips: 2 each on the fern, rose and daisy, none on the lavender. `<svg class="pressed gum" viewBox="0 0 34 12">` with the twig's `gum-strip` class; width 9.5% of the sheet, rotated across the stem. Each is placed at the nearest point to 0.30 and 0.64 along the stem path where a hit test finds only bare board, the sprig's own stem, leaf, frond or vein, or a crossing stem under the strip's footprint (with a 20% margin), never a bloom, bud or petal. The lavender stem is under the daisy or its buds everywhere a strip would fit, so it carries none |
+| hero gum strips | 6 strips: 2 each on the fern, rose and daisy, none on the lavender. `<svg class="pressed gum" viewBox="0 0 34 12">` with the twig's `gum-strip` class; width 9.5% of the sheet, rotated across the stem. Each is placed at the nearest point to 0.30 and 0.64 along the stem path, among the points that pass at 1440, 820 and 390 all together, where a hit test finds only bare board, the sprig's own stem, leaf, frond or vein, or a crossing stem under the strip's footprint (with a 20% margin), never a bloom, bud or petal. Every sample is scrolled into the viewport before it is tested and a sample that cannot be seen fails, so the test holds below the fold at 390. The lavender stem is under the daisy or its buds everywhere a strip would fit at all three sizes, so it carries none |
 | petals on mounted sheets | light palette (drawn for cream paper), petal fills 10% less saturated: `--cc-petal-back #efe6d4`, `--cc-rose-petal #e5b1ad`, `--cc-blush #fef4e5`, `--cc-lav #a596c9` (`--cc-petal` is already near white and does not move) |
 | `--cc-gum-strip` | `#ece0c4` (was `#4a3b2c`, invisible on cream) |
 
@@ -145,7 +145,10 @@ postcard, stamp and Sent page were not proofed. (c) does not touch them.
 3. Markup: class `cc-board` beside `cc-paper` on `.sheet` in `Home.astro` and
    `About.astro`; the hero's six gum strips in `Home.astro` as in `mount.js`,
    at the percentages in `strips.json` (they are the same at every size,
-   drift 0 points, each strip clear of blooms and buds at all three sizes).
+   drift 0 points). The same table was replayed and re-tested at 1440, 820 and
+   390, in the full-page frames and in the 2x crops, and all six strips are clear
+   of blooms and buds each time (`measures.json`: `stripAllClearAtEverySize` and
+   `cropStripsAllClear` true).
 4. `meta.ts`: the `--board*` entries from `contrast-entries.txt`.
 5. The strip markup is in both schemes, so its geometry rule (`html[data-theme='cottagecore'] .sheet .gum`: absolute, 9.5% wide, centred) is not gated to dark in `shared.css`; probed in light, the strips render 40 to 42px at 1440, as in dark. Everything else here is dark only, and the rest of the light scheme is untouched. The mounted-sheet petal
    desaturation, the pale gum strip and the strips themselves are worth showing

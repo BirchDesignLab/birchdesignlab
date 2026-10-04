@@ -10,6 +10,10 @@
       positions are computed from the real stem paths and returned, so strips.json
       (written by the harness) is what Tier B hardcodes.
 
+   Options: fixed (a strip table to replay, each strip re-tested at this size),
+   scan (return, per sprig, every t that is clear at this size, and place
+   nothing; the harness intersects the sizes and picks one table for all).
+
    Defines window.__ccMount(opts) and returns the strip table. */
 window.__ccMount = function (opts) {
   const o = Object.assign({ strips: true, at: [0.3, 0.64], fixed: null }, opts || {});
@@ -17,6 +21,12 @@ window.__ccMount = function (opts) {
   const sheet = document.querySelector('.hero .sheet');
   const table = [];
   if (!sheet || !o.strips) return table;
+  /* All geometry is taken at scroll 0, so client coordinates are page
+     coordinates. Hit tests scroll each sample into the viewport first
+     (elementsFromPoint answers [] for a point outside it, which would read as
+     bare board and pass a strip it never looked at), then scroll back. */
+  const scroll0 = [scrollX, scrollY];
+  window.scrollTo(0, 0);
   const NS = 'http://www.w3.org/2000/svg';
   const theta = parseFloat(getComputedStyle(sheet).rotate) || 0; // the sheet's own tilt, degrees
   const r = sheet.getBoundingClientRect();
@@ -37,8 +47,9 @@ window.__ccMount = function (opts) {
     const stem = svg && svg.querySelector('path.stem');
     if (!stem) continue;
     const L = stem.getTotalLength();
-    const m = stem.getScreenCTM();
     const proj = (t) => {
+      if (scrollX || scrollY) window.scrollTo(0, 0); // a hit test may have scrolled; the CTM is read at scroll 0
+      const m = stem.getScreenCTM();
       const p = stem.getPointAtLength(L * t);
       const q = stem.getPointAtLength(Math.min(L, L * t + 2));
       const sp = new DOMPoint(p.x, p.y).matrixTransform(m);
@@ -49,7 +60,15 @@ window.__ccMount = function (opts) {
        topmost sprig element under its centre must be this sprig's own .stem,
        and under both ends of its long axis it must be that stem or no sprig at
        all (bare board). So no bloom, bud or other sprig sits under the strip. */
-    const sprigAt = (x, y) => {
+    const OFF = { off: true };
+    const sprigAt = (px, py) => {
+      let x = px, y = py - scrollY;
+      if (y < 0 || y >= innerHeight) {
+        window.scrollTo(0, Math.max(0, Math.min(document.documentElement.scrollHeight - innerHeight, py - innerHeight / 2)));
+        y = py - scrollY;
+      }
+      /* a sample that still falls outside the viewport cannot be tested: fail it */
+      if (x < 0 || x >= innerWidth || y < 0 || y >= innerHeight) return OFF;
       for (const el of document.elementsFromPoint(x, y)) {
         if (el === sheet || !sheet.contains(el)) continue;
         if (el.matches('svg')) continue; // an svg root answers for its whole box
@@ -71,14 +90,14 @@ window.__ccMount = function (opts) {
       const a = Math.atan2(sq.y - sp.y, sq.x - sp.x) + Math.PI / 2; // strip long axis, screen
       const W = 0.095 * w * 1.2, H = W * (12 / 34) * 1.3; // the strip's footprint on screen, with a margin so the result holds at every size
       const ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux;
-      const why = (e, r) => { if (o.trace) o.trace.push([name, +t.toFixed(2), r + ':' + e.closest('svg').getAttribute('class').split(' ').pop() + '/' + e.getAttribute('class')]); return false; };
+      const why = (e, r) => { if (e === OFF) { if (o.trace) o.trace.push([name, +t.toFixed(2), r + ':off-screen']); return false; } if (o.trace) o.trace.push([name, +t.toFixed(2), r + ':' + e.closest('svg').getAttribute('class').split(' ').pop() + '/' + e.getAttribute('class')]); return false; };
       /* a 7 x 5 grid of samples across the footprint, centre included: bare
          board or something allowed under, nothing else */
       for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) {
         const x = sp.x + ux * (i / 3) * (W / 2) + vx * (j / 2) * (H / 2);
         const y = sp.y + uy * (i / 3) * (W / 2) + vy * (j / 2) * (H / 2);
         const e = sprigAt(x, y);
-        if (e && !okUnder(e)) return why(e, i === 0 && j === 0 ? 'centre' : 'foot');
+        if (e === OFF || (e && !okUnder(e))) return why(e, i === 0 && j === 0 ? 'centre' : 'foot');
       }
       return true;
     };
@@ -104,6 +123,13 @@ window.__ccMount = function (opts) {
       table.push({ sprig: name, t, left, top, rotate: rot, clear: ok });
     };
     const taken = [];
+    if (o.scan) {
+      /* every t (0.03 to 0.95, step 0.01) where a strip would be clear at this size */
+      const ok = [];
+      for (let i = 3; i <= 95; i++) if (clear(i / 100)) ok.push(i / 100);
+      table.push({ sprig: name, scan: ok });
+      continue;
+    }
     if (o.fixed) {
       /* replay a table found at another size; report whether each still passes */
       for (const f of o.fixed.filter((x) => x.sprig === name && x.t !== null)) {
@@ -130,5 +156,6 @@ window.__ccMount = function (opts) {
   }
   /* strips go in after every test, so none hides another sprig from the hit test */
   pending.forEach((g) => sheet.appendChild(g));
+  window.scrollTo(scroll0[0], scroll0[1]);
   return table;
 };

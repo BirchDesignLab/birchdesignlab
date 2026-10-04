@@ -1,5 +1,5 @@
 {
-  "note": "percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path; each strip is placed where a hit test finds bare stem under it, so a sprig can carry fewer than two",
+  "note": "percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path; each strip sits where a hit test finds bare stem under it at 1440, 820 and 390 alike (off-screen samples fail), so a sprig can carry fewer than two",
   "strips": [
     {
       "sprig": "fern",
@@ -19,10 +19,10 @@
     },
     {
       "sprig": "rose",
-      "t": 0.31,
-      "left": 75.6,
-      "top": 52.6,
-      "rotate": 193.8,
+      "t": 0.32,
+      "left": 75.5,
+      "top": 52.9,
+      "rotate": 194,
       "clear": true
     },
     {
@@ -35,10 +35,10 @@
     },
     {
       "sprig": "daisy",
-      "t": 0.38,
+      "t": 0.39,
       "left": 39.4,
-      "top": 64.4,
-      "rotate": 177.5,
+      "top": 64.8,
+      "rotate": 177.4,
       "clear": true
     },
     {

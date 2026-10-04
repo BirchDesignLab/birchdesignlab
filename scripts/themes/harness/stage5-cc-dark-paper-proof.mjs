@@ -89,7 +89,7 @@ async function newPage(browser, sz) {
 }
 
 /* Open a page in a variant. motes: leave the firefly canvas on. */
-async function open(page, path, v, { motes = false, fixed = null } = {}) {
+async function open(page, path, v, { motes = false, fixed = null, scan = false } = {}) {
   await page.goto(`${base}/t/cottagecore/${path}`, { waitUntil: 'networkidle' });
   await page.addStyleTag({ content: HIDE + (motes ? '' : NOMOTES) });
   let strips = [];
@@ -99,7 +99,7 @@ async function open(page, path, v, { motes = false, fixed = null } = {}) {
     await page.addScriptTag({ content: css.mount });
   }
   await page.evaluate(async () => { await document.fonts.ready; });
-  if (v !== 'a') strips = await page.evaluate((fx) => window.__ccMount({ strips: !!document.querySelector('.hero .sheet'), fixed: fx }), fixed);
+  if (v !== 'a') strips = await page.evaluate((fx) => window.__ccMount({ strips: !!document.querySelector('.hero .sheet'), fixed: fx.fixed, scan: fx.scan }), { fixed, scan });
   await page.waitForTimeout(500);
   const got = await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, scheme: document.documentElement.dataset.scheme }));
   if (got.theme !== 'cottagecore' || got.scheme !== scheme) console.warn(`WARN theme=${got.theme} scheme=${got.scheme} (wanted ${scheme})`);
@@ -222,10 +222,34 @@ async function capture() {
   }
   const measures = { contrast: {}, strips: {}, fireflies: {}, built: {} };
 
+  /* strips: one table for every size. Each size reports every t where a strip
+     is clear (mount.js scan); the table takes, per sprig, the t nearest to
+     0.30 and 0.64 among those clear at ALL sizes, at least 0.2 apart. Every
+     strip is then replayed and re-tested at each size below. */
+  const scans = {};
+  for (const sz of [...SIZES, BIG]) {
+    const { context, page } = await newPage(browser, sz);
+    const r = await open(page, '', 'c', { scan: true });
+    scans[sz.id] = Object.fromEntries(r.map((x) => [x.sprig, x.scan]));
+    await context.close();
+  }
+  const table1440 = [];
+  for (const name of ['fern', 'lavender', 'rose', 'daisy']) {
+    const ok = scans['1440'][name].filter((t) => Object.values(scans).every((sc) => sc[name].includes(t)));
+    const taken = [];
+    for (const want of [0.3, 0.64]) {
+      const t = ok.filter((c) => !taken.some((u) => Math.abs(u - c) < 0.2)).sort((a, b) => Math.abs(a - want) - Math.abs(b - want) || a - b)[0];
+      if (t === undefined) { table1440.push({ sprig: name, t: null, skipped: 'no bare stem clear at every size' }); continue; }
+      taken.push(t);
+      table1440.push({ sprig: name, t });
+    }
+  }
+  measures.scans = Object.fromEntries(Object.entries(scans).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([n, a]) => [n, a.length]))]));
+
   /* whole pages */
   for (const sz of SIZES) for (const [name, path] of PAGES) for (const v of VARIANTS) {
     const { context, page } = await newPage(browser, sz);
-    const strips = await open(page, path, v, { fixed: name === 'home' && sz.id !== '1440' ? (measures.strips['1440'] || null) : null });
+    const strips = await open(page, path, v, { fixed: name === 'home' ? table1440 : null });
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: shotPath(name, v, sz.id), fullPage: true });
     if (name === 'home' && v === 'c') measures.strips[sz.id] = strips;
@@ -243,14 +267,18 @@ async function capture() {
     for (const k of ['820', '390']) (s[k] || []).forEach((t, i) => { if (base1[i] && t.t !== null && base1[i].t !== null && base1[i].sprig === t.sprig && base1[i].t === t.t) drift = Math.max(drift, Math.abs(t.left - base1[i].left), Math.abs(t.top - base1[i].top)); });
     measures.stripDriftPercent = +drift.toFixed(2);
     measures.stripAllClearAtEverySize = Object.values(s).flat().every((t) => t.t === null || t.clear);
+    measures.cropStripsAllClear = null; // filled after the crops, below
     measures.stripSameSet = ['820', '390'].every((k) => JSON.stringify((s[k] || []).map((t) => [t.sprig, t.t])) === JSON.stringify(base1.filter((t) => t.t !== null).map((t) => [t.sprig, t.t])));
-    await writeFile(join(PROOF, 'strips.json'), JSON.stringify({ note: 'percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path; each strip is placed where a hit test finds bare stem under it, so a sprig can carry fewer than two', strips: base1.filter((t) => t.t !== null) }, null, 2) + '\n');
+    await writeFile(join(PROOF, 'strips.json'), JSON.stringify({ note: 'percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path; each strip sits where a hit test finds bare stem under it at 1440, 820 and 390 alike (off-screen samples fail), so a sprig can carry fewer than two', strips: base1.filter((t) => t.t !== null) }, null, 2) + '\n');
   }
 
+  /* The crops replay the 1440 table (a fresh placement at another size could
+     land somewhere the table never was), and report whether it is still clear. */
+  measures.cropStrips = {};
   /* 2x crops at 1440 */
   for (const v of VARIANTS) {
     const { context, page } = await newPage(browser, BIG);
-    await open(page, '', v);
+    measures.cropStrips[`1440x2__${v}`] = await open(page, '', v, { fixed: table1440 });
     await cropEl(page, '.hero .sheet', cropPath('home-sheet', v), 34);
     await cropEl(page, '.card', cropPath('home-card', v), 30, 0);
     await cropEl(page, '.note-lift', cropPath('home-note', v), 30);
@@ -266,7 +294,7 @@ async function capture() {
   /* 2x crops at 390 */
   for (const v of VARIANTS) {
     const { context, page } = await newPage(browser, SIZES[2]);
-    await open(page, '', v);
+    measures.cropStrips[`390__${v}`] = await open(page, '', v, { fixed: table1440 });
     await cropEl(page, '.hero .sheet', cropPath('home-sheet-390', v), 24);
     await open(page, 'about/', v);
     await cropEl(page, '.herbarium .sheet', cropPath('about-sheet-390', v), 24);
@@ -292,6 +320,12 @@ async function capture() {
     await context.close();
   }
   await browser.close();
+  {
+    /* every crop that carried strips replayed the 1440 table: same set, all clear */
+    const key = (a) => JSON.stringify(a.filter((t) => t.t !== null).map((t) => [t.sprig, t.t]));
+    const want = key(measures.strips['1440'] || []);
+    measures.cropStripsAllClear = Object.entries(measures.cropStrips).filter(([k]) => !k.endsWith('__a')).every(([, a]) => a.length > 0 && key(a) === want && a.every((t) => t.clear));
+  }
   await writeFile(join(out, 'measures.json'), JSON.stringify(measures, null, 2) + '\n');
   return measures;
 }
