@@ -142,7 +142,18 @@ const SURFACES = ['--paper', '--note', '--field'];
 const ROLES = {
   homeLead: '.hero .lead', homeKicker: '.doors .kicker', labKicker: '.lab .cc-hand', homeMore: '.doors .more', labMore: '.lab .cc-note-link',
   footerLoc: '.f-loc', cardNo: '.card .no', billboard: '.billboard .b1', billboardB2: '.billboard .b2', cardH3: '.card h3', closerLead: '.closer-lead', pull: '.pull', wmName: '.wm-name',
+  /* the roles the scoped page rules fought over (fix round 1) */
+  servicesKicker: '.kicker', servicesNum: '.num', contactKicker: '.kicker', contactLabel: '.field label',
+  aboutLetterH2: '.letter h2',
 };
+/* Roles read per page, so each page's own kicker size is in the table. */
+const PAGE_ROLES = {
+  home: ['homeLead', 'homeKicker', 'labKicker', 'homeMore', 'labMore', 'footerLoc', 'cardNo', 'billboard', 'billboardB2', 'cardH3', 'closerLead', 'pull', 'wmName'],
+  services: ['servicesKicker', 'servicesNum', 'footerLoc'],
+  contact: ['contactKicker', 'contactLabel', 'footerLoc'],
+  about: ['aboutLetterH2', 'footerLoc'],
+};
+const pickRoles = (name) => Object.fromEntries(PAGE_ROLES[name].map((k) => [k, ROLES[k]]));
 
 async function capture() {
   if (!base) { console.error('no SNAP_BASE; run through snap.mjs'); process.exit(1); }
@@ -169,8 +180,8 @@ async function capture() {
     await open(page, scheme, path, state === 'after' ? css : null, state === 'after' ? 'sharp' : null);
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: shotPath(name, state, scheme, sz.id), fullPage: true });
+    measures.computed[`${scheme}__${sz.id}__${name}__${state}`] = await page.evaluate(COMPUTE, pickRoles(name));
     if (sz.id === '1440' && name === 'home') {
-      measures.computed[`${scheme}__${state}`] = await page.evaluate(COMPUTE, ROLES);
       if (state === 'after') {
         const toks = await page.evaluate(TOKENS, [...INK_TOKENS, ...SURFACES, '--glow', '--accent', '--link', '--mark-muted']);
         const surf = { '--paper': toks['--paper'], '--note': toks['--note'], '--field': toks['--field'] };
@@ -204,6 +215,9 @@ async function capture() {
     await open(page, scheme, 'contact/', apply, apply && 'sharp');
     await cropEl(page, '.field label', cropPath('hand-label', state, scheme), 22, 0);
     await cropEl(page, '.field', cropPath('hand-field', state, scheme), 14, 2);
+    await cropEl(page, '.kicker', cropPath('hand-contact-kicker', state, scheme), 22);
+    await open(page, scheme, 'about/', apply, apply && 'sharp');
+    await cropEl(page, '.letter h2', cropPath('hand-letter', state, scheme), 22);
     await open(page, scheme, 'services/', apply, apply && 'sharp');
     await cropEl(page, '.recipe h2', cropPath('wet-h2', state, scheme), 20);
     await cropEl(page, '.num', cropPath('hand-num', state, scheme), 20);
@@ -312,11 +326,12 @@ async function sheets() {
       });
   }
   /* the hands: kicker, lead, margin note, numeral, lab kicker, footer, form label, services numeral */
-  const handCols = [['hand-kicker', 'kicker'], ['hand-lead', 'lead (kicker voice)'], ['hand-lab', 'From the lab (kicker)'], ['hand-note', 'How we build (note)'], ['hand-footer', 'footer place (note)'], ['hand-numeral', 'No. 1 (label)'], ['hand-label', 'form label (label)'], ['hand-num', 'method numeral (label)']];
-  await sheet(join(out, 'sheet-hands.jpg'), 'Three hands: kicker, margin note, label (2x crops, before above after)', rows4, handCols.map((c) => c[1]), 330, async (r, c) => {
+  const handCols = [['hand-kicker', 'kicker'], ['hand-lead', 'lead (kicker voice)'], ['hand-lab', 'From the lab (label)'], ['hand-note', 'How we build (note)'], ['hand-footer', 'footer place (note)'], ['hand-numeral', 'No. 1 (label)'], ['hand-label', 'form label (label)'], ['hand-contact-kicker', 'Contact kicker'], ['hand-letter', 'About letter h2 (kicker)'], ['hand-num', 'method numeral (label)']];
+  await sheet(join(out, 'sheet-hands.jpg'), 'Three hands: kicker, margin note, label (2x crops all drawn at the same scale: 1 CSS px = 1 px; before above after)', rows4, handCols.map((c) => c[1]), 330, async (r, c) => {
     const [scheme, state] = rs(r);
     const img = await load(cropPath(handCols[c][0], state, scheme));
-    return img && { img, w: Math.min(330, img.width) };
+    /* one scale for every cell (1 CSS px = 1 sheet px, from the 2x crop), so a size change shows */
+    return img && { img, w: img.width / 2 };
   });
   await sheet(join(out, 'sheet-nav-390.jpg'), 'The mobile nav: before and after (390, 2x, shown at half)', rows4, ['nav'], 390, async (r) => {
     const [scheme, state] = rs(r);

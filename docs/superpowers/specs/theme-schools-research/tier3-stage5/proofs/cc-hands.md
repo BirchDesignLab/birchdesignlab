@@ -20,8 +20,11 @@ contrast?
   margin note (sepia, 450, a touch larger, +1deg) and the label (sage, 400,
   upright) are plainly different writers from the kicker. The kicker itself
   barely moves: it was already rose or amber at 600, and 650 with the
-  standardised -1.5deg is a small step. The three read as three people because
-  of the other two. See `sheet-hands.jpg`.
+  standardised -1.5deg is a small step. Its size is not touched: every page
+  keeps its own kicker size (round 1 dropped a size override that had shrunk
+  Home's by 28%). On Home all three writers now show: "What we build" (kicker),
+  "From the lab" (label) and "How we build" (note). See `sheet-hands.jpg`, which
+  draws every crop at one scale (1 CSS px = 1 sheet px).
 - **Wetness: the billboard is wetter than everything below it, but h2 against h3
   is subtle.** Billboard, wordmark and every h1 were already SOFT 100, so the top
   step is unchanged by design. SOFT 50 on h2 and SOFT 0 with WONK 0 on h3 are
@@ -55,14 +58,17 @@ All in `scripts/themes/proofs/stage5-cc-hands/` and
 
 | role | weight | ink light | ink dark | size | tilt | applied to |
 |---|---|---|---|---|---|---|
-| kicker | 650 | `--accent` #9b4652 | `--accent` #eab86a | clamp(1.7rem, 2.5vw, 2.1rem) | -1.5deg | `.cc-hand` (Home "What we build", "From the lab", Services and Contact kickers), Home `.lead`, About `.letter h2` |
+| kicker | 650 | `--accent` #9b4652 | `--accent` #eab86a | unchanged: each page's own (Home 2.2-2.9rem, Services 1.9-2.4rem, Contact 1.9-2.3rem, About letter 2.6rem) | -1.5deg | `.cc-hand` (Home "What we build", Services and Contact kickers), Home `.lead`, About `.letter h2` |
 | margin note | 450 | #74502f (new) | #dcbd96 (new) | 1.85rem (footer place 1.55rem) | +1deg | `.cc-note-link` ("How we build", "Visit the lab", back link), `.f-loc`, the mobile nav links (1.6rem, no tilt) |
-| label | 400 (numerals 500) | `--link` #4e6a45 | `--link` #a9c294 | 1.5rem | 0 | `.field label`, `.no` (Home, Services), `.num` (method rings) |
+| label | 400 (numerals 500) | `--link` #4e6a45 | `--link` #a9c294 | 1.5rem (Contact form labels 24px; "From the lab" 1.7rem) | 0 | `.field label`, `.no` (Home, Services), `.num` (method rings), Home `.lab .cc-hand` ("From the lab") |
 
 Judgement calls the brief left open, for the founder:
 
-- "From the lab" is treated as a kicker (it is the note's section kicker). The
-  brief's verify line could also mean it as a label.
+- "From the lab" takes the label hand (400, sage, upright, 1.7rem), not the
+  kicker: it heads a butter note like a neat card label, and it is what makes
+  Home read as three writers rather than two. Round 1 moved it from kicker to
+  label for that reason; flip it back by deleting `.lab .cc-hand` from the label
+  selector. At 390 it is 27.2px against the note's 29.6px, quieter by design.
 - Numerals are 500, not 400: at 400 a 24px numeral inside the dashed ring looked
   thin. Form labels are the full 400.
 - The note hand makes "How we build" and "Visit the lab" sepia, not link sage.
@@ -86,6 +92,20 @@ Judgement calls the brief left open, for the founder:
 Page h1s other than the billboard (Services, Contact, About) stay SOFT 100; the
 brief did not name them. The two `data-pull` rules at the end of `proof.css`
 exist only for the comparison sheet.
+
+### Specificity (round 1)
+
+Contact's `.field[data-astro-cid] label[data-astro-cid]` and About's
+`.letter[data-astro-cid] h2[data-astro-cid]` are (0,3,1), which beat the first
+draft's (0,2,2): form labels and the About letter heading kept w600 in rose or
+amber. The kicker, label and numeral rules now lead with `html[..]:root`
+(0,3,2). Computed after, light and dark, 1440 and 390: Contact labels w400, 24px,
+sage (`--link`), 0deg; About `.letter h2` w650, -1.5deg, size unchanged. Kicker
+sizes are identical before and after on every page (Home 46.4/35.2px, Services
+38.4/30.4px, Contact 36.8/30.4px at 1440/390), so at 390 every kicker is above the
+29.6px note. The full table is `measures.json` `computed`, keyed
+scheme/size/page/state. Tier B: once the pages' scoped rules for these elements
+are deleted, `:root` and `html` can go.
 
 ## Contrast, ready to paste
 

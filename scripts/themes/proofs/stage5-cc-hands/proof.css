@@ -3,7 +3,9 @@
    whole file into src/themes/cottagecore/theme.css (tokens into the two
    token blocks, the rules into "type voices"). Specificity is one element
    above the pages' Astro-scoped rules, which is why each selector leads with
-   `html`; in theme.css, where the scoped rules are replaced or edited, the
+   `html` and the voice rules add `:root` (a scoped `.field[data-astro-cid]
+   label[data-astro-cid]` is (0,3,1), so (0,2,2) loses to it; `html[..]:root`
+   is (0,3,2)); in theme.css, where the scoped rules are replaced or edited, the
    `html` can go.
 
    1. Hands. One script font (Caveat Variable, wght 400 to 700), three roles,
@@ -13,7 +15,9 @@ html[data-theme='cottagecore'] {
   /* kicker: the loud one, written first and underlined */
   --hand-kicker-wght: 650;
   --hand-kicker-ink: var(--accent); /* rose-deep light, amber dark */
-  --hand-kicker-size: clamp(1.7rem, 2.5vw, 2.1rem);
+  /* no kicker size token: every page already tunes its own kicker size
+     (Home 2.2-2.9rem, Services 1.9-2.4rem, Contact 1.9-2.3rem, About letter
+     2.6rem) and the proof leaves those alone; weight, ink and tilt only. */
   --hand-kicker-tilt: -1.5deg;
   /* margin note: added later in another pen, a touch larger to make up for
      the thinner stroke */
@@ -32,15 +36,12 @@ html[data-theme='cottagecore'][data-scheme='dark'] {
 }
 
 /* kicker hand */
-html[data-theme='cottagecore'] :is(.cc-hand, .lead, .letter h2) {
+html[data-theme='cottagecore']:root :is(.cc-hand, .lead, .letter h2) {
   font-weight: var(--hand-kicker-wght);
   color: var(--hand-kicker-ink);
   rotate: var(--hand-kicker-tilt);
   transform-origin: left center;
 }
-html[data-theme='cottagecore'] .cc-hand { font-size: var(--hand-kicker-size); }
-/* Home's lead keeps its billboard-supporting size; only the voice changes. */
-html[data-theme='cottagecore'] .lead { font-weight: var(--hand-kicker-wght); }
 
 /* margin-note hand */
 html[data-theme='cottagecore'] :is(.cc-note-link, .f-loc) {
@@ -63,15 +64,19 @@ html[data-theme='cottagecore'] .f-loc { font-size: 1.55rem; }
 }
 
 /* label hand */
-html[data-theme='cottagecore'] :is(.field label, .no, .num) {
+html[data-theme='cottagecore']:root :is(.field label, .no, .num, .lab .cc-hand) {
   font-weight: var(--hand-label-wght);
   color: var(--hand-label-ink);
   rotate: var(--hand-label-tilt);
 }
-html[data-theme='cottagecore'] .field label { font-size: var(--hand-label-size); }
+html[data-theme='cottagecore']:root .field label { font-size: var(--hand-label-size); }
+/* "From the lab" heads a butter note, like a neat card label, so Home shows
+   three writers: kicker (What we build), label (From the lab), note (How we
+   build). Size 1.7rem, a step over the 1.5rem form labels. */
+html[data-theme='cottagecore']:root .lab .cc-hand { font-size: 1.7rem; }
 /* The numerals sit a little heavier than the form labels so a 24px hand
    still holds up inside its ring and against a card's corner. */
-html[data-theme='cottagecore'] :is(.no, .num) { font-weight: 500; }
+html[data-theme='cottagecore']:root :is(.no, .num) { font-weight: 500; }
 
 /* 2. Fraunces wetness by role (SOFT 0 dry to 100 wet; WONK on for display). */
 
