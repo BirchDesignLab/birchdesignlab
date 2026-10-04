@@ -1,0 +1,61 @@
+{
+  "note": "percent of the hero sheet (its own tilted frame); rotate is the strip across the stem, degrees; t is the distance along the stem path",
+  "strips": [
+    {
+      "sprig": "fern",
+      "t": 0.3,
+      "left": 27,
+      "top": 50.9,
+      "rotate": -15.6
+    },
+    {
+      "sprig": "fern",
+      "t": 0.64,
+      "left": 20.4,
+      "top": 30.5,
+      "rotate": -14.1
+    },
+    {
+      "sprig": "lavender",
+      "t": 0.3,
+      "left": 44.7,
+      "top": 46.2,
+      "rotate": 10.2
+    },
+    {
+      "sprig": "lavender",
+      "t": 0.64,
+      "left": 48.8,
+      "top": 26.2,
+      "rotate": 7.7
+    },
+    {
+      "sprig": "rose",
+      "t": 0.3,
+      "left": 75.7,
+      "top": 52.3,
+      "rotate": 195.6
+    },
+    {
+      "sprig": "rose",
+      "t": 0.64,
+      "left": 72.1,
+      "top": 63.2,
+      "rotate": 196
+    },
+    {
+      "sprig": "daisy",
+      "t": 0.3,
+      "left": 38.9,
+      "top": 60.8,
+      "rotate": 177.8
+    },
+    {
+      "sprig": "daisy",
+      "t": 0.64,
+      "left": 41.5,
+      "top": 76,
+      "rotate": 165.6
+    }
+  ]
+}

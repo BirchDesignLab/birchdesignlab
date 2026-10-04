@@ -1,0 +1,65 @@
+/* Stage 5 proof a5, option (c), the hybrid (recommended, brief D4): the brown
+   cards, the butter note and the letter are kept; only the mounted herbarium
+   sheets (Home hero, About) are lifted to a heavier, lighter board. Pair with
+   shared.css (items 3 and 5).
+
+   Markup Tier B adds: the class `cc-board` on the two sheets, next to
+   `cc-paper` (Home.astro `.sheet`, About.astro `.sheet`), and the hero's gum
+   strips (mount.js; strips.json holds the placements).
+
+   Every rule is under html[data-theme='cottagecore'][data-scheme='dark']; the
+   injected `:root` is for specificity only (see shared.css). */
+html[data-theme='cottagecore'][data-scheme='dark']:root {
+  /* a mounting board, dimmed cream: the lamp does not light it white */
+  --board: #cfc1a1;
+  --board-ink: #2f2219;
+  --board-ink-muted: #4f3a2b;
+  --board-accent: #702a36;
+  --board-link: #2f4a2a;
+  --board-rule: rgba(58, 42, 31, 0.3);
+  --board-lamp-foot: 0.1;
+  --board-lamp:
+    radial-gradient(ellipse 80% 60% at 18% 0%, rgba(255, 200, 120, 0.34), transparent 70%),
+    linear-gradient(0deg, rgba(40, 25, 10, var(--board-lamp-foot)), transparent 45%);
+  --cc-gum-strip: #ece0c4;
+}
+html[data-theme='cottagecore'][data-scheme='dark']:root .cc-board {
+  --paper: var(--board);
+  color: var(--board-ink);
+  --mark: var(--board-ink);
+  --mark-muted: var(--board-ink-muted);
+  --accent: var(--board-accent);
+  --link: var(--board-link);
+  --rule: var(--board-rule);
+  --margin-line: rgba(112, 42, 54, 0.42);
+  /* pressed flowers: the light palette (drawn for cream paper), petals 10% less
+     saturated (desat.mjs) */
+  --cc-petal: #fffdf7; --cc-petal-back: #efe6d4; --cc-petal-edge: rgba(107, 82, 66, 0.5);
+  --cc-heart: #eec35a; --cc-heart-deep: #b98a2a;
+  --cc-stem: #7f9870; --cc-leaf: #a9bb96; --cc-leaf-edge: #6c8460;
+  --cc-lav: #a596c9; --cc-lav-edge: #6f5f98; --cc-fern: #95ae86;
+  --cc-twig: #6d5140; --cc-lenticel: #f7efdf; --cc-catkin: #c9a672;
+  --cc-rose-petal: #e5b1ad; --cc-rose-edge: #b8747a; --cc-blush: #fef4e5;
+
+  background-color: var(--board);
+  background-image:
+    var(--board-lamp),
+    repeating-linear-gradient(0deg, rgba(58, 42, 31, 0.022) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(58, 42, 31, 0.026) 0 1px, transparent 1px 4px);
+  /* heavier: card stock with a visible edge (a lit top lip, a dark thickness
+     underneath) instead of a soft paper lift */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 222, 0.5),
+    inset 0 0 0 1px rgba(90, 70, 40, 0.2),
+    0 2px 0 #a2936c,
+    0 3px 0 rgba(0, 0, 0, 0.4),
+    0 24px 36px -18px rgba(0, 0, 0, 0.8);
+}
+/* the plate mark a mounted print leaves in its board */
+html[data-theme='cottagecore'][data-scheme='dark']:root .cc-board::after {
+  content: '';
+  position: absolute; inset: 0.65rem;
+  border: 1px solid rgba(58, 42, 31, 0.2);
+  box-shadow: 0 1px 0 rgba(255, 246, 222, 0.35);
+  pointer-events: none;
+}
