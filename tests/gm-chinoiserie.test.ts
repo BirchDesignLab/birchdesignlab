@@ -57,6 +57,14 @@ describe('grandmillennial chinoiserie', () => {
     expect(bird).toContain('aria-hidden="true"');
     expect(bird).not.toMatch(/tabindex|role=/);
   });
+  it('the live bird layer lies under the intro, so it never paints over the oval or the story', () => {
+    const z = (src: string, sel: RegExp) => Number(src.match(sel)?.[1]);
+    const layer = z(read('parts/WallBird.astro'), /\.wall-bird-layer\s*\{[^}]*z-index:\s*(-?\d+)/);
+    const intro = z(read('pages/About.astro'), /\.intro\s*\{[^}]*z-index:\s*(-?\d+)/);
+    expect(layer).toBeGreaterThanOrEqual(0); // above the wall file (z -1)
+    expect(intro).toBeGreaterThan(layer);
+    expect(read('pages/About.astro')).toMatch(/\.intro\s*\{[^}]*position:\s*relative/);
+  });
   it('the sampler lettering is drawn, not typed', () => {
     const about = read('pages/About.astro');
     expect(about).toContain('<mask id="gm-abc-m">');

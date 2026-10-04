@@ -447,7 +447,7 @@ const pb = (x, y, s, flip, cls) => out.birds.push(`<use href="#sc-pb" transform=
 const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" transform="translate(${tk(x)} ${tk(y)}) rotate(${tk(rot)}) scale(${tk(flip * s)} ${tk(s)})" class="${cls}"/>`);
 {
   const f1 = bR[1](0.55).at, f2 = bR[5](0.55).at, f3 = bR[9](0.5).at;
-  pb(f1[0] - 6, f1[1] + 2, 1.25, 1, 'sc-birdA'); pb(f1[0] + 68, f1[1] - 6, 1.05, -1, 'sc-birdB');
+  pb(f1[0] - 6, f1[1] + 2, 1.25, 1, 'sc-birdA'); // the blue bird that sat at (f1 + 68, -6) is the wall's live bird (About.astro BIRD_WIDE.home): the file leaves its perch empty
   pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
   pb(f3[0] - 8, f3[1] + 3, 1.0, 1, 'sc-birdA');
   fb(680, 255, 1.35, -8, 1, 'sc-birdA'); fb(870, 130, 1.0, -12, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');

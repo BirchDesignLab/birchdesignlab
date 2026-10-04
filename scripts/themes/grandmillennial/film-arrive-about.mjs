@@ -1,9 +1,15 @@
 /**
  * B1 task 2: films the ARRIVAL on grandmillennial's About from the quiet school
- * (the drapes part from frame one, 640 ms), through the real router, as a
- * timestamped strip. Also an in-school swap (Home to About) for the same sizes.
+ * (the drapes part from frame one, 640 ms) through the real switcher (its dialog opened,
+ * the school's row clicked; the row's href is already /t/grandmillennial/about/), as a
+ * timestamped strip. COLD: a fresh browser context, so no cached wall file. WARM: the
+ * target visited once first in the same context. Also an in-school swap (Home to About)
+ * with a real click on the header's About link.
  *
  *   BDL_GPU=1 node scripts/themes/snap.mjs --name b1t2 --reuse --port 4460 -- node scripts/themes/grandmillennial/film-arrive-about.mjs [--label after]
+ *
+ * Run it once against the before build (stage5-base) and once against the head, same label
+ * scheme (--label base / --label after), to compare when the drapes first part.
  *
  * Output: scripts/themes/.out/stage5/b1/t2/film/<label>__<arrive|swap>__<scheme>__<size>.jpg
  * Frames are CDP screencast frames (real composited frames, GPU), stamped with
@@ -24,12 +30,16 @@ const label = li < 0 ? 'after' : process.argv[li + 1];
 const base = (process.env.SNAP_BASE || '').replace(/\/$/, '');
 const SIZES = [{ id: '1440', w: 1440, h: 900, dpr: 1 }, { id: '390', w: 390, h: 844, dpr: 1, mobile: true }];
 const browser = await chromium.launch({ args: ['--hide-scrollbars', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-gpu-rasterization'] });
-for (const scheme of ['light', 'dark']) for (const sz of SIZES) for (const scenario of ['arrive', 'swap']) {
+// The first page a fresh GPU Chromium opens pays for process and GPU start-up (the stage5-base build
+// stalls ~780 ms on its first cold arrival too), so one throwaway visit comes first and no strip is it.
+{ const { context, page } = await open(browser, 'light', SIZES[0]); await page.goto(`${base}/t/quiet/about/`, { waitUntil: 'networkidle' }); await page.goto(`${base}/t/grandmillennial/about/`, { waitUntil: 'networkidle' }); await context.close(); }
+for (const scheme of ['light', 'dark']) for (const sz of SIZES) for (const scenario of ['arrive-cold', 'arrive-warm', 'swap']) {
   const { context, page } = await open(browser, scheme, sz);
-  const start = scenario === 'arrive' ? `${base}/t/quiet/about/` : `${base}/t/grandmillennial/`;
+  const arrive = scenario.startsWith('arrive');
+  const start = arrive ? `${base}/t/quiet/about/` : `${base}/t/grandmillennial/`;
   const target = '/t/grandmillennial/about/';
+  if (scenario === 'arrive-warm') await page.goto(`${base}${target}`, { waitUntil: 'networkidle' }); // the walls are now cached
   await page.goto(start, { waitUntil: 'networkidle' });
-  await page.addStyleTag({ content: 'bdl-switcher{display:none!important}' });
   await page.evaluate(async () => { await document.fonts.ready; });
   await page.waitForTimeout(400);
   const cdp = await context.newCDPSession(page);
@@ -37,11 +47,20 @@ for (const scheme of ['light', 'dark']) for (const sz of SIZES) for (const scena
   cdp.on('Page.screencastFrame', async (f) => { frames.push({ t: f.metadata.timestamp, data: f.data }); await cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}); });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 70, everyNthFrame: 1 });
   await page.waitForTimeout(250);
-  const t0 = Date.now() / 1000;
-  await page.evaluate((h) => {
-    const a = document.createElement('a'); a.href = h; a.textContent = 'go';
-    a.style.cssText = 'position:fixed;left:0;top:0;opacity:0'; document.body.append(a); a.click();
-  }, target);
+  let t0;
+  if (arrive) {
+    // the real switcher: open its dialog, wait for it to settle, click the school's row
+    await page.locator('bdl-switcher .open').click();
+    await page.waitForTimeout(600);
+    const row = page.locator('bdl-switcher a[data-school="grandmillennial"]');
+    const href = await row.getAttribute('href');
+    if (href !== target) throw new Error(`switcher row goes to ${href}, not ${target}`);
+    t0 = Date.now() / 1000;
+    await row.click();
+  } else {
+    t0 = Date.now() / 1000;
+    await page.locator(`header a[href="${target}"]`).first().click();
+  }
   await page.waitForTimeout(1500);
   await cdp.send('Page.stopScreencast');
   const after = frames.filter((f) => f.t >= t0 - 0.05);
@@ -56,6 +75,7 @@ for (const scheme of ['light', 'dark']) for (const sz of SIZES) for (const scena
   g.fillStyle = '#222'; g.fillRect(0, 0, cv.width, cv.height);
   imgs.forEach((im, i) => { const x = (i % cols) * w, y = Math.floor(i / cols) * (hh + 18); g.drawImage(im, x, y + 18, w, hh); g.fillStyle = '#fff'; g.font = '13px sans-serif'; g.fillText(`+${Math.round((pick[i].t - t0) * 1000)}ms`, x + 4, y + 13); });
   await writeFile(join(OUT, `${label}__${scenario}__${scheme}__${sz.id}.jpg`), cv.toBuffer('image/jpeg', 78));
+  console.log(scenario, scheme, sz.id, 'frame offsets ms:', after.slice(0, 40).map((f) => Math.round((f.t - t0) * 1000)).join(' '));
   console.log(scenario, scheme, sz.id, `${after.length} frames`, page.url());
   await context.close();
 }

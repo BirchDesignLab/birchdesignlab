@@ -22,8 +22,8 @@ const { copy, theme } = Astro.props;
    1300 drawing; the wall file carries no bird at either point. The wide wall
    (anchored to the top centre) and the phone's (anchored to the left) are the
    same drawing cropped differently, so each has its own pair. */
-const BIRD_WIDE = { home: [665, 501, 1.1, 1], away: [680, 709, 1.0, -1] } as const;
-const BIRD_PHONE = { home: [336, 217, 1.0, -1], away: [246, 73, 0.95, 1] } as const;
+const BIRD_WIDE = { home: [575, 119, 1.05, -1], away: [644, 89, 1.0, 1] } as const;
+const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [367, 199, 0.5, 1] } as const;
 
 /* The sampler's cross-stitch border motif: a heart between two flowers, one
    cross per cell. r = the stitch thread, g = leaf green. */
@@ -112,7 +112,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
 
   <div class="scene-part a">
     <div class="scene-art" aria-hidden="true"></div>
-    <WallBird class="wide" home={[...BIRD_WIDE.home]} away={[...BIRD_WIDE.away]} par="xMidYMin slice" />
+    <WallBird class="wide" colour="B" home={[...BIRD_WIDE.home]} away={[...BIRD_WIDE.away]} par="xMidYMin slice" />
     <WallBird class="phone" home={[...BIRD_PHONE.home]} away={[...BIRD_PHONE.away]} par="xMinYMin slice" />
     <section class="intro gm-wrap">
       <figure class="sitter" aria-hidden="true">
@@ -203,13 +203,17 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
   .scene-part :global(.wall-bird-layer.phone) { display: none; }
 
   /* ---------- The sitter and the story ---------- */
+  /* Above the live bird's layer (z 0): the oval, its wire and the story lie over the wall bird,
+     never under it. The grid's own box lets pointers through to the bird; its children take them. */
   .intro {
+    position: relative; z-index: 1; pointer-events: none;
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: clamp(2.5rem, 6vw, 5.5rem);
     align-items: center;
     padding-block: clamp(3.5rem, 8vw, 6rem);
   }
+  .intro > * { pointer-events: auto; }
   /* Hung a little off true: left of its column and lifted, the small second
      frame lower right. The picture wire runs from the gilt to a nail. */
   .sitter {
