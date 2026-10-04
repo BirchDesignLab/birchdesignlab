@@ -145,10 +145,14 @@ const { chrome, theme } = Astro.props;
     .site-header[data-home] .wordmark {
       display: flex; align-items: baseline; justify-content: center; gap: 0.5rem;
       white-space: nowrap;
+      /* The canopy keeps the stacked mark's height on Home: it is pinned
+         between rooms (grandmillennial-header), so a shorter masthead would
+         snap on the first frame of a swap to or from Home. The compact line
+         sits centred in the stacked mark's box. */
+      padding-block: 1.489rem;
     }
     .site-header[data-home] .wm-first { font-size: 1.7rem; }
     .site-header[data-home] .wm-rest { font-size: 0.7rem; letter-spacing: 0.32em; padding-left: 0; margin-top: 0; }
     .site-header[data-home] .swash { display: none; }
-    .site-header[data-home] .masthead { gap: 0.4rem; padding-block: 0.9rem 1rem; }
   }
 </style>

@@ -562,6 +562,20 @@
   html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-new(wordmark) {
     animation-name: grandmillennial-wordmark-in;
   }
+  /* In-school swaps on a phone: Home's one-line mark and the stacked mark on
+     the other pages differ in size, so Astro's default crossfade (both
+     pictures at once on the 300ms group clock) showed two wordmarks
+     together. Same split as the room: the old one is gone by 45%, the new
+     one starts at 40%, so the two are never legible together. Above 760px
+     the marks are identical and the plain crossfade stays. */
+  @media (max-width: 760px) {
+    html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(wordmark) {
+      animation-name: gm-leave;
+    }
+    html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-new(wordmark) {
+      animation-name: gm-enter;
+    }
+  }
 }
 /* The new room bares itself from the centre outward, like two drapes drawn
    back at once, already parted a hand's width on the first frame. No filter:
