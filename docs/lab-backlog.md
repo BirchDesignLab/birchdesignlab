@@ -58,12 +58,11 @@ name appears nowhere else in it.)
 
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
-Current handoff: Stage 3, pair B (glassmorphism and vaporwave), wave B2
-merged in PR #93 09-27-26 (the glass lens and Control Centre, the live
-Venus, the vaporwave interactables); record in
-`docs/superpowers/specs/theme-schools-research/HANDOFF-09-26-26-stage3-tierB2-round4.md`
-and `tier3-stage3/tier-b2-report.md`. Owed: the founder's iPhone look after
-deploy. (Tier 1 and 2 done; the founder's decisions are in
+Current handoff: `docs/superpowers/specs/theme-schools-research/HANDOFF-10-03-26-stage5.md`
+(Stage 4, pair A swiss and bauhaus, merged in PR #95 10-03-26; next Stage 5,
+pair C grandmillennial and cottagecore, on `feat/theme-schools-tier3-stage5`).
+Stage 3 (pair B, glass and vaporwave) merged in PR #93 09-27-26. Owed: the
+founder's iPhone pass at the end of the run. (Tier 1 and 2 done; the founder's decisions are in
 `tier3-briefs/stage0-decisions.md` and `tier3-stage3/stage3-decisions.md`.) Six tranche-1 schools built 09-23-26
 (vaporwave, grandmillennial, glassmorphism, cottagecore, bauhaus, swiss).
 Tier 3 Stage 1 (the portal) merged in PR #88 (BDL-010 is a working specimen
