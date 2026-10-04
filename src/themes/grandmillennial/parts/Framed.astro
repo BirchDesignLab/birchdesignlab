@@ -1,19 +1,27 @@
 ---
 /** The frames of this school (B1 item 11). `border="gilt"` (the default) is a
     double gilt rule with a scroll at each corner. `border="chintz"` is a strip of
-    the chintz meander (parts/Defs.astro #gm-chintz) laid round the card, ending
-    in a thin porcelain-blue band against the paper, and a gold hairline outside.
+    a running chintz vine with a rose at an even pitch (parts/Defs.astro
+    #gm-meander), turning on a rosette at each corner, ending in a thin porcelain-blue band against the paper, and a gold hairline outside.
     A page keeps the corner scrolls on one element and the chintz border on
     another. `tag` keeps the semantics with the caller. */
 import Corner from './Corner.astro';
-import Chintz from './Chintz.astro';
 
 interface Props { tag?: 'div' | 'section' | 'article' | 'aside' | 'figure'; class?: string; tone?: 'field' | 'raised' | 'paper'; border?: 'gilt' | 'chintz' }
 const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro.props;
 ---
 <Tag class:list={['gm-framed', `tone-${tone}`, { 'is-chintz': border === 'chintz' }, cls]}>
   {border === 'chintz' ? (
-    <span class="strip" aria-hidden="true"><Chintz /></span>
+    <span class="strip" aria-hidden="true">
+      <svg class="run top"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg>
+      <svg class="run bottom"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg>
+      <svg class="run left"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg>
+      <svg class="run right"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg>
+      <svg class="knot tl" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
+      <svg class="knot tr" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
+      <svg class="knot bl" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
+      <svg class="knot br" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
+    </span>
   ) : (
     <span class="corners" aria-hidden="true">
       <Corner class="c tl" /><Corner class="c tr" /><Corner class="c bl" /><Corner class="c br" />
@@ -36,10 +44,11 @@ const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro
   .tone-raised { background: var(--field-raised); }
   .tone-field { background: var(--field); }
   .tone-paper { background: var(--paper); }
-  /* The chintz border: the strip lies under the card (z -1 in the stacking context
-     the card sits in, so the card's own paper paints over its middle) and shows 1.6rem round it; the blue band is the card's
-     own outline, 3px against the paper, and the gold hairline closes the strip
-     on the outside. The gilt rule and its outline give way to it. */
+  /* The chintz border: a vine strip (four runs and four corner rosettes, parts/Defs.astro
+     #gm-meander, #gm-corner) lies under the card (z -1 in the stacking context the card
+     sits in, so the card's own paper paints over its middle) and shows --strip round it;
+     the blue band is the card's own outline, 3px against the paper, and the gold hairline
+     closes the strip on the outside. The gilt rule and its outline give way to it. */
   .is-chintz {
     --strip: 1.6rem;
     margin: calc(7px + var(--strip));
@@ -50,12 +59,26 @@ const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro
   .strip {
     position: absolute; z-index: -1;
     inset: calc(-1 * var(--strip) - 3px);
-    overflow: hidden;
     /* Its own cloth, so it reads as a border even on a papered wall of the same chintz. */
     background: var(--field);
     box-shadow: 0 0 0 1px var(--rule), 0 0 0 5px var(--field), 0 0 0 6px var(--rule);
     pointer-events: none;
   }
+  .strip svg { position: absolute; overflow: hidden; }
+  .run.top, .run.bottom { left: var(--strip); right: var(--strip); width: calc(100% - 2 * var(--strip)); height: var(--strip); }
+  .run.top { top: 0; }
+  .run.bottom { bottom: 0; }
+  .run.left, .run.right { top: var(--strip); bottom: var(--strip); height: calc(100% - 2 * var(--strip)); width: var(--strip); }
+  .run.left { left: 0; }
+  .run.right { right: 0; }
+  /* The 26-unit cell is centred in the strip, so a thinner strip (phone) trims the vine's edges, not one side. */
+  .run.top .r, .run.bottom .r { transform: translateY(calc((var(--strip) - 26px) / 2)); }
+  .run.left .r, .run.right .r { transform: translateX(calc((var(--strip) - 26px) / 2)); }
+  .knot { width: var(--strip); height: var(--strip); }
+  .knot.tl { top: 0; left: 0; }
+  .knot.tr { top: 0; right: 0; }
+  .knot.bl { bottom: 0; left: 0; }
+  .knot.br { bottom: 0; right: 0; }
   .corners { position: absolute; inset: -11px; pointer-events: none; }
   .corners :global(.c) { position: absolute; }
   .corners :global(.tl) { top: 0; left: 0; }

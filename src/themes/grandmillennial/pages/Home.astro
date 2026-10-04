@@ -288,12 +288,12 @@ const [first, ...rest] = chrome.name.split(' ');
   }
   .band-inner {
     display: grid;
-    grid-template-columns: 1fr minmax(0, 46rem) 1fr;
+    grid-template-columns: minmax(5.5rem, 1fr) minmax(0, 46rem) minmax(5.5rem, 1fr);
     align-items: center;
     gap: 2rem;
   }
   .band :global(.jar) { width: min(100%, 9.5rem); justify-self: center; }
-  .band-copy { display: grid; justify-items: center; text-align: center; }
+  .band-copy { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
   .pull {
     font-family: var(--font-display);
     font-style: italic;
@@ -380,7 +380,7 @@ const [first, ...rest] = chrome.name.split(' ');
     .plates { display: none; }
   }
   @media (max-width: 860px) {
-    .band-inner { grid-template-columns: 1fr; }
+    .band-inner { grid-template-columns: minmax(0, 1fr); }
     .band :global(.jar) { width: 5.5rem; }
     .band :global(.jar:last-child) { display: none; }
   }

@@ -118,6 +118,38 @@
       <use href="#gm-floret" x="8" y="-32" />
       <use href="#gm-floret" x="21" y="-5" />
     </g>
+    <!-- The chintz border strip (Framed border="chintz"): a running vine with a rose
+         at an even pitch, florets at the joins, drawn on its own cloth in a cell
+         48 wide by 26 tall so it tiles without a seam. -vertical turns it for the
+         side runs; gm-corner is the rosette the runs turn on. -->
+    <pattern id="gm-meander" width="48" height="26" patternUnits="userSpaceOnUse">
+      <rect class="k-cloth" width="48" height="26" />
+      <path class="k-stem" d="M0 13C12 4 36 22 48 13" />
+      <path class="k-leaf-lt" d="M12 8.6C10 4.4 12.6 1.6 17 1.4C17.6 5.4 15.6 8 12 8.6Z" />
+      <path class="k-leaf" d="M36 17.4C38 21.6 35.4 24.4 31 24.6C30.4 20.6 32.4 18 36 17.4Z" />
+      <circle class="k-rose-lt" cx="24" cy="13" r="8" />
+      <circle class="k-rose" cx="24" cy="13" r="6.2" />
+      <circle class="k-rose-lt" cx="23.2" cy="12.2" r="4" />
+      <circle class="k-rose" cx="24.4" cy="13.4" r="2.6" />
+      <path class="k-line" d="M20 15.6A4.4 4.4 0 0 1 24.8 9.6" />
+      <circle class="k-blue" cx="0" cy="13" r="2.7" />
+      <circle class="k-blue" cx="48" cy="13" r="2.7" />
+      <circle class="k-dot" cx="0" cy="13" r="1" />
+      <circle class="k-dot" cx="48" cy="13" r="1" />
+    </pattern>
+    <pattern id="gm-meander-v" href="#gm-meander" patternTransform="translate(26 0) rotate(90)" />
+    <g id="gm-corner">
+      <rect class="k-cloth" width="26" height="26" />
+      <path class="k-leaf" d="M13 13C6 15 1.5 20 1.5 25C8 24.5 12.5 20 13 13Z" />
+      <path class="k-leaf-lt" d="M13 13C20 11 24.5 6 24.5 1C18 1.5 13.5 6 13 13Z" />
+      <circle class="k-rose-lt" cx="13" cy="13" r="12" />
+      <circle class="k-rose" cx="13" cy="13" r="9.4" />
+      <circle class="k-rose-lt" cx="11.6" cy="11.6" r="6.2" />
+      <circle class="k-rose" cx="13.4" cy="13.5" r="4" />
+      <path class="k-line" d="M6 15A7.6 7.6 0 0 1 14 5.4" />
+      <path class="k-line" d="M19.6 12A6.6 6.6 0 0 1 12.4 19.6" />
+      <circle class="k-rose-dk" cx="13.2" cy="13.2" r="1.3" />
+    </g>
     <!-- gm:tile-begin (written by scripts/themes/grandmillennial/build-patterns.mjs; do not edit by hand) -->
     <pattern id="gm-chintz" width="200" height="200" patternUnits="userSpaceOnUse">
       <rect class="k-ground" width="200" height="200" />
@@ -157,6 +189,7 @@
      (being drawn last, on the true position) hides all of the first but the
      sliver it sits off by. */
   .k-ground { fill: var(--c-ground); }
+  .k-cloth { fill: var(--field); }
   .k-rose, .k-rose-lt, .k-rose-dk, .k-leaf, .k-leaf-lt, .k-blue {
     stroke: var(--o-line, none); stroke-width: 0.5; stroke-linejoin: round;
   }
