@@ -1,0 +1,15 @@
+{
+ "scene": {
+  "raw": 130234,
+  "gzip": 29788
+ },
+ "birch": {
+  "raw": 16169,
+  "gzip": 3820
+ },
+ "counts": {
+  "leaves": 629,
+  "birds": 11,
+  "catkins": 70
+ }
+}

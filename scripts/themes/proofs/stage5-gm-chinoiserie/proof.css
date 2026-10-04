@@ -1,0 +1,238 @@
+/* Stage 5 proof a3: the chinoiserie scenic wall and the botanical birch on
+   About. Every rule is under html[data-theme='grandmillennial'] so Tier B can
+   lift it unchanged (the sc-* and bb-* rules belong with the drawings, in a
+   Scene.astro and the new Birch.astro; the layout rules go in About.astro).
+
+   Markup (the harness builds it from build-scene.mjs's output; About.astro would):
+     <div class="gm-scene">
+       <div class="gm-scene-band" aria-hidden="true"></div>
+       <svg class="gm-scene-art wide">...<use href="#gm-scene"/></svg>      (>= 821px)
+       <div class="gm-scene-part">
+         <svg class="gm-scene-art panel-a">...</svg>                         (<= 820px)
+         <section class="intro gm-wrap"> sitter (oval + second frame), story </section>
+       </div>
+       <div class="gm-scene-band mid" aria-hidden="true"></div>              (<= 820px)
+       <div class="gm-scene-part">
+         <svg class="gm-scene-art panel-b">...</svg>                         (<= 820px)
+         <section class="founder"> ...letter on a --field-raised card... </section>
+       </div>
+       <div class="gm-scene-band" aria-hidden="true"></div>
+     </div>
+   The text never sits on the painting: the story and the founder's letter are
+   --field-raised cards lying on the wall. */
+
+/* ---------- the painter's tokens: one drawing, two rooms ---------- */
+
+html[data-theme='grandmillennial'] {
+  /* The day parlour: muted inks on a celadon ground. */
+  --sc-ground: #e2e6d3;
+  --sc-ground2: #d4dbc2;
+  --sc-hill1: #d6dcc6;
+  --sc-hill2: #cbd3b8;
+  --sc-line: #3d4a3b;
+  --sc-trunk: #f4efe0;
+  --sc-shade: #d8d0b7;
+  --sc-limb: #5b4d3d;
+  --sc-hl: #9a8a70;
+  --sc-lf: #7c986f;
+  --sc-lf2: #a6bb93;
+  --sc-cat: #c6a65f;
+  --sc-oxb: #ad505a;
+  --sc-blue: #587ab0;
+  --sc-gold: #b8933f;
+  --sc-rock: #cdd2bd;
+  --sc-rockshade: #b6bea4;
+  --sc-curl: #faf6ea;
+  --sc-mist: #e2e6d3;
+  /* The birch in the oval keeps its own paper: the old --c-* inks. */
+  --bb-paper: #f7f3ea;
+  --bb-shade: #ddd3bb;
+  --bb-line: #3a3225;
+  --bb-dark: #2b2a26;
+  --bb-limb: #6b4a2e;
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] {
+  /* The hunter room: gold and cream line, the wall darker than the cards so a
+     card lies on the room, never a hole in it. */
+  --sc-ground: #0b1f15;
+  --sc-ground2: #102a1c;
+  --sc-hill1: #11301f;
+  --sc-hill2: #15382a;
+  --sc-line: #d9c58d;
+  --sc-trunk: #cfc6a6;
+  --sc-shade: #a89e80;
+  --sc-limb: #7a6342;
+  --sc-hl: #e6d6a0;
+  --sc-lf: #2e6a49;
+  --sc-lf2: #4a8660;
+  --sc-cat: #b99a55;
+  --sc-oxb: #b8505e;
+  --sc-blue: #6f94c9;
+  --sc-gold: #c9a95c;
+  --sc-rock: #1d3a2b;
+  --sc-rockshade: #15301f;
+  --sc-curl: #e4dcc0;
+  --sc-mist: #0b1f15;
+  --bb-paper: #d8cfb6;
+  --bb-shade: #a69c82;
+  --bb-line: #e0cf98;
+  --bb-dark: #1d1b15;
+  --bb-limb: #8a6a46;
+}
+
+/* ---------- the scene's drawing classes ---------- */
+
+.sc-ln { fill: none; stroke: var(--sc-line); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.sc-ln2 { fill: none; stroke: var(--sc-line); stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+.sc-hill1 { fill: var(--sc-hill1); }
+.sc-hill2 { fill: var(--sc-hill2); }
+.g-farT { opacity: 0.5; }
+.sc-ground { fill: var(--sc-ground2); }
+.sc-trunk { fill: var(--sc-trunk); }
+.sc-shade { fill: var(--sc-shade); opacity: 0.8; }
+.sc-lent { fill: none; stroke: var(--sc-line); stroke-width: 2.8; stroke-linecap: round; }
+.sc-curl { fill: var(--sc-curl); stroke: var(--sc-line); stroke-width: 0.8; stroke-linejoin: round; }
+.sc-eye2 { fill: var(--sc-line); }
+.sc-limb { fill: var(--sc-limb); stroke: var(--sc-line); stroke-width: 0.8; stroke-linejoin: round; }
+.sc-hl { fill: none; stroke: var(--sc-hl); stroke-width: 1; stroke-linecap: round; opacity: 0.8; }
+.sc-twig { fill: none; stroke: var(--sc-limb); stroke-width: 1.5; stroke-linecap: round; }
+.sc-lf { fill: var(--sc-lf); stroke: var(--sc-line); stroke-width: 0.6; stroke-linejoin: round; }
+.sc-lf2 { fill: var(--sc-lf2); stroke: var(--sc-line); stroke-width: 0.6; stroke-linejoin: round; }
+.sc-vein { fill: none; stroke: var(--sc-line); stroke-width: 0.45; opacity: 0.6; stroke-linecap: round; }
+.sc-cat { fill: var(--sc-cat); stroke: var(--sc-line); stroke-width: 0.6; }
+.sc-rock { fill: var(--sc-rock); }
+.sc-rockshade { fill: var(--sc-rockshade); opacity: 0.75; }
+.sc-hole { fill: var(--sc-ground2); stroke: var(--sc-line); stroke-width: 1; }
+.sc-grass { fill: none; stroke: var(--sc-line); stroke-width: 1.2; stroke-linecap: round; opacity: 0.8; }
+.sc-fern { fill: var(--sc-lf2); stroke: var(--sc-line); stroke-width: 0.5; stroke-linejoin: round; }
+.sc-petal { fill: color-mix(in srgb, var(--sc-oxb) 35%, var(--sc-trunk)); stroke: var(--sc-line); stroke-width: 0.6; }
+.sc-gold { fill: var(--sc-gold); }
+
+/* Birds: two colourways, set on the <use>; the body, the wing and the long
+   tail take them through custom properties. */
+.sc-birdA { --bird-body: var(--sc-oxb); --bird-wing: color-mix(in srgb, var(--sc-oxb) 70%, #000); --bird-tail: color-mix(in srgb, var(--sc-oxb) 80%, var(--sc-trunk)); --bird-belly: color-mix(in srgb, var(--sc-oxb) 35%, var(--sc-trunk)); }
+.sc-birdB { --bird-body: var(--sc-blue); --bird-wing: color-mix(in srgb, var(--sc-blue) 70%, #000); --bird-tail: color-mix(in srgb, var(--sc-blue) 75%, var(--sc-trunk)); --bird-belly: color-mix(in srgb, var(--sc-blue) 30%, var(--sc-trunk)); }
+.sc-body,
+.sc-crest { fill: var(--bird-body); }
+.sc-belly { fill: var(--bird-belly); }
+.sc-wing,
+.sc-wing2 { fill: var(--bird-wing); }
+.sc-tail,
+.sc-tail2 { fill: var(--bird-tail); }
+.sc-beak { fill: var(--sc-gold); stroke: var(--sc-line); stroke-width: 0.6; }
+.sc-eye { fill: var(--sc-line); }
+
+/* ---------- the botanical birch in the oval ---------- */
+
+.gm-birch { overflow: visible; width: 100%; height: 100%; }
+.bb-ln { fill: none; stroke: var(--bb-line); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.bb-ln2 { fill: none; stroke: var(--bb-line); stroke-width: 0.8; stroke-linecap: round; stroke-linejoin: round; }
+.bb-trunk { fill: var(--bb-paper); }
+.bb-shade { fill: var(--bb-shade); opacity: 0.85; }
+.bb-lent { fill: none; stroke: var(--bb-dark); stroke-width: 2.1; stroke-linecap: round; }
+.bb-curl { fill: var(--bb-paper); stroke: var(--bb-line); stroke-width: 0.6; stroke-linejoin: round; }
+.bb-limb { fill: var(--bb-limb); stroke: var(--bb-line); stroke-width: 0.6; stroke-linejoin: round; }
+.bb-eye { fill: var(--bb-dark); }
+.bb-twig { fill: none; stroke: var(--bb-limb); stroke-width: 1.1; stroke-linecap: round; }
+.bb-lf { fill: var(--c-leaf); stroke: var(--bb-line); stroke-width: 0.5; stroke-linejoin: round; }
+.bb-lf2 { fill: var(--c-leaf-lt); stroke: var(--bb-line); stroke-width: 0.5; stroke-linejoin: round; }
+.bb-vein { fill: none; stroke: var(--bb-line); stroke-width: 0.4; opacity: 0.55; stroke-linecap: round; }
+.bb-cat { fill: var(--catkin); stroke: var(--bb-line); stroke-width: 0.5; }
+.bb-ground { fill: none; stroke: var(--bb-line); stroke-width: 1; stroke-linecap: round; opacity: 0.5; }
+.bb-grass { fill: none; stroke: var(--bb-line); stroke-width: 0.9; stroke-linecap: round; opacity: 0.55; }
+.bb-stone { fill: var(--bb-shade); stroke: var(--bb-line); stroke-width: 0.7; opacity: 0.8; }
+
+/* ---------- the wall ---------- */
+
+html[data-theme='grandmillennial'] .gm-scene-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+html[data-theme='grandmillennial'] .gm-scene {
+  position: relative;
+  isolation: isolate;
+  background: var(--sc-ground);
+}
+html[data-theme='grandmillennial'] .gm-scene-art {
+  position: absolute; inset: 0; z-index: -1;
+  width: 100%; height: 100%;
+  display: block;
+}
+html[data-theme='grandmillennial'] .gm-scene-art.panel-a,
+html[data-theme='grandmillennial'] .gm-scene-art.panel-b { display: none; }
+html[data-theme='grandmillennial'] .gm-scene-part { position: relative; isolation: isolate; }
+html[data-theme='grandmillennial'] .gm-scene .founder { background: none; border-block: 0; }
+
+/* The border band: the same stripe-and-pinstripe rail as Contact's wall (a2),
+   at the top and foot of the scene; on phones also between the two panels. */
+html[data-theme='grandmillennial'] .gm-scene-band {
+  position: relative; z-index: 1;
+  height: 1.6rem;
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 1.38rem, var(--band-pin, var(--accent)) 1.38rem calc(1.38rem + 1px), transparent calc(1.38rem + 1px) 1.8rem),
+    repeating-linear-gradient(90deg, var(--stripe-a) 0 0.9rem, var(--stripe-b) 0.9rem 1.8rem);
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] .gm-scene-band { --band-pin: #e0cf98; }
+html[data-theme='grandmillennial'] .gm-scene-band.mid { display: none; }
+html[data-theme='grandmillennial'] .gm-scene-band:first-child { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38); }
+html[data-theme='grandmillennial'] .gm-scene-band:last-child { box-shadow: 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
+
+/* ---------- cards on the wall ---------- */
+
+html[data-theme='grandmillennial'] .gm-scene .story {
+  position: relative;
+  background: var(--field-raised);
+  border: 1px solid var(--rule);
+  outline: 1px solid var(--rule);
+  outline-offset: 6px;
+  margin: 7px;
+  padding: clamp(1.75rem, 4vw, 3rem);
+  box-shadow: 0 22px 36px -20px rgb(30 16 6 / 0.55), 0 2px 0 rgb(0 0 0 / 0.06);
+}
+html[data-theme='grandmillennial'] .gm-scene .gm-framed {
+  box-shadow: 0 22px 36px -20px rgb(30 16 6 / 0.55), 0 2px 0 rgb(0 0 0 / 0.06);
+}
+html[data-theme='grandmillennial'][data-scheme='dark'] .gm-scene .story,
+html[data-theme='grandmillennial'][data-scheme='dark'] .gm-scene .gm-framed {
+  box-shadow: 0 22px 36px -18px rgb(0 0 0 / 0.8), 0 2px 0 rgb(0 0 0 / 0.2);
+}
+
+/* ---------- the off-axis hang: the oval beside a small second frame ---------- */
+
+html[data-theme='grandmillennial'] .gm-scene .sitter {
+  justify-self: start;
+  margin-left: clamp(0rem, 1.5vw, 1.5rem);
+  translate: 0 -1.25rem;
+  width: min(100%, 20rem);
+}
+html[data-theme='grandmillennial'] .gm-frame2 {
+  position: absolute; z-index: 3;
+  right: -16%; bottom: -3%;
+  width: 36%;
+  aspect-ratio: 4 / 5;
+  padding: 6px;
+  background: var(--gilt);
+  box-shadow: inset 0 0 0 1px rgb(255 245 210 / 0.6), inset 0 0 0 3px rgb(122 90 28 / 0.3), 0 14px 22px -10px rgb(20 10 4 / 0.6);
+}
+html[data-theme='grandmillennial'] .gm-frame2 .mat {
+  position: relative; width: 100%; height: 100%;
+  background: radial-gradient(closest-side, var(--oval), color-mix(in srgb, var(--oval), var(--ornament) 14%));
+  box-shadow: inset 0 0 0 2px var(--ornament-deep), inset 0 3px 8px rgb(0 0 0 / 0.3);
+  overflow: hidden;
+}
+html[data-theme='grandmillennial'] .gm-frame2 svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+html[data-theme='grandmillennial'] .gm-frame2::before {
+  /* the little cord it hangs from */
+  content: ''; position: absolute; left: 50%; bottom: 100%;
+  width: 1px; height: 2.5rem;
+  background: var(--ornament-deep);
+  rotate: 18deg; transform-origin: 50% 100%;
+}
+
+@media (max-width: 820px) {
+  html[data-theme='grandmillennial'] .gm-scene-art.wide { display: none; }
+  html[data-theme='grandmillennial'] .gm-scene-art.panel-a,
+  html[data-theme='grandmillennial'] .gm-scene-art.panel-b { display: block; }
+  html[data-theme='grandmillennial'] .gm-scene-band.mid { display: block; box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38), 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
+  html[data-theme='grandmillennial'] .gm-scene .sitter { justify-self: center; margin-left: 0; translate: -4% 0; width: min(68%, 15rem); }
+  html[data-theme='grandmillennial'] .gm-frame2 { right: -22%; bottom: -4%; width: 38%; }
+}
