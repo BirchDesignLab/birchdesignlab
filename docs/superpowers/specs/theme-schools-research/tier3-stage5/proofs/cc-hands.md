@@ -104,7 +104,15 @@ sage (`--link`), 0deg; About `.letter h2` w650, -1.5deg, size unchanged. Kicker
 sizes are identical before and after on every page (Home 46.4/35.2px, Services
 38.4/30.4px, Contact 36.8/30.4px at 1440/390), so at 390 every kicker is above the
 29.6px note. The full table is `measures.json` `computed`, keyed
-scheme/size/page/state. Tier B: once the pages' scoped rules for these elements
+scheme/size/page/state.
+
+Round 2: the shared label rule is (0,3,2) because `:is()` takes its most
+specific argument, so the plain numeral weight rule (0,3,1) lost and `.no` and
+`.num` fell to w400. "From the lab" now has its own rule, and the numeral rule
+repeats `:is(.no, .num)` to reach (0,5,1). measures.json after: `.card .no` and
+Services `.num` are w500 in both schemes at 1440, 820 and 390.
+
+Tier B: once the pages' scoped rules for these elements
 are deleted, `:root` and `html` can go.
 
 ## Contrast, ready to paste

@@ -64,7 +64,8 @@ html[data-theme='cottagecore'] .f-loc { font-size: 1.55rem; }
 }
 
 /* label hand */
-html[data-theme='cottagecore']:root :is(.field label, .no, .num, .lab .cc-hand) {
+html[data-theme='cottagecore']:root :is(.field label, .no, .num),
+html[data-theme='cottagecore']:root .lab .cc-hand {
   font-weight: var(--hand-label-wght);
   color: var(--hand-label-ink);
   rotate: var(--hand-label-tilt);
@@ -75,8 +76,10 @@ html[data-theme='cottagecore']:root .field label { font-size: var(--hand-label-s
    build). Size 1.7rem, a step over the 1.5rem form labels. */
 html[data-theme='cottagecore']:root .lab .cc-hand { font-size: 1.7rem; }
 /* The numerals sit a little heavier than the form labels so a 24px hand
-   still holds up inside its ring and against a card's corner. */
-html[data-theme='cottagecore']:root :is(.no, .num) { font-weight: 500; }
+   still holds up inside its ring and against a card's corner. The label rule
+   above is (0,3,2) because :is() takes its most specific argument
+   (.field label), so this one repeats the class list to reach (0,5,1). */
+html[data-theme='cottagecore']:root :is(.no, .num):is(.no, .num):is(.no, .num) { font-weight: 500; }
 
 /* 2. Fraunces wetness by role (SOFT 0 dry to 100 wet; WONK on for display). */
 
