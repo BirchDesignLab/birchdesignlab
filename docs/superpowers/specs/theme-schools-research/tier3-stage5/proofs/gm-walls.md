@@ -27,7 +27,7 @@ not a paper.
 All in `scripts/themes/proofs/stage5-gm-walls/`:
 
 - `build-wall.mjs` (seeded, repeatable: `node scripts/themes/proofs/stage5-gm-walls/build-wall.mjs`)
-  writes `wall-defs.svg.html` (about 8.5 KB raw): two new motifs, `#gm-wall-bloom`
+  writes `wall-defs.svg.html` (about 13 KB raw): two new motifs, `#gm-wall-bloom`
   (a pale open peony) and `#gm-wall-vine` (a trailing stem with leaves and a
   curl), plus `<pattern id="gm-chintz-wall">`. It reuses `#gm-rose`, `#gm-bud`,
   `#gm-sprig`, `#gm-leafpair` and `#gm-floret` already in `parts/Defs.astro`.
@@ -38,15 +38,24 @@ All in `scripts/themes/proofs/stage5-gm-walls/`:
 
 ### The repeat
 
-Tile **464 x 544**, a true half drop: the big cabbage roses sit in two columns
-(x = 116 and 348), the second column dropped 136 px (half the 272 spacing in a
-column), the second hero in that column being the paler bloom. Blooms, vines,
-buds, sprigs, leaf pairs and gold beads fill the rest by seeded best-candidate
-placement on a torus, at many angles and sizes; anything crossing a tile edge is
-drawn again one tile over, so there is no seam.
+Tile **928 x 544**: two 464-wide half-drop pairs side by side. The big cabbage
+roses and the paler blooms sit in four columns (x = 116, 348, 580, 812), two
+heroes per column 272 apart, the columns dropped by 0, 136, 68 and 204 px. That
+is a half drop between neighbours, and no two columns share a height. Blooms,
+vines, buds, sprigs, leaf pairs and gold beads fill the rest by seeded
+best-candidate placement on a torus, at many angles and sizes. A big filler
+(rose or bloom) is additionally kept at least about 34 px off the height of every
+other big motif (torus dy), so the fillers cannot line up with the heroes. Anything
+crossing a tile edge is drawn again one tile over, so there is no seam.
 
-The width is 464 on purpose. 480 would be exactly three columns at 1440 (three
-identical halves). 464 gives 3.1 columns at 1440, 2.8 at 1280, 2.2 at 1024, 1.8 at 820.
+Why 928 and not 464: the first version was a 464 tile. Its fillers landed at
+the heroes' heights, so nine near-identical roses ran in one evenly spaced line
+across 1440 (about 155 px apart) with a second band of ten blooms below, and
+the same rose and bloom repeated at the same height three times. Review caught
+it; the 0.19 autocorrelation peak I had cited was that row. At 928 wide, 1440 shows
+1.55 tiles, so any motif appears at most twice across, and the big motifs are kept
+off each other's heights. The cost is a larger inline defs (about 13 KB,
+123 uses, against 8.5 KB and 63) which Tier B can bake to a static SVG (see below).
 
 ### Loudness method
 
@@ -99,21 +108,31 @@ the wall on `--field`. Card shadows lift them off the cloth.
 
 ## Does a tile row or seam read at 1440?
 
-No row or seam reads in the crop. The old tile at 200 px shows a plain grid of
-identical clusters (7.2 across 1440). The new wall shows scattered motifs with
-a diagonal flow from the half drop and no tile edge visible even with the
-red edges removed. Two honest notes:
+No tile edge reads, and (after the 928 rework) no row of roses or blooms reads
+in the crop. The old tile at 200 px shows a plain grid of identical clusters
+(7.2 across 1440). The new wall shows scattered motifs, with no edge visible even
+with the red edges removed. Notes:
 
-- The largest rose repeats every 464 px, so a viewer hunting for it finds it
-  three times across 1440, on a slight diagonal. That is the nature of any
-  print repeat and is the half drop doing its job. A longer tile would hide it
-  further and cost file size.
+- The vertical repeat is still 544 px, so the same cluster recurs at the same x
+  one tile down (a vine at y 110 and 655). That is the nature of a straight
+  vertical repeat; the half-drop columns keep neighbours from sharing a height.
+  Horizontally nothing repeats closer than 928 px: a given motif shows twice
+  across 1440, at an x offset of 928, not three times in a line.
 - Autocorrelation of luminance on the plain 1440 wall (1.0 is identical): at the
-  tile period it is 1.0 by construction, at the half-drop offset (232, 272) it is
-  -0.04 light and -0.08 dark, and the highest value away from the tile period is
-  0.19 (light, at a 308 px horizontal lag) and 0.20 (dark). The old tile reads
-  0.06 to 0.08 away from its period but repeats 7 times across, which is what
-  the eye sees as a grid. The numbers are in `measures.json` under `wall`.
+  tile period it is 1.0 by construction, at the half-drop offset (464, 272) it is
+  -0.04 light and -0.05 dark, and the highest value away from the tile period
+  along x is 0.06 (light) and 0.04 (dark), along y 0.12 and 0.14 at the 272 px
+  lag (the two heroes per column). The old tile reads 0.06 to 0.08 away from its
+  period but repeats 7 times across, which is what the eye sees as a grid.
+- Row and column banding (new in this round; the lag scan only looks along one
+  axis and cannot see a row of similar shapes at one height). The measure is the
+  standard deviation of the row means (or column means) over the pixel standard
+  deviation, on the plain 1440 wall: row banding is 0.14 light and 0.13 dark at
+  every loudness, against 0.30 for the old 200 px tile; the 464 version it
+  replaces measured 0.26 (light 100) and 0.29 (dark 60). Column banding is 0.23,
+  against 0.28 old. The harness now fails (exit 1) if the new wall's row banding
+  is not under 85 percent of the old tile's at any loudness in either scheme.
+  Numbers are in `measures.json` under `wall` (`rowBand`, `colBand`).
 
 ## Contrast
 
@@ -145,18 +164,18 @@ paper, a non-text separation, `measures.json`):
 
 | Ink | Light | Dark |
 |---|---|---|
-| 100% | 1.30 | 1.26 |
-| 60% | 1.26 | 1.05 |
-| 40% | 1.23 | 1.16 |
+| 100% | 1.29 | 1.25 |
+| 60% | 1.25 | 1.03 |
+| 40% | 1.22 | 1.14 |
 
 Weak spot: in dark at 60% the card is nearly the same average lightness as the
-wall (1.05). It separates by the gilt frame, the 1px rule, the shadow and the
+wall (1.03). It separates by the gilt frame, the 1px rule, the shadow and the
 pattern stopping at its edge, and it reads on the sheet, but it is the one place
 loudness is borderline. If the founder wants a stronger card in dark, darken
 `--wall-ground` further (for example `#000` 40%) before touching the ink value.
 
-Wall texture, standard deviation of relative luminance: light 0.197 / 0.142 /
-0.104 and dark 0.100 / 0.039 / 0.020 at 100 / 60 / 40, against 0.210 and 0.098
+Wall texture, standard deviation of relative luminance: light 0.193 / 0.139 /
+0.102 and dark 0.097 / 0.038 / 0.019 at 100 / 60 / 40, against 0.210 and 0.098
 for the old 200px chintz. At 60% the light wall is about a third quieter than
 the old tile; in dark the 40% wall is almost flat, which is why 60 and not 40.
 

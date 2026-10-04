@@ -273,6 +273,16 @@ async function analysePlain(scheme, ink) {
     }
     return best;
   };
+  /* Banding: SD of the row means (and of the column means) over the pixel SD. A row of similar motifs at one height raises the row figure; the x/y-only lag scan cannot see it. */
+  const profile = (byRow) => {
+    const n = byRow ? img.height : img.width, k = byRow ? img.width : img.height;
+    const means = new Float64Array(n);
+    for (let i = 0; i < n; i++) { let t = 0; for (let j = 0; j < k; j++) { const q = byRow ? i * img.width + j : j * img.width + i; t += lumaOf(data[4 * q], data[4 * q + 1], data[4 * q + 2]); } means[i] = t / k; }
+    let mm = 0; for (const v of means) mm += v; mm /= n;
+    let v2 = 0; for (const v of means) v2 += (v - mm) ** 2;
+    return +(Math.sqrt(v2 / n) / (sdL || 1)).toFixed(3);
+  };
+  const rowBand = profile(true), colBand = profile(false);
   const isOld = ink === 'old';
   const [pw, ph] = isOld ? [200, 200] : [TW, TH];
   return {
@@ -281,6 +291,7 @@ async function analysePlain(scheme, ink) {
     atHalfDrop: lag(pw / 2, ph / 2),
     atHalfX: lag(pw / 2, 0), atHalfY: lag(0, ph / 2),
     peakAlongX: scan('x', pw), peakAlongY: scan('y', ph),
+    rowBand, colBand,
     columnsAt1440: +(1440 / pw).toFixed(2),
     tile: [pw, ph],
   };
@@ -422,6 +433,11 @@ if (process.argv.includes('--sheets-only')) {
     measures.wall[`${scheme}__${ink}`] = a;
     await seamsCrop(scheme, ink);
     console.log(scheme, ink, JSON.stringify(a));
+  }
+  /* Gate: the new wall must band less than the old 200px tile along rows, in both schemes at every loudness. */
+  for (const scheme of SCHEMES) for (const ink of ['100', '60', '40']) {
+    const n = measures.wall[`${scheme}__${ink}`], o = measures.wall[`${scheme}__old`];
+    if (!(n.rowBand < o.rowBand * 0.85)) { console.error(`FAIL row banding ${scheme} ${ink}: new ${n.rowBand} vs old ${o.rowBand}`); process.exitCode = 1; }
   }
   await writeFile(mpath, JSON.stringify(measures, null, 2) + '\n');
 }
