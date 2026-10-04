@@ -38,7 +38,7 @@ export const meta: ThemeMeta = {
   ],
   assets: {
     provenance: 'original-vector',
-    note: 'All drawn for this school in SVG and CSS: a chintz repeat (cabbage roses, buds, forget-me-not sprigs), a trellis lattice, a birch-branch botanical, blue-and-white plates, a ribbon bow, gilt corner scrolls, a wax seal and a scalloped striped awning.',
+    note: 'All drawn for this school in SVG and CSS: a chintz repeat (cabbage roses in three variants, buds, forget-me-not sprigs), a chintz wallpaper and an engraved garden toile de Jouy (external SVG files), a trellis lattice, a birch-branch botanical, blue-and-white plates, a ribbon bow, gilt corner scrolls, a wax seal and a scalloped striped awning.',
   },
   order: 5,
 };

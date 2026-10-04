@@ -1,13 +1,32 @@
 ---
-/** A panel of the chinoiserie toile repeat (parts/Defs.astro): scattered
-    blue sprays, no lattice line, for the porcelain sample-book swatch. */
+/** A cutting of the toile de Jouy for the sample-book swatch: engraved garden
+    scenes in one ink (oxblood by day, gold on hunter in the lacquered room),
+    after Huet. The drawing is an external SVG per scheme (assets/toile-*.svg,
+    built by scripts/themes/proofs/stage5-gm-toile + scripts/themes/grandmillennial/build-patterns.mjs)
+    that the browser caches; this is only the frame it is cut in.
+
+    A swatch is not one size (353 x 441 at 1440, 258 x 322 at 820, 353 x 199 on
+    a phone), and a background is anchored to its top left, so one fixed offset
+    would cut the scenes at the edges. The cutting is a square 1000px field
+    centred on the swatch (the swatch clips it), so the scenes sit the same way
+    at every size: one cut of the cloth for the portrait swatch, a second,
+    wider one under 720px. The offsets come from
+    scripts/themes/proofs/stage5-gm-toile/find-swatch-frames.mjs. */
 interface Props { class?: string }
 const { class: cls } = Astro.props;
 ---
-<svg class:list={['gm-toile', cls]} aria-hidden="true" focusable="false">
-  <rect width="100%" height="100%" fill="url(#gm-porcelaine)" />
-</svg>
+<div class:list={['gm-toile', cls]} aria-hidden="true"></div>
 
 <style>
-  .gm-toile { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .gm-toile {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 1000px; height: 1000px;
+    margin: -500px 0 0 -500px;
+    background: url('../assets/toile-light.svg') 481px 98px / 507px 576px repeat;
+  }
+  :global(html[data-scheme='dark']) .gm-toile { background-image: url('../assets/toile-dark.svg'); }
+  @media (max-width: 720px) {
+    .gm-toile { background-position: 125px 440px; background-size: 465px 528px; }
+  }
 </style>

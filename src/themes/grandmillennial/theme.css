@@ -51,6 +51,10 @@
   --band-lattice: rgb(223 231 242 / 0.14);
   /* The lamp over the field: none by day (the lacquered room's is below). */
   --lamp: none;
+  /* The lacquered room's deeper edge vignette and the lit top-left edge of a
+     framed card or the Lab band: none by day. */
+  --vignette: none;
+  --edge-hi: 0 0 0 0 transparent;
   --piping: var(--hunter);
   --btn-rule: var(--gold-light);
   --porcelain-ground: var(--porcelain-pale);
@@ -72,15 +76,32 @@
   /* The envelope's flap, distinct from the writing paper it lies beside. */
   --flap: var(--paper);
 
-  /* The chintz repeat's inks (parts/Defs.astro). */
-  --c-ground: #f5e5dc;
-  --c-rose: #c9576b;
-  --c-rose-lt: #f0c0b8;
-  --c-rose-dk: #7d1f2b;
-  --c-leaf: #2f5e41;
-  --c-leaf-lt: #8aa981;
-  --c-blue: #3a64a8;
-  --c-dot: #b8933f;
+  /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
+     Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
+     a print that has lived in a room, not a new one. Text tokens are untouched.
+     The wall files bake these same values (scripts/themes/grandmillennial/build-patterns.mjs
+     reads them back out of this file), so change them here and rebuild. */
+  --c-ground: #f3e6df;
+  --c-rose: #bd6270;
+  --c-rose-lt: #e9c3bc;
+  --c-rose-dk: #742b31;
+  --c-leaf: #385c45;
+  --c-leaf-lt: #8ea787;
+  --c-blue: #44659b;
+  --c-dot: #b29556;
+  /* The thin brown line the old printers laid round each motif, and the grain
+     in the ground: a dark and a light fleck. */
+  --c-brown: #7b5a46;
+  --c-grain-d: rgb(110 78 58 / 0.34);
+  --c-grain-l: rgb(255 250 240 / 0.55);
+  /* Papered walls (B1 item 2): the ground under the wall pattern, the toile
+     swatch's ground, the stripe band's pinstripe and the ticking's stripe.
+     Light walls lie on the cloth colour, so a raised card is the paler sheet. */
+  --wall-ground: var(--c-ground);
+  --toile-ground: var(--field);
+  --toile-wall: var(--field);
+  --band-pin: var(--oxblood);
+  --tick-ink: var(--porcelain);
 
   --font-display: 'Playfair Display Variable', 'Playfair Display Variable fallback', Georgia, serif;
   --font-body: 'Cormorant Garamond Variable', 'Cormorant Garamond Variable fallback', Georgia, serif;
@@ -125,6 +146,13 @@
      the body and the canopy's swap picture (the foot of this file), so the
      two never drift apart. */
   --lamp: radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%);
+  /* Lacquer, B1 item 6 (static, hunter hue unchanged): the room falls away
+     toward its edges. Sized like the lamp, so the canopy's swap picture at the
+     foot of this file can carry it too. */
+  --vignette: radial-gradient(135% 105% at 50% 38%, transparent 52%, rgb(0 0 0 / 0.36) 100%);
+  /* The top-left edge of anything framed catches the lamp: a hairline of light
+     inside the frame's top and left, and a soft one under it. */
+  --edge-hi: inset 1px 1px 0 rgb(255 238 196 / 0.3), inset 3px 3px 5px -2px rgb(255 238 196 / 0.1);
   --piping: #c9a95c;
   --btn-rule: #8a6a26;
   --porcelain-ground: #2a4a7e;
@@ -144,14 +172,27 @@
   --catkin: #a68f5c;
   --flap: #0f251b;
 
-  --c-ground: #1b3a2a;
-  --c-rose: #b04458;
-  --c-rose-lt: #d99a9c;
-  --c-rose-dk: #5d1422;
-  --c-leaf: #4b7d59;
-  --c-leaf-lt: #7f9c73;
-  --c-blue: #86a6d8;
-  --c-dot: #c9a95c;
+  --c-ground: #21392c;
+  --c-rose: #a54f5c;
+  --c-rose-lt: #d19e9f;
+  --c-rose-dk: #561e26;
+  --c-leaf: #547b5e;
+  --c-leaf-lt: #839a7a;
+  --c-blue: #8ca6ce;
+  --c-dot: #c3aa6f;
+  --c-brown: #2b1b14;
+  --c-grain-d: rgb(8 20 14 / 0.4);
+  --c-grain-l: rgb(236 220 180 / 0.13);
+  /* Darker than --field-raised, so a card on a wall is paper on a darker room,
+     never a hole (the a1 critic's C5). The swatch's toile is a lifted hunter
+     cloth. */
+  --wall-ground: color-mix(in srgb, var(--field), #000 24%);
+  --toile-ground: var(--hunter);
+  --toile-wall: var(--wall-ground);
+  /* The a2 minor: the accent is gold in the lacquer, and a gold pinstripe on
+     the cream stripe was 1.1 to 1. A lacquer-dark oxblood shows. */
+  --band-pin: #3b0d16;
+  --tick-ink: #6e1a29;
 }
 
 :where([data-theme='grandmillennial']) *,
@@ -160,7 +201,7 @@
 
 [data-theme='grandmillennial'] body {
   margin: 0;
-  background: var(--lamp), var(--field);
+  background: var(--vignette), var(--lamp), var(--field);
   color: var(--mark);
   font-family: var(--font-body);
   font-size: 1.25rem;
@@ -316,6 +357,95 @@
    field between its gold double rule and the skirted table. */
 [data-theme='grandmillennial'] body:has(.sent) .site-footer { margin-top: 0; }
 
+/* ---------- Papered walls (B1 item 2, decision F) ---------- */
+
+/* One shared wrapper, a per-page paper. Contact: the chintz at 0.6 ink. Services:
+   the toile at full ink. (About's chinoiserie wall is B1 task 2's.) The papers
+   are external SVG files, one per scheme with the ink baked, so the browser
+   caches them and no page carries them inline; the ground is a token under the
+   file. Text never sits on a wall: it sits on --field-raised cards. Markup:
+     <div class="gm-wall gm-wall--chintz|toile">
+       <div class="gm-wall-band" aria-hidden="true"></div>
+       <div class="gm-wall-room"> cards </div>
+       <div class="gm-wall-band" aria-hidden="true"></div>
+     </div>
+   The wall's side margin is the band of paper you see around the cards; on a
+   phone it stays a real band (call 3), not a sliver. */
+[data-theme='grandmillennial'] .gm-wall {
+  --wall-side: clamp(1.6rem, 7vw, 3.5rem);
+  position: relative;
+  isolation: isolate;
+  background-color: var(--wall-ground);
+  background-repeat: repeat;
+  background-position: 0 0;
+}
+[data-theme='grandmillennial'] .gm-wall--chintz {
+  background-image: url('./assets/chintz-wall-light.svg');
+  background-size: 928px 544px;
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--chintz { background-image: url('./assets/chintz-wall-dark.svg'); }
+[data-theme='grandmillennial'] .gm-wall--toile {
+  background-color: var(--toile-wall);
+  background-image: url('./assets/toile-light.svg');
+  background-size: 704px 800px;
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--toile { background-image: url('./assets/toile-dark.svg'); }
+
+[data-theme='grandmillennial'] .gm-wall-room {
+  width: min(100% - 2 * var(--wall-side), var(--wrap));
+  margin-inline: auto;
+  padding-block: clamp(2.75rem, 6vw, 4.75rem);
+}
+/* Inside the room the cards take the room's width: the wall's own margin is
+   the gutter. */
+[data-theme='grandmillennial'] .gm-wall-room .gm-wrap { width: 100%; }
+
+/* The border band. Stripe: an awning-wide stripe with a narrow pinstripe down
+   the cream, between two gold rules. Ticking: the mattress-ticking pairs of thin
+   stripes on cream. */
+[data-theme='grandmillennial'] .gm-wall-band {
+  position: relative; z-index: 1;
+  height: 1.6rem;
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 1.38rem, var(--band-pin) 1.38rem calc(1.38rem + 1px), transparent calc(1.38rem + 1px) 1.8rem),
+    repeating-linear-gradient(90deg, var(--stripe-a) 0 0.9rem, var(--stripe-b) 0.9rem 1.8rem);
+}
+[data-theme='grandmillennial'] .gm-wall-band.ticking {
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 11px, var(--tick-ink) 11px 13px, transparent 13px 16px, var(--tick-ink) 16px 17px, transparent 17px 28px),
+    var(--stripe-b);
+}
+[data-theme='grandmillennial'] .gm-wall-band:first-child { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38); }
+[data-theme='grandmillennial'] .gm-wall-band:last-child { box-shadow: 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
+
+/* Cards on a wall are paper lifted off the cloth; in the lacquer the lamp
+   catches their top-left edge as well. */
+[data-theme='grandmillennial'] .gm-wall .gm-framed,
+[data-theme='grandmillennial'] .gm-wall .wall-card {
+  box-shadow: var(--edge-hi), 0 22px 36px -20px rgb(30 16 6 / 0.55), 0 2px 0 rgb(0 0 0 / 0.06);
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .gm-framed,
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .wall-card {
+  box-shadow: var(--edge-hi), 0 22px 36px -18px rgb(0 0 0 / 0.75), 0 2px 0 rgb(0 0 0 / 0.2);
+}
+
+/* ---------- The lacquered dark room (B1 item 6): static ---------- */
+
+/* A diagonal specular band across the viewport, on a fixed pseudo-element so it
+   stays put while the room scrolls under it, like a window's reflection on
+   lacquer. Faint enough to leave every text contrast alone; nothing moves.
+   The edge vignette is --vignette (body), the lit edges are --edge-hi. */
+[data-theme='grandmillennial'][data-scheme='dark'] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 30;
+  pointer-events: none;
+  background: linear-gradient(112deg, transparent 30%, rgb(255 244 214 / 0.028) 41%, rgb(255 244 214 / 0.07) 47%, rgb(255 244 214 / 0.07) 49%, rgb(255 244 214 / 0.028) 55%, transparent 66%);
+}
+
 /* ---------- Arrival: the drapes part ---------- */
 
 /* Coming in from another school (or the Lab), the new room is revealed from
@@ -410,7 +540,7 @@ html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
 html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
-  background: var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
+  background: var(--vignette) 0 0 / 100% 3000px no-repeat, var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),

@@ -16,6 +16,9 @@ const { copy, theme } = Astro.props;
   <p class="subline">{copy.subline}</p>
 </section>
 
+<div class="gm-wall gm-wall--chintz">
+<div class="gm-wall-band" aria-hidden="true"></div>
+<div class="gm-wall-room">
 <div class="desk gm-wrap">
   <section class="write">
     <Framed tone="raised" class="stationery">
@@ -41,7 +44,7 @@ const { copy, theme } = Astro.props;
     </Framed>
   </section>
 
-  <section class="envelope">
+  <section class="envelope wall-card">
     <div class="flap" aria-hidden="true"><Seal class="seal" /></div>
     <div class="note">
       <p class="invite">{copy.invite}</p>
@@ -51,6 +54,9 @@ const { copy, theme } = Astro.props;
   </section>
 
   <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}{part}</>)}</p>
+</div>
+</div>
+<div class="gm-wall-band" aria-hidden="true"></div>
 </div>
 
 <style>
@@ -132,10 +138,16 @@ const { copy, theme } = Astro.props;
   button { justify-self: center; margin-top: 0.5rem; }
   .trust {
     grid-column: 1 / -1;
-    margin-top: 0.5rem;
+    justify-self: center;
+    margin-top: 0.75rem;
     text-align: center;
     font-style: italic;
     color: var(--mark-muted);
+    /* On the wall, the line sits on a small card of its own: text never on the paper. */
+    padding: 0.7rem 1.75rem 0.8rem;
+    background: var(--field-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 12px 22px -14px rgb(30 16 6 / 0.5);
   }
   .sep { font-style: normal; color: var(--rule); padding-inline: 0.35rem; }
 

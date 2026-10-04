@@ -21,6 +21,8 @@ const { tag: Tag = 'div', class: cls, tone = 'raised' } = Astro.props;
     border: 1px solid var(--rule);
     outline: 1px solid var(--rule);
     outline-offset: 6px;
+    /* The lacquered room's lamp catches the frame's top-left edge (theme.css --edge-hi; none by day). */
+    box-shadow: var(--edge-hi);
   }
   .tone-raised { background: var(--field-raised); }
   .tone-field { background: var(--field); }

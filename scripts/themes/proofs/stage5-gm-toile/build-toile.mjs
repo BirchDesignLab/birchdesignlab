@@ -32,7 +32,10 @@ function figure(fine, bold, x, prop) {
   // gown: a bell with long folds, shaded on the right
   bold.M(x - 4, -28).Q(x - 12, -14, x - 17, g).L(x + 15, g).Q(x + 11, -14, x + 5, -28);
   bold.M(x - 4, -28).Q(x, -31, x + 5, -28);
-  hatch(fine, [[x + 1, -26], [x + 6, -26], [x + 14, g - 1], [x - 2, g - 1]], 78, (u) => 1.8 + u * 0.3);
+  hatch(fine, [[x + 1, -26], [x + 6, -26], [x + 14, g - 1], [x - 2, g - 1]], 78, (u) => 1.05 + u * 0.2);
+  // B1: a lighter pass over the lit half of the skirt, and the bodice
+  hatch(fine, [[x - 9, -22], [x - 2, -26], [x - 2, g - 1], [x - 15, g - 1]], 78, (u) => 2.1 + u * 0.4, { skip: 0.1 });
+  hatch(fine, [[x - 3, -29], [x + 4, -29], [x + 5, -38], [x - 4, -38]], 70, 1.3, { minLen: 1 });
   fine.M(x - 7, -22).Q(x - 11, -11, x - 13, -2);
   fine.M(x - 2, -24).Q(x - 3, -12, x - 4, -2);
   fine.M(x - 14, -3).Q(x - 8, -5, x - 2, -3).Q(x + 4, -1, x + 10, -3);
@@ -67,7 +70,8 @@ function figure(fine, bold, x, prop) {
     }
     for (const p of pts.slice(1, 4)) fine.M(...apex).Q((apex[0] + p[0]) / 2, (apex[1] + p[1]) / 2 - 1, ...p);
     fine.M(x + 14, -82).l(0, -4);
-    hatch(fine, [[x + 14, -80], [x + 38, -66], [x + 40, -64], [x + 24, -64]], -30, 1.7, { trim: 0.2 });
+    hatch(fine, [[x + 14, -80], [x + 38, -66], [x + 40, -64], [x + 24, -64]], -30, 1.05, { trim: 0.2 });
+    hatch(fine, [[x - 12, -70], [x + 2, -76], [x + 8, -66], [x - 12, -64]], 25, 2, { trim: 0.2 });
   }
 }
 
@@ -96,7 +100,7 @@ function grove() {
   canopy(fine, bold, -52, -88, 18, 10, { airy: 0.7, scallop: 6, tick: 3.8 });
   canopy(fine, bold, 90, -86, 17, 10, { airy: 0.7, scallop: 6, tick: 3.8 });
   // tree shadows falling right
-  for (const tx of [-74, 70]) for (let k = 0; k < 3; k++) fine.seg(tx + 4, 2 + k * 1.8, tx + 22 - k * 4, 2 + k * 1.8);
+  for (const tx of [-74, 70]) for (let k = 0; k < 5; k++) fine.seg(tx + 4, 2 + k * 1.4, tx + 30 - k * 4, 2 + k * 1.4);
   bench(fine, bold, -2, 56);
   // a watering can beside the bench, wild flowers
   bold.M(34, 0).l(0, -10).l(10, 0).l(0, 10);
@@ -115,7 +119,7 @@ function grove2() {
   const trees = [[-80, 124, 10, -4, 3], [-62, 98, 7.5, 3, 2], [-46, 112, 8.5, 5, 3]];
   for (const [x, h, w, lean, br] of trees) birch(fine, bold, x, 0, h, w, lean, { branches: br, crown: false });
   canopy(fine, bold, -62, -118, 50, 24, { airy: 0.6 });
-  for (const tx of [-80, -46]) for (let k = 0; k < 3; k++) fine.seg(tx + 4, 2 + k * 1.8, tx + 24 - k * 4, 2 + k * 1.8);
+  for (const tx of [-80, -46]) for (let k = 0; k < 5; k++) fine.seg(tx + 4, 2 + k * 1.4, tx + 28 - k * 4, 2 + k * 1.4);
   bench(fine, bold, -8, 40, true);
   bold.poly([[2, -17], [10, -17], [11, -20], [3, -20]], true);
   fine.seg(3.5, -18.5, 9, -18.5);
@@ -147,6 +151,7 @@ function desk() {
   bold.seg(X - 6, -36, X + 50, -36);
   bold.poly([[X - 2, -36], [X + 46, -36], [X + 46, -27], [X - 2, -27]], true);
   fine.M(X + 20, -31.5).l(6, 0);
+  hatch(fine, [[X - 2, -36], [X + 46, -36], [X + 46, -27], [X - 2, -27]], 90, 1.5, { trim: 0.3, minLen: 1 });
   for (const [a, b] of [[X - 4, X - 6], [X + 48, X + 50], [X + 7, X + 6], [X + 56, X + 57]]) {
     bold.seg(a, -27, b, 0); fine.seg(a + 2.2, -27, b + 2.2, 0);
   }
@@ -166,7 +171,7 @@ function desk() {
   fine.M(cx - 1, -42).l(0, 18);
   for (let k = 0; k < 4; k++) fine.seg(X - 4 + k * 3, 2 + k * 1.7, X + 62 - k * 4, 2 + k * 1.7);
   // shadow of the trunk and its hatching
-  for (let k = 0; k < 3; k++) fine.seg(-40, 2 + k * 1.8, -18 - k * 4, 2 + k * 1.8);
+  for (let k = 0; k < 5; k++) fine.seg(-40, 2 + k * 1.4, -14 - k * 4, 2 + k * 1.4);
   spray(fine, 82, 0, 16, -1.65, { leaves: 5, side: 2.6 });
   spray(fine, -90, 1, 12, -1.5, { leaves: 3, side: 2.2 });
   flyer(fine, 66, -80, 1); flyer(fine, 84, -90, 0.75);
@@ -181,7 +186,8 @@ function reader() {
   bold.poly([[px - 10, 0], [px - 10, -66], [px + 8, -66], [px + 8, 0]]);
   bold.M(px - 13, -66).l(0, -4).l(24, 0).l(0, 4);
   bold.seg(px - 13, -66, px + 11, -66);
-  hatch(fine, [[px - 10, 0], [px - 10, -64], [px - 3, -64], [px - 3, 0]], 90, (u) => 1.6 + u * 0.4);
+  hatch(fine, [[px - 10, 0], [px - 10, -64], [px - 3, -64], [px - 3, 0]], 90, (u) => 1.05 + u * 0.3);
+  hatch(fine, [[px - 3, 0], [px - 3, -64], [px + 8, -64], [px + 8, 0]], 90, 2.4, { skip: 0.15 });
   for (let k = 1; k < 6; k++) fine.seg(px - 10, -k * 11, px + 8, -k * 11);
   bold.M(px - 10, -66).Q(px - 30, -92, px - 62, -80);
   bold.M(px - 13, -70).Q(px - 32, -98, px - 64, -87);
@@ -208,10 +214,10 @@ function parasol() {
   island(fine, bold, 92, 13);
   birch(fine, bold, -66, 0, 104, 8, -3, { branches: 3, crown: false });
   canopy(fine, bold, -64, -102, 36, 18, { airy: 0.6 });
-  for (let k = 0; k < 3; k++) fine.seg(-62, 2 + k * 1.8, -44 - k * 4, 2 + k * 1.8);
+  for (let k = 0; k < 5; k++) fine.seg(-62, 2 + k * 1.4, -40 - k * 4, 2 + k * 1.4);
   figure(fine, bold, 8, 'parasol');
   canopy(fine, bold, 62, -16, 22, 15, { airy: 0.95, scallop: 7, tick: 3.8 });
-  for (let k = 0; k < 3; k++) fine.seg(54 + k * 3, 2 + k * 1.8, 82 - k * 5, 2 + k * 1.8);
+  for (let k = 0; k < 5; k++) fine.seg(54 + k * 3, 2 + k * 1.4, 84 - k * 5, 2 + k * 1.4);
   spray(fine, -26, 0, 12, -1.6, { leaves: 3, side: 2.2 });
   flyer(fine, 20, -92, 0.9);
   return { fine, bold, w: 180, h: 112 };
@@ -223,8 +229,8 @@ function urn() {
   island(fine, bold, 76, 12);
   bold.poly([[-24, 0], [-24, -7], [24, -7], [24, 0]]);
   bold.poly([[-19, -7], [-19, -14], [19, -14], [19, -7]]);
-  hatch(fine, [[10, -7], [24, -7], [24, 0], [10, 0]], 90, 1.7);
-  hatch(fine, [[8, -14], [19, -14], [19, -7], [8, -7]], 90, 1.7);
+  hatch(fine, [[6, -7], [24, -7], [24, 0], [6, 0]], 90, 1.05);
+  hatch(fine, [[4, -14], [19, -14], [19, -7], [4, -7]], 90, 1.05);
   // pedestal: a baluster, both sides drawn from one curve
   for (const sg of [-1, 1]) {
     bold.M(sg * 11, -14).C(sg * 9, -17, sg * 5.5, -20, sg * 5.5, -28)
@@ -239,7 +245,8 @@ function urn() {
     const x0 = k * 5.2;
     fine.M(x0 * 0.55, -46).Q(x0 * 1.1, -58, x0 * 0.92, -72);
   }
-  hatch(fine, [[8, -47], [20, -60], [17, -72], [8, -72]], 12, (u) => 1.6 + u * 0.5, { minLen: 1 });
+  hatch(fine, [[4, -47], [21, -60], [18, -73], [4, -73]], 12, (u) => 1.0 + u * 0.4, { minLen: 1 });
+  hatch(fine, [[-18, -50], [-8, -48], [-8, -72], [-18, -72]], 80, 2.4, { minLen: 1, skip: 0.12 });
   bold.M(-21, -62).C(-34, -62, -34, -72, -20, -73);
   bold.M(21, -62).C(34, -62, 34, -72, 20, -73);
   const base = [[-6, -80, -2.1], [0, -82, -1.57], [6, -80, -1.0], [-10, -78, -2.7], [10, -78, -0.45]];
@@ -256,8 +263,8 @@ function urn() {
   for (const sx of [-1, 1]) {
     const cx = sx * 54;
     bold.M(cx - 8, 0).Q(cx - 10, -22, cx, -38).Q(cx + 10, -22, cx + 8, 0);
-    for (let k = 0; k < 14; k++) {
-      const yy = -4 - k * 2.6, hw = 8 * (1 - Math.abs(yy + 18) / 24);
+    for (let k = 0; k < 22; k++) {
+      const yy = -4 - k * 1.6, hw = 8 * (1 - Math.abs(yy + 18) / 24);
       if (hw > 1) fine.seg(cx - hw + (sx > 0 ? 1 : 0), yy, cx + hw * (sx > 0 ? 0.9 : 0.4), yy);
     }
   }
@@ -349,7 +356,9 @@ for (const [id, x, y, s, m] of items) {
     for (const ky of [-1, 0, 1]) {
       const py = yn + ky * TH;
       if (py + 16 * s < 0 || py - up > TH) continue;
-      const t = `translate(${f(px)} ${f(py)})${s === 1 && m === 1 ? '' : ` scale(${f(s * m)} ${f(s)})`}`;
+      // B1 (a1 minor): scale to two decimals on both axes, so a mirror never stretches
+      const sc = (n) => String(Math.round(n * 100) / 100);
+      const t = `translate(${f(px)} ${f(py)})${s === 1 && m === 1 ? '' : ` scale(${sc(s * m)} ${sc(s)})`}`;
       useEls.push(`<use href="#gm-toile-${id}" transform="${t}"/>`);
     }
   }
@@ -370,6 +379,8 @@ const swatchPatterns =
 
 const markup = `<g class="k-toile" aria-hidden="true">${defs.join('')}</g>\n${pattern}\n${swatchPatterns}\n`;
 writeFileSync(join(HERE, 'toile-defs.svg.html'), markup);
+// B1: the parts, for scripts/themes/grandmillennial/build-patterns.mjs, which bakes the per-scheme external SVG files.
+writeFileSync(join(HERE, 'toile-tile.json'), JSON.stringify({ tile: [TW, TH], defs, uses: useEls }));
 
 const stats = {
   tile: `${TW} x ${TH}`,

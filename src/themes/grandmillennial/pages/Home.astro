@@ -271,6 +271,9 @@ const [first, ...rest] = chrome.name.split(' ');
 
   /* ---------- The Lab: a plate wall ---------- */
   .lab { margin-block: 1rem clamp(4rem, 8vw, 6rem); }
+  /* Lacquer (dark only): the band's scalloped top-left
+     edge catches the lamp. A drop-shadow on the parent follows the band's mask. */
+  :global(html[data-scheme='dark']) .lab { filter: drop-shadow(-1px -1px 0 rgb(255 238 196 / 0.3)); }
   .band {
     --r: 16px;
     --lattice: var(--band-lattice);

@@ -20,8 +20,11 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   </div>
 </section>
 
+<div class="gm-wall gm-wall--toile">
+<div class="gm-wall-band ticking" aria-hidden="true"></div>
+<div class="gm-wall-room">
 {copy.offerings.map((offering, i) => (
-  <section class:list={['offering', 'gm-wrap', { flip: i % 2 === 1 }]}>
+  <section class:list={['offering', 'wall-card', 'gm-wrap', { flip: i % 2 === 1 }]}>
     <div class="swatch-hang" aria-hidden="true">
       <div class:list={['swatch', i % 2 ? 'porcelain' : 'floral']}>
         {i % 2 === 0 ? <Chintz swatch /> : <Toile />}
@@ -34,6 +37,9 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     </div>
   </section>
 ))}
+</div>
+<div class="gm-wall-band ticking" aria-hidden="true"></div>
+</div>
 
 <section class="process gm-trellis">
   <div class="gm-wrap">
@@ -81,8 +87,12 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
     gap: clamp(2rem, 6vw, 5rem);
     align-items: center;
-    padding-block: clamp(2.5rem, 5vw, 3.5rem);
+    padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3.5rem);
+    /* Text sits on paper, never on the toile: each offering is a card on the wall. */
+    background: var(--field-raised);
+    border: 1px solid var(--rule);
   }
+  .offering + .offering { margin-top: clamp(2.25rem, 5vw, 3.5rem); }
   .offering.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); }
   .offering.flip .swatch-hang { order: 2; }
   /* The shadow is a drop-shadow on the hanger so it follows the pinked cut. */
@@ -105,8 +115,10 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
       conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
       conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
     mask-composite: intersect;
+    overflow: hidden;
   }
-  .swatch.porcelain { background: var(--porcelain-ground); }
+  /* The toile's cloth: cream by day, hunter in the lacquered room (the ink is in the file). */
+  .swatch.porcelain { background: var(--toile-ground); }
   .tag {
     position: absolute; left: 50%; bottom: -1.1rem;
     translate: -50% 0;

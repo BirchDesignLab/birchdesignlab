@@ -136,7 +136,7 @@ const ellipsePoly = (cx, cy, rx, ry, n = 20) =>
  * toward the lower right (light from the upper left). `airy` thins the ticks
  * and leaves clear paper in the light, for birch.
  */
-function canopy(fine, bold, cx, cy, rx, ry, { airy = 0.6, scallop = 9, tick = 4.5 } = {}) {
+function canopy(fine, bold, cx, cy, rx, ry, { airy = 0.6, scallop = 9, tick = 4.5, shade = 1 } = {}) {
   // outline: a chain of bumps, left open at the top-left where the light is.
   const n = Math.max(8, Math.round((Math.PI * (rx + ry)) / scallop));
   const start = 3.3;
@@ -169,6 +169,26 @@ function canopy(fine, bold, cx, cy, rx, ry, { airy = 0.6, scallop = 9, tick = 4.
       fine.M(x, y).Q(x + s * 0.5, y + s * 0.9, x + s, y - s * 0.1);
     }
   }
+  // Stage 5 B1 (call 1): tone from hatching. A crescent of diagonal strokes
+  // fills the shaded lower right of the crown, tighter toward its edge, so the
+  // mass reads as foliage lit from the upper left, not an outline.
+  if (shade > 0) {
+    const outer = [], inner = [];
+    const a0 = -0.45, a1 = 3.2, steps = 14;
+    for (let i = 0; i <= steps; i++) {
+      const a = a0 + ((a1 - a0) * i) / steps;
+      outer.push([cx + rx * 0.93 * Math.cos(a), cy + ry * 0.93 * Math.sin(a)]);
+    }
+    for (let i = steps; i >= 0; i--) {
+      const a = a0 + ((a1 - a0) * i) / steps;
+      inner.push([cx - rx * 0.2 + rx * 0.62 * Math.cos(a), cy - ry * 0.3 + ry * 0.62 * Math.sin(a)]);
+    }
+    hatch(fine, [...outer, ...inner], 52, (u) => (1.55 - 0.55 * u) / shade, { trim: 0.7, minLen: 2.2, skip: 0.06 });
+    // a second, crossing pass in the deepest shade at the rim
+    const rim = outer.slice(3, 12).map(([x, y]) => [x, y]);
+    const rimIn = rim.map(([x, y]) => [cx + (x - cx) * 0.8, cy + (y - cy) * 0.8]).reverse();
+    hatch(fine, [...rim, ...rimIn], -38, (u) => 1.6 / shade, { trim: 0.5, minLen: 2, skip: 0.1 });
+  }
 }
 
 /** The mound an island stands on: edge line, tapering hatch, tufts. */
@@ -181,11 +201,13 @@ function island(fine, bold, halfW, depth = 13) {
     bold.M(x0, y0).Q((x0 + x1) / 2, (y0 + y1) / 2 - rr(0.5, 1.8), x1, y1);
   }
   // underside lens: horizontal strokes, longer in the middle
-  for (let k = 1; k <= 7; k++) {
-    const yy = k * (depth / 7.5) + 1;
-    const half = halfW * (1 - Math.pow(k / 8.4, 1.5)) * rr(0.82, 0.98);
+  // (B1: eleven rows, tighter, plus a short second stroke on the shaded right)
+  for (let k = 1; k <= 11; k++) {
+    const yy = k * (depth / 10.5) + 1;
+    const half = halfW * (1 - Math.pow(k / 12.6, 1.5)) * rr(0.82, 0.98);
     const off = rr(-4, 4);
     fine.seg(-half + off, yy, half + off, yy + rr(-0.4, 0.4));
+    if (k <= 8) fine.seg(half * 0.25 + off, yy + 0.55, half * 0.9 + off, yy + 0.55);
   }
   // grass tufts along the edge
   for (let i = 0; i < Math.round(halfW / 11); i++) {
@@ -277,6 +299,8 @@ function bigTree(fine, bold, x, y, h, w) {
     const y0 = y - rr(2, 6), y1 = y - h * rr(0.45, 0.95);
     fine.M(x0, y0).Q(x0 + wob, (y0 + y1) / 2, x0 + wob * 0.4, y1);
   }
+  // B1: a shaded flank, close vertical strokes down the right third of the trunk
+  hatch(fine, [[x + w * 0.1, y - 4], [x + w / 2 - 1, y - 4], [x + w / 2 - 2, y - h * 0.9], [x + w * 0.1, y - h * 0.9]], 90, 1.3, { trim: 0.6, minLen: 3, skip: 0.1 });
   // roots
   bold.M(x - w / 2 - 6, y + 1).Q(x - w / 2 - 1, y - 1, x - w / 2, y - 9);
   bold.M(x + w / 2 + 6, y + 1).Q(x + w / 2 + 1, y - 1, x + w / 2, y - 9);
