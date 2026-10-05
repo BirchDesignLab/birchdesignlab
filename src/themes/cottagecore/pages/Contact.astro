@@ -58,7 +58,10 @@ const { copy, theme } = Astro.props;
     </div>
     <div class="post-posy" aria-hidden="true">
       <Pressed kind="fern" seed={103} class="pp-fern" />
-      <Pressed kind="rose" seed={104} class="pp-rose" />
+      <div class="pp-card cc-paper">
+        <span class="cc-tape cc-tape--rose cc-tape--half pp-tape" aria-hidden="true"></span>
+        <Pressed kind="rose" seed={104} class="pp-rose" />
+      </div>
     </div>
   </div>
 </section>
@@ -103,13 +106,13 @@ const { copy, theme } = Astro.props;
   }
   /* Lines to write on: each input is one ruled line, the same pitch and rule
      as the textarea below it, so the form reads as one sheet of ruled
-     stationery. Focus draws a --field-line outline (3:1 on paper). */
+     stationery. The input rule and the textarea edge are --field-line (3:1); focus adds an outline. */
   .field input {
     box-sizing: border-box;
     height: 26px;
     line-height: 25px;
     padding: 0 0.25rem;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--field-line);
   }
   /* Writing on the lines (brief item 4): a 30px pitch, the first line 4px
      below the top edge and 6px under the last (less than a rule's reach), so every line of text
@@ -124,6 +127,9 @@ const { copy, theme } = Astro.props;
     padding: var(--pad-top) 0.6rem 6px;
     min-height: calc(var(--lh) * 6 + var(--pad-top) + 6px);
     resize: vertical;
+    /* The last rule is the sheet's edge, drawn at --field-line (3:1) so the
+       box stays findable; the inner rules stay faint. */
+    border-bottom: 1px solid var(--field-line);
     background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
     background-size: 100% var(--lh);
     background-position: 0 calc(var(--pad-top) + var(--rule-y) + 1px - var(--lh));
@@ -157,7 +163,11 @@ const { copy, theme } = Astro.props;
   .post-posy { position: relative; flex: 1 1 auto; min-height: 9rem; margin-top: -1.2rem; }
   .post-posy :global(.pressed) { position: absolute; bottom: 0; }
   .post-posy :global(.pp-fern) { width: 8rem; left: 12%; top: -1.6rem; bottom: auto; rotate: -24deg; }
-  .post-posy :global(.pp-rose) { width: 8.5rem; left: 42%; rotate: 16deg; }
+  /* The rose is mounted on a small card with a gum strip (dossier item 7),
+     bottom-aligned so the columns end together and nothing floats on cloth. */
+  .pp-card { --tilt: -3deg; position: absolute; right: 8%; bottom: 0; width: 9.5rem; height: 10.5rem; padding: 0.6rem; }
+  .pp-tape { top: -0.7rem; left: 1.6rem; --tape-tilt: 6deg; --tape-w: 4.2rem; }
+  .post-posy :global(.pp-rose) { position: absolute; width: 7.4rem; left: 1rem; bottom: 0.7rem; rotate: 12deg; }
   .stamp {
     position: absolute; top: 1.2rem; right: 1.2rem;
     width: 5.6rem; height: 6.6rem;
