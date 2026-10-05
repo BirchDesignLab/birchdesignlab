@@ -792,16 +792,17 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   pointer-events: none;
 }
 
-/* ---------- fireflies (fx.ts, dark only) ---------- */
+/* ---------- floaters (fx.ts): fireflies by lamplight, dandelion seeds by day ----------
+   One canvas, over the cloth and under main (D7 (a)); fx.ts draws the one that
+   belongs to the scheme and clears the other. */
 
 [data-theme='cottagecore'] .cc-motes {
   position: fixed; inset: 0;
   width: 100%; height: 100%;
   z-index: 0;
   pointer-events: none;
-  display: none;
+  display: block;
 }
-[data-theme='cottagecore'][data-scheme='dark'] .cc-motes { display: block; }
 
 /* ---------- page change: a fresh sheet on the table ---------- */
 

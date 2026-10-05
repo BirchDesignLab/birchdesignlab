@@ -2,7 +2,8 @@
 /** Cottagecore header: a gingham café-curtain valance with a scalloped hem,
     then the wordmark written like a jar label (a set serif name, the rest in
     handwriting) and a nav whose current page is stitched underneath. It also
-    carries the fireflies canvas, which only shows by lamplight (fx.ts). */
+    carries the floaters canvas: fireflies by lamplight, dandelion seeds by
+    day (fx.ts). */
 import { hrefFor, isCurrent } from '../paths';
 import type { CopyData } from '../../lib/copy';
 import Pressed from './assets/Pressed.astro';
@@ -16,7 +17,7 @@ const [first, ...rest] = chrome.wordmark;
   {/* The curtain and the header row, named cottagecore-header between two
       cottagecore pages so they hold still (theme.css, "page change"). A plain
       block: at rest it adds no space and no stacking context, so the
-      fireflies still drift over the valance and under the bar. */}
+      floaters still drift over the valance and under the bar. */}
   <div class="cc-chrome">
     <div class="valance cc-gingham" aria-hidden="true"></div>
     <div class="cc-wrap bar">
