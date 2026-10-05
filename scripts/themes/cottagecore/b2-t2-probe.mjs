@@ -57,7 +57,22 @@ for (const scheme of ['light', 'dark']) for (const sz of SIZES) {
         for (let n = walker.nextNode(); n; n = walker.nextNode()) {
           if (!n.textContent.trim()) continue;
           const parentCs = getComputedStyle(n.parentElement);
-          if (n.parentElement.closest('h2')) continue;
+          if (n.parentElement.closest('h2')) {
+            /* the heading is measured by baseline: gap from its baseline down to the rule under it (body text sits ~3px above its rule) */
+            if (sel === '.letter') {
+              const h = n.parentElement.closest('h2');
+              if (!h.__probed) {
+                h.__probed = true;
+                const m = document.createElement('span'); m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+                h.prepend(m);
+                const base = m.getBoundingClientRect().bottom; m.remove();
+                const rs = parseFloat(cs.getPropertyValue('--rule-y')) || 0;
+                const k = (base - box.top - rs) / lh;
+                rows.push({ sel: 'h2 baseline gap to rule', gap: Math.round((Math.ceil(k - 1e-6) * lh + rs + box.top - base) * 10) / 10 });
+              }
+            }
+            continue;
+          }
           const range = document.createRange(); range.selectNodeContents(n);
           for (const r of range.getClientRects()) lines.set(Math.round(r.top * 2) / 2, [r, parentCs]);
         }

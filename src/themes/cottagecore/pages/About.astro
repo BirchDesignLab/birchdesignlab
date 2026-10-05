@@ -113,6 +113,9 @@ const [etymLead, ...etymRest] = copy.etymology;
     font-size: 2.9rem;
     line-height: calc(var(--lh) * 2);
     letter-spacing: 0;
+    /* The Caveat heading puts its baseline ~45px down a 60px box, 9px over
+       the rule; 6px down lands it about 3px above, like the body lines. */
+    position: relative; top: 6px;
   }
   .letter p { margin-top: var(--lh); color: var(--mark); }
   .letter p:first-of-type { margin-top: 0; }
