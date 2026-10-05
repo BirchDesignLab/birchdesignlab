@@ -33,7 +33,7 @@ const { copy, theme } = Astro.props;
       <ContactHidden theme={theme} label={copy.labels.honeypot} />
       <button class="cc-label" type="submit">{copy.submit}</button>
     </form>
-    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10047;</span> </>}{part}</>)}</p>
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10047;</span> </>}<span class="tp">{part}</span></>)}</p>
     <Pressed kind="lavender" seed={101} class="st-lav" />
   </div>
 
@@ -71,6 +71,9 @@ const { copy, theme } = Astro.props;
     align-items: start;
     padding-block: clamp(2rem, 5vw, 4rem) 0;
   }
+  /* Both columns end together: the postcard column stretches to the
+     stationery and the loose posy fills what the postcard leaves. */
+  .stationery { align-self: start; }
 
   /* ---- the stationery ---- */
   .stationery {
@@ -83,7 +86,7 @@ const { copy, theme } = Astro.props;
   h1 { font-size: clamp(2.6rem, 4.6vw, 3.6rem); margin-top: 0.7rem; }
   .subline { margin-top: 1rem; font-size: 1.14rem; color: var(--mark-muted); max-width: 34rem; }
   form { display: grid; gap: 1.6rem; margin-top: 2.4rem; }
-  .field { display: grid; gap: 0.15rem; }
+  .field { display: grid; gap: 0.25rem; }
   /* Weight, ink and upright tilt come from the label hand (theme.css). */
   .field label {
     font-family: var(--font-hand);
@@ -98,11 +101,15 @@ const { copy, theme } = Astro.props;
     border-radius: 0;
     width: 100%;
   }
-  /* Lines to write on: a dashed line under each field, in --field-line
-     (not the decorative --stitch) so the boundary clears 3:1. */
+  /* Lines to write on: each input is one ruled line, the same pitch and rule
+     as the textarea below it, so the form reads as one sheet of ruled
+     stationery. Focus draws a --field-line outline (3:1 on paper). */
   .field input {
-    border-bottom: 2px dashed var(--field-line);
-    padding: 0.45rem 0.25rem;
+    box-sizing: border-box;
+    height: 26px;
+    line-height: 25px;
+    padding: 0 0.25rem;
+    border-bottom: 1px solid var(--rule);
   }
   /* Writing on the lines (brief item 4): a 30px pitch, the first line 4px
      below the top edge and 6px under the last (less than a rule's reach), so every line of text
@@ -117,18 +124,15 @@ const { copy, theme } = Astro.props;
     padding: var(--pad-top) 0.6rem 6px;
     min-height: calc(var(--lh) * 6 + var(--pad-top) + 6px);
     resize: vertical;
-    border: 2px dashed var(--field-line);
-    border-radius: 4px;
     background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
     background-size: 100% var(--lh);
     background-position: 0 calc(var(--pad-top) + var(--rule-y) + 1px - var(--lh));
     background-attachment: local;
   }
   .field input:focus-visible, .field textarea:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--field-line);
     outline-offset: 3px;
-    border-color: var(--accent);
-    border-style: solid;
+    border-radius: 2px;
     background-color: color-mix(in srgb, var(--note) 55%, transparent);
   }
   form .cc-label { justify-self: start; margin-top: 0.4rem; }
@@ -141,17 +145,18 @@ const { copy, theme } = Astro.props;
   }
 
   /* ---- the postcard ---- */
-  .post { padding-top: clamp(0rem, 6vw, 5rem); }
+  .post { padding-top: clamp(0rem, 6vw, 5rem); align-self: stretch; display: flex; flex-direction: column; }
   .postcard {
     --tilt: 2deg;
+    position: relative; z-index: 1;
     display: grid;
     padding: 1.8rem 1.6rem 1.8rem;
   }
   .pc-tape { top: -0.8rem; left: 1.4rem; --tape-tilt: -7deg; --tape-w: 5.5rem; }
   /* A loose posy on the table under the postcard, where the form runs long. */
-  .post-posy { position: relative; height: 16rem; margin-top: 2rem; }
+  .post-posy { position: relative; flex: 1 1 auto; min-height: 9rem; margin-top: -1.2rem; }
   .post-posy :global(.pressed) { position: absolute; bottom: 0; }
-  .post-posy :global(.pp-fern) { width: 7.5rem; left: 18%; rotate: -28deg; }
+  .post-posy :global(.pp-fern) { width: 8rem; left: 12%; top: -1.6rem; bottom: auto; rotate: -24deg; }
   .post-posy :global(.pp-rose) { width: 8.5rem; left: 42%; rotate: 16deg; }
   .stamp {
     position: absolute; top: 1.2rem; right: 1.2rem;
@@ -182,8 +187,13 @@ const { copy, theme } = Astro.props;
   :global([data-theme='cottagecore'][data-scheme='dark']) .stamp-face { filter: brightness(0.82) sepia(0.15); }
   .stamp :global(.stamp-flower) { width: 82%; translate: 0 18%; }
   /* The cancel: a real postmark overlaps the stamp's lower-left corner. */
+  /* In the flow after the heading (never on top of it), raised into the
+     stamp's lower-left corner like a real cancel; the room below is left for
+     the lettering Task 4 adds. */
   .postmark {
-    position: absolute; top: 5.4rem; right: 4.4rem;
+    order: 1;
+    justify-self: end;
+    margin: -1rem 2.8rem 0 0;
     width: 7.2rem;
     fill: none; stroke: var(--mark-muted); stroke-width: 1.6; opacity: 0.55;
     rotate: -8deg;
@@ -193,13 +203,15 @@ const { copy, theme } = Astro.props;
     /* Cleared to the stamp's own width, not the stamp plus the postmark, so
        the heading sets in two lines instead of a narrow four-line stack. */
     padding-right: 5.6rem;
+    min-height: 5.9rem;
     font-family: var(--font-display);
     font-style: italic;
     font-weight: 460;
     font-size: clamp(1.45rem, 2.3vw, 1.8rem);
     line-height: 1.15;
   }
-  .address { display: grid; gap: 1.1rem; margin-top: 1.8rem; }
+  .address, .fine { order: 2; }
+  .address { display: grid; gap: 1.1rem; margin-top: 1.2rem; }
   .mail {
     font-family: var(--font-hand);
     font-weight: 600;
@@ -221,13 +233,15 @@ const { copy, theme } = Astro.props;
     .post-posy { display: none; }
   }
   @media (max-width: 640px) {
+    /* The trust line breaks at the flower, never inside 'A reply within...'. */
+    .trust .tp { white-space: nowrap; }
     /* Below the trust line, not on top of it: it sat on 'A reply within'. */
     .stationery :global(.st-lav) { width: 2.6rem; right: 0.4rem; bottom: -2.4rem; }
     /* The stamp and postmark keep their own row (stamp bottom lands at
        ~7.8rem); the invite starts clear of both instead of wrapping beside
        a narrow column. */
     .postcard { padding-top: 8.6rem; }
-    .invite { padding-right: 0; }
-    .postmark { right: 3.2rem; top: 5rem; width: 6.2rem; }
+    .invite { padding-right: 0; min-height: 0; }
+    .postmark { position: absolute; margin: 0; right: 3.2rem; top: 5rem; width: 6.2rem; }
   }
 </style>

@@ -57,6 +57,33 @@ function inAnyRect(x: number, y: number, rects: DOMRect[]): boolean {
   return false;
 }
 
+/** Touch: a tap on a washi tape lifts its free corner and lays it back down
+    (fine pointers do the same on hover, in CSS). The tapes are inert and
+    aria-hidden; this only sets and clears a data flag. */
+export function mountTapes(): void {
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== SCHOOL) return;
+    const timers = new Map<Element, number>();
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      const tape = (e.target as Element | null)?.closest?.('.cc-tape');
+      if (!tape) return;
+      tape.setAttribute('data-lift', '');
+      clearTimeout(timers.get(tape));
+      timers.set(tape, window.setTimeout(() => {
+        tape.removeAttribute('data-lift');
+        timers.delete(tape);
+      }, 1100));
+    };
+    document.addEventListener('pointerdown', onDown, { passive: true });
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      timers.forEach((id, tape) => { clearTimeout(id); tape.removeAttribute('data-lift'); });
+      timers.clear();
+    };
+  });
+}
+
 export function mountFireflies(): void {
   onMount(() => {
     const root = document.documentElement;

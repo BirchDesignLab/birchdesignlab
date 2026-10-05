@@ -60,7 +60,7 @@ const year = new Date().getFullYear();
     line-height: 1.2;
   }
   nav { display: flex; flex-wrap: wrap; gap: 0.3rem 1.3rem; justify-content: center; }
-  nav a { color: var(--mark); text-decoration: none; }
+  nav a { color: var(--mark); text-decoration: none; white-space: nowrap; }
   nav a:hover { color: var(--accent); text-decoration: underline wavy var(--accent) 1px; }
   .fine { color: var(--mark-muted); font-size: 0.95rem; text-align: right; }
   .fine a { color: var(--mark-muted); }
@@ -76,9 +76,20 @@ const year = new Date().getFullYear();
       radial-gradient(var(--scallop) at 50% var(--scallop), #000 97%, #0000) 50% 0 / calc(2 * var(--scallop)) 100% repeat-x,
       linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--scallop)) no-repeat;
   }
+  /* Tablet: the wordmark and fine print share the first row, the nav takes
+     its own row below (nowrap keeps every nav item on one line). */
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: 1fr auto; row-gap: 1.4rem; }
+    .ident { grid-column: 1; grid-row: 1; }
+    .fine { grid-column: 2; grid-row: 1; }
+    nav { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; gap: 0.3rem 1.8rem; }
+  }
   @media (max-width: 760px) {
     .grid { grid-template-columns: 1fr; align-items: start; gap: 1.3rem; }
-    nav { justify-content: flex-start; }
+    .ident, .fine, nav { grid-column: auto; grid-row: auto; }
+    nav { gap: 0 1.3rem; }
     .fine { text-align: left; }
+    /* Touch targets: nav items and the Privacy link are at least 44px tall. */
+    nav a, .fine a { display: inline-flex; align-items: center; min-height: 44px; }
   }
 </style>

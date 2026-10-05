@@ -172,10 +172,17 @@ const { copy, theme } = Astro.props;
   @media (max-width: 820px) {
     .intro { grid-template-columns: 1fr; }
     .posy { height: 17rem; max-width: 14rem; }
-    .offerings { grid-template-columns: 1fr; }
-    .recipe:nth-child(2) { margin-top: 0; }
     .steps { grid-template-columns: 1fr; }
     .ask :global(.a-left) { display: none; }
+  }
+  @media (max-width: 1000px) {
+    .recipe .body { padding-bottom: 2rem; }
+  }
+  @media (max-width: 700px) {
+    .offerings { grid-template-columns: 1fr; }
+    .recipe { width: min(100%, 32rem); }
+    .recipe:nth-child(1) { justify-self: start; }
+    .recipe:nth-child(2) { justify-self: end; margin-top: 0; }
   }
   @media (max-width: 640px) {
     .steps li { grid-template-columns: 2.8rem 1fr; gap: 0.9rem; }
