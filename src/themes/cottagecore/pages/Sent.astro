@@ -56,10 +56,11 @@ const { copy, theme } = Astro.props;
   .envelope :global(.env-lav) { position: absolute; width: 30%; left: 20%; top: -34%; rotate: -16deg; }
   .envelope :global(.env-daisy) { position: absolute; width: 34%; left: 40%; top: -40%; rotate: 12deg; }
   /* The same stamp and postmark as the Contact postcard: the stamp in the
-     pocket's upper right, the ring over its lower corner and the wavy cancel
-     running off across the twine. */
+     pocket's upper right, the ring in the pocket's lower middle clear of the
+     stamp and the twine loop (cream ink on the stamp's cream edge was
+     illegible in the dark scheme), the wavy cancel running off to the left. */
   .envelope :global(.env-stamp) { position: absolute; right: 3%; top: 56%; width: 19%; aspect-ratio: 5.6 / 6.6; rotate: 5deg; }
-  .envelope :global(.env-postmark) { position: absolute; right: 7%; bottom: 3%; width: 46%; height: auto; opacity: 0.8; rotate: -9deg; }
+  .envelope :global(.env-postmark) { position: absolute; right: 36.5%; bottom: 3%; width: 46%; height: auto; opacity: 0.8; rotate: -9deg; }
   .envelope {
     --kraft: #e8d3ad;
     --kraft-deep: #cdb080;
