@@ -26,9 +26,15 @@
  * on its own clock, riding a slow breeze up and across with a sway and a
  * turn, and now and then a gust. They fade off text like the fireflies. They
  * were timid, so they are drawn about 1.5 times larger and a little inkier,
- * and the loop keeps at least MIN_SHOWN of them on the cloth in view (it
- * re-seats a seed that has faded out into a clear spot), so a phone's first
- * screen always has two or three.
+ * and the loop keeps at least minShown of them on the cloth in view (it
+ * re-seats a seed nobody can see into a clear spot), so a phone's first
+ * screen has two or three where the page has room for them. A seed counts as
+ * on show by its fan (crown and both tips), so one drifting out from behind a
+ * sheet counts. It is kept off text by its drawn shape (a half disc for the
+ * fan, a narrow strip for the stalk), not a box around both; a view too
+ * cramped for a seed at its own size gets it at a smaller one, never below
+ * the smallest size, so a header that is mostly wordmark and nav still has
+ * seeds in it. Every seed starts unseen and fades in where it is clear.
  *
  * Pointer (S3, passive, one listener per event type, no layout reads): a seed
  * drifts away from a passing cursor or a tap; a hovered or tapped firefly
@@ -116,10 +122,23 @@ const SEED = {
   fadeOut: 0.4,
   /** Sprite units to CSS px at size 1: 1.5 times the first proof's 0.62. */
   spriteScale: 0.93,
-  /** Clear air (px) kept between a seed's drawn extent and any text. */
-  textPad: 12,
+  /** Clear air (px) kept between a seed's drawn shape and any text. */
+  textPad: 8,
   /** Seconds of travel looked ahead when testing for text. */
   lookAhead: 0.7,
+  /** Size range (times spriteScale). A seed that cannot find room at its own
+      size is seated smaller, never below sizeMin. */
+  sizeMin: 0.8,
+  sizeMax: 1.25,
+  /** Seating: candidates tried per size, and how far along its drift (s, in
+      steps of seatStep) a seat must stay clear to be preferred. */
+  seatTries: 160,
+  seatPool: 10,
+  seatStep: 0.5,
+  seatHorizon: 5,
+  /** Least spacing (px) between two seats, relaxed for the second half of the tries. */
+  seatApart: 90,
+  seatApartTight: 70,
   /** How often (ms) the loop checks that enough seeds are showing. */
   keepEvery: 400,
 };
@@ -160,6 +179,8 @@ interface Seed {
   turnRate: number;
   alpha: number;
   cover: number;
+  /** The size it was born with; a cramped seat may use a smaller one. */
+  base: number;
 }
 interface Box {
   l: number;
@@ -205,8 +226,6 @@ function lcg(seed: number): () => number {
     full ink; the caller sets the alpha. The anchor (where the stalk meets the
     filaments) is at sprite unit (64, 48). */
 const SEED_SPRITE_SIZE = 128;
-/** Points (of 5) of a seed's drawn extent that must be on show for it to count. */
-const SEED_SHOWN_POINTS = 4;
 const SEED_SPRITE_PX = 256;
 const SEED_ANCHOR = { x: 64, y: 48 };
 function buildSeedSprite(filaments: number, rnd: () => number): HTMLCanvasElement {
@@ -270,16 +289,26 @@ function inAnyBox(x: number, y: number, boxes: Box[], pad: number): boolean {
   return false;
 }
 
-/** Whether a seed drawn with its anchor at (x, y) at scale k would touch a
-    text box: the pappus fan reaches 40 sprite units to each side and 42 above
-    the anchor, the body 70 below it. */
+/** Whether a seed drawn with its anchor at (x, y) at scale k would come
+    within SEED.textPad of a text box. The drawing is a fan of filaments
+    reaching 45 sprite units (pin-heads included) over the anchor, a hair
+    below it at most, and a thin stalk and body hanging 70 units under it; so
+    the test is that half disc plus a narrow strip, not the box around both.
+    A bounding box would keep a seed a whole fan's width from a line it only
+    passes beside. */
 function seedHitsText(x: number, y: number, k: number, boxes: Box[]): boolean {
-  const l = x - 40 * k - SEED.textPad;
-  const r = x + 40 * k + SEED.textPad;
-  const t = y - 42 * k - SEED.textPad;
-  const b = y + 70 * k + SEED.textPad;
+  const pad = SEED.textPad;
+  const reach = 45 * k + pad;
+  const low = y + 3 * k + pad;
+  const half = 4 * k + pad;
+  const bottom = y + 70 * k + pad;
   for (const q of boxes) {
-    if (l < q.r && r > q.l && t < q.b && b > q.t) return true;
+    if (q.t < low) {
+      const cx = Math.min(Math.max(x, q.l), q.r);
+      const cy = Math.min(Math.max(y, q.t), Math.min(q.b, low));
+      if (Math.hypot(cx - x, cy - y) < reach) return true;
+    }
+    if (x - half < q.r && x + half > q.l && y < q.b && bottom > q.t) return true;
   }
   return false;
 }
@@ -404,48 +433,68 @@ export function mountFireflies(): void {
 
     const edgeFade = (s: Seed) => Math.min(1, Math.max(0, Math.min(s.x + 30, width + 30 - s.x, s.y + 30, height + 30 - s.y) / 70));
     const onSheet = (x: number, y: number) => inAnyBox(x, y, coverBoxes, 0);
-    /** How many of a seed's five drawn points are on show: the anchor, the
-        fan's two tips, the crown and the body's middle (the extents
-        seedHitsText uses). A point counts when it is inside the viewport and
-        off every sheet and band. The anchor alone would count a seed half
-        under a sheet or half off the screen as shown. */
-    const seedPointsShown = (x: number, y: number, k: number, sy: number): number => {
-      const pts: Array<[number, number]> = [[x, y], [x - 40 * k, y - 10 * k], [x + 40 * k, y - 10 * k], [x, y - 42 * k], [x, y + 35 * k]];
-      let n = 0;
-      for (const [px, py] of pts) {
-        if (px >= 0 && px <= width && py >= 0 && py <= height && !onSheet(px, py + sy)) n++;
+    const pointOnShow = (px: number, py: number, sy: number) => px >= 0 && px <= width && py >= 0 && py <= height && !onSheet(px, py + sy);
+    /** A seed is on show when its fan is: the crown and both tips inside the
+        viewport and off every sheet and band. The anchor and the body may be
+        tucked under a sheet; that is a seed drifting out from behind the
+        paper, and it is what a phone's mostly-sheet first screen has room for. */
+    const seedOnShow = (x: number, y: number, k: number, sy: number) =>
+      pointOnShow(x, y - 42 * k, sy) && pointOnShow(x - 40 * k, y - 10 * k, sy) && pointOnShow(x + 40 * k, y - 10 * k, sy);
+    /** Whether any of a seed's five drawn points (anchor, both tips, crown,
+        body middle) is on show. False means the seed is wholly under a sheet
+        or off the screen, so moving it loses nothing anyone can see. */
+    const seedVisible = (x: number, y: number, k: number, sy: number) =>
+      pointOnShow(x, y, sy) || pointOnShow(x - 40 * k, y - 10 * k, sy) || pointOnShow(x + 40 * k, y - 10 * k, sy) || pointOnShow(x, y - 42 * k, sy) || pointOnShow(x, y + 35 * k, sy);
+    const seatClear = (x: number, y: number, k: number, sy: number) => seedOnShow(x, y, k, sy) && !seedHitsText(x, y + sy, k, textBoxes);
+    /** Seconds a seat stays clear (fan on show, off text) riding its drift. */
+    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number) => {
+      let t = SEED.seatStep;
+      for (; t < SEED.seatHorizon; t += SEED.seatStep) {
+        if (!seatClear(x + vx * t, y + vy * t, k, sy)) break;
       }
-      return n;
+      return t;
     };
-    /** A seed is on show when most of it is (at least 4 of 5 points). */
-    const seedOnShow = (x: number, y: number, k: number, sy: number) => seedPointsShown(x, y, k, sy) >= SEED_SHOWN_POINTS;
 
-    /** Seat a seed on a clear patch of the cloth in view: off every line of
-        text (now and where the breeze will have taken it), not under a sheet,
-        and not on top of another shown seed. False if the view has none. */
+    /** Seat a seed on a clear patch of the cloth in view: fan on show, off
+        every line of text now and where the breeze will have taken it, and
+        not on top of another shown seed. Of the clear patches found it takes
+        the one it can stay on longest, so a cramped header does not have
+        seeds popping in and out every second. A view with no room at the
+        seed's own size gets it at a smaller one (never under sizeMin). False
+        if the view has none at all. */
     const seatSeed = (s: Seed, sy: number): boolean => {
-      const k = s.size * SEED.spriteScale;
-      for (let i = 0; i < 60; i++) {
-        const x = rand(24, width - 24);
-        const y = rand(24, height - 24);
-        // The first 40 tries want the whole seed on clear cloth; the rest
-        // settle for most of it, since a phone's cloth is mostly sheet.
-        if (seedPointsShown(x, y, k, sy) < (i < 40 ? 5 : SEED_SHOWN_POINTS)) continue;
-        const ax = x + SEED.windX * s.drift * SEED.lookAhead;
-        const ay = y + SEED.windY * s.drift * SEED.lookAhead;
-        if (seedHitsText(x, y + sy, k, textBoxes) || seedHitsText(ax, ay + sy, k, textBoxes)) continue;
-        if (onSheet(ax, ay + sy)) continue;
-        let crowded = false;
-        for (const o of seeds) {
-          if (o !== s && o.cover > 0.3 && Math.hypot(o.x - x, o.y - y) < 90) { crowded = true; break; }
+      const vx = SEED.windX * s.drift;
+      const vy = SEED.windY * s.drift;
+      const sizes = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
+      for (const size of sizes) {
+        const k = size * SEED.spriteScale;
+        let bx = 0;
+        let by = 0;
+        let best = -1;
+        let pool = 0;
+        for (let i = 0; i < SEED.seatTries && pool < SEED.seatPool; i++) {
+          const x = rand(24, width - 24);
+          const y = rand(24, height - 24);
+          if (!seatClear(x, y, k, sy) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy)) continue;
+          const apart = i < SEED.seatTries / 2 ? SEED.seatApart : SEED.seatApartTight;
+          let crowded = false;
+          for (const o of seeds) {
+            if (o !== s && o.cover > 0.3 && Math.hypot(o.x - x, o.y - y) < apart) { crowded = true; break; }
+          }
+          if (crowded) continue;
+          pool++;
+          const life = seatLife(x, y, k, vx, vy, sy) + Math.random() * 0.4;
+          if (life > best) { best = life; bx = x; by = y; }
         }
-        if (crowded) continue;
-        s.x = x;
-        s.y = y;
-        s.vx = SEED.windX * s.drift;
-        s.vy = SEED.windY * s.drift;
-        s.cover = 0;
-        return true;
+        if (pool) {
+          s.size = size;
+          s.x = bx;
+          s.y = by;
+          s.vx = vx;
+          s.vy = vy;
+          s.cover = 0;
+          return true;
+        }
       }
       return false;
     };
@@ -454,12 +503,14 @@ export function mountFireflies(): void {
       const count = width < SEED.phoneWidth ? SEED.phone : SEED.desktop;
       const sy = window.scrollY;
       seeds = Array.from({ length: count }, (_, i) => {
+        const size = rand(SEED.sizeMin, SEED.sizeMax);
         const s: Seed = {
           x: 0,
           y: 0,
           vx: SEED.windX,
           vy: SEED.windY,
-          size: rand(0.8, 1.25),
+          size,
+          base: size,
           sprite: i % 2,
           drift: rand(0.7, 1.35),
           swayPhase: Math.random() * Math.PI * 2,
@@ -468,14 +519,16 @@ export function mountFireflies(): void {
           turnPhase: Math.random() * Math.PI * 2,
           turnRate: (Math.PI * 2) / rand(7, 13),
           alpha: rand(SEED.alphaMin, SEED.alphaMax),
-          cover: 1,
+          cover: 0,
         };
+        // Every seed starts unseen and fades in where it is clear, so none
+        // is ever drawn for a frame over a line of text (the first
+        // measurement can precede the fonts).
         spawnSeed(s, true);
-        s.cover = 1;
         return s;
       });
-      // The first few go straight onto clear cloth, so the opening view has
-      // seeds in it (a phone's first screen is mostly text).
+      // The first few go straight onto clear cloth, already showing, so the
+      // opening view has seeds in it (a phone's first screen is mostly text).
       for (let i = 0; i < Math.min(SEED.minShown, seeds.length); i++) {
         if (seatSeed(seeds[i], sy)) seeds[i].cover = 1;
       }
@@ -628,7 +681,10 @@ export function mountFireflies(): void {
           for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy)) shown++;
           for (const s of seeds) {
             if (shown >= SEED.minShown) break;
-            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy);
+            // Only a seed nobody can see is moved: one that has faded out, or
+            // is wholly under a sheet or off the screen. A seed part way out
+            // from behind a sheet, or leaving at an edge, finishes its fade.
+            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedVisible(s.x, s.y, s.size * SEED.spriteScale, sy);
             if (gone && seatSeed(s, sy)) shown++;
           }
         }

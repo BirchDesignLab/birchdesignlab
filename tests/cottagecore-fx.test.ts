@@ -38,6 +38,34 @@ describe('cottagecore floaters', () => {
     expect(fx).toMatch(/minShown: 3/);
   });
 
+  it('tests a seed against its drawn shape, not a box around it', () => {
+    const fn = fx.slice(fx.indexOf('function seedHitsText'), fx.indexOf('/** Where a firefly'));
+    expect(fn).toMatch(/Math\.hypot\(cx - x, cy - y\) < reach/);
+    expect(fn).toMatch(/const half = 4 \* k \+ pad/);
+    expect(fn).not.toMatch(/40 \* k - SEED\.textPad/);
+  });
+
+  it('moves only a seed nobody can see, and counts a seed by its fan', () => {
+    const keep = fx.slice(fx.indexOf('let shown = 0;'), fx.indexOf('const pointerLive'));
+    expect(keep).toMatch(/seedOnShow\(s\.x, s\.y/);
+    const gone = keep.slice(keep.indexOf('const gone'));
+    expect(gone.split(String.fromCharCode(10))[0]).toMatch(/seedVisible/);
+    expect(gone.split(String.fromCharCode(10))[0]).not.toMatch(/seedOnShow/);
+    // The fan (crown and both tips) is what counts as on show; the anchor may be under a sheet.
+    const show = fx.slice(fx.indexOf('const seedOnShow'), fx.indexOf('const seedVisible'));
+    expect(show).toMatch(/y - 42 \* k/);
+    expect(show).toMatch(/x - 40 \* k, y - 10 \* k/);
+    expect(show).not.toMatch(/pointOnShow\(x, y, sy\)/);
+  });
+
+  it('seats a cramped seed smaller, never under the size floor, and starts every seed unseen', () => {
+    expect(fx).toMatch(/sizeMin: 0\.8/);
+    expect(fx).toMatch(/const sizes = \[s\.base, SEED\.sizeMin \+ \(s\.base - SEED\.sizeMin\) \/ 2, SEED\.sizeMin\]/);
+    const mount = fx.slice(fx.indexOf('const seedDandelions'), fx.indexOf('/* Text, measured line by line'));
+    expect(mount).toMatch(/cover: 0,/);
+    expect(mount).not.toMatch(/\.cover = 1;\s*return s/);
+  });
+
   it('keeps the tape-lift mount and ships no proof-only probe', () => {
     expect(fx).toContain('export function mountTapes');
     expect(fx).not.toContain('__ccFloatersProbe');
