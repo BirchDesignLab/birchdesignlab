@@ -29,12 +29,18 @@ const want = arg('sizes', '').split(',').filter(Boolean);
 const SIZES = ALL.filter((s) => !want.length || want.includes(s.id));
 const scene = JSON.parse(readFileSync(join(REPO, 'scripts/themes/proofs/stage5-gm-chinoiserie/scene.json'), 'utf8'));
 const birds = [...scene.sceneG.matchAll(/<use href="#sc-(pb|fb)" transform="translate\(([-\d.]+) ([-\d.]+)\)(?: rotate\(([-\d.]+)\))? scale\(([-\d.]+) ([-\d.]+)\)" class="([\w-]+)"/g)]
-  .map((m) => ({ kind: m[1], x: +m[2], y: +m[3], sx: +m[5], sy: +m[6], cls: m[7] }));
+  .map((m) => ({ kind: m[1], x: +m[2], y: +m[3], sx: +m[5], sy: +m[6], rot: +(m[4] || 0), cls: m[7] }));
 /* local extents of each symbol (the outline, with the tail) */
 const EXT = { pb: [-108, -57, 42, 40], fb: [-70, -40, 45, 44] };
 const box = (b) => {
   const [x0, y0, x1, y1] = EXT[b.kind];
-  const xs = [b.x + b.sx * x0, b.x + b.sx * x1], ys = [b.y + b.sy * y0, b.y + b.sy * y1];
+  /* the transform is translate, rotate, scale: map the four scaled corners through the rotation */
+  const a = ((b.rot || 0) * Math.PI) / 180, co = Math.cos(a), si = Math.sin(a);
+  const pts = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([px, py]) => {
+    const lx = b.sx * px, ly = b.sy * py;
+    return [b.x + lx * co - ly * si, b.y + lx * si + ly * co];
+  });
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 };
 
@@ -49,7 +55,9 @@ for (const sz of SIZES) {
   await page.waitForTimeout(400);
   const m = await page.evaluate(() => {
     const r = (e) => { const b = e.getBoundingClientRect(); return [b.left, b.top + scrollY, b.right, b.top + scrollY + b.height]; };
-    const vis = (s) => [...document.querySelectorAll(s)].filter((e) => getComputedStyle(e).display !== 'none').map(r);
+    /* cards grow by their outline (offset + width) so a bird touching the ring counts */
+    const rg = (e) => { const cs = getComputedStyle(e), g = cs.outlineStyle === 'none' ? 0 : (parseFloat(cs.outlineOffset) || 0) + (parseFloat(cs.outlineWidth) || 0), b = r(e); return [b[0] - g, b[1] - g, b[2] + g, b[3] + g]; };
+    const vis = (s) => [...document.querySelectorAll(s)].filter((e) => getComputedStyle(e).display !== 'none').map(rg);
     const wb = [...document.querySelectorAll('.wb')].find((e) => getComputedStyle(e.closest('svg')).display !== 'none');
     return {
       parts: [...document.querySelectorAll('.scene-part')].map(r),
@@ -84,7 +92,7 @@ function verdicts(m, b) {
       cov = Math.max(cov, (cx * cy) / area);
     }
     const cut = (ix * iy) / area < 0.98;
-    res.push({ room: 'ab'[ri], cov, verdict: cov > 0.04 && cov < 0.9 ? 'PEEK' : cov >= 0.9 ? 'hidden' : cut ? 'CUT' : 'open' });
+    res.push({ room: 'ab'[ri], cov, verdict: cov > 0 && cov < 0.9 ? 'PEEK' : cov >= 0.9 ? 'hidden' : cut ? 'CUT' : 'open' });
   });
   return res;
 }
@@ -107,7 +115,7 @@ if (SEARCH) {
   const kind = arg('kind', 'fb'), sc = +arg('scale', 1);
   const good = [];
   for (let x = 120; x <= 1520; x += 20) for (let y = 100; y <= 1150; y += 20) {
-    const b = { kind, x, y, sx: sc, sy: sc };
+    const b = { kind, x, y, sx: sc, sy: sc, rot: +arg('rot', 0) };
     let open = 0, bad = 0;
     for (const m of M) for (const v of verdicts(m, b)) { if (v.verdict === 'PEEK' || (v.verdict === 'CUT' && CUTBAD)) bad++; else if (v.verdict === 'open') open++; }
     if (!bad && open >= +arg("minopen", M.length)) good.push([x, y, open]);

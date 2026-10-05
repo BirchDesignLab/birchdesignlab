@@ -453,8 +453,8 @@ const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" trans
      maps each bird into both rooms at each size and reports a PEEK when a card covers some of it).
      The live bird's branch (About.astro BIRD_WIDE/BIRD_PHONE) is left to it alone. */
   pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
-  pb(614, 802, 1.1, 1, 'sc-birdA'); // on the T2 bough beside the trunk (a limb centreline point, see the --limbs search)
-  fb(700, 440, 1.0, -8, 1, 'sc-birdA'); fb(240, 120, 1.0, -10, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
+  pb(626, 808, 1.1, 1, 'sc-birdA'); // on the T2 bough beside the trunk (a limb centreline point, see the --limbs search)
+  fb(640, 260, 0.8, -8, 1, 'sc-birdA'); fb(240, 100, 1.0, -10, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
   fb(980, 330, 0.9, -6, -1, 'sc-birdA'); fb(540, 840, 0.75, -10, 1, 'sc-birdA');
   fb(1080, 900, 0.8, 8, -1, 'sc-birdB');
 }
