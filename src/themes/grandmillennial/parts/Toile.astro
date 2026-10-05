@@ -1,6 +1,8 @@
 ---
 /** A cutting of the toile de Jouy for the sample-book swatch: engraved garden
-    scenes in one ink (oxblood by day, gold on hunter in the lacquered room),
+    scenes in one ink (porcelain blue by day, so the No. 2 cutting reads as a
+    different cloth laid on the oxblood toile wall; gold on hunter in the
+    lacquered room),
     after Huet. The drawing is an external SVG per scheme (assets/toile-*.svg,
     built by scripts/themes/proofs/stage5-gm-toile + scripts/themes/grandmillennial/build-patterns.mjs)
     that the browser caches; this is only the frame it is cut in.
@@ -23,7 +25,7 @@ const { class: cls } = Astro.props;
     left: 50%; top: 50%;
     width: 1000px; height: 1000px;
     margin: -500px 0 0 -500px;
-    background: url('../assets/toile-light.svg') 481px 98px / 507px 576px repeat;
+    background: url('../assets/toile-porcelain-light.svg') 481px 98px / 507px 576px repeat;
   }
   :global(html[data-scheme='dark']) .gm-toile { background-image: url('../assets/toile-dark.svg'); }
   @media (max-width: 720px) {

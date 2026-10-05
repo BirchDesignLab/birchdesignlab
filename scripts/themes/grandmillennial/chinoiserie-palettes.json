@@ -1,5 +1,5 @@
 {
-  "_": "The chinoiserie wall's three colourways (Stage 5 B1 task 2). Read by build-chinoiserie.mjs, which bakes them into assets/chinoiserie-<name>.svg. light = the day parlour (celadon, muted inks); hunter = the lacquered room that holds the founder's letter in the LIGHT scheme (item 5, B: one saturated anchor per page); dark = the dark scheme's room (also behind the letter in dark, where the page is already a hunter room). The keys that theme.css repeats (the ones the inline birds and the second frame use) are checked against this file by tests/gm-chinoiserie.test.ts.",
+  "_": "The chinoiserie wall's three colourways (Stage 5 B1 task 2). Read by build-chinoiserie.mjs, which bakes them into assets/chinoiserie-<name>.svg. light = the day parlour (celadon, muted inks); hunter = the lacquered room that holds the founder's letter in the LIGHT scheme (item 5, B: one saturated anchor per page); dark = the dark scheme's hero wall; darkroom = the dark scheme's founder room, a deeper, richer lacquer green so the letter has a room of its own below the hero wall (B1 fix call 3). The keys that theme.css repeats (the ones the inline birds and the second frame use) are checked against this file by tests/gm-chinoiserie.test.ts.",
   "light": {
     "ground": "#e2e6d3", "ground2": "#d4dbc2", "hill1": "#d6dcc6", "hill2": "#cbd3b8",
     "line": "#3d4a3b", "lent": "#3d4a3b", "trunk": "#f4efe0", "shade": "#d8d0b7",
@@ -12,6 +12,13 @@
     "line": "#d9c58d", "lent": "#10251a", "trunk": "#cfc6a6", "shade": "#a89e80",
     "limb": "#7a6342", "hl": "#e6d6a0", "lf": "#3a8a5c", "lf2": "#6aa882", "cat": "#c9a95c",
     "oxb": "#c0606c", "blue": "#7ea0d2", "gold": "#c9a95c", "rock": "#285c42", "rockshade": "#1d4733",
+    "curl": "#e4dcc0"
+  },
+  "darkroom": {
+    "ground": "#0a3321", "ground2": "#0f3f29", "hill1": "#0e3b27", "hill2": "#134630",
+    "line": "#d9c58d", "lent": "#0d1d14", "trunk": "#cfc6a6", "shade": "#a89e80",
+    "limb": "#7a6342", "hl": "#e6d6a0", "lf": "#2e7a52", "lf2": "#4a9468", "cat": "#b99a55",
+    "oxb": "#b8505e", "blue": "#6f94c9", "gold": "#c9a95c", "rock": "#175238", "rockshade": "#0f3f29",
     "curl": "#e4dcc0"
   },
   "dark": {

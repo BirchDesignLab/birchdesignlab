@@ -7,7 +7,6 @@
     band and the heart between two flowers. */
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
-import Birch from '../parts/Birch.astro';
 import Chintz from '../parts/Chintz.astro';
 import ChinoiserieShapes from '../parts/ChinoiserieShapes.astro';
 import Framed from '../parts/Framed.astro';
@@ -23,7 +22,7 @@ const { copy, theme } = Astro.props;
    (anchored to the top centre) and the phone's (anchored to the left) are the
    same drawing cropped differently, so each has its own pair. */
 const BIRD_WIDE = { home: [575, 119, 1.05, -1], away: [644, 89, 1.0, 1] } as const;
-const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [367, 199, 0.5, 1] } as const;
+const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [357, 204, 0.5, 1] } as const;
 
 /* The sampler's cross-stitch border motif: a heart between two flowers, one
    cross per cell. r = the stitch thread, g = leaf green. */
@@ -60,26 +59,37 @@ const FONT: Record<string, string> = {
   W: 'X...XX...XX...XX.X.XX.X.XXX.XXX...X', X: 'X...XX...X.X.X...X...X.X.X...XX...X',
   Y: 'X...XX...X.X.X...X....X....X....X..', Z: 'XXXXX....X...X...X...X...X....XXXXX',
 };
-const rows = ['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ'];
 const ABC_CELL = 3;
-let abc = '';
-rows.forEach((letters, r) => {
-  [...letters].forEach((ch, i) => {
-    const g = FONT[ch];
-    for (let y = 0; y < 7; y++) {
-      let x = 0;
-      while (x < 5) {
-        if (g[y * 5 + x] !== 'X') { x++; continue; }
-        let run = x;
-        while (run < 5 && g[y * 5 + run] === 'X') run++;
-        abc += `M${(i * 6 + x) * ABC_CELL} ${(r * 9 + y) * ABC_CELL}h${(run - x) * ABC_CELL}v${ABC_CELL}h${-(run - x) * ABC_CELL}z`;
-        x = run;
+/** The filled cells of the letters laid out in the given rows, and the size of the sheet. */
+function abcLayout(rows: string[]) {
+  let d = '';
+  rows.forEach((letters, r) => {
+    [...letters].forEach((ch, i) => {
+      const g = FONT[ch];
+      for (let y = 0; y < 7; y++) {
+        let x = 0;
+        while (x < 5) {
+          if (g[y * 5 + x] !== 'X') { x++; continue; }
+          let run = x;
+          while (run < 5 && g[y * 5 + run] === 'X') run++;
+          d += `M${(i * 6 + x) * ABC_CELL} ${(r * 9 + y) * ABC_CELL}h${(run - x) * ABC_CELL}v${ABC_CELL}h${-(run - x) * ABC_CELL}z`;
+          x = run;
+        }
       }
-    }
+    });
   });
-});
-const ABC_W = 13 * 6 * ABC_CELL - ABC_CELL; // the last letter has no trailing column
-const ABC_H = 16 * ABC_CELL;
+  const cols = Math.max(...rows.map((letters) => letters.length));
+  // the last letter has no trailing column, the last row no trailing gap
+  return { d, w: (cols * 6 - 1) * ABC_CELL, h: (rows.length * 9 - 2) * ABC_CELL };
+}
+/* Two rows of thirteen on a wide sampler; four rows of seven on a phone, so each stitch is still a
+   visible X at the narrow width (B1 fix call 2). Only one of the two is ever shown. */
+const abcWide = abcLayout(['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ']);
+const abcNarrow = abcLayout(['ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ']);
+const abcSheets = [
+  { cls: 'abc wide', id: 'w', ...abcWide },
+  { cls: 'abc narrow', id: 'n', ...abcNarrow },
+];
 
 /* The Greek key: a hook between two rails, one cross per cell, as a repeating
    mask. The top and foot of the sampler take the tile across; the sides take it
@@ -103,7 +113,19 @@ const tile = (rows: string[]) => {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='${cross}' fill='none' stroke='#000' stroke-width='.36' stroke-linecap='round'/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 };
-const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
+/* The corner stone where the runs turn: concentric squares, worked in the same crosses (B1 fix:
+   the runs end in whole motifs and turn the four corners). */
+const CORNER = [
+  'XXXXXXXX',
+  'X......X',
+  'X.XXXX.X',
+  'X.X..X.X',
+  'X.X..X.X',
+  'X.XXXX.X',
+  'X......X',
+  'XXXXXXXX',
+];
+const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CORNER)}`;
 ---
 <ChinoiserieShapes />
 
@@ -125,7 +147,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
         <div class="gilt-oval">
           <div class="ring">
             <Chintz />
-            <div class="oval"><Birch /></div>
+            <div class="oval"><div class="birch-box"><span class="birch"></span></div></div>
           </div>
         </div>
         <Frame2 />
@@ -158,15 +180,21 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
   <div class="sampler" style={keyStyle}>
     <span class="key side l" aria-hidden="true"></span>
     <span class="key side r" aria-hidden="true"></span>
-    <svg class="abc" viewBox={`0 0 ${ABC_W} ${ABC_H}`} aria-hidden="true" focusable="false">
-      <defs>
-        <pattern id="gm-abc-x" width={ABC_CELL} height={ABC_CELL} patternUnits="userSpaceOnUse">
-          <path d="M.45 .45l2.1 2.1m0 -2.1l-2.1 2.1" />
-        </pattern>
-        <mask id="gm-abc-m"><path d={abc} fill="#fff" /></mask>
-      </defs>
-      <rect width={ABC_W} height={ABC_H} fill="url(#gm-abc-x)" mask="url(#gm-abc-m)" />
-    </svg>
+    <span class="key corner tl" aria-hidden="true"></span>
+    <span class="key corner tr" aria-hidden="true"></span>
+    <span class="key corner bl" aria-hidden="true"></span>
+    <span class="key corner br" aria-hidden="true"></span>
+    {abcSheets.map((a) => (
+      <svg class={a.cls} viewBox={`0 0 ${a.w} ${a.h}`} aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id={`gm-abc-x-${a.id}`} width={ABC_CELL} height={ABC_CELL} patternUnits="userSpaceOnUse">
+            <path d="M.4 .4l2.2 2.2m0 -2.2l-2.2 2.2" />
+          </pattern>
+          <mask id={`gm-abc-m-${a.id}`}><path d={a.d} fill="#fff" /></mask>
+        </defs>
+        <rect width={a.w} height={a.h} fill={`url(#gm-abc-x-${a.id})`} mask={`url(#gm-abc-m-${a.id})`} />
+      </svg>
+    ))}
     <svg class="stitchwork" viewBox={`-2 -2 ${motif[0].length * cell + 4} ${motif.length * cell + 4}`} aria-hidden="true" focusable="false">
       {stitches.map(({ x, y, kind }) => (
         <path class={kind === 'g' ? 'st g' : 'st'} d={`M${x + 1} ${y + 1}l6 6m0-6l-6 6`} />
@@ -197,7 +225,8 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
   .a .scene-art { background-image: url('../assets/chinoiserie-light.svg'); background-position: 50% 0; }
   .b .scene-art { background-image: url('../assets/chinoiserie-hunter.svg'); background-position: 50% 100%; }
   :global(html[data-scheme='dark']) .a .scene-art { background-image: url('../assets/chinoiserie-dark.svg'); }
-  :global(html[data-scheme='dark']) .b .scene-art { background-image: url('../assets/chinoiserie-dark.svg'); }
+  /* The founder's room in the lacquered scheme is a deeper, richer green than the hero wall (B1 fix call 3). */
+  :global(html[data-scheme='dark']) .b .scene-art { background-image: url('../assets/chinoiserie-darkroom.svg'); }
   :global(.gm-wall-band.mid) { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38), 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
 
   .scene-part :global(.wall-bird-layer.phone) { display: none; }
@@ -216,6 +245,11 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
   .intro > * { pointer-events: auto; }
   /* Hung a little off true: left of its column and lifted, the small second
      frame lower right. The picture wire runs from the gilt to a nail. */
+  /* Decorative and inert (aria-hidden): it lets pointers through to the live bird's tap target under
+     it, so the sitter never covers the target (B1 fix: the phone bird's tap rect was half under the
+     oval). The story card still takes its own pointer events. Spelled .intro > .sitter to outrank the
+     rule above, which Astro scopes to .intro > *[data-astro-cid]. */
+  .intro > .sitter { pointer-events: none; }
   .sitter {
     position: relative; margin: 0;
     justify-self: start;
@@ -262,7 +296,16 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
     background: radial-gradient(closest-side, var(--oval), color-mix(in srgb, var(--oval), var(--ornament) 14%));
     box-shadow: 0 0 0 3px var(--ornament), 0 0 0 5px var(--oval), 0 0 0 6px var(--ornament), 0 4px 14px 5px rgb(0 0 0 / 0.25);
   }
-  .oval :global(.gm-birch) { width: 100%; height: 100%; }
+  /* The botanical birch is a cached file per scheme (assets/birch-*.svg, inks baked), not inline
+     markup. Its viewBox is the drawing plus 60 units on every side (the trunk runs past the drawing
+     and the oval ends it), so the span is 150% x 140% of the box the old inline svg filled: same
+     scale, same centre (scripts/themes/grandmillennial/build-chinoiserie.mjs). */
+  .birch-box { position: relative; width: 100%; height: 100%; }
+  .birch {
+    position: absolute; left: -25%; right: -25%; top: -20%; bottom: -20%;
+    background: url('../assets/birch-light.svg') center / contain no-repeat;
+  }
+  :global(html[data-scheme='dark']) .birch { background-image: url('../assets/birch-dark.svg'); }
   /* The story lies on the wall as a card, so no text sits on the painting. */
   .story {
     position: relative;
@@ -354,22 +397,37 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
     background: var(--stitch);
     pointer-events: none;
   }
+  /* Whole motifs only: each run lies between the corner stones and its tile repeats `round`, so the
+     run is a whole number of hooks (each a hair over or under 24px), and the four corners turn on a
+     stone of their own. */
   .sampler::before, .sampler::after {
-    left: 14px; right: 14px; height: 24px;
-    -webkit-mask: var(--key-h) center / 24px 24px repeat-x;
-    mask: var(--key-h) center / 24px 24px repeat-x;
+    left: 38px; right: 38px; height: 24px;
+    -webkit-mask: var(--key-h) center / 24px 24px round no-repeat;
+    mask: var(--key-h) center / 24px 24px round no-repeat;
   }
   .sampler::before { top: 14px; }
   .sampler::after { bottom: 14px; }
   .key.side {
     top: 38px; bottom: 38px; width: 24px;
-    -webkit-mask: var(--key-v) center / 24px 24px repeat-y;
-    mask: var(--key-v) center / 24px 24px repeat-y;
+    -webkit-mask: var(--key-v) center / 24px 24px no-repeat round;
+    mask: var(--key-v) center / 24px 24px no-repeat round;
   }
   .key.l { left: 14px; }
   .key.r { right: 14px; }
-  .abc { width: min(100%, 14rem); height: auto; }
-  .abc pattern path { fill: none; stroke: var(--c-blue); stroke-width: 0.75px; stroke-linecap: round; }
+  .key.corner {
+    width: 24px; height: 24px;
+    -webkit-mask: var(--key-c) center / 24px 24px no-repeat;
+    mask: var(--key-c) center / 24px 24px no-repeat;
+  }
+  .key.tl { left: 14px; top: 14px; }
+  .key.tr { right: 14px; top: 14px; }
+  .key.bl { left: 14px; bottom: 14px; }
+  .key.br { right: 14px; bottom: 14px; }
+  /* Oxblood thread, each cross a visible X on the counted grid (B1 fix call 2): large, so a cell is
+     about 6px at 1440 and 5px on a phone. */
+  .abc { width: min(100%, 30rem); height: auto; }
+  .abc.narrow { display: none; width: min(100%, 17rem); }
+  .abc pattern path { fill: none; stroke: var(--thread); stroke-width: 0.8px; stroke-linecap: round; }
   .stitchwork { width: min(100%, 13rem); overflow: visible; }
   .st { fill: none; stroke: var(--stitch); stroke-width: 1.7; stroke-linecap: round; }
   .st.g { stroke: var(--c-leaf); }
@@ -379,6 +437,11 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)}`;
     font-size: clamp(1.5rem, 3vw, 2rem);
     line-height: 1.3;
     text-wrap: balance;
+  }
+
+  @media (max-width: 600px) {
+    .abc.wide { display: none; }
+    .abc.narrow { display: block; }
   }
 
   @media (max-width: 820px) {

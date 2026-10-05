@@ -388,7 +388,7 @@ out.far.push(`<path class="sc-hill1" d="M0 880C140 820 250 790 400 830C520 862 6
 out.far.push(`<path class="sc-hill2" d="M0 960C180 930 300 960 470 940C650 920 760 880 940 900C1120 920 1220 880 1400 890C1500 896 1560 920 1600 930V1300H0Z"/>`);
 // far thin birches, pale and small
 for (const [x, y0, y1, w] of [[470, 1010, 330, 20], [915, 1030, 260, 22], [1275, 1000, 340, 18], [75, 1040, 500, 22]]) {
-  trunk([[x, y0], [x + 7, (y0 + y1) / 2], [x - 4, y1]], w, w * 0.55, { curls: 0, lens: 0.5, layer: 'farT' });
+  trunk([[x, y0], [x + 2, (y0 + y1) / 2], [x - 1, y1]], w, w * 0.55, { curls: 0, lens: 0.5, layer: 'farT' });
 }
 // ground wash
 out.ground.push(`<path class="sc-ground" d="M0 1118C120 1096 220 1112 360 1100C520 1086 660 1108 820 1100C980 1092 1100 1112 1260 1098C1400 1086 1510 1104 1600 1096V1300H0Z"/>`);
@@ -413,11 +413,11 @@ for (const [x, y] of [[300, 1206], [640, 1216], [905, 1250], [1260, 1190], [1390
 for (const [x, y, s] of [[300, 1226, 1], [312, 1218, 0.8], [690, 1232, 1.1], [1230, 1212, 0.9], [1245, 1222, 1], [880, 1262, 1], [1180, 1236, 0.9]]) flower(x, y, s);
 
 // trunks and limbs
-const T1 = trunk([[255, 1190], [286, 1010], [236, 830], [214, 640], [250, 420], [268, 200], [226, -60]], 80, 42, { eyes: [0.52, 0.62, 0.78, 0.9, 0.34], curls: 8 });
-const T3 = trunk([[1130, 1180], [1100, 1000], [1146, 800], [1166, 580], [1128, 340], [1090, 100], [1138, -60]], 72, 38, { eyes: [0.5, 0.64, 0.8, 0.9, 0.3], curls: 8 });
-const T5 = trunk([[1525, 1200], [1500, 1020], [1540, 820], [1556, 600], [1520, 380], [1490, 160], [1530, -60]], 66, 32, { eyes: [0.44, 0.7, 0.86], curls: 6 });
-const T2 = trunk([[640, 1170], [668, 1000], [626, 850], [650, 700], [616, 560]], 46, 24, { eyes: [0.5, 0.7], curls: 4 });
-const T4 = trunk([[1385, 1140], [1395, 950], [1380, 780], [1400, 600], [1395, 430]], 38, 18, { eyes: [0.6, 0.82], curls: 3 });
+const T1 = trunk([[255, 1190], [257, 1010], [252, 830], [253, 640], [262, 420], [267, 200], [264, -60]], 80, 42, { eyes: [0.52, 0.62, 0.78, 0.9, 0.34], curls: 8 });
+const T3 = trunk([[1130, 1180], [1127, 1000], [1131, 800], [1136, 580], [1135, 340], [1131, 100], [1128, -60]], 72, 38, { eyes: [0.5, 0.64, 0.8, 0.9, 0.3], curls: 8 });
+const T5 = trunk([[1525, 1200], [1524, 1020], [1529, 820], [1531, 600], [1527, 380], [1522, 160], [1524, -60]], 66, 32, { eyes: [0.44, 0.7, 0.86], curls: 6 });
+const T2 = trunk([[640, 1170], [644, 1000], [642, 850], [646, 700], [643, 560]], 46, 24, { eyes: [0.5, 0.7], curls: 4 });
+const T4 = trunk([[1385, 1140], [1387, 950], [1385, 780], [1390, 600], [1389, 430]], 38, 18, { eyes: [0.6, 0.82], curls: 3 });
 
 const bR = [];
 bR.push(bough(T1, 0.62, 1, 330, 120, 40, 24, 5, { sub: 90 }));
@@ -446,13 +446,17 @@ bR.push(bough(T4, 1.0, -1, 70, 110, 0, 9, 3));
 const pb = (x, y, s, flip, cls) => out.birds.push(`<use href="#sc-pb" transform="translate(${tk(x)} ${tk(y)}) scale(${tk(flip * s)} ${tk(s)})" class="${cls}"/>`);
 const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" transform="translate(${tk(x)} ${tk(y)}) rotate(${tk(rot)}) scale(${tk(flip * s)} ${tk(s)})" class="${cls}"/>`);
 {
-  const f1 = bR[1](0.55).at, f2 = bR[5](0.55).at, f3 = bR[9](0.5).at;
-  pb(f1[0] - 6, f1[1] + 2, 1.25, 1, 'sc-birdA'); // the blue bird that sat at (f1 + 68, -6) is the wall's live bird (About.astro BIRD_WIDE.home): the file leaves its perch empty
+  const f2 = bR[5](0.55).at;
+  /* B1 fix (deferred minors, rc1-N1 and C4): the painted red bird that shared the live bird's branch is
+     gone (the live bird's home perch touched it at 1440), and every painted bird is placed where no
+     card half-covers it at 1440, 1280, 1024 or 820 (scripts/themes/grandmillennial/b1-t6-birds.mjs
+     maps each bird into both rooms at each size and reports a PEEK when a card covers some of it).
+     The live bird's branch (About.astro BIRD_WIDE/BIRD_PHONE) is left to it alone. */
   pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
-  pb(f3[0] - 8, f3[1] + 3, 1.0, 1, 'sc-birdA');
-  fb(680, 255, 1.35, -8, 1, 'sc-birdA'); fb(870, 130, 1.0, -12, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
-  fb(1330, 300, 0.9, -6, -1, 'sc-birdA'); fb(330, 800, 0.75, -10, 1, 'sc-birdA');
-  fb(1260, 900, 0.8, 8, -1, 'sc-birdB');
+  pb(614, 802, 1.1, 1, 'sc-birdA'); // on the T2 bough beside the trunk (a limb centreline point, see the --limbs search)
+  fb(700, 440, 1.0, -8, 1, 'sc-birdA'); fb(240, 120, 1.0, -10, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
+  fb(980, 330, 0.9, -6, -1, 'sc-birdA'); fb(540, 840, 0.75, -10, 1, 'sc-birdA');
+  fb(1080, 900, 0.8, 8, -1, 'sc-birdB');
 }
 
 /* ---------- assemble ---------- */
@@ -483,7 +487,7 @@ writeFileSync(join(HERE, 'scene.json'), JSON.stringify({ defs, sceneG, perchedBi
 reseed(2210);
 {
   const o = { limbs: [], twigs: [], leaves: [], cats: [], trunk: [], ground: [] };
-  const trk = [[98, 282], [105, 224], [90, 168], [103, 112], [91, 58], [101, 6], [94, -60]];
+  const trk = [[98, 282], [100, 224], [98, 168], [102, 112], [100, 58], [101, 6], [100, -60]];
   const pts = catmull(trk, 10);
   const wf = (t) => 33 - 15 * t + 1.4 * Math.sin(t * 13);
   const rb = ribbon(pts, wf);

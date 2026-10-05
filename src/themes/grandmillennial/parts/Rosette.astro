@@ -1,30 +1,56 @@
 ---
-/** A pleated rosette, drawn for this school: three rings of knife pleats
-    round a covered button, in the bow's two reds. It takes the ribbon bow's
-    place on Services' ask (B1 task 4, decision C: Home's and Sent's bows
-    stay, this one is trimmed). */
+/** A ribbon rosette, drawn for this school: nine broad pleats round a covered
+    button, a smaller nine between them, in the bow's oxblood. Each pleat is a
+    fan folded down its middle (one half lit, one half in shade) with a soft
+    rounded edge, so the ring reads as gathered ribbon and not as a starburst
+    (B1 fix call 8: the first pass drew sixty knife pleats). It takes the
+    ribbon bow's place on Services' ask (B1 task 4, decision C: Home's and
+    Sent's bows stay, this one is trimmed). */
 interface Props { class?: string }
 const { class: cls } = Astro.props;
-const ring = (n: number, r0: number, r1: number, w: number) =>
-  Array.from({ length: n }, (_, i) => (i * 360) / n).map((a) => ({ a, d: `M${-w} ${-r0}L0 ${-r1}L${w} ${-r0}Z` }));
-const outer = ring(20, 14, 38, 6.2);
-const mid = ring(16, 10, 28, 5.4);
-const inner = ring(12, 6, 18, 4.2);
+const t = (n: number) => String(Math.round(n * 10) / 10);
+/** One pleat pointing up from the centre: [lit half, shaded half, fold line]. */
+function pleat(r0: number, r1: number, w: number) {
+  const half = (s: number) =>
+    `M0 ${t(-r0)}L${t(s * w * 0.3)} ${t(-r0)}C${t(s * w * 0.8)} ${t(-r1 * 0.5)} ${t(s * w)} ${t(-r1 * 0.82)} ${t(s * w * 0.62)} ${t(-r1 * 0.96)}Q${t(s * w * 0.3)} ${t(-r1 * 1.03)} 0 ${t(-r1)}Z`;
+  return { lit: half(-1), shade: half(1), fold: `M0 ${t(-r0)}L0 ${t(-r1 * 0.94)}` };
+}
+const ring = (n: number, off: number, r0: number, r1: number, w: number) =>
+  Array.from({ length: n }, (_, i) => off + (i * 360) / n).map((a) => ({ a, ...pleat(r0, r1, w) }));
+const outer = ring(9, 0, 7, 38, 15);
+const inner = ring(9, 20, 5, 25, 10.5);
 ---
 <svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 84" aria-hidden="true" focusable="false">
-  <circle class="disc" r="30" />
-  {outer.map((p) => <path class="pleat deep" transform={`rotate(${p.a})`} d={p.d} />)}
-  {mid.map((p) => <path class="pleat" transform={`rotate(${p.a + 9})`} d={p.d} />)}
-  {inner.map((p) => <path class="pleat deep" transform={`rotate(${p.a})`} d={p.d} />)}
-  <circle class="button" r="5.6" />
-  <circle class="shine" cx="-1.6" cy="-1.8" r="1.6" />
+  <circle class="disc" r="24" />
+  {outer.map((p) => (
+    <g transform={`rotate(${p.a})`}>
+      <path class="lit" d={p.lit} />
+      <path class="shade" d={p.shade} />
+      <path class="fold" d={p.fold} />
+    </g>
+  ))}
+  {inner.map((p) => (
+    <g transform={`rotate(${p.a})`}>
+      <path class="lit deep" d={p.lit} />
+      <path class="shade deep" d={p.shade} />
+      <path class="fold" d={p.fold} />
+    </g>
+  ))}
+  <circle class="button" r="7.2" />
+  <path class="gather" d="M-5 -2.2Q0 -5 5 -2.2M-5.6 1Q0 -2.2 5.6 1M-4.6 4Q0 1.4 4.6 4" />
+  <circle class="shine" cx="-2.2" cy="-2.6" r="1.8" />
 </svg>
 
 <style>
   .gm-rosette { overflow: visible; filter: drop-shadow(0 3px 3px rgb(40 10 10 / 0.25)); }
   .disc { fill: var(--bow-deep); }
-  .pleat { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 0.7; stroke-linejoin: round; }
-  .pleat.deep { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 45%); }
-  .button { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1.2; }
-  .shine { fill: rgb(255 235 235 / 0.55); }
+  .lit { fill: var(--bow); }
+  .shade { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 55%); }
+  .deep.lit { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 22%); }
+  .deep.shade { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 72%); }
+  .lit, .shade { stroke: var(--bow-deep); stroke-width: 0.6; stroke-linejoin: round; }
+  .fold { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; stroke-linecap: round; opacity: 0.7; }
+  .button { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1; }
+  .gather { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; stroke-linecap: round; opacity: 0.55; }
+  .shine { fill: rgb(255 235 235 / 0.5); }
 </style>

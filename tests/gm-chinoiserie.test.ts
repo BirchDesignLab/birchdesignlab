@@ -23,11 +23,18 @@ describe('grandmillennial chinoiserie', () => {
       for (const [t, k] of Object.entries(keys)) expect(token(block, t), `${scheme} ${t}`).toBe(pal[k]);
     });
   }
-  it('--sc-room is the hunter file in light and the dark file in dark', () => {
+  it('--sc-room is the hunter file in light and the deeper darkroom file in dark', () => {
     expect(token(light, '--sc-room')).toBe(palettes.hunter.ground);
-    expect(token(dark, '--sc-room')).toBe(palettes.dark.ground);
+    expect(token(dark, '--sc-room')).toBe(palettes.darkroom.ground);
+    /* the founder's room in the lacquered scheme is not the hero wall's ground (B1 fix call 3) */
+    expect(token(dark, '--sc-room')).not.toBe(token(dark, '--sc-ground'));
   });
-  for (const name of ['light', 'hunter', 'dark'] as const) {
+  it('the dark founder band lays the darkroom file, the hero wall the dark one', () => {
+    const about = read('pages/About.astro');
+    expect(about).toContain("html[data-scheme='dark']) .b .scene-art { background-image: url('../assets/chinoiserie-darkroom.svg')");
+    expect(about).toContain("html[data-scheme='dark']) .a .scene-art { background-image: url('../assets/chinoiserie-dark.svg')");
+  });
+  for (const name of ['light', 'hunter', 'dark', 'darkroom'] as const) {
     it(`chinoiserie-${name}.svg is a real file with its ground and line baked`, () => {
       const svg = read(`assets/chinoiserie-${name}.svg`);
       expect(statSync(new URL(`assets/chinoiserie-${name}.svg`, GM)).size).toBeGreaterThan(4096);
@@ -46,11 +53,22 @@ describe('grandmillennial chinoiserie', () => {
     const birds = [...scene.sceneG.matchAll(/<use href="#sc-(?:pb|fb)" transform="translate\(([-\d.]+) ([-\d.]+)\)/g)].map((m) => [+m[1], +m[2]]);
     for (const [x, y] of spots) for (const [bx, by] of birds) expect(Math.hypot(x - bx, y - by), `${x},${y} vs ${bx},${by}`).toBeGreaterThan(60);
   });
-  it('the botanical birch draws double-toothed leaves and slender catkins, with no text nodes', () => {
-    const birch = read('parts/Birch.astro');
-    expect(birch).toContain('id="bb-l1"');
-    expect(birch).toContain('id="bb-ck"');
-    expect(birch).not.toMatch(/<text/);
+  for (const [scheme, block] of [['light', light], ['dark', dark]] as const) {
+    it(`birch-${scheme}.svg is a cached file with its inks baked and no text nodes`, () => {
+      const birch = read(`assets/birch-${scheme}.svg`);
+      expect(statSync(new URL(`assets/birch-${scheme}.svg`, GM)).size).toBeGreaterThan(4096);
+      expect(birch).toContain('id="bb-l1"');
+      expect(birch).toContain('id="bb-ck"');
+      expect(birch).not.toMatch(/<text/);
+      expect(birch).toContain(`fill:${token(block, '--c-leaf')}`);
+      expect(birch).toContain(`fill:${token(block, '--catkin')}`);
+    });
+  }
+  it('About carries the birch as a cached background, not inline markup', () => {
+    const about = read('pages/About.astro');
+    expect(about).toContain('assets/birch-light.svg');
+    expect(about).toContain('assets/birch-dark.svg');
+    expect(about).not.toMatch(/<Birch|gm-birch/);
   });
   it('the live bird is aria-hidden and not focusable', () => {
     const bird = read('parts/WallBird.astro');
@@ -67,7 +85,7 @@ describe('grandmillennial chinoiserie', () => {
   });
   it('the sampler lettering is drawn, not typed', () => {
     const about = read('pages/About.astro');
-    expect(about).toContain('<mask id="gm-abc-m">');
+    expect(about).toContain('<mask id={`gm-abc-m-${a.id}`}>');
     expect(about).not.toMatch(/<text[ >]/);
   });
   it('services\' band has its own lacquer yellow token in both schemes', () => {

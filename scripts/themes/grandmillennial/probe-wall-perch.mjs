@@ -84,7 +84,7 @@ async function measure(page, sz) {
       };
       for (const e of document.querySelectorAll(sel)) {
         for (const el of [e, ...e.querySelectorAll('*')]) {
-          if (getComputedStyle(el).visibility === 'hidden') continue;
+          if (getComputedStyle(el).visibility === 'hidden' || el.matches('.birch')) continue; // the birch span is laid wider than the oval, which clips it
           if (own.some((o) => el.matches(o)) || (!el.children.length && el.tagName !== 'defs')) add(el.getBoundingClientRect());
         }
       }
@@ -99,6 +99,31 @@ async function measure(page, sz) {
       home: g.dataset.home.split(' ').map(Number), away: g.dataset.away.split(' ').map(Number),
       cards: { sitter: union('.sitter', ['.gilt-oval']), frame2: union('.gm-frame2', ['.gm-frame2']), story: union('.story', ['.story']) },
       layerUnder,
+      hit: (() => { const h = g.querySelector('.wb-hit'); return ['x', 'y', 'width', 'height'].map((n) => Number(h.getAttribute(n))); })(),
+      /* the real thing: hit-test a 3px grid over the tap target (scrolled into view) with the bird moved to each perch,
+         and count the points where the element on top IS the tap target (not the sitter, the frame or the story) */
+      taps: (() => {
+        const h = g.querySelector('.wb-hit'), saved = g.style.transform, out = {};
+        const home = g.dataset.home.split(' ').map(Number), away = g.dataset.away.split(' ').map(Number);
+        for (const [k, sp] of [['home', home], ['away', away]]) {
+          g.style.transform = `translate(${sp[0]}px, ${sp[1]}px)`;
+          const r = h.getBoundingClientRect();
+          window.scrollTo(0, Math.max(0, r.top + scrollY - innerHeight / 2));
+          const r2 = h.getBoundingClientRect();
+          let total = 0, hit = 0, run = 0, runMax = 0;
+          for (let y = r2.top + 1; y < r2.bottom; y += 3) {
+            run = 0;
+            for (let x = r2.left + 1; x < r2.right; x += 3) {
+              total++;
+              if (document.elementFromPoint(x, y) === h) { hit++; run += 3; runMax = Math.max(runMax, run); } else run = 0;
+            }
+          }
+          out[k] = { share: hit / total, run: runMax, w: r2.width, h: r2.height };
+        }
+        g.style.transform = saved;
+        window.scrollTo(0, 0);
+        return out;
+      })(),
       part: [part.left, part.top + scrollY, part.right, part.bottom + scrollY],
     };
   });
@@ -157,13 +182,16 @@ for (const scheme of CHECK ? ['light', 'dark'] : ['light']) for (const sz of SIZ
   let ok, line;
   if (sz.variant === 'wide') {
     // the wide wall has open wall: both perches clear by the pad, the whole flight clear of every card
-    ok = perchGap >= PAD && w.gap >= 0 && m.layerUnder;
-    line = `perched ${Math.round(perchGap)}px clear (pad ${PAD}), flight tightest ${Math.round(w.gap)}px to ${w.who} at ${w.at}`;
+    const tapH = m.taps.home;
+    ok = perchGap >= PAD && w.gap >= 0 && m.layerUnder && tapH.share >= 0.6;
+    line = `perched ${Math.round(perchGap)}px clear (pad ${PAD}), flight tightest ${Math.round(w.gap)}px to ${w.who} at ${w.at}; tap target open ${Math.round(tapH.share * 100)}%`;
   } else {
     // a phone's cards cover the wall edge to edge, so no perch is wholly clear: the layer lies under
     // the cards (nothing is painted over one) and the perched bird stays mostly in the open
-    ok = vis >= 0.75 && m.layerUnder;
-    line = `perched outline ${Math.round(vis * 100)}% in the open (needs 75%), nearest card ${Math.round(perchGap)}px`;
+    const tapH = m.taps.home, tapA = m.taps.away;
+    const tapOk = [tapH, tapA].every((t) => t.share >= 0.6 && t.run >= 24);
+    ok = vis >= 0.75 && m.layerUnder && tapOk;
+    line = `perched outline ${Math.round(vis * 100)}% in the open (needs 75%), nearest card ${Math.round(perchGap)}px; tap target ${Math.round(tapH.w)}x${Math.round(tapH.h)}px, open ${Math.round(tapH.share * 100)}% (run ${Math.round(tapH.run)}px) at home, ${Math.round(tapA.share * 100)}% (run ${Math.round(tapA.run)}px) away (needs 60% and a 24px run)`;
   }
   if (!m.layerUnder) line += ' [bird layer is NOT under the intro]';
   if (!ok) bad++;
@@ -200,7 +228,7 @@ if (process.argv.includes('--vis')) {
   const sc = Number(arg('scale', 0.5));
   for (const sp of spots.filter((q) => !LIMBS.length || LIMBS.includes(q.li))) for (const f of [1, -1]) {
     const v = ['390', '820'].map((id) => visible(M[id], birdBox(M[id], 'perch', pose(M[id], [sp.x, sp.y, sc, f]))));
-    if (Math.min(...v) > 0.6) console.log(sp.li, Math.round(sp.x), Math.round(sp.y), f, v.map((x) => x.toFixed(2)).join(' '));
+    if (Math.min(...v) > Number(arg('minvis', 0.6))) console.log(sp.li, Math.round(sp.x), Math.round(sp.y), f, v.map((x) => x.toFixed(2)).join(' '));
   }
   process.exit(0);
 }

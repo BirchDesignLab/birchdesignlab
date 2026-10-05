@@ -35,12 +35,12 @@ export const meta: ThemeMeta = {
     { fg: '--link', bg: ['--field-raised'], min: 4.5, note: 'links on cards' },
     { fg: '--mark', bg: ['--paper'], min: 4.5, note: 'text on the ticking-stripe paper' },
     { fg: '--accent', bg: ['--paper'], min: 4.5, note: 'kickers on the ticking-stripe paper' },
-    { fg: '--mark', bg: ['--field-raised'], min: 4.5, note: "text on cards (the founder's letter, the story) lying on the painted wall" },
     { fg: '--mark', bg: ['--lacquer-yellow'], min: 4.5, note: 'process band text on the lacquer yellow (hunter by day, cream on amber in the lacquered room)' },
     { fg: '--accent', bg: ['--lacquer-yellow'], min: 4.5, note: 'process band kicker on the lacquer yellow' },
     { fg: '--mark', bg: ['--oval'], min: 4.5, note: 'billboard inside the portrait oval' },
     { fg: '--accent', bg: ['--oval'], min: 4.5, note: 'billboard second line inside the oval' },
     { fg: '--band-mark', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' summaries" },
+    { fg: '--thread', bg: ['--field-raised'], min: 3, note: "the sampler's alphabet thread on its card (non-text, 3:1)" },
     { fg: '--band-accent', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' BDL numbers" },
   ],
   assets: {

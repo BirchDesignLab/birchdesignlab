@@ -10,6 +10,10 @@
  *       the 704 x 800 toile tile, ink baked (oxblood by day, gold-light in the
  *       lacquered room), no ground: the swatch and the wall paint the ground in
  *       CSS (--toile-ground, --wall-ground). Loaded by theme.css as a cached URL.
+ *   src/themes/grandmillennial/assets/toile-porcelain-light.svg
+ *       the same drawing in porcelain-blue ink (B1 fix call 6): the No. 2 cutting on Services by day
+ *       (dark keeps gold on its hunter cloth: it reads as laid on the darker wall),
+ *       so the swatch reads as a different cloth laid on the oxblood wall.
  *   src/themes/grandmillennial/assets/chintz-wall-light.svg, chintz-wall-dark.svg
  *       the 928 x 544 chintz wall, inks baked from theme.css's --c-* tokens, the
  *       ink layer at 0.6 opacity (decision F), aged: every motif printed twice
@@ -44,8 +48,8 @@ const INK_KEYS = ['--c-ground', '--c-rose', '--c-rose-lt', '--c-rose-dk', '--c-l
 for (const k of INK_KEYS) for (const [n, d] of [['light', light], ['dark', dark]]) if (!d[k]) throw new Error(`theme.css has no ${k} in the ${n} block`);
 const inksOf = (d) => Object.fromEntries(INK_KEYS.map((k) => [k, d[k]]));
 const SCHEMES = {
-  light: { inks: inksOf(light), toileInk: light['--oxblood'] },
-  dark: { inks: inksOf(dark), toileInk: light['--gold-light'] },
+  light: { inks: inksOf(light), toileInk: light['--oxblood'], cuttingInk: light['--porcelain-ink'] },
+  dark: { inks: inksOf(dark), toileInk: light['--gold-light'], cuttingInk: dark['--porcelain-ink'] },
 };
 
 /* The class rules, baked. Mirrors Defs.astro's style block. */
@@ -173,8 +177,7 @@ function wallFile(scheme) {
 const toile = JSON.parse(readFileSync(join(REPO, 'scripts', 'themes', 'proofs', 'stage5-gm-toile', 'toile-tile.json'), 'utf8'));
 const [TW, TH] = toile.tile;
 const toileUses = toile.uses.map((u) => u.replace(/ ?\/>$/, '/>')).join('');
-function toileFile(scheme) {
-  const ink = SCHEMES[scheme].toileInk;
+function toileFile(scheme, ink = SCHEMES[scheme].toileInk) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${TW}" height="${TH}" viewBox="0 0 ${TW} ${TH}">` +
     `<style>g.k{fill:none;stroke:${ink};stroke-width:.9;stroke-linecap:round;stroke-linejoin:round}</style>` +
     `<defs>${toile.defs.join('')}</defs><g class="k">${toileUses}</g></svg>\n`;
@@ -186,7 +189,7 @@ const out = join(GM, 'assets');
 mkdirSync(out, { recursive: true });
 const report = {};
 for (const scheme of ['light', 'dark']) {
-  for (const [name, text] of [[`toile-${scheme}.svg`, toileFile(scheme)], [`chintz-wall-${scheme}.svg`, wallFile(scheme)]]) {
+  for (const [name, text] of [[`toile-${scheme}.svg`, toileFile(scheme)], ...(scheme === 'light' ? [['toile-porcelain-light.svg', toileFile(scheme, SCHEMES[scheme].cuttingInk)]] : []), [`chintz-wall-${scheme}.svg`, wallFile(scheme)]]) {
     save(join(out, name), text);
     report[name] = { bytes: Buffer.byteLength(text), gzip: gzipSync(text).length };
   }

@@ -74,13 +74,16 @@
   --seal: #8e2433;
   --seal-deep: #5f121d;
   --stitch: #a8394a;
+  /* The oxblood thread of the sampler's alphabet band (B1 fix call 2). */
+  --thread: #a8394a;
   --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
   /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
   --bark-edge: #cfc6b4;
   --catkin: #8f7a4a;
   /* The envelope's flap, distinct from the writing paper it lies beside. */
-  /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12). */
-  --flap: #dfdcd6;
+  /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12), in a warm paper
+     hue (oklch 0.895 0.022 84), not the cool grey the first pass (#dfdcd6, chroma 0.009) read as (B1 fix call 7). */
+  --flap: #e3dbcc;
 
   /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
      Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
@@ -165,6 +168,8 @@
   --foot-muted: #d9b896;
   --foot-link: #e2c67f;
   --band-card: #3e0512;
+  /* A deep porcelain blue under the oxblood valance, not the pale line (B1 fix call 5). */
+  --foot-band: #234a86;
 
   --rule: #c9a95c;
   --ornament: #c9a95c;
@@ -206,6 +211,8 @@
   --seal: #9a2a3a;
   --seal-deep: #5f121d;
   --stitch: #c9a95c;
+  /* The alphabet band's oxblood thread, lifted to a rose so it reads on the dark sampler. */
+  --thread: #d4707e;
   --bark-edge: #4a4130;
   --catkin: #a68f5c;
   --flap: #0f251b;
@@ -231,13 +238,13 @@
      the cream stripe was 1.1 to 1. A lacquer-dark oxblood shows. */
   --band-pin: #3b0d16;
   /* Its dark equivalent stays an anchor: a burnished amber lacquer, cream text. */
-  --lacquer-yellow: #3f300d;
+  --lacquer-yellow: #6f4700;
   --tick-ink: #6e1a29;
 
   /* The dark scheme's wall (chinoiserie-dark.svg): gold-cream line on hunter, the
      wall darker than the cards. The founder's room is the same file. */
   --sc-ground: #0b1f15;
-  --sc-room: #0b1f15;
+  --sc-room: #0a3321;
   --sc-line: #d9c58d;
   --sc-trunk: #cfc6a6;
   --sc-limb: #7a6342;
