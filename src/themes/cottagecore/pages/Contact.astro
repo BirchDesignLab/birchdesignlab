@@ -6,6 +6,8 @@
 import ContactHidden from '../../portal/ContactHidden.astro';
 import type { CopyData } from '../../../lib/copy';
 import Pressed from '../assets/Pressed.astro';
+import Stamp from '../assets/Stamp.astro';
+import Postmark from '../assets/Postmark.astro';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -40,14 +42,8 @@ const { copy, theme } = Astro.props;
   <div class="post">
     <div class="postcard cc-paper">
       <span class="cc-tape cc-tape--rose cc-tape--half pc-tape" aria-hidden="true"></span>
-      <div class="stamp" aria-hidden="true">
-        <div class="stamp-face"><Pressed kind="daisy" seed={102} class="stamp-flower" /></div>
-      </div>
-      <svg class="postmark" viewBox="0 0 150 70" aria-hidden="true" focusable="false">
-        <circle cx="35" cy="35" r="30" />
-        <circle cx="35" cy="35" r="22" />
-        <path d="M70 18c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 30c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 42c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 54c10-6 18 6 28 0s18 6 28 0 14 4 22 0" />
-      </svg>
+      <Stamp class="stamp" seed={102} />
+      <Postmark class="postmark" arcId="pm-arc-contact" />
       <p class="invite">{copy.invite}</p>
       <div class="address">
         <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
@@ -57,7 +53,7 @@ const { copy, theme } = Astro.props;
       <p class="fine">{copy.fine}</p>
     </div>
     <div class="post-posy" aria-hidden="true">
-      <Pressed kind="fern" seed={103} class="pp-fern" />
+      <Pressed kind="myrtle" seed={103} class="pp-myrtle" />
       <div class="pp-card cc-paper">
         <span class="cc-tape cc-tape--rose cc-tape--half pp-tape" aria-hidden="true"></span>
         <Pressed kind="rose" seed={104} class="pp-rose" />
@@ -162,50 +158,28 @@ const { copy, theme } = Astro.props;
   /* A loose posy on the table under the postcard, where the form runs long. */
   .post-posy { position: relative; flex: 1 1 auto; min-height: 9rem; margin-top: -1.2rem; }
   .post-posy :global(.pressed) { position: absolute; bottom: 0; }
-  .post-posy :global(.pp-fern) { width: 8rem; left: 12%; top: -1.6rem; bottom: auto; rotate: -24deg; }
+  .post-posy :global(.pp-myrtle) { width: 7.6rem; left: 10%; top: -1.6rem; bottom: auto; rotate: -22deg; }
   /* The rose is mounted on a small card with a gum strip (dossier item 7),
      bottom-aligned so the columns end together and nothing floats on cloth. */
   .pp-card { --tilt: -3deg; position: absolute; right: 8%; bottom: 0; width: 9.5rem; height: 10.5rem; padding: 0.6rem; }
   .pp-tape { top: -0.7rem; left: 1.6rem; --tape-tilt: 6deg; --tape-w: 4.2rem; }
   .post-posy :global(.pp-rose) { position: absolute; width: 7.4rem; left: 1rem; bottom: 0.7rem; rotate: 12deg; }
-  .stamp {
+  /* The stamp's look (perforations, face, the value 3) is assets/Stamp.astro. */
+  .postcard :global(.stamp) {
     position: absolute; top: 1.2rem; right: 1.2rem;
     width: 5.6rem; height: 6.6rem;
-    padding: 0.5rem;
-    /* A stock that contrasts with the postcard under it, in both schemes, so
-       the perforated edge stays visible rather than reading as a flat square. */
-    background: var(--cc-stamp-stock);
     rotate: 4deg;
-    filter: drop-shadow(0 1px 2px rgba(var(--shadow), 0.35)) drop-shadow(0 0 0 1px rgba(var(--shadow), 0.08));
-    /* Perforations: a grid of holes, kept only around the edge by a solid
-       inner rectangle laid over it. */
-    -webkit-mask:
-      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
-      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
-    mask:
-      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
-      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
   }
-  .stamp-face {
-    height: 100%;
-    display: grid; place-items: center;
-    background: var(--cc-stamp-face);
-    outline: 1px solid rgba(58, 42, 31, 0.25);
-    outline-offset: -3px;
-    overflow: hidden;
-  }
-  :global([data-theme='cottagecore'][data-scheme='dark']) .stamp-face { filter: brightness(0.82) sepia(0.15); }
-  .stamp :global(.stamp-flower) { width: 82%; translate: 0 18%; }
   /* The cancel: a real postmark overlaps the stamp's lower-left corner. */
   /* In the flow after the heading (never on top of it), raised into the
      stamp's lower-left corner like a real cancel; the room below is left for
      the lettering Task 4 adds. */
-  .postmark {
+  .postcard :global(.postmark) {
     order: 1;
     justify-self: end;
-    margin: -1rem 2.8rem 0 0;
-    width: 7.2rem;
-    fill: none; stroke: var(--mark-muted); stroke-width: 1.6; opacity: 0.55;
+    margin: -1rem 2.2rem 0 0;
+    width: 8.6rem;
+    opacity: 0.72;
     rotate: -8deg;
   }
   .invite {
@@ -240,7 +214,7 @@ const { copy, theme } = Astro.props;
   /* In the narrow two-column band the heading sets in three lines, so the
      raised ring would sit on its last line: drop the ring clear of it. */
   @media (min-width: 861px) and (max-width: 980px) {
-    .postmark { margin-top: 0.7rem; }
+    .postcard :global(.postmark) { margin-top: 0.7rem; }
   }
   @media (max-width: 860px) {
     .contact { grid-template-columns: 1fr; }
@@ -257,6 +231,6 @@ const { copy, theme } = Astro.props;
        a narrow column. */
     .postcard { padding-top: 8.6rem; }
     .invite { padding-right: 0; min-height: 0; }
-    .postmark { position: absolute; margin: 0; right: 3.2rem; top: 5rem; width: 6.2rem; }
+    .postcard :global(.postmark) { position: absolute; margin: 0; right: 2.4rem; top: 4.8rem; width: 7.6rem; }
   }
 </style>

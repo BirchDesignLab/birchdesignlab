@@ -1,0 +1,34 @@
+---
+/** A circular postmark: "GULF COAST MS" lettered round the top of the ring,
+    "SEP 23 2026" across it, and (on the card) a wavy cancel running off to the
+    side. Decorative, aria-hidden SVG, so the lettering is outside the copy
+    parity. `arcId` must be unique on the page. */
+interface Props { arcId: string; waves?: boolean; flip?: boolean; class?: string }
+const { arcId, waves = true, flip = false, class: cls } = Astro.props;
+/* flip: the ring at the right and the cancel running off to the left. */
+const cx = flip ? 115 : 35;
+---
+<svg class:list={['postmark', cls]} viewBox={waves ? '0 0 150 70' : '0 0 70 70'} aria-hidden="true" focusable="false">
+  <defs><path id={arcId} d={`M${cx - 27} 35A27 27 0 0 1 ${cx + 27} 35`} /></defs>
+  <g transform={`translate(${cx - 35} 0)`}>
+  <circle class="pm-ring" cx="35" cy="35" r="33" />
+  <circle class="pm-ring" cx="35" cy="35" r="24.5" />
+  <path class="pm-ring pm-dots" d="M13 47.5l.1.1M20 54.6l.1.1M35 58l.1.1M50 54.6l.1.1M57 47.5l.1.1" />
+  <path class="pm-ring pm-rule" d="M17 29.6h36M17 42.4h36" />
+  </g>
+  <text class="pm-arc"><textPath href={`#${arcId}`} startOffset="50%" text-anchor="middle">GULF COAST MS</textPath></text>
+  <text class="pm-date" x={cx} y="38" text-anchor="middle">SEP 23 2026</text>
+  {waves && <path transform={flip ? 'translate(150 0) scale(-1 1)' : undefined} class="pm-ring pm-waves" d="M72 19c10-6 18 6 28 0s18 6 28 0 14 4 20 0M72 30c10-6 18 6 28 0s18 6 28 0 14 4 20 0M72 41c10-6 18 6 28 0s18 6 28 0 14 4 20 0M72 52c10-6 18 6 28 0s18 6 28 0 14 4 20 0" />}
+</svg>
+
+<style>
+  .postmark { fill: none; stroke: var(--mark-muted); stroke-width: 1.5; }
+  .pm-dots { stroke-width: 2.2; }
+  .pm-rule { stroke-width: 0.8; }
+  .pm-arc, .pm-date {
+    fill: var(--mark-muted); stroke: none;
+    font-family: var(--font-body); font-weight: 700; text-transform: uppercase;
+  }
+  .pm-arc { font-size: 7.4px; letter-spacing: 1.3px; }
+  .pm-date { font-size: 6.6px; letter-spacing: 0.35px; }
+</style>

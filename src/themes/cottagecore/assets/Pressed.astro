@@ -1,14 +1,15 @@
 ---
 /**
  * Pressed botanicals, drawn for this school: daisy, lavender, fern, a birch
- * twig with catkins, a wild rose and a single leaf. Each is generated at build
+ * twig with catkins, a wild rose and a single leaf, plus three Gulf Coast
+ * specimens (southern magnolia, maypop passionflower, wax myrtle). Each is generated at build
  * time from a few hand-tuned curves plus a seeded jitter, so two presses of
  * the same flower never match (the imperfection is the point) while the build
  * stays deterministic. Colours are custom properties from theme.css, so both
  * schemes restyle them. Always decorative.
  */
 interface Props {
-  kind: 'daisy' | 'lavender' | 'fern' | 'birch' | 'rose' | 'leaf';
+  kind: 'daisy' | 'lavender' | 'fern' | 'birch' | 'rose' | 'leaf' | 'magnolia' | 'passion' | 'myrtle';
   seed?: number;
   class?: string;
 }
@@ -431,6 +432,180 @@ if (kind === 'leaf') {
   add(lf.outline, 'leaf');
   add(lf.rib, 'vein');
 }
+/* ---- Gulf Coast specimens (Stage 5 D2 b) ----
+   Pressed the same way as the English four: named, firm outlines, a seeded
+   jitter so no two presses match. */
+
+if (kind === 'magnolia') {
+  // Southern magnolia, Magnolia grandiflora: two glossy oblong leaves and
+  // one wide cupped bloom with a central cone of stamens.
+  viewBox = '0 0 200 270';
+  const base: Pt = [96, 268];
+  const ctrl: Pt = [84 + jit(4), 176];
+  const top: Pt = [100, 104];
+  add(`M${P(base)}Q${P(ctrl)} ${P(top)}`, 'stem');
+  for (const [t, a, l, w] of [[0.3, -154, 104, 40], [0.5, -26, 94, 36]] as const) {
+    const at = quad(base, ctrl, top, t).p;
+    const ang = (a + jit(6)) * deg;
+    const lf = leaf(at, ang, l + jit(5), w + jit(2), { n: 24, bend: 0.07 * (a < -90 ? -1 : 1), widest: 0.46 });
+    add(lf.outline, 'leaf leaf--dark');
+    add(lf.rib, 'vein');
+    // Side veins run out from the midrib toward the edge.
+    let veins = '';
+    const dir: Pt = [Math.cos(ang), Math.sin(ang)];
+    const perp: Pt = [-dir[1], dir[0]];
+    for (let v = 1; v <= 8; v++) {
+      const s = v / 10;
+      const m: Pt = [at[0] + dir[0] * l * s, at[1] + dir[1] * l * s];
+      const reach = w * 0.38 * Math.sin(Math.PI * Math.pow(s, 0.8));
+      for (const sd of [-1, 1]) {
+        veins += `M${P(m)}L${P([m[0] + perp[0] * reach * sd + dir[0] * reach * 0.8, m[1] + perp[1] * reach * sd + dir[1] * reach * 0.8])}`;
+      }
+    }
+    add(veins, 'vein');
+  }
+  const c: Pt = [100 + jit(2), 66];
+  for (const ring of [0, 1]) {
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const a = ((i + ring * 0.5) / count) * Math.PI * 2 + jit(0.1) - Math.PI / 2;
+      const len = (ring ? 45 : 50) + jit(3);
+      const base2: Pt = [c[0] + Math.cos(a) * 5, c[1] + Math.sin(a) * 5];
+      const p = leaf(base2, a, len, (ring ? 34 : 36) + jit(2), { n: 16, widest: 0.6, bend: jit(0.06) });
+      add(p.outline, ring ? 'petal' : 'petal petal--back');
+      add(p.rib, 'petal-vein');
+    }
+  }
+  add(`M${P([c[0] - 9, c[1]])}a9 9 0 1 0 18 0a9 9 0 1 0 -18 0Z`, 'heart');
+  let stamens = '';
+  let tips = '';
+  for (let i = 0; i < 30; i++) {
+    const a = (i / 30) * Math.PI * 2 + jit(0.1);
+    const l = 11 + jit(2.5);
+    const e: Pt = [c[0] + Math.cos(a) * l, c[1] + Math.sin(a) * l];
+    stamens += `M${P([c[0] + Math.cos(a) * 4, c[1] + Math.sin(a) * 4])}L${P(e)}`;
+    tips += `M${P([e[0] - 1, e[1]])}a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z`;
+  }
+  add(stamens, 'stamen');
+  add(tips, 'floret');
+  add(`M${P([c[0] - 4.5, c[1]])}a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0Z`, 'pistil');
+}
+
+if (kind === 'passion') {
+  // Maypop, Passiflora incarnata: a three-lobed leaf, a curled tendril and a
+  // flower of ten tepals under a banded corona of filaments.
+  viewBox = '0 0 180 280';
+  const base: Pt = [86, 278];
+  const ctrl: Pt = [68 + jit(5), 176];
+  const top: Pt = [92, 88];
+  add(`M${P(base)}Q${P(ctrl)} ${P(top)}`, 'stem');
+  const lb = quad(base, ctrl, top, 0.42).p;
+  const la = (-158 + jit(6)) * deg;
+  const pet: Pt = [lb[0] + Math.cos(la) * 10, lb[1] + Math.sin(la) * 10];
+  add(`M${P(lb)}L${P(pet)}`, 'stem stem--thin');
+  for (const [off, l] of [[-36, 36], [0, 48], [36, 36]] as const) {
+    const lf = leaf(pet, la + (off + jit(5)) * deg, l + jit(3), 15 + jit(1.5), { n: 18, widest: 0.5, teeth: 8, depth: 0.16, bend: jit(0.06) });
+    add(lf.outline, 'leaf');
+    add(lf.rib, 'vein');
+  }
+  const tb = quad(base, ctrl, top, 0.62).p;
+  const spiral: Pt[] = [];
+  for (let k = 0; k < 26; k++) {
+    const th = -0.4 + k * 0.5;
+    const r = 22 - k * 0.72;
+    spiral.push([tb[0] + 20 + Math.cos(th) * r - 20 * Math.cos(-0.4), tb[1] - 6 + Math.sin(th) * r * 0.9 - 20 * Math.sin(-0.4) * 0.9]);
+  }
+  add(smooth([tb, ...spiral], false), 'stem stem--thin');
+  const h: Pt = [92 + jit(2), 62];
+  for (const ring of [0, 1]) {
+    for (let i = 0; i < 5; i++) {
+      const a = ((i + ring * 0.5) / 5) * Math.PI * 2 + jit(0.06) - Math.PI / 2;
+      const len = (ring ? 40 : 43) + jit(2.5);
+      const b: Pt = [h[0] + Math.cos(a) * 5, h[1] + Math.sin(a) * 5];
+      const p = leaf(b, a, len, (ring ? 11 : 12.5) + jit(1), { n: 14, widest: 0.5, bend: jit(0.05) });
+      add(p.outline, ring ? 'petal petal--lav' : 'petal petal--lav petal--back');
+      add(p.rib, 'petal-vein');
+    }
+  }
+  let longPurple = '';
+  let longPale = '';
+  let shortRing = '';
+  for (let i = 0; i < 64; i++) {
+    const a = (i / 64) * Math.PI * 2 + jit(0.04);
+    const r2 = 15 + jit(2.5);
+    const r3 = r2 + 7 + jit(1.5);
+    const [ca, sa] = [Math.cos(a), Math.sin(a)];
+    longPurple += `M${P([h[0] + ca * 7, h[1] + sa * 7])}L${P([h[0] + ca * r2, h[1] + sa * r2])}`;
+    longPale += `M${P([h[0] + ca * r2, h[1] + sa * r2])}L${P([h[0] + ca * r3, h[1] + sa * r3])}`;
+  }
+  for (let i = 0; i < 32; i++) {
+    const a = ((i + 0.5) / 32) * Math.PI * 2 + jit(0.05);
+    const [ca, sa] = [Math.cos(a), Math.sin(a)];
+    shortRing += `M${P([h[0] + ca * 6, h[1] + sa * 6])}L${P([h[0] + ca * (10 + jit(1.2)), h[1] + sa * (10 + jit(1.2))])}`;
+  }
+  add(longPurple, 'corona');
+  add(longPale, 'corona corona--pale');
+  add(shortRing, 'corona corona--short');
+  add(`M${P([h[0] - 4, h[1]])}a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z`, 'pistil');
+  let styles = '';
+  let knobs = '';
+  for (const ang of [-90, 30, 150]) {
+    const a = (ang + jit(8)) * deg;
+    const e: Pt = [h[0] + Math.cos(a) * 11, h[1] + Math.sin(a) * 11];
+    styles += `M${P(h)}L${P(e)}`;
+    knobs += `M${P([e[0] - 2, e[1]])}a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z`;
+  }
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + 0.3 + jit(0.12);
+    const e: Pt = [h[0] + Math.cos(a) * 9, h[1] + Math.sin(a) * 9];
+    styles += `M${P(h)}L${P(e)}`;
+    knobs += `M${P([e[0] - 1.6, e[1]])}a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0Z`;
+  }
+  add(styles, 'stamen');
+  add(knobs, 'floret');
+}
+
+if (kind === 'myrtle') {
+  // Wax myrtle, Morella cerifera: a brown twig, narrow leaves toothed near
+  // the tip, and the waxy blue-grey berries held in tight clusters.
+  viewBox = '0 0 170 290';
+  const base: Pt = [50, 288];
+  const ctrl: Pt = [74 + jit(6), 172];
+  const tip: Pt = [118 + jit(5), 14];
+  add(`M${P(base)}Q${P(ctrl)} ${P(tip)}`, 'twig');
+  const sb = quad(base, ctrl, tip, 0.42).p;
+  const sc: Pt = [sb[0] + 34, sb[1] - 20];
+  const se: Pt = [150 + jit(4), 104 + jit(4)];
+  add(`M${P(sb)}Q${P(sc)} ${P(se)}`, 'twig twig--thin');
+  const spray = (a0: Pt, c0: Pt, b0: Pt, from: number, to: number, count: number, size: number) => {
+    for (let i = 0; i < count; i++) {
+      const t = from + ((to - from) * i) / (count - 1);
+      for (const side of [i % 2 ? 1 : -1]) {
+        const { p, tan } = quad(a0, c0, b0, t);
+        const tangent = Math.atan2(tan[1], tan[0]);
+        const len = size * (1.05 - 0.4 * t) * (1 + jit(0.08));
+        const a = tangent + side * (46 + jit(8)) * deg;
+        const lf = leaf(p, a, len, len * 0.3, { n: 16, widest: 0.62, bend: side * 0.06, teeth: 5, depth: 0.32 });
+        add(lf.outline, 'leaf');
+        add(lf.rib, 'vein');
+      }
+    }
+  };
+  spray(base, ctrl, tip, 0.2, 0.99, 15, 44);
+  spray(sb, sc, se, 0.25, 0.98, 6, 34);
+  let berries = '';
+  for (const t of [0.3, 0.37, 0.45, 0.52, 0.6]) {
+    const { p } = quad(base, ctrl, tip, t);
+    const side = t > 0.45 ? 1 : -1;
+    for (let k = 0; k < 3; k++) {
+      const bx = p[0] + side * (3 + k * 3.2) + jit(1);
+      const by = p[1] + (k - 1) * 3.4 + jit(1);
+      berries += `M${P([bx - 2.7, by])}a2.7 2.7 0 1 0 5.4 0a2.7 2.7 0 1 0 -5.4 0Z`;
+    }
+  }
+  add(berries, 'berry');
+}
+
 // Written as one string of self-closed paths (legal inside an inline <svg>),
 // with each opacity to two places rather than a float's tail: a Home page
 // carries about 800 of them. Every value here is built above from numbers,

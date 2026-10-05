@@ -1,0 +1,46 @@
+---
+/** A perforated postage stamp: a pressed daisy on a butter face, the value
+    "3" in its corner. Decorative; the page places and rotates it. */
+import Pressed from './Pressed.astro';
+
+interface Props { class?: string; seed?: number }
+const { class: cls, seed = 102 } = Astro.props;
+---
+<div class:list={['stamp', cls]} aria-hidden="true">
+  <div class="stamp-face">
+    <Pressed kind="daisy" seed={seed} class="stamp-flower" />
+    <svg class="stamp-value" viewBox="0 0 16 18" focusable="false"><text x="8" y="14" text-anchor="middle">3</text></svg>
+  </div>
+</div>
+
+<style>
+  .stamp {
+    padding: 0.5rem;
+    /* A stock that contrasts with the postcard under it, in both schemes, so
+       the perforated edge stays visible rather than reading as a flat square. */
+    background: var(--cc-stamp-stock);
+    filter: drop-shadow(0 1px 2px rgba(var(--shadow), 0.35)) drop-shadow(0 0 0 1px rgba(var(--shadow), 0.08));
+    /* Perforations: a grid of holes, kept only around the edge by a solid
+       inner rectangle laid over it. */
+    -webkit-mask:
+      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
+      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
+    mask:
+      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
+      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
+  }
+  .stamp-face {
+    position: relative;
+    height: 100%;
+    display: grid; place-items: center;
+    background: var(--cc-stamp-face);
+    outline: 1px solid rgba(58, 42, 31, 0.25);
+    outline-offset: -3px;
+    overflow: hidden;
+  }
+  :global([data-theme='cottagecore'][data-scheme='dark']) .stamp-face { filter: brightness(0.82) sepia(0.15); }
+  .stamp :global(.stamp-flower) { width: 82%; translate: 0 18%; }
+  /* The value, printed in the corner in the stamp's own dark ink. */
+  .stamp-value { position: absolute; top: 0.2rem; left: 0.28rem; width: 24%; overflow: visible; }
+  .stamp-value text { font-family: var(--font-display); font-weight: 700; font-size: 17px; fill: #3a2a1f; font-variation-settings: 'SOFT' 0, 'WONK' 0; }
+</style>

@@ -51,10 +51,14 @@ export const meta: ThemeMeta = {
     { fg: '--board-ink-muted', bg: ['--board'], min: 4.5, note: 'secondary text and the hero herb-label scribble on the board' },
     { fg: '--board-accent', bg: ['--board'], min: 4.5, note: 'emphasis in the specimen label on the board' },
     { fg: '--board-link', bg: ['--board'], min: 4.5, note: 'links on the board' },
+    /* The printed clipping on the Home butter note (item 11). */
+    { fg: '--clip-ink', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: list text' },
+    { fg: '--clip-ink-muted', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: summaries' },
+    { fg: '--clip-accent', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: accession numbers (links)' },
   ],
   assets: {
     provenance: 'original-vector',
-    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a cross-stitch motif charted stitch by stitch; a ribbon bow, an envelope with twine, a perforated stamp and postmark, a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
+    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a cross-stitch motif charted stitch by stitch; southern magnolia, maypop passionflower and wax myrtle for the Gulf Coast pages; garden twine round the Services posy; an envelope with twine, a perforated stamp (value 3) and a lettered postmark; a running-stitch maker line; a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
   },
   order: 4,
 };

@@ -36,10 +36,13 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
       <svg class="pressed gum" viewBox="0 0 34 12" aria-hidden="true" focusable="false" style="left: 39.4%; top: 64.8%; rotate: 177.4deg"><path class="gum-strip" d="M1.2 .6L33 0L32.6 11.4L0 12Z" /></svg>
       <svg class="pressed gum" viewBox="0 0 34 12" aria-hidden="true" focusable="false" style="left: 41.5%; top: 76%; rotate: 167.6deg"><path class="gum-strip" d="M1.2 .6L33 0L32.6 11.4L0 12Z" /></svg>
       <span class="herb-label" aria-hidden="true">
-        <svg class="hl-hand" viewBox="0 0 100 40" focusable="false">
-          <path d="M2 10c14-5 24 6 38 1s20-9 34-3M6 22c10-4 18 4 30 1s16-7 26-2M4 33c8-3 14 3 24 1s13-5 21-2" />
+        <svg class="hl-text" viewBox="0 0 130 66" focusable="false">
+          <text class="hl-t1" x="2" y="14">Garden flowers, pressed</text>
+          <path class="hl-rule" d="M2 19.5h126" />
+          <text class="hl-t2" x="2" y="32">Mississippi Gulf Coast</text>
+          <text class="hl-t2" x="2" y="45">23 Sept. 2026</text>
+          <text class="hl-t3" x="2" y="59">coll. Birch Design Lab</text>
         </svg>
-        <Pressed kind="leaf" seed={44} class="hl-leaf" />
       </span>
     </div>
     <Pressed kind="leaf" seed={2} class="stray s1" />
@@ -71,15 +74,18 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
         <div class="note cc-torn">
           <p class="cc-hand">{copy.lab.kicker}</p>
           <p class="pull">{copy.lab.pull}</p>
-          <ul class="specimens" role="list" data-parity-skip>
-            {featured.map(({ entry, link }, i) => (
-              <li>
-                <Pressed kind="leaf" seed={40 + i} class="bullet" />
-                <a class="des" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
-                <span class="sum">{entry.data.summary}</span>
-              </li>
-            ))}
-          </ul>
+          <div class="clipping">
+            <span class="cc-tape cc-tape--cut clip-tape" aria-hidden="true"></span>
+            <ul class="specimens" role="list" data-parity-skip>
+              {featured.map(({ entry, link }, i) => (
+                <li>
+                  <Pressed kind="leaf" seed={40 + i} class="bullet" />
+                  <a class="des" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
+                  <span class="sum">{entry.data.summary}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <a class="cc-note-link" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more} <Arrow /></a>
         </div>
       </div>
@@ -156,21 +162,23 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
   .sheet :global(.p-lav) { left: 32%; top: 2%; width: 32%; rotate: 9deg; }
   .sheet :global(.p-rose) { right: 1%; top: 26%; width: 46%; rotate: 14deg; }
   .sheet :global(.p-daisy) { left: 18%; top: 30%; width: 44%; rotate: -8deg; }
-  /* A herbarium label, written on: a hand-drawn scribble standing in for
-     handwriting, plus a tiny pressed leaf, so it reads as filled in rather
-     than an empty box waiting to be. */
+  /* A herbarium label in the RHS style, filled in by hand (Stage 5 D1): the
+     sprig and where it grew, the day it was pressed, who collected it. The
+     lettering is decorative aria-hidden SVG text in the label hand. */
   .herb-label {
-    position: absolute; right: 8%; bottom: 7%;
-    width: 38%; padding: 0.55rem 0.6rem 0.4rem;
+    position: absolute; right: 6%; bottom: 6%;
+    width: 46%; padding: 0.5rem 0.55rem 0.4rem;
     border: 1px solid var(--rule);
     outline: 1px solid var(--rule); outline-offset: 2px;
-    display: grid; gap: 0.3rem;
+    background: var(--paper);
+    display: grid;
   }
-  .herb-label .hl-hand {
-    width: 100%; height: auto;
-    fill: none; stroke: var(--mark-muted); stroke-width: 2; stroke-linecap: round; opacity: 0.8;
-  }
-  .herb-label :global(.hl-leaf) { width: 0.85rem; justify-self: end; rotate: 18deg; }
+  .herb-label .hl-text { width: 100%; height: auto; overflow: visible; }
+  .hl-text text { font-family: var(--font-hand); fill: var(--mark-muted); }
+  .hl-text .hl-t1 { font-size: 13px; font-weight: 700; fill: var(--mark); }
+  .hl-text .hl-t2 { font-size: 11.5px; font-weight: 600; }
+  .hl-text .hl-t3 { font-size: 10.5px; font-weight: 500; }
+  .hl-text .hl-rule { fill: none; stroke: var(--mark-muted); stroke-width: 0.7; opacity: 0.8; }
   .specimen :global(.stray) { position: absolute; width: 1.6rem; }
   .specimen :global(.s1) { left: -2.2rem; bottom: 18%; rotate: -30deg; }
   .specimen :global(.s2) { right: -1.2rem; top: -1.6rem; rotate: 50deg; width: 1.2rem; }
@@ -226,9 +234,24 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     line-height: 1.15;
     margin-top: 0.5rem;
   }
-  .specimens {
-    list-style: none; padding: 0;
+  /* The one printed clipping (Stage 5 item 11): the lab list as a trimmed slip
+     pasted on the butter note. A whiter, greyer paper than the note, straight
+     edges, a printed hairline frame, a slight counter-tilt to the note, and
+     one corner held by a small tape. */
+  .clipping {
+    position: relative;
     margin: 1.6rem 0 1.5rem;
+    padding: 1.15rem 1.3rem 1.25rem;
+    background: var(--clip-paper);
+    color: var(--clip-ink);
+    rotate: 1.5deg;
+    box-shadow: 0 1px 1px rgba(var(--shadow), 0.22), 0 7px 12px -9px rgba(var(--shadow), 0.55);
+    outline: 1px solid var(--clip-rule);
+    outline-offset: -6px;
+  }
+  .clip-tape { top: -0.8rem; right: -1.1rem; --tape-tilt: 36deg; --tape-w: 4.2rem; }
+  .specimens {
+    list-style: none; padding: 0; margin: 0;
     display: grid; gap: 0.9rem;
   }
   .specimens li {
@@ -237,17 +260,18 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
   }
   .specimens :global(.bullet) { width: 1.1rem; translate: 0 0.2rem; }
   .des {
-    font-weight: 650; letter-spacing: 0.06em; font-size: 0.92rem;
-    color: var(--accent);
+    font-variant-caps: all-small-caps;
+    font-weight: 650; letter-spacing: 0.09em; font-size: 1.04rem;
+    color: var(--clip-accent);
     text-decoration: none;
   }
   /* The designation links to its entry: plain ink at rest, the theme's wavy
      hand-drawn underline on hover and on focus. */
   .des:hover, .des:focus-visible {
-    text-decoration: underline wavy var(--accent);
+    text-decoration: underline wavy var(--clip-accent);
     text-decoration-thickness: 1px;
   }
-  .sum { color: var(--mark-muted); }
+  .sum { color: var(--clip-ink-muted); }
   .lab-tape { top: -0.9rem; left: calc(50% - var(--tape-w) / 2); --tape-tilt: -2deg; --tape-w: 9rem; }
 
   /* ---- closer ---- */

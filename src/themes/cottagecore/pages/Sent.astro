@@ -4,6 +4,8 @@
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Pressed from '../assets/Pressed.astro';
+import Stamp from '../assets/Stamp.astro';
+import Postmark from '../assets/Postmark.astro';
 import Arrow from '../assets/Arrow.astro';
 
 interface Props { copy: CopyData<'sent'>; chrome: CopyData<'chrome'>; theme: string }
@@ -22,6 +24,8 @@ const { copy, theme } = Astro.props;
       <path class="fold" d="M2 258L128 178M298 258L172 178" />
       <path class="twine" d="M214 80C212 140 216 200 212 262M198 190c8-10 26-10 30 2-10 8-26 8-30-2Z" />
     </svg>
+    <Stamp class="env-stamp" seed={123} />
+    <Postmark class="env-postmark" arcId="pm-arc-sent" flip />
   </div>
   <div class="words">
     <h1>{copy.heading}</h1>
@@ -51,6 +55,11 @@ const { copy, theme } = Astro.props;
   .twine { fill: none; stroke: var(--cc-rose-edge); stroke-width: 2.4; stroke-linecap: round; }
   .envelope :global(.env-lav) { position: absolute; width: 30%; left: 20%; top: -34%; rotate: -16deg; }
   .envelope :global(.env-daisy) { position: absolute; width: 34%; left: 40%; top: -40%; rotate: 12deg; }
+  /* The same stamp and postmark as the Contact postcard: the stamp in the
+     pocket's upper right, the ring over its lower corner and the wavy cancel
+     running off across the twine. */
+  .envelope :global(.env-stamp) { position: absolute; right: 3%; top: 56%; width: 19%; aspect-ratio: 5.6 / 6.6; rotate: 5deg; }
+  .envelope :global(.env-postmark) { position: absolute; right: 7%; bottom: 3%; width: 46%; height: auto; opacity: 0.8; rotate: -9deg; }
   .envelope {
     --kraft: #e8d3ad;
     --kraft-deep: #cdb080;

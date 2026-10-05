@@ -1,0 +1,63 @@
+---
+/** The maker's line on the hoop: "B.D.L. 9.23.26" in a freehand running
+    stitch, one thread per stroke, each letter a single pen path drawn here
+    with a seeded wobble. Not counted lettering and no alphabet (S5).
+    Decorative, aria-hidden SVG paths. */
+interface Props { class?: string; seed?: number }
+const { class: cls, seed = 923 } = Astro.props;
+
+function rng(s: number) {
+  let a = (s * 2654435761) >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = rng(seed);
+
+/* One absolute pen path per glyph in a 12-unit-tall box, baseline at 12. */
+const GLYPHS: Record<string, { d: string; w: number }> = {
+  B: { d: 'M1 12L1 0C8 -.5 8.5 5.5 1.5 6C9.5 6 9 12.5 1 12', w: 10 },
+  D: { d: 'M1 12L1 0C10.5 -.5 10.5 12.5 1 12', w: 10.5 },
+  L: { d: 'M1 0L1 12L7.5 12', w: 8.5 },
+  '9': { d: 'M7 5C7 -1 1 -1 1.2 3.8C1.4 7.5 7 7 7 4C7.2 8.5 6 11 2.5 12', w: 8.5 },
+  '2': { d: 'M1 3C1 -1.5 7.5 -1 7 3C6.6 6 1.5 9 1 12L7.5 12', w: 8.5 },
+  '3': { d: 'M1 1.5C4 -1 7.5 1 6.2 4C5.4 5.6 3.6 5.8 3 5.8C7.5 6 8 11 4.2 12C2.5 12.3 1.4 11.4 1 10', w: 8.5 },
+  '6': { d: 'M7 1C3 -.5 .8 4 1 8C1.2 13.5 7.5 13 7 9C6.7 5.5 2 5.5 1 8', w: 8.5 },
+};
+const LINE = ['B', '.', 'D', '.', 'L', '.', ' ', '9', '.', '2', '3', '.', '2', '6'];
+let x = 0;
+let strokes = '';
+let dots = '';
+for (const ch of LINE) {
+  if (ch === ' ') { x += 4; continue; }
+  if (ch === '.') { dots += `M${(x + 0.8).toFixed(1)} 11.4l.1 0`; x += 3.2; continue; }
+  const g = GLYPHS[ch];
+  // The wobble: every coordinate of the pen path moves a little, so no two
+  // letters repeat and the line is never ruler-straight.
+  let i = 0;
+  const d = g.d.replace(/-?\d*\.?\d+/g, (n) => {
+    const v = parseFloat(n) + (rand() * 2 - 1) * 0.45;
+    return String(Math.round((i++ % 2 === 0 ? v + x : v) * 10) / 10);
+  });
+  strokes += d;
+  x += g.w;
+}
+const width = Math.ceil(x + 4);
+---
+<svg class:list={['cc-signature', cls]} viewBox={`0 -2 ${width} 17`} aria-hidden="true" focusable="false">
+  <g transform="translate(2.4 0) skewX(-10)">
+    <path class="sig-run" d={strokes} />
+    <path class="sig-dot" d={dots} />
+  </g>
+</svg>
+
+<style>
+  svg { overflow: visible; }
+  path { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
+  /* A running stitch: short threads and short gaps along the pen path. */
+  .sig-run { stroke-width: 1.3; stroke-dasharray: 3.1 1.9; }
+  .sig-dot { stroke-width: 2.1; }
+</style>
