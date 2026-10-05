@@ -70,6 +70,12 @@ and About at 390.
    **Recommend:** softer, fewer pleats around a covered button, like a
    ribbon rosette.
 
+## Answers (founder, 10-05-26)
+
+Every call taken. 1: "i very much agree. i'd say more straight than lean"
+(straight trunks first, the lean slight). 2, 3, 4, 5, 7, 8: agreed.
+6: "definitely noticed that one, good".
+
 ## Deferred minors (the controller's to fix, no founder call)
 
 The Greek key runs end in cut half-motifs and never turn the corners; the
