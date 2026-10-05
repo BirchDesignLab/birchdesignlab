@@ -274,6 +274,9 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     .closer :global(.c-right) { right: 0; }
   }
   @media (max-width: 640px) {
+    /* SOFT 0 sets the line narrower than the soft cut did, so it fits one
+       line and runs under the gutter sprigs. Hold two lines, clear of them. */
+    .closer-lead { max-inline-size: 9em; text-wrap: balance; }
     .card p.cc-ruled { padding-right: 0; padding-bottom: 2.4rem; }
     .card :global(.corner) { width: 3.6rem; }
     .specimens li { grid-template-columns: 1.3rem 1fr; }
