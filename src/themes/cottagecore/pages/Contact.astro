@@ -237,6 +237,11 @@ const { copy, theme } = Astro.props;
   .addr-line.short { width: 62%; }
   .fine { margin-top: 1.6rem; font-size: 0.98rem; color: var(--mark-muted); }
 
+  /* In the narrow two-column band the heading sets in three lines, so the
+     raised ring would sit on its last line: drop the ring clear of it. */
+  @media (min-width: 861px) and (max-width: 980px) {
+    .postmark { margin-top: 0.7rem; }
+  }
   @media (max-width: 860px) {
     .contact { grid-template-columns: 1fr; }
     .post { padding-top: 0; max-width: 30rem; width: 100%; justify-self: center; }
