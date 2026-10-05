@@ -205,6 +205,8 @@ function lcg(seed: number): () => number {
     full ink; the caller sets the alpha. The anchor (where the stalk meets the
     filaments) is at sprite unit (64, 48). */
 const SEED_SPRITE_SIZE = 128;
+/** Points (of 5) of a seed's drawn extent that must be on show for it to count. */
+const SEED_SHOWN_POINTS = 4;
 const SEED_SPRITE_PX = 256;
 const SEED_ANCHOR = { x: 64, y: 48 };
 function buildSeedSprite(filaments: number, rnd: () => number): HTMLCanvasElement {
@@ -402,6 +404,21 @@ export function mountFireflies(): void {
 
     const edgeFade = (s: Seed) => Math.min(1, Math.max(0, Math.min(s.x + 30, width + 30 - s.x, s.y + 30, height + 30 - s.y) / 70));
     const onSheet = (x: number, y: number) => inAnyBox(x, y, coverBoxes, 0);
+    /** How many of a seed's five drawn points are on show: the anchor, the
+        fan's two tips, the crown and the body's middle (the extents
+        seedHitsText uses). A point counts when it is inside the viewport and
+        off every sheet and band. The anchor alone would count a seed half
+        under a sheet or half off the screen as shown. */
+    const seedPointsShown = (x: number, y: number, k: number, sy: number): number => {
+      const pts: Array<[number, number]> = [[x, y], [x - 40 * k, y - 10 * k], [x + 40 * k, y - 10 * k], [x, y - 42 * k], [x, y + 35 * k]];
+      let n = 0;
+      for (const [px, py] of pts) {
+        if (px >= 0 && px <= width && py >= 0 && py <= height && !onSheet(px, py + sy)) n++;
+      }
+      return n;
+    };
+    /** A seed is on show when most of it is (at least 4 of 5 points). */
+    const seedOnShow = (x: number, y: number, k: number, sy: number) => seedPointsShown(x, y, k, sy) >= SEED_SHOWN_POINTS;
 
     /** Seat a seed on a clear patch of the cloth in view: off every line of
         text (now and where the breeze will have taken it), not under a sheet,
@@ -411,10 +428,13 @@ export function mountFireflies(): void {
       for (let i = 0; i < 60; i++) {
         const x = rand(24, width - 24);
         const y = rand(24, height - 24);
+        // The first 40 tries want the whole seed on clear cloth; the rest
+        // settle for most of it, since a phone's cloth is mostly sheet.
+        if (seedPointsShown(x, y, k, sy) < (i < 40 ? 5 : SEED_SHOWN_POINTS)) continue;
         const ax = x + SEED.windX * s.drift * SEED.lookAhead;
         const ay = y + SEED.windY * s.drift * SEED.lookAhead;
         if (seedHitsText(x, y + sy, k, textBoxes) || seedHitsText(ax, ay + sy, k, textBoxes)) continue;
-        if (onSheet(x, y + sy) || onSheet(ax, ay + sy)) continue;
+        if (onSheet(ax, ay + sy)) continue;
         let crowded = false;
         for (const o of seeds) {
           if (o !== s && o.cover > 0.3 && Math.hypot(o.x - x, o.y - y) < 90) { crowded = true; break; }
@@ -486,7 +506,7 @@ export function mountFireflies(): void {
         }
         region.querySelectorAll('input, textarea, select, button').forEach((el) => push(text, el.getBoundingClientRect()));
       });
-      document.querySelectorAll('.cc-paper, .cc-torn').forEach((el) => push(cover, el.getBoundingClientRect()));
+      document.querySelectorAll('.cc-paper, .cc-torn, .cc-gingham').forEach((el) => push(cover, el.getBoundingClientRect()));
       textBoxes = text;
       coverBoxes = cover;
     };
@@ -605,10 +625,10 @@ export function mountFireflies(): void {
         if (switched || t - lastKeepT > SEED.keepEvery) {
           lastKeepT = t;
           let shown = 0;
-          for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && !onSheet(s.x, s.y + sy)) shown++;
+          for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy)) shown++;
           for (const s of seeds) {
             if (shown >= SEED.minShown) break;
-            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || onSheet(s.x, s.y + sy);
+            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy);
             if (gone && seatSeed(s, sy)) shown++;
           }
         }
