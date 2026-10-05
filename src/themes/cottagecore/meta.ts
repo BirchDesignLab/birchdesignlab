@@ -44,6 +44,13 @@ export const meta: ThemeMeta = {
     { fg: '--hand-label-ink', bg: ['--paper'], min: 4.5, note: 'form labels and numerals on a card' },
     { fg: '--hand-label-ink', bg: ['--note'], min: 4.5, note: 'numerals and labels on a butter note' },
     { fg: '--hand-label-ink', bg: ['--glow', '--field'], min: 4.5, note: 'labels and numerals on the table' },
+    /* The mounted herbarium sheets (Home hero, About): in the dark scheme a
+       dimmed-cream board with its own inks (D4 c); in light the board is the
+       paper, so the same pairs hold there. */
+    { fg: '--board-ink', bg: ['--board'], min: 4.5, note: 'About sheet h1, label and etymology on the mounted board' },
+    { fg: '--board-ink-muted', bg: ['--board'], min: 4.5, note: 'secondary text and the hero herb-label scribble on the board' },
+    { fg: '--board-accent', bg: ['--board'], min: 4.5, note: 'emphasis in the specimen label on the board' },
+    { fg: '--board-link', bg: ['--board'], min: 4.5, note: 'links on the board' },
   ],
   assets: {
     provenance: 'original-vector',

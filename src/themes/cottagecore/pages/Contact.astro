@@ -39,7 +39,7 @@ const { copy, theme } = Astro.props;
 
   <div class="post">
     <div class="postcard cc-paper">
-      <span class="cc-tape cc-tape--rose pc-tape" aria-hidden="true"></span>
+      <span class="cc-tape cc-tape--rose cc-tape--half pc-tape" aria-hidden="true"></span>
       <div class="stamp" aria-hidden="true">
         <div class="stamp-face"><Pressed kind="daisy" seed={102} class="stamp-flower" /></div>
       </div>
@@ -104,17 +104,24 @@ const { copy, theme } = Astro.props;
     border-bottom: 2px dashed var(--field-line);
     padding: 0.45rem 0.25rem;
   }
+  /* Writing on the lines (brief item 4): a 30px pitch, the first line 4px
+     below the top edge and 6px under the last (less than a rule's reach), so every line of text
+     sits on its rule (1px at --rule-y, about 0.2em under the baseline; the
+     rules scroll with the text). The rules are the textarea's own background,
+     so they tilt with the stationery. */
   .field textarea {
-    --lh: 1.9rem;
+    --lh: 30px;
+    --rule-y: 24px;
+    --pad-top: 4px;
     line-height: var(--lh);
-    padding: 0.2rem 0.6rem 0.4rem;
-    min-height: calc(var(--lh) * 6 + 0.6rem);
+    padding: var(--pad-top) 0.6rem 6px;
+    min-height: calc(var(--lh) * 6 + var(--pad-top) + 6px);
     resize: vertical;
     border: 2px dashed var(--field-line);
     border-radius: 4px;
     background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
     background-size: 100% var(--lh);
-    background-position: 0 0.2rem;
+    background-position: 0 calc(var(--pad-top) + var(--rule-y) + 1px - var(--lh));
     background-attachment: local;
   }
   .field input:focus-visible, .field textarea:focus-visible {

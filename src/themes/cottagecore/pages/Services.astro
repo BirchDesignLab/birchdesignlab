@@ -33,7 +33,7 @@ const { copy, theme } = Astro.props;
 <section class="offerings cc-wrap">
   {copy.offerings.map((offering, i) => (
     <article class="recipe cc-paper">
-      <span class:list={['cc-tape', { 'cc-tape--rose': i % 2 === 1 }]} aria-hidden="true"></span>
+      <span class:list={['cc-tape', i % 2 === 1 ? 'cc-tape--rose cc-tape--ragged' : 'cc-tape--cut']} aria-hidden="true"></span>
       <p class="no" aria-hidden="true">&#8470; {i + 1}</p>
       <h2>{offering.heading}</h2>
       <div class="card-rule" aria-hidden="true"></div>
@@ -62,7 +62,7 @@ const { copy, theme } = Astro.props;
       </ol>
     </div>
   </div>
-  <span class="cc-tape cc-tape--butter method-tape" aria-hidden="true"></span>
+  <span class="cc-tape cc-tape--butter cc-tape--half method-tape" aria-hidden="true"></span>
 </section>
 
 <section class="ask cc-wrap cc-lamp">
@@ -106,7 +106,8 @@ const { copy, theme } = Astro.props;
   .recipe { padding: 2.6rem clamp(1.5rem, 3vw, 2.8rem) 3rem; }
   .recipe:nth-child(1) { --tilt: -0.9deg; }
   .recipe:nth-child(2) { --tilt: 1deg; margin-top: 3rem; }
-  .recipe .cc-tape { top: -0.85rem; left: calc(50% - 3.75rem); --tape-tilt: -4deg; }
+  .recipe .cc-tape { top: -0.85rem; left: calc(50% - var(--tape-w) / 2); --tape-tilt: -4deg; --tape-w: 7.5rem; }
+  .recipe:nth-child(2) .cc-tape { --tape-tilt: 3deg; --tape-w: 6.5rem; }
   .no {
     position: absolute; top: 1.4rem; right: 1.6rem;
     font-family: var(--font-hand); font-size: 1.5rem;
@@ -125,6 +126,7 @@ const { copy, theme } = Astro.props;
   .method { position: relative; display: grid; justify-items: center; padding-bottom: clamp(3rem, 7vw, 5rem); }
   .method-lift { --tilt: -0.4deg; width: 100%; }
   .method-sheet {
+    --torn-x: -45px;
     background: var(--note);
     padding: clamp(2.6rem, 5vw, 3.8rem) clamp(1.5rem, 5vw, 4rem) clamp(2.8rem, 5vw, 4rem);
   }
@@ -147,7 +149,7 @@ const { copy, theme } = Astro.props;
   }
   .steps h3 { font-size: 1.65rem; margin-top: 0.35rem; }
   .steps p { margin-top: 0.5rem; color: var(--mark-muted); }
-  .method-tape { top: -0.9rem; left: calc(50% - 3.75rem); --tape-tilt: 2deg; }
+  .method-tape { top: -0.9rem; left: calc(50% - var(--tape-w) / 2); --tape-tilt: 2deg; --tape-w: 8rem; }
 
   /* ---- the ask ---- */
   .ask {

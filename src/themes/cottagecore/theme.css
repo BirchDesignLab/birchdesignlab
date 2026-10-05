@@ -73,6 +73,10 @@
   --tape-rose-dot: rgba(155, 70, 82, 0.34);
   --tape-butter: rgba(244, 222, 150, 0.8);
   --tape-butter-stripe: rgba(214, 170, 70, 0.3);
+  /* The one indigo thread (D8): an indigo-and-white gingham tape, no text on
+     it. Same in both schemes; the one instance sits on the cream hero sheet. */
+  --tape-indigo: rgba(236, 238, 248, 0.86);
+  --tape-indigo-thread: rgba(58, 74, 140, 0.55);
   --wood: #c49a6c;
   --wood-dark: #9a7148;
   /* The postage stamp: a rose-cream stock distinct from --paper so its
@@ -105,7 +109,22 @@
   --cc-rose-petal: #e8aeaa;
   --cc-rose-edge: #b8747a;
   --cc-blush: #fff4e4;
-  --press-shadow: drop-shadow(0 1px 1px rgba(58, 42, 31, 0.2));
+  /* Pressed flat (brief item 3). A specimen mounted on paper casts nothing
+     but a hairline of contact; a sprig lying loose on the cloth keeps a very
+     soft contact shadow, so none floats. */
+  --press-shadow: drop-shadow(0 1px 2px rgba(58, 42, 31, 0.16));
+  --press-shadow-mounted: drop-shadow(0 0.5px 0 rgba(58, 42, 31, 0.12));
+  /* The lamp laid over a paper by night (dark only). */
+  --paper-lamp: none;
+
+  /* The mounted herbarium sheets (Home hero, About) are boards. In light the
+     board is the paper itself; in dark it is a dimmed-cream card. Held at the
+     root so meta.contrast can check the pairs in both schemes. */
+  --board: var(--paper);
+  --board-ink: var(--mark);
+  --board-ink-muted: var(--mark-muted);
+  --board-accent: var(--accent);
+  --board-link: var(--link);
 
   --font-display: 'Fraunces Variable', 'Fraunces Variable fallback', Georgia, serif;
   --font-body: 'Lora Variable', 'Lora Variable fallback', Georgia, serif;
@@ -153,10 +172,15 @@
   --cc-gum-strip: #4a3b2c;
   --shadow: 0, 0, 0;
   --lift: 0 1px 0 rgba(255, 214, 150, 0.05) inset, 0 18px 34px -16px rgba(0, 0, 0, 0.75);
-  /* Gingham by lamplight is only a running stitch in the dark cloth. */
+  /* The cloth by lamplight is still a woven check (brief item 5): sage thread
+     in both directions over green-black, so the crossings show three tones.
+     0.14 (founder call 7): at 0.18 the lit butter note read as sunk into the
+     check. A faint diagonal weave stands where the dashed SVG was. */
   --gingham-ground: #1c251d;
-  --gingham-thread: transparent;
-  --gingham-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 .75h5M9 .75h5M18 .75h5M.75 0v5M.75 9v5M.75 18v5' stroke='%23a9c294' stroke-opacity='.2' stroke-width='1.5'/%3E%3C/svg%3E");
+  --gingham-thread: rgba(169, 194, 148, 0.14);
+  --gingham-texture: repeating-linear-gradient(45deg, rgba(255, 214, 150, 0.035) 0 1px, transparent 1px 4px);
+  /* The lamp-lit rim on the valance and hem scallops. */
+  --cc-lamp-rim: rgba(255, 214, 150, 0.42);
   --tape-sage: rgba(110, 134, 98, 0.5);
   --tape-sage-thread: rgba(20, 30, 18, 0.3);
   --tape-rose: rgba(160, 104, 100, 0.5);
@@ -167,7 +191,9 @@
   --wood-dark: #5e4127;
   --cc-stamp-stock: #e8d8c6;
   --cc-stamp-face: #c9a15a;
-  --field-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 .75h5M9 .75h5M18 .75h5M.75 0v5M.75 9v5M.75 18v5' stroke='%23f2e5cc' stroke-opacity='.03' stroke-width='1.5'/%3E%3C/svg%3E");
+  --field-texture:
+    repeating-linear-gradient(0deg, rgba(242, 229, 204, 0.022) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(242, 229, 204, 0.026) 0 1px, transparent 1px 4px);
   --lamp: radial-gradient(closest-side, rgba(255, 200, 120, 0.32), rgba(240, 165, 80, 0.14) 55%, transparent);
   /* The lamp hangs over the top of the table. */
   --table:
@@ -191,7 +217,31 @@
   --cc-rose-petal: #cf928f;
   --cc-rose-edge: #8a4d53;
   --cc-blush: #f0dcc0;
-  --press-shadow: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+  --press-shadow: drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.3));
+  --press-shadow-mounted: none;
+  --paper-lamp: linear-gradient(165deg, rgba(255, 200, 120, 0.14), transparent 60%);
+
+  /* D4 (c), the hybrid: the brown cards, the butter note and the letter stay;
+     the two mounted herbarium sheets become a dimmed-cream board (the lamp
+     does not light it white). Contrast, measured from the live colours at
+     1440, the base case first and then the worst case with the lamp foot
+     dimming the board at full strength under the text:
+       ink on board       8.65 / 7.21
+       muted ink          5.98 / 4.99
+       accent             5.69 / 4.74
+       link               5.53 / 4.61 (the token level)
+     Cards, note and letter are unchanged from the brown papers above, so
+     their rows are the plain --paper and --note pairs in meta.contrast. */
+  --board: #cfc1a1;
+  --board-ink: #2f2219;
+  --board-ink-muted: #4f3a2b;
+  --board-accent: #702a36;
+  --board-link: #2f4a2a;
+  --board-rule: rgba(58, 42, 31, 0.3);
+  --board-lamp-foot: 0.1;
+  --board-lamp:
+    radial-gradient(ellipse 80% 60% at 18% 0%, rgba(255, 200, 120, 0.34), transparent 70%),
+    linear-gradient(0deg, rgba(40, 25, 10, var(--board-lamp-foot)), transparent 45%);
 }
 
 /* ---------- globals ---------- */
@@ -223,7 +273,6 @@
     linear-gradient(var(--gingham-thread) 50%, transparent 0);
   background-size: auto, 28px 28px, 28px 28px;
 }
-[data-theme='cottagecore'][data-scheme='dark'] [data-portal-tail] { background-size: 28px 28px, 28px 28px, 28px 28px; }
 [data-theme='cottagecore'] :is(h1, h2, h3, p, ul, ol, figure, blockquote) { margin: 0; }
 [data-theme='cottagecore'] :is(h1, h2, h3) {
   font-family: var(--font-display);
@@ -351,39 +400,114 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   box-shadow: var(--lift);
   rotate: var(--tilt, 0deg);
 }
-[data-theme='cottagecore'][data-scheme='dark'] .cc-paper {
-  background-image: linear-gradient(165deg, rgba(255, 200, 120, 0.14), transparent 60%);
+[data-theme='cottagecore'] .cc-paper { background-image: var(--paper-lamp); }
+
+/* The mounted herbarium sheets (Home hero, About): a board. Petals are 10%
+   less saturated than on a loose card (they are pressed and old), in both
+   schemes; the light palette is the one drawn for cream. */
+[data-theme='cottagecore'] .cc-board {
+  --cc-petal: #fffdf7; --cc-petal-back: #efe6d4; --cc-petal-edge: rgba(107, 82, 66, 0.5);
+  --cc-heart: #eec35a; --cc-heart-deep: #b98a2a;
+  --cc-stem: #7f9870; --cc-leaf: #a9bb96; --cc-leaf-edge: #6c8460;
+  --cc-lav: #a596c9; --cc-lav-edge: #6f5f98; --cc-fern: #95ae86;
+  --cc-twig: #6d5140; --cc-lenticel: #f7efdf; --cc-catkin: #c9a672;
+  --cc-rose-petal: #e5b1ad; --cc-rose-edge: #b8747a; --cc-blush: #fef4e5;
+  --cc-gum-strip: #ece0c4;
 }
-/* Ruled like a recipe card: the rule sits under each line of text. */
+/* By lamplight the board takes its own inks and stays cream, with a visible
+   edge (a lit top lip, a dark thickness) in place of the soft paper lift. The
+   washi on it is the light scheme's (founder call 7: the dark tape tokens read
+   as heavy bands on cream). */
+[data-theme='cottagecore'][data-scheme='dark'] .cc-board {
+  --paper: var(--board);
+  color: var(--board-ink);
+  --mark: var(--board-ink);
+  --mark-muted: var(--board-ink-muted);
+  --accent: var(--board-accent);
+  --link: var(--board-link);
+  --rule: var(--board-rule);
+  --margin-line: rgba(112, 42, 54, 0.42);
+  --tape-sage: rgba(170, 192, 158, 0.78);
+  --tape-sage-thread: rgba(98, 128, 88, 0.36);
+  --tape-rose: rgba(236, 196, 190, 0.82);
+  --tape-rose-dot: rgba(155, 70, 82, 0.34);
+  --tape-butter: rgba(244, 222, 150, 0.8);
+  --tape-butter-stripe: rgba(214, 170, 70, 0.3);
+  --shadow: 58, 42, 31;
+  background-color: var(--board);
+  background-image:
+    var(--board-lamp),
+    repeating-linear-gradient(0deg, rgba(58, 42, 31, 0.022) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(58, 42, 31, 0.026) 0 1px, transparent 1px 4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 222, 0.5),
+    inset 0 0 0 1px rgba(90, 70, 40, 0.2),
+    0 2px 0 #a2936c,
+    0 3px 0 rgba(0, 0, 0, 0.4),
+    0 24px 36px -18px rgba(0, 0, 0, 0.8);
+}
+/* The plate mark a mounted print leaves in its board. */
+[data-theme='cottagecore'][data-scheme='dark'] .cc-board::after {
+  content: '';
+  position: absolute; inset: 0.65rem;
+  border: 1px solid rgba(58, 42, 31, 0.2);
+  box-shadow: 0 1px 0 rgba(255, 246, 222, 0.35);
+  pointer-events: none;
+}
+
+/* Ruled like a recipe card: the rule sits under each line of text. Whole
+   pixels all the way (brief item 4): a 30px pitch, so the rule tile and the
+   line boxes never drift apart as a fractional pitch would; a paragraph
+   margin is a whole number of --lh. The rules are the element's own
+   background, so they tilt with the text. Lora in a 30px line puts the
+   baseline 21px down; the rule is 1px at --rule-y (24px), about 0.2em under
+   it. Origin and clip are the content box, so the first and the last line
+   both sit on a rule and none runs on past the text into the padding. */
 [data-theme='cottagecore'] .cc-ruled {
-  --lh: 1.8rem;
+  --lh: 30px;
+  --rule-y: 24px;
   line-height: var(--lh);
   background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
   background-size: 100% var(--lh);
-  background-position: 0 -0.28rem;
+  background-origin: content-box;
+  background-clip: content-box;
+  background-position: 0 calc(var(--rule-y) + 1px - var(--lh));
 }
 /* Torn edges: an irregular tile repeated along the top or bottom as a mask.
    Shadows are clipped by a mask, so a torn sheet takes its shadow from a
    drop-shadow filter on its wrapper (.cc-torn-lift). */
 [data-theme='cottagecore'] .cc-torn {
-  --torn-top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14H240V9L228 8L223 5.8L220 4.6L216 2L213 7.9L208 8.5L201 8.2L194 3.4L190 6.7L186 4.9L182 4L178 2.4L172 5.5L167 4.6L161 3L156 2.7L152 4.7L147 6.7L142 6.4L138 6.2L135 5.4L128 4.3L124 6.4L121 2.6L118 6L113 5.1L109 8.6L102 3.9L97 2.4L93 6L89 7.9L85 3.1L81 6.4L74 2.6L69 4.5L63 2.5L58 8.1L51 2.5L46 4.2L43 4.1L37 6.4L33 3.3L27 4.2L22 3.7L16 6.7L11 3.9L7 7L0 9Z'/%3E%3C/svg%3E");
-  --torn-bottom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0H240V5L228 6L223 8.2L220 9.4L216 12L213 6.1L208 5.5L201 5.8L194 10.6L190 7.3L186 9.1L182 10L178 11.6L172 8.5L167 9.4L161 11L156 11.3L152 9.3L147 7.3L142 7.6L138 7.8L135 8.6L128 9.7L124 7.6L121 11.4L118 8L113 8.9L109 5.4L102 10.1L97 11.6L93 8L89 6.1L85 10.9L81 7.6L74 11.4L69 9.5L63 11.5L58 5.9L51 11.5L46 9.8L43 9.9L37 7.6L33 10.7L27 9.8L22 10.3L16 7.3L11 10.1L7 7L0 5Z'/%3E%3C/svg%3E");
+  --torn-top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14H1200L1200 6L1195 7.2L1189 3.7L1186 3.7L1178 6L1174 2.8L1166 6.2L1161 6.3L1155 4.2L1151 6.3L1148 6.2L1142 5.1L1134 5.6L1130 4.2L1124 6.3L1119 7.2L1114 7.4L1110 8.3L1105 3.9L1101 5.8L1095 5.8L1087 6.9L1082 7.1L1075 8.3L1068 8.7L1064 4.8L1058 6L1052 2.5L1047 4.7L1041 4.6L1037 2.9L1032 3.8L1025 4.7L1020 5.6L1014 5L1009 6L1001 6.8L993 4.5L988 6L983 6.3L979 6.2L973 3.6L966 5.1L958 5L952 7.6L949 7L943 5.3L938 6.1L933 6.2L930 4.6L923 7.6L916 6.1L912 3.7L909 4.2L906 4.4L903 3.6L895 5.2L888 6.1L880 7.2L874 5.2L869 6.8L863 4.7L855 7.8L852 5.7L847 8L842 8.4L839 7.7L836 7L828 4.9L823 6.7L816 5.7L808 6.5L805 6.1L800 6.9L794 5.8L790 2.5L787 4.7L783 5.8L776 7.5L770 6.4L767 6.5L762 3.3L754 4.2L748 4.9L744 5L737 5.5L729 5.6L725 4L717 3.8L713 5.8L709 4.5L701 3.4L698 3L694 4L689 6.6L685 3.6L677 4L670 6.4L664 6.7L659 6.4L652 3.5L645 5.3L637 5.6L633 6.1L628 4.6L620 6.1L617 7.7L612 7.1L609 3.7L606 4L603 5.9L598 5.7L592 2.6L588 4.5L580 5.2L577 8L574 6.8L570 6.3L567 4.1L564 3.1L559 3.9L551 5.1L543 6.4L540 5.3L533 6.5L530 7.4L523 4.9L518 5.6L513 7.1L507 6.2L501 4.6L496 4.3L489 6L484 4.1L477 3.4L472 3.9L466 7.4L463 3.5L459 4.4L453 7.2L448 6.1L445 4.3L440 7.1L434 5L428 3L421 7.4L415 5.5L410 6.5L403 5.6L395 6.2L388 7.4L381 6.9L378 6.7L371 5.2L364 3.3L357 4.5L352 4.6L348 5.8L343 4.8L338 4.4L330 6.5L326 7.3L320 6.2L313 5.9L308 6.2L305 4.2L300 5.4L292 7.8L286 6.5L279 3.3L275 4.4L271 6.3L266 6.2L263 6.4L257 6.1L254 6.5L251 4.3L248 6.8L243 7.7L235 7.5L231 7.4L226 4.6L220 4.6L214 6.4L211 8.6L206 8.4L202 4.2L194 3.6L188 3.5L182 6.8L176 3.6L173 4.3L167 5.7L159 6L153 5.3L146 6.2L138 7.3L131 7.5L123 6.9L120 6.9L115 5.4L107 6.3L103 4.9L98 4.1L91 3.1L85 3.3L78 6.9L75 4.8L70 6.6L67 3.9L63 4.5L59 5.4L51 7.2L48 4L45 3.7L37 4.5L31 7L26 4.6L19 5.7L16 6.5L12 6.6L4 5.2L0 6Z'/%3E%3C/svg%3E");
+  --torn-bottom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0H1200L1200 8L1196 7.5L1190 8.6L1187 8.6L1183 7.6L1178 7.2L1172 9.3L1166 7.1L1160 9.7L1152 7.2L1144 9.1L1141 9.6L1135 8.7L1129 6.2L1125 6.3L1118 6.9L1113 8.6L1108 9.1L1105 6.8L1102 7.2L1098 8.8L1090 8.7L1082 6.2L1074 7.9L1071 9.2L1067 9.7L1062 7.2L1055 7.3L1051 8.2L1046 9.8L1040 8.9L1032 6L1029 5.9L1021 7.1L1016 8.9L1011 7.4L1006 8.8L1003 6.7L996 8.2L991 8.2L986 7.9L981 7.2L973 9.8L967 8.3L960 6.6L956 9.4L950 7.2L946 10.4L942 9.7L935 8.3L931 8L925 6.2L921 9.5L915 9.8L910 7.2L903 6.6L897 9.3L890 6L882 9.4L878 8.6L871 9.2L868 6.8L863 9.7L857 9.8L852 7.8L844 9L836 9.8L830 7.6L823 8.8L815 7.7L807 8L802 7.7L799 9.4L794 9.3L791 7.9L788 10.7L780 9.3L772 8.1L769 10.1L764 9.1L759 6.4L753 8.7L749 8L746 6.5L739 6.4L732 8.2L725 6.7L720 7.1L712 6.8L705 6.1L698 6.3L693 6.3L690 7.5L682 7.4L678 8.6L671 10.4L664 10.5L658 8.5L653 6.6L650 6.1L647 7L643 7.3L640 5.2L636 11.5L629 7.1L626 10.4L619 9.7L616 9.9L611 6.3L604 6.8L599 7.1L593 9.6L588 8.6L585 6.8L581 7.6L577 7.4L571 6L566 10.2L559 11.2L555 10.6L550 9.9L545 10.1L538 9.1L532 8.3L525 8.6L520 6.2L516 8L509 10.7L501 9.5L495 6.7L487 10L483 7.1L480 8.5L475 8.9L471 9.6L464 8.2L458 8.1L450 9.6L446 8.7L438 9.3L432 7L426 9.1L420 7.3L416 6.8L412 9L409 10.4L404 8.6L400 8.3L394 8.9L391 6.5L383 6.5L377 9.2L369 8.3L361 9.6L354 9.5L350 7.4L346 8.4L342 8.1L338 7.3L335 10L330 10.4L323 9L315 10.2L308 7.8L300 6.3L296 9.3L292 6.3L284 6.8L279 8.1L274 9.8L267 9.1L260 10L253 8.2L250 9.2L243 9.7L238 11L234 10L229 7.1L224 8.6L221 8.7L214 5.5L208 8.8L200 7.3L192 8.6L184 7.9L178 8L174 8.9L166 5.4L158 9.6L150 8.9L142 8.6L137 8.9L134 6.4L128 6.5L125 6.8L118 8.4L110 10L102 7.3L96 9.7L88 10.3L84 9.2L77 8.3L72 8.7L66 7.9L61 6L53 7.5L45 8.9L40 9.6L37 8.2L30 6.2L24 5.6L17 5.7L14 6.3L11 8.4L3 7.2L0 8Z'/%3E%3C/svg%3E");
   box-shadow: none;
+  /* One 1200px tile (gen-torn.mjs), wider than any torn sheet, so a tear
+     never repeats along a sheet; --torn-x starts each sheet's window at its
+     own stretch of the tile. */
   -webkit-mask:
-    var(--torn-top) top left / 240px 14px repeat-x,
+    var(--torn-top) var(--torn-x, 0px) 0 / 1200px 14px repeat-x,
     linear-gradient(#000 0 0) center / 100% calc(100% - 26px) no-repeat,
-    var(--torn-bottom) bottom left / 240px 14px repeat-x;
+    var(--torn-bottom) var(--torn-x, 0px) 100% / 1200px 14px repeat-x;
   mask:
-    var(--torn-top) top left / 240px 14px repeat-x,
+    var(--torn-top) var(--torn-x, 0px) 0 / 1200px 14px repeat-x,
     linear-gradient(#000 0 0) center / 100% calc(100% - 26px) no-repeat,
-    var(--torn-bottom) bottom left / 240px 14px repeat-x;
+    var(--torn-bottom) var(--torn-x, 0px) 100% / 1200px 14px repeat-x;
 }
 [data-theme='cottagecore'] .cc-torn-lift {
   filter: drop-shadow(0 10px 14px rgba(var(--shadow), 0.2)) drop-shadow(0 1px 1px rgba(var(--shadow), 0.12));
   rotate: var(--tilt, 0deg);
 }
+/* By lamplight a torn sheet is lit paper laid on the cloth, not a hole in it:
+   a warm cast spills onto the check around it (under the dark shadow), and the
+   sheet itself takes a lit lip along its torn top edge and the lamp from the
+   upper left. The lamp is held at 0.08 so the sage-light kicker on the note
+   keeps 4.5:1. */
 [data-theme='cottagecore'][data-scheme='dark'] .cc-torn-lift {
-  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 14px rgba(240, 165, 80, 0.16));
+}
+[data-theme='cottagecore'][data-scheme='dark'] :is(.note, .method-sheet) {
+  background-image:
+    linear-gradient(180deg, rgba(255, 222, 160, 0.14), transparent 30px),
+    linear-gradient(165deg, rgba(255, 200, 120, 0.08), transparent 60%);
 }
 
 /* ---------- washi tape ---------- */
@@ -416,6 +540,37 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   background-image: repeating-linear-gradient(-45deg, var(--tape-butter-stripe) 0 5px, transparent 5px 11px);
   background-size: auto;
 }
+/* The one indigo thread (D8): indigo-and-white gingham, no text on it. */
+[data-theme='cottagecore'] .cc-tape--indigo {
+  background-color: var(--tape-indigo);
+  background-image:
+    linear-gradient(90deg, var(--tape-indigo-thread) 50%, transparent 0),
+    linear-gradient(var(--tape-indigo-thread) 50%, transparent 0);
+  background-size: 8px 8px;
+}
+/* Cut ends (brief item 9): torn at both ends is the default; these are the
+   others a roll of washi gives, so no two tapes on a page share an outline.
+   Every instance also sets its own --tape-w. */
+[data-theme='cottagecore'] .cc-tape--cut {
+  clip-path: polygon(2.5% 0, 100% 0, 97.5% 100%, 0 100%);
+}
+[data-theme='cottagecore'] .cc-tape--half {
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 0 100%, 2.5% 88%, 0 76%, 3% 62%, 0 50%, 2.5% 36%, 0 22%, 3% 10%
+  );
+}
+[data-theme='cottagecore'] .cc-tape--ragged {
+  clip-path: polygon(
+    1% 0, 99% 0, 100% 20%, 96% 41%, 99% 63%, 97% 84%, 100% 100%,
+    2% 100%, 0 76%, 4% 58%, 1% 33%, 3% 14%
+  );
+}
+[data-theme='cottagecore'] .cc-tape--pinked {
+  clip-path: polygon(
+    0 0, 100% 0, 98% 17%, 100% 33%, 98% 50%, 100% 67%, 98% 83%, 100% 100%,
+    0 100%, 2% 83%, 0 67%, 2% 50%, 0 33%, 2% 17%
+  );
+}
 
 /* ---------- gingham ---------- */
 
@@ -427,7 +582,29 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
     linear-gradient(var(--gingham-thread) 50%, transparent 0);
   background-size: auto, 28px 28px, 28px 28px;
 }
-[data-theme='cottagecore'][data-scheme='dark'] .cc-gingham { background-size: 28px 28px, 28px 28px, 28px 28px; }
+/* The valance and hem scallops by lamplight: a 1.5px lit rim, drawn as a ring
+   gradient inside the same scallop tile the mask cuts (a mask hides borders
+   and filters, so the rim has to be background). */
+[data-theme='cottagecore'][data-scheme='dark'] .valance.cc-gingham {
+  background-image:
+    radial-gradient(var(--scallop) at 50% 0, transparent calc(97% - 1.5px), var(--cc-lamp-rim) calc(97% - 1.5px) 97%, transparent 97%),
+    var(--gingham-texture),
+    linear-gradient(90deg, var(--gingham-thread) 50%, transparent 0),
+    linear-gradient(var(--gingham-thread) 50%, transparent 0);
+  background-size: calc(2 * var(--scallop)) var(--scallop), auto, 28px 28px, 28px 28px;
+  background-repeat: repeat-x, repeat, repeat, repeat;
+  background-position: 50% 100%, 0 0, 0 0, 0 0;
+}
+[data-theme='cottagecore'][data-scheme='dark'] .hem.cc-gingham {
+  background-image:
+    radial-gradient(var(--scallop) at 50% 100%, transparent calc(97% - 1.5px), var(--cc-lamp-rim) calc(97% - 1.5px) 97%, transparent 97%),
+    var(--gingham-texture),
+    linear-gradient(90deg, var(--gingham-thread) 50%, transparent 0),
+    linear-gradient(var(--gingham-thread) 50%, transparent 0);
+  background-size: calc(2 * var(--scallop)) var(--scallop), auto, 28px 28px, 28px 28px;
+  background-repeat: repeat-x, repeat, repeat, repeat;
+  background-position: 50% 0, 0 0, 0 0, 0 0;
+}
 
 /* ---------- stitching ---------- */
 
@@ -497,6 +674,9 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 /* ---------- pressed flowers ---------- */
 
 [data-theme='cottagecore'] .pressed { overflow: visible; filter: var(--press-shadow); }
+/* Pressed flat: a specimen on paper (a card, a sheet, a note, the stationery)
+   is held by the paper and casts nothing but a hairline of contact. */
+[data-theme='cottagecore'] :is(.cc-paper, .cc-board, .note) .pressed { filter: var(--press-shadow-mounted); }
 [data-theme='cottagecore'] .pressed path { stroke-linejoin: round; stroke-linecap: round; }
 [data-theme='cottagecore'] .pressed .stem { fill: none; stroke: var(--cc-stem); stroke-width: 2.4; }
 [data-theme='cottagecore'] .pressed .stem--thin { stroke-width: 1.6; }
