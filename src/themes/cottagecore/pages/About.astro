@@ -77,7 +77,7 @@ const [etymLead, ...etymRest] = copy.etymology;
   }
   .label :global(em) { font-family: var(--font-display); font-weight: 500; font-variation-settings: 'SOFT' 100, 'WONK' 1; }
   .label :global(strong) { color: var(--accent); }
-  .etym-more { margin-top: 1.4rem; color: var(--mark-muted); max-width: var(--measure); }
+  .etym-more { margin-top: 1.4rem; color: var(--mark); font-size: 1.02rem; max-width: var(--measure); }
 
   /* ---- the letter ---- */
   .letter-sec {
@@ -111,12 +111,9 @@ const [etymLead, ...etymRest] = copy.etymology;
   }
   .letter h2 {
     font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: 2.6rem;
+    font-size: 2.9rem;
     line-height: calc(var(--lh) * 2);
-    color: var(--accent);
     letter-spacing: 0;
-    rotate: -1.5deg;
   }
   .letter p { margin-top: var(--lh); color: var(--mark); }
   .letter p:first-of-type { margin-top: 0; }
@@ -185,7 +182,6 @@ const [etymLead, ...etymRest] = copy.etymology;
     font-weight: 460;
     font-size: clamp(1.25rem, 2.6vw, 1.75rem);
     line-height: 1.3;
-    font-variation-settings: 'SOFT' 100, 'WONK' 1;
     color: var(--mark);
     text-wrap: balance;
   }
@@ -198,7 +194,7 @@ const [etymLead, ...etymRest] = copy.etymology;
   }
   @media (max-width: 640px) {
     .letter { --lh: 1.8rem; font-size: 1rem; }
-    .letter h2 { font-size: 2.3rem; }
+    .letter h2 { font-size: 2.6rem; }
     .hoop { padding: 0.65rem; }
     .cloth { gap: 0.6rem; }
     .cloth :global(.motif) { width: 4rem; }

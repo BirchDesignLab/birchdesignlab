@@ -77,19 +77,17 @@ const { copy, theme } = Astro.props;
     --tilt: -0.5deg;
     padding: clamp(2rem, 5vw, 3.6rem) clamp(1.4rem, 5vw, 3.6rem) clamp(2.4rem, 5vw, 3.6rem);
   }
-  .kicker { font-size: clamp(1.9rem, 3vw, 2.3rem); }
+  .kicker { font-size: clamp(2.2rem, 3.4vw, 2.7rem); }
   /* Capped so 'Start a conversation' sets on one line at desktop instead of
      stranding 'Start a' above a heavy second line. */
   h1 { font-size: clamp(2.6rem, 4.6vw, 3.6rem); margin-top: 0.7rem; }
   .subline { margin-top: 1rem; font-size: 1.14rem; color: var(--mark-muted); max-width: 34rem; }
   form { display: grid; gap: 1.6rem; margin-top: 2.4rem; }
   .field { display: grid; gap: 0.15rem; }
+  /* Weight, ink and upright tilt come from the label hand (theme.css). */
   .field label {
     font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: 1.55rem;
     line-height: 1.2;
-    color: var(--accent);
   }
   .field input, .field textarea {
     font: inherit;
@@ -193,7 +191,6 @@ const { copy, theme } = Astro.props;
     font-weight: 460;
     font-size: clamp(1.45rem, 2.3vw, 1.8rem);
     line-height: 1.15;
-    font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
   .address { display: grid; gap: 1.1rem; margin-top: 1.8rem; }
   .mail {
