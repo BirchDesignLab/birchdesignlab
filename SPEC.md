@@ -1,6 +1,6 @@
 # SPEC
 
-A technical specification of the Birch Design Lab site as it exists at the head of main (2026-10-03). Written from reading the repository, its docs and its git history, for someone joining the project. The design specs that produced each feature live under [docs/superpowers/specs](https://github.com/wbp318/birchdesignlab/tree/main/docs/superpowers/specs); this file is the system as built, not a proposal. The README carries the charts; this carries the contracts.
+A technical specification of the Birch Design Lab site as it exists at the head of main (2026-10-03). Written from reading the repository, its docs and its git history, for someone joining the project. The design specs that produced each feature live under [docs/superpowers/specs](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs); this file is the system as built, not a proposal. The README carries the charts; this carries the contracts.
 
 ## 1. Purpose and scope
 
@@ -117,13 +117,13 @@ Two deliberate Vite plugins in `astro.config.mjs`:
 
 ## 9. Deploy
 
-Cloudflare Workers Builds watches upstream `main`. Build command `npm run build`, deploy command `npx wrangler deploy`. Merging to `main` is the production deploy; there is no staging. Reversibility is the safety net. The `www` host redirects to the apex by a dashboard rule. Full history and dashboard steps are in [docs/deploy.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/deploy.md).
+Cloudflare Workers Builds watches upstream `main`. Build command `npm run build`, deploy command `npx wrangler deploy`. Merging to `main` is the production deploy; there is no staging. Reversibility is the safety net. The `www` host redirects to the apex by a dashboard rule. Full history and dashboard steps are in [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md).
 
 A fork has none of the bindings, so `npm run deploy`, `wrangler dev` and the beacon and contact endpoints do not work from a fork. Everything else does.
 
 ## 10. Agent operating model
 
-Documented in [CLAUDE.md](https://github.com/wbp318/birchdesignlab/blob/main/CLAUDE.md) and [.claude/workflows/README.md](https://github.com/wbp318/birchdesignlab/blob/main/.claude/workflows/README.md).
+Documented in [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) and [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md).
 
 - Every subagent dispatch sets `model` and `effort`. Haiku for enumeration, Sonnet for implementation and verification, Opus for critique, design and sensitive code. Fable is never a subagent model. Defaults are never `xhigh` or `max`.
 - `bdl-task` args: `task`, `title`, `repoDir`, `branch`, `base` (full sha), `briefPath`, `reportPath`, `workDir`, `scratchRoot`, `runLabel`, `owns`, `ports` (three in 4460 to 4480), `trailer`; optional `school`, `sizes`, `schemes`, `films`, `layout` with `baseline`, `runtime`, `foreignPaths`, `carries`, `roles`, `maxRounds` (default 2), `maxAgents` (default 14), `answers`, `implemented`.
@@ -135,7 +135,7 @@ Documented in [CLAUDE.md](https://github.com/wbp318/birchdesignlab/blob/main/CLA
 
 ## 11. Brand
 
-Name decided 2026-07-15 ([founding record](https://github.com/wbp318/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md)): Birch Design Lab, eroding to Birch Labs, then Birch. Dark mode is the default face. North star object: the Grand Seiko White Birch. Mark concept: lenticel dashes. Assets under `assets/brand/` (SVG marks and lockups, PNG rasters at 512 and 2048, four GLB 3D marks, a sponsor card with QR). Build scripts under `scripts/brand/`. Social render pipeline under `social/` with its own `package.json`.
+Name decided 2026-07-15 ([founding record](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md)): Birch Design Lab, eroding to Birch Labs, then Birch. Dark mode is the default face. North star object: the Grand Seiko White Birch. Mark concept: lenticel dashes. Assets under `assets/brand/` (SVG marks and lockups, PNG rasters at 512 and 2048, four GLB 3D marks, a sponsor card with QR). Build scripts under `scripts/brand/`. Social render pipeline under `social/` with its own `package.json`.
 
 ## 12. Known constraints and decisions of record
 

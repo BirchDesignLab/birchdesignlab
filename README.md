@@ -79,8 +79,8 @@ Notes that matter when touching this layer:
 - The contact form works with JavaScript off. Errors are plain HTML pages, not JSON.
 - The recipient must be a verified Email Routing destination. Sending to a routing address like `hello@` returns 502 on the free plan.
 - `public/_headers` sets the security headers on static responses. The Worker adds its own two (Referrer-Policy, X-Frame-Options) because `_headers` does not apply to Worker responses.
-- No Permissions-Policy header, on purpose: the Lab intends to use camera, location and sensors. See [docs/deploy.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/deploy.md).
-- Analytics consent (Cloudflare Zaraz) is documented in [docs/analytics.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/analytics.md).
+- No Permissions-Policy header, on purpose: the Lab intends to use camera, location and sensors. See [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md).
+- Analytics consent (Cloudflare Zaraz) is documented in [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md).
 
 The Worker, the contact route, secrets, `_headers`, analytics consent and the verify gate are the repo's declared **sensitive code**. Changes there get an Opus-grade review under the house rules.
 
@@ -124,19 +124,19 @@ flowchart TB
 
 | Path | What lives there | Start with |
 |---|---|---|
-| [src/pages](https://github.com/wbp318/birchdesignlab/tree/main/src/pages) | Every route. `lab/` renders the content collection; `t/<school>/[...page].astro` is one Portal school each | [index.astro](https://github.com/wbp318/birchdesignlab/blob/main/src/pages/index.astro) |
-| [src/content](https://github.com/wbp318/birchdesignlab/tree/main/src/content) | `copy/` holds every visitor-facing word as data; `lab/` holds one Markdown entry per specimen | [content.config.ts](https://github.com/wbp318/birchdesignlab/blob/main/src/content.config.ts) |
-| [src/experiments](https://github.com/wbp318/birchdesignlab/tree/main/src/experiments) | The interactive specimen components, keyed by designation | [registry.ts](https://github.com/wbp318/birchdesignlab/blob/main/src/experiments/registry.ts) |
-| [src/themes](https://github.com/wbp318/birchdesignlab/tree/main/src/themes) | The seven design schools and the Portal runtime | [README.md](https://github.com/wbp318/birchdesignlab/blob/main/src/themes/README.md) |
-| [src/lib/bark](https://github.com/wbp318/birchdesignlab/tree/main/src/lib/bark) | The generative birch-bark engine that paints the site's background (BDL-001) | |
-| [worker/index.ts](https://github.com/wbp318/birchdesignlab/blob/main/worker/index.ts) | Contact and beacon endpoints | [docs/deploy.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/deploy.md) |
-| [scripts/themes](https://github.com/wbp318/birchdesignlab/tree/main/scripts/themes) | Playwright capture, film, strip and proof tooling for the Portal. Hundreds of probe scripts are kept on purpose (see House rules) | [snap.mjs](https://github.com/wbp318/birchdesignlab/blob/main/scripts/themes/snap.mjs), [stage-gates.mjs](https://github.com/wbp318/birchdesignlab/blob/main/scripts/themes/harness/stage-gates.mjs) |
-| [docs/lab-backlog.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/lab-backlog.md) | The single backlog: open gates, parked items, future experiments, dependency queue | |
-| [docs/birch-design-lab-founding-record.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md) | Why the name, the brand foundation, the naming graveyard | |
-| [docs/brand-brief.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/brand-brief.md) | Visual identity brief | [assets/brand/README.md](https://github.com/wbp318/birchdesignlab/blob/main/assets/brand/README.md) |
-| [docs/ar-card/HANDOFF.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) | The WebAR business card project | |
-| [CLAUDE.md](https://github.com/wbp318/birchdesignlab/blob/main/CLAUDE.md) | Working rules for Claude Code sessions: model tiering, git flow, scripts policy, dependency policy | |
-| [.claude/workflows/README.md](https://github.com/wbp318/birchdesignlab/blob/main/.claude/workflows/README.md) | The saved multi-agent workflows | |
+| [src/pages](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/pages) | Every route. `lab/` renders the content collection; `t/<school>/[...page].astro` is one Portal school each | [index.astro](https://github.com/BirchDesignLab/birchdesignlab/blob/main/src/pages/index.astro) |
+| [src/content](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/content) | `copy/` holds every visitor-facing word as data; `lab/` holds one Markdown entry per specimen | [content.config.ts](https://github.com/BirchDesignLab/birchdesignlab/blob/main/src/content.config.ts) |
+| [src/experiments](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/experiments) | The interactive specimen components, keyed by designation | [registry.ts](https://github.com/BirchDesignLab/birchdesignlab/blob/main/src/experiments/registry.ts) |
+| [src/themes](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/themes) | The seven design schools and the Portal runtime | [README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/src/themes/README.md) |
+| [src/lib/bark](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/lib/bark) | The generative birch-bark engine that paints the site's background (BDL-001) | |
+| [worker/index.ts](https://github.com/BirchDesignLab/birchdesignlab/blob/main/worker/index.ts) | Contact and beacon endpoints | [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md) |
+| [scripts/themes](https://github.com/BirchDesignLab/birchdesignlab/tree/main/scripts/themes) | Playwright capture, film, strip and proof tooling for the Portal. Hundreds of probe scripts are kept on purpose (see House rules) | [snap.mjs](https://github.com/BirchDesignLab/birchdesignlab/blob/main/scripts/themes/snap.mjs), [stage-gates.mjs](https://github.com/BirchDesignLab/birchdesignlab/blob/main/scripts/themes/harness/stage-gates.mjs) |
+| [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) | The single backlog: open gates, parked items, future experiments, dependency queue | |
+| [docs/birch-design-lab-founding-record.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md) | Why the name, the brand foundation, the naming graveyard | |
+| [docs/brand-brief.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/brand-brief.md) | Visual identity brief | [assets/brand/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/assets/brand/README.md) |
+| [docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) | The WebAR business card project | |
+| [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) | Working rules for Claude Code sessions: model tiering, git flow, scripts policy, dependency policy | |
+| [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md) | The saved multi-agent workflows | |
 
 ---
 
@@ -238,7 +238,7 @@ How a school is built and judged:
 
 - Start a draft with `node scripts/themes/new-theme.mjs <id> "<Name>"`. While the route file is named `_[...page].astro` the school is invisible to the switcher and the build.
 - Decoration is `aria-hidden`; any visible word that is not in the copy fails **word parity**, which compares every school to quiet word for word.
-- Each school has a primary-source research **dossier** under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/wbp318/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers), and revisions are judged against it.
+- Each school has a primary-source research **dossier** under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers), and revisions are judged against it.
 - The **stage gates** (`scripts/themes/harness/stage-gates.mjs`, about 75 minutes on a GPU machine) film every swap at five widths in both schemes, check the switcher holds still in every strip, time the arrival, and judge the wordmark morph.
 - The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is next, then a transitions phase.
 
@@ -303,7 +303,7 @@ flowchart TB
     SORT -->|still open after maxRounds| PARK[parked: controller rules]:::store
 ```
 
-**Everything is recorded.** Each stage ends with a founder report (for example [stage4-report.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)) listing what changed, what it cost in agents and tokens, the calls the founder owes, and what is owed on a real iPhone after deploy. Stage 4 cost about 150 agents and 15M subagent tokens over two days.
+**Everything is recorded.** Each stage ends with a founder report (for example [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)) listing what changed, what it cost in agents and tokens, the calls the founder owes, and what is owed on a real iPhone after deploy. Stage 4 cost about 150 agents and 15M subagent tokens over two days.
 
 ---
 
@@ -353,7 +353,7 @@ Head of main is the Stage 4 merge on 2026-10-03. Upstream has no open issues or 
 
 - **Safari and iOS.** Every film so far is Chromium. Playwright WebKit on Windows is not iOS Safari, so a real-device tester with time is valuable in itself.
 - **Accessibility audit** across the seven schools: the word-parity and `aria-hidden` rules are strict, but nobody has done a screen-reader pass.
-- **The AR card** ([docs/ar-card/HANDOFF.md](https://github.com/wbp318/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md)): the remaining one-way door is ordering the etched wood card run.
+- **The AR card** ([docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md)): the remaining one-way door is ordering the etched wood card run.
 - **Dependency upgrades** per the policy in CLAUDE.md; the queue is in the backlog.
 - **The Loom (BDL-004)** sits in `attic/` with tests and could be revived as a specimen.
 - **Studies.** Every study so far is a fictional genre study. Real client work, written up as a study, is the thing the Lab is built to hold.
@@ -403,7 +403,7 @@ Optional: `npx playwright install chromium` for the capture and film scripts und
 
 ## House rules
 
-Pulled from [CLAUDE.md](https://github.com/wbp318/birchdesignlab/blob/main/CLAUDE.md) and the docs, in the order they will bite.
+Pulled from [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) and the docs, in the order they will bite.
 
 - Branch and open a PR. Never commit to main. Merging deploys.
 - `npm run verify` as one command before every PR.
