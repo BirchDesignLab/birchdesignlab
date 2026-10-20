@@ -2,7 +2,7 @@
 
 The source of [birchdesignlab.com](https://birchdesignlab.com): the business and portfolio site of Birch Design Lab, a one-person web design studio founded by Tyler Hobbs in July 2026. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-011) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
 
-This is a fork at [github.com/wbp318/birchdesignlab](https://github.com/wbp318/birchdesignlab). Upstream is [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchDesignLab/birchdesignlab). This README was written for the fork to map the project before contributing; upstream does not carry one.
+Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchDesignLab/birchdesignlab). The site has been built since July 2026; this README maps the project for a reader joining it.
 
 **Credo, from the founding record:** *First green after the fire, and the bark you write on.* Birch is the pioneer species that returns first after a burn, and birch bark was the paper of medieval Novgorod. Both ideas run through the brand, the copy and the experiments.
 
@@ -389,7 +389,7 @@ Builds, tests and the dev server all work without any of these.
 ## Local setup
 
 ```bash
-git clone https://github.com/wbp318/birchdesignlab.git
+git clone https://github.com/BirchDesignLab/birchdesignlab.git
 cd birchdesignlab
 nvm use            # .nvmrc; Node 20.11 or newer
 npm install
