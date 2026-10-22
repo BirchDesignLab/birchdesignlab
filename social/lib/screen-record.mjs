@@ -38,10 +38,19 @@ export const useGpu = () => process.env.BDL_GPU === '1';
 /** The switcher remembers a dismissed first-load prompt under this sessionStorage key. */
 const PROMPT_KEY = 'bdl-portal-prompt';
 
-export async function launch() {
-  return chromium.launch({
-    args: ['--hide-scrollbars', ...(useGpu() ? GPU_ARGS : [])],
-  });
+/**
+ * `window` makes the phone real: a window of exactly that size with a real
+ * device scale factor, rather than a viewport the DevTools emulation fakes one
+ * onto. The difference is the whole recording. Under emulation the screencast
+ * delivers CSS pixels (390x844 for a dPR-3 phone, measured by
+ * scripts/probe-screencast-resolution.mjs), which is a 2.8x upscale at 1080
+ * wide; under a real device scale factor it delivers device pixels (1170x2532),
+ * and the text is sharp.
+ */
+export async function launch(window = null) {
+  const args = ['--hide-scrollbars', ...(useGpu() ? GPU_ARGS : [])];
+  if (window) args.push(`--window-size=${window.width},${window.height}`, `--force-device-scale-factor=${window.dpr}`);
+  return chromium.launch({ args });
 }
 
 /**
@@ -50,12 +59,13 @@ export async function launch() {
  * switcher's first-load prompt marked dismissed (its fade-in and beacon would
  * otherwise sit in the first clip a fresh context films).
  */
-export async function phoneContext(browser, { width, height, dpr = 3, scheme = 'dark', recordVideo } = {}) {
+export async function phoneContext(browser, { width, height, dpr = 3, scheme = 'dark', recordVideo, native = false } = {}) {
+  // native: the browser was launched with the phone's window size and device
+  // scale factor (see launch()), so the context takes the window as it is.
   const context = await browser.newContext({
-    viewport: { width, height },
-    deviceScaleFactor: dpr,
-    isMobile: true,
-    hasTouch: true,
+    ...(native
+      ? { viewport: null }
+      : { viewport: { width, height }, deviceScaleFactor: dpr, isMobile: true, hasTouch: true }),
     colorScheme: scheme,
     reducedMotion: 'no-preference',
     ...(recordVideo ? { recordVideo } : {}),

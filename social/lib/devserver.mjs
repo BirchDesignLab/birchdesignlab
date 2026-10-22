@@ -9,7 +9,20 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEV_ORIGIN = 'http://localhost:4321';
+/**
+ * Where the site is served from. The dev server, by default.
+ *
+ * BDL_BASE points the PAGE recorders (render/screens.mjs) at a build of the
+ * checked-out tree instead, for when `astro dev` will not start: on this
+ * machine it deadlocks while loading its own logger module and never binds
+ * :4321, which is why the theme scripts all serve a built dist (the "preview"
+ * config on :4400, or `npm run dev:worker` on :8787). The rule this guards is
+ * unchanged: every run renders the current tree, never production and never a
+ * cached copy. A build made from the working tree just before the run keeps it.
+ * The WebGL harness still needs Vite's /@fs/ route, so loops.mjs needs the real
+ * dev server.
+ */
+export const DEV_ORIGIN = (process.env.BDL_BASE ?? 'http://localhost:4321').replace(/\/$/, '');
 
 const SOCIAL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -39,7 +52,7 @@ export function siteUrl(pathname) {
  * Confirm the dev server is up and is actually this repo's dev server.
  * Throws with the command to run if it is not.
  */
-export async function requireDevServer({ timeoutMs = 4000 } = {}) {
+export async function requireDevServer({ timeoutMs = 4000, harness = true } = {}) {
   let res;
   try {
     res = await fetch(`${DEV_ORIGIN}/`, {
@@ -60,6 +73,9 @@ export async function requireDevServer({ timeoutMs = 4000 } = {}) {
   if (!res.ok) {
     throw new Error(`Dev server at ${DEV_ORIGIN} answered ${res.status}. Expected 200.`);
   }
+
+  // Page recorders read ordinary routes and need nothing more.
+  if (!harness) return DEV_ORIGIN;
 
   // Cheap identity check: confirm Vite's /@fs/ route is live, since every
   // harness URL depends on it. A plain static server on :4321 would pass the

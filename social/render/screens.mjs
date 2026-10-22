@@ -16,8 +16,11 @@
  *   --keep-frames   leave the 1080x1920 PNG sequences in out/.frames/screens
  *   --keep-raw      leave the raw screencast JPEGs
  *
- * Dev server only, as everywhere in this pipeline: there is no fallback to
- * production. Run with BDL_GPU=1; the run refuses to film on SwiftShader.
+ * Local only, as everywhere in this pipeline: there is no fallback to
+ * production. The dev server (:4321) by default; BDL_BASE=http://localhost:4400
+ * points it at a fresh `npm run build` of the checked-out tree served by
+ * `npm run preview -- --port 4400`, for when `astro dev` will not start (see
+ * lib/devserver.mjs). Run with BDL_GPU=1; the run refuses to film on SwiftShader.
  *
  * Output: out/<post date>/<ID>-<FRAMING>-VT.mp4, a contact sheet beside it, and
  * out/report.md. Both framings are rendered because the choice between them is
@@ -28,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { contactSheet, evenIndices } from '../lib/contact.mjs';
 import { encode } from '../lib/encode.mjs';
-import { currentCommit, requireDevServer, siteUrl } from '../lib/devserver.mjs';
+import { currentCommit, DEV_ORIGIN, requireDevServer, siteUrl } from '../lib/devserver.mjs';
 import { run } from '../lib/ffmpeg.mjs';
 import { frameName } from '../lib/frames.mjs';
 import {
@@ -36,7 +39,7 @@ import {
 } from '../lib/screen-record.mjs';
 import { renderReport, verifyFile } from '../lib/verify.mjs';
 import { readManifest } from '../scripts/manifest.mjs';
-import { FRAMINGS, OUTPUT, SAFE_Y } from './screen-framing.mjs';
+import { FRAMINGS, SAFE_Y } from './screen-framing.mjs';
 import { controller, TAKES } from './screen-takes.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -55,13 +58,19 @@ const IDS = arg('id') ? arg('id').split(',') : null;
 const FRAMING_IDS = (arg('framing') ?? 'PHONE,RAISED').toUpperCase().split(',');
 for (const f of FRAMING_IDS) if (!FRAMINGS[f]) throw new Error(`unknown framing ${f}; use ${Object.keys(FRAMINGS).join(', ')}`);
 
-/** Context + page for one framing, on the GPU, with the bottom inset applied where the framing wants one. */
-async function openPage(browser, framing, take, startUrl) {
+/**
+ * A real window of the framing's size on a real device scale factor, on the
+ * GPU, with the bottom inset applied where the framing wants one. One browser
+ * per framing, because the window size and scale factor are launch flags.
+ */
+async function openPage(framing, take, startUrl) {
+  const browser = await launch({ width: framing.css.width, height: framing.css.height, dpr: framing.dpr });
   const context = await phoneContext(browser, {
     width: framing.css.width,
     height: framing.css.height,
     dpr: framing.dpr,
     scheme: take.scheme,
+    native: true,
   });
   const page = await context.newPage();
   await normaliseMedia(context, page);
@@ -77,10 +86,15 @@ async function openPage(browser, framing, take, startUrl) {
   const renderer = await rendererString(page);
   if (useGpu()) assertGpu(renderer);
   else console.warn(`  WARNING: BDL_GPU is not set; filming on ${renderer}`);
-  return { context, page, renderer };
+  // The window must really be the phone the framing assumes.
+  const seen = await page.evaluate(() => ({ w: innerWidth, h: innerHeight, dpr: devicePixelRatio }));
+  if (seen.w !== framing.css.width || seen.h !== framing.css.height || seen.dpr !== framing.dpr) {
+    throw new Error(`window is ${seen.w}x${seen.h}@${seen.dpr}, wanted ${framing.css.width}x${framing.css.height}@${framing.dpr}`);
+  }
+  return { browser, context, page, renderer };
 }
 
-async function recordClip(browser, row, framingId) {
+async function recordClip(row, framingId) {
   const framing = FRAMINGS[framingId];
   const take = TAKES[row.id];
   const date = row.use[0];
@@ -92,7 +106,7 @@ async function recordClip(browser, row, framingId) {
   const seconds = row.duration_s;
 
   console.log(`\n${label}: ${seconds}s, ${framing.css.width}x${framing.css.height}@${framing.dpr}`);
-  const { context, page, renderer } = await openPage(browser, framing, take, take.start);
+  const { browser, context, page, renderer } = await openPage(framing, take, take.start);
   console.log(`  renderer: ${renderer}`);
 
   // Native frame size: the screencast delivers device pixels when asked for them.
@@ -113,6 +127,7 @@ async function recordClip(browser, row, framingId) {
   const tookS = c.now();
   const { frames: shot, endAt } = await rec.stop();
   await context.close();
+  await browser.close();
   if (failure) throw new Error(`${label}: take failed at ${tookS.toFixed(2)}s: ${failure.message}\n${JSON.stringify(c.events)}`);
   if (tookS > seconds) {
     throw new Error(`${label}: the take ran ${tookS.toFixed(2)}s, past its ${seconds}s slot. Tighten the script rather than trimming the clip.\n${JSON.stringify(c.events)}`);
@@ -167,7 +182,7 @@ function staleTicks(times, t0, seconds) {
 }
 
 /** The framing options as stills: idle, list open, list open with Instagram's zones shaded. */
-async function framingStills(browser) {
+async function framingStills() {
   const dir = path.join(OUT_DIR, 'framing');
   await rm(dir, { recursive: true, force: true });
   await mkdir(dir, { recursive: true });
@@ -180,7 +195,7 @@ async function framingStills(browser) {
   for (const fid of FRAMING_IDS) {
     const framing = FRAMINGS[fid];
     const frames = path.join(WORK, `framing-${fid}`);
-    const { context, page, renderer } = await openPage(browser, framing, { scheme: 'dark' }, '/t/quiet/');
+    const { browser, context, page, renderer } = await openPage(framing, { scheme: 'dark' }, '/t/quiet/');
     console.log(`${fid}: ${renderer}`);
     const rec = await startScreencast(page, {
       dir: path.join(WORK, `framing-${fid}.raw`),
@@ -194,6 +209,7 @@ async function framingStills(browser) {
     await c.until(3.0);
     const { frames: shot } = await rec.stop();
     await context.close();
+    await browser.close();
     await toFrames({ frames: shot, t0, seconds: 3.2, fps: FPS, outDir: frames, filterComplex: framing.filterComplex });
 
     const idle = path.join(dir, `${fid}-idle.png`);
@@ -229,27 +245,22 @@ async function framingStills(browser) {
 }
 
 async function main() {
-  await requireDevServer();
+  await requireDevServer({ harness: false });
   const commit = await currentCommit();
-  console.log(`commit ${commit?.slice(0, 8) ?? 'unknown'}  gpu=${useGpu()}`);
+  console.log(`commit ${commit?.slice(0, 8) ?? 'unknown'}  base ${DEV_ORIGIN}  gpu=${useGpu()}`);
   await mkdir(WORK, { recursive: true });
-  const browser = await launch();
-  try {
-    if (flag('stills')) {
-      await framingStills(browser);
-      return;
-    }
-    const manifest = await readManifest();
-    const rows = (manifest.screen_captures ?? []).filter((r) => TAKES[r.id] && (!IDS || IDS.includes(r.id)));
-    if (!rows.length) throw new Error(`no scripted take matched ${IDS?.join(',') ?? '*'}`);
-    const results = [];
-    for (const row of rows) {
-      for (const fid of FRAMING_IDS) results.push(await recordClip(browser, row, fid));
-    }
-    await writeReport(results, commit);
-  } finally {
-    await browser.close();
+  if (flag('stills')) {
+    await framingStills();
+    return;
   }
+  const manifest = await readManifest();
+  const rows = (manifest.screen_captures ?? []).filter((r) => TAKES[r.id] && (!IDS || IDS.includes(r.id)));
+  if (!rows.length) throw new Error(`no scripted take matched ${IDS?.join(',') ?? '*'}`);
+  const results = [];
+  for (const row of rows) {
+    for (const fid of FRAMING_IDS) results.push(await recordClip(row, fid));
+  }
+  await writeReport(results, commit);
 }
 
 async function writeReport(results, commit) {
@@ -257,7 +268,7 @@ async function writeReport(results, commit) {
     renderReport(results.map((r) => r.verify)).replace('# Social asset verification', '# Screen captures: verification'),
     '## Recording',
     '',
-    `Commit ${commit ?? 'unknown'}. Real-time DevTools screencast, ${FPS}fps grid, GPU=${useGpu()}.`,
+    `Commit ${commit ?? 'unknown'}, served from ${DEV_ORIGIN}. Real-time DevTools screencast, ${FPS}fps grid, GPU=${useGpu()}.`,
     '',
     '| Clip | Take ran | Frames delivered | Mean gap | p95 gap | Worst gap | Ticks showing a frame >50ms old | >100ms | Worst age |',
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',

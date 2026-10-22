@@ -1,30 +1,34 @@
 /**
- * Which real-time recorder gives steadier frames: the DevTools screencast, or
- * Playwright's recordVideo? Measured on one clip, because the choice decides
- * whether UI text is legible at 1080 wide and whether a view transition arrives
- * as motion or as a few frames.
+ * Which real-time recorder gives steadier, sharper frames? Measured on one clip,
+ * because the choice decides whether UI text is legible at 1080 wide and whether
+ * a view transition arrives as motion or as a few frames.
  *
  * The clip: the portal on a 390x844 phone at dPR 3, two school changes through
- * the switcher with real clicks, 3s between them. Same script, same page state,
- * same GPU, once per backend.
+ * the switcher with real clicks and a rest after each. Same script, same GPU,
+ * once per backend:
+ *
+ *   screencast-emulated  DevTools screencast, Playwright's emulated dPR 3
+ *   screencast-native    DevTools screencast, a real window at a real dPR 3
+ *   recordVideo          Playwright's recordVideo, asked for 1170x2532
  *
  * Reports, per backend:
- *   native    the frame size the backend actually delivers (not what was asked)
- *   pacing    interval statistics between delivered frames, and how many gaps
- *             exceed 50 / 100ms
- *   during    the same, but only across the ~1s after each school change, where
- *             a recorder that cannot keep up shows itself
- *   at30      what is on screen at each 30Hz tick: how many ticks hold a frame
- *             older than 50ms
+ *   frame     the size a frame really has (a recordVideo canvas can be 1170x2532
+ *             with the picture in one corner at 1x)
+ *   pacing    interval statistics between delivered frames over the whole take
+ *   inTransition   the longest gap between frames, and gaps over 50ms, measured
+ *             separately inside the second after each school change (a recorder
+ *             that cannot keep up shows itself there); static stretches are not
+ *             held against a backend, because a page that does not repaint has
+ *             nothing to deliver
  *
- * Usage (dev server up, BDL_GPU=1):  node scripts/measure-screen-recorders.mjs
- * Output: out/.measure-recorders/ (stills from each backend, results.json)
+ * Usage:  BDL_BASE=http://localhost:4400 BDL_GPU=1 node scripts/measure-screen-recorders.mjs
+ * Output: out/.measure-recorders/results.json plus a frame from each backend.
  */
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { run, probe } from '../lib/ffmpeg.mjs';
-import { requireDevServer, siteUrl } from '../lib/devserver.mjs';
+import { probe, run } from '../lib/ffmpeg.mjs';
+import { DEV_ORIGIN, requireDevServer, siteUrl } from '../lib/devserver.mjs';
 import {
   assertGpu, jpegSize, launch, normaliseMedia, pacing, phoneContext, rendererString, startScreencast,
 } from '../lib/screen-record.mjs';
@@ -35,12 +39,11 @@ const W = 390;
 const H = 844;
 const DPR = 3;
 
-await requireDevServer();
+await requireDevServer({ harness: false });
 await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
-const browser = await launch();
 
-/** The take: open the school list, pick a school, rest, twice. Returns trigger times. */
+/** The take: open the school list, pick a school, rest, twice. Returns trigger times (epoch s). */
 async function take(page) {
   const triggers = [];
   for (const id of ['bauhaus', 'vaporwave']) {
@@ -65,84 +68,83 @@ async function openPage(context) {
   return page;
 }
 
-const result = { viewport: `${W}x${H}@${DPR}`, backends: {} };
-
-// --- backend 1: screencast -------------------------------------------------
-{
-  const context = await phoneContext(browser, { width: W, height: H, dpr: DPR });
-  const page = await openPage(context);
-  result.renderer = await rendererString(page);
-  assertGpu(result.renderer);
-  const rec = await startScreencast(page, { dir: path.join(OUT, 'screencast'), width: W * DPR, height: H * DPR });
-  const t0 = Date.now() / 1000;
-  const triggers = await take(page);
-  const { frames, endAt } = await rec.stop();
-  const first = await readFile(frames[Math.floor(frames.length / 2)].file);
-  const times = frames.map((f) => f.at);
-  result.backends.screencast = {
-    native: jpegSize(first),
-    clipSeconds: +(endAt - t0).toFixed(2),
-    pacing: pacing(times),
-    during: duringTransitions(times, triggers),
-    at30: at30(times, t0, endAt),
-  };
-  await context.close();
+/** Gap statistics inside the second after each trigger, windows kept apart. */
+function inTransition(times, triggers) {
+  let worst = 0;
+  let over50 = 0;
+  let frames = 0;
+  for (const g of triggers) {
+    const inside = times.filter((t) => t >= g && t <= g + 1.0);
+    frames += inside.length;
+    for (let i = 1; i < inside.length; i++) {
+      const gap = (inside[i] - inside[i - 1]) * 1000;
+      worst = Math.max(worst, gap);
+      if (gap > 50) over50++;
+    }
+  }
+  return { framesInWindows: frames, worstGapMs: +worst.toFixed(1), gapsOver50ms: over50 };
 }
 
-// --- backend 2: recordVideo ------------------------------------------------
-{
+const result = { phone: `${W}x${H}@${DPR}`, base: DEV_ORIGIN, backends: {} };
+
+async function screencastBackend(name, native) {
+  const browser = await launch(native ? { width: W, height: H, dpr: DPR } : null);
+  const context = await phoneContext(browser, { width: W, height: H, dpr: DPR, native });
+  const page = await openPage(context);
+  result.renderer ??= await rendererString(page);
+  assertGpu(result.renderer);
+  const rec = await startScreencast(page, { dir: path.join(OUT, name), width: W * DPR, height: H * DPR });
+  const t0 = Date.now() / 1000;
+  const triggers = await take(page);
+  const { frames } = await rec.stop();
+  const times = frames.map((f) => f.at);
+  const jpg = await readFile(frames[Math.floor(frames.length / 2)].file);
+  result.backends[name] = {
+    frame: jpegSize(jpg),
+    clipSeconds: +(Date.now() / 1000 - t0).toFixed(2),
+    pacing: pacing(times),
+    inTransition: inTransition(times, triggers),
+  };
+  await context.close();
+  await browser.close();
+}
+
+await screencastBackend('screencast-emulated', false);
+await screencastBackend('screencast-native', true);
+
+{ // recordVideo
   const dir = path.join(OUT, 'recordvideo');
+  const browser = await launch();
   const context = await phoneContext(browser, {
     width: W, height: H, dpr: DPR,
     recordVideo: { dir, size: { width: W * DPR, height: H * DPR } },
   });
   const page = await openPage(context);
-  const t0 = Date.now() / 1000;
+  // recordVideo's clock starts when the page is created; the take starts later.
+  const pageOpenedAt = Date.now() / 1000;
   const triggers = await take(page);
-  const endAt = Date.now() / 1000;
   const video = page.video();
   await context.close();
+  await browser.close();
   const file = await video.path();
   const info = await probe(file);
   const v = info.streams.find((s) => s.codec_type === 'video');
-  // Per-frame presentation times straight from the container.
   const { stdout } = await run('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'frame=pts_time', '-of', 'csv=p=0', file]);
   const times = stdout.trim().split('\n').map(Number).filter(Number.isFinite);
-  const vt0 = 0; // recordVideo's clock starts when the page opened, not at t0
-  const offset = (t0 - (endAt - (times[times.length - 1] ?? 0))); // aligns clip start to video time
+  // The video starts roughly when the context did, a second or two before the
+  // take; align its last frame to the take's end so windows land on the right frames.
+  const takeEnd = Date.now() / 1000;
+  const shift = takeEnd - times[times.length - 1];
+  const aligned = times.map((t) => t + shift);
   result.backends.recordVideo = {
-    native: { width: v.width, height: v.height },
+    canvas: { width: v.width, height: v.height },
     codec: `${v.codec_name} ${v.avg_frame_rate}`,
-    clipSeconds: +(endAt - t0).toFixed(2),
     pacing: pacing(times),
-    during: duringTransitions(times.map((t) => t + (endAt - (times[times.length - 1] ?? 0))), triggers),
-    at30: at30(times.map((t) => t + (endAt - (times[times.length - 1] ?? 0))), t0, endAt),
-    _alignedBy: +offset.toFixed(3),
+    inTransition: inTransition(aligned, triggers),
+    note: 'constant 25fps; the 390x844 picture sits in the corner of the canvas at 1x (see rv.png)',
   };
-  void vt0;
-}
-
-await browser.close();
-
-/** Intervals between frames in the second after each trigger. */
-function duringTransitions(times, triggers) {
-  const inside = times.filter((t) => triggers.some((g) => t >= g && t <= g + 1.0));
-  return pacing(inside);
-}
-
-/** At each 30Hz tick, how old is the frame being shown? */
-function at30(times, t0, endAt) {
-  let stale = 0;
-  let n = 0;
-  let worst = 0;
-  for (let t = t0; t < endAt; t += 1 / 30) {
-    let age = Infinity;
-    for (let i = times.length - 1; i >= 0; i--) if (times[i] <= t) { age = t - times[i]; break; }
-    n++;
-    if (age > 0.05) stale++;
-    if (Number.isFinite(age)) worst = Math.max(worst, age);
-  }
-  return { ticks: n, staleOver50ms: stale, worstAgeMs: +(worst * 1000).toFixed(1) };
+  void pageOpenedAt;
+  await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '3', '-i', file, '-frames:v', '1', path.join(OUT, 'rv.png')]);
 }
 
 await writeFile(path.join(OUT, 'results.json'), JSON.stringify(result, null, 2));
