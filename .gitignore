@@ -28,6 +28,7 @@ social/out/
 
 # Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
 scripts/themes/.out/
+scripts/footer/.out/
 
 # Doc-gen outputs (scripts/docs/): delivered PDFs and the page-check
 # screenshots, both regenerable from the .html/.css source with
