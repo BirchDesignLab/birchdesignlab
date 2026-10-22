@@ -14,6 +14,30 @@ dashboard, not in git. Keep it in sync when you change the Zaraz setup.
 - **Consent:** Zaraz Consent Management enabled 09-01-26. One purpose
   (**Analytics**) gates the GA4 tag. See "Consent management" below.
 
+## Also live: Cloudflare Web Analytics (not in Zaraz, not gated)
+
+Found 10-22-26 while checking the live site; it predates this doc and was
+never recorded. Kept on purpose (founder call 10-22-26), now disclosed on
+`/privacy`.
+
+- **What:** Cloudflare Web Analytics (RUM beacon). Cloudflare injects
+  `static.cloudflareinsights.com/beacon.min.js` into every page at the edge and
+  it reports to `/cdn-cgi/rum`. Site token `d83d74ba079e46e984502a275a2fae5a`
+  (public, in page source), `spa` mode on. Nothing in the repo adds it.
+- **Consent:** none. It loads and reports before the Zaraz banner is answered,
+  and on Reject. Zaraz consent cannot gate it: it is a separate Cloudflare
+  product. Verified live 10-22-26: beacon loaded, `/cdn-cgi/rum` sent, no
+  cookies set (`document.cookie` empty before consent).
+- **What we see:** totals only, in the Cloudflare dashboard (Web Analytics):
+  page views, visits, referrers, countries, browsers and devices, page load
+  timings.
+- **Where it is configured:** Cloudflare dashboard, Web Analytics, site for
+  birchdesignlab.com. Not checked from here (no dashboard API access with
+  Web Analytics scope); confirm whether it is the automatic setup.
+- **Privacy page rule:** the page must not say that declining stops all
+  measurement. It says declining stops Google and Meta, and names this
+  separately. If it is ever turned off, update `/privacy` in the same change.
+
 ## Pending dashboard setup: Meta Pixel (10-22-26)
 
 Recorded ahead of the dashboard change so the backup and the privacy page land
@@ -111,7 +135,7 @@ Pending version (10-22-26), paste with the Marketing purpose:
 
 ```html
 <div class="bdl-consent-intro">
-  <p class="bdl-consent-lead">We use two tools. Analytics counts visits and which pages are read. Advertising lets us measure our ads on Facebook and Instagram, and may show them to you after you visit. You choose below. Nothing here is sold.</p>
+  <p class="bdl-consent-lead">Two tools here ask first. Analytics counts visits and which pages are read. Advertising lets us measure our ads on Facebook and Instagram, and may show them to you after you visit. You choose below. Nothing here is sold.</p>
   <p class="bdl-consent-legal">Birch Design Lab &middot; <a href="/privacy">Privacy Policy</a></p>
 </div>
 ```
@@ -241,5 +265,7 @@ Email Routing target (`birchdesignlab@gmail.com`); `hello@` forwards there.
 
 10-22-26 (Meta Pixel PR): adds an Advertising clause (Meta Pixel, Marketing
 consent), names Meta under "Who we share it with", rewrites the subline and the
-banner description for two separate choices, and adds Meta to retention. Not
+banner description for two separate choices, and adds Meta to retention. Also
+discloses Cloudflare Web Analytics (runs without consent, no cookies) and drops
+the claim that declining means "nothing about your visit is measured". Not
 legally reviewed.
