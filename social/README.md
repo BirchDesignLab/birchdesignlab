@@ -55,6 +55,16 @@ npm run loops
 Captures and encodes every video asset. Needs a dev server running (see below).
 
 ```bash
+npm run screens:stills
+BDL_GPU=1 npm run screens
+```
+
+The screen captures: real-time recordings of interactive pages (the Portal tour,
+the Bark Engine), not WebGL loops. `screens:stills` renders the framing options
+as stills with Instagram's covered zones shaded; `screens` records every
+scripted take in every framing. See "Screen captures" below.
+
+```bash
 npm run cards
 ```
 
@@ -86,6 +96,15 @@ guard is disabled on purpose and the run must then FAIL to reproduce — proving
 the guard is load-bearing rather than decorative.
 
 ```bash
+npm run selftest:screens
+```
+
+Browser-free proof for the screen recorder: `toFrames()` puts timestamped frames
+on the right ticks, and every framing's filter graph yields a full 96-frame,
+1080x1920 clip. `npm run measure:recorders` and `npm run probe:screencast` are
+the measurements behind the recorder choice.
+
+```bash
 npm run probe
 ```
 
@@ -106,6 +125,25 @@ From the **repo root**, in a separate terminal:
 ```bash
 npm run dev
 ```
+
+### When `astro dev` will not start
+
+On this machine `astro dev` can deadlock while loading its own logger module and
+never bind :4321. Every theme script already serves a built `dist` instead (the
+"preview" config on :4400, or `npm run dev:worker` on :8787). The page recorders
+(`screens`, `measure:recorders`, `probe:screencast`) take that route with
+`BDL_BASE`; from the repo root:
+
+```bash
+npm run build
+npm run preview -- --port 4400
+BDL_BASE=http://localhost:4400 BDL_GPU=1 npm run screens
+```
+
+Build immediately before the run: the rule behind "dev server only" is that a
+render shows the checked-out tree, never production and never a stale copy. The
+WebGL loops still need the real dev server, because the harness is served by
+Vite's `/@fs/` route.
 
 ### How the harness is served
 
@@ -137,6 +175,10 @@ not a copy. `lib/devserver.mjs` builds these URLs; nothing hard-codes the path.
 | `lib/ffmpeg.mjs` | Shared ffmpeg/ffprobe plumbing and the PSNR frame diff. |
 | `render/loops.mjs` | Drives capture + encode for every video asset. |
 | `render/cards.mjs` | Renders stills and carousel slides. |
+| `render/screens.mjs` | Records the interactive screen captures in real time and encodes them. |
+| `render/screen-takes.mjs` | What the visitor does in each take: real clicks, holds and drags, paced against the clip clock. |
+| `render/screen-framing.mjs` | How a phone recording becomes a 1080x1920 Reel clear of Instagram's overlays: the PHONE and SHORT options. |
+| `lib/screen-record.mjs` | Real-device-scale browser launch, the screencast recorder, and the timestamp-to-ticks resampler. |
 | `render/framing.mjs` | The founder-specified per-asset framing table, capture resolution, and time scale. |
 | `harness/bdl-007.html` + `.mjs` | Render harness. Imports the real scene module; adds a frame-sized stage, a true first-draw hook, and deterministic variant staging. |
 | `scripts/selftest.mjs` | Browser-free proof that encode + verify are correct. |
@@ -381,6 +423,40 @@ not a drop-in sibling for a SwiftShader one, so never mix the two inside one
 delivery. Render one asset both ways, diff with `lumaDelta`, look at the
 frames — and if the difference is edge-level, switch over and re-render the
 whole set as a matched pair.
+
+## Screen captures
+
+`render/screens.mjs` is the real-time sibling of the loops. A view transition
+runs on the compositor and a click is a real input event, so these clips cannot
+use `capture()`'s frozen clock; the page runs on its own clock and the Chrome
+DevTools screencast films what the compositor presents.
+
+Three findings, each measured (`out/.measure-recorders`, `out/.probe-screencast`
+after running the scripts), each silent if forgotten:
+
+1. **The screencast only gives device pixels from a real device scale factor.**
+   Playwright's `deviceScaleFactor` is an emulation, and under it the screencast
+   delivers CSS pixels: 390x844 for a dPR-3 phone, a 2.8x upscale at 1080 wide.
+   `launch({ width, height, dpr })` starts Chromium with `--window-size` and
+   `--force-device-scale-factor` instead, and the frames are 1170x2532 and sharp.
+2. **`recordVideo` is steadier and worse.** A constant 25fps, but at CSS
+   resolution: asked for 1170x2532 it draws the 390x844 picture in one corner of
+   a grey canvas. The screencast averages ~50fps wherever the page repaints and
+   holds the last frame where it does not (a page that is not repainting has
+   nothing to deliver); `toFrames()` lays it on a 30fps grid by timestamp.
+3. **Generated filter sources default to 25fps.** An overlay takes its rate from
+   its first input, so an unpinned `color` background cut a clip to 84% of its
+   length. Every source in `render/screen-framing.mjs` is pinned with `r=30`.
+
+Framings keep the switcher bar clear of Instagram's own UI (top 14%, bottom 35%
+of a Reel). Both are rendered for every take; the file name carries the choice.
+`RAISED` (a full-bleed window with a 35% bottom inset) was tried and dropped:
+the site places the school list `inset + 72px` above the bottom edge, so it was
+pushed off the top of the window.
+
+Output is `out/<post date>/<ID>-<FRAMING>-VT.mp4` with a contact sheet beside it
+and `out/report.md`. `npm run verify` also finds the dated folders, with the loop
+seam test off. It rewrites `out/report.md` without the recording tables.
 
 ## Known gap
 

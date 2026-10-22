@@ -24,6 +24,14 @@ import { fileURLToPath } from 'node:url';
  */
 export const DEV_ORIGIN = (process.env.BDL_BASE ?? 'http://localhost:4321').replace(/\/$/, '');
 
+// BDL_BASE moves the server, never the rule: it must be this machine.
+{
+  const host = new URL(DEV_ORIGIN).hostname;
+  if (!['localhost', '127.0.0.1', '[::1]', '::1'].includes(host)) {
+    throw new Error(`BDL_BASE=${DEV_ORIGIN} is not a local address. This pipeline renders the checked-out tree from this machine and never from a deployed site.`);
+  }
+}
+
 const SOCIAL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**

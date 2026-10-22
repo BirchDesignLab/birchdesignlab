@@ -110,7 +110,7 @@ export async function rendererString(page) {
 
 export function assertGpu(renderer) {
   if (!renderer) throw new Error('no WebGL context: cannot tell which rasteriser this is');
-  if (/swiftshader|llvmpipe|software/i.test(renderer)) {
+  if (/swiftshader|llvmpipe|software|basic render|warp/i.test(renderer)) {
     throw new Error(`rendering on the CPU, not the GPU: ${renderer}\nSet BDL_GPU=1.`);
   }
 }
@@ -197,6 +197,10 @@ export async function startScreencast(page, { dir, width, height, quality = 92 }
  */
 export async function toFrames({ frames, t0, seconds, fps = 30, outDir, vf = null, filterComplex = null }) {
   if (!frames.length) throw new Error('toFrames: the recorder produced no frames');
+  // A frame with no usable stamp would make every tick compare false and the
+  // whole clip frame 0, which still passes verification.
+  const unstamped = frames.filter((f) => !Number.isFinite(f.at)).length;
+  if (unstamped) throw new Error(`toFrames: ${unstamped} of ${frames.length} frames have no timestamp`);
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
 

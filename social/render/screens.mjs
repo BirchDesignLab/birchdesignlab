@@ -13,6 +13,7 @@
  *   node render/screens.mjs --id VP1 --framing PHONE    one clip, one framing
  *   node render/screens.mjs                             every take, both framings
  *
+ *   --report        rewrite out/report.md from the clips already rendered
  *   --keep-frames   leave the 1080x1920 PNG sequences in out/.frames/screens
  *   --keep-raw      leave the raw screencast JPEGs
  *
@@ -26,7 +27,7 @@
  * out/report.md. Both framings are rendered because the choice between them is
  * the founder's; the file name carries it.
  */
-import { mkdir, rm, writeFile, copyFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { contactSheet, evenIndices } from '../lib/contact.mjs';
@@ -39,7 +40,7 @@ import {
 } from '../lib/screen-record.mjs';
 import { renderReport, verifyFile } from '../lib/verify.mjs';
 import { readManifest } from '../scripts/manifest.mjs';
-import { FRAMINGS, SAFE_Y } from './screen-framing.mjs';
+import { FRAMINGS, SAFE, SAFE_Y } from './screen-framing.mjs';
 import { controller, TAKES } from './screen-takes.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -65,6 +66,7 @@ for (const f of FRAMING_IDS) if (!FRAMINGS[f]) throw new Error(`unknown framing 
  */
 async function openPage(framing, take, startUrl) {
   const browser = await launch({ width: framing.css.width, height: framing.css.height, dpr: framing.dpr });
+  try {
   const context = await phoneContext(browser, {
     width: framing.css.width,
     height: framing.css.height,
@@ -84,14 +86,19 @@ async function openPage(framing, take, startUrl) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(900);
   const renderer = await rendererString(page);
-  if (useGpu()) assertGpu(renderer);
-  else console.warn(`  WARNING: BDL_GPU is not set; filming on ${renderer}`);
+  // Always asserted, whatever BDL_GPU says: a clip filmed on a software
+  // rasteriser verifies cleanly and looks subtly different from the rest.
+  assertGpu(renderer);
   // The window must really be the phone the framing assumes.
   const seen = await page.evaluate(() => ({ w: innerWidth, h: innerHeight, dpr: devicePixelRatio }));
   if (seen.w !== framing.css.width || seen.h !== framing.css.height || seen.dpr !== framing.dpr) {
     throw new Error(`window is ${seen.w}x${seen.h}@${seen.dpr}, wanted ${framing.css.width}x${framing.css.height}@${framing.dpr}`);
   }
   return { browser, context, page, renderer };
+  } catch (err) {
+    await browser.close().catch(() => {});
+    throw err;
+  }
 }
 
 async function recordClip(row, framingId) {
@@ -119,20 +126,36 @@ async function recordClip(row, framingId) {
   const t0 = Date.now() / 1000;
   const c = controller(page, t0);
   let failure = null;
+  let tookS = 0;
+  let shot = [];
   try {
-    await take.run(c);
-  } catch (err) {
-    failure = err;
+    try {
+      await take.run(c);
+    } catch (err) {
+      failure = err;
+    }
+    tookS = c.now();
+    if (!failure && tookS <= seconds) {
+      c.log('take ended');
+      // Keep filming to the end of the slot. Whatever the page is still doing
+      // (a shape falling back, a transition finishing) belongs in the clip; the
+      // alternative is a recorder that stops with the take and a clip that holds
+      // its last frame, which verification cannot see.
+      await c.until(seconds + 0.1);
+    }
+  } finally {
+    try {
+      ({ frames: shot } = await rec.stop());
+    } catch (err) {
+      failure ??= err;
+    }
+    await context.close().catch(() => {});
+    await browser.close().catch(() => {});
   }
-  const tookS = c.now();
-  const { frames: shot, endAt } = await rec.stop();
-  await context.close();
-  await browser.close();
   if (failure) throw new Error(`${label}: take failed at ${tookS.toFixed(2)}s: ${failure.message}\n${JSON.stringify(c.events)}`);
   if (tookS > seconds) {
     throw new Error(`${label}: the take ran ${tookS.toFixed(2)}s, past its ${seconds}s slot. Tighten the script rather than trimming the clip.\n${JSON.stringify(c.events)}`);
   }
-  c.log('take ended');
   if (flag('keep-raw')) {
     await writeFile(path.join(raw, 'frames.json'), JSON.stringify({ t0, seconds, frames: shot.map((f) => ({ file: path.basename(f.file), at: f.at })), events: c.events }));
   }
@@ -152,7 +175,7 @@ async function recordClip(row, framingId) {
   });
 
   const times = shot.map((f) => f.at).filter((t) => t >= t0 && t <= t0 + seconds);
-  const delivered = pacing(times);
+  const delivered = pacing(times) ?? { frames: times.length, meanMs: 0, sdMs: 0, p50Ms: 0, p95Ms: 0, maxMs: 0, over50ms: 0, over100ms: 0 };
   const stale = staleTicks(shot.map((f) => f.at), t0, seconds);
 
   if (!flag('keep-frames')) await rm(frames, { recursive: true, force: true });
@@ -256,19 +279,74 @@ async function main() {
     await framingStills();
     return;
   }
+  if (flag('report')) {
+    await writeReport([], commit); // regenerate report.md from the clips already rendered
+    return;
+  }
   const manifest = await readManifest();
+  const known = new Set((manifest.screen_captures ?? []).filter((r) => TAKES[r.id]).map((r) => r.id));
+  for (const id of IDS ?? []) if (!known.has(id)) throw new Error(`--id ${id}: no scripted take with that id (have ${[...known].join(', ')})`);
   const rows = (manifest.screen_captures ?? []).filter((r) => TAKES[r.id] && (!IDS || IDS.includes(r.id)));
   if (!rows.length) throw new Error(`no scripted take matched ${IDS?.join(',') ?? '*'}`);
   const results = [];
   for (const row of rows) {
-    for (const fid of FRAMING_IDS) results.push(await recordClip(row, fid));
+    for (const fid of FRAMING_IDS) {
+      results.push(await recordClip(row, fid));
+      await writeReport([results[results.length - 1]], commit); // a later failure never loses finished clips
+    }
   }
-  await writeReport(results, commit);
+  if (results.some((r) => !r.verify.pass)) {
+    console.error('\nVERIFY FAILED on at least one clip; see out/report.md');
+    process.exitCode = 1;
+  }
 }
 
-async function writeReport(results, commit) {
+/**
+ * Results persist in out/screens-results.json, keyed by clip label, so a run of
+ * one take tops up the report instead of replacing it: report.md always covers
+ * every clip rendered so far.
+ */
+async function mergeResults(fresh) {
+  const file = path.join(OUT_DIR, 'screens-results.json');
+  let prior = {};
+  let text = null;
+  try {
+    text = await readFile(file, 'utf8');
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err; // first run: nothing yet
+  }
+  // A file that exists but does not parse is an error, not a fresh start:
+  // resetting it would silently drop every clip rendered so far.
+  if (text !== null) prior = JSON.parse(text);
+  for (const r of fresh) prior[r.label] = r;
+  await writeFile(file, JSON.stringify(prior, null, 2));
+  return Object.values(prior).sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
+}
+
+async function writeReport(fresh, commit) {
+  const results = await mergeResults(fresh);
+  const notes = await readFile(path.join(HERE, 'screen-notes.md'), 'utf8');
+  const mb = (n) => `${(n / 1024 / 1024).toFixed(2)} MB`;
   const md = [
     renderReport(results.map((r) => r.verify)).replace('# Social asset verification', '# Screen captures: verification'),
+    '## Files',
+    '',
+    'Drafts for review. Nothing here has been posted. Choose a framing per clip; the other set goes.',
+    '',
+    '| Post date | File | Length | Size | Contact sheet |',
+    '| --- | --- | --- | --- | --- |',
+    ...results.map((r) =>
+      `| ${r.date} | out/${r.date}/${path.basename(r.outFile)} | ${r.seconds}s | ${mb(r.bytes)} | out/${r.date}/${path.basename(r.sheetFile)} |`),
+    '',
+    '## Framing options',
+    '',
+    `Instagram covers the top ${SAFE.topPct}% (y 0 to ${SAFE_Y.top}) and the bottom ${SAFE.bottomPct}% (y ${SAFE_Y.bottom} to 1920) of a Reel. The switcher bar sits at the bottom of the viewport, so a full-bleed phone recording puts it near y 1800. Stills with the covered zones shaded: out/framing/framing-options.png.`,
+    '',
+    '| Option | Window | Scale | Window top | Bar bottom edge | Sides | What it costs |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    `| PHONE | ${FRAMINGS.PHONE.css.width}x${FRAMINGS.PHONE.css.height} drawn as a device on the charcoal field | ${FRAMINGS.PHONE.scale}x | y ${FRAMINGS.PHONE.screen.y} | y ${FRAMINGS.PHONE.barBottom} | ${FRAMINGS.PHONE.screen.x}px | The real phone layout, whole pages in frame, but UI text is small (about 1.4x). The bezel runs past y ${SAFE_Y.bottom}; it is decoration. |`,
+    `| SHORT | ${FRAMINGS.SHORT.css.width}x${FRAMINGS.SHORT.css.height} full width on the charcoal field | ${FRAMINGS.SHORT.scale}x | y ${FRAMINGS.SHORT.screen.y} | y ${FRAMINGS.SHORT.barBottom} | ${FRAMINGS.SHORT.screen.x}px | Large legible text, but each page is cropped to its top and the school list shows two rows at a time. |`,
+    '',
     '## Recording',
     '',
     `Commit ${commit ?? 'unknown'}, served from ${DEV_ORIGIN}. Real-time DevTools screencast, ${FPS}fps grid, GPU=${useGpu()}.`,
@@ -279,6 +357,7 @@ async function writeReport(results, commit) {
       `| ${r.label} | ${r.tookS}s of ${r.seconds}s | ${r.delivered.frames} | ${r.delivered.meanMs}ms | ${r.delivered.p95Ms}ms | ${r.delivered.maxMs}ms | ${r.stale.over50ms} of ${r.stale.ticks} | ${r.stale.over100ms} | ${r.stale.worstMs}ms |`),
     '',
     ...results.flatMap((r) => [`### ${r.label} timeline`, '', r.events.map((e) => `- ${e.t.toFixed(2)}s  ${e.label}`).join('\n'), '']),
+    notes,
   ].join('\n');
   await writeFile(path.join(OUT_DIR, 'report.md'), md, 'utf8');
   console.log(`\nreport: out/report.md`);

@@ -153,6 +153,41 @@ and the output is wrong.
    `GATHER_AFTER_MS` and they seek fixed points on the moss), at the cost of
    most of the scene's motion.
 
+## Q4 2026 screen captures (10-22-26)
+
+`social/calendar.html` is now the weekly Oct 22 to Dec 30 calendar (September's
+is in git history). `manifest.mjs` flattens its `screen_captures`. The three clips
+that can be made today are rendered as drafts for review, each in two framings:
+
+| post date | clip | length | files |
+| --- | --- | --- | --- |
+| 11-04 | VP1, the Portal tour | 22 s | `out/2026-11-04/VP1-{PHONE,SHORT}-VT.mp4` |
+| 11-18 | VP2, Swiss and Bauhaus | 18 s | `out/2026-11-18/VP2-{PHONE,SHORT}-VT.mp4` |
+| 12-23 | V001, the Bark Engine | 14 s | `out/2026-12-23/V001-{PHONE,SHORT}-VT.mp4` |
+
+How it works, the findings behind it and every call made on the founder's behalf
+are in `social/README.md` ("Screen captures") and `social/render/screen-notes.md`,
+which `render/screens.mjs` appends to `out/report.md`.
+
+Open, in order:
+
+- **The founder picks a framing per clip** (PHONE or SHORT), then the other set is
+  deleted and the survivor renamed to `<ID>-VT.mp4`.
+- **V001's regrow.** The site's how-to says typing a seed regrows the bark; the
+  code only swaps the dashes (`rebuild()` has no `growTree()`), so only New tree
+  regrows. Fix the copy or the behaviour in `src/` (not touched here). The clip
+  shows New tree's regrow, then types "birch".
+- **VP1 shows main's grandmillennial and cottagecore**, which are earlier than the
+  Stage 5 branch's. Re-render after Stage 5 merges.
+- **`astro dev` will not start on this machine** (a module-runner fetch of astro's
+  own logger deadlocks). Page recorders use `BDL_BASE` with a fresh build on :4400.
+  The WebGL loops still need the real dev server. Worth a proper diagnosis.
+- **Not built:** VP3 (gated on Stage 5 pair C), VMM and VBK (specimen repos), K-1230
+  (the Dec 30 card), V007's fallback re-render, and the older B2/C4/V005/V029 items
+  below.
+- **Footer.** Instagram and Facebook links in every school's footer and in
+  `sameAs`, on `feat/footer-social-links`, committed and not pushed.
+
 ## Open work
 
 ### VT is only supersampled 1.125x, not 2x — FIX FIRST

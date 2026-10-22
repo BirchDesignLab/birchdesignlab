@@ -21,10 +21,15 @@ if (!existsSync(OUT_DIR)) {
   process.exit(1);
 }
 
-const files = (await readdir(OUT_DIR))
-  .filter((f) => f.endsWith('.mp4'))
-  .sort()
-  .map((f) => path.join(OUT_DIR, f));
+// out/*.mp4 (the loops) and out/<post date>/*.mp4 (the screen captures).
+const entries = await readdir(OUT_DIR, { withFileTypes: true });
+const dated = entries.filter((e) => e.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(e.name));
+const files = [
+  ...entries.filter((e) => e.isFile() && e.name.endsWith('.mp4')).map((e) => path.join(OUT_DIR, e.name)),
+  ...(await Promise.all(dated.map(async (d) => (await readdir(path.join(OUT_DIR, d.name)))
+    .filter((f) => f.endsWith('.mp4'))
+    .map((f) => path.join(OUT_DIR, d.name, f))))).flat(),
+].sort();
 
 if (files.length === 0) {
   console.error(`no .mp4 files in ${path.relative(SOCIAL_DIR, OUT_DIR)}.`);
@@ -37,11 +42,14 @@ const byId = new Map(rows.map((r) => [r.id, r]));
 const specs = {};
 for (const file of files) {
   const base = path.basename(file);
-  const id = base.replace(/-(SQ|PT|VT|OG)\.mp4$/, '');
+  // VP1-PHONE-VT.mp4 is VP1, framed PHONE: the framing option is part of the name.
+  const id = base.replace(/-(SQ|PT|VT|OG)\.mp4$/, '').replace(/-(PHONE|SHORT)$/, '');
   const row = byId.get(id);
-  specs[base] = {
+  specs[path.basename(file)] = {
     expectSeconds: row?.duration_s ?? undefined,
-    loop: row?.kind !== 'slideshow-reel', // reels play once, they do not wrap
+    // Reels and screen captures play once, they do not wrap.
+    loop: row?.kind !== 'slideshow-reel' && row?.kind !== 'screen-capture',
+    fps: row?.kind === 'screen-capture' ? 30 : undefined,
   };
 }
 
