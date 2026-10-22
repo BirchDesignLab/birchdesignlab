@@ -5,6 +5,7 @@
     centred like a calling card. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
+import { SOCIAL_PROFILES } from '../../lib/seo/site';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
@@ -20,6 +21,9 @@ const year = new Date().getFullYear();
       <nav aria-label="Footer">
         {chrome.nav.map(({ to, label }, i) => (
           <>{i > 0 && <span class="sep" aria-hidden="true">&#10086;</span>}<a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a></>
+        ))}
+        {SOCIAL_PROFILES.map(({ label, url }) => (
+          <><span class="sep" aria-hidden="true">&#10086;</span><a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a></>
         ))}
       </nav>
       <p class="fine">&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>

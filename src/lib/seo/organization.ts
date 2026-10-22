@@ -23,14 +23,15 @@
  * Deliberately absent: `founder`, `address`, `telephone`. The founder stays
  * abstracted from the brand.
  *
- * `sameAs` is omitted rather than emitted empty. When the Birch Design Lab
- * accounts exist, add them as a string array here and the markup follows.
+ * `sameAs` is the business's social profiles (SOCIAL_PROFILES in site.ts), the
+ * same list the footer links. It is still omitted rather than emitted empty if
+ * that list is ever emptied.
  *
  * Name, description, and service area come from site.ts, the single source of
  * truth shared with the home-page meta.
  */
 
-import { SITE_NAME, SITE_DESCRIPTION, SERVICE_AREA } from './site';
+import { SITE_NAME, SITE_DESCRIPTION, SERVICE_AREA, SOCIAL_PROFILES } from './site';
 
 export interface AreaServedJsonLd {
   '@type': 'AdministrativeArea';
@@ -45,6 +46,7 @@ export interface OrganizationJsonLd {
   logo: string;
   description: string;
   areaServed: AreaServedJsonLd;
+  sameAs?: string[];
 }
 
 function areaServed(): AreaServedJsonLd {
@@ -61,6 +63,7 @@ export function buildOrganization(site: URL | string): OrganizationJsonLd {
     logo: new URL('/icon-512.png', base).href,
     description: SITE_DESCRIPTION,
     areaServed: areaServed(),
+    ...(SOCIAL_PROFILES.length ? { sameAs: SOCIAL_PROFILES.map((p) => p.url) } : {}),
   };
 }
 
