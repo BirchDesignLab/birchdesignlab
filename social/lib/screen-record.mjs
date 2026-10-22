@@ -200,32 +200,32 @@ export async function toFrames({ frames, t0, seconds, fps = 30, outDir, vf = nul
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
 
-  // The newest frame at or before t0 is what was on screen at the first tick.
-  let first = 0;
-  for (let i = 0; i < frames.length; i++) if (frames[i].at <= t0) first = i;
-  const used = frames.slice(first);
-  const end = t0 + seconds;
-
+  // One concat entry per output tick, each the newest frame at or before that
+  // tick's moment, each lasting exactly one tick. That is what the screen
+  // showed, and it needs no help from ffmpeg: an earlier version listed each
+  // frame once with its own duration and let `fps` resample, and lost the tail
+  // of the clip to the concat demuxer's handling of the final duration.
+  const total = Math.round(seconds * fps);
+  const ordered = [...frames].sort((a, b) => a.at - b.at);
   const lines = ['ffconcat version 1.0'];
-  for (let i = 0; i < used.length; i++) {
-    const from = Math.max(used[i].at, t0);
-    const to = Math.min(i + 1 < used.length ? used[i + 1].at : end, end);
-    if (to <= from && i + 1 < used.length) continue;
-    // A frame stamped after the clip ends contributes nothing.
-    if (from >= end) break;
-    lines.push(`file '${used[i].file.replace(/\\/g, '/')}'`);
-    lines.push(`duration ${Math.max(to - from, 0.001).toFixed(6)}`);
+  let at = 0;
+  let last = null;
+  for (let k = 0; k < total; k++) {
+    const t = t0 + k / fps;
+    while (at + 1 < ordered.length && ordered[at + 1].at <= t) at++;
+    last = ordered[at].file.replace(/\\/g, '/');
+    lines.push(`file '${last}'`);
+    lines.push(`duration ${(1 / fps).toFixed(6)}`);
   }
-  // concat ignores the last duration unless the file is repeated.
-  const lastFile = lines.filter((l) => l.startsWith('file ')).pop();
-  lines.push(lastFile);
+  // The demuxer drops the last duration unless the file is listed once more.
+  lines.push(`file '${last}'`);
 
   const list = path.join(outDir, '..', `${path.basename(outDir)}.concat.txt`);
   await writeFile(list, lines.join('\n'), 'utf8');
 
   // `fps` first, in both shapes: it is what turns the timestamped frames into
   // a constant grid, and everything after it works on the final tick sequence.
-  const grid = `fps=${fps}:start_time=0`;
+  const grid = `fps=${fps}`;
   const graph = filterComplex
     ? ['-filter_complex', filterComplex.replace('[0:v]', `[0:v]${grid},`), '-map', '[out]']
     : ['-vf', [grid, vf].filter(Boolean).join(',')];

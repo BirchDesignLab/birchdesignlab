@@ -28,11 +28,11 @@ export function controller(page, t0) {
     log(label, extra = {}) {
       events.push({ t: +now().toFixed(3), label, ...extra });
     },
-    /** Wait until the clip clock reads `t`. Returns how late we already were (negative = on time). */
+    /** Wait until the clip clock reads `t`. Returns how many seconds late we already were (0 when on time). */
     async until(t) {
       const wait = (t - now()) * 1000;
       if (wait > 0) await page.waitForTimeout(wait);
-      return -wait / 1000;
+      return Math.max(0, -wait / 1000);
     },
     async pause(seconds) {
       await page.waitForTimeout(seconds * 1000);
@@ -108,21 +108,29 @@ export function controller(page, t0) {
     /** Pick a school's row in the open list, scrolling the list with the wheel if the row is out of view. */
     async pickSchool(id) {
       const row = await c.shadow(`a[data-school="${id}"]`);
-      for (let tries = 0; tries < 8; tries++) {
-        const visible = await row.evaluate((el) => {
-          const list = el.closest('ul');
+      for (let tries = 0; tries < 12; tries++) {
+        // -1: the row is above the list's window, +1: below it, 0: in view.
+        const where = await row.evaluate((el) => {
           const r = el.getBoundingClientRect();
-          const l = list.getBoundingClientRect();
-          return r.top >= l.top && r.bottom <= l.bottom;
+          const l = el.closest('ul').getBoundingClientRect();
+          return r.top < l.top ? -1 : r.bottom > l.bottom ? 1 : 0;
         });
-        if (visible) break;
+        if (where === 0) break;
         const list = await c.shadow('ul');
         const at = await c.centre(list);
         await c.moveTo(at.x, at.y, { steps: 6 });
-        await page.mouse.wheel(0, 140);
-        await page.waitForTimeout(90);
+        await page.mouse.wheel(0, where * 220);
+        await page.waitForTimeout(260); // let the list stop moving: a row clicked mid-scroll is missed
       }
       await c.click(row);
+      // A click that landed on a row still moving leaves the dialog open: try once more.
+      const closed = await page
+        .waitForFunction((s) => new Function(`return !${s}.querySelector("dialog").open`)(), SWITCHER, { polling: 20, timeout: 1200 })
+        .then(() => true, () => false);
+      if (!closed) {
+        c.log(`${id} row missed; clicking again`);
+        await c.click(row);
+      }
       c.log(`picked ${id}`);
     },
 
@@ -176,7 +184,7 @@ export const TAKES = {
       c.log('start on quiet');
       for (let i = 0; i < order.length; i++) {
         const late = await c.until(FIRST + i * SLOT);
-        c.log(`slot ${i + 1} (${order[i]}) began ${late < 0 ? `${(-late).toFixed(2)}s late` : 'on time'}`);
+        c.log(`slot ${i + 1} (${order[i]}) ${late > 0.05 ? `began ${late.toFixed(2)}s late` : 'on time'}`);
         await c.openList();
         await c.pause(0.25);
         await c.pickSchool(order[i]);

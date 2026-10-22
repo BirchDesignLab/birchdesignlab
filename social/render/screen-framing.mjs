@@ -15,15 +15,19 @@
  *           y 1248. Faithful to what a visitor holds; costs size, so the UI is
  *           ~1.4x rather than ~2.8x.
  *
- *   RAISED  a full-bleed 9:16 viewport with CSS safe-area-inset-bottom set to
- *           35% of the height. The switcher positions itself at
- *           max(12px, env(safe-area-inset-bottom)), so the SITE lifts its own
- *           bar, the way it does above a phone's home indicator. Text stays at
- *           ~2.8x. The page continues underneath the bar, where Instagram's
- *           caption sits.
+ *   SHORT   a short window, 390x420, scaled 2.5x so the bar sits on the line
+ *           and the text stays large. The site is unchanged and the bar is where
+ *           the site puts it: the bottom of the window. Costs a cramped school
+ *           list (two rows show, the rest scroll) and a header that rides under
+ *           Instagram's account row.
  *
- * Nothing here touches src/. RAISED uses an emulation override that a phone
- * with a larger bottom inset would supply by itself.
+ * Tried and dropped: RAISED, a full-bleed 9:16 window with CSS
+ * safe-area-inset-bottom set to 35%, so the site would lift its own bar. The
+ * bar did lift, but the school list sits `inset + 72px` above the bottom edge,
+ * so it was pushed up and off the top of the window: its title and first rows
+ * (quiet among them) were unreachable. Found by scripts/probe-raised-dialog.mjs.
+ *
+ * Nothing here touches src/.
  */
 
 export const OUTPUT = { width: 1080, height: 1920 };
@@ -91,24 +95,34 @@ function phone() {
   };
 }
 
-/** RAISED: a 9:16 viewport, 390 wide, with the site's own bottom inset lifting the bar. */
-function raised() {
-  const css = { width: 390, height: 693 };
-  const k = OUTPUT.width / css.width; // 2.769
-  // Put the bar's bottom edge on the line: inset = distance from viewport bottom to the line.
-  const inset = Math.floor((OUTPUT.height - SAFE_Y.bottom) / k);
-  const filterComplex = `[0:v]scale=${OUTPUT.width}:${OUTPUT.height}:flags=lanczos,format=rgb24[out]`;
+/**
+ * SHORT: a 390x420 window drawn 2.5x on the field, its bottom edge placed so the
+ * bar's bottom edge lands on the line. Sides come out at 5.4% of the width,
+ * inside the 6% the calendar asks for.
+ */
+function short() {
+  const css = { width: 390, height: 420 };
+  const k = 2.5;
+  const sw = css.width * k; //  975
+  const sh = css.height * k; // 1050
+  const x = Math.round((OUTPUT.width - sw) / 2);
+  const y = Math.round(SAFE_Y.bottom - (css.height - BAR_GAP_CSS) * k);
+  const filterComplex =
+    `[0:v]scale=${sw}:${sh}:flags=lanczos,format=rgba[scr];` +
+    `color=c=${FIELD}:s=${OUTPUT.width}x${OUTPUT.height},format=rgba[bg];` +
+    `[bg][scr]overlay=${x}:${y}:shortest=1,` +
+    `drawbox=x=${x - 1}:y=${y - 1}:w=${sw + 2}:h=${sh + 2}:color=${BEZEL}:t=1,format=rgb24[out]`;
   return {
-    id: 'RAISED',
-    title: 'Full-bleed, bar raised by a bottom inset',
+    id: 'SHORT',
+    title: 'Short window on the charcoal field',
     css,
     dpr: DPR,
-    scale: +k.toFixed(3),
-    barBottom: Math.round(OUTPUT.height - Math.max(BAR_GAP_CSS, inset) * k),
-    screen: { x: 0, y: 0, width: OUTPUT.width, height: OUTPUT.height },
+    scale: k,
+    barBottom: Math.round(y + (css.height - BAR_GAP_CSS) * k),
+    screen: { x, y, width: sw, height: sh },
     filterComplex,
-    safeAreaInsetBottomPx: inset,
+    safeAreaInsetBottomPx: 0,
   };
 }
 
-export const FRAMINGS = { PHONE: phone(), RAISED: raised() };
+export const FRAMINGS = { PHONE: phone(), SHORT: short() };

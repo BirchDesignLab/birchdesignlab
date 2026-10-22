@@ -55,7 +55,7 @@ const arg = (n, d = null) => {
   return i >= 0 && argv[i + 1] ? argv[i + 1] : d;
 };
 const IDS = arg('id') ? arg('id').split(',') : null;
-const FRAMING_IDS = (arg('framing') ?? 'PHONE,RAISED').toUpperCase().split(',');
+const FRAMING_IDS = (arg('framing') ?? 'PHONE,SHORT').toUpperCase().split(',');
 for (const f of FRAMING_IDS) if (!FRAMINGS[f]) throw new Error(`unknown framing ${f}; use ${Object.keys(FRAMINGS).join(', ')}`);
 
 /**
@@ -133,6 +133,9 @@ async function recordClip(row, framingId) {
     throw new Error(`${label}: the take ran ${tookS.toFixed(2)}s, past its ${seconds}s slot. Tighten the script rather than trimming the clip.\n${JSON.stringify(c.events)}`);
   }
   c.log('take ended');
+  if (flag('keep-raw')) {
+    await writeFile(path.join(raw, 'frames.json'), JSON.stringify({ t0, seconds, frames: shot.map((f) => ({ file: path.basename(f.file), at: f.at })), events: c.events }));
+  }
 
   const frameCount = await toFrames({
     frames: shot, t0, seconds, fps: FPS, outDir: frames, filterComplex: framing.filterComplex,
