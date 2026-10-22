@@ -62,6 +62,24 @@ export function flatten(m) {
     });
   }
 
+  // Real-time recordings of interactive pages (render/screens.mjs). Unlike a
+  // loop there is no seam and no fixed scene clock, so duration_s is a target
+  // the take is scripted to, and `script` carries what the visitor does.
+  for (const c of m.screen_captures ?? []) {
+    rows.push({
+      id: c.id,
+      kind: 'screen-capture',
+      formats: c.framings ?? [],
+      source: c.source ?? null,
+      duration_s: c.duration_s ?? null,
+      slides: null,
+      note: c.script ?? null,
+      use: c.use ?? [],
+      scheme: c.scheme ?? null,
+      gate: c.gate ?? null,
+    });
+  }
+
   for (const s of m.stills ?? []) {
     rows.push({
       id: s.id,
@@ -78,12 +96,12 @@ export function flatten(m) {
   for (const c of m.cards ?? []) {
     rows.push({
       id: c.id,
-      kind: `card:${c.kind}`,
-      formats: c.formats ?? [],
+      kind: `card:${c.kind ?? c.status ?? 'still'}`,
+      formats: c.formats ?? (c.format ? [c.format] : []),
       source: null,
       duration_s: null,
       slides: null,
-      note: c.title ?? c.quote ?? (c.lines ? c.lines[0] : null),
+      note: c.title ?? c.quote ?? (c.lines ? c.lines[0] : null) ?? c.files ?? c.style ?? null,
       use: c.use ?? [],
     });
   }
@@ -145,7 +163,7 @@ function truncate(s, n) {
 
 /** Every video file this run is expected to produce, as <id>-<FMT>. */
 export function videoTargets(rows) {
-  const videoKinds = new Set(['webgl-loop', 'scroll-capture', 'kinetic-type', 'slideshow-reel']);
+  const videoKinds = new Set(['webgl-loop', 'screen-capture', 'scroll-capture', 'kinetic-type', 'slideshow-reel']);
   return rows
     .filter((r) => videoKinds.has(r.kind))
     .flatMap((r) => r.formats.map((f) => `${r.id}-${f}`));

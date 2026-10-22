@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Card style reference for social/render/cards.mjs. 1080x1350 (PT). Rendered the Oct 22 PHP carousel.
+     Tokens are the brand brief's: field #1c1a17, paper #f4f0e6, moss #a3bd8f, stone #a89f8f. Marcellus display, Spectral body, Cormorant SC labels.
+     The canvas.bark layer is a seeded lenticel scatter clustered in bands; seed = 2026 + slideIndex*97. -->
+<style>
+@font-face{font-family:Marcellus;src:url(../../node_modules/@fontsource/marcellus/files/marcellus-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Spectral;src:url(../../node_modules/@fontsource/spectral/files/spectral-latin-300-normal.woff2) format("woff2");font-weight:300}
+@font-face{font-family:Spectral;src:url(../../node_modules/@fontsource/spectral/files/spectral-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Spectral;src:url(../../node_modules/@fontsource/spectral/files/spectral-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic}
+@font-face{font-family:Spectral;src:url(../../node_modules/@fontsource/spectral/files/spectral-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:"Cormorant SC";src:url(../../node_modules/@fontsource/cormorant-sc/files/cormorant-sc-latin-500-normal.woff2) format("woff2");font-weight:500}
+:root{--field:#1c1a17;--paper:#f4f0e6;--moss:#a3bd8f;--stone:#a89f8f;--rule:#3a352e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000}
+.slide{width:1080px;height:1350px;background:var(--field);color:var(--paper);position:relative;overflow:hidden;
+  padding:96px 96px 88px;display:flex;flex-direction:column;font-family:Spectral,Georgia,serif}
+.bark{position:absolute;inset:0;pointer-events:none}
+.top,.foot{display:flex;justify-content:space-between;align-items:baseline;font-family:"Cormorant SC",serif;
+  font-weight:500;font-size:30px;letter-spacing:.14em;color:var(--stone);position:relative}
+.foot{margin-top:auto}
+.main{position:relative;display:flex;flex-direction:column;gap:44px;margin-top:120px}
+h1{font-family:Marcellus,serif;font-weight:400;font-size:176px;line-height:.98;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:Marcellus,serif;font-weight:400;font-size:96px;line-height:1.02;text-wrap:balance}
+.lede{font-size:46px;line-height:1.36;font-weight:300;max-width:860px}
+.rule{width:132px;height:6px;border-radius:3px;background:var(--moss)}
+.cve{font-family:"Cormorant SC",serif;font-weight:500;font-size:32px;letter-spacing:.12em;color:var(--moss)}
+p.b{font-size:42px;line-height:1.42;font-weight:400;max-width:880px}
+p.b em{font-style:italic;color:var(--moss)}
+.rows{display:flex;flex-direction:column;gap:0}
+.row{display:grid;grid-template-columns:1fr;gap:14px;padding:44px 0;border-top:2px solid var(--rule)}
+.row:last-child{border-bottom:2px solid var(--rule)}
+.row .k{font-family:Marcellus,serif;font-size:48px;line-height:1.1}
+.row .v{font-size:38px;line-height:1.42;color:#ddd6c8}
+.row.us .k{color:var(--moss)}
+ul.list{list-style:none;display:flex;flex-direction:column;gap:22px}
+ul.list li{font-size:42px;line-height:1.3;display:flex;gap:26px;align-items:baseline}
+ul.list li::before{content:"";flex:none;width:44px;height:7px;border-radius:4px;background:var(--moss);transform:translateY(-12px)}
+.note{font-size:36px;line-height:1.4;color:var(--stone);font-style:italic}
+.s3 .main{margin-top:72px;gap:30px}
+.s4 .main{margin-top:100px;gap:48px}
+.s4 p.b{font-size:44px}
+.s4 ul.list li{font-size:44px}
+.s2 .main{margin-top:100px}
+</style></head>
+<body>
+
+<section class="slide s1" id="s1">
+  <canvas class="bark" width="1080" height="1350"></canvas>
+  <div class="top"><span>Birch Design Lab</span><span>1 / 4</span></div>
+  <div class="main" style="margin-top:300px">
+    <div class="cve">PHP2Shell · October 2026</div>
+    <h1>No PHP here.</h1>
+    <div class="rule"></div>
+    <p class="lede">This week&rsquo;s PHP security flaw, what it means for your website, and why none of our work is affected.</p>
+  </div>
+  <div class="foot"><span>birchdesignlab.com</span><span>Swipe</span></div>
+</section>
+
+<section class="slide s2" id="s2">
+  <canvas class="bark" width="1080" height="1350"></canvas>
+  <div class="top"><span>What happened</span><span>2 / 4</span></div>
+  <div class="main">
+    <h2>Two critical flaws in PHP itself.</h2>
+    <p class="b">On October 21, PHP shipped emergency fixes for two flaws researchers named PHP2Shell.</p>
+    <p class="b">On an unpatched server, under the right conditions, an attacker can run their own code without logging in.</p>
+    <p class="b">PHP runs roughly <em>7 in 10</em> websites where the language can be measured. Every WordPress site is one of them.</p>
+  </div>
+  <div class="foot"><span>CVE-2026-109618 · 109619</span><span>Birch Design Lab</span></div>
+</section>
+
+<section class="slide s3" id="s3">
+  <canvas class="bark" width="1080" height="1350"></canvas>
+  <div class="top"><span>Is your site affected?</span><span>3 / 4</span></div>
+  <div class="main">
+    <div class="rows">
+      <div class="row"><div class="k">WordPress, or anything on PHP</div>
+        <div class="v">Ask your host whether PHP is on the October 21 release: 8.2.35, 8.3.36, 8.4.27, 8.5.12 or newer. Updating WordPress or its plugins does not fix this one. On PHP 8.1 or older there is no official fix.</div></div>
+      <div class="row"><div class="k">Wix, Squarespace, Shopify</div>
+        <div class="v">Reportedly in the clear. Those platforms don&rsquo;t run PHP.</div></div>
+      <div class="row us"><div class="k">Built by Birch Design Lab</div>
+        <div class="v">Not affected. There&rsquo;s no PHP anywhere in what we build.</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Patch status as of Oct 22, 2026</span><span>Birch Design Lab</span></div>
+</section>
+
+<section class="slide s4" id="s4">
+  <canvas class="bark" width="1080" height="1350"></canvas>
+  <div class="top"><span>Why we don&rsquo;t use it</span><span>4 / 4</span></div>
+  <div class="main">
+    <p class="b">PHP has been a running joke among developers for twenty years. A well-known 2012 essay called it <em>&ldquo;a fractal of bad design.&rdquo;</em> Modern PHP is better than its reputation. We&rsquo;d still rather have fewer things to patch.</p>
+    <h2 style="font-size:64px">What a custom build gets you</h2>
+    <ul class="list">
+      <li>Code you own, and can move.</li>
+      <li>No plugins to keep patched.</li>
+      <li>Built around how your business runs.</li>
+    </ul>
+    <p class="note">Not sure what your site runs on? Send us a message and we&rsquo;ll look. No pitch.</p>
+  </div>
+  <div class="foot"><span>birchdesignlab.com</span><span>Birch Design Lab</span></div>
+</section>
+
+<script>
+// Seeded lenticel dashes, clustered in bands, the way the site's bark is drawn.
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+document.querySelectorAll('canvas.bark').forEach(function(c,i){
+  var r=mulberry32(2026+i*97), g=c.getContext('2d');
+  var bands=[[22,86],[146,196],[1176,1206],[1272,1328]];
+  if(i===0) bands.push([196,280]);
+  bands.forEach(function(b){
+    for(var n=0;n<46;n++){
+      var y=b[0]+r()*(b[1]-b[0]), x=-40+r()*1160, w=18+Math.pow(r(),2)*120, h=3+r()*4;
+      g.globalAlpha=0.05+r()*0.09; g.fillStyle='#f4f0e6';
+      g.beginPath(); g.roundRect(x,y,w,h,h/2); g.fill();
+    }
+  });
+  g.globalAlpha=0.9; g.fillStyle='#a3bd8f';
+  var my=50+r()*20; g.beginPath(); g.roundRect(700+r()*200,my,74,6,3); g.fill();
+});
+</script>
+</body></html>
