@@ -84,15 +84,12 @@ pane can't composite WebGL.
 
 ## Safari cert report (#49, docs only)
 
-A friend hit Safari's "connection is not private / certificate not valid" on
+A visitor hit Safari's "connection is not private / certificate not valid" on
 birchdesignlab.com. **The live cert is valid** from outside (GTS, good dates,
 correct SANs, chain verifies, `ssl_verify_result=0`). The site is not the
-vector. Cause is device- or network-side. The friend works for a 10-15 person
-shop that had a data theft months ago, so the note records the full triage:
-the decisive tell is the warning cert's issuer (filter/firewall vendor =
-benign; unknown/self-signed = escalate), plus filter-vs-attacker separators
-(major sites also warning, DNS resolving to a private IP, cellular clean) and
-post-breach device-hygiene checks. Not the founder's network to probe. Full
+vector. Cause is device- or network-side; the decisive tell is the warning
+cert's issuer (filter/firewall vendor = benign; unknown/self-signed =
+escalate). Not our network to probe. Full
 detail in `docs/lab-backlog.md` under "Prod ops notes".
 
 ## Traps worth carrying forward (this model)

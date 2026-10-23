@@ -69,9 +69,8 @@ The whole path works in production: form -> `POST /api/contact` -> Worker
   said "I", saw it, and reversed ("we definitely sounds better, basically
   anything but first person"). Kept "We meet, you talk, we take notes"-style
   inclusive "we". This also suits the identity-obfuscation goal.
-- **Identity obfuscation still stands.** No personal name on the public site; the
-  enterprise-credibility line is deliberately generic (no employer/client names)
-  because of an unresolved day-job noncompete.
+- **No individual named.** No personal name on the public site; the
+  enterprise-credibility line is deliberately generic (no employer/client names).
 - **Geography / positioning.** "New Orleans to Mobile" on home; Gulf Coast + the
   decade already on About; the enterprise-credibility line on Services ("A decade
   of skills honed at the enterprise level, now served to the businesses that keep
@@ -109,9 +108,8 @@ fallback** (FOUT/CLS), **bdl-007 keyboard** control, optional **WebSite schema**
 ## Housekeeping / do-not-repeat
 
 - **Do NOT touch the founder's git identity or config.** Their setup is
-  intentional and predates Claude Code: personal account (**THobbs23 /
-  theskyguy23@gmail.com**) authors commits, the **BirchDesignLab** business
-  account approves the merges. One #45 commit was mis-authored as the business
+  intentional and predates Claude Code: one account authors commits, the
+  **BirchDesignLab** business account approves the merges. One #45 commit was mis-authored as the business
   before this was clarified; it is left as-is (rewriting `main` history to fix one
   author is not worth it and is itself more identity-meddling).
 - Workflow unchanged: branch + PR for everything, never straight to `main`

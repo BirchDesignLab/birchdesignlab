@@ -46,3 +46,6 @@ share/public/*
 # check-pages.mjs / build-pdf.mjs. Never source.
 docs/**/*.pdf
 docs/**/generated/
+
+# Rate card: private, never pushed (this repo is public). Founder call 10-22-26.
+docs/pricing/

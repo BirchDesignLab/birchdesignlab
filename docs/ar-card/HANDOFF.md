@@ -53,7 +53,7 @@ app" without any rewrite: `/hello` and `/greetings` are two independent Astro
 pages that both render the same `CardLanding.astro` component, and that
 component's inline script does `import(CONFIG.AR_MODULE_URL)` to fetch the
 *same* `/ar/card-ar.js` module regardless of which page loaded it, then calls
-`mod.mount(rootEl, channel)`. Cloudflare Pages/Workers serves that path
+`mod.mount(rootEl, channel)`. Cloudflare Workers Static Assets serves that path
 straight out of `public/ar/` like any other static asset — nothing to
 configure in the host dashboard. Reintroducing a rewrite would be a
 regression against a reasoned, recent, founder-directed decision, so this
