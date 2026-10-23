@@ -293,11 +293,11 @@
  {
   "id": "F015",
   "title": "The \"engineer learning design\" writeup framing breaks both the voice lock and the identity constraint",
-  "claim": "The plan's stated frame — touching on the fact the founder is an engineer learning proper high-standards design — is first-person singular and discloses the founder's occupation, and the repo has an explicit decision against both while the day-job noncompete is unresolved.",
-  "evidence": "plan-prompt.md:17. Against it: docs/lab-backlog.md:832-838 \"identity must stay obfuscated while a day-job noncompete is unresolved (founder is a 10-year engineer)… pick one register and hold it, leaning to an unnamed studio 'we'\" and the note about reviewing About's biographical specifics as identity breadcrumbs; the live breadcrumbs remain at src/pages/about.astro:32,38. docs/lab-backlog.md:720-726 logs \"Unify the voice to one register (HIGH)\" as open. Existing Lab copy holds the studio register: src/content/lab/bdl-001.md, src/pages/lab/index.astro:20.",
+  "claim": "The plan frames the writeup around the author personally (first-person singular, autobiographical). That breaks the studio-voice lock, and the repo has an explicit rule that no individual is named or described.",
+  "evidence": "plan-prompt.md:17, against the studio-voice decision in docs/lab-backlog.md (Voice, audit #1).",
   "severity": "blocker",
   "kind": "flaw",
-  "recommendation": "Drop the autobiographical frame from the spec. The specimen argues the design schools, not the author's learning curve: \"a studio teaching itself twelve design languages in public\" carries the same honesty in the unnamed-studio \"we\" and names no occupation. If the founder wants the personal frame anyway, that is a deliberate reversal of the 08-18-26 constraint, must be written down as one, and needs a legal read of the noncompete first — not slipped in as writeup tone. Copy stays founder territory either way.",
+  "recommendation": "Drop the autobiographical frame from the spec. The specimen argues the design schools, not the author: \"a studio teaching itself twelve design languages in public\" carries the same honesty in the unnamed-studio \"we\". A personal frame would be a deliberate reversal of the 08-18-26 voice decision and must be written down as one, not slipped in as writeup tone. Copy stays founder territory either way.",
   "sources": [
    "brand-founder",
    "main-thread"
@@ -370,7 +370,7 @@
    "design-schools"
   ],
   "files": [
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md",
+   "<scratchpad>/plan-prompt.md",
    "C:/git/demo-magnolia-mane-salon/docs/superpowers/specs/09-13-26-theme-packs-approach-b-note.md"
   ]
  },
@@ -386,7 +386,7 @@
    "design-schools"
   ],
   "files": [
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+   "<scratchpad>/plan-prompt.md"
   ]
  },
  {
@@ -823,7 +823,7 @@
   ],
   "files": [
    "C:/git/bdlBase/scripts/check-contrast.mjs",
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+   "<scratchpad>/plan-prompt.md"
   ]
  },
  {
@@ -838,7 +838,7 @@
    "design-schools"
   ],
   "files": [
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+   "<scratchpad>/plan-prompt.md"
   ]
  },
  {
@@ -853,7 +853,7 @@
    "design-schools"
   ],
   "files": [
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md",
+   "<scratchpad>/plan-prompt.md",
    "C:/git/demo-magnolia-mane-salon/docs/superpowers/specs/09-13-26-theme-packs-approach-b-note.md"
   ]
  },
@@ -869,7 +869,7 @@
    "design-schools"
   ],
   "files": [
-   "C:/Users/thesk/AppData/Local/Temp/claude/C--git-birchdesignlab/45678e74-9393-4422-b092-b2f6a0fedda9/scratchpad/plan-prompt.md"
+   "<scratchpad>/plan-prompt.md"
   ]
  },
  {

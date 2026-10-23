@@ -89,8 +89,9 @@ merit. Re-open it only if one of the triggers at the end of this section fires.
 
 **Why it does not pay for itself here.** CSP stops injected script from
 executing, which needs an injection path to exist. This site has none: static
-pages, no user-submitted content rendered anywhere, no third-party scripts, no
-CDN, no embeds, private repo. The contact form does not change that either;
+pages, no user-submitted content rendered anywhere, no third-party scripts in
+site code (analytics are injected at the edge by Zaraz and Cloudflare's own
+beacon, see `docs/analytics.md`), no CDN, no embeds. The contact form does not change that either;
 submissions are emailed, never rendered back onto a page.
 
 The one genuine threat it touches is a compromised npm dependency shipping
@@ -199,7 +200,11 @@ All verified live unless noted.
 5. **Google Search Console.** DONE. Domain property, verified automatically
    through the Cloudflare integration (do not delete that TXT record).
    `sitemap-index.xml` submitted.
-6. **Site analytics — shipped as GA4, not Cloudflare Web Analytics.** The
+6. **Site analytics: SUPERSEDED 09-01-26, see `docs/analytics.md`.** Analytics
+   now run through Cloudflare Zaraz (GA4 under Analytics consent, the Meta
+   Pixel under Marketing consent since 10-22-26), plus cookieless Cloudflare
+   Web Analytics; `Analytics.astro` is dormant. The rest of this item is the
+   08-19 record. **Shipped as GA4, not Cloudflare Web Analytics.** The
    original plan (CF Web Analytics, below) was superseded. **GA4**
    (`G-44Y71C24L7`) shipped 2026-08-19 (#52) as `src/components/Analytics.astro`,
    prod-gated and lazily loaded on the first idle after `load` so it never
@@ -215,6 +220,9 @@ beside your name in inboxes and needs a Verified Mark Certificate (roughly a
 thousand dollars a year) plus a registered trademark. Ignore it.
 
 ### Analytics pathway (decided 2026-08-03, revised 2026-08-19)
+
+**Superseded 09-01-26.** Current analytics setup and its consent rules live in
+`docs/analytics.md`. This section is kept as the record of the earlier reasoning.
 
 **Revision 2026-08-19:** the site shipped **GA4** (`G-44Y71C24L7`) as the single
 always-on tag instead of Cloudflare Web Analytics — see dashboard step 6 and

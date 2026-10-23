@@ -1,6 +1,6 @@
 # Lab Backlog
 
-*Experiment concepts agreed 2026-07-16, evening session. Parent documents: founding record, website spec, handoff. BDL-003 Novgorod Letters is specced and in build; everything here comes after. Each concept gets its own spec at its own build time, per house practice.*
+*Experiment concepts agreed 2026-07-16, evening session. Parent documents: founding record, website spec, handoff. BDL-003 Novgorod Letters was specced first (now forthcoming, gated behind a visual rework); everything here came after. Each concept gets its own spec at its own build time, per house practice.*
 
 *This is the only backlog file. The AR card had its own `docs/ar-card/BACKLOG.md` until 08-26-26; it is merged in below under "AR card" and the file is gone. Its `HANDOFF.md` stays where it is, as the project's context document.*
 
@@ -537,7 +537,7 @@ else.
 
 ### 08-19-26 — Safari "connection is not private" report (birchdesignlab.com)
 
-A friend of the founder got Safari's "This Connection Is Not Private /
+A visitor got Safari's "This Connection Is Not Private /
 certificate is not valid" on birchdesignlab.com. Investigated same day:
 the live cert is fully valid from an outside vantage. Both apex and www
 serve a Google Trust Services cert (CF's default issuer), notBefore
@@ -549,44 +549,17 @@ So the site is not misconfigured. The warning is device- or network-side,
 or a transient CF edge blip. Ranked causes: (1) the friend's iPhone clock
 set before the cert's 07-29 notBefore, which makes Safari read any valid
 cert as not-yet-valid; (2) a TLS-intercepting network (captive portal,
-content filter, some VPN/DNS) — retry on cellular; (3) transient edge
-provisioning, gone on retry. Ask for the exact URL, WiFi vs cellular, and
-whether the device date is correct before touching Cloudflare SSL/TLS
-settings. Not reproduced from here.
+content filter, corporate SSL inspection, some VPN/DNS) — retry on
+cellular; (3) transient edge provisioning, gone on retry. Ask for the
+exact URL, WiFi vs cellular, and whether the device date is correct before
+touching Cloudflare SSL/TLS settings. Not reproduced from here.
 
-Follow-up: founder believes it was the friend's WORK network. That makes
-corporate TLS inspection the leading explanation: an SSL-inspecting
-middlebox (Zscaler/Netskope/Palo Alto/Fortinet/Cisco et al.) decrypts and
-re-signs HTTPS with the company root. A managed laptop trusts that root; a
-personal iPhone on guest/BYOD WiFi does not, so Safari reports the re-signed
-cert as impersonation. A young domain (launched this month) is also commonly
-intercepted or blocked by enterprise filters as newly-registered. This reads
-as a legitimate proxy, not a lingering breach: covert MITM avoids triggering
-warnings, and interception is not site-specific. To confirm, have the friend
-read the warning cert's Issuer (corporate/vendor CA = inspection; unrelated
-self-signed = report to their IT). Not the founder's network to probe.
-
-Escalation 08-19-26: the friend's employer is a 10-15 person shop, not a
-corporation, and had sensitive data stolen a few months ago. That lowers
-the odds of legitimate enterprise TLS inspection and raises the weight of
-"something still wrong on the network." Still calibrated, not alarmist:
-small shops do run prosumer firewalls/DNS filters (Sophos, Fortinet,
-SonicWall, Meraki, NextDNS, Cloudflare Gateway) that also re-sign HTTPS.
-The site is confirmed not the vector (valid cert, Cloudflare DNS). Decisive
-tell is the warning cert's issuer: known filter/firewall vendor = benign;
-self-signed / unknown CA / mismatched org / very-recently-issued = escalate.
-Separators between filter and attacker, all read-only on the friend's own
-device: (1) scope — if major sites (bank, Apple) also warn, treat the
-network as hostile; (2) DNS — if the domain resolves to a private IP
-(10.x/192.168.x) on the work WiFi vs Cloudflare ranges on cellular, that's
-LAN DNS hijacking; (3) cellular clean confirms it's that network. Post-breach
-device hygiene: check Settings for unknown configuration profiles and
-untrusted root certs (a rogue trusted root is how MITM goes silent; getting
-a warning means the device did NOT silently trust the fake cert). If issuer
-is unknown/self-signed, or major sites warn, or DNS points to a private IP,
-the network should be treated as compromised and handled by a real security
-professional. NOT the founder's to probe: testing someone else's employer
-network is unauthorized regardless of the breach.
+Outcome: most likely the visitor's network re-signing HTTPS (a filter or
+inspecting firewall that their phone does not trust). The site was
+confirmed not the cause. The decisive tell for any repeat report is the
+warning cert's Issuer: a known filter or firewall vendor is benign; a
+self-signed or unknown CA is the network owner's problem to escalate. A
+visitor's network is never ours to probe.
 
 ## Concepts, ranked by projected effort (lowest first)
 
@@ -994,16 +967,11 @@ art (deferred), bdl-006 h1→h3 skip (noindexed instrument), and the
 
 ### Founder responses to the audit (08-18-26, same session)
 
-- **Voice / identity (audit #1).** Founder constraint: identity must stay
-  obfuscated while a day-job noncompete is unresolved (founder is a 10-year
-  engineer). The real protection is that no personal name appears anywhere, not
-  the choice of "we" vs "I"; the live defect is the *inconsistency*. Revised
-  recommendation: pick one register and hold it, leaning to an **unnamed studio
-  "we"** for the most distance from the individual, keeping the accountability
-  promise without "I", and reviewing About's biographical specifics ("one man",
-  "over a decade on the Gulf Coast") as possible identity breadcrumbs. Not legal
-  advice: an employment lawyer should read the noncompete; enforceability varies
-  by state and obfuscation is not a legal shield.
+- **Voice (audit #1).** Founder constraint: no individual is named anywhere on
+  the site. The live defect was the *inconsistency* between "we" and "I".
+  Decision: one register, an **unnamed studio "we"**, keeping the
+  accountability promise without "I". About's biographical specifics stay
+  under review.
 - **Testimonial (audit #2).** Decision: place the client quote *inside* the
   BDL-005 specimen as a pull-quote, not a separate testimonials page. Blocked on
   Cheer & Chatter fully wrapping and the founder asking permission.
