@@ -1,10 +1,8 @@
 # Birch Design Lab
 
-The source of [birchdesignlab.com](https://birchdesignlab.com): the business and portfolio site of Birch Design Lab, a one-person web design studio founded by Tyler Hobbs in July 2026. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-011) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
+The source of [birchdesignlab.com](https://birchdesignlab.com): the business and portfolio site of Birch Design Lab, a one-person web design studio founded in July 2026. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-011) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
 
 Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchDesignLab/birchdesignlab). The site has been built since July 2026; this README maps the project for a reader joining it.
-
-**Credo, from the founding record:** *First green after the fire, and the bark you write on.* Birch is the pioneer species that returns first after a burn, and birch bark was the paper of medieval Novgorod. Both ideas run through the brand, the copy and the experiments.
 
 ---
 
@@ -33,9 +31,7 @@ Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchD
 | Framework | Astro 7 (static output), Svelte 5 islands, three.js for the 3D pieces |
 | Host | Cloudflare Workers (Static Assets plus one Worker), deployed by Workers Builds on merge to main |
 | Tests | Vitest (unit, about 50 files under tests/) plus a second Vitest config that inspects the built dist/ |
-| Commits | 616 on main, 2026-07-15 to 2026-10-03, 95 pull requests |
-| Authors | Tyler Hobbs (THobbs23, 527 commits) and the studio account (89 commits) |
-| Tracked files | 918 |
+| History | Built since 2026-07-15; about 100 pull requests by late October 2026 |
 | Dev tooling | Claude Code with saved multi-agent workflows (`bdl-task`, `bdl-wave`) and a strict model-tiering policy |
 
 Public pages: Home, About, Services, Contact (a real form), Privacy, the Lab index and one page per specimen, the Styleguide, three QR-card landings (`/hello`, `/showcase`, `/greetings`) and the Portal at `/t/<school>/` with five business pages per school.
@@ -80,7 +76,7 @@ Notes that matter when touching this layer:
 - The recipient must be a verified Email Routing destination. Sending to a routing address like `hello@` returns 502 on the free plan.
 - `public/_headers` sets the security headers on static responses. The Worker adds its own two (Referrer-Policy, X-Frame-Options) because `_headers` does not apply to Worker responses.
 - No Permissions-Policy header, on purpose: the Lab intends to use camera, location and sensors. See [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md).
-- Analytics consent (Cloudflare Zaraz) is documented in [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md).
+- Analytics runs at the edge, not in site code: Cloudflare Zaraz loads Google Analytics 4 (Analytics consent) and the Meta Pixel (Marketing consent), opt-in everywhere, and Cloudflare Web Analytics counts page views without cookies. The config of record is [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md).
 
 The Worker, the contact route, secrets, `_headers`, analytics consent and the verify gate are the repo's declared **sensitive code**. Changes there get an Opus-grade review under the house rules.
 
@@ -194,8 +190,8 @@ BDL-010 is the biggest piece in the repo and where most of the last six weeks we
 | bauhaus | `/t/bauhaus/` | Stage 4 revision merged (PR #95) |
 | glassmorphism | `/t/glassmorphism/` | Stage 3 revision merged (PR #93) |
 | vaporwave | `/t/vaporwave/` | Stage 3 revision merged (PR #93) |
-| grandmillennial | `/t/grandmillennial/` | Tranche 1 build; Stage 5 next |
-| cottagecore | `/t/cottagecore/` | Tranche 1 build; Stage 5 next |
+| grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision in progress on its branch |
+| cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision in progress on its branch |
 
 ```mermaid
 flowchart TB
@@ -329,13 +325,14 @@ timeline
     2026-09-27 : Stage 3 glass and vaporwave merged
     2026-10-02 : Saved workflows bdl-task and bdl-wave
     2026-10-03 : Stage 4 swiss and bauhaus merged (PR 95)
+    2026-10-22 : Footer social links, Meta Pixel behind consent
 ```
 
 ---
 
 ## Where it stands and how to help
 
-Head of main is the Stage 4 merge on 2026-10-03. Upstream has no open issues or pull requests, so the backlog file and the stage reports are the queue. The owner sets priorities; these are the open threads as the repo records them.
+As of late October 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03) and Stage 5 is in progress on `feat/theme-schools-tier3-stage5`. The backlog file and the stage reports are the queue. The owner sets priorities; these are the open threads as the repo records them.
 
 **Owed to the founder, small and specific**
 
@@ -360,7 +357,7 @@ Head of main is the Stage 4 merge on 2026-10-03. Upstream has no open issues or 
 
 **How contributions flow**
 
-1. Branch on this fork, run `npm run verify`, open a pull request against upstream `main`.
+1. Work on a fork or a branch, run `npm run verify`, open a pull request against `main`.
 2. Keep sensitive code (Worker, contact route, `_headers`, analytics, the verify gate) out of a first PR unless invited.
 3. For Portal work, read the school's dossier and the brief format in the stage directories before changing a school. The founder judges on film sheets, not on code.
 4. Follow CLAUDE.md on scripts (commit them, no temp directories) and on no em dashes in visitor copy.
@@ -377,7 +374,7 @@ The fork is a clean copy of upstream's tracked files. These exist only on the fo
 | `public/og/` | Generated by `npm run og` during prebuild | Regenerates locally |
 | `scripts/themes/.out/`, `social/out/`, `docs/**/generated/`, `docs/**/*.pdf` | Capture, film, sheet and PDF outputs | The stage reports point at sheets you cannot see without re-running the harness on a GPU machine |
 | `docs/refs/`, four named founder working docs, `.superpowers/` | Founder drafting material and the superpowers plugin state | Some handoffs reference them; the tracked specs are the record |
-| `graphify-out/`, the knowledge graph | Lives at a vault path outside the repo | Not needed to build |
+| `graphify-out/`, an old knowledge graph | Retired tooling, local only | Not needed to build |
 | `assets/brand/logos/3d/*.obj` and `.mtl` | 60 MB or more per asset | The `.glb` exports are tracked and are what the site uses |
 | `.dev.vars` or any secret | None are needed; the Worker has no API keys | Nothing to configure |
 | The specimen sibling repos (Cheer and Chatter, the salon and restaurant builds) | Separate private repos, deliberately unnamed here | BDL-005, 008 and 009 are write-ups of work held elsewhere |

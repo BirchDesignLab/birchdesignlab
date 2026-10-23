@@ -1,8 +1,8 @@
 # TODO
 
-Open threads as the repository records them at the head of main (Stage 4 merge, PR #95, 2026-10-03), plus candidate contributions from the fork. Upstream carries no open issues or pull requests, so this file is the working queue until the owner says otherwise. Sources: [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md), [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md), [SPEC.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/SPEC.md).
+Open threads as the repository records them in late October 2026 (last Portal merge: Stage 4, PR #95, 2026-10-03; Stage 5 in progress on its branch), plus candidate contributions from a fork. This file is a working queue until the owner says otherwise. Sources: [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md), [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md), [SPEC.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/SPEC.md).
 
-Owner decides priority. Items marked **founder** need Tyler's call or device and cannot be done from the fork.
+Owner decides priority. Items marked **founder** need the founder's call or device and cannot be done from the fork.
 
 ## Owed by the founder (small, specific)
 

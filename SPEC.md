@@ -1,6 +1,6 @@
 # SPEC
 
-A technical specification of the Birch Design Lab site as it exists at the head of main (2026-10-03). Written from reading the repository, its docs and its git history, for someone joining the project. The design specs that produced each feature live under [docs/superpowers/specs](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs); this file is the system as built, not a proposal. The README carries the charts; this carries the contracts.
+A technical specification of the Birch Design Lab site as it exists on main in late October 2026 (last Portal merge: Stage 4, PR #95). Written from reading the repository, its docs and its git history, for someone joining the project. The design specs that produced each feature live under [docs/superpowers/specs](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs); this file is the system as built, not a proposal. The README carries the charts; this carries the contracts.
 
 ## 1. Purpose and scope
 
@@ -119,6 +119,8 @@ Two deliberate Vite plugins in `astro.config.mjs`:
 
 Cloudflare Workers Builds watches upstream `main`. Build command `npm run build`, deploy command `npx wrangler deploy`. Merging to `main` is the production deploy; there is no staging. Reversibility is the safety net. The `www` host redirects to the apex by a dashboard rule. Full history and dashboard steps are in [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md).
 
+Analytics is configured in the Cloudflare dashboard, not in site code: Zaraz loads Google Analytics 4 under an Analytics consent purpose and the Meta Pixel (server-side, Conversions API) under a Marketing purpose, opt-in everywhere; Cloudflare Web Analytics runs cookieless and is not consent-gated. `src/components/Analytics.astro` is dormant on purpose. The config of record and the privacy-page rules are in [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md).
+
 A fork has none of the bindings, so `npm run deploy`, `wrangler dev` and the beacon and contact endpoints do not work from a fork. Everything else does.
 
 ## 10. Agent operating model
@@ -135,7 +137,7 @@ Documented in [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/
 
 ## 11. Brand
 
-Name decided 2026-07-15 ([founding record](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md)): Birch Design Lab, eroding to Birch Labs, then Birch. Dark mode is the default face. North star object: the Grand Seiko White Birch. Mark concept: lenticel dashes. Assets under `assets/brand/` (SVG marks and lockups, PNG rasters at 512 and 2048, four GLB 3D marks, a sponsor card with QR). Build scripts under `scripts/brand/`. Social render pipeline under `social/` with its own `package.json`.
+Name decided 2026-07-15 ([founding record](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md)): Birch Design Lab, eroding to Birch Labs, then Birch. Dark mode is the default face. North star object: the Grand Seiko White Birch. Mark: the stem-and-chevron mark, locked 2026-08-13 (the earlier three-dash placeholder is retired); the header and footer use the wordmark, and the mark is for social and paperwork. Assets under `assets/brand/` (SVG marks and lockups, PNG rasters at 512 and 2048, four GLB 3D marks, a sponsor card with QR). Build scripts under `scripts/brand/`. Social render pipeline under `social/` with its own `package.json`.
 
 ## 12. Known constraints and decisions of record
 
@@ -143,5 +145,5 @@ Name decided 2026-07-15 ([founding record](https://github.com/BirchDesignLab/bir
 - Safari is untested by film; the founder's iPhone 17 Pro Max is the only WebKit evidence.
 - The render-everything Lab landing is fine to about 30 to 50 entries.
 - Analytics Engine keeps about three months; durable scan storage is undecided.
-- The specimen sibling repos are deliberately unnamed in this repo because it may become public.
+- The specimen sibling repos are deliberately unnamed in this repo.
 - Dependencies: newest stable, no release candidates, majors as their own PR, `npm audit` triaged not obeyed, no majors during a launch run-up.
