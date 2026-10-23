@@ -3,6 +3,7 @@
     floor that runs off toward the horizon. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
+import { SOCIAL_PROFILES } from '../../lib/seo/site';
 import Palm from './parts/Palm.astro';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
@@ -18,6 +19,9 @@ const year = new Date().getFullYear();
     <nav aria-label="Footer">
       {chrome.nav.map(({ to, label }) => (
         <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
+      ))}
+      {SOCIAL_PROFILES.map(({ label, url }) => (
+        <a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a>
       ))}
     </nav>
     <p class="fine">&copy; {year} {chrome.name} <span class="sep" aria-hidden="true">&#9670;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>

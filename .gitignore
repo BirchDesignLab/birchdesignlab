@@ -28,9 +28,24 @@ social/out/
 
 # Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
 scripts/themes/.out/
+scripts/footer/.out/
+
+# Client briefs: never pushed (this repo is public). Founder call 10-22-26.
+docs/briefs/
+
+# share.birchdesignlab.com Worker (share/README.md): the client pages it serves
+# never enter this public repo, only the Worker's own config and site files.
+share/.wrangler/
+share/public/*
+!share/public/_headers
+!share/public/robots.txt
+!share/public/404.html
 
 # Doc-gen outputs (scripts/docs/): delivered PDFs and the page-check
 # screenshots, both regenerable from the .html/.css source with
 # check-pages.mjs / build-pdf.mjs. Never source.
 docs/**/*.pdf
 docs/**/generated/
+
+# Rate card: private, never pushed (this repo is public). Founder call 10-22-26.
+docs/pricing/

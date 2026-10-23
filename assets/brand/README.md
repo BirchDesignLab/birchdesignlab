@@ -17,7 +17,7 @@
 > produces a visibly different logo.
 
 Source of truth for the dense-bark mark and lockups, chosen 2026-08-08
-(spec: `docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).
+(spec: `docs/archive/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).
 
 - `mark-dense.svg` — the mark. Nine lenticel dashes, one moss.
 - `mark-small.svg` — simplified cut for sub-32px placements.

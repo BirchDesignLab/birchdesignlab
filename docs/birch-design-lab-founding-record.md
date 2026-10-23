@@ -1,5 +1,7 @@
 # Birch Design Lab — Founding Record
 
+> **Historical record (10-22-26).** The founding record as written on 2026-07-15. Since then the credo has been retired as site copy (birch copy belongs only on About), and the lenticel-dash mark concept was superseded by the stem-and-chevron mark locked 2026-08-13 (see `assets/brand/README.md`). The name and its reasoning stand.
+
 *The closing version of the naming handoff. The exploration is over; this is the record of what was decided, why, and what remains to be done. Supersedes the previous handoff document in full.*
 
 ---
