@@ -1,5 +1,7 @@
 # Handoff: porting the design-system passes into the Astro repo
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 Every change made in this design-system project since 2026-07-16, ordered for porting in passes. Targets are the real files in `birchdesignlab/`; sources are this project's files. Values are final — copy them verbatim, don't re-derive.
 
 ## Read first: where the repo is authoritative

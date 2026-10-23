@@ -1,5 +1,7 @@
 # Business Naming — Handoff Document
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 *A working record of the naming exploration, so it can be picked up again after some rumination. Reflects the state of the decision as of this session.*
 
 ---

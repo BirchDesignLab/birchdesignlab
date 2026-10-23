@@ -1,5 +1,7 @@
 # Handoff · 08-18-26
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 Session: BDL-005 specimen refresh, sitewide reading-measure pass, BDL-007
 specced and planned. PRs #23, #24, #25 all merged; main is clean and
 deployed.

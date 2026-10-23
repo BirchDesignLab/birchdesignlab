@@ -1,5 +1,7 @@
 # Theme schools implementation plan
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 > **For agentic workers:** execute task by task. Steps use checkbox (`- [ ]`) syntax. Interfaces blocks are binding: parallel tasks rely on the exact names.
 
 **Goal:** the business pages rendered in six design schools (plus quiet) behind a Lab-entered portal at `/t/<school>/`, with root pages unchanged, contact working in every school, and dist-reading guards.

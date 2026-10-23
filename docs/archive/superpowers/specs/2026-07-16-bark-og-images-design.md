@@ -1,5 +1,7 @@
 # Bark-Generated OG Images · Design
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 *Spec agreed 2026-07-16, evening session. Site feature, not a Lab experiment. Parent documents: website spec (SEO section flagged this as "a nice later touch"), lab backlog.*
 
 ## 1. What it is

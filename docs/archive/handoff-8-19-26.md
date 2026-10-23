@@ -1,5 +1,7 @@
 # Handoff · 08-19-26
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 Long session, 2026-08-18 into 08-19: a pre-launch SEO + site-quality audit,
 then a full round of founder-driven business-page polish, and the **contact
 form shipped and went live**. `main` is clean. The only PR still to merge is

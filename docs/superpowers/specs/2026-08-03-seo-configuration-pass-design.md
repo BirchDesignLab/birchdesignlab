@@ -1,7 +1,7 @@
 # SEO and Configuration Pass · Design
 
 *Spec agreed 2026-08-03. Parent documents: the website spec (§7 named the SEO
-baseline), `docs/lab-backlog.md`, and `docs/handoff-2026-07-16.md` item 6, which
+baseline), `docs/lab-backlog.md`, and `docs/archive/handoff-2026-07-16.md` item 6, which
 parked deploy hygiene "awaiting go". This is that go, widened.*
 
 Business launch is 2026-09-01. The site is already deployed and crawlable, so

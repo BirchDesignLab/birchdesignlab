@@ -30,7 +30,7 @@
   "id": "F002",
   "title": "\"Default load unchanged\" is false: ClientRouter, prefetch-all, the switcher island and the WebGL stage all ship to the Lighthouse-100 business pages, with no budget, no flag and no baseline",
   "claim": "The plan relaxes Lighthouse only on /t/<theme>/ routes but every new runtime cost lands on /, /about, /services, /contact. The home page currently ships ~10.7 KB of minified JS; ClientRouter plus a Svelte-island switcher takes it to roughly 55-60 KB. ClientRouter unconditionally calls `init({ prefetchAll: true })`, so the quiet home page begins hover-prefetching every link — including whichever theme routes the switcher exposes as anchors, i.e. heavy theme documents pulled from the viewport. There is no feature flag and no CI, merge-to-main deploys production, so the only rollback is a revert PR. And no Lighthouse baseline is recorded anywhere in this repo, so \"kept its current scores\" is unfalsifiable.",
-  "evidence": "dist/index.html references two entry scripts whose closure is BarkField 2,525 B + index.astro 534 B + pattern 619 B + renderer 7,051 B = 10,729 B; a Svelte island adds render.Cibgvqob.js 31,308 B + client.svelte 1,131 B (measured on dist/lab/bdl-006/); ClientRouter's client is router.js 18,127 B + events.js 4,245 B + swap-functions.js 4,628 B + prefetch/index.js 6,427 B unminified. node_modules/astro/components/ClientRouter.astro:156-157 `if (!__PREFETCH_DISABLED__) { init({ prefetchAll: true }); }`; prefetch/index.js:16 defaults strategy to `hover`. plan-prompt.md:5 \"Lighthouse may drop to 0.90 perf on theme routes\", :12 persistent WebGL stage, :15 floating switcher, :21 \"stricter on root\". docs/lab-backlog.md:500 \"quiet luxury now names the business pages (home, services, about, contact — Lighthouse 100s, restrained, no heavy motion)\". context-pointers.md:3 \"no CI, no Lighthouse config in this repo\"; CLAUDE.md merge-to-main deploys prod. docs/handoff-8-23-26.md still lists a Lighthouse home run under unfinished verification.",
+  "evidence": "dist/index.html references two entry scripts whose closure is BarkField 2,525 B + index.astro 534 B + pattern 619 B + renderer 7,051 B = 10,729 B; a Svelte island adds render.Cibgvqob.js 31,308 B + client.svelte 1,131 B (measured on dist/lab/bdl-006/); ClientRouter's client is router.js 18,127 B + events.js 4,245 B + swap-functions.js 4,628 B + prefetch/index.js 6,427 B unminified. node_modules/astro/components/ClientRouter.astro:156-157 `if (!__PREFETCH_DISABLED__) { init({ prefetchAll: true }); }`; prefetch/index.js:16 defaults strategy to `hover`. plan-prompt.md:5 \"Lighthouse may drop to 0.90 perf on theme routes\", :12 persistent WebGL stage, :15 floating switcher, :21 \"stricter on root\". docs/lab-backlog.md:500 \"quiet luxury now names the business pages (home, services, about, contact — Lighthouse 100s, restrained, no heavy motion)\". context-pointers.md:3 \"no CI, no Lighthouse config in this repo\"; CLAUDE.md merge-to-main deploys prod. docs/archive/handoff-8-23-26.md still lists a Lighthouse home run under unfinished verification.",
   "severity": "blocker",
   "kind": "decision",
   "recommendation": "Restate the promise as \"visual first impression unchanged, JS budget explicitly re-set\", and put a number on it in the spec. Build the switcher as a no-framework inline control that dynamic-imports the drawer (or `client:idle`) so the Svelte runtime stays off root pages; set `prefetch: { prefetchAll: false }` in astro.config.mjs with `data-astro-prefetch` on theme links only; do not mount the WebGL stage until the first theme jump. Gate the whole feature behind a build-time flag (the parked note already models this) so PR 0 merges dark and the rollback unit is a flag flip, not a revert. Capture a real-Chrome Lighthouse baseline for /, /about, /services, /contact before ClientRouter lands.",
@@ -47,7 +47,7 @@
    "C:/git/birchdesignlab/astro.config.mjs",
    "C:/git/birchdesignlab/src/layouts/BaseLayout.astro",
    "C:/git/birchdesignlab/docs/lab-backlog.md",
-   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+   "C:/git/birchdesignlab/docs/archive/handoff-8-23-26.md"
   ]
  },
  {
@@ -259,7 +259,7 @@
   "id": "F013",
   "title": "The seed renderer has no context-loss recovery, and the plan promotes it to a long-lived stage where loss becomes likely",
   "claim": "src/lib/bark/renderer.ts never listens for `webglcontextlost`/`webglcontextrestored` — it only calls `loseContext()` on teardown — so a stage built on it goes permanently black on any context loss (GPU reset, mobile backgrounding, exceeding the context cap that F004/F008 make reachable), with no repaint path and no visible fallback.",
-  "evidence": "Repo-wide grep for `webglcontextlost` hits only src/experiments/bdl-007/stage.ts:686 and vendored three; src/lib/bark/renderer.ts:247 is the sole `WEBGL_lose_context` use and it is inside `destroy()`. docs/handoff-8-23-26.md \"Deferred, tracked\": \"BarkField WebGL context-loss recovery (only if post-return lag persists)\" — explicitly deferred, with context-loss named as the next suspect for post-return lag.",
+  "evidence": "Repo-wide grep for `webglcontextlost` hits only src/experiments/bdl-007/stage.ts:686 and vendored three; src/lib/bark/renderer.ts:247 is the sole `WEBGL_lose_context` use and it is inside `destroy()`. docs/archive/handoff-8-23-26.md \"Deferred, tracked\": \"BarkField WebGL context-loss recovery (only if post-return lag persists)\" — explicitly deferred, with context-loss named as the next suspect for post-return lag.",
   "severity": "blocker",
   "kind": "gap",
   "recommendation": "Make context-loss handling a stated deliverable of the stage work, not a follow-up: `addEventListener('webglcontextlost', e => e.preventDefault())`, full rebuild on `webglcontextrestored`, and a CSS-gradient fallback background so a lost context degrades to the theme's flat colour rather than transparent. Port the pattern already proven in src/experiments/bdl-007/stage.ts:686-729.",
@@ -270,7 +270,7 @@
   "files": [
    "C:/git/birchdesignlab/src/lib/bark/renderer.ts",
    "C:/git/birchdesignlab/src/experiments/bdl-007/stage.ts",
-   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+   "C:/git/birchdesignlab/docs/archive/handoff-8-23-26.md"
   ]
  },
  {
@@ -413,7 +413,7 @@
   "id": "F022",
   "title": "Theme fonts are guaranteed to FOUT after the morph, and fontaine is wired with one global serif fallback list plus hand-written fallback names",
   "claim": "Astro's router awaits only `link[rel=stylesheet]` from the incoming document before swapping; the new theme's font preloads and `@font-face` files are inserted at swap time and start downloading after the DOM has already changed, so the showpiece transition lands on fallback type and re-lays-out mid-animation. Compounding it: `FontaineTransform.vite` is given one global `fallbacks: ['Georgia','Times New Roman','serif']`, so a Bauhaus geometric sans or Swiss grotesque gets metric-matched fallbacks computed from a serif — measurable CLS on exactly the LCP element; the generated `\"<Family> fallback\"` names are inserted into the `--font-*` stacks by hand, so every pack must declare them; and BaseLayout hardcodes two preloads for Marcellus and Spectral, so every theme route preloads the quiet-luxury faces and never its own.",
-  "evidence": "node_modules/astro/dist/transitions/router.js:163-183 `preloadStyleLinks` iterates `newDocument.querySelectorAll('head link[rel=stylesheet]')` only; swap-functions.js:30-40. src/layouts/BaseLayout.astro:5-16 explains the preloads exist because \"the largest type on the site FOUT-swaps\"; :17-18,:32-33 the two hardcoded links. astro.config.mjs:92-101 the global fallbacks array and the by-hand comment; node_modules/fontaine/dist/index.d.mts:73-84 `fallbacks: string[] | Record<string,string[]>` plus `categoryFallbacks`. src/styles/tokens.css:28-35 the hand-inserted \"Marcellus fallback\"/\"Spectral fallback\"; docs/handoff-8-23-26.md trap #5.",
+  "evidence": "node_modules/astro/dist/transitions/router.js:163-183 `preloadStyleLinks` iterates `newDocument.querySelectorAll('head link[rel=stylesheet]')` only; swap-functions.js:30-40. src/layouts/BaseLayout.astro:5-16 explains the preloads exist because \"the largest type on the site FOUT-swaps\"; :17-18,:32-33 the two hardcoded links. astro.config.mjs:92-101 the global fallbacks array and the by-hand comment; node_modules/fontaine/dist/index.d.mts:73-84 `fallbacks: string[] | Record<string,string[]>` plus `categoryFallbacks`. src/styles/tokens.css:28-35 the hand-inserted \"Marcellus fallback\"/\"Spectral fallback\"; docs/archive/handoff-8-23-26.md trap #5.",
   "severity": "major",
   "kind": "flaw",
   "recommendation": "Spec a `fonts` block in each pack's meta.ts (imports, preload hrefs capped at two faces, stacks including the fontaine fallback name), emit preloads from it rather than from literals, and change astro.config.mjs to the per-family `fallbacks` record / `categoryFallbacks` form so sans and mono packs get sans and mono metrics. Add a font-readiness step to the transition: on drawer open or in `astro:before-preparation`, inject `<link rel=preload as=font crossorigin>` for the target theme's woff2 and await `document.fonts.load()` before starting the view transition. Add a build assertion that no theme token stack is missing its fallback name.",
@@ -615,7 +615,7 @@
   "id": "F033",
   "title": "A full-page fixed stage defeats the off-screen pause that was added specifically to fix the reported scroll lag",
   "claim": "BarkField's only power guard besides tab visibility is an IntersectionObserver that pauses the rAF loop when the canvas scrolls out of view. A stage sitting behind everything for the whole page is always intersecting, so the loop runs continuously for the entire session — reintroducing exactly the full-viewport-canvas-vs-scroll-compositing problem PR #60 fixed, and on mobile turning it into a session-long battery draw.",
-  "evidence": "src/components/BarkField.astro:63-83 `let inView = true; const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches;` driven by the IntersectionObserver; the in-file comment at :51-58 states the reason (\"repainting it behind content the visitor has scrolled past competes with the browser's scroll compositing (the 'scroll lags' report)\"); docs/handoff-8-23-26.md Performance/GPU section records the founder-reported lag and #60 as its fix; renderer.ts:179,216 caps at BARK_FPS via FRAME_INTERVAL.",
+  "evidence": "src/components/BarkField.astro:63-83 `let inView = true; const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches;` driven by the IntersectionObserver; the in-file comment at :51-58 states the reason (\"repainting it behind content the visitor has scrolled past competes with the browser's scroll compositing (the 'scroll lags' report)\"); docs/archive/handoff-8-23-26.md Performance/GPU section records the founder-reported lag and #60 as its fix; renderer.ts:179,216 caps at BARK_FPS via FRAME_INTERVAL.",
   "severity": "major",
   "kind": "flaw",
   "recommendation": "Spec an explicit power budget for the persistent stage that does not depend on intersection: cap devicePixelRatio (bdl-007 landed on 1.5), render at a low steady fps or go fully idle once the crossfade settles (render-on-demand rather than a permanent loop), keep the visibilitychange pause, and add a coarse-pointer/low-memory branch that drops to a static gradient. Verify on a real phone via scripts/lab/, not the preview pane.",
@@ -625,7 +625,7 @@
   "files": [
    "C:/git/birchdesignlab/src/components/BarkField.astro",
    "C:/git/birchdesignlab/src/lib/bark/renderer.ts",
-   "C:/git/birchdesignlab/docs/handoff-8-23-26.md"
+   "C:/git/birchdesignlab/docs/archive/handoff-8-23-26.md"
   ]
  },
  {
@@ -700,7 +700,7 @@
   "id": "F038",
   "title": "There is no recorded Lighthouse baseline for the root pages, so \"stricter on root\" has no number behind it",
   "claim": "The only evidence for the business pages' scores is prose in handoff documents, the most recent dated 08-19-26 — before the 09-01-26 Zaraz/GA4 edge cutover and before BDL-008 shipped. The repo contains no lighthouserc, no .lighthouseci output and no recorded run, so the first LHCI run will likely red on pre-existing drift and the threshold will get loosened for the wrong reason.",
-  "evidence": "docs/handoff-8-19-26.md:136 \"Lighthouse held at 100/100/100/100 on all four business pages\"; docs/handoff-2026-07-16.md:38 \"Mobile Lighthouse scored 100/100/100/100 on four pages and 99 performance on /about at core-site launch\"; no lighthouserc.* and no .github in the repo; docs/lab-backlog.md:184 already records \"Lighthouse was not run against the deployed specimen\".",
+  "evidence": "docs/archive/handoff-8-19-26.md:136 \"Lighthouse held at 100/100/100/100 on all four business pages\"; docs/archive/handoff-2026-07-16.md:38 \"Mobile Lighthouse scored 100/100/100/100 on four pages and 99 performance on /about at core-site launch\"; no lighthouserc.* and no .github in the repo; docs/lab-backlog.md:184 already records \"Lighthouse was not run against the deployed specimen\".",
   "severity": "major",
   "kind": "gap",
   "recommendation": "Make measuring the baseline a step of the guards PR, before any theme exists: land lighthouserc.cjs, run it against current main, and commit the four root scores — with the form factor and throttling used, since the source config sets neither and Lighthouse defaults to mobile emulation with CPU throttling — into the spec. Set the root threshold to the measured value, not the remembered 100; a measured shortfall is a pre-existing regression to triage in its own PR, not something to discover mid-theme-build.",
@@ -708,7 +708,7 @@
    "guards"
   ],
   "files": [
-   "C:/git/birchdesignlab/docs/handoff-8-19-26.md",
+   "C:/git/birchdesignlab/docs/archive/handoff-8-19-26.md",
    "C:/git/birchdesignlab/docs/lab-backlog.md",
    "C:/git/bdlBase/lighthouserc.cjs"
   ]
