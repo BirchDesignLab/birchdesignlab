@@ -17,7 +17,7 @@ Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchD
 7. [The Claude Code harness](#the-claude-code-harness)
 8. [Timeline](#timeline)
 9. [Where it stands and how to help](#where-it-stands-and-how-to-help)
-10. [What the fork does not have](#what-the-fork-does-not-have)
+10. [What a clone does not have](#what-a-clone-does-not-have)
 11. [Local setup](#local-setup)
 12. [House rules](#house-rules)
 
@@ -95,7 +95,8 @@ flowchart TB
     ROOT --> WORKER[worker/<br/>Cloudflare Worker]:::cloud
     ROOT --> TESTS[tests/<br/>Vitest unit and dist tests]:::you
     ROOT --> SCRIPTS[scripts/<br/>every script ever run, kept]:::store
-    ROOT --> DOCS[docs/<br/>specs, plans, handoffs, backlog]:::store
+    ROOT --> DOCS[docs/<br/>backlog, live references, specs, archive]:::store
+    ROOT --> SHARE[share/<br/>share.birchdesignlab.com Worker, deployed by hand]:::cloud
     ROOT --> ASSETS[assets/brand/<br/>logos, lockups, 3D marks, sponsor card]:::store
     ROOT --> SOCIAL[social/<br/>video and card render pipeline]:::you
     ROOT --> ATTIC[attic/<br/>parked work, BDL-004 The Loom]:::store
@@ -112,10 +113,11 @@ flowchart TB
     SCRIPTS --> ST[themes/<br/>capture, film, probes, proofs, harness]
     SCRIPTS --> SB[brand/ og/ lab/ docs/ ar-card/ workflows/ build/]
 
-    DOCS --> SP[superpowers/<br/>specs/ and plans/ per feature]
-    DOCS --> TSR[superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs]
-    DOCS --> HAND[handoff-*.md<br/>session handoffs July to August]
     DOCS --> BACK[lab-backlog.md<br/>the only backlog]
+    DOCS --> LIVE[deploy.md analytics.md ar-card/<br/>live references]
+    DOCS --> SP[superpowers/specs/<br/>specs for live features]
+    DOCS --> TSR[superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs]
+    DOCS --> ARCH[archive/<br/>dated handoffs, finished plans, superseded specs]
 ```
 
 | Path | What lives there | Start with |
@@ -133,6 +135,23 @@ flowchart TB
 | [docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) | The WebAR business card project | |
 | [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) | Working rules for Claude Code sessions: model tiering, git flow, scripts policy, dependency policy | |
 | [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md) | The saved multi-agent workflows | |
+| [share/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/share) | A separate static Worker for sharing client pieces at share.birchdesignlab.com. Deployed by hand, never by Workers Builds; the pages it serves are not in git | [README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
+
+### Docs map: what is current
+
+`docs/` holds both live references and history. Read these as current; treat everything under `docs/archive/` as a dated record of how the project got here, not as how it works now.
+
+| Question | Current source |
+|---|---|
+| What is planned, parked or owed | [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) |
+| Hosting, DNS, email, headers, dashboard steps | [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md) |
+| Analytics, consent, what the privacy page must say | [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md) |
+| Brand marks and how to use them | [assets/brand/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/assets/brand/README.md), [docs/brand-brief.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/brand-brief.md) |
+| The AR business card | [docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) |
+| How a live feature was designed | [docs/superpowers/specs/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs) (finished and superseded ones are in `docs/archive/superpowers/`) |
+| Where the Portal stands | the newest stage report and handoff under [theme-schools-research/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research) |
+| Why the name | [docs/birch-design-lab-founding-record.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md), read with its banner: the credo and the first mark concept are retired |
+| How to work in the repo | [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) |
 
 ---
 
@@ -364,13 +383,15 @@ As of late October 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03) a
 
 ---
 
-## What the fork does not have
+## What a clone does not have
 
-The fork is a clean copy of upstream's tracked files. These exist only on the founder's machine or in the founder's Cloudflare account and are gitignored or external:
+A clone or fork holds only the tracked files. These exist only on the founder's machine or in the owner's Cloudflare account, and are gitignored or external:
 
-| Missing on the fork | Why | Effect |
+| Missing from a clone | Why | Effect |
 |---|---|---|
-| Cloudflare account, domain, Email Routing, rate limiter, Analytics Engine | Bindings in `wrangler.jsonc` resolve only in the owner's account | `npm run deploy` and `wrangler dev` will not work from the fork. Merging to this fork's main deploys nothing |
+| Cloudflare account, domain, Email Routing, rate limiter, Analytics Engine, Zaraz config | Bindings in `wrangler.jsonc` resolve only in the owner's account; analytics are configured in the dashboard | `npm run deploy` and `wrangler dev` will not work from a fork. Merging to a fork's main deploys nothing |
+| `docs/briefs/`, `docs/pricing/` | Client briefs and the rate card are kept out of this public repo on purpose | Nothing in the build reads them |
+| The pages under `share/public/` (except `_headers`, `robots.txt`, `404.html`) | Client pieces served at share.birchdesignlab.com, kept out of git on purpose | Never deploy `share/` from a clone: it would publish an empty site. See [share/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
 | `public/og/` | Generated by `npm run og` during prebuild | Regenerates locally |
 | `scripts/themes/.out/`, `social/out/`, `docs/**/generated/`, `docs/**/*.pdf` | Capture, film, sheet and PDF outputs | The stage reports point at sheets you cannot see without re-running the harness on a GPU machine |
 | `docs/refs/`, four named founder working docs, `.superpowers/` | Founder drafting material and the superpowers plugin state | Some handoffs reference them; the tracked specs are the record |
