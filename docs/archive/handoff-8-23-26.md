@@ -1,5 +1,7 @@
 # Handoff · 08-23-26 · launch-prep sweep
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 A long session, ~9 days out from the 09-01 launch. It opened with a full
 repo critique, corrected a stale-local mistake mid-stream, then shipped a large
 batch of launch-blocker, performance, accessibility, and test work. `main` is

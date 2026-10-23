@@ -1,5 +1,7 @@
 # BDL brand lockup and Cheer & Chatter sponsor card — design
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 *2026-08-08. Brainstormed with the visual companion (session
 `.superpowers/brainstorm/139-1786211973`, screens preserved there). This spec
 covers static brand assets only; it deliberately does not build the Cheer &

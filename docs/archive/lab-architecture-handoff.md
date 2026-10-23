@@ -1,5 +1,7 @@
 # Birch Design Lab — Lab Architecture Handoff
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 Context for Claude Code. This defines how the **Lab** section should be structured in the Astro site. It is the product of design decisions made separately; the *why* is settled, the *how* is yours to implement against the existing codebase. Confirm the open questions before writing files.
 
 ---

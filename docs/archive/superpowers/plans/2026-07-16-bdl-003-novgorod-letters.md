@@ -1,5 +1,7 @@
 # BDL-003 Novgorod Letters Implementation Plan
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship `/lab/bdl-003`: a scratch-to-reveal reader for three real Novgorod birch-bark letters, per `docs/superpowers/specs/2026-07-16-bdl-003-novgorod-letters-design.md`.

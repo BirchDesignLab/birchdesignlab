@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-29
 **Status:** Approved by founder in session (sections 1-4), pending spec review
-**Parents:** `docs/lab-architecture-handoff.md` (the original experiment/study architecture; this spec reconciles it with what shipped), `docs/lab-backlog.md` (Direction set 2026-07-29: Lab becomes the entire portfolio)
+**Parents:** `docs/archive/lab-architecture-handoff.md` (the original experiment/study architecture; this spec reconciles it with what shipped), `docs/lab-backlog.md` (Direction set 2026-07-29: Lab becomes the entire portfolio)
 **Supersedes:** the schema sketch in `lab-architecture-handoff.md` (accession numbers, separate problem/process/outcome frontmatter fields)
 
 ## What this builds

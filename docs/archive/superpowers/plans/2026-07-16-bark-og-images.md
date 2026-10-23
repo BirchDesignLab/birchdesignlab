@@ -1,10 +1,12 @@
 # Bark-Generated OG Images Implementation Plan
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build-time bark-textured OpenGraph cards (1200x630 PNG per page) so every shared birchdesignlab.com link shows the tree of the deploy.
 
-**Architecture:** The existing pure bark pattern (`generateBark`) plus a shared canvas2D dash-drawing routine render onto a `@napi-rs/canvas` in a prebuild Node script, which writes PNGs to `public/og/`. `Seo.astro` maps each pathname to its card. Spec: `docs/superpowers/specs/2026-07-16-bark-og-images-design.md`.
+**Architecture:** The existing pure bark pattern (`generateBark`) plus a shared canvas2D dash-drawing routine render onto a `@napi-rs/canvas` in a prebuild Node script, which writes PNGs to `public/og/`. `Seo.astro` maps each pathname to its card. Spec: `docs/archive/superpowers/specs/2026-07-16-bark-og-images-design.md`.
 
 **Tech Stack:** Astro 5, TypeScript, vitest, `@napi-rs/canvas` (prebuilt native canvas), `tsx` (run TS scripts in Node).
 

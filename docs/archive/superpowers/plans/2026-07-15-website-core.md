@@ -1,8 +1,10 @@
 # Birch Design Lab Website (Core + Lab Framework + BDL-001) Implementation Plan
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build and deploy the Birch Design Lab public site — Home, Services, About, Contact, 404, the Lab specimen catalog, and experiment BDL-001 (The Bark Engine) — per `docs/superpowers/specs/2026-07-15-birchdesignlab-website-design.md`.
+**Goal:** Build and deploy the Birch Design Lab public site — Home, Services, About, Contact, 404, the Lab specimen catalog, and experiment BDL-001 (The Bark Engine) — per `docs/archive/superpowers/specs/2026-07-15-birchdesignlab-website-design.md`.
 
 **Architecture:** Astro 5 static site. One WebGL generative-bark module split into a pure seeded pattern core (unit-tested) and a shader draw layer (canvas2D static fallback). Vanilla CSS with a two-layer token system (primitives + per-theme semantics), dark default. Lab experiments are content-collection entries plus an optional per-designation component from a registry; adding one is one folder.
 
@@ -10,7 +12,7 @@
 
 ## Global Constraints
 
-- Spec is authority: `docs/superpowers/specs/2026-07-15-birchdesignlab-website-design.md`. Brand authority: `docs/birch-design-lab-founding-record.md`.
+- Spec is authority: `docs/archive/superpowers/specs/2026-07-15-birchdesignlab-website-design.md`. Brand authority: `docs/birch-design-lab-founding-record.md`.
 - Dark theme is the default face; light theme is a true inverse; both first-class. Honor `prefers-color-scheme`; manual toggle persisted in `localStorage` key `theme`.
 - All colors/spacing/type via CSS custom properties in `src/styles/tokens.css`. Palette and type values are **provisional by design** — components must reference semantic tokens only, never raw hex.
 - Motion: 300–600ms, easing `var(--ease-weighted)`, no scroll-jacking, `prefers-reduced-motion` respected everywhere (bark renders a single static frame; reveals appear instantly).

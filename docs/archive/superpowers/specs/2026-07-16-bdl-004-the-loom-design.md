@@ -1,5 +1,7 @@
 # BDL-004 · The Loom · Design
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 *Spec agreed 2026-07-16, evening session. Decisions made with the founder in session; the founding record, website spec, and lab backlog are the parent documents. BDL-004 was previously reserved for the view-source CSS feat (the Painting); that piece returns to the backlog unnumbered, and the Loom takes the slot, because the goal right now is quick wins and the Loom is the cheapest concept on the board.*
 
 ## 1. What it is

@@ -1,5 +1,7 @@
 # Birch Design Lab — Website Design Spec
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 *Date: 2026-07-15. Product of the brainstorming session following the naming decision recorded in `docs/birch-design-lab-founding-record.md`. That document is the brand authority; this one translates it into a website.*
 
 ---

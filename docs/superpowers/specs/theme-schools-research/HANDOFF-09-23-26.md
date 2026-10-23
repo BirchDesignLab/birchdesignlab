@@ -1,6 +1,6 @@
 # Theme schools: build handoff (session 09-22/23-26)
 
-Start here in the next session. Spec: `docs/superpowers/specs/09-22-26-theme-schools-design.md` (its §11 lists calls made in build; founder has not reviewed them). Plan: `docs/superpowers/plans/09-22-26-theme-schools.md`. Founder said "just build it"; approval gates were waived for this work.
+Start here in the next session. Spec: `docs/superpowers/specs/09-22-26-theme-schools-design.md` (its §11 lists calls made in build; founder has not reviewed them). Plan: `docs/archive/superpowers/plans/09-22-26-theme-schools.md`. Founder said "just build it"; approval gates were waived for this work.
 
 ## Branches
 

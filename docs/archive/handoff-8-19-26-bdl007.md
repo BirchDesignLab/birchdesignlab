@@ -1,5 +1,7 @@
 # Handoff · 08-19-26 · BDL-007 The Shining Tree
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 A second session on 08-19-26, separate from the SEO/contact-form thread in
 `handoff-8-19-26.md`. This one built, shipped, and polished **BDL-007 The
 Shining Tree**, the interactive three.js stage for the organic 3D wordmark

@@ -402,7 +402,7 @@ The spec stays as the record of what was agreed, so read the code for what
 ships.
 
 - Spec: `docs/superpowers/specs/2026-08-18-bdl-007-shining-tree-design.md`
-- Plan: `docs/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
+- Plan: `docs/archive/superpowers/plans/2026-08-18-bdl-007-shining-tree.md`
 - PR #29 (the build, subagent-driven), #32 (re-shot still), #30 (brand test),
   #31 (8c favicon set), #48 (mobile framing + disclosure affordances +
   bordered hatch + ground shadow removed)
@@ -567,7 +567,7 @@ visitor's network is never ours to probe.
 
 **Built, tested, shipped, then pulled.** Founder verdict: visually unacceptable, redo unlikely. The whole build (components, weave lib, tests, catalog entry) lives in `attic/bdl-004/` with a resurrection note; it is out of the site, the registry, and the test run. The BDL-004 designation stays burned; the next experiment takes the next number.
 
-**Specced 2026-07-16:** `docs/superpowers/specs/2026-07-16-bdl-004-the-loom-design.md`. The paragraphs below are the pre-spec sketch, kept for the record.
+**Specced 2026-07-16:** `docs/archive/superpowers/specs/2026-07-16-bdl-004-the-loom-design.md`. The paragraphs below are the pre-spec sketch, kept for the record.
 
 Generative woven textile. Pick warp and weft colors, pick a draft pattern, watch the cloth weave itself thread by thread on canvas. Download the finished cloth as a wallpaper. Craft rather than nature: tactile like 003's dig, but a different sense entirely, and not a tree in sight.
 
@@ -608,7 +608,7 @@ Liked, not dead. Revisit when the moment fits.
 
 ## Direction set 2026-07-29 (founder session)
 
-- **The Lab becomes the entire portfolio.** Two kinds of resident: experiments (technical/artistic flexes, the current BDL-00N line) and specimens/case studies of client work. Exact shape not fully flushed out; `docs/lab-architecture-handoff.md` (the experiment/study split, accession numbers, filterable catalog) is the live starting point, NOT stale — reconcile it with the shipped schema when building.
+- **The Lab becomes the entire portfolio.** Two kinds of resident: experiments (technical/artistic flexes, the current BDL-00N line) and specimens/case studies of client work. Exact shape not fully flushed out; `docs/archive/lab-architecture-handoff.md` (the experiment/study split, accession numbers, filterable catalog) is the live starting point, NOT stale — reconcile it with the shipped schema when building.
 - **First case study: Cheer and Chatter** (just wrapped). Director's-commentary voice is part of the format, not a separate idea. Client cleared publishing basically anything short of extremely personal details.
 - **BDL-003 gate changed.** The founder hand-trace pass (Task 8) is deferred indefinitely — too much time/effort right now. New gate: BDL-003 needs a **complete visual rework** before the trace pass is even worth sitting down for. It survives the Loom's fate only because it is a thematic lynchpin.
 - **Conversion path is the near-term priority.** Pages-to-Workers migration + contact form slot right behind the hygiene commit; specimen/case-study work after that.
@@ -661,7 +661,7 @@ The founder's summary of the first two, from the time: *"loud accents with the
 relaxed spacing."* Both halves are now in.
 
 Spec and plan: `docs/superpowers/specs/2026-08-13-lab-accent-pass-design.md`,
-`docs/superpowers/plans/2026-08-13-lab-accent-pass.md`.
+`docs/archive/superpowers/plans/2026-08-13-lab-accent-pass.md`.
 
 Two decisions worth not relitigating. The forthcoming chip keeps the word
 **"forthcoming"**; the frame's "in progress" was declined because it is a claim
@@ -678,7 +678,7 @@ Side ideas from earlier sessions, gathered here so the handoff stops carrying th
 - **From-the-Lab recency switch.** Home section flips to recency ordering at 4+ live entries.
 - **Lab visual identity.** The Lab will eventually branch away from the professional site theme and grow its own style. Nothing decided; also tracked as handoff open thread 4. Worth deciding before the Lab has many live pieces, since each experiment currently inherits site tokens.
 - **Presentation ceiling (the awwwards note).** Founder browsed awwwards 2026-07-16 and found the backlog concepts presentation-modest by comparison. Diagnosis agreed: the concepts' substance is the differentiator (working systems, not demo shells), but the specs say little about arrival, motion, and material feel. Action when ready: define the Lab's presentation language (entrance beats, transition grammar, motion budget; GSAP is already reserved for Lab pieces) under the Lab visual identity thread, optionally preceded by a study session naming which awwwards techniques to steal and which scroll-jack noise to skip. The Loom would ship as the language's first full expression. Founder installed a front-end design plugin for this work.
-- **Bark-generated OG images.** Seeded bark rendered into per-page OpenGraph images at build time. Flagged as "a nice later touch" in the website spec's SEO section. Specced 2026-07-16: `docs/superpowers/specs/2026-07-16-bark-og-images-design.md`.
+- **Bark-generated OG images.** Seeded bark rendered into per-page OpenGraph images at build time. Flagged as "a nice later touch" in the website spec's SEO section. Specced 2026-07-16: `docs/archive/superpowers/specs/2026-07-16-bark-og-images-design.md`.
 - **Per-experiment OG art.** Each Lab piece gets its own OG card instead of sharing the catalog's. Worthwhile once the catalog holds about a dozen live experiments.
 - **Daily OG rebuild.** Cloudflare deploy hook on a cron so the OG card's tree is truly daily rather than tree-of-last-deploy. Only matters if platform OG caching ever stops making it moot.
 - **GSAP as a Lab-piece technology.** ~~Reserved, no concept attached.~~ **Committed 2026-08-03** (see the direction set above). Still banned from the core site by the spec; the Lab is where it lives. Open: which piece uses it first.
@@ -789,7 +789,7 @@ answer-engine-friendly prose (offering / audience / hire-path all crawlable, not
 locked in canvas). The real gaps are **conversion, proof, and voice**, not
 plumbing.
 
-### Execution since the audit (08-18 / 08-19) — see `docs/handoff-8-19-26.md`
+### Execution since the audit (08-18 / 08-19) — see `docs/archive/handoff-8-19-26.md`
 
 Most of the audit's actionable items shipped this session, in small PRs:
 

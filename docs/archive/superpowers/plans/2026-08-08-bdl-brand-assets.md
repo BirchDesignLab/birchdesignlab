@@ -1,8 +1,10 @@
 # BDL Brand Assets Implementation Plan
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the dense-bark mark, two lockup SVGs, and the Cheer & Chatter sponsor-card reference assets under `assets/brand/`, per `docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`.
+**Goal:** Ship the dense-bark mark, two lockup SVGs, and the Cheer & Chatter sponsor-card reference assets under `assets/brand/`, per `docs/archive/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`.
 
 **Architecture:** Static SVG assets outside the site build. Marks are hand-authored rects. Lockup wordmarks are Marcellus text outlined to paths by a committed build script (`scripts/brand/build-lockups.mjs`, opentype.js), so the SVGs stand alone without the font. The card is a self-contained HTML reference plus a Playwright PNG export. One guard test keeps the assets honest.
 
@@ -311,7 +313,7 @@ Content, verbatim (generated with `qrcode` 2026-08-08, encodes `https://birchdes
 <!doctype html>
 <!-- BDL developer-credit slide: reference for the Cheer & Chatter
      Break/Sponsor slideshow (their backlog 14). Self-contained on purpose.
-     Spec: docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md -->
+     Spec: docs/archive/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -404,7 +406,7 @@ git commit -m "feat(brand): sponsor-card reference with live QR"
 # Brand assets
 
 Source of truth for the dense-bark mark and lockups, chosen 2026-08-08
-(spec: `docs/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).
+(spec: `docs/archive/superpowers/specs/2026-08-08-bdl-brand-lockup-sponsor-card-design.md`).
 
 - `mark-dense.svg` — the mark. Nine lenticel dashes, one moss.
 - `mark-small.svg` — simplified cut for sub-32px placements.

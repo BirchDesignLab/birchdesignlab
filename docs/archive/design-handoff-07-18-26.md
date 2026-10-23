@@ -1,5 +1,7 @@
 # Handoff 2026-07-18 — design-system port complete & deployed
 
+> **Archived 10-22-26: historical record.** This describes the project as of its own date and is not a current reference. Current sources: `docs/lab-backlog.md` (work and decisions), `docs/deploy.md` (hosting), `docs/analytics.md` (analytics and consent), `assets/brand/README.md` (brand), and the live code.
+
 Delta since [design-handoff-07-16](design-handoff-07-16.md) (the kit-port plan). That doc was the source; this one records what actually shipped. Live on Cloudflare Pages, commit `28642fe` on `main`. Parent: [birch-design-lab website spec](superpowers/specs/2026-07-15-birchdesignlab-website-design.md).
 
 ## What shipped
