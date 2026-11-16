@@ -149,6 +149,7 @@ not a copy. `lib/devserver.mjs` builds these URLs; nothing hard-codes the path.
 | `scripts/measure-supersample.mjs` | Proves 1440 CSS does not move the framing. |
 | `scripts/render-one.mjs` | One asset plus a contact sheet, for review before it ships. |
 | `scripts/render-candidates.mjs` | Variant B angles and variant C orbit speeds, as stills to choose from. |
+| `scripts/render-bdl-012.mjs` | One portrait take of BDL-012, the data map: a journey travelling the map. Records the page itself (`?play=`), dresses the shot with injected CSS, and puts CSS animations on the fake clock, which the WebGL loops never needed. Header explains each. |
 | `lib/contact.mjs` | Contact sheets. A clip cannot be judged in a terminal. |
 
 ### Why the capture is built the way it is
