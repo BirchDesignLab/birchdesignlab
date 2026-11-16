@@ -1,0 +1,129 @@
+---
+/**
+ * BDL-005's in-page piece, rendered after the narrative (src/studies/registry.ts).
+ * Two things the prose can only describe:
+ *
+ *  1. The shape of the work as a picture: commits by month, with the four
+ *     figures the narrative spells out set beside it as numerals. No script.
+ *     The bars grow as they scroll into view where the browser supports
+ *     scroll-driven animation, and are simply there where it does not.
+ *
+ *  2. A working miniature of the live app: the host phone and venue TV from
+ *     BDL-012, the same component, with real cards from the Plant deck.
+ *     This is the first script on a study page. Founder call 11-16-26: the
+ *     "studies ship no JS" rule stands for the layout and the narrative; a
+ *     registered extra may carry its own.
+ *
+ * The numbers. MONTHS is commits on the client repo's main branch by calendar
+ * month and sums to the 815 in TILES. All of it is the same pull as the
+ * narrative's figures (main at 11-11-26) and follows the same rule: see
+ * docs/lab-backlog.md, "what the BDL-005 page is allowed to say about the
+ * client". Refresh every figure here and in bdl-005.md together, or none.
+ */
+import TvDemo from '../../experiments/bdl-012/TvDemo.astro';
+
+/** [month, commits, what was happening] */
+const MONTHS: [string, number, string][] = [
+  ['July', 262, 'First commit on the 7th. The site is live on day thirteen.'],
+  ['August', 392, 'The first rooms, the first sell-outs, and v1 delivered.'],
+  ['September', 67, ''],
+  ['October', 82, ''],
+  ['November', 12, 'To the 11th.'],
+];
+const top = Math.max(...MONTHS.map((m) => m[1]));
+/** [figure, what it counts] */
+const TILES: [string, string][] = [
+  ['815', 'commits'],
+  ['245', 'merged pull requests'],
+  ['701', 'automated tests'],
+  ['33,056', 'lines of code'],
+];
+---
+<section class="s5 wrap" aria-labelledby="s5-shape">
+  <div class="s5-head">
+    <p class="smallcaps s5-kick">In one picture</p>
+    <h2 id="s5-shape">Two months of building, then refinements</h2>
+    <p class="s5-lede">Commits to the project, month by month, from the first one in July 2026 to the middle of November.</p>
+  </div>
+
+  <div class="s5-fig">
+    <ol class="s5-bars">
+      {MONTHS.map(([month, n, note], i) => (
+        <li style={`--f:${n / top};--i:${i}`} class={i < 2 ? 'build' : ''}>
+          <span class="n">{n}</span>
+          <span class="bar" aria-hidden="true"></span>
+          <span class="m smallcaps"><span class="full">{month}</span><span class="abbr" aria-hidden="true">{month.slice(0, 3)}</span></span>
+          {note && <span class="note">{note}</span>}
+        </li>
+      ))}
+    </ol>
+    <p class="s5-brace smallcaps" aria-hidden="true"><span>Building</span><span>Refining</span></p>
+    <dl class="s5-tiles">
+      {TILES.map(([n, what]) => <div><dt>{n}</dt><dd>{what}</dd></div>)}
+    </dl>
+    <p class="s5-basis">All figures are the project’s main branch as of 11 November 2026.</p>
+  </div>
+
+  <div class="s5-head s5-mini">
+    <p class="smallcaps s5-kick">One piece of it, working</p>
+    <h2>Call a card</h2>
+    <p class="s5-lede">This is the host’s phone and the venue TV in miniature, with real cards from the Plant deck. The whole system is drawn, and can be operated, in <a href="/lab/bdl-012/">BDL-012, The Data Map</a>.</p>
+  </div>
+  {/* The miniature is built by script. Without it there is a phone with dead
+      buttons and an empty TV, so it steps aside. is:inline keeps the rule
+      inside the noscript. */}
+  <noscript><style is:inline>.s5 .s5-mini, .s5 .tvd { display: none; }</style></noscript>
+  <TvDemo note="A working miniature of the Live Event App. Tap Call next to take the phone." />
+</section>
+
+<style>
+  @keyframes s5-grow { from { transform: scaleY(0); } }
+
+  .s5 { max-width: var(--measure-wide); padding-block: var(--space-5) var(--space-6); border-top: 1px solid var(--line-accent); }
+  .s5-kick { color: var(--accent); font-size: var(--text-sm); }
+  .s5-head h2 { font-size: var(--text-2xl); margin-top: var(--space-1); text-wrap: balance; }
+  .s5-lede { color: var(--mark-muted); line-height: 1.6; margin-top: var(--space-2); max-width: 62ch; }
+  .s5-lede a { color: var(--link, var(--accent)); }
+  .s5-mini { margin-top: var(--space-6); }
+
+  .s5-fig { margin-top: var(--space-5); }
+  .s5-bars { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(0.5rem, 2vw, 1.5rem); align-items: start; }
+  .s5-bars li { display: grid; grid-template-rows: auto 15rem auto auto; justify-items: center; min-width: 0; }
+  .s5-bars .abbr { display: none; }
+  .s5-bars .n { font-family: var(--font-display); font-size: clamp(1.5rem, 3.4vw, 2.5rem); line-height: 1; color: var(--mark); font-variant-numeric: lining-nums tabular-nums; align-self: end; padding-bottom: 0.4rem;
+    /* The numeral rides on top of its bar. */
+    transform: translateY(calc((1 - var(--f)) * 15rem)); }
+  .s5-bars .bar { align-self: end; width: 100%; height: calc(var(--f) * 15rem); min-height: 3px; background: color-mix(in srgb, var(--accent) 38%, transparent); border-top: 2px solid var(--accent); transform-origin: bottom; }
+  .s5-bars .build .bar { background: var(--accent); }
+  .s5-bars .m { margin-top: 0.6rem; font-size: var(--text-sm); color: var(--mark); }
+  .s5-bars .note { margin-top: 0.3rem; font-size: var(--text-sm); line-height: 1.4; color: var(--mark-muted); text-align: center; text-wrap: balance; }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .s5-bars .bar { animation: s5-grow linear both; animation-timeline: view(); animation-range: entry 0% cover 34%; }
+    }
+  }
+  .s5-brace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: clamp(0.5rem, 2vw, 1.5rem); margin-top: var(--space-3); font-size: var(--text-sm); color: var(--mark-muted); }
+  .s5-brace span { border-top: 1px solid var(--line-accent); padding-top: 0.45rem; text-align: center; }
+  .s5-brace span:first-child { border-top-color: var(--accent); color: var(--accent); }
+
+  .s5-tiles { margin: var(--space-5) 0 0; display: grid; grid-template-columns: repeat(4, 1fr); border-block: 1px solid var(--line-accent); }
+  .s5-tiles div { padding: var(--space-4) var(--space-3); border-left: 1px solid var(--line); }
+  .s5-tiles div:first-child { border-left: 0; padding-left: 0; }
+  .s5-tiles dt { font-family: var(--font-display); font-size: clamp(2rem, 4.6vw, 3.5rem); line-height: 1; color: var(--accent); font-variant-numeric: lining-nums tabular-nums; }
+  .s5-tiles dd { margin: 0.5rem 0 0; color: var(--mark-muted); font-size: var(--text-sm); }
+  .s5-basis { margin-top: var(--space-2); font-size: var(--text-sm); font-style: italic; color: var(--mark-muted); }
+
+  @media (max-width: 640px) {
+    .s5-bars li { grid-template-rows: auto 11rem auto; }
+    .s5-bars .n { transform: translateY(calc((1 - var(--f)) * 11rem)); }
+    .s5-bars .bar { height: calc(var(--f) * 11rem); }
+    /* Five columns are too narrow for a sentence under each bar. */
+    .s5-bars .note { display: none; }
+    .s5-bars .full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .s5-bars .abbr { display: inline; }
+    .s5-tiles { grid-template-columns: 1fr 1fr; }
+    .s5-tiles div { padding: var(--space-3) var(--space-3); }
+    .s5-tiles div:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .s5-tiles div:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  }
+</style>

@@ -15,9 +15,12 @@
  */
 import {
   BEHIND, CALLOUTS, DRAWERS, FEATS, FEEDS, GOOGLE, LANES, LOCKS, PAGES, SEO, SIM, STATS, STEPS,
-  THEMES, TIERS, TV_DECK, ART_THEME,
+  THEMES, TIERS, ART_THEME,
 } from './data';
 import { STRIP } from './art';
+import TvDemo from './TvDemo.astro';
+import { Image } from 'astro:assets';
+import mapStill from './map-still.png';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 const maxC = Math.max(...THEMES.map((t) => t[1]));
@@ -42,7 +45,14 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
 
 <div class="dm" id="dm">
   <header class="hero">
-    <div class="wall" id="dm-wall" aria-hidden="true"></div>
+    {/* The map itself is the opening picture: the whole system, already
+        running, with the club's caller cards flying into the content library.
+        Decorative here (the real, operable map is the next section), so it is
+        hidden from assistive tech and takes no pointer. */}
+    <div class="hero-map" id="dm-hero" aria-hidden="true">
+      <div class="map-fit"><div class="map-size"><div class="canvas" id="dm-map-hero"></div></div></div>
+      <div class="hero-cards" id="dm-hero-cards"></div>
+    </div>
     <div class="hero-inner">
       <div class="letterhead">
         <span>The Data Map</span>
@@ -52,7 +62,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
       <h2 class="title">Everything that makes a night run</h2>
       <p class="lede">Cheer and Chatter Social Club runs themed game nights on the Mississippi Gulf Coast. When the owners hit Publish, sell a ticket or start a game, a lot happens out of sight.</p>
       <p class="lede">We drew them this map so they could see their own system: every place their information lives, where it travels, and where it shows up. Then we liked it enough to hang it in the Lab.</p>
-      <p class="wall-note"><i></i>Behind this title: watercolor caller cards from the club’s Plant deck.</p>
+      <p class="wall-note"><i></i>Flying into the library: watercolor caller cards from the club’s Plant deck.</p>
     </div>
   </header>
 
@@ -83,8 +93,25 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
           <button type="button" data-mode="tech" aria-pressed="false">Under the hood</button>
         </div>
       </div>
-      <div class="map-fit"><div class="map-size"><div class="canvas map-main" id="dm-map-main"></div></div></div>
-      <div class="map-hint mob-only"><span>The whole system at once. Every light is information on the move. Tap a box to see what it connects to.</span><button type="button" id="dm-zoom">Zoom in</button></div>
+      {/* Without JavaScript nothing below can be built, so the map arrives as
+          a picture (scripts/lab/capture-bdl-012-still.mjs) and everything
+          that only works with script steps aside. is:inline keeps the style
+          inside the noscript; Astro would otherwise hoist it to the head,
+          where it would hide these for everyone. */}
+      <noscript>
+        <style is:inline>
+          .dm .tour-bar, .dm .map-tools .mode, .dm .map-hint, .dm .skip-map, .dm .hero-map, .dm .map-fit,
+          .dm .sub-h.mob-only, .dm .desk, .dm .tvd, .dm .wall-note { display: none !important; }
+          .dm .map-still { display: block; width: 100%; height: auto; margin-top: 22px; border-radius: 12px; }
+        </style>
+        <Image class="map-still" src={mapStill} alt="The whole map as a still picture. On the left, the owners in Sanity Studio, their game decks, Ticket Tailor and their guests. In the middle, the Sanity content library and the Ticket Tailor box office feed four pieces on Cloudflare: the site builder, the sold-out watcher, the game relay and the forms desk, with Resend below. On the right, the website, Google and Facebook, the host console, the venue TV, and the owners’ and guests’ inboxes and mailing lists. Coloured lines join them: content, tickets, game night and email." widths={[768, 1104, 1656]} sizes="(max-width: 1200px) 100vw, 1104px" />
+        <p class="note">This is a still. With JavaScript on, the map moves, plays four journeys and opens every box.</p>
+      </noscript>
+      <a class="skip-map" href="#dm-after-map">Skip past the map’s boxes</a>
+      <div class="map-fit"><div class="map-size" id="dm-view"><div class="canvas map-main" id="dm-map-main"></div></div></div>
+      <div class="map-hint mob-only"><span>Pinch or double-tap to zoom, drag to move around. Tap a box to open it, or a line to see what travels on it.</span><button type="button" id="dm-zoom">Zoom in</button></div>
+      <p class="map-hint desk-only"><span>Click a box to open it. Hover a line to see what travels on it.</span></p>
+      <span id="dm-after-map" tabindex="-1"></span>
       <h3 class="sub-h mob-only">Four moments, step by step<small>Each one plays as you reach it.</small></h3>
       <div class="chains mob-only" id="dm-chains"></div>
     </section>
@@ -123,7 +150,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
             </div>
             <div class="bar">
               {totals[row]
-                ? <Fragment><div class="track">{t.map((n, i) => n > 0 && <i style={`width:${(n / maxT) * 100}%;background:var(${tierVar[i]});animation-delay:${row * 70 + 120}ms`} title={`${TIERS[i]}: ${n}`}></i>)}</div><span class="v">{totals[row]}</span></Fragment>
+                ? <Fragment><div class="track" role="img" aria-label={t.map((n, i) => n > 0 ? `${TIERS[i]} ${n}` : '').filter(Boolean).join(', ')}>{t.map((n, i) => n > 0 && <i style={`width:${(n / maxT) * 100}%;background:var(${tierVar[i]});animation-delay:${row * 70 + 120}ms`} title={`${TIERS[i]}: ${n}`}></i>)}</div><span class="v">{totals[row]}</span></Fragment>
                 : <span class="v none">Bingo only</span>}
             </div>
           </div>
@@ -166,6 +193,12 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
             <button type="button" id="dm-refund" class="alt">Refund one</button>
           </div>
           <ol class="desk-log" id="dm-log" aria-live="polite"><li>Two seats left. Nothing has happened yet.</li></ol>
+        </div>
+        {/* The same sale, drawn on the lines of the big map. Built by stage.ts
+            from DESK (wide) or DESK_M (phone). */}
+        <div class="desk-map" aria-hidden="true">
+          <div class="dk-label">The same sale, on the map</div>
+          <div class="map-fit"><div class="map-size"><div class="canvas" id="dm-map-desk"></div></div></div>
         </div>
       </div>
 
@@ -220,26 +253,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     <section>
       <div class="sec-head"><span class="kick">Part 4</span><h2>Game night</h2></div>
       <p class="sec-intro">The Live Event App reads the same library as the website, but only ever reads. Nothing that happens at a venue can change the website.</p>
-      <div class="demo">
-        <div class="host">
-          <div class="h-bar"></div>
-          <div class="h-title">{TV_DECK.name}</div>
-          <div class="h-tv"><i></i>TV connected</div>
-          <div class="h-tabs" aria-hidden="true"><span>Welcome</span><span class="on">Caller</span><span>Board</span><span>Trivia</span><span>Break</span><span>Closing</span></div>
-          <button type="button" class="h-btn" id="dm-call">Call next</button>
-          <div class="h-count"><b id="dm-n-called">{TV_DECK.called}</b> called, <b id="dm-n-left">{TV_DECK.size - TV_DECK.called}</b> left</div>
-          <button type="button" class="h-btn alt" id="dm-fact">Reveal fun fact</button>
-        </div>
-        <div class="relay-hint" aria-hidden="true">
-          <svg width="70" height="16" viewBox="0 0 70 16"><path d="M2 8 H62" stroke="currentColor" stroke-width="2" stroke-dasharray="2 6" fill="none"><animate attributeName="stroke-dashoffset" from="0" to="-16" dur=".8s" repeatCount="indefinite"/></path><path d="M60 3 L68 8 L60 13 z" fill="currentColor"/></svg>
-          instantly
-        </div>
-        <div class="tv">
-          <div class="screen" id="dm-screen" aria-live="polite"></div>
-          <div class="stand"></div>
-        </div>
-        <p class="demo-note" id="dm-demo-note">A working miniature of the Live Event App, with real cards from the Plant deck. Tap Call next to take the phone.</p>
-      </div>
+      <TvDemo />
       <h3 class="sub-h">How the phone reaches the TV</h3>
       <div class="map-fit desk-only"><div class="map-size"><div class="canvas" id="dm-map-live"></div></div></div>
       <div class="mob-only" id="dm-live-m"></div>
@@ -285,6 +299,14 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
       </div>
     </div>
   </div>
+
+  {/* A box's drawer: both voices, what travels on its lines, and for five
+      boxes the reasoning and the failure modes. A side panel on a wide
+      screen, a bottom sheet on a phone. Filled by stage.ts. */}
+  <aside class="box-drawer" id="dm-drawer" aria-labelledby="dm-drawer-title">
+    <button type="button" class="dr-close" id="dm-drawer-close" aria-label="Close">×</button>
+    <div class="dr-body" id="dm-drawer-body"></div>
+  </aside>
 </div>
 
 <script>
@@ -296,7 +318,6 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
   @keyframes dm-drift { to { transform: translateY(-50%); } }
   @keyframes dm-flow { to { stroke-dashoffset: -29; } }
   @keyframes dm-grow { from { transform: scaleX(0); } }
-  @keyframes dm-ripple { to { transform: scale(16); opacity: 0; } }
   @keyframes dm-chdot { 0% { top: 0; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
   @keyframes dm-nudge { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--l-tickets) 55%, transparent); } 60% { box-shadow: 0 0 0 12px transparent; } }
 
@@ -360,19 +381,33 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
 
     /* ---------- hero: a wall of the club's own cards ---------- */
     .hero { position: relative; overflow: hidden; isolation: isolate; }
-    .wall { position: absolute; inset: -40px 0 0 0; display: flex; gap: 10px; justify-content: center; z-index: -2; }
-    .wall .col { flex: none; width: 104px; display: flex; flex-direction: column; gap: 10px; animation: dm-drift var(--dur, 90s) linear infinite; }
-    .wall .col.up { animation-direction: reverse; }
-    .wall img { width: 104px; height: 104px; max-width: none; border-radius: 12px; object-fit: cover; display: block; background: color-mix(in srgb, var(--mark) 4%, transparent); opacity: .5; filter: saturate(.9); transition: opacity .9s, filter .9s, transform .9s; }
-    .wall img.glint { opacity: 1; filter: saturate(1.15); transform: scale(1.06); }
+    /* The hero map. Wide: behind the title, bleeding off the right edge,
+       under the veil below. Phone: its own band under the text (the flex
+       order further down), where there is no room to read a title over it. */
+    .hero-map { position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
+    .hero-map .map-fit { position: absolute; top: 132px; right: -56px; margin: 0; overflow: visible; opacity: .9; }
+    .hero-map .node { transition: none; }
+    .hero-cards { position: absolute; inset: 0; }
+    .hero-cards img { position: absolute; left: 0; top: 0; width: 86px; height: 86px; max-width: none; border-radius: 12px; object-fit: cover; opacity: 0; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+    .hero-cards img.rest { opacity: .8; }
+    @media (max-width: 759px) {
+      .hero { display: flex; flex-direction: column; }
+      .hero-inner { order: 1; width: 100%; }
+      .hero-map { order: 2; position: relative; inset: auto; z-index: 0; height: 300px;
+        -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 16%, #000 80%, transparent 100%);
+        mask-image: linear-gradient(180deg, transparent 0, #000 16%, #000 80%, transparent 100%); }
+      .hero-map .map-fit { top: 0; right: auto; left: -118px; opacity: .9; }
+      .hero-cards img { width: 58px; height: 58px; border-radius: 9px; }
+      .hero::before { display: none; }
+    }
     .hero::before { content: ""; position: absolute; inset: 0; z-index: -1;
       background:
-        linear-gradient(90deg, var(--field) 0%, color-mix(in srgb, var(--field) 94%, transparent) 34%, color-mix(in srgb, var(--field) 62%, transparent) 62%, color-mix(in srgb, var(--field) 30%, transparent) 100%),
+        linear-gradient(90deg, var(--field) 0%, color-mix(in srgb, var(--field) 97%, transparent) 50%, color-mix(in srgb, var(--field) 80%, transparent) 58%, color-mix(in srgb, var(--field) 26%, transparent) 70%, color-mix(in srgb, var(--field) 10%, transparent) 100%),
         linear-gradient(0deg, var(--field) 0%, transparent 28%),
         linear-gradient(180deg, color-mix(in srgb, var(--field) 92%, transparent) 0%, transparent 24%); }
-    @media (max-width: 760px) { .hero::before { background: linear-gradient(0deg, var(--field) 0%, color-mix(in srgb, var(--field) 82%, transparent) 40%, color-mix(in srgb, var(--field) 70%, transparent) 100%); } }
+    @media (max-width: 759px) { .hero::before { background: linear-gradient(0deg, var(--field) 0%, color-mix(in srgb, var(--field) 82%, transparent) 40%, color-mix(in srgb, var(--field) 70%, transparent) 100%); } }
     .hero-inner { max-width: 1200px; margin: 0 auto; padding-inline: 48px; padding-block: 84px 70px; }
-    @media (max-width: 700px) { .hero-inner { padding-inline: 16px; padding-block: 28px 48px; } }
+    @media (max-width: 700px) { .hero-inner { padding-inline: 16px; padding-block: 28px 14px; } }
     .letterhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--line); font-family: var(--display); font-size: 14px; letter-spacing: .26em; text-transform: uppercase; color: var(--mark); }
     .letterhead .for { font-family: var(--body); font-size: 15px; letter-spacing: .04em; text-transform: none; color: var(--muted); }
     .eyebrow { font-family: var(--display); font-size: 14px; letter-spacing: .3em; text-transform: uppercase; color: var(--moss); margin-top: 64px; }
@@ -435,7 +470,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
 
     /* ---------- node maps ---------- */
     .map-fit { margin-top: 22px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .map-size { position: relative; overflow: hidden; }
+    .map-size { position: relative; overflow: hidden; overflow: clip; }
     .canvas { position: absolute; top: 0; left: 0; width: 1104px; transform-origin: 0 0; }
     .canvas svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; overflow: visible; z-index: 1; pointer-events: none; }
     .node { position: absolute; z-index: 2; background: var(--field-raised); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px 14px; transition: opacity .35s, border-color .35s, box-shadow .35s; }
@@ -459,7 +494,8 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .n-thumbs img { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; background: var(--field-deep); border: 2px solid var(--pine); margin-left: -8px; }
     .n-thumbs img:first-child { margin-left: 0; }
     .node:not(.hub) .n-thumbs img { border-color: var(--field-raised); }
-    .map-main .node[role="button"] { cursor: pointer; }
+    /* A box reached with Tab scrolls itself clear of the sticky journey bar. */
+    .map-main .node[role="button"] { cursor: pointer; scroll-margin-top: 15rem; }
     .colhead { position: absolute; z-index: 2; font-family: var(--display); font-size: 13px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
     .group { position: absolute; z-index: 0; border: 1.5px dashed color-mix(in srgb, var(--mark) 22%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--mark) 2.5%, transparent); transition: opacity .35s; }
     .group .g-label { position: absolute; top: 10px; left: 16px; font-family: var(--display); font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--mark); }
@@ -473,6 +509,70 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .tiny g.edge path.base { stroke-width: 4.5; opacity: .7; }
     .tiny g.edge.hot path.base { stroke-width: 7; }
     @media (prefers-reduced-motion: reduce) { g.edge path.flow { animation: none; } .wall .col { animation: none; } }
+
+    /* ---------- the camera (engine.ts) ---------- */
+    /* At the fitted view a finger scrolls the page straight past the map.
+       Zoomed in, the map takes the finger: that is the only way to pan it. */
+    .map-size.cam { touch-action: pan-y; }
+    .map-size.cam.zoomed { touch-action: none; cursor: grab; }
+    .map-size.cam.dragging { cursor: grabbing; user-select: none; }
+    .canvas.fly { transition: transform .8s cubic-bezier(.3,.05,.2,1); }
+    @media (prefers-reduced-motion: reduce) { .canvas.fly { transition: none; } }
+    @media (max-width: 759px) {
+      .map-size.cam { border: 1px solid var(--line); border-radius: 14px; background: radial-gradient(circle, color-mix(in srgb, var(--mark) 9%, transparent) 1px, transparent 1.5px) 0 0 / 18px 18px, var(--field-deep); }
+    }
+    /* A line is a thin target. This fat invisible stroke over it is what the
+       pointer actually meets; --hit grows as the map shrinks on screen. */
+    g.edge path.hit { fill: none; stroke: transparent; stroke-width: var(--hit, 22px); pointer-events: stroke; cursor: help; }
+    .edge-tip { position: absolute; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; background: var(--field-deep); border: 1px solid var(--c, var(--line)); color: var(--mark); padding: 5px 11px; border-radius: 8px; white-space: nowrap; font-size: 14.5px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+    .tiny .edge-tip { font-size: 34px; padding: 12px 22px; border-radius: 16px; border-width: 2px; }
+    /* Camera controls follow the camera, not the phone breakpoint. */
+    &.is-cam .map-hint.mob-only { display: flex !important; }
+    &.is-cam .map-hint.desk-only { display: none !important; }
+    .skip-map { position: absolute; left: -9999px; }
+    .skip-map:focus { position: static; display: inline-block; margin-top: 14px; color: var(--moss); font-size: 15px; }
+
+    /* ---------- small boxes with a state pill (the ticket desk's map) ---------- */
+    .node.compact { padding: 10px 12px 11px; }
+    .node.compact .n-title { font-size: 16.5px; }
+    .node .n-chip { margin-top: 7px; display: inline-block; font-size: 12.5px; line-height: 1; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-variant-numeric: lining-nums tabular-nums; transition: color .4s, border-color .4s, background .4s; }
+    .node .n-chip:empty { display: none; }
+    .node .n-chip.busy { color: var(--l-tickets); border-color: var(--l-tickets); }
+    .node .n-chip.on { color: #1c1a17; background: var(--l-tickets); border-color: var(--l-tickets); }
+    /* The big map's own boxes remember a sold-out night with a flag, which
+       sits on the corner and so never changes a box's measured height. */
+    .node .n-flag { position: absolute; top: -11px; right: 10px; font-size: 12px; line-height: 1; padding: 4px 9px; border-radius: 999px; background: var(--l-tickets); color: #1c1a17; box-shadow: 0 4px 14px rgba(0,0,0,.4); white-space: nowrap; }
+    svg.still g.edge path.flow { display: none; }
+
+    /* ---------- a box's drawer ---------- */
+    /* .box-drawer, never .drawer: that name belongs to the twelve cards of
+       the content library further down, and a shared class hid all of them. */
+    .box-drawer { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(430px, 100vw); background: var(--field-raised); border-left: 1px solid var(--line); box-shadow: -30px 0 70px rgba(0,0,0,.55); padding: 24px 26px 5rem; overflow-y: auto; overscroll-behavior: contain; visibility: hidden; transform: translateX(104%); transition: transform .34s cubic-bezier(.2,.7,.2,1), visibility 0s .34s; }
+    .box-drawer.open { visibility: visible; transform: none; transition: transform .34s cubic-bezier(.2,.7,.2,1), visibility 0s; }
+    @media (prefers-reduced-motion: reduce) { .box-drawer, .box-drawer.open { transition: none; } }
+    @media (max-width: 759px) {
+      .box-drawer { top: auto; left: 0; width: auto; max-height: 66vh; border-left: 0; border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -24px 60px rgba(0,0,0,.6); padding: 18px 18px 2.2rem; transform: translateY(104%); }
+    }
+    .dr-close { position: sticky; top: 0; display: block; width: 38px; height: 38px; margin: -4px -6px -34px auto; border-radius: 50%; border: 1px solid var(--line); background: var(--field-deep); cursor: pointer; font-size: 21px; line-height: 1; z-index: 1; }
+    .dr-close:hover { border-color: var(--mark); }
+    .dr-lanes { display: flex; gap: 5px; margin-bottom: 10px; }
+    .dr-lanes i { width: 22px; height: 3px; border-radius: 2px; display: block; }
+    .dr-kick { font-family: var(--display); font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+    .dr-title { font-family: var(--display); font-size: 29px; line-height: 1.12; margin-top: 3px; }
+    .dr-sec { margin-top: 22px; }
+    .dr-sec h4 { font-family: var(--display); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .dr-sec p { font-size: 15.5px; line-height: 1.48; }
+    .dr-sec.tech p { border-left: 2px solid var(--caramel); padding-left: 11px; }
+    .dr-sec.deep { border-top: 1px solid var(--line-soft); padding-top: 18px; }
+    .dr-lines { list-style: none; display: grid; gap: 9px; }
+    .dr-lines li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: start; font-size: 15px; line-height: 1.35; }
+    .dr-lines li i { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--c); box-shadow: 0 0 8px var(--c); display: block; }
+    .dr-lines button { background: none; border: 0; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--mark) 35%, transparent); text-underline-offset: 3px; }
+    .dr-lines button:hover { text-decoration-color: var(--mark); }
+    .dr-lines small { display: block; color: var(--muted); font-size: 14px; margin-top: 1px; }
+    .dr-lines small.w { color: color-mix(in srgb, var(--caramel) 80%, var(--mark)); }
+    .dr-sketch { font-family: ui-monospace, 'Cascadia Code', Consolas, Menlo, monospace; font-size: 12.5px; line-height: 1.65; background: var(--field-deep); border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px; overflow-x: auto; white-space: pre; color: color-mix(in srgb, var(--mark) 86%, transparent); }
+    .dr-note { margin-top: 7px; font-size: 13px; color: var(--muted); font-style: italic; }
 
     /* ---------- content library ---------- */
     .drawers { margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -526,7 +626,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
 
     /* The ticket desk: a made-up night you can sell out. */
     .desk { margin-top: 16px; display: grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: center; padding: 22px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--l-tickets) 34%, transparent); background: radial-gradient(ellipse at 20% 30%, color-mix(in srgb, var(--l-tickets) 9%, var(--field-deep)), var(--field-deep) 70%); }
-    @media (max-width: 760px) { .desk { grid-template-columns: 1fr; padding: 16px; } }
+    @media (max-width: 759px) { .desk { grid-template-columns: 1fr; padding: 16px; } }
     .desk-page { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #f5f1e8; color: #1f1b15; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
     .dp-bar { display: flex; align-items: center; gap: 5px; padding: 8px 10px; background: #e9e1d2; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 11.5px; color: #5a5244; }
     .dp-bar i { width: 8px; height: 8px; border-radius: 50%; background: #c9bfae; display: block; }
@@ -557,11 +657,15 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .desk-log li::before { content: ""; position: absolute; left: 0; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
     .desk-log li:first-child { color: var(--mark); }
     .desk-log li:first-child::before { background: var(--l-tickets); box-shadow: 0 0 8px var(--l-tickets); }
+    .desk-map { grid-column: 1 / -1; border-top: 1px solid var(--line-soft); padding-top: 16px; min-width: 0; }
+    .desk-map .dk-label { font-family: var(--display); font-size: 12.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+    .desk-map .map-fit { margin-top: 12px; }
+    .desk-map .map-size { margin-inline: auto; }
 
     .callout { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     .callout div { border-top: 1px solid var(--line); padding-top: 12px; font-size: 16px; color: var(--muted); }
     .callout b { display: block; font-family: var(--display); font-weight: 400; font-size: 17.5px; color: var(--mark); margin-bottom: 3px; letter-spacing: .02em; }
-    @media (max-width: 760px) { .callout { grid-template-columns: 1fr; } }
+    @media (max-width: 759px) { .callout { grid-template-columns: 1fr; } }
 
     /* ---------- website + search ---------- */
     .two { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
@@ -609,41 +713,11 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     @media (max-width: 560px) { .seo-grid { grid-template-columns: 1fr; } }
 
     /* ---------- game night demo ---------- */
-    .demo { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 30px 40px; padding: 34px 20px 26px; border-radius: 18px; background: radial-gradient(ellipse at 60% 40%, color-mix(in srgb, var(--l-live) 10%, var(--field-deep)), var(--field-deep) 70%); border: 1px solid var(--line-soft); }
-    .host { width: 236px; flex: none; border-radius: 34px; border: 2px solid #3a362e; background: #12110f; padding: 14px 12px 18px; box-shadow: 0 20px 50px rgba(0,0,0,.45); font-size: 13px; }
-    .host .h-bar { width: 70px; height: 5px; border-radius: 3px; background: #3a362e; margin: 0 auto 14px; }
-    .host .h-title { font-family: var(--display); font-size: 15px; }
-    .host .h-tv { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-    .host .h-tv i { width: 7px; height: 7px; border-radius: 50%; background: #8fd18a; box-shadow: 0 0 8px #8fd18a; display: block; }
-    .host .h-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 12px; }
-    .host .h-tabs span { text-align: center; font-size: 11px; padding: 5px 0; border-radius: 7px; border: 1px solid var(--line); color: var(--muted); }
-    .host .h-tabs span.on { border-color: var(--l-live); color: var(--mark); background: color-mix(in srgb, var(--l-live) 16%, transparent); }
-    .host .h-btn { display: block; width: 100%; cursor: pointer; border: 0; position: relative; overflow: hidden; margin-top: 14px; border-radius: 14px; padding: 15px 0; text-align: center; font-family: var(--display); font-size: 18px; letter-spacing: .04em; background: var(--fern); color: #10140f; transition: transform .12s; }
-    .host .h-btn:active { transform: scale(.97); }
-    .host .h-btn.alt { background: transparent; border: 1px solid var(--line); color: var(--mark); font-size: 14px; padding: 9px 0; margin-top: 8px; }
-    .host .h-count { text-align: center; margin-top: 8px; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
-    .host .h-count b { color: var(--mark); font-weight: 600; }
-    .ripple { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: rgba(255,255,255,.55); pointer-events: none; animation: dm-ripple .7s ease-out forwards; }
-    .relay-hint { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--l-live); font-size: 13.5px; font-style: italic; }
-    .tv { flex: 1 1 480px; max-width: 600px; min-width: 0; }
-    .tv .screen { aspect-ratio: 16 / 9; border-radius: 10px; border: 10px solid #0d0c0b; outline: 1px solid #3a362e; background: #1a1916; overflow: hidden; position: relative; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 80px color-mix(in srgb, var(--l-live) 10%, transparent); }
-    .tv .stand { width: 26%; height: 14px; margin: 0 auto; background: linear-gradient(#24221d, #12110f); border-radius: 0 0 8px 8px; }
-    .card-tv { position: absolute; inset: 0; display: grid; grid-template-columns: 44% 1fr; gap: 5%; padding: 6% 6% 5%; align-items: center; transition: opacity .5s, transform .5s; }
-    .card-tv.out { opacity: 0; transform: scale(.97); }
-    .card-tv img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 6%; }
-    .card-tv .k { font-family: var(--display); font-size: 12px; letter-spacing: .26em; text-transform: uppercase; color: var(--moss); }
-    .card-tv .nm { font-family: var(--display); font-size: 34px; line-height: 1.05; margin-top: 4px; }
-    .card-tv .fact { margin-top: 14px; font-size: 13px; line-height: 1.4; color: #d9d2c3; border-left: 2px solid var(--moss); padding-left: 10px; transition: opacity .6s, transform .6s; }
-    .card-tv .fact b { display: block; font-family: var(--display); font-weight: 400; color: var(--moss); letter-spacing: .08em; margin-bottom: 2px; }
-    .card-tv .fact.hide { opacity: 0; transform: translateY(6px); }
-    .card-tv .prev { margin-top: 14px; font-size: 11.5px; color: var(--muted); }
-    @media (max-width: 640px) { .card-tv .prev { display: none; } }
-    .demo-note { flex-basis: 100%; text-align: center; font-size: 14.5px; color: var(--muted); font-style: italic; }
     .feats { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .feat { border-top: 2px solid var(--l-live); padding-top: 10px; }
     .feat h4 { font-family: var(--display); font-size: 17.5px; line-height: 1.2; margin-bottom: 4px; }
     .feat p { font-size: 15px; color: var(--muted); line-height: 1.4; }
-    @media (max-width: 760px) { .feats { grid-template-columns: 1fr; } }
+    @media (max-width: 759px) { .feats { grid-template-columns: 1fr; } }
 
     /* ---------- safety ---------- */
     .locks { margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -705,7 +779,23 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .ch-cap.on { color: var(--mark); }
     @media (max-width: 759px) {
       .desk-only { display: none !important; }
-      .tour-bar { display: none; }
+      /* The journeys play on the phone map too, with the camera following.
+         The caption has to sit right on top of the map to be read with it,
+         so the legend and the label switch move above the journey bar. */
+      #dm-map-section { display: flex; flex-direction: column; }
+      #dm-map-section > * { order: 3; }
+      #dm-map-section > .sec-head, #dm-map-section > .sec-intro { order: 0; }
+      #dm-map-section > .map-tools { order: 1; }
+      #dm-map-section > .tour-bar { order: 2; position: static; padding-block: 0 2px; margin-top: 18px; scroll-margin-top: 4.2rem; }
+      .tour { margin-top: 0; flex-wrap: nowrap; overflow-x: auto; margin-inline: -16px; padding: 4px 16px 6px; scrollbar-width: none; }
+      .tour::-webkit-scrollbar { display: none; }
+      .tour .t-label { display: none; }
+      .tour button { flex: none; font-size: 15px; padding: 7px 13px 7px 10px; }
+      .caption { margin-top: 8px; min-height: 84px; padding: 10px 13px; gap: 12px; }
+      .caption .c-step { width: 36px; height: 36px; font-size: 14px; }
+      .caption .c-text { font-size: 16px; }
+      .caption .c-text small { font-size: 13px; }
+      .map-fit { margin-top: 10px; }
       section { margin-top: 64px; }
       h2 { font-size: 30px; }
       .sec-head { gap: 4px 14px; }
@@ -720,16 +810,6 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
       .p-row { grid-template-columns: 1fr; gap: 2px; padding: 10px 14px; }
       .gcard dl { grid-template-columns: 92px 1fr; }
       .gcard dt, .gcard dd { padding: 8px 12px; }
-      .demo { padding: 24px 14px 18px; gap: 18px; }
-      .relay-hint { flex-basis: 100%; gap: 4px; }
-      .relay-hint svg { display: none; }
-      .relay-hint::before { content: ""; width: 2px; height: 30px; background: repeating-linear-gradient(var(--l-live) 0 4px, transparent 4px 9px); }
-      .tv { flex-basis: 100%; }
-      .tv .screen { aspect-ratio: auto; display: grid; border-width: 8px; }
-      .card-tv { position: relative; inset: auto; grid-area: 1 / 1; grid-template-columns: 38% 1fr; gap: 14px; padding: 18px 16px; }
-      .card-tv .nm { font-size: 24px; }
-      .card-tv .fact { font-size: 13px; margin-top: 8px; }
-      .card-tv .k { font-size: 10px; }
       .close h2 { font-size: 32px; }
       .close p { font-size: 17.5px; }
       .legend { gap: 8px 18px; font-size: 14.5px; }

@@ -52,6 +52,8 @@ export interface MapNode {
   list?: [string, string][];
   thumbs?: 'wall' | 'strip';
   cls?: 'hub' | 'quiet';
+  /** A small state pill under the title, changed from script (the ticket desk's map). */
+  chip?: string;
 }
 
 export interface MapEdge {
@@ -65,9 +67,15 @@ export interface MapEdge {
   label?: string;
   dx?: number;
   dy?: number;
+  /** What travels on this line, in a few plain words. Shown when the line is hovered or tapped, and in the box drawers. */
+  carries?: string;
+  /** The same, in engineering terms. */
+  wire?: string;
 }
 
 export interface MapSpec {
+  /** Canvas width in px. 1104 unless a map is drawn for a narrower space. */
+  w?: number;
   interactive?: boolean;
   heads?: { x: number; y: number; w: number; text: string }[];
   groups?: { label: string; members: string[]; pad: number; top: number }[];
@@ -159,24 +167,26 @@ export const MAIN: MapSpec = {
       tech: 'Resend contacts. Waitlist entries carry the nights each person asked about.' },
   ],
   edges: [
-    { from: 'studio', to: 'sanity', lane: 'content' },
-    { from: 'files', to: 'sanity', lane: 'content' },
-    { from: 'sanity', to: 'builder', lane: 'content' },
-    { from: 'sanity', to: 'relay', lane: 'content' },
-    { from: 'builder', to: 'site', lane: 'content' },
-    { from: 'builder', to: 'google', lane: 'content' },
-    { from: 'ttyou', to: 'tt', lane: 'tickets' },
-    { from: 'guests', to: 'tt', lane: 'tickets' },
-    { from: 'tt', to: 'builder', lane: 'tickets' },
-    { from: 'tt', to: 'watcher', lane: 'tickets' },
-    { from: 'watcher', to: 'sanity', lane: 'tickets', fs: 'l', ts: 'r' },
-    { from: 'relay', to: 'host', lane: 'live', both: true },
-    { from: 'relay', to: 'tv', lane: 'live' },
-    { from: 'guests', to: 'desk', lane: 'mail' },
-    { from: 'desk', to: 'resend', lane: 'mail', fs: 'b', ts: 't' },
-    { from: 'resend', to: 'inbox', lane: 'mail' },
-    { from: 'resend', to: 'guestmail', lane: 'mail' },
-    { from: 'resend', to: 'lists', lane: 'mail' },
+    // carries / wire: what travels on the line, in each voice. Kept to a few
+    // words, and to things the box lines above already say.
+    { from: 'studio', to: 'sanity', lane: 'content', carries: 'every edit, on Publish', wire: 'document mutations from the Studio' },
+    { from: 'files', to: 'sanity', lane: 'content', carries: 'cards, questions and photos', wire: 'typed documents, written by import script' },
+    { from: 'sanity', to: 'builder', lane: 'content', carries: 'the whole library', wire: 'GROQ queries at build time' },
+    { from: 'sanity', to: 'relay', lane: 'content', carries: 'tonight’s cards and questions', wire: 'one GROQ read for the night' },
+    { from: 'builder', to: 'site', lane: 'content', carries: 'the finished pages', wire: 'prerendered static HTML' },
+    { from: 'builder', to: 'google', lane: 'content', carries: 'listings, sitemap and share cards', wire: 'JSON-LD, the sitemap and Open Graph tags' },
+    { from: 'ttyou', to: 'tt', lane: 'tickets', carries: 'nights, ticket types and capacity', wire: 'event series set up in Ticket Tailor' },
+    { from: 'guests', to: 'tt', lane: 'tickets', carries: 'ticket orders', wire: 'checkout on the club’s own subdomain' },
+    { from: 'tt', to: 'builder', lane: 'tickets', carries: 'each night’s checkout link', wire: 'a REST API read during the build' },
+    { from: 'tt', to: 'watcher', lane: 'tickets', carries: 'a note for every order', wire: 'a signed order webhook' },
+    { from: 'watcher', to: 'sanity', lane: 'tickets', fs: 'l', ts: 'r', carries: 'Sold Out, on or off', wire: 'one field patched, only on a real change' },
+    { from: 'relay', to: 'host', lane: 'live', both: true, carries: 'every tap, and who is watching', wire: 'a WebSocket in the host role' },
+    { from: 'relay', to: 'tv', lane: 'live', carries: 'what to show next', wire: 'a WebSocket in the viewer role' },
+    { from: 'guests', to: 'desk', lane: 'mail', carries: 'whatever was typed into a form', wire: 'one validated POST' },
+    { from: 'desk', to: 'resend', lane: 'mail', fs: 'b', ts: 't', carries: 'only what passed screening', wire: 'calls to the Resend API' },
+    { from: 'resend', to: 'inbox', lane: 'mail', carries: 'the full request', wire: 'an email with reply-to set to the sender' },
+    { from: 'resend', to: 'guestmail', lane: 'mail', carries: 'a thank-you', wire: 'a confirmation email' },
+    { from: 'resend', to: 'lists', lane: 'mail', carries: 'newsletter and waitlist signups', wire: 'a contact created or updated' },
   ],
 };
 
@@ -353,6 +363,51 @@ export const CALLOUTS: [string, string][] = [
 /** The ticket desk you can drive. Illustrative numbers, not a real night. */
 export const SIM = { capacity: 40, sold: 38 };
 
+/**
+ * The ticket desk's own map: the boxes a sale passes through, lifted from
+ * MAIN so a press of Sell a ticket can send a light along the same lines the
+ * big map draws. Two layouts of the same boxes and lines, one row for a wide
+ * screen and a zigzag for a phone. Titles are shortened to fit a small box;
+ * the under-the-hood line is MAIN's own.
+ */
+const deskBox = (id: string, title: string, x: number, y: number, chip?: string): MapNode => {
+  const n = MAIN.nodes.find((m) => m.id === id)!;
+  return { id, x, y, w: 150, kick: n.kick, title, tech: n.tech, chip };
+};
+const DESK_BOXES: [string, string, string | undefined][] = [
+  ['guests', 'A guest', undefined],
+  ['tt', 'Ticket Tailor', ''],
+  ['watcher', 'Sold-out watcher', 'listening'],
+  ['sanity', 'Sanity', 'Sold Out: off'],
+  ['builder', 'Site builder', 'idle'],
+  ['site', 'The event page', 'On sale'],
+  ['google', 'Google', 'In stock'],
+];
+const deskAt = (at: Record<string, [number, number]>) => DESK_BOXES.map(([id, title, chip]) => deskBox(id, title, at[id][0], at[id][1], chip));
+export const DESK: MapSpec = {
+  nodes: deskAt({ guests: [0, 62], tt: [191, 62], watcher: [382, 62], sanity: [572, 62], builder: [763, 62], site: [954, 0], google: [954, 124] }),
+  edges: [
+    { from: 'guests', to: 'tt', lane: 'tickets' },
+    { from: 'tt', to: 'watcher', lane: 'tickets' },
+    { from: 'watcher', to: 'sanity', lane: 'tickets' },
+    { from: 'sanity', to: 'builder', lane: 'content' },
+    { from: 'builder', to: 'site', lane: 'content' },
+    { from: 'builder', to: 'google', lane: 'content' },
+  ],
+};
+export const DESK_M: MapSpec = {
+  w: 340,
+  nodes: deskAt({ guests: [0, 0], tt: [190, 0], watcher: [190, 140], sanity: [0, 140], builder: [0, 280], site: [190, 280], google: [190, 420] }),
+  edges: [
+    { from: 'guests', to: 'tt', lane: 'tickets' },
+    { from: 'tt', to: 'watcher', lane: 'tickets', fs: 'b', ts: 't' },
+    { from: 'watcher', to: 'sanity', lane: 'tickets', fs: 'l', ts: 'r' },
+    { from: 'sanity', to: 'builder', lane: 'content', fs: 'b', ts: 't' },
+    { from: 'builder', to: 'site', lane: 'content' },
+    { from: 'builder', to: 'google', lane: 'content', fs: 'b', ts: 'l' },
+  ],
+};
+
 /* ======================= website and search ======================= */
 /** [page, small note under the name, what it is built from, highlight] */
 export const PAGES: [string, string, string, boolean][] = [
@@ -438,3 +493,56 @@ export const BEHIND: [number, string, string][] = [
   [245, '245', 'reviewed updates shipped'],
   [33000, '33,000', 'lines written for this system'],
 ];
+
+/* ======================= the drawers ======================= */
+/**
+ * The deeper notes behind five boxes, shown in the drawer a box opens.
+ *
+ * Every sentence here was checked against the client repo's main branch on
+ * 11-16-26 (file and line, by a read-only pass), and each describes what the
+ * deployed code does, including where it stops. The rules at the top of this
+ * file apply: no settings (no limits, timeouts or lifetimes as numbers),
+ * nothing that is written but held, and no client code. The sketches are
+ * ours, drawn to show the order of operations.
+ */
+export interface Deep { why: string; fails: string; sketch?: string[] }
+export const DEEP: Record<string, Deep> = {
+  watcher: {
+    why: 'An order message can be forged, replayed or arrive late, so it is treated as a doorbell and never as the answer. The watcher checks the signature, reads the real count from Ticket Tailor, and compares it with what Sanity already says. An ordinary order changes nothing, so it costs no write and no rebuild.',
+    fails: 'A message that fails the signature check is refused. If Ticket Tailor cannot be reached, nothing is written. What the watcher cannot do is hear a message that was never sent: a missed delivery leaves the page as it was until the next one arrives or someone corrects it by hand.',
+    sketch: [
+      'on an order message:',
+      '  refuse it unless the signature checks out',
+      '  count = ask Ticket Tailor   // never read from the message',
+      '  if soldOut(count) is what Sanity already says: stop',
+      '  patch one field in Sanity   // the publish hook rebuilds the site',
+    ],
+  },
+  relay: {
+    why: 'The host’s phone is the single source of truth. It pushes its full state, the room keeps the latest copy, and every TV is sent that copy. Viewers are read-only by construction: anything a TV sends is ignored.',
+    fails: 'If the connection drops, the phone carries on with the night and the TV holds its last screen. Both reconnect by themselves, waiting a little longer between tries, and the phone sends its full state again, so the TV catches up in one step. A room left idle clears itself.',
+    sketch: [
+      'host  ->  room   full state, on every tap',
+      'room             keep the latest, pass it on',
+      'room  ->  TVs    the latest state',
+      'TV    ->  room   ignored',
+    ],
+  },
+  builder: {
+    why: 'Whether a night is upcoming or past is decided when its page is built, so the site has to be rebuilt as time passes, not only when something is published. A publish starts a build, and so does a scheduled job once a day. Every build also asks Ticket Tailor for each night’s checkout link.',
+    fails: 'If Ticket Tailor cannot be reached during a build, the build carries on with the link saved in Sanity. Every build ends by scanning its own output for secrets, and fails if it finds one.',
+  },
+  desk: {
+    why: 'The message to the owners is the one that must land, so it is sent first and the request fails loudly if it does not go. The thank-you to the sender is a courtesy: if it fails, the lead still goes through.',
+    fails: 'A form that cannot be sent says so and points to the club’s contact address. It never shows a success it did not earn. A mailing-list signup that fails does not fail the request; the owners are told in the same email.',
+    sketch: [
+      'limit repeat tries  ->  validate  ->  screen for spam',
+      'send to the owners      // must land, or fail loudly',
+      'send the thank-you      // best effort',
+    ],
+  },
+  host: {
+    why: 'The console never re-checks the sign-in while a night is running, so losing the connection can never lock the host out mid-game. Every change is saved on the phone as it happens.',
+    fails: 'If the wifi drops, the game carries on from the phone. If the phone itself restarts, the saved night is offered back once it is online again: the board, the winners, the round and the questions already asked. If the art could not be saved, the night runs with names only.',
+  },
+};

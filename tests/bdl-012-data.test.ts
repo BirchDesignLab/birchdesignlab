@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as data from '../src/experiments/bdl-012/data';
-import { FORMS, JOURNEYS, LANES, LIVE, MAIN, NIGHT, STEPS, TV_CARDS, THEMES, ART_THEME, type MapSpec } from '../src/experiments/bdl-012/data';
+import { DEEP, DESK, DESK_M, FORMS, JOURNEYS, LANES, LIVE, MAIN, NIGHT, STEPS, TV_CARDS, THEMES, ART_THEME, type MapSpec } from '../src/experiments/bdl-012/data';
 
-const SPECS: [string, MapSpec][] = [['MAIN', MAIN], ['NIGHT', NIGHT], ['LIVE', LIVE], ['FORMS', FORMS]];
+const SPECS: [string, MapSpec][] = [['MAIN', MAIN], ['NIGHT', NIGHT], ['LIVE', LIVE], ['FORMS', FORMS], ['DESK', DESK], ['DESK_M', DESK_M]];
 
 /** Every string anywhere in the data module, for the copy rules. */
 function strings(v: unknown, out: string[] = []): string[] {
@@ -39,11 +39,41 @@ describe('bdl-012 map specs', () => {
     for (const n of spec.nodes) expect(n.tech.length, n.id).toBeGreaterThan(20);
   });
 
-  it.each(SPECS)('%s: boxes stay on the 1104px canvas', (_name, spec) => {
+  it.each(SPECS)('%s: boxes stay on its canvas (1104px unless it says otherwise)', (_name, spec) => {
     for (const n of spec.nodes) {
       expect(n.x, n.id).toBeGreaterThanOrEqual(0);
-      expect(n.x + n.w, n.id).toBeLessThanOrEqual(1104);
+      expect(n.x + n.w, n.id).toBeLessThanOrEqual(spec.w ?? 1104);
     }
+  });
+
+  it('MAIN: every line says what travels on it, in both voices', () => {
+    // A line with no words would open an empty tip and leave a hole in every
+    // drawer that lists it.
+    for (const e of MAIN.edges) {
+      expect(e.carries?.length ?? 0, `${e.from} -> ${e.to}`).toBeGreaterThan(3);
+      expect(e.wire?.length ?? 0, `${e.from} -> ${e.to}`).toBeGreaterThan(3);
+    }
+  });
+
+  it.each([['DESK', DESK], ['DESK_M', DESK_M]] as [string, MapSpec][])('%s: the ticket desk map is a piece of the main map', (_name, spec) => {
+    // The desk sends its lights along these lines by name (stage.ts), and the
+    // point of the small map is that it is the big one, so every box and line
+    // on it has to exist there too. Both layouts carry the same lines.
+    const mainIds = new Set(MAIN.nodes.map((n) => n.id));
+    for (const n of spec.nodes) expect(mainIds.has(n.id), n.id).toBe(true);
+    for (const e of spec.edges) {
+      expect(MAIN.edges.some((m) => m.from === e.from && m.to === e.to), `${e.from} -> ${e.to}`).toBe(true);
+    }
+    const lines = (s: MapSpec) => s.edges.map((e) => `${e.from}>${e.to}`).sort();
+    expect(lines(spec)).toEqual(lines(DESK));
+    for (const [from, to] of [['guests', 'tt'], ['tt', 'watcher'], ['watcher', 'sanity'], ['sanity', 'builder'], ['builder', 'site'], ['builder', 'google']]) {
+      expect(spec.edges.some((e) => e.from === from && e.to === to), `${from} -> ${to}`).toBe(true);
+    }
+  });
+
+  it('the deeper drawer notes belong to real boxes', () => {
+    const ids = new Set(MAIN.nodes.map((n) => n.id));
+    for (const id of Object.keys(DEEP)) expect(ids.has(id), id).toBe(true);
   });
 });
 

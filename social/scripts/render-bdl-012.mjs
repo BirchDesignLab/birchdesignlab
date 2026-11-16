@@ -76,6 +76,15 @@ const SHOT_CSS = `
   .dm .caption .c-text { font-size: 33px !important; line-height: 1.22 !important; }
   .dm .caption .c-text small { font-size: 19px !important; margin-top: 4px; }
   .dm .map-fit { margin-top: 26px !important; }
+  /* A take is watched, not operated. The page's captions that tell a visitor
+     what to press (the idle prompt before the journey starts, the line under
+     the closing caption, the Show everything pill) read as a screen recording
+     in a feed, so they come out of the shot. Found by watching the first take
+     frame by frame on 11-16-26; the contact sheet had hidden both ends. */
+  .dm .tour button.reset { display: none !important; }
+  .dm .map-hint, .dm .skip-map, .dm .box-drawer { display: none !important; }
+  .dm .caption:not(.shot-live) { visibility: hidden !important; }
+  .dm .caption.shot-done .c-text small { display: none !important; }
 `;
 
 const DRESS = `(() => {
@@ -84,6 +93,14 @@ const DRESS = `(() => {
     const s = document.createElement('style');
     s.textContent = css;
     document.head.appendChild(s);
+    // Mark the caption once a journey step is on it, and again on the closing
+    // line, so SHOT_CSS can hide the two that are instructions.
+    const cap = document.getElementById('dm-caption');
+    if (cap) new MutationObserver(() => {
+      const mark = cap.querySelector('.c-step')?.textContent ?? '';
+      cap.classList.toggle('shot-live', /^[0-9]+$/.test(mark) || mark === '✓');
+      cap.classList.toggle('shot-done', mark === '✓');
+    }).observe(cap, { childList: true, subtree: true });
   });
 })();`;
 
