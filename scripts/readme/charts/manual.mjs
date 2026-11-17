@@ -3,7 +3,7 @@
 // comes from the README block); these helpers size the nodes with real font
 // metrics, route the edges as smooth curves and measure the result.
 import { f1, parsePath, pathToD, polyLength, sample } from './geometry.mjs';
-import { width, wrap } from './textmetrics.mjs';
+import { width, wrapBalanced as wrap } from './textmetrics.mjs';
 
 export const NORMAL = { T: [0, -1], B: [0, 1], L: [-1, 0], R: [1, 0] };
 
@@ -11,6 +11,9 @@ export const NORMAL = { T: [0, -1], B: [0, 1], L: [-1, 0], R: [1, 0] };
 export function makeNodes(graph, cfg) {
   const nodes = new Map();
   for (const v of graph.vertices) {
+    const sc = cfg.scaleFor?.(v.id) ?? 1;
+    const base = cfg;
+    cfg = sc === 1 ? base : { ...base, head: base.head * sc, body: base.body * sc };
     const logical = v.text.split(/<br\s*\/?>/i).map((s) => s.trim()).filter(Boolean);
     const maxW = cfg.wrapFor?.(v.id) ?? cfg.wrap;
     const heads = wrap('display', cfg.head, logical[0], maxW);
@@ -32,7 +35,8 @@ export function makeNodes(graph, cfg) {
       h = th + cfg.padY * 2;
     }
     w = Math.max(w, cfg.minW ?? 0);
-    nodes.set(v.id, { id: v.id, classes: v.classes, shape: v.shape, cx: 0, cy: 0, w, h, lines, headN: heads.length });
+    nodes.set(v.id, { id: v.id, classes: v.classes, shape: v.shape, cx: 0, cy: 0, w, h, lines, headN: heads.length, scale: sc });
+    cfg = base;
   }
   return nodes;
 }

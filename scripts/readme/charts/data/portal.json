@@ -20,6 +20,9 @@
    "face": {
     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
     "pin": {}
+   },
+   "signature": {
+    "kind": "quiet"
    }
   },
   {
@@ -38,6 +41,9 @@
     "pin": {
      "wght": 700
     }
+   },
+   "signature": {
+    "kind": "swiss"
    }
   },
   {
@@ -55,6 +61,14 @@
     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
     "pin": {
      "wght": 700
+    }
+   },
+   "signature": {
+    "kind": "bauhaus",
+    "tokens": {
+     "red": "--red",
+     "yellow": "--yellow",
+     "blue": "--blue"
     }
    }
   },
@@ -75,6 +89,19 @@
      "wght": 600,
      "opsz": 28
     }
+   },
+   "signature": {
+    "kind": "glass",
+    "tokens": {
+     "light": {
+      "a": "--blob-violet-hi",
+      "b": "--blob-pink-hi"
+     },
+     "dark": {
+      "a": "--blob-violet",
+      "b": "--blob-pink"
+     }
+    }
    }
   },
   {
@@ -91,6 +118,15 @@
    "face": {
     "src": "@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2",
     "pin": {}
+   },
+   "signature": {
+    "kind": "vaporwave",
+    "tokens": {
+     "grid": "--hz-grid",
+     "sunA": "--hz-sun-a",
+     "sunB": "--hz-sun-b",
+     "sunC": "--hz-sun-c"
+    }
    }
   },
   {
@@ -110,6 +146,13 @@
      "wght": 600
     },
     "italic": true
+   },
+   "signature": {
+    "kind": "grandmillennial",
+    "tokens": {
+     "gold": "--gold",
+     "lace": "--c-rose-lt"
+    }
    }
   },
   {
@@ -129,6 +172,12 @@
      "wght": 600
     },
     "italic": true
+   },
+   "signature": {
+    "kind": "cottagecore",
+    "tokens": {
+     "sage": "--cc-sage"
+    }
    }
   }
  ],

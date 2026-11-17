@@ -9,7 +9,7 @@ import {
   arrowD, endOf, endTangent, esc, f1, parsePath, pathToD, polyLength, rhombusD, rng, sample, startOf, startTangent,
   trimEnd, trimStart,
 } from './geometry.mjs';
-import { BUILDER_VERSION, FONT_STACK, contrast, mix, palette, role } from './theme.mjs';
+import { BUILDER_VERSION, FONT_STACK, contrast, mix, paletteHash, palette, role } from './theme.mjs';
 import { fontCss } from './fonts.mjs';
 import { width as textWidth } from './textmetrics.mjs';
 
@@ -60,24 +60,47 @@ export function prepare(chart, { graph, model }, spec, variant = 'desktop') {
 }
 
 function nodeBlock(n, sizes, glyphs) {
+  if (n.shape === 'bar') {
+    // a checkpoint bar: either a small-caps label (stacked, centred) or a heading on the left and its detail on the right
+    if (n.barLabel) {
+      const lh = 17;
+      const y0 = n.cy - ((n.lines.length - 1) * lh) / 2 + 5;
+      return {
+        svg: `<text class="bl">${n.lines.map((l, i) => { glyphs.display += l; return `<tspan x="${f1(n.cx)}" y="${f1(y0 + i * lh)}">${esc(l)}</tspan>`; }).join('')}</text>`,
+        needed: n.lines.length * lh + 8,
+      };
+    }
+    const [head, ...rest] = n.lines;
+    glyphs.display += head;
+    glyphs.body += rest.join(' ');
+    return {
+      svg:
+        `<text class="h" x="${f1(n.cx - n.w / 2 + 18)}" y="${f1(n.cy + sizes.head * 0.32)}" style="text-anchor:start">${esc(head)}</text>` +
+        (rest.length ? `<text class="d" x="${f1(n.cx + n.w / 2 - 18)}" y="${f1(n.cy + sizes.body * 0.3)}" style="text-anchor:end">${esc(rest.join(' '))}</text>` : ''),
+      needed: 0,
+    };
+  }
+  const sc = n.scale ?? 1;
+  const hs = sizes.head * sc;
+  const bs = sizes.body * sc;
   const hn = n.headN ?? 1;
   const heads = n.lines.slice(0, hn);
   const rest = n.lines.slice(hn);
-  const hLH = sizes.head * 1.22;
-  const dLH = sizes.body * 1.3;
+  const hLH = hs * 1.22;
+  const dLH = bs * 1.3;
   const total = hLH * heads.length + rest.length * dLH;
   let y = n.cy - total / 2;
   let out = '';
   heads.forEach((head, i) => {
     glyphs.display += head;
-    out += `<text class="h" x="${f1(n.cx)}" y="${f1(y + i * hLH + hLH / 2 + sizes.head * 0.32)}">${esc(head)}</text>`;
+    out += `<text class="h" x="${f1(n.cx)}" y="${f1(y + i * hLH + hLH / 2 + hs * 0.32)}"${sc === 1 ? '' : ` style="font-size:${f1(hs)}px"`}>${esc(head)}</text>`;
   });
   y += hLH * heads.length;
   if (rest.length) {
-    out += '<text class="d">';
+    out += `<text class="d"${sc === 1 ? '' : ` style="font-size:${f1(bs)}px"`}>`;
     rest.forEach((l, i) => {
       glyphs.body += l;
-      out += `<tspan x="${f1(n.cx)}" y="${f1(y + i * dLH + dLH / 2 + sizes.body * 0.3)}">${esc(l)}</tspan>`;
+      out += `<tspan x="${f1(n.cx)}" y="${f1(y + i * dLH + dLH / 2 + bs * 0.3)}">${esc(l)}</tspan>`;
     });
     out += '</text>';
   }
@@ -89,6 +112,7 @@ function nodeShape(n, style) {
   const y = n.cy - n.h / 2;
   if (n.shape === 'rhombus') return `<path class="s" d="${rhombusD(n.cx, n.cy, n.w, n.h)}"/>`;
   if (n.shape === 'trunk') return '';
+  if (n.shape === 'bar') return `<rect class="s" x="${f1(x)}" y="${f1(y)}" width="${f1(n.w)}" height="${f1(n.h)}" rx="7"/>`;
   if (style === 'specimen') {
     return (
       `<rect class="s" x="${f1(x)}" y="${f1(y)}" width="${f1(n.w)}" height="${f1(n.h)}" rx="3"/>` +
@@ -99,21 +123,26 @@ function nodeShape(n, style) {
 }
 
 export function barkDashes(seed, W, H, t, mx = MARGIN_X) {
+  // One deliberate bark edge down the left of the card: paired lenticels with a
+  // rhythm (a long dash and a short one, light and heavy), not scattered noise.
   const r = rng(seed);
-  let d = '';
-  const strip = (x0, x1, y0, y1, count) => {
-    for (let k = 0; k < count; k++) {
-      const len = 9 + r() * 20;
-      const x = x0 + r() * Math.max(1, x1 - x0 - len);
-      const y = y0 + r() * (y1 - y0);
-      d += `M${f1(x)} ${f1(y)}h${f1(len)}`;
-    }
-  };
-  const edgeW = mx - 14;
-  strip(10, 10 + edgeW, 16, H - 16, Math.round(H / 26));
-  strip(W - 10 - edgeW, W - 10, 16, H - 16, Math.round(H / 26));
-  strip(mx + 20, W - mx - 20, H - MARGIN_BOTTOM + 14, H - 14, Math.round(W / 70));
-  return `<path class="bark" d="${d}"/>`;
+  const x0 = 13;
+  const room = Math.max(8, mx - 22);
+  let thin = '';
+  let heavy = '';
+  let y = 34 + r() * 10;
+  while (y < H - 26) {
+    const a = Math.min(room, 9 + r() * (room - 4));
+    const b = Math.max(5, a * (0.4 + r() * 0.25));
+    const off = r() * (room - a);
+    const heavyPair = r() < 0.3;
+    const d1 = `M${f1(x0 + off)} ${f1(y)}h${f1(a)}`;
+    const d2 = `M${f1(x0 + (r() < 0.5 ? 0 : room - b))} ${f1(y + 7)}h${f1(b)}`;
+    if (heavyPair) heavy += d1 + d2;
+    else thin += d1 + d2;
+    y += 24 + r() * 22;
+  }
+  return `<path class="bark" d="${thin}"/><path class="bark" style="stroke-width:3.8" d="${heavy}"/>`;
 }
 
 export function renderScheme(P, scheme, { sourceHash }) {
@@ -183,7 +212,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
   for (const e of edges) {
     const dotted = e.dotted ? ' dot' : '';
     edgeSvg +=
-      `<g class="ed" id="${e.dom}"><path class="el${dotted}" pathLength="1" d="${e.d}"/>` +
+      `<g class="ed" id="${e.dom}"><path class="el${dotted}" d="${e.d}"/>` +
       (e.headD ? `<path class="eh" d="${e.headD}"/>` : '') +
       (e.tailD ? `<path class="eh" d="${e.tailD}"/>` : '') +
       '</g>';
@@ -237,7 +266,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
   const css = [
     fontCss(glyphs),
     `.card{fill:${t.field};stroke:${t.line};stroke-width:1}`,
-    `.bark{fill:none;stroke:${t.dash};stroke-opacity:${t.dashOpacity};stroke-width:2.6;stroke-linecap:round}`,
+    `.bark{fill:none;stroke:${t.dash};stroke-opacity:${t.dashOpacity};stroke-width:2.2;stroke-linecap:round}`,
     `.cap{font:${capSize}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted}}.capn{fill:${t.accentStrong}}`,
     `.cb{fill:${t.clusterFill};stroke:${t.clusterStroke};stroke-width:1.2}`,
     `.ct{font:${sizes.cluster}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted};paint-order:stroke;stroke:${t.clusterFill};stroke-width:6px;stroke-linejoin:round}`,
@@ -247,11 +276,12 @@ export function renderScheme(P, scheme, { sourceHash }) {
     `.lb{font:italic ${sizes.edge}px ${FONT_STACK.body};fill:${t.muted};paint-order:stroke;stroke:${t.field};stroke-width:6px;stroke-linejoin:round;text-anchor:middle}`,
     `.s{stroke-width:1.5}`,
     `.rule{fill:none;stroke-width:.8}`,
+    `.bl{font:${sizes.cluster}px ${FONT_STACK.display};letter-spacing:.14em;text-anchor:middle}`,
     `.h{font:${sizes.head}px ${FONT_STACK.display};text-anchor:middle}`,
     `.d{font:${sizes.body}px ${FONT_STACK.body};text-anchor:middle}`,
     ...Object.entries(roles).map(
       ([k, r]) =>
-        `.${k} .s{fill:${r.fill};stroke:${r.stroke}}.${k} .rule{stroke:${r.stroke};stroke-opacity:.6}.${k} .h{fill:${r.head}}.${k} .d{fill:${r.detail}}`,
+        `.${k} .s{fill:${r.fill};stroke:${r.stroke}}.${k} .rule{stroke:${r.stroke};stroke-opacity:.6}.${k} .h,.${k} .bl{fill:${r.head}}.${k} .d{fill:${r.detail}}`,
     ),
     extra.css ?? '',
     '@media (prefers-reduced-motion:reduce){*{animation:none!important}.tv{display:none}}',
@@ -265,7 +295,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${svgW}" height="${svgH}" role="img" aria-labelledby="t d">` +
     `<title id="t">${esc(chart.title)}</title><desc id="d">${esc(chart.alt)}</desc>` +
-    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-variant="${P.variant}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-motion-s="${f1(extra.duration ?? 0)}"></metadata>` +
+    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-variant="${P.variant}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-palette-hash="${extra.paletteHash ?? paletteHash()}" data-motion-s="${f1(extra.duration ?? 0)}"></metadata>` +
     `<style>${css}</style>` +
     `<rect class="card" x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="22"/>` +
     dashes +
@@ -280,6 +310,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
   if (model.clusters.length) used.push(sizes.cluster);
   if (model.nodes.some((n) => n.lines.length > (n.headN ?? 1))) used.push(sizes.body);
   if (edges.some((e) => e.label)) used.push(sizes.edge);
+  used.push(...(extra.textSizes ?? []));
   const minText = Math.min(...used);
   return { svg, W, H, pairs: pairs.map((p) => ({ ...p, ratio: contrast(p.fg, p.bg) })), minRendered: minText * P.scale, fit, scheme };
 }

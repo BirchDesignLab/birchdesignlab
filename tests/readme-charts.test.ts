@@ -10,6 +10,8 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { describe, expect, it } from 'vitest';
+import { deltaE, contrast, paletteHash, palette } from '../scripts/readme/charts/theme.mjs';
+import { portalPaletteHash } from '../scripts/readme/charts/portal.mjs';
 import { REPO, mermaidBlocks, normalizeMermaid, readmeText, registry, sha256, svgName, svgPath } from '../scripts/readme/charts/source.mjs';
 
 type Chart = {
@@ -116,6 +118,19 @@ const agreement: Record<string, (json: unknown, mermaid: string) => string[]> = 
 };
 
 describe('README charts', () => {
+  it('the three model-tier colours are distinguishable in both schemes (distance and 3:1 on the field)', () => {
+    for (const scheme of ['light', 'dark'] as const) {
+      const t = palette(scheme);
+      const names = ['haiku', 'sonnet', 'opus'] as const;
+      for (const n of names) expect(contrast(t.tier[n], t.field), `${scheme} ${n} against the field`).toBeGreaterThanOrEqual(3);
+      for (let i = 0; i < 3; i++) {
+        for (let j = i + 1; j < 3; j++) {
+          expect(deltaE(t.tier[names[i]], t.tier[names[j]]), `${scheme} ${names[i]} vs ${names[j]}`).toBeGreaterThanOrEqual(25);
+        }
+      }
+    }
+  });
+
   it('registry covers the README: one chart per Mermaid block, in order', () => {
     expect(fences.length).toBe(charts.length);
     expect(charts.map((c) => c.n)).toEqual(charts.map((_, i) => i + 1));
@@ -204,6 +219,13 @@ describe('README charts', () => {
         expect(compare(json, pic!.mermaid!)).toEqual([]);
       });
     }
+
+    it.each(cases)('%s %s SVG was drawn with the current palette', (v, s) => {
+      const svg = readFileSync(svgPath(c, s, v), 'utf8');
+      const recorded = svg.match(/<metadata[^>]*data-palette-hash="([0-9a-f]{64})"/)?.[1];
+      const want = c.name === 'portal-schools' ? portalPaletteHash(JSON.parse(readFileSync(resolve(REPO, c.data!), 'utf8'))) : paletteHash();
+      expect(recorded, `README chart ${c.n} was drawn with an older palette or builder: run node scripts/readme/charts/build.mjs`).toBe(want);
+    });
 
     it.each(cases)('%s %s SVG is safe to show through <img>', (v, s) => {
       const file = svgPath(c, s, v);

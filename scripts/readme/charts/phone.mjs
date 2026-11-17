@@ -121,7 +121,8 @@ export function harnessPhone(graph, chart) {
   const nodes = makeNodes(graph, { ...cfg, wrapFor: (id) => (['CRIT', 'VER', 'GATE'].includes(id) ? 84 : 270) });
   const N = (id) => nodes.get(id);
   const TIERS = ['IMPL', 'VH', 'CRIT', 'VER', 'GATE', 'FIX'];
-  for (const id of TIERS) N(id).classes = ['you'];
+  for (const n of nodes.values()) n.classes = ['you'];
+  for (const id of TIERS) N(id).h += 8;
   const chainW = 300;
   let y = 0;
   for (const id of ['BRIEF', 'IMPL', 'VH']) {
@@ -191,8 +192,8 @@ export function harnessPhone(graph, chart) {
   const rightX = box.x + box.w + 20;
   push(ge('FIX', 'VH'), rounded([anchor(FIX, 'R'), [rightX, FIX.cy], [rightX, VH.cy], anchor(VH, 'R')], 18));
   const model = finish({ nodes: [...nodes.values()], clusters: [box], edges }, 6);
-  model.legend = { x: Math.min(...outs.map((n) => n.cx - n.w / 2)), y: model.height + 22 };
-  model.height += 56;
+  model.legend = { x: Math.min(box.x, ...model.nodes.map((n) => n.cx - n.w / 2)), y: model.height + 22 };
+  model.height += 100;
   return model;
 }
 

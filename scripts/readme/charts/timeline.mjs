@@ -5,10 +5,11 @@
 import { fontCss } from './fonts.mjs';
 import { esc, f1, rng } from './geometry.mjs';
 import { KEYFRAMES, RING_CSS, anim } from './motion.mjs';
+import { eye, growClip, lenticels, trunkOutline } from './birch.mjs';
 import { shell } from './shell.mjs';
 import { CAP_SIZE, MARGIN_BOTTOM, MARGIN_TOP } from './render.mjs';
 import { FONT_STACK, contrast, palette } from './theme.mjs';
-import { width, wrap } from './textmetrics.mjs';
+import { width, wrapBalanced as wrap } from './textmetrics.mjs';
 
 const DATE = 15;
 const ITEM = 15.5;
@@ -20,9 +21,9 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
   const glyphs = { display: '', body: '', italic: '' };
   const pairs = [];
   const W = phone ? 430 : 880;
-  const trunkW = phone ? 30 : 46;
+  const trunkW = phone ? 34 : 54;
   const trunkX = phone ? 44 : W / 2;
-  const textW = phone ? 430 - 44 - trunkW / 2 - 28 - 20 : 328;
+  const textW = phone ? 430 - 44 - trunkW / 2 - 34 - 20 : 318;
   const pickedBy = new Map(data.picked.map((p) => [p.date, p]));
 
   // ---- lay the entries out ----
@@ -47,34 +48,24 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
   const fill = scheme === 'light' ? t.paper : t.ink;
   const mark = scheme === 'light' ? t.ink : t.field;
   const x0 = trunkX;
-  let body = '';
-  body +=
-    `<g id="trunk"><path class="tk-o" pathLength="1" d="M${f1(x0)} ${f1(trunkTop)}V${f1(trunkBottom)}" stroke="${mark}" stroke-width="${trunkW + 3.6}"/>` +
-    `<path class="tk-f" pathLength="1" d="M${f1(x0)} ${f1(trunkTop)}V${f1(trunkBottom)}" stroke="${fill}" stroke-width="${trunkW}"/></g>`;
-  // lenticels: the faint dashes of birch bark between the event marks
-  const rnd = rng(7007);
-  let len = '';
-  const n = Math.round((trunkBottom - trunkTop) / 12);
-  for (let k = 0; k < n; k++) {
-    const l = 6 + rnd() * (trunkW * 0.55);
-    const x = x0 - trunkW / 2 + 5 + rnd() * (trunkW - 10 - l);
-    const y = trunkTop + 12 + rnd() * (trunkBottom - trunkTop - 24);
-    len += `M${f1(x)} ${f1(y)}h${f1(l)}`;
-  }
-  body += `<path id="lent" d="${len}" stroke="${mark}" stroke-opacity=".34" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
+  const markYs = entries.map((e) => e.y + 9);
+  const growStart = 0;
+  const growDur = 2.4;
+  const len = lenticels({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, junctions: markYs, seed: 7007 });
+  let body =
+    growClip('grow', { x: x0 - trunkW / 2 - 30, y: trunkTop - 12, w: trunkW + 60, h: trunkBottom - trunkTop + 26, up: false, dur: growDur, begin: growStart }) +
+    `<g clip-path="url(#grow)"><path d="${trunkOutline({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, seed: 911, taper: 0.12 })}" fill="${fill}" stroke="${mark}" stroke-width="1.8" stroke-linejoin="round"/>` +
+    `<path class="lent" d="${len.thin}" style="stroke:${mark}"/><path class="lent" d="${len.heavy}" style="stroke:${mark};stroke-width:3.8"/></g>`;
 
   // ---- entries ----
   let css = KEYFRAMES + RING_CSS(t.glow);
-  const growStart = 0.15;
-  const growDur = 2.5;
-  css += `#trunk .tk-o,#trunk .tk-f{fill:none;stroke-dasharray:1;stroke-linecap:round;animation:bdl-draw ${growDur}s cubic-bezier(.45,.05,.3,1) ${growStart}s both}`;
-  css += anim('#lent', 'fade', 1.6, 0.5);
+  css += `.lent{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.78}`;
   let end = growStart + growDur;
   entries.forEach((e, i) => {
     const toLeft = e.side === 'L';
     const dir = toLeft ? -1 : 1;
     const edge = x0 + dir * (trunkW / 2);
-    const tx = x0 + dir * (trunkW / 2 + 30);
+    const tx = x0 + dir * (trunkW / 2 + 34);
     const anchor = toLeft ? 'end' : 'start';
     const y = e.y;
     const markY = y + 9;
@@ -84,10 +75,15 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
     glyphs.display += e.ev.date;
     let g = `<g class="ev" id="ev${i}">`;
     // bark mark across the trunk, and the twig out to the text
-    const mw = hot ? trunkW + 14 : trunkW * 0.62;
-    g += `<path d="M${f1(x0 - mw / 2)} ${f1(markY)}h${f1(mw)}" stroke="${hot ? t.accent : mark}" stroke-width="${hot ? 6 : 4.4}" stroke-linecap="round"/>`;
-    g += `<path d="M${f1(edge)} ${f1(markY)}h${f1(dir * 22)}" stroke="${t.edge}" stroke-width="1.6" stroke-linecap="round"/>`;
-    g += `<circle cx="${f1(edge + dir * 22)}" cy="${f1(markY)}" r="3" fill="${hot ? t.accent : t.edge}"/>`;
+    // the event is a lenticel pair on the trunk (the long dash points to its side), and a
+    // knot with the brand chevron where the twig leaves
+    const mc = hot ? t.accent : mark;
+    const long = trunkW * (hot ? 0.74 : 0.6);
+    const short = long * 0.5;
+    g += `<path d="M${f1(x0 + dir * 2 - long / 2)} ${f1(markY)}h${f1(long)}M${f1(x0 - dir * 5 - short / 2)} ${f1(markY + 6.5)}h${f1(short)}" stroke="${mc}" stroke-width="${hot ? 5 : 4}" stroke-linecap="round" fill="none"/>`;
+    g += `<path d="M${f1(edge)} ${f1(markY)}h${f1(dir * 24)}" stroke="${t.edge}" stroke-width="1.6" stroke-linecap="round"/>`;
+    g += eye(edge, markY, dir, hot ? t.accent : mark, hot ? t.onAccent : fill, hot ? 1.15 : 0.8);
+    g += `<circle cx="${f1(edge + dir * 24)}" cy="${f1(markY)}" r="3" fill="${hot ? t.accent : t.edge}"/>`;
     // date line (with the picked-out chip)
     let dateX = tx;
     const dw = width('display', DATE, e.ev.date, 0.08);

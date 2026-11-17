@@ -12,7 +12,6 @@ import { EASE } from './theme.mjs';
 import { endOf, f1, parsePath, polyLength, rhombusD, sample, startOf } from './geometry.mjs';
 
 export const KEYFRAMES = [
-  '@keyframes bdl-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}',
   '@keyframes bdl-fade{from{opacity:0}to{opacity:1}}',
   '@keyframes bdl-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
   '@keyframes bdl-ring{0%{opacity:0;transform:scale(.98)}22%{opacity:.85}100%{opacity:0;transform:scale(1.13)}}',
@@ -24,12 +23,21 @@ const r = (n) => Math.round(n * 100) / 100;
 export const anim = (sel, name, dur, delay, ease = EASE) =>
   `${sel}{animation:bdl-${name} ${r(dur)}s ${ease} ${r(delay)}s both}`;
 
+/**
+ * Stroke a path on, in pixels (never pathLength: an engine that ignores it would draw a stub).
+ * `len` is the path's length in user units; the keyframes are named per `key`.
+ */
+export function drawCss(sel, key, len, dur, delay, ease = EASE) {
+  const L = Math.ceil(len) + 2;
+  return `${sel}{stroke-dasharray:${L};animation:bdl-d${key} ${r(dur)}s ${ease} ${r(delay)}s both}@keyframes bdl-d${key}{from{stroke-dashoffset:${L}}to{stroke-dashoffset:0}}`;
+}
+
 /** Draw an edge in: the path strokes on, then its arrowhead(s) and label fade in. */
 export function edgeIn(e, delay, dur = 0.55) {
   const sel = `#${e.dom}`;
   let css = '';
   if (e.dotted) css += anim(`${sel} .el`, 'fade', dur, delay);
-  else css += `${sel} .el{stroke-dasharray:1}` + anim(`${sel} .el`, 'draw', dur, delay);
+  else css += drawCss(`${sel} .el`, e.dom, e.len, dur, delay);
   css += anim(`${sel} .eh`, 'fade', 0.25, delay + dur * 0.8);
   if (e.label) css += anim(`${sel}l`, 'fade', 0.35, delay + dur * 0.5);
   return css;

@@ -72,11 +72,37 @@ export async function layoutAll(requests) {
     for (let i = 0; i < requests.length; i++) {
       const graph = await page.evaluate(parseInPage, requests[i].src);
       const model = requests[i].dagre === false ? null : await page.evaluate(extractInPage, { req: requests[i], idx: i });
+      if (model) reconcile(graph, model);
       out.push({ graph, model });
     }
     return out;
   } finally {
     await browser.close();
+  }
+}
+
+/**
+ * Pair every dagre edge with the parsed graph's edge by its index (Mermaid numbers
+ * edge ids L_<from>_<to>_<index> in source order) instead of splitting the id on
+ * underscores, and check what was drawn against what was parsed. Throws on any
+ * disagreement: unknown endpoints, a different edge count, or a label that is not
+ * the parsed edge's text.
+ */
+function reconcile(graph, model) {
+  const known = new Set([...graph.vertices.map((v) => v.id), ...graph.subs.map((s) => s.id)]);
+  for (const e of graph.edges) {
+    for (const end of [e.from, e.to]) if (!known.has(end)) throw new Error(`edge ${e.from} to ${e.to}: ${end} is not a node or subgraph`);
+  }
+  if (model.edges.length !== graph.edges.length) throw new Error(`dagre drew ${model.edges.length} edges, the graph has ${graph.edges.length}`);
+  const norm = (t) => t.replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').trim();
+  for (const e of model.edges) {
+    const idx = Number(/_(\d+)$/.exec(e.id)?.[1]);
+    const g = graph.edges[idx];
+    if (!g) throw new Error(`edge id ${e.id} has no parsed edge`);
+    e.from = g.from;
+    e.to = g.to;
+    const drawn = e.label ? norm(e.label.lines.join(' ')) : '';
+    if (drawn !== norm(g.text)) throw new Error(`edge ${g.from} to ${g.to}: drew label ${JSON.stringify(drawn)}, parsed ${JSON.stringify(norm(g.text))}`);
   }
 }
 

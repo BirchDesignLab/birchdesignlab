@@ -16,11 +16,11 @@
         "fontSize": 16,
         "headSize": 18,
         "edgeSize": 15,
-        "clusterSize": 14,
+        "clusterSize": 14.5,
         "nodeSpacing": 14,
         "rankSpacing": 40,
         "padding": 12,
-        "wrap": 150,
+        "wrap": 190,
         "phone": {
           "fontSize": 15.5,
           "headSize": 17.5,
@@ -29,7 +29,8 @@
           "padding": 10,
           "wrap": 150,
           "edgeWrap": 100
-        }
+        },
+        "edgeWrap": 150
       },
       "phone": true
     },
@@ -86,7 +87,7 @@
         "nodeSpacing": 30,
         "rankSpacing": 56,
         "padding": 14,
-        "wrap": 250,
+        "wrap": 230,
         "phone": {
           "wrap": 280,
           "fontSize": 15.5,
@@ -151,9 +152,7 @@
       "title": "The Claude Code harness",
       "caption": "The Claude Code harness",
       "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion.",
-      "focus": [
-        "DONE"
-      ],
+      "focus": [],
       "render": {
         "direction": "TB",
         "fontSize": 16,
@@ -170,7 +169,7 @@
           "fontSize": 15,
           "headSize": 17,
           "edgeSize": 15,
-          "clusterSize": 14.5,
+          "clusterSize": 15.5,
           "padding": 10,
           "edgeWrap": 120
         }

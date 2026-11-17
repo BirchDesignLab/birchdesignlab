@@ -5,6 +5,7 @@
 // all seven, and a viewfinder slides across it once. Content comes from
 // scripts/readme/charts/data/portal.json, which must agree with the README's
 // Mermaid block and school table (tests/readme-charts.test.ts).
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { REPO } from './source.mjs';
@@ -13,8 +14,9 @@ import { esc, f1 } from './geometry.mjs';
 import { KEYFRAMES, anim, traveler } from './motion.mjs';
 import { shell } from './shell.mjs';
 import { CAP_SIZE, MARGIN_BOTTOM, MARGIN_TOP, MARGIN_X } from './render.mjs';
-import { contrast, mix, palette, role } from './theme.mjs';
+import { contrast, mix, paletteHash, palette, role } from './theme.mjs';
 import { measureTtf, wrap } from './textmetrics.mjs';
+import { signature } from './portal-art.mjs';
 
 // ---- reading a school's real tokens -------------------------------------
 function blockBody(css, selector) {
@@ -55,6 +57,14 @@ export function schoolTokens(school, scheme, names) {
   return out;
 }
 
+/** Hash of every school token the panels draw with, plus the shared palette: recomputed by the drift test. */
+export function portalPaletteHash(data) {
+  const all = ['light', 'dark'].map((sc) =>
+    data.schools.map((s) => [schoolTokens(s, sc, data.tokens), s.signature?.tokens ? schoolTokens(s, sc, s.signature.tokens[sc] ?? s.signature.tokens) : null]),
+  );
+  return createHash('sha256').update(paletteHash() + JSON.stringify(all)).digest('hex');
+}
+
 // ---- drawing -----------------------------------------------------------
 const bracket = (x, y, w, h, l = 11) =>
   `M${f1(x)} ${f1(y + l)}V${f1(y)}H${f1(x + l)}M${f1(x + w - l)} ${f1(y)}H${f1(x + w)}V${f1(y + l)}M${f1(x + w)} ${f1(y + h - l)}V${f1(y + h)}H${f1(x + w - l)}M${f1(x + l)} ${f1(y + h)}H${f1(x)}V${f1(y + h - l)}`;
@@ -80,7 +90,7 @@ export function buildPortal(chart, data, scheme, variant, { sourceHash }) {
 
   // ---- geometry ----
   const M = phone ? 20 : MARGIN_X;
-  const cell = phone ? { w: 390, h: 124 } : { w: 196, h: 236 };
+  const cell = phone ? { w: 390, h: 130 } : { w: 196, h: 262 };
   const GAP = phone ? 10 : 14;
   const W = phone ? 430 : 4 * 196 + 3 * GAP + 2 * M;
   const gridTop = MARGIN_TOP;
@@ -128,7 +138,7 @@ export function buildPortal(chart, data, scheme, variant, { sourceHash }) {
     const copyW = phone ? 134 : sl.w - 40;
     const copySize = 14.5;
     const copyLines = wrapWith(s, copySize, data.copy, copyW);
-    const copyY = phone ? sl.y + 64 : sl.y + 184;
+    const copyY = phone ? sl.y + 64 : sl.y + 178;
     const barY = wy0 + (wmParts.length - 1) * lh + 14;
     const id = `p-${s.id}`;
     const wmBox = { x: wx - 10, y: wy0 - size * 0.82 - 6, w: Math.max(...wmParts.map((p2) => wid(s, size, p2))) + 20, h: lh * wmParts.length + 14 + 14 };
@@ -140,9 +150,14 @@ export function buildPortal(chart, data, scheme, variant, { sourceHash }) {
       .map((c, j) => `<circle cx="${f1((phone ? sl.x + sl.w - 20 - 3 * 18 : sl.x + sl.w - 20 - 3 * 18) + j * 18)}" cy="${f1(sl.y + sl.h - 22)}" r="6.5" fill="${c}" stroke="${border}" stroke-width="1"/>`)
       .join('');
     const fam = `font-family:'${s.family}',Georgia,serif;font-style:${s.style}`;
+    const sg = s.signature;
+    const sigTokens = sg.tokens ? schoolTokens(s, scheme, sg.tokens[scheme] ?? sg.tokens) : {};
+    const art = signature(sg.kind, { sl, k, sig: sigTokens, phone, id: s.id, scheme });
+    for (const p2 of art.pairs) pairs.push(p2);
     body +=
-      `<g class="pn" id="${id}">` +
+      `<g class="pn" id="${id}">` + art.defs +
       `<rect x="${f1(sl.x)}" y="${f1(sl.y)}" width="${sl.w}" height="${sl.h}" rx="12" fill="${k.field}" stroke="${border}" stroke-width="1.3"/>` +
+      art.under +
       `<text x="${f1(nameX)}" y="${f1(nameY)}" text-anchor="${nameAnchor}" style="${fam};font-size:13.5px;letter-spacing:.16em;font-style:normal" fill="${k.muted}">${esc(s.nameCaps)}</text>` +
       `<g class="wm" id="wm-${s.id}">` +
       wmParts.map((p2, j) => `<text x="${f1(wx)}" y="${f1(wy0 + j * lh)}" style="${fam};font-size:${size}px" fill="${k.mark}">${esc(p2)}</text>`).join('') +
@@ -294,6 +309,7 @@ export function buildPortal(chart, data, scheme, variant, { sourceHash }) {
     sourceHash,
     duration: end,
     variant,
+    palette: portalPaletteHash(data),
   });
   const minText = Math.min(13.5, DET, CAP_SIZE, 14.5, 15);
   const scale = (phone ? 360 : 830) / W;

@@ -5,9 +5,10 @@
 // block and :root[data-scheme='light'] block in that file.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { ROOT } from './layout.mjs';
 
-export const BUILDER_VERSION = '1.0.0';
+export const BUILDER_VERSION = '1.1.0';
 
 function readPrimitives() {
   const css = readFileSync(resolve(ROOT, 'src/styles/tokens.css'), 'utf8');
@@ -80,11 +81,11 @@ export function palette(scheme) {
       edge: mix(ink, field, 0.38),
       line: mix(ink, field, 0.8),
       dash: ink,
-      dashOpacity: 0.075,
+      dashOpacity: 0.2,
       clusterFill: mix(field, ink, 0.035),
       clusterStroke: mix(ink, field, 0.74),
       glow: p['green-canopy'],
-      tier: { haiku: ensure(p['green-moss'], field, ink), sonnet: p['green-canopy'], opus: p['leather-brown'] },
+      tier: { haiku: ensure(p['stone-warm'], field, ink), sonnet: p['green-canopy'], opus: p['leather-brown'] },
     };
     return t;
   }
@@ -110,11 +111,11 @@ export function palette(scheme) {
     edge: mix(mark, field, 0.4),
     line: mix(mark, field, 0.84),
     dash: mark,
-    dashOpacity: 0.07,
+    dashOpacity: 0.2,
     clusterFill: mix(field, mark, 0.03),
     clusterStroke: mix(mark, field, 0.8),
     glow: p['green-moss'],
-    tier: { haiku: p['green-moss'], sonnet: p['green-fern'], opus: p['leather-caramel'] },
+    tier: { haiku: mix(p['bark-warm'], p['stone-warm'], 0.3), sonnet: p['green-fern'], opus: p['leather-caramel'] },
   };
 }
 
@@ -143,3 +144,30 @@ export const FONT_STACK = {
 
 /** Motion constants shared by every chart. Calm: easing only, nothing bounces. */
 export const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+/** CIE76 colour distance between two hex colours (about 2.3 is a just-noticeable difference). */
+export function deltaE(a, b) {
+  const lab = (h) => {
+    const [r, g, bl] = rgb(h).map((v) => {
+      const c = v / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    const x = (0.4124 * r + 0.3576 * g + 0.1805 * bl) / 0.95047;
+    const y = 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+    const z = (0.0193 * r + 0.1192 * g + 0.9505 * bl) / 1.08883;
+    const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+  };
+  const [l1, a1, b1] = lab(a);
+  const [l2, a2, b2] = lab(b);
+  return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+}
+
+/**
+ * Hash of every palette value the charts draw with, plus the builder version. It is
+ * written into each SVG's metadata and recomputed by the drift test, so editing
+ * src/styles/tokens.css (or the builder's version) without a rebuild fails verify.
+ */
+export function paletteHash() {
+  return createHash('sha256').update(JSON.stringify([palette('light'), palette('dark'), BUILDER_VERSION])).digest('hex');
+}

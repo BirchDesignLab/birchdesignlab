@@ -59,3 +59,15 @@ export function measureTtf(ttf, size, text, ls = 0) {
   const f = opentype.parse(ttf.buffer.slice(ttf.byteOffset, ttf.byteOffset + ttf.byteLength));
   return f.getAdvanceWidth(text, size, { kerning: true }) + text.length * ls * size;
 }
+
+/** wrap(), but never leaves a lone short word on the last line if a slightly narrower measure avoids it. */
+export function wrapBalanced(face, size, text, maxW, ls = 0) {
+  const lines = wrap(face, size, text, maxW, ls);
+  const last = lines[lines.length - 1];
+  if (lines.length < 2 || last.includes(' ') || last.length > 9) return lines;
+  for (let w = maxW * 0.93; w > maxW * 0.55; w -= maxW * 0.035) {
+    const alt = wrap(face, size, text, w, ls);
+    if (alt.length <= lines.length && alt[alt.length - 1].includes(' ')) return alt;
+  }
+  return lines;
+}
