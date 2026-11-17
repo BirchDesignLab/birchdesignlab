@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { labTestSchema as labSchema } from '../src/lib/lab-schema';
+import { catalogSet, typeLabel } from '../src/lib/lab-sets';
 
 const experiment = {
   type: 'experiment',
@@ -86,6 +87,24 @@ describe('study branch', () => {
   it('rejects selfStudy: false (declare it or leave it out)', () => {
     const { client: _c, ...own } = study;
     expect(() => labSchema.parse({ ...own, selfStudy: false })).toThrow();
+  });
+  it('accepts a genre study with no client', () => {
+    const { client: _c, ...genre } = study;
+    const parsed = labSchema.parse({ ...genre, genreStudy: true });
+    expect(parsed.type === 'study' && parsed.genreStudy).toBe(true);
+  });
+  it('rejects a genre study that also names a client or is a self-study', () => {
+    const { client: _c, ...genre } = study;
+    expect(() => labSchema.parse({ ...study, genreStudy: true })).toThrow();
+    expect(() => labSchema.parse({ ...genre, genreStudy: true, selfStudy: true })).toThrow();
+  });
+  it('catalogues genre studies with the experiments, badged as genre studies', () => {
+    const { client: _c, ...genre } = study;
+    const g = labSchema.parse({ ...genre, genreStudy: true });
+    const c = labSchema.parse(study);
+    const e = labSchema.parse(experiment);
+    expect([catalogSet(g), catalogSet(c), catalogSet(e)]).toEqual(['experiment', 'study', 'experiment']);
+    expect([typeLabel(g), typeLabel(c), typeLabel(e)]).toEqual(['genre study', 'study', 'experiment']);
   });
   it('rejects experiment fields on a study', () => {
     expect(() => labSchema.parse({ ...study, device: 'universal' })).toThrow();

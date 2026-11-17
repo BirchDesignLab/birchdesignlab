@@ -1,9 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
+import { catalogSet } from '../../lib/lab-sets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
 
-const entries = (await getCollection('lab', ({ data }) => data.type === 'study' && !data.noindex)).sort(
+const entries = (await getCollection('lab', ({ data }) => catalogSet(data) === 'study' && !data.noindex)).sort(
   (a, b) => b.data.designation.localeCompare(a.data.designation),
 );
 ---
