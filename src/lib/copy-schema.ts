@@ -34,7 +34,10 @@ const home = z.strictObject({
     items: z.array(z.strictObject({ title: text, body: text })).min(1),
     more: text,
   }),
-  lab: z.strictObject({ kicker: text, pull: text, more: text }),
+  /** proof: one result line under the Lab pull, linked to the study it comes
+      from. Root site only (quiet renders it inside a data-parity-skip zone),
+      so the seven schools are not reflowed by it. */
+  lab: z.strictObject({ kicker: text, pull: text, proof: text.optional(), more: text }),
   closer: z.strictObject({ lead: text, cta: text }),
 });
 
