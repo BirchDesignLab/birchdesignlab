@@ -314,13 +314,12 @@ form shipped and the stash was dropped.)
 
 ## Node version
 
-Pinned by `.nvmrc` at the repo root to **22.16.0**.
+Pinned by `.nvmrc` at the repo root to **24.22.1** (the 2026-10-20 security
+release), and `package.json` requires `>=24.22.1` to match.
 
-This matters: `package.json` requires `>=20.11`, and `prebuild` runs
-`npm run og`, which needs `tsx` plus the native `@napi-rs/canvas` binary.
-Workers Builds respects `.nvmrc` the same way Pages did; the pin keeps the
-build deterministic regardless of image defaults.
+This matters: `prebuild` runs `npm run og`, which needs `tsx` plus the native
+`@napi-rs/canvas` binary. Workers Builds respects `.nvmrc` the same way Pages
+did; the pin keeps the build deterministic regardless of image defaults.
 
-Local dev currently runs Node 24. That one-major gap is deliberate and
-harmless for this stack; if it ever stops being harmless, bump `.nvmrc`
-rather than unpinning it.
+Local dev should run the same version. When a newer 24.x security release
+lands, bump `.nvmrc` and `engines` together rather than unpinning.

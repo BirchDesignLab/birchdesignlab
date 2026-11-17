@@ -20,7 +20,7 @@ const leaves = (to: string) => (theme && (to === 'lab' || to === 'privacy') ? ''
       {chrome.nav.map(({ to, label }, i) => (
         <>{i > 0 && ' '}<a href={hrefFor(to, theme)} data-astro-reload={leaves(to)}>{label}</a></>
       ))}
-      <!-- Reserved room (spec §8): social handles, once registered (see sameAs). -->
+      {/* Social handles (see sameAs). */}
       {SOCIAL_PROFILES.map(({ label, url }) => (
         <>{' '}<a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a></>
       ))}

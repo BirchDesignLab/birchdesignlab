@@ -17,17 +17,12 @@ This repo is **public**, so the client pages the Worker serves never go in it.
 | `public/<client>/...` | **no** (gitignored) | The pages being shared. They exist only on this machine and in the deployed Worker. |
 | `.wrangler/` | no | Wrangler's local cache. |
 
-## What it serves (as of 10-22-26)
+## What it serves
 
-- `/cheer-chatter/data-map/`: Cheer & Chatter data map (10-06-26). Built by
-  `build.mjs` from the Cheer & Chatter repo
-  (`C:/git/websites/cheerAndChatter/files/docs/data-map/`), so the source of
-  truth is that repo. `build.mjs` only runs on a machine with that repo at that
-  path.
-- `/query-module/design-overview/`: Query Module design overview (10-19-26).
-  **Not** built by `build.mjs`: copied into `public/` by hand from another
-  session, so this machine's `share/public/` is its only local copy here.
-  Record its source here when known.
+Not listed here: this repo is public, so the client paths stay off it. The
+current list, with each page's source, lives in `docs/private/share-pages.md`
+on the deploying machine (gitignored), and the pages `build.mjs` generates are
+listed in `share/pages.local.json` (gitignored, same machine).
 
 ## Deploy, add, remove
 
@@ -39,9 +34,10 @@ node share/build.mjs
 npx wrangler deploy --config share/wrangler.jsonc
 ```
 
-- **Add a page:** add an entry to `PAGES` in `build.mjs` (source in its own
-  repo, never here), build, deploy. A hand-copied page goes straight into
-  `public/<client>/<page>/`; note it in the list above.
+- **Add a page:** add an entry to `share/pages.local.json` (`src`, `out`,
+  optional `with`; source in its own repo, never here), build, deploy. A
+  hand-copied page goes straight into `public/<client>/<page>/`; note it in
+  the private list.
 - **Take a page down:** delete its folder from `public/` and deploy again.
   Deploys upload the whole `public/` folder, so anything deleted locally is gone
   from the site.

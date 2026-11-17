@@ -2,19 +2,21 @@
 // artifact-style HTML body (no doctype/head), so this wraps it in a real
 // document with noindex. Re-run after editing a source, then deploy.
 //   node share/build.mjs && npx wrangler deploy --config share/wrangler.jsonc
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const PAGES = [
-  {
-    src: 'C:/git/websites/cheerAndChatter/files/docs/data-map/data-map-10-06-26.html',
-    out: 'cheer-chatter/data-map/index.html',
-    // files the page loads by relative path, copied next to it
-    with: ['C:/git/websites/cheerAndChatter/files/docs/data-map/data-map-assets.js'],
-  },
-];
+// The page list names client paths, so it lives in a gitignored file next to
+// this script rather than in this public repo. Shape:
+//   [{ "src": "<abs path to body html>", "out": "<client>/<page>/index.html",
+//      "with": ["<abs path to a file the page loads by relative path>"] }]
+const listPath = join(here, 'pages.local.json');
+if (!existsSync(listPath)) {
+  console.error('[share] missing share/pages.local.json (gitignored; see share/README.md)');
+  process.exit(1);
+}
+const PAGES = JSON.parse(readFileSync(listPath, 'utf8'));
 
 const head = `<!doctype html>
 <html lang="en">
