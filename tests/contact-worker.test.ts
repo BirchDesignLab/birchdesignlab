@@ -8,16 +8,56 @@ type WorkerEnv = Parameters<typeof worker.fetch>[1];
 // global Request the tests build; cast through this at construction.
 type WorkerRequest = Parameters<typeof worker.fetch>[0];
 
+/** In-memory stand-in for the CONTACT_KV namespace: just the calls the
+ *  Worker makes (get text/json, put with TTL, delete, list by prefix). */
+function makeKv(seed: Record<string, string> = {}) {
+  const store = new Map(Object.entries(seed));
+  return {
+    store,
+    get: vi.fn(async (key: string, type?: string) => {
+      const v = store.get(key);
+      if (v === undefined) return null;
+      return type === 'json' ? JSON.parse(v) : v;
+    }),
+    put: vi.fn(async (key: string, value: string, _opts?: unknown) => {
+      store.set(key, value);
+    }),
+    delete: vi.fn(async (key: string) => {
+      store.delete(key);
+    }),
+    list: vi.fn(async ({ prefix = '', limit = 1000 }: { prefix?: string; limit?: number } = {}) => ({
+      keys: [...store.keys()]
+        .filter((k) => k.startsWith(prefix))
+        .sort()
+        .slice(0, limit)
+        .map((name) => ({ name })),
+    })),
+  };
+}
+
+/** A KV that counts fine but cannot hold a failed submission: the path where
+ *  the visitor gets the 502 page with the public address. */
+function kvThatCannotHold() {
+  const kv = makeKv();
+  kv.put.mockImplementation(async (key: string, value: string) => {
+    if (key.startsWith('held:')) throw new Error('kv down');
+    kv.store.set(key, value);
+  });
+  return kv;
+}
+
 function makeEnv(over: Record<string, unknown> = {}) {
   const email = { send: vi.fn().mockResolvedValue(undefined) };
   const rateLimiter = { limit: vi.fn().mockResolvedValue({ success: true }) };
   const assets = { fetch: vi.fn().mockResolvedValue(new Response('asset', { status: 200 })) };
-  const env = { EMAIL: email, CONTACT_RATE_LIMITER: rateLimiter, ASSETS: assets, ...over };
-  // Cast for the call site; the tests only touch the three bindings above.
+  const kv = makeKv();
+  const env = { EMAIL: email, CONTACT_RATE_LIMITER: rateLimiter, ASSETS: assets, CONTACT_KV: kv, ...over };
+  // Cast for the call site; the tests only touch the bindings above.
   return env as unknown as WorkerEnv & {
     EMAIL: typeof email;
     CONTACT_RATE_LIMITER: typeof rateLimiter;
     ASSETS: typeof assets;
+    CONTACT_KV: ReturnType<typeof makeKv>;
   };
 }
 
@@ -86,8 +126,11 @@ describe('contact worker', () => {
     expectSecureHeaders(res);
   });
 
-  it('returns 502 when the email send fails', async () => {
-    const env = makeEnv({ EMAIL: { send: vi.fn().mockRejectedValue(new Error('send failed')) } });
+  it('returns 502 when the email send fails and it cannot be held', async () => {
+    const env = makeEnv({
+      EMAIL: { send: vi.fn().mockRejectedValue(new Error('send failed')) },
+      CONTACT_KV: kvThatCannotHold(),
+    });
     const res = await worker.fetch(contactRequest(GOOD), env);
     expect(res.status).toBe(502);
     expectSecureHeaders(res);
@@ -230,6 +273,7 @@ describe('contact worker, school return path', () => {
     const env = makeEnv({
       ASSETS: assetsServing('/t/vaporwave/contact/sent/'),
       EMAIL: { send: vi.fn().mockRejectedValue(new Error('send failed')) },
+      CONTACT_KV: kvThatCannotHold(),
     });
     const res = await worker.fetch(contactRequest({ ...GOOD, return: 'vaporwave' }), env);
     expect(res.status).toBe(502);
@@ -246,7 +290,134 @@ describe('contact worker, school return path', () => {
     const limitedEnv = makeEnv({ CONTACT_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } });
     const limited = await worker.fetch(contactRequest(GOOD), limitedEnv);
     expect(limited.status).toBe(429);
-    expect(await limited.text()).toContain('<a href="https://birchdesignlab.com/contact">Back to the form</a>');
+    expect(await limited.text()).toContain('<a href="https://birchdesignlab.com/contact/">Back to the form</a>');
     expect(limitedEnv.ASSETS.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('contact safety net: daily cap', () => {
+  const today = () => `count:${new Date().toISOString().slice(0, 10)}`;
+
+  it('counts each valid submission against today', async () => {
+    const env = makeEnv();
+    await worker.fetch(contactRequest(GOOD), env);
+    await worker.fetch(contactRequest(GOOD), env);
+    expect(env.CONTACT_KV.store.get(today())).toBe('2');
+  });
+
+  it('refuses with 429 and sends nothing once the day is at the cap', async () => {
+    const env = makeEnv({ CONTACT_KV: makeKv({ [today()]: '40' }) });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(429);
+    expect(await res.text()).toContain('hello@birchdesignlab.com');
+    expect(env.EMAIL.send).not.toHaveBeenCalled();
+    expectSecureHeaders(res);
+  });
+
+  it('does not count honeypot or invalid submissions', async () => {
+    const env = makeEnv();
+    await worker.fetch(contactRequest({ ...GOOD, company: 'Bot Co' }), env);
+    await worker.fetch(contactRequest({ ...GOOD, name: '' }), env);
+    expect(env.CONTACT_KV.store.has(today())).toBe(false);
+  });
+
+  it('fails open when the counter write throws after a good read', async () => {
+    const kv = makeKv();
+    kv.put.mockRejectedValue(new Error('too many writes'));
+    const env = makeEnv({ CONTACT_KV: kv });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(303);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not count a per-IP 429 against the cap', async () => {
+    const env = makeEnv({ CONTACT_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } });
+    await worker.fetch(contactRequest(GOOD), env);
+    expect(env.CONTACT_KV.store.has(today())).toBe(false);
+  });
+
+  it('fails open: a KV outage never blocks a real lead', async () => {
+    const kv = makeKv();
+    kv.get.mockRejectedValue(new Error('kv down'));
+    const env = makeEnv({ CONTACT_KV: kv });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(303);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('contact safety net: holding a failed send', () => {
+  it('holds the submission and tells the visitor it is saved (202)', async () => {
+    const env = makeEnv({ EMAIL: { send: vi.fn().mockRejectedValue(new Error('send down')) } });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(202);
+    const html = await res.text();
+    expect(html).toContain('Your message is saved');
+    expect(html).not.toContain('birchdesignlab@gmail.com');
+    expectSecureHeaders(res);
+    const held = [...env.CONTACT_KV.store.entries()].filter(([k]) => k.startsWith('held:'));
+    expect(held).toHaveLength(1);
+    expect(JSON.parse(held[0][1])).toMatchObject(GOOD);
+    const ttl = env.CONTACT_KV.put.mock.calls.find(([k]) => String(k).startsWith('held:'))?.[2];
+    expect(ttl).toMatchObject({ expirationTtl: expect.any(Number) });
+  });
+
+  it('falls back to the 502 page with the public address if holding fails too', async () => {
+    const env = makeEnv({ EMAIL: { send: vi.fn().mockRejectedValue(new Error('send down')) }, CONTACT_KV: kvThatCannotHold() });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(502);
+    expect(await res.text()).toContain('hello@birchdesignlab.com');
+  });
+});
+
+describe('contact safety net: daily retry (scheduled)', () => {
+  type Scheduled = NonNullable<typeof worker.scheduled>;
+  const run = (env: unknown) =>
+    worker.scheduled!({} as Parameters<Scheduled>[0], env as Parameters<Scheduled>[1]);
+  const held = (at: string) => JSON.stringify({ ...GOOD, at });
+
+  it('resends each held submission as a delayed email and deletes it', async () => {
+    const kv = makeKv({ 'held:2026-11-17T10:00:00.000Z:a': held('2026-11-17T10:00:00.000Z'), 'count:2026-11-17': '3' });
+    const env = makeEnv({ CONTACT_KV: kv });
+    await run(env);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+    const msg = env.EMAIL.send.mock.calls[0][0] as { subject: string; replyTo: string; text: string; to: string };
+    expect(msg.subject).toBe('Contact form (delayed): Ada Lovelace');
+    expect(msg.replyTo).toBe('ada@example.com');
+    expect(msg.to).toBe('birchdesignlab@gmail.com');
+    expect(msg.text).toContain('2026-11-17T10:00:00.000Z');
+    expect(kv.store.has('held:2026-11-17T10:00:00.000Z:a')).toBe(false);
+    expect(kv.store.has('count:2026-11-17')).toBe(true);
+  });
+
+  it('keeps a held submission whose retry fails, for the next run', async () => {
+    const kv = makeKv({ 'held:x:1': held('x') });
+    const env = makeEnv({ CONTACT_KV: kv, EMAIL: { send: vi.fn().mockRejectedValue(new Error('still down')) } });
+    await run(env);
+    expect(kv.store.has('held:x:1')).toBe(true);
+  });
+
+  it('skips a corrupt held record and still sends the rest', async () => {
+    const kv = makeKv({ 'held:0:bad': '{', 'held:1:ok': held('1') });
+    const env = makeEnv({ CONTACT_KV: kv });
+    await run(env);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+    expect(kv.store.has('held:1:ok')).toBe(false);
+  });
+
+  it('logs loudly when a held record nears expiry and still fails', async () => {
+    const old = new Date(Date.now() - 27 * 864e5).toISOString();
+    const kv = makeKv({ [`held:${old}:z`]: held(old) });
+    const env = makeEnv({ CONTACT_KV: kv, EMAIL: { send: vi.fn().mockRejectedValue(new Error('still down')) } });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await run(env);
+    expect(spy.mock.calls.some((c) => c[0] === 'HELD CONTACT EXPIRING SOON')).toBe(true);
+    spy.mockRestore();
+  });
+
+  it('does nothing when nothing is held', async () => {
+    const env = makeEnv();
+    await run(env);
+    expect(env.EMAIL.send).not.toHaveBeenCalled();
   });
 });
