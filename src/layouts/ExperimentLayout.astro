@@ -6,6 +6,7 @@ import '@fontsource/spectral/600.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import HeadCommon from '../components/HeadCommon.astro';
+import { ogImageForLab } from '../lib/og/manifest';
 
 /** `title` is the full page title; `heading` is the specimen's own title,
     which is what the h1 says. Keeping them separate stops the heading from
@@ -22,7 +23,7 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
 <!doctype html>
 <html lang="en" data-zone="lab">
   <head>
-    <HeadCommon title={title} description={description} noindex={noindex} ogImage="lab-experiment" />
+    <HeadCommon title={title} description={description} noindex={noindex} ogImage={ogImageForLab(designation, 'lab-experiment')} />
     <slot name="head" />
   </head>
   <body>
