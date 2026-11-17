@@ -65,7 +65,9 @@ export function mount() {
 
   /* ======================= maps ======================= */
   let mainMap: LiveMap;
-  let deskMap: LiveMap;
+  let deskMap: LiveMap | undefined;
+  /** Which layout deskMap was built in (DESK_M below 760px, DESK above). */
+  let deskPhone = false;
   /** The box whose drawer is open. Its highlight outlives hover and blur. */
   let picked: string | null = null;
   /** True once a visitor has moved the camera themselves; a journey then stops steering it. */
@@ -155,7 +157,14 @@ export function mount() {
       buildMap($('dm-map-live'), LIVE, { tech });
       buildMap($('dm-map-forms'), FORMS, { tech });
     }
-    deskMap = buildMap($('dm-map-desk'), phone ? DESK_M : DESK, { compact: true, ambient: false });
+    // The desk map is titles and chips only, the same in both voices, so the
+    // label switch leaves it alone and a sale in flight keeps its light. Only
+    // the phone breakpoint swaps its layout (send() re-sends a light caught
+    // in that rebuild).
+    if (!deskMap || deskPhone !== phone) {
+      deskMap = buildMap($('dm-map-desk'), phone ? DESK_M : DESK, { compact: true, ambient: false });
+      deskPhone = phone;
+    }
     paintDesk();
   }
 
@@ -349,7 +358,7 @@ export function mount() {
     $('dm-forms-m').innerHTML = bare('mail', [
       { node: pick(FORMS, 'four') },
       { cap: 'every form, checked', node: pick(FORMS, 'fdesk') },
-      { cap: 'only real people', node: pick(FORMS, 'rs') },
+      { cap: 'spam screened out', node: pick(FORMS, 'rs') },
       { cap: 'the full lead, to the owners', node: pick(FORMS, 'oin') },
       { cap: 'a thank-you, to the sender', node: pick(FORMS, 'gin') },
       { cap: 'signups join the lists', node: pick(FORMS, 'lst') },
@@ -461,9 +470,10 @@ export function mount() {
   const cap40 = SIM.capacity;
   const desk = { sold: SIM.sold, ticked: false, page: false, listing: false, busy: false, watcher: 'listening', builder: 'idle' };
   function paintDesk() {
-    if (!deskMap) return;
+    const dm = deskMap;
+    if (!dm) return;
     const chip = (id: string, text: string, cls = '') => {
-      const c = deskMap.nodes[id]?.el.querySelector<HTMLElement>('.n-chip');
+      const c = dm.nodes[id]?.el.querySelector<HTMLElement>('.n-chip');
       if (c) { c.textContent = text; c.className = 'n-chip' + (cls ? ' ' + cls : ''); }
     };
     chip('tt', `${desk.sold} of ${cap40} sold`, desk.sold >= cap40 ? 'on' : '');
@@ -509,13 +519,20 @@ export function mount() {
     };
     /** Send a light along one of the desk map's lines, and ring the box it lands on. */
     const send = async (from: string, to: string, back = false) => {
-      const r = edgeOf(deskMap, from, to);
-      if (!r) return;
-      r.g.classList.add('hot');
-      await travel(deskMap, r, r.e.lane === 'tickets' ? tickets : content, 620, () => true, back);
-      r.g.classList.remove('hot');
-      const end = deskMap.nodes[back ? from : to];
-      if (end) pingNode({ el: end.el }, r.color);
+      for (;;) {
+        const m = deskMap;
+        const r = m && edgeOf(m, from, to);
+        if (!m || !r) return;
+        r.g.classList.add('hot');
+        await travel(m, r, r.e.lane === 'tickets' ? tickets : content, 620, () => deskMap === m, back);
+        r.g.classList.remove('hot');
+        // Crossing the phone breakpoint rebuilt the map under the light: send
+        // it again along the same line of the new layout.
+        if (deskMap !== m) continue;
+        const end = m.nodes[back ? from : to];
+        if (end) pingNode({ el: end.el }, r.color);
+        return;
+      }
     };
     const beat = () => wait(STILL ? 0 : 380);
     const say = (step: number, text: string) => { lit(step); log(text); };

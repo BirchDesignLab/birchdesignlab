@@ -126,11 +126,11 @@ export const MAIN: MapSpec = {
       tech: 'Sanity Content Lake. Twelve document types, read with GROQ at build time and by the live app.' },
     { id: 'tt', x: X.b, y: 392, w: W.b, cls: 'hub', kick: 'Box office', title: 'Ticket Tailor',
       sub: 'Checkout on the club’s own web address, payments, ticket emails and waitlists.',
-      tech: 'Ticket Tailor’s REST API and webhooks. The site reads checkout links and ticket counts, never buyers.' },
+      tech: 'Ticket Tailor’s REST API and webhooks. The site reads checkout links and ticket counts, and keeps nothing about buyers.' },
 
     { id: 'builder', x: X.c, y: 80, w: W.c, kick: 'Website', title: 'Site builder',
-      sub: 'Rebuilds all 50 pages whenever the owners publish, and again every night.',
-      tech: 'Astro on Cloudflare Workers. Pages prerender to static HTML. A publish webhook and a nightly scheduled job start the build.' },
+      sub: 'Rebuilds every page whenever the owners publish, and again each morning.',
+      tech: 'Astro on Cloudflare Workers. Pages prerender to static HTML; the API routes and one TV route run on request. A publish webhook and a daily scheduled job start the build.' },
     { id: 'watcher', x: X.c, y: 228, w: W.c, kick: 'Tickets', title: 'Sold-out watcher',
       sub: 'Hears about every order and flips Sold Out by itself.',
       tech: 'A Worker route. It checks each webhook’s signature, asks the Ticket Tailor API for the real count, then patches Sanity.' },
@@ -145,14 +145,14 @@ export const MAIN: MapSpec = {
       tech: 'Resend for transactional email and contact lists, called straight from the Worker.' },
 
     { id: 'site', x: X.d, y: 64, w: W.d, kick: 'Website', title: 'cheerandchatter.com',
-      sub: 'Home, Events, 42 event pages, Private Events, Venue Partners, About, FAQ.',
+      sub: 'Home, Events, a page for every night, Private Events, Venue Partners, About, FAQ.',
       tech: 'Static HTML at Cloudflare’s edge, with React islands only where a page needs one.' },
     { id: 'google', x: X.d, y: 208, w: W.d, kick: 'Search and social', title: 'Google and Facebook',
       sub: 'Event listings, sitemap and share cards.',
       tech: 'JSON-LD for Event, Offer, Place, Organization, FAQPage and BreadcrumbList, a filtered sitemap and Open Graph tags.' },
     { id: 'host', x: X.d, y: 340, w: W.d, kick: 'Game night', title: 'Host console',
       sub: 'The host’s phone. Keeps going if the wifi drops.',
-      tech: 'A React island behind a signed session. A service worker caches the app and tonight’s art, and local state lets a dead phone resume.' },
+      tech: 'A React island behind a signed session. A service worker caches the app and tonight’s art, and the night is saved on the phone, so a restarted phone can pick it back up once it is online.' },
     { id: 'tv', x: X.d, y: 466, w: W.d, kick: 'Game night', title: 'Venue TV',
       sub: 'Bingo, trivia, winners and the slideshow.',
       tech: 'A React island that joins the room as a viewer over a WebSocket. It can only watch.' },
@@ -170,7 +170,7 @@ export const MAIN: MapSpec = {
     // carries / wire: what travels on the line, in each voice. Kept to a few
     // words, and to things the box lines above already say.
     { from: 'studio', to: 'sanity', lane: 'content', carries: 'every edit, on Publish', wire: 'document mutations from the Studio' },
-    { from: 'files', to: 'sanity', lane: 'content', carries: 'cards, questions and photos', wire: 'typed documents, written by import script' },
+    { from: 'files', to: 'sanity', lane: 'content', carries: 'cards, questions and photos', wire: 'typed documents, written by an import script' },
     { from: 'sanity', to: 'builder', lane: 'content', carries: 'the whole library', wire: 'GROQ queries at build time' },
     { from: 'sanity', to: 'relay', lane: 'content', carries: 'tonight’s cards and questions', wire: 'one GROQ read for the night' },
     { from: 'builder', to: 'site', lane: 'content', carries: 'the finished pages', wire: 'prerendered static HTML' },
@@ -204,7 +204,7 @@ export const JOURNEYS: Journey[] = [
   { key: 'publish', name: 'The owners hit Publish', lane: 'content', steps: [
     ['studio', 'sanity', 'The owners change something in the Studio and hit Publish.'],
     ['sanity', 'builder', 'Sanity tells Cloudflare, and the site builder reads the whole library.'],
-    ['builder', 'site', 'All 50 pages are rebuilt and go live.'],
+    ['builder', 'site', 'Every page is rebuilt and goes live.'],
     ['builder', 'google', 'Google and Facebook get fresh listings, a fresh sitemap and new share cards.'],
     ['sanity', 'relay', 'The game app reads the same library, so the next game night is up to date too.'],
   ] },
@@ -223,7 +223,7 @@ export const JOURNEYS: Journey[] = [
   ] },
   { key: 'form', name: 'Someone fills a form', lane: 'mail', steps: [
     ['guests', 'desk', 'Someone asks about a private party on the website.'],
-    ['desk', 'resend', 'The forms desk makes sure it’s a real person, not a bot.'],
+    ['desk', 'resend', 'The forms desk screens out spam and limits repeat tries.'],
     ['resend', 'inbox', 'The owners get the full request. They hit reply and it goes straight to the sender.'],
     ['resend', 'guestmail', 'The sender gets a thank-you right away.'],
     ['resend', 'lists', 'Newsletter and waitlist signups join the mailing lists.'],
@@ -290,7 +290,7 @@ export const FORMS: MapSpec = {
       tech: 'Four forms, one endpoint. The server names the exact field to fix, in a plain sentence.' },
     { id: 'fdesk', x: 312, y: 70, w: 240, kick: 'Cloudflare', title: 'Forms desk',
       sub: 'Spam screening and a limit on repeat tries, before anything is sent.',
-      tech: 'A single Worker endpoint: validate, screen, rate-limit, then send. Nothing is written to storage.' },
+      tech: 'A single Worker endpoint: validate, screen, rate-limit, then send. The site keeps no database of its own; signups go straight to Resend’s contact lists.' },
     { id: 'rs', x: 632, y: 82, w: 214, cls: 'hub', kick: 'Mail service', title: 'Resend',
       sub: 'Sends from the club’s own address.',
       tech: 'Resend’s send and contacts APIs on the club’s verified domain.' },
@@ -306,7 +306,7 @@ export const FORMS: MapSpec = {
   ],
   edges: [
     { from: 'four', to: 'fdesk', lane: 'mail' },
-    { from: 'fdesk', to: 'rs', lane: 'mail', label: 'only real people', dy: -22 },
+    { from: 'fdesk', to: 'rs', lane: 'mail', label: 'spam screened out', dy: -22 },
     { from: 'rs', to: 'oin', lane: 'mail' },
     { from: 'rs', to: 'gin', lane: 'mail' },
     { from: 'rs', to: 'lst', lane: 'mail' },
@@ -318,7 +318,7 @@ export type Feed = 'site' | 'live' | 'g';
 /** [name, count ('' = no count shown), what it holds, where it feeds] */
 export const DRAWERS: [string, string, string, Feed[]][] = [
   ['Event', '42', 'One per night or showing: date, venue, theme, tickets, photos, FAQs.', ['site', 'live']],
-  ['Venue', '9', 'Name, address, city and map link. Six cities along the coast.', ['site', 'live']],
+  ['Venue', '9', 'Name, address, city and map link. Six cities, most of them on the coast.', ['site', 'live']],
   ['Caller card', '673', 'A bingo call: name, photo, column and an optional fun fact.', ['live']],
   ['Trivia question', '1,192', 'Clue, answer and difficulty, from Easy to Final Boss.', ['live']],
   ['Sponsor', '', 'Name, logo and QR link for the break and closing slideshow.', ['live']],
@@ -357,8 +357,8 @@ export const STEPS: [string, string][] = [
 ];
 export const CALLOUTS: [string, string][] = [
   ['Quiet on purpose', 'An ordinary order changes nothing on the site, so it costs no rebuild. Only a real change does.'],
-  ['And back again', 'If a refund frees a seat, Sold Out clears itself and the Buy button returns.'],
-  ['Every night', 'The site rebuilds itself overnight, so finished nights move to Past, stop selling, and leave the sitemap Google reads.'],
+  ['And back again', 'When Ticket Tailor reports a refund that frees a seat, Sold Out clears itself and the Buy button returns.'],
+  ['Once a day', 'The site also rebuilds itself every morning, so last night’s event moves to Past, stops selling, and leaves the sitemap Google reads.'],
 ];
 /** The ticket desk you can drive. Illustrative numbers, not a real night. */
 export const SIM = { capacity: 40, sold: 38 };
@@ -413,7 +413,7 @@ export const DESK_M: MapSpec = {
 export const PAGES: [string, string, string, boolean][] = [
   ['Home', '', 'Home page record, the next upcoming nights, newsletter signup', false],
   ['Events', '', 'Every event, with theme and Tickets live filters that update by themselves as nights pass', false],
-  ['42 event pages', 'one per night', 'The event, its venue, its Ticket Tailor checkout, the note on every event, its own FAQ', true],
+  ['Event pages', 'one per night', 'The event, its venue, its Ticket Tailor checkout, the note on every event, its own FAQ', true],
   ['Private Events', '', 'Private Events page record, event types, packages, add-ons, gallery, quote form', false],
   ['Venue Partners', '', 'Venue Partners record, partner inquiry form', false],
   ['About', '', 'About page record and photos', false],
@@ -424,7 +424,7 @@ export const PAGES: [string, string, string, boolean][] = [
 /** [label, value, quiet aside]. The Available row is driven by the ticket desk. */
 export const GOOGLE: [string, string, string][] = [
   ['Kind', 'Event, in person', ''],
-  ['Starts', 'A Wednesday, 6:00 p.m. Central', ''],
+  ['Starts', 'A Tuesday, 6:00 p.m. Central', ''],
   ['Ends', '8:00 p.m. Central', 'daylight time worked out automatically'],
   ['Where', 'The venue’s name and full address', ''],
   ['Price', 'The ticket price, with the link to buy', ''],
@@ -464,12 +464,12 @@ export const FEATS: [string, string][] = [
 
 /* ======================= safety ======================= */
 export const LOCKS: [string, string][] = [
-  ['Keys stay locked', 'Every key the system uses is stored as a locked secret in Cloudflare. Each build scans its own output to prove none leaked into the pages.'],
-  ['Buyers stay private', 'The website only ever asks the box office how many tickets are left. It never sees who bought them.'],
+  ['Keys stay locked', 'Every key the system uses is stored as a locked secret in Cloudflare. Each build scans its own output to catch any that leaked into the pages.'],
+  ['Buyers stay private', 'Who bought a ticket stays with the box office. Each order message does name the buyer, and the site never stores or logs it: it notes the night, then asks Ticket Tailor for the count.'],
   ['Only real order messages', 'The sold-out watcher acts only on messages it can verify came from Ticket Tailor, then confirms the count with Ticket Tailor itself.'],
   ['Only the host runs the game', 'The host signs in to run a night. The TV can only watch.'],
-  ['Guessing gets locked out', 'The host login and every form limit repeat tries. After that, the device has to wait.'],
-  ['Checks before every change', '701 automated checks run before anything goes live, from ticket math to Central time on daylight-saving nights.'],
+  ['Repeat tries are slowed', 'The host login and every form limit repeat tries. After that, the device has to wait.'],
+  ['Tested where it’s tricky', '701 automated tests cover the system, from ticket math to Central time on daylight-saving nights.'],
   ['The Studio catches mistakes', 'It won’t save two nights with one checkout link, a ticketed night without its series ID, or an end time before the start.'],
   ['Security headers on every page', 'The site tells browsers to use a secure connection and refuses to be framed by other sites.'],
 ];
@@ -481,10 +481,10 @@ export const STATS: [number, string, string][] = [
   [813, '', 'photos stored and served'],
   [1192, '', 'trivia questions across 7 themes and 4 difficulty levels'],
   [673, '', 'bingo caller cards in 6 decks, 286 with fun facts'],
-  [50, '', 'web pages rebuilt every time the owners publish'],
+  [49, '', 'web pages rebuilt every time the owners publish'],
   [42, '', 'event nights and showings, at 9 venues in 6 cities'],
   [4, '', 'outside services working as one: Sanity, Ticket Tailor, Cloudflare, Resend'],
-  [701, '', 'automated checks run before any change goes live'],
+  [701, '', 'automated tests in the codebase'],
 ];
 /** [number (0 = show the label as written), display, what it counts] */
 export const BEHIND: [number, string, string][] = [
