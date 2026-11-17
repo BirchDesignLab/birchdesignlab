@@ -1,0 +1,68 @@
+/* Stage 5 proof a5, option (b): dimmed cream papers lit by the amber pools,
+   ink-brown text, only the room dark. Every paper in the dark scheme (cards,
+   the butter note, the letter, the mounted sheets) takes it. Pair with
+   shared.css (items 3 and 5).
+
+   Every rule is under html[data-theme='cottagecore'][data-scheme='dark']; the
+   injected `:root` is for specificity only (see shared.css).
+
+   Tokens. --paper and --note are the surfaces the text sits on (meta.contrast
+   holds them); the four --paper-ink* tokens are the inks that sit on them, so
+   the tokens that mean "text on the table" (--mark, --accent, --link stay
+   cream, amber and lit sage) are not touched. A surface rule remaps them
+   inside paper only. */
+html[data-theme='cottagecore'][data-scheme='dark']:root {
+  --paper: #d5c8ac;
+  --note: #d9c892;
+  --paper-ink: #2f2219;
+  --paper-ink-muted: #4f3a2b;
+  --paper-accent: #702a36;
+  --paper-link: #2f4a2a;
+  --paper-rule: rgba(58, 42, 31, 0.17);
+  --paper-margin-line: rgba(112, 42, 54, 0.42);
+  /* Lit by the amber pools: a warm glow from the upper left, a dimming toward
+     the foot. Both are overlays, so the text surface at its darkest is the
+     paper with the foot overlay's full strength (--paper-lamp-foot). */
+  --paper-lamp-foot: 0.1;
+  --paper-lamp:
+    radial-gradient(ellipse 80% 60% at 18% 0%, rgba(255, 200, 120, 0.34), transparent 70%),
+    linear-gradient(0deg, rgba(40, 25, 10, var(--paper-lamp-foot)), transparent 45%);
+  /* the gummed strip, pale kraft on cream */
+  --cc-gum-strip: #ece0c4;
+}
+html[data-theme='cottagecore'][data-scheme='dark']:root :is(.cc-paper, .note, .letter, .cc-board, .skip) {
+  color: var(--paper-ink);
+  --mark: var(--paper-ink);
+  --mark-muted: var(--paper-ink-muted);
+  --accent: var(--paper-accent);
+  --link: var(--paper-link);
+  --rule: var(--paper-rule);
+  --margin-line: var(--paper-margin-line);
+  /* the pressed flowers take the light scheme's palette, which was drawn for
+     cream paper */
+  --cc-petal: #fffdf7; --cc-petal-back: #f1e7d2; --cc-petal-edge: rgba(107, 82, 66, 0.5);
+  --cc-heart: #eec35a; --cc-heart-deep: #b98a2a;
+  --cc-stem: #7f9870; --cc-leaf: #a9bb96; --cc-leaf-edge: #6c8460;
+  --cc-lav: #a493cc; --cc-lav-edge: #6f5f98; --cc-fern: #95ae86;
+  --cc-twig: #6d5140; --cc-lenticel: #f7efdf; --cc-catkin: #c9a672;
+  --cc-rose-petal: #e8aeaa; --cc-rose-edge: #b8747a; --cc-blush: #fff4e4;
+}
+/* Mounted sheets only: petal fills 10% less saturated (desat.mjs). */
+html[data-theme='cottagecore'][data-scheme='dark']:root .cc-board {
+  --cc-petal: #fffdf7; --cc-petal-back: #efe6d4; --cc-rose-petal: #e5b1ad;
+  --cc-blush: #fef4e5; --cc-lav: #a596c9;
+}
+html[data-theme='cottagecore'][data-scheme='dark']:root .cc-paper { background-image: var(--paper-lamp); }
+html[data-theme='cottagecore'][data-scheme='dark']:root .note { background-image: var(--paper-lamp); }
+html[data-theme='cottagecore'][data-scheme='dark']:root .letter {
+  background-image:
+    linear-gradient(90deg, transparent 3.1rem, var(--margin-line) 3.1rem 3.2rem, transparent 3.2rem 3.45rem, var(--margin-line) 3.45rem 3.55rem, transparent 3.55rem),
+    linear-gradient(to top, var(--rule) 1px, transparent 1px),
+    var(--paper-lamp);
+  background-size: 100% 100%, 100% var(--lh), 100% 100%;
+  background-position: 0 0, 0 calc(var(--lh) * 0.72), 0 0;
+}
+/* the torn sheets keep a shadow; cream paper needs a little less than brown */
+html[data-theme='cottagecore'][data-scheme='dark']:root .cc-torn-lift {
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}

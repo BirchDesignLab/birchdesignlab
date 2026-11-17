@@ -6,6 +6,8 @@
 import ContactHidden from '../../portal/ContactHidden.astro';
 import type { CopyData } from '../../../lib/copy';
 import Pressed from '../assets/Pressed.astro';
+import Stamp from '../assets/Stamp.astro';
+import Postmark from '../assets/Postmark.astro';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -33,21 +35,15 @@ const { copy, theme } = Astro.props;
       <ContactHidden theme={theme} label={copy.labels.honeypot} />
       <button class="cc-label" type="submit">{copy.submit}</button>
     </form>
-    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10047;</span> </>}{part}</>)}</p>
+    <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10047;</span> </>}<span class="tp">{part}</span></>)}</p>
     <Pressed kind="lavender" seed={101} class="st-lav" />
   </div>
 
   <div class="post">
     <div class="postcard cc-paper">
-      <span class="cc-tape cc-tape--rose pc-tape" aria-hidden="true"></span>
-      <div class="stamp" aria-hidden="true">
-        <div class="stamp-face"><Pressed kind="daisy" seed={102} class="stamp-flower" /></div>
-      </div>
-      <svg class="postmark" viewBox="0 0 150 70" aria-hidden="true" focusable="false">
-        <circle cx="35" cy="35" r="30" />
-        <circle cx="35" cy="35" r="22" />
-        <path d="M70 18c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 30c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 42c10-6 18 6 28 0s18 6 28 0 14 4 22 0M70 54c10-6 18 6 28 0s18 6 28 0 14 4 22 0" />
-      </svg>
+      <span class="cc-tape cc-tape--rose cc-tape--half pc-tape" aria-hidden="true"></span>
+      <Stamp class="stamp" seed={102} />
+      <Postmark class="postmark" arcId="pm-arc-contact" />
       <p class="invite">{copy.invite}</p>
       <div class="address">
         <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
@@ -57,8 +53,11 @@ const { copy, theme } = Astro.props;
       <p class="fine">{copy.fine}</p>
     </div>
     <div class="post-posy" aria-hidden="true">
-      <Pressed kind="fern" seed={103} class="pp-fern" />
-      <Pressed kind="rose" seed={104} class="pp-rose" />
+      <Pressed kind="myrtle" seed={103} class="pp-myrtle" />
+      <div class="pp-card cc-paper">
+        <span class="cc-tape cc-tape--rose cc-tape--half pp-tape" aria-hidden="true"></span>
+        <Pressed kind="rose" seed={104} class="pp-rose" />
+      </div>
     </div>
   </div>
 </section>
@@ -71,25 +70,26 @@ const { copy, theme } = Astro.props;
     align-items: start;
     padding-block: clamp(2rem, 5vw, 4rem) 0;
   }
+  /* Both columns end together: the postcard column stretches to the
+     stationery and the loose posy fills what the postcard leaves. */
+  .stationery { align-self: start; }
 
   /* ---- the stationery ---- */
   .stationery {
     --tilt: -0.5deg;
     padding: clamp(2rem, 5vw, 3.6rem) clamp(1.4rem, 5vw, 3.6rem) clamp(2.4rem, 5vw, 3.6rem);
   }
-  .kicker { font-size: clamp(1.9rem, 3vw, 2.3rem); }
+  .kicker { font-size: clamp(2.2rem, 3.4vw, 2.7rem); }
   /* Capped so 'Start a conversation' sets on one line at desktop instead of
      stranding 'Start a' above a heavy second line. */
   h1 { font-size: clamp(2.6rem, 4.6vw, 3.6rem); margin-top: 0.7rem; }
   .subline { margin-top: 1rem; font-size: 1.14rem; color: var(--mark-muted); max-width: 34rem; }
   form { display: grid; gap: 1.6rem; margin-top: 2.4rem; }
-  .field { display: grid; gap: 0.15rem; }
+  .field { display: grid; gap: 0.25rem; }
+  /* Weight, ink and upright tilt come from the label hand (theme.css). */
   .field label {
     font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: 1.55rem;
     line-height: 1.2;
-    color: var(--accent);
   }
   .field input, .field textarea {
     font: inherit;
@@ -100,30 +100,54 @@ const { copy, theme } = Astro.props;
     border-radius: 0;
     width: 100%;
   }
-  /* Lines to write on: a dashed line under each field, in --field-line
-     (not the decorative --stitch) so the boundary clears 3:1. */
+  /* Lines to write on: each input is one ruled line, the same pitch and rule
+     as the textarea below it, so the form reads as one sheet of ruled
+     stationery. The input rule and the textarea edge are --field-line (3:1); focus adds an outline. */
   .field input {
-    border-bottom: 2px dashed var(--field-line);
-    padding: 0.45rem 0.25rem;
+    box-sizing: border-box;
+    height: 26px;
+    line-height: 25px;
+    padding: 0 0.25rem;
+    border-bottom: 1px solid var(--field-line);
   }
+  /* Writing on the lines (brief item 4): a 30px pitch, the first line 4px
+     below the top edge and 6px under the last (less than a rule's reach), so every line of text
+     sits on its rule (1px at --rule-y, about 0.2em under the baseline; the
+     rules scroll with the text). The rules are the textarea's own background,
+     so they tilt with the stationery. */
   .field textarea {
-    --lh: 1.9rem;
+    --lh: 30px;
+    --rule-y: 24px;
+    --pad-top: 4px;
+    --lines: 7;
     line-height: var(--lh);
-    padding: 0.2rem 0.6rem 0.4rem;
-    min-height: calc(var(--lh) * 6 + 0.6rem);
-    resize: vertical;
-    border: 2px dashed var(--field-line);
-    border-radius: 4px;
-    background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
-    background-size: 100% var(--lh);
-    background-position: 0 0.2rem;
-    background-attachment: local;
+    padding: var(--pad-top) 0.6rem 0;
+    /* Seven lines exactly, no padding below the last: the box ends where the
+       seventh line's rule is. */
+    height: calc(var(--lh) * var(--lines) + var(--pad-top));
+    /* No resize grip on the ruled sheet (founder's missed-problems list,
+       11-17-26): a field that grows would show a grip over the rules, and
+       Firefox cannot hide it. The text scrolls inside the sheet instead. */
+    resize: none;
+    border-bottom: 0;
+    /* The seventh rule is the sheet's edge, drawn once at --field-line (3:1)
+       so the box stays findable, as a layer pinned to the box (the faint rules
+       scroll with the text and would run on past it). The faint rule under the
+       same line is covered by it, so the sheet ends in one rule, not two. */
+    background-image:
+      linear-gradient(var(--field-line), var(--field-line)),
+      linear-gradient(to top, var(--rule) 1px, transparent 1px);
+    background-size: 100% 1px, 100% var(--lh);
+    background-repeat: no-repeat, repeat;
+    background-position:
+      0 calc(var(--pad-top) + var(--lh) * (var(--lines) - 1) + var(--rule-y)),
+      0 calc(var(--pad-top) + var(--rule-y) + 1px - var(--lh));
+    background-attachment: scroll, local;
   }
   .field input:focus-visible, .field textarea:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--field-line);
     outline-offset: 3px;
-    border-color: var(--accent);
-    border-style: solid;
+    border-radius: 2px;
     background-color: color-mix(in srgb, var(--note) 55%, transparent);
   }
   form .cc-label { justify-self: start; margin-top: 0.4rem; }
@@ -136,66 +160,64 @@ const { copy, theme } = Astro.props;
   }
 
   /* ---- the postcard ---- */
-  .post { padding-top: clamp(0rem, 6vw, 5rem); }
+  .post { padding-top: clamp(0rem, 6vw, 5rem); align-self: stretch; display: flex; flex-direction: column; }
   .postcard {
     --tilt: 2deg;
+    position: relative; z-index: 1;
+    /* The message in the first column, the stamp in the second; the postmark
+       takes the row under both. The stamp stands on the bottom of the first
+       row, so a heading that sets in more lines carries the stamp, the ring
+       and the cancel down with it: they keep the same place against each
+       other and the ring never meets the heading at any width. */
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 1.8rem 1.6rem 1.8rem;
   }
   .pc-tape { top: -0.8rem; left: 1.4rem; --tape-tilt: -7deg; --tape-w: 5.5rem; }
   /* A loose posy on the table under the postcard, where the form runs long. */
-  .post-posy { position: relative; height: 16rem; margin-top: 2rem; }
+  .post-posy { position: relative; flex: 1 1 auto; min-height: 9rem; margin-top: -1.2rem; }
   .post-posy :global(.pressed) { position: absolute; bottom: 0; }
-  .post-posy :global(.pp-fern) { width: 7.5rem; left: 18%; rotate: -28deg; }
-  .post-posy :global(.pp-rose) { width: 8.5rem; left: 42%; rotate: 16deg; }
-  .stamp {
-    position: absolute; top: 1.2rem; right: 1.2rem;
+  .post-posy :global(.pp-myrtle) { width: 7.6rem; left: 10%; top: -1.6rem; bottom: auto; rotate: -22deg; }
+  /* The rose is mounted on a small card with a gum strip (dossier item 7),
+     bottom-aligned so the columns end together and nothing floats on cloth. */
+  .pp-card { --tilt: -3deg; position: absolute; right: 8%; bottom: 0; width: 9.5rem; height: 10.5rem; padding: 0.6rem; }
+  .pp-tape { top: -0.7rem; left: 1.6rem; --tape-tilt: 6deg; --tape-w: 4.2rem; }
+  .post-posy :global(.pp-rose) { position: absolute; width: 7.4rem; left: 1rem; bottom: 0.7rem; rotate: 12deg; }
+  /* The stamp's look (perforations, face, the value 3) is assets/Stamp.astro.
+     In the flow: it stands at the foot of the first row, 1.2rem from the
+     card's top and right when the heading is short. */
+  .postcard :global(.stamp) {
+    grid-column: 2; grid-row: 1; align-self: end;
+    position: relative;
     width: 5.6rem; height: 6.6rem;
-    padding: 0.5rem;
-    /* A stock that contrasts with the postcard under it, in both schemes, so
-       the perforated edge stays visible rather than reading as a flat square. */
-    background: var(--cc-stamp-stock);
+    margin: -0.6rem -0.4rem 0 0.6rem;
     rotate: 4deg;
-    filter: drop-shadow(0 1px 2px rgba(var(--shadow), 0.35)) drop-shadow(0 0 0 1px rgba(var(--shadow), 0.08));
-    /* Perforations: a grid of holes, kept only around the edge by a solid
-       inner rectangle laid over it. */
-    -webkit-mask:
-      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
-      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
-    mask:
-      radial-gradient(circle 4px at 5px 5px, #0000 96%, #000) -5px -5px / 10px 10px,
-      linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
   }
-  .stamp-face {
-    height: 100%;
-    display: grid; place-items: center;
-    background: var(--cc-stamp-face);
-    outline: 1px solid rgba(58, 42, 31, 0.25);
-    outline-offset: -3px;
-    overflow: hidden;
-  }
-  :global([data-theme='cottagecore'][data-scheme='dark']) .stamp-face { filter: brightness(0.82) sepia(0.15); }
-  .stamp :global(.stamp-flower) { width: 82%; translate: 0 18%; }
-  /* The cancel: a real postmark overlaps the stamp's lower-left corner. */
-  .postmark {
-    position: absolute; top: 5.4rem; right: 4.4rem;
-    width: 7.2rem;
-    fill: none; stroke: var(--mark-muted); stroke-width: 1.6; opacity: 0.55;
+  /* The cancel: a real postmark overlaps the stamp's lower-left corner. It
+     rises 2rem into the first row's foot, which the heading never reaches:
+     the invite keeps 2.4rem of empty room under its last line. The same
+     stamp and cancel are on the Sent envelope (Sent.astro). */
+  .postcard :global(.postmark) {
+    grid-column: 1 / -1; grid-row: 2;
+    justify-self: end;
+    margin: -2rem 2.2rem 0 0;
+    width: 8.6rem;
+    opacity: 0.72;
     rotate: -8deg;
   }
   .invite {
+    grid-column: 1; grid-row: 1;
     margin-top: 0.2rem;
-    /* Cleared to the stamp's own width, not the stamp plus the postmark, so
-       the heading sets in two lines instead of a narrow four-line stack. */
-    padding-right: 5.6rem;
+    /* The room under the last line is the ring's, whatever the line count. */
+    padding-bottom: 2.4rem;
     font-family: var(--font-display);
     font-style: italic;
     font-weight: 460;
     font-size: clamp(1.45rem, 2.3vw, 1.8rem);
     line-height: 1.15;
-    font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
-  .address { display: grid; gap: 1.1rem; margin-top: 1.8rem; }
+  .address, .fine { grid-column: 1 / -1; }
+  .address { display: grid; gap: 1.1rem; margin-top: 1.2rem; }
   .mail {
     font-family: var(--font-hand);
     font-weight: 600;
@@ -214,16 +236,26 @@ const { copy, theme } = Astro.props;
   @media (max-width: 860px) {
     .contact { grid-template-columns: 1fr; }
     .post { padding-top: 0; max-width: 30rem; width: 100%; justify-self: center; }
-    .post-posy { display: none; }
+    /* One Gulf Coast specimen still shows here (dossier D2: one hero species
+       per page): the wax myrtle lies tucked under the postcard's lower edge,
+       its tip out past the edge, where the rose card would not fit. */
+    .post-posy { flex: none; min-height: 0; height: 6rem; margin-top: 0; }
+    .pp-card { display: none; }
+    .post-posy :global(.pp-myrtle) { width: 5.4rem; left: auto; right: 14%; top: -3.2rem; rotate: 160deg; }
   }
   @media (max-width: 640px) {
+    /* The trust line breaks at the flower, never inside 'A reply within...'. */
+    .trust .tp { white-space: nowrap; }
     /* Below the trust line, not on top of it: it sat on 'A reply within'. */
     .stationery :global(.st-lav) { width: 2.6rem; right: 0.4rem; bottom: -2.4rem; }
     /* The stamp and postmark keep their own row (stamp bottom lands at
        ~7.8rem); the invite starts clear of both instead of wrapping beside
        a narrow column. */
-    .postcard { padding-top: 8.6rem; }
-    .invite { padding-right: 0; }
-    .postmark { right: 3.2rem; top: 5rem; width: 6.2rem; }
+    .postcard { grid-template-columns: 1fr; padding-top: 8.6rem; }
+    /* Out of the grid areas too (auto), or the absolute offsets would be
+       measured from the first row, below the padding, not from the card. */
+    .postcard :global(.stamp) { grid-column: auto; grid-row: auto; position: absolute; top: 1.2rem; right: 1.2rem; margin: 0; }
+    .invite { padding-bottom: 0; }
+    .postcard :global(.postmark) { grid-column: auto; grid-row: auto; position: absolute; margin: 0; right: 2.4rem; top: 4.8rem; width: 7.6rem; }
   }
 </style>

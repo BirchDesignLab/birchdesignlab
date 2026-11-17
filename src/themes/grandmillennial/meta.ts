@@ -1,5 +1,6 @@
 import type { ThemeMeta } from '../types';
 import playfair from '@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2?url';
+import cormorantSc from '@fontsource/cormorant-sc/files/cormorant-sc-latin-600-normal.woff2?url';
 import cormorant from '@fontsource-variable/cormorant-garamond/files/cormorant-garamond-latin-wght-normal.woff2?url';
 
 /** Grandmillennial: the parlour revival. Light-native; dark is a lacquered room. */
@@ -16,6 +17,7 @@ export const meta: ThemeMeta = {
   fonts: [
     { family: 'Playfair Display Variable', role: 'heading', preload: [playfair] },
     { family: 'Cormorant Garamond Variable', role: 'body', preload: [cormorant] },
+    { family: 'Cormorant SC', role: 'accent', preload: [cormorantSc] },
     { family: 'Pinyon Script', role: 'accent' },
   ],
   /* Surfaces beyond the field that carry text: the porcelain (light) or
@@ -33,12 +35,17 @@ export const meta: ThemeMeta = {
     { fg: '--link', bg: ['--field-raised'], min: 4.5, note: 'links on cards' },
     { fg: '--mark', bg: ['--paper'], min: 4.5, note: 'text on the ticking-stripe paper' },
     { fg: '--accent', bg: ['--paper'], min: 4.5, note: 'kickers on the ticking-stripe paper' },
+    { fg: '--mark', bg: ['--lacquer-yellow'], min: 4.5, note: 'process band text on the lacquer yellow (hunter by day, cream on amber in the lacquered room)' },
+    { fg: '--accent', bg: ['--lacquer-yellow'], min: 4.5, note: 'process band kicker on the lacquer yellow' },
     { fg: '--mark', bg: ['--oval'], min: 4.5, note: 'billboard inside the portrait oval' },
     { fg: '--accent', bg: ['--oval'], min: 4.5, note: 'billboard second line inside the oval' },
+    { fg: '--band-mark', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' summaries" },
+    { fg: '--thread', bg: ['--field-raised'], min: 3, note: "the sampler's alphabet thread on its card (non-text, 3:1)" },
+    { fg: '--band-accent', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' BDL numbers" },
   ],
   assets: {
     provenance: 'original-vector',
-    note: 'All drawn for this school in SVG and CSS: a chintz repeat (cabbage roses, buds, forget-me-not sprigs), a trellis lattice, a birch-branch botanical, blue-and-white plates, a ribbon bow, gilt corner scrolls, a wax seal and a scalloped striped awning.',
+    note: 'All drawn for this school in SVG and CSS: a chintz repeat (cabbage roses in three variants, buds, forget-me-not sprigs), a chintz wallpaper and an engraved garden toile de Jouy (external SVG files), a trellis lattice, a birch-branch botanical, blue-and-white plates, a ribbon bow, gilt corner scrolls, a wax seal and a scalloped striped awning.',
   },
   order: 5,
 };

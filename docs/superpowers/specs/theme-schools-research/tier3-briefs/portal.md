@@ -312,6 +312,7 @@ Everything is held to the shared swap acceptance.
 - Regenerate all twelve sheets and the arrival strips.
 - Run this same set critique against them.
 - Check the boundaries: the confusable pairs at thumbnail scale in dark, and phones.
+- Build Stage 4's parked interactables: the swiss width dial and the bauhaus questionnaire card (founder, 10-03-26: "fold them into 6").
 - Only then open the transitions phase.
 
 ## 7. Founder decisions that gate Tier 3

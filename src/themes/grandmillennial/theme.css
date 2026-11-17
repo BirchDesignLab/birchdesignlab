@@ -42,6 +42,10 @@
   --foot-mark: #f3ead6;
   --foot-muted: #cfc4a4;
   --foot-link: #f3ead6;
+  /* The Lab band's catalogue cards: the band, a shade deeper, so the hung labels read as cards on it. */
+  --band-card: #0d2e63;
+  /* The thin porcelain-blue band under the footer valance (B1 item 18). */
+  --foot-band: #5d86c2;
 
   /* Ornament only: never text. */
   --rule: var(--gold);
@@ -51,6 +55,11 @@
   --band-lattice: rgb(223 231 242 / 0.14);
   /* The lamp over the field: none by day (the lacquered room's is below). */
   --lamp: none;
+  /* The lacquered room's deeper edge vignette, its diagonal specular band, and
+     the lit top-left edge of a framed card or the Lab band: none by day. */
+  --vignette: none;
+  --sheen: none;
+  --edge-hi: 0 0 0 0 transparent;
   --piping: var(--hunter);
   --btn-rule: var(--gold-light);
   --porcelain-ground: var(--porcelain-pale);
@@ -65,28 +74,72 @@
   --seal: #8e2433;
   --seal-deep: #5f121d;
   --stitch: #a8394a;
+  /* The oxblood thread of the sampler's alphabet band (B1 fix call 2). */
+  --thread: #a8394a;
   --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
   /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
   --bark-edge: #cfc6b4;
   --catkin: #8f7a4a;
   /* The envelope's flap, distinct from the writing paper it lies beside. */
-  --flap: var(--paper);
+  /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12), in a warm paper
+     hue (oklch 0.895 0.022 84), not the cool grey the first pass (#dfdcd6, chroma 0.009) read as (B1 fix call 7). */
+  --flap: #e3dbcc;
 
-  /* The chintz repeat's inks (parts/Defs.astro). */
-  --c-ground: #f5e5dc;
-  --c-rose: #c9576b;
-  --c-rose-lt: #f0c0b8;
-  --c-rose-dk: #7d1f2b;
-  --c-leaf: #2f5e41;
-  --c-leaf-lt: #8aa981;
-  --c-blue: #3a64a8;
-  --c-dot: #b8933f;
+  /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
+     Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
+     a print that has lived in a room, not a new one. Text tokens are untouched.
+     The wall files bake these same values (scripts/themes/grandmillennial/build-patterns.mjs
+     reads them back out of this file), so change them here and rebuild. */
+  --c-ground: #f3e6df;
+  --c-rose: #bd6270;
+  --c-rose-lt: #e9c3bc;
+  --c-rose-dk: #742b31;
+  --c-leaf: #385c45;
+  --c-leaf-lt: #8ea787;
+  --c-blue: #44659b;
+  --c-dot: #b29556;
+  /* The thin brown line the old printers laid round each motif, and the grain
+     in the ground: a dark and a light fleck. */
+  --c-brown: #7b5a46;
+  --c-grain-d: rgb(110 78 58 / 0.34);
+  --c-grain-l: rgb(255 250 240 / 0.55);
+  /* Papered walls (B1 item 2): the ground under the wall pattern, the toile
+     swatch's ground, the stripe band's pinstripe and the ticking's stripe.
+     Light walls lie on the cloth colour, so a raised card is the paler sheet. */
+  --wall-ground: var(--c-ground);
+  --toile-ground: var(--field);
+  --toile-wall: var(--field);
+  --band-pin: var(--oxblood);
+  /* The one saturated anchor of Services (B1 item 5, B): a buttery lacquer yellow
+     under "How a project runs", hunter text on it. Used once. */
+  --lacquer-yellow: #f0d77f;
+  --tick-ink: var(--porcelain);
+
+  /* About's chinoiserie wall (B1 task 2). The inks the INLINE pieces use (the
+     perched and flying birds, the second frame's bough): the wall itself is the
+     external file assets/chinoiserie-<colourway>.svg with the same inks baked
+     (scripts/themes/grandmillennial/chinoiserie-palettes.json; tests/gm-chinoiserie.test.ts
+     keeps the two in step). --sc-ground is the day parlour's wall, --sc-room the
+     hunter lacquer room that holds the founder's letter (item 5, B). */
+  --sc-ground: #e2e6d3;
+  --sc-room: #163b2a;
+  --sc-line: #3d4a3b;
+  --sc-trunk: #f4efe0;
+  --sc-limb: #5b4d3d;
+  --sc-lf: #7c986f;
+  --sc-lf2: #a6bb93;
+  --sc-cat: #c6a65f;
+  --sc-oxb: #ad505a;
+  --sc-blue: #587ab0;
+  --sc-gold: #b8933f;
 
   --font-display: 'Playfair Display Variable', 'Playfair Display Variable fallback', Georgia, serif;
   --font-body: 'Cormorant Garamond Variable', 'Cormorant Garamond Variable fallback', Georgia, serif;
   --font-script: 'Pinyon Script', 'Pinyon Script fallback', Georgia, cursive;
+  /* Engraved small capitals for kickers, the nav, the footer name and the form labels (B1 item 17). */
+  --font-sc: 'Cormorant SC', 'Cormorant SC fallback', Georgia, serif;
 
-  --measure: 36em;
+  --measure: 30em;
   --wrap: 72rem;
   --gutter: clamp(1.1rem, 4vw, 2.5rem);
 }
@@ -114,6 +167,9 @@
   --foot-mark: #f2e8d2;
   --foot-muted: #d9b896;
   --foot-link: #e2c67f;
+  --band-card: #3e0512;
+  /* A deep porcelain blue under the oxblood valance, not the pale line (B1 fix call 5). */
+  --foot-band: #234a86;
 
   --rule: #c9a95c;
   --ornament: #c9a95c;
@@ -125,6 +181,21 @@
      the body and the canopy's swap picture (the foot of this file), so the
      two never drift apart. */
   --lamp: radial-gradient(120% 60% at 20% 0%, rgb(255 240 200 / 0.05), transparent 60%);
+  /* Lacquer, B1 item 6 (static, hunter hue unchanged): the room falls away
+     toward its edges. Painted on the fixed body::before (viewport-sized), not a
+     body background, which would span the whole document. closest-side puts
+     the end of the ramp ON the four edges (t=1 at the side and top/bottom
+     midpoints, 1.41 in the corners), so the sides darken as much as the foot
+     does: a transparent core to 50% leaves a quarter of the width to fall,
+     0.34 at the edge midpoints and 0.5 in the corners. (The first two tries
+     ran the ramp past the edges, to 120% of the width, and the sides never
+     left --field.) */
+  --vignette: radial-gradient(ellipse closest-side at 50% 50%, transparent 50%, rgb(0 0 0 / 0.34) 100%, rgb(0 0 0 / 0.5) 141.4%);
+  /* The specular band, a window's reflection on lacquer. */
+  --sheen: linear-gradient(112deg, transparent 30%, rgb(255 244 214 / 0.028) 41%, rgb(255 244 214 / 0.07) 47%, rgb(255 244 214 / 0.07) 49%, rgb(255 244 214 / 0.028) 55%, transparent 66%);
+  /* The top-left edge of anything framed catches the lamp: a hairline of light
+     inside the frame's top and left, and a soft one under it. */
+  --edge-hi: inset 1px 1px 0 rgb(255 238 196 / 0.3), inset 3px 3px 5px -2px rgb(255 238 196 / 0.1);
   --piping: #c9a95c;
   --btn-rule: #8a6a26;
   --porcelain-ground: #2a4a7e;
@@ -140,18 +211,49 @@
   --seal: #9a2a3a;
   --seal-deep: #5f121d;
   --stitch: #c9a95c;
+  /* The alphabet band's oxblood thread, lifted to a rose so it reads on the dark sampler. */
+  --thread: #d4707e;
   --bark-edge: #4a4130;
   --catkin: #a68f5c;
   --flap: #0f251b;
 
-  --c-ground: #1b3a2a;
-  --c-rose: #b04458;
-  --c-rose-lt: #d99a9c;
-  --c-rose-dk: #5d1422;
-  --c-leaf: #4b7d59;
-  --c-leaf-lt: #7f9c73;
-  --c-blue: #86a6d8;
-  --c-dot: #c9a95c;
+  --c-ground: #21392c;
+  --c-rose: #a54f5c;
+  --c-rose-lt: #d19e9f;
+  --c-rose-dk: #561e26;
+  --c-leaf: #547b5e;
+  --c-leaf-lt: #839a7a;
+  --c-blue: #8ca6ce;
+  --c-dot: #c3aa6f;
+  --c-brown: #2b1b14;
+  --c-grain-d: rgb(8 20 14 / 0.4);
+  --c-grain-l: rgb(236 220 180 / 0.13);
+  /* Darker than --field-raised, so a card on a wall is paper on a darker room,
+     never a hole (the a1 critic's C5). The swatch's toile is a lifted hunter
+     cloth. */
+  --wall-ground: color-mix(in srgb, var(--field), #000 24%);
+  --toile-ground: var(--hunter);
+  --toile-wall: var(--wall-ground);
+  /* The a2 minor: the accent is gold in the lacquer, and a gold pinstripe on
+     the cream stripe was 1.1 to 1. A lacquer-dark oxblood shows. */
+  --band-pin: #3b0d16;
+  /* Its dark equivalent stays an anchor: a burnished amber lacquer, cream text. */
+  --lacquer-yellow: #6f4700;
+  --tick-ink: #6e1a29;
+
+  /* The dark scheme's wall (chinoiserie-dark.svg): gold-cream line on hunter, the
+     wall darker than the cards. The founder's room is the same file. */
+  --sc-ground: #0b1f15;
+  --sc-room: #0a3321;
+  --sc-line: #d9c58d;
+  --sc-trunk: #cfc6a6;
+  --sc-limb: #7a6342;
+  --sc-lf: #2e6a49;
+  --sc-lf2: #4a8660;
+  --sc-cat: #b99a55;
+  --sc-oxb: #b8505e;
+  --sc-blue: #6f94c9;
+  --sc-gold: #c9a95c;
 }
 
 :where([data-theme='grandmillennial']) *,
@@ -206,13 +308,12 @@
   margin-inline: auto;
 }
 
-/* Kicker: letterspaced capitals in oxblood (gold in the lacquered room). */
+/* Kicker: letterspaced small capitals (Cormorant SC) in oxblood (gold in the lacquered room). */
 [data-theme='grandmillennial'] .gm-kicker {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+  font-family: var(--font-sc);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
   color: var(--accent);
 }
 /* A kicker set between two gold rules, each ending in a bead. */
@@ -252,9 +353,18 @@
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
-[data-theme='grandmillennial'] .gm-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 3px 0 var(--ornament-deep);
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] .gm-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 3px 0 var(--ornament-deep);
+  }
+}
+/* Pressed: the cushion sinks into its seat (B1 task 5): down a pixel, the
+   shadow shallower, and quick (60ms) so it feels like a press. Any pointer. */
+[data-theme='grandmillennial'] .gm-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 5px var(--btn-rule), 0 1px 0 var(--ornament-deep);
+  transition-duration: 60ms;
 }
 [data-theme='grandmillennial'] .gm-btn:focus-visible { outline-offset: 4px; }
 [data-theme='grandmillennial'] .gm-btn .fleuron { font-style: normal; font-size: 0.9em; }
@@ -265,7 +375,12 @@
   font-style: italic;
   font-size: 1.2rem;
 }
-[data-theme='grandmillennial'] .gm-more .curl { display: inline-block; margin-left: 0.35em; text-decoration: none; }
+[data-theme='grandmillennial'] .gm-more .curl { display: inline-block; margin-left: 0.35em; text-decoration: none; transition: translate 220ms ease; }
+/* The curl nudges 0.18em along on focus, and on hover for a mouse: no rotation, no bounce. */
+[data-theme='grandmillennial'] .gm-more:focus-visible .curl { translate: 0.18em 0; }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] .gm-more:hover .curl { translate: 0.18em 0; }
+}
 
 /* Trellis wallpaper: the lattice drawn once in assets/trellis.svg and inked
    per scheme through a mask, so the same vector serves the day parlour and
@@ -315,6 +430,104 @@
 /* Sent's room runs straight into the valance: no leftover strip of plain
    field between its gold double rule and the skirted table. */
 [data-theme='grandmillennial'] body:has(.sent) .site-footer { margin-top: 0; }
+/* Contact's chintz wall also ends at the valance (its last band is the page's
+   last block), so no plain strip of field lies between the two. */
+[data-theme='grandmillennial'] body:has(.gm-wall--chintz) .site-footer { margin-top: 0; }
+
+/* ---------- Papered walls (B1 item 2, decision F) ---------- */
+
+/* One shared wrapper, a per-page paper. Contact: the chintz at 0.6 ink. Services:
+   the toile at full ink. (About's chinoiserie wall is B1 task 2's.) The papers
+   are external SVG files, one per scheme with the ink baked, so the browser
+   caches them and no page carries them inline; the ground is a token under the
+   file. Text never sits on a wall: it sits on --field-raised cards. Markup:
+     <div class="gm-wall gm-wall--chintz|toile">
+       <div class="gm-wall-band" aria-hidden="true"></div>
+       <div class="gm-wall-room"> cards </div>
+       <div class="gm-wall-band" aria-hidden="true"></div>
+     </div>
+   The wall's side margin is the band of paper you see around the cards; on a
+   phone it stays a real band (call 3), not a sliver. */
+[data-theme='grandmillennial'] .gm-wall {
+  --wall-side: clamp(1.6rem, 7vw, 3.5rem);
+  position: relative;
+  isolation: isolate;
+  background-color: var(--wall-ground);
+  background-repeat: repeat;
+  background-position: 0 0;
+}
+[data-theme='grandmillennial'] .gm-wall--chintz {
+  background-image: url('./assets/chintz-wall-light.svg');
+  background-size: 928px 544px;
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--chintz { background-image: url('./assets/chintz-wall-dark.svg'); }
+[data-theme='grandmillennial'] .gm-wall--toile {
+  background-color: var(--toile-wall);
+  background-image: url('./assets/toile-light.svg');
+  background-size: 704px 800px;
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--toile { background-image: url('./assets/toile-dark.svg'); }
+
+[data-theme='grandmillennial'] .gm-wall-room {
+  width: min(100% - 2 * var(--wall-side), var(--wrap));
+  margin-inline: auto;
+  padding-block: clamp(2.75rem, 6vw, 4.75rem);
+}
+/* Inside the room the cards take the room's width: the wall's own margin is
+   the gutter. */
+[data-theme='grandmillennial'] .gm-wall-room .gm-wrap { width: 100%; }
+
+/* The border band. Stripe: an awning-wide stripe with a narrow pinstripe down
+   the cream, between two gold rules. Ticking: the mattress-ticking pairs of thin
+   stripes on cream. */
+[data-theme='grandmillennial'] .gm-wall-band {
+  position: relative; z-index: 1;
+  height: 1.6rem;
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 1.38rem, var(--band-pin) 1.38rem calc(1.38rem + 1px), transparent calc(1.38rem + 1px) 1.8rem),
+    repeating-linear-gradient(90deg, var(--stripe-a) 0 0.9rem, var(--stripe-b) 0.9rem 1.8rem);
+}
+[data-theme='grandmillennial'] .gm-wall-band.ticking {
+  background:
+    linear-gradient(var(--rule), var(--rule)) top / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 11px, var(--tick-ink) 11px 13px, transparent 13px 16px, var(--tick-ink) 16px 17px, transparent 17px 28px),
+    var(--stripe-b);
+}
+[data-theme='grandmillennial'] .gm-wall-band:first-child { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38); }
+[data-theme='grandmillennial'] .gm-wall-band:last-child { box-shadow: 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
+
+/* Cards on a wall are paper lifted off the cloth; in the lacquer the lamp
+   catches their top-left edge as well. */
+[data-theme='grandmillennial'] .gm-wall .gm-framed,
+[data-theme='grandmillennial'] .gm-wall .wall-card {
+  box-shadow: var(--edge-hi), 0 22px 36px -20px rgb(30 16 6 / 0.55), 0 2px 0 rgb(0 0 0 / 0.06);
+}
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .gm-framed,
+[data-theme='grandmillennial'][data-scheme='dark'] .gm-wall .wall-card {
+  box-shadow: var(--edge-hi), 0 22px 36px -18px rgb(0 0 0 / 0.75), 0 2px 0 rgb(0 0 0 / 0.2);
+}
+
+/* ---------- The lacquered dark room (B1 item 6): static ---------- */
+
+/* A diagonal specular band across the viewport, on a fixed pseudo-element so it
+   stays put while the room scrolls under it, like a window's reflection on
+   lacquer. Faint enough to leave every text contrast alone; nothing moves.
+   The edge vignette is --vignette (fixed body::before, viewport-sized), the lit edges are --edge-hi.
+   The layer lies UNDER the content (z-index -1, above the body background the
+   canvas carries): the lacquer is the room's green, so it darkens the field
+   and never the type, the cards or the papered walls on it. Over the content it
+   cut muted and footer text below AA in the corners, and every view-transition
+   group (the wordmark) escaped it and popped brighter mid-swap (Stage 5 B1
+   task 1, the controller's ruling). */
+[data-theme='grandmillennial'][data-scheme='dark'] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  background: var(--vignette), var(--sheen);
+}
 
 /* ---------- Arrival: the drapes part ---------- */
 
@@ -370,6 +583,21 @@
   html[data-theme='grandmillennial']:not([data-from-theme='grandmillennial'])::view-transition-new(wordmark) {
     animation-name: grandmillennial-wordmark-in;
   }
+  /* In-school swaps on a phone: Home's one-line mark and the stacked mark on
+     the other pages differ in size, so Astro's default crossfade (both
+     pictures at once on the 300ms group clock) showed two wordmarks
+     together. A hard cut at the midpoint of the group's clock: the old mark
+     is fully drawn until then and the new one fully drawn after, so the header
+     is never empty and the two are never legible together. Above 760px
+     the marks are identical and the plain crossfade stays. */
+  @media (max-width: 760px) {
+    html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-old(wordmark) {
+      animation-name: gm-mark-out;
+    }
+    html[data-theme='grandmillennial'][data-from-theme='grandmillennial']::view-transition-new(wordmark) {
+      animation-name: gm-mark-in;
+    }
+  }
 }
 /* The new room bares itself from the centre outward, like two drapes drawn
    back at once, already parted a hand's width on the first frame. No filter:
@@ -383,6 +611,8 @@
   from, to { opacity: 1; }
 }
 @keyframes gm-leave { 45%, 100% { opacity: 0; } }
+@keyframes gm-mark-out { 0% { opacity: 1; animation-timing-function: step-end; } 50%, 100% { opacity: 0; } }
+@keyframes gm-mark-in { 0% { opacity: 0; animation-timing-function: step-end; } 50%, 100% { opacity: 1; } }
 @keyframes gm-enter { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes grandmillennial-wordmark-out { 50%, 100% { opacity: 0; } }
 @keyframes grandmillennial-wordmark-in { 0%, 20% { opacity: 0; } 100% { opacity: 1; } }
@@ -409,8 +639,17 @@ html[data-theme='grandmillennial']:is([data-to-theme='grandmillennial'], [data-f
 html[data-theme='grandmillennial']::view-transition-group(grandmillennial-header),
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) { animation: none; }
 html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) { animation: none; opacity: 0; }
+/* In the lacquer the fixed body::before (vignette and specular band) lies
+   under the canopy's content on the page, so the picture's background carries
+   the same two layers beneath --lamp and --field's paint, sized to the
+   viewport so they land where the body's do (the canopy is at the viewport's
+   top left in the new state). Light sets both to none. */
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
-  background: var(--lamp) 0 0 / 100% 3000px no-repeat, var(--field);
+  background:
+    var(--vignette) 0 0 / 100vw 100vh no-repeat,
+    var(--sheen) 0 0 / 100vw 100vh no-repeat,
+    var(--lamp) 0 0 / 100% 3000px no-repeat,
+    var(--field);
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme='grandmillennial']::view-transition-group(*),

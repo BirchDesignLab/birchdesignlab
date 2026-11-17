@@ -4,7 +4,7 @@
     process as four cameos on trellis wallpaper, and the ask tied with a bow. */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
-import Bow from '../parts/Bow.astro';
+import Rosette from '../parts/Rosette.astro';
 import Chintz from '../parts/Chintz.astro';
 import Toile from '../parts/Toile.astro';
 
@@ -16,16 +16,20 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   <p class="gm-kicker ruled">{copy.kicker}</p>
   <h1>{copy.heading}</h1>
   <div class="sublines">
-    {copy.sublines.map((line) => <p>{line}</p>)}
+    {copy.sublines.map((line, i) => <p class={i === 0 ? 'lede' : undefined}>{line}</p>)}
   </div>
 </section>
 
+<div class="gm-wall gm-wall--toile">
+<div class="gm-wall-band ticking" aria-hidden="true"></div>
+<div class="gm-wall-room">
 {copy.offerings.map((offering, i) => (
-  <section class:list={['offering', 'gm-wrap', { flip: i % 2 === 1 }]}>
+  <section class:list={['offering', 'wall-card', 'gm-wrap', { flip: i % 2 === 1 }]}>
     <div class="swatch-hang" aria-hidden="true">
       <div class:list={['swatch', i % 2 ? 'porcelain' : 'floral']}>
         {i % 2 === 0 ? <Chintz swatch /> : <Toile />}
       </div>
+      <span class="selvedge" aria-hidden="true"></span>
       <span class="tag">No. {i + 1}</span>
     </div>
     <div class="offer-text">
@@ -34,6 +38,9 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     </div>
   </section>
 ))}
+</div>
+<div class="gm-wall-band ticking" aria-hidden="true"></div>
+</div>
 
 <section class="process gm-trellis">
   <div class="gm-wrap">
@@ -51,7 +58,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 </section>
 
 <section class="ask gm-wrap">
-  <Bow class="ask-bow" />
+  <Rosette class="ask-bow" />
   <p class="pull">{copy.pull}</p>
   <a class="gm-btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
 </section>
@@ -59,7 +66,8 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 <style>
   .intro {
     display: grid; justify-items: center; text-align: center;
-    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(3rem, 6vw, 4.5rem);
+    /* The gap to the first offering is about 30% tighter than it was (B1 item 8). */
+    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.1rem, 4.2vw, 3.15rem);
   }
   .intro h1 {
     font-style: italic;
@@ -74,29 +82,94 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     font-size: 1.35rem;
     color: var(--mark-muted);
   }
+  /* The first sentence is the lede: Playfair italic in the full mark colour. */
+  .sublines .lede {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.3;
+    color: var(--mark);
+    text-wrap: balance;
+  }
 
   /* ---------- Sample-book spreads ---------- */
+  /* Cuttings laid on a table (B1 item 13): the swatch is about a third of the
+     row (34%, counting the part that hangs past the card), turned a couple of
+     degrees and overhanging the card's edge onto the wall; the heading's cap
+     height sits on the swatch's top edge. */
   .offering {
+    --pad: clamp(1.5rem, 4vw, 3.5rem);
+    --hang: calc(var(--pad) + 1.25rem);
     display: grid;
-    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
-    gap: clamp(2rem, 6vw, 5rem);
-    align-items: center;
-    padding-block: clamp(2.5rem, 5vw, 3.5rem);
+    grid-template-columns: calc(34% - 0.32 * var(--pad) - 1.25rem) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+    padding: clamp(2.5rem, 5vw, 3.5rem) var(--pad);
+    /* Text sits on paper, never on the toile: each offering is a card on the wall. */
+    background: var(--field-raised);
+    border: 1px solid var(--rule);
   }
-  .offering.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); }
-  .offering.flip .swatch-hang { order: 2; }
+  .offering + .offering { margin-top: clamp(2.25rem, 5vw, 3.5rem); }
+  .offering.flip { grid-template-columns: minmax(0, 1fr) calc(34% - 0.32 * var(--pad) - 1.25rem); }
+  .offering.flip .swatch-hang { order: 2; margin-left: 0; margin-right: calc(-1 * var(--hang)); --rot: 1.8deg; }
   /* The shadow is a drop-shadow on the hanger so it follows the pinked cut. */
   .swatch-hang {
     position: relative;
-    width: min(100%, 22rem);
-    justify-self: center;
+    width: calc(100% + var(--hang));
+    margin-left: calc(-1 * var(--hang));
+    rotate: var(--rot, -2deg);
     filter: drop-shadow(0 10px 12px rgb(40 22 8 / 0.28));
+    --lift-rot: -0.6deg;
+    transition: translate 200ms ease, rotate 200ms ease, filter 200ms ease;
+    -webkit-tap-highlight-color: transparent;
   }
+  .offering.flip .swatch-hang { --lift-rot: 0.5deg; }
+  /* Picked up off the table (B1 task 5): a small lift, a deeper shadow, the
+     rotation straightening a little, and the cloth's selvedge slides out
+     beneath. Pressed on any pointer, hovered on fine ones. Laid back on release. */
+  .swatch-hang.lifted {
+    translate: 0 -8px; rotate: var(--lift-rot);
+    filter: drop-shadow(0 20px 16px rgb(40 22 8 / 0.34));
+  }
+  .swatch-hang.lifted .selvedge { translate: 0 0; opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    .swatch-hang:hover {
+      translate: 0 -8px; rotate: var(--lift-rot);
+      filter: drop-shadow(0 20px 16px rgb(40 22 8 / 0.34));
+    }
+    .swatch-hang:hover .selvedge { translate: 0 0; opacity: 1; }
+  }
+  /* The selvedge: a strip of the same cloth with pinked long edges, printed
+     with the register dots (the colours the cloth was printed in), tucked
+     under the swatch until it is lifted. No words. */
+  .selvedge {
+    position: absolute; left: 3%; right: 3%; top: calc(100% - 0.35rem);
+    height: 1.5rem;
+    z-index: -1;
+    translate: 0 -1rem; opacity: 0;
+    transition: translate 200ms ease, opacity 200ms ease;
+    background:
+      radial-gradient(circle at 50% 50%, var(--d1) 0 2.6px, transparent 3px) 0 50% / 22px 100% repeat-x,
+      radial-gradient(circle at 50% 50%, var(--d2) 0 2.6px, transparent 3px) 11px 50% / 44px 100% repeat-x,
+      radial-gradient(circle at 50% 50%, var(--d3) 0 2.6px, transparent 3px) 33px 50% / 66px 100% repeat-x,
+      color-mix(in srgb, var(--rule) 38%, var(--field-raised));
+    --d1: var(--c-rose); --d2: var(--c-leaf); --d3: var(--c-blue);
+    -webkit-mask:
+      conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%,
+      conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+    -webkit-mask-composite: source-in;
+    mask:
+      conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%,
+      conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+    mask-composite: intersect;
+  }
+  /* The toile is printed in one ink on its cloth: dots of that ink and the gilt. */
+  .swatch-hang:has(.porcelain) .selvedge { --d1: var(--accent); --d2: var(--rule); --d3: var(--accent); }
   /* Pinking shears: both long edges zigzag, cut with two intersected
      conic masks (one tooth every 18px). */
   .swatch {
     position: relative;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1;
     -webkit-mask:
       conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
       conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
@@ -105,8 +178,10 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
       conic-gradient(from -135deg at right, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px,
       conic-gradient(from 45deg at left, #0000, #000 1deg 89deg, #0000 90deg) 50% / 100% 18px;
     mask-composite: intersect;
+    overflow: hidden;
   }
-  .swatch.porcelain { background: var(--porcelain-ground); }
+  /* The toile's cloth: cream by day, hunter in the lacquered room (the ink is in the file). */
+  .swatch.porcelain { background: var(--toile-ground); }
   .tag {
     position: absolute; left: 50%; bottom: -1.1rem;
     translate: -50% 0;
@@ -118,12 +193,16 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     line-height: 1.2;
     color: var(--mark);
     white-space: nowrap;
+    z-index: 1;
   }
   .offer-text h2 {
     font-size: clamp(2.2rem, 4.4vw, 3.2rem);
     font-style: italic;
     color: var(--accent);
     margin-bottom: 1.4rem;
+    /* The first line's cap height, not its leading, is what meets the swatch's top. */
+    text-box-trim: trim-start;
+    text-box-edge: cap alphabetic;
   }
   .offer-text p { max-width: var(--measure); }
   .offer-text p + p { margin-top: 1rem; }
@@ -133,20 +212,29 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     margin-top: clamp(3rem, 6vw, 4.5rem);
     padding-block: clamp(3.5rem, 7vw, 5rem);
     border-block: 1px solid var(--rule);
+    /* The page's one saturated surface in the day room: buttery lacquer yellow,
+       hunter text (the trellis lies over it). */
+    background-color: var(--lacquer-yellow);
   }
+  /* One axis per step (B1 item 8): the medallion, the title and the text all hang
+     from the left. Each step is three rows of a shared grid (subgrid), so the
+     paragraph tops line up across the four columns whatever the titles do. */
   .steps {
     list-style: none; padding: 0;
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(1.75rem, 3vw, 2.75rem);
+    column-gap: clamp(1.75rem, 3vw, 2.75rem); row-gap: 0;
     margin-top: 3rem;
   }
-  .steps li { display: grid; justify-items: center; align-content: start; text-align: center; gap: 0.75rem; }
+  .steps li {
+    display: grid; grid-row: span 3; grid-template-rows: subgrid;
+    justify-items: start; align-content: start; text-align: left; row-gap: 0.75rem;
+  }
   .cameo {
     display: grid; place-items: center;
     width: 4.6rem; height: 5.8rem;
     border-radius: 50%;
     background: radial-gradient(closest-side, var(--porcelain), var(--porcelain-deep));
-    box-shadow: 0 0 0 3px var(--plate), 0 0 0 4px var(--ornament), 0 0 0 8px var(--field), 0 0 0 9px var(--ornament), 0 8px 14px 6px rgb(0 0 0 / 0.12);
+    box-shadow: 0 0 0 3px var(--plate), 0 0 0 4px var(--ornament), 0 0 0 8px var(--lacquer-yellow), 0 0 0 9px var(--ornament), 0 8px 14px 6px rgb(0 0 0 / 0.12);
     margin-bottom: 0.75rem;
   }
   .cameo span {
@@ -156,7 +244,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     color: var(--plate);
   }
   .steps h3 { font-size: 1.6rem; font-style: italic; }
-  .steps p { text-align: left; hyphens: auto; max-width: 17em; margin-inline: auto; font-size: 1.2rem; }
+  .steps p { text-wrap: pretty; max-width: 17em; font-size: 1.2rem; }
 
   /* ---------- The ask ---------- */
   .ask {
@@ -164,7 +252,7 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     text-align: center;
     padding-top: clamp(4rem, 8vw, 6rem);
   }
-  .ask :global(.ask-bow) { width: 7rem; }
+  .ask :global(.ask-bow) { width: 6rem; }
   .pull {
     font-family: var(--font-display);
     font-style: italic;
@@ -175,12 +263,42 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   }
 
   @media (max-width: 980px) {
-    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 3rem; }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps li:nth-child(-n + 2) { padding-bottom: 3rem; }
   }
   @media (max-width: 720px) {
     .offering, .offering.flip { grid-template-columns: 1fr; gap: 2.75rem; }
-    .offering.flip .swatch-hang { order: 0; }
+    .offering .swatch-hang, .offering.flip .swatch-hang { order: 0; width: 100%; margin: 0; --rot: -1.2deg; --lift-rot: -0.4deg; }
+    .offering.flip .swatch-hang { --rot: 1.2deg; --lift-rot: 0.4deg; }
     .swatch { aspect-ratio: 16 / 9; }
-    .steps { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; row-gap: 2.5rem; }
+    .steps li { grid-row: auto; grid-template-rows: none; }
+    .steps li:nth-child(-n + 2) { padding-bottom: 0; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+
+  /* Pressing a swatch lifts it (the hover lift is pure CSS, for fine pointers);
+     touch and pen have no hover, so the press sets a class and release lays the
+     swatch back. Inert: the swatches are aria-hidden, not focusable. */
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    const stops = [...document.querySelectorAll<HTMLElement>('.swatch-hang')].map((el) => {
+      const on = () => el.classList.add('lifted');
+      const off = () => el.classList.remove('lifted');
+      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointercancel', off);
+      el.addEventListener('pointerleave', off);
+      return () => {
+        el.removeEventListener('pointerdown', on);
+        el.removeEventListener('pointerup', off);
+        el.removeEventListener('pointercancel', off);
+        el.removeEventListener('pointerleave', off);
+      };
+    });
+    return () => stops.forEach((stop) => stop());
+  });
+</script>
