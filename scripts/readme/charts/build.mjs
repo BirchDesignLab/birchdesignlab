@@ -54,7 +54,8 @@ for (const { chart, scheme, out } of jobs) {
   const file = svgPath(chart, scheme);
   const bytes = Buffer.byteLength(out.svg);
   if (check) {
-    const cur = existsSync(file) ? readFileSync(file, 'utf8') : null;
+    // a Windows checkout may have turned the committed LF into CRLF
+    const cur = existsSync(file) ? readFileSync(file, 'utf8').split(String.fromCharCode(13, 10)).join(String.fromCharCode(10)) : null;
     if (cur !== out.svg) {
       stale++;
       console.error(`STALE ${file}`);
