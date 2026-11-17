@@ -53,6 +53,14 @@ The contact route is more than a form handler. It runs a safety net so a lead is
 4. A global daily cap of 40 valid submissions per UTC day, kept in a KV namespace (`CONTACT_KV`). It stops a bot that rotates IPs. The cap is soft and fails open, because a real lead matters more than an exact count.
 5. The email send. If it fails, the submission is held in KV for 30 days, the visitor sees a plain "your message is saved" page, and a daily cron (`17 14 * * *`, handled by `scheduled()`) retries every held submission until it sends or expires.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/1-served.dark.svg">
+  <img src="assets/readme/charts/1-served.light.svg" alt="Flow diagram of how birchdesignlab.com is served. Page requests go to Cloudflare Static Assets, which serves the built site or its 404 page, while form and beacon posts go to the Worker, which checks a honeypot, a rate limit, validation and a daily cap before sending email and holds failed sends in KV for a daily cron to retry." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -88,6 +96,8 @@ flowchart LR
     W -->|"one data point, no PII"| AE
 ```
 
+</details>
+
 Before you touch this layer:
 
 - `wrangler.jsonc` sets `run_worker_first` for `/api/*`, so the assets layer cannot swallow a browser form POST with a 405.
@@ -103,6 +113,14 @@ The Worker, the contact route, secrets, `_headers`, analytics consent and the ve
 ---
 
 ## Repository map
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/2-repo-map.dark.svg">
+  <img src="assets/readme/charts/2-repo-map.light.svg" alt="Tree of the repository. The root holds src, worker, tests, scripts, docs, share, assets, social, attic, .claude and public, and src, scripts and docs each branch into their main subfolders." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -140,6 +158,8 @@ flowchart TB
     DOCS --> TSR["superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs"]
     DOCS --> ARCH["archive/<br/>dated handoffs, finished plans, superseded specs"]
 ```
+
+</details>
 
 | Path | What lives there | Start with |
 |---|---|---|
@@ -197,6 +217,14 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-011 | Field Guide to the Schools | study | forthcoming | What each school believes and forbids, and what it took to build it |
 | BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on, and where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.dark.svg">
+  <img src="assets/readme/charts/3-lab-specimens.light.svg" alt="How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -217,6 +245,8 @@ flowchart LR
     SREG --> DET
     DET -.->|"layout picks the lab-experiment or lab-study card"| OG
 ```
+
+</details>
 
 Share images are not per entry. The generator renders cards for Home, Services, About, Contact and the Lab index, plus one shared card for experiments and one for studies. Only BDL-012 carries its own committed capture (`src/lib/og/manifest.ts`).
 
@@ -287,6 +317,14 @@ How a school is built and judged:
 
 ## Build, verify and deploy
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/5-build-deploy.dark.svg">
+  <img src="assets/readme/charts/5-build-deploy.light.svg" alt="Pipeline from a feature branch to production. npm run verify runs unit tests, type checks, the build and the built output tests, a pull request then needs a green CI check before merging, and Cloudflare Workers Builds builds and deploys birchdesignlab.com." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -304,6 +342,8 @@ flowchart LR
     WB --> LIVE["birchdesignlab.com"]:::cloud
 ```
 
+</details>
+
 - `npm run verify` is the gate and must be clean before any PR. It runs `vitest run`, `astro check`, `npm run build` and then `npm run test:dist` (Vitest over the built `dist/`). It is one command on purpose, because the three-part version was easy to skip. The GitHub Action (`.github/workflows/verify.yml`) runs the same command on every pull request. The check is required, so a red run blocks the merge.
 - Workers Builds only builds and deploys. It does not run tests, so CI is where they run before a merge.
 - Merging to main **is** the production deploy. There is no staging environment. The safety net is reversibility: revert the commit, redeploy.
@@ -320,6 +360,14 @@ The repo is built with Claude Code, and we treat its agent fleet as engineering 
 **Model tiering is mandatory.** Every subagent dispatch sets a model and an effort. The table in CLAUDE.md maps work to seats: Haiku for enumeration, Sonnet for implementation and verification, Opus for critique, design and sensitive code. The rule exists because a fleet of unset, untiered agents burned a month of usage in minutes.
 
 **Saved workflows run the visual work.** `bdl-task` takes one brief-sized task on a feature branch and runs it through implement, verify-head, parallel review and up to two fix rounds. `bdl-wave` chains tasks and carries taste calls forward. Their args, roles and stop points are in [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md). A mock harness and a mutant suite under `scripts/workflows/` test the workflows themselves, and `verify-locked.mjs` there runs the gate while holding the render lock.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/6-harness.dark.svg">
+  <img src="assets/readme/charts/6-harness.light.svg" alt="Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -346,6 +394,8 @@ flowchart TB
     SORT -->|"clean, gate green, films pass"| DONE["complete"]:::cloud
     SORT -->|"still open after maxRounds"| PARK["parked: controller rules"]:::store
 ```
+
+</details>
 
 **Everything is recorded.** Each stage ends with a report (for example [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)). It lists what changed, the calls the studio owes, and what still needs checking on a real iOS device after deploy.
 
@@ -451,6 +501,8 @@ npm run verify     # tests, astro check, build, dist tests
 Optional: `npx playwright install chromium` for the capture and film scripts under `scripts/themes/`. They expect a GPU renderer, and a software renderer fails the film gate by design.
 
 `scripts/readme/portal-loop.mjs` regenerates the hero loop at the top of this README against a local preview build. Usage is in that file's header comment.
+
+`node scripts/readme/charts/build.mjs` regenerates the chart SVGs under `assets/readme/charts/` from the Mermaid blocks in this README. It needs Playwright's Chromium and Python with `fonttools` and `brotli`. `tests/readme-charts.test.ts` fails when a Mermaid block changes without a rebuild.
 
 ---
 

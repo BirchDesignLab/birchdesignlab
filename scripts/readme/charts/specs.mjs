@@ -1,0 +1,490 @@
+// Per-chart specs for the README charts: hand layouts where dagre's ranking
+// would draw the wrong picture, plus each chart's decoration and motion.
+//
+//   layout(graph, chart)  -> model   (hand layout from the parsed Mermaid graph)
+//   compose(ctx)          -> { css, under, over, nodeUnder, nodeOver, duration }
+//
+// Charts 1 and 3 use Mermaid's own dagre layout and only compose.
+import { anchor, cluster, finish, makeEdge, makeNodes, rounded, smooth } from './manual.mjs';
+import { f1, parsePath, rng, sample } from './geometry.mjs';
+import { KEYFRAMES, RING_CSS, anim, chain, depths, edgeIn, nodeIn, pulse, ringEl, traveler } from './motion.mjs';
+import { mix, readable } from './theme.mjs';
+import { width as textWidth } from './textmetrics.mjs';
+
+const cfgOf = (chart) => {
+  const r = chart.render;
+  return { head: r.headSize, body: r.fontSize, edge: r.edgeSize, wrap: r.wrap, padX: r.padding + 6, padY: r.padding - 1, edgeWrap: r.edgeWrap ?? 150 };
+};
+
+// ---------------------------------------------------------------- repo map
+// A birch trunk with the first-level folders branching off both sides and
+// their subfolders hanging off those. A pure tree, so it is laid out as a tidy
+// tree rather than ranked by dagre.
+function repoLayout(graph, chart) {
+  const cfg = cfgOf(chart);
+  const nodes = makeNodes(graph, { ...cfg, wrapFor: (id) => (id === 'ROOT' ? 400 : cfg.wrap) });
+  const kids = (id) => graph.edges.filter((e) => e.from === id).map((e) => e.to);
+  const root = nodes.get('ROOT');
+  root.shape = 'trunk';
+  root.w = 54;
+  const children = kids('ROOT');
+  const slots = (id) => Math.max(1, kids(id).length);
+  const total = children.reduce((s, c) => s + slots(c), 0);
+  let acc = 0;
+  let split = 1;
+  let bestDiff = Infinity;
+  children.forEach((c, i) => {
+    acc += slots(c);
+    const diff = Math.abs(total - 2 * acc);
+    if (i < children.length - 1 && diff < bestDiff) {
+      bestDiff = diff;
+      split = i + 1;
+    }
+  });
+  const sides = [
+    { dir: -1, ids: children.slice(0, split) },
+    { dir: 1, ids: children.slice(split) },
+  ];
+  const gapLeaf = 10;
+  const gapGroup = 22;
+  const gap1 = 52;
+  const gap2 = 30;
+  const half = root.w / 2;
+  let sideMax = 0;
+  for (const side of sides) {
+    const groups = side.ids.map((id) => {
+      const c = nodes.get(id);
+      const leaves = kids(id).map((l) => nodes.get(l));
+      const leavesH = leaves.reduce((s, l) => s + l.h, 0) + gapLeaf * Math.max(0, leaves.length - 1);
+      return { c, leaves, leavesH, h: Math.max(leavesH, c.h) };
+    });
+    const colW = Math.max(...groups.map((g) => g.c.w));
+    const totalH = groups.reduce((s, g) => s + g.h, 0) + gapGroup * (groups.length - 1);
+    sideMax = Math.max(sideMax, totalH);
+    let y = -totalH / 2;
+    for (const g of groups) {
+      g.c.cy = y + g.h / 2;
+      g.c.cx = side.dir * (half + gap1 + g.c.w / 2);
+      let ly = y + (g.h - g.leavesH) / 2;
+      for (const l of g.leaves) {
+        l.cy = ly + l.h / 2;
+        l.cx = side.dir * (half + gap1 + colW + gap2 + l.w / 2);
+        ly += l.h + gapLeaf;
+      }
+      y += g.h + gapGroup;
+    }
+  }
+  root.h = sideMax + 46;
+  root.cx = 0;
+  root.cy = 0;
+  const edges = graph.edges.map((ge, i) => {
+    const a = nodes.get(ge.from);
+    const b = nodes.get(ge.to);
+    const dir = b.cx < 0 ? -1 : 1;
+    const out = dir > 0 ? 'R' : 'L';
+    const into = dir > 0 ? 'L' : 'R';
+    const segs =
+      ge.from === 'ROOT'
+        ? smooth([dir * half, b.cy * 0.82], out, anchor(b, into), into, gap1 * 0.55)
+        : smooth(anchor(a, out), out, anchor(b, into), into, gap2 * 0.55);
+    return makeEdge(ge, i, { segs, arrow: false }, cfg);
+  });
+  return finish({ nodes: [...nodes.values()], edges }, 6);
+}
+
+function repoCompose(ctx) {
+  const { t, scheme, nodes } = ctx;
+  const trunk = nodes.get('ROOT');
+  const light = scheme === 'light';
+  const fill = light ? t.paper : t.ink;
+  const mark = light ? t.ink : t.field;
+  const x = trunk.cx - trunk.w / 2;
+  const y = trunk.cy - trunk.h / 2;
+  const r = rng(4242);
+  let dashes = '';
+  const band = 78;
+  for (let k = 0; k < 60; k++) {
+    const len = 8 + r() * 20;
+    const dx = 7 + r() * (trunk.w - 14 - len);
+    const dy = 12 + r() * (trunk.h - 24);
+    if (Math.abs(y + dy - trunk.cy) < band) continue;
+    dashes += `M${f1(x + dx)} ${f1(y + dy)}h${f1(len)}`;
+  }
+  const label = trunk.lines.join(' ');
+  ctx.glyphs.display += label;
+  ctx.pairs.push({ where: 'trunk label on trunk', fg: mark, bg: fill });
+  const svg =
+    `<rect class="tr" x="${f1(x)}" y="${f1(y)}" width="${f1(trunk.w)}" height="${f1(trunk.h)}" rx="26" style="fill:${fill};stroke:${mark}"/>` +
+    `<path class="lent" d="${dashes}" style="stroke:${mark}"/>` +
+    `<text class="trl" transform="rotate(-90 ${f1(trunk.cx)} ${f1(trunk.cy)})" x="${f1(trunk.cx)}" y="${f1(trunk.cy + 6)}" style="fill:${mark}">${label}</text>`;
+  // branches grow outward from the trunk's middle, then the subfolders follow
+  const rootEdges = ctx.edges.filter((e) => e.from === 'ROOT').sort((a, b) => Math.abs(nodes.get(a.to).cy) - Math.abs(nodes.get(b.to).cy));
+  let css = KEYFRAMES + anim('.lent', 'fade', 1.4, 0.1);
+  const nodeAt = new Map();
+  let end = 0;
+  rootEdges.forEach((e, i) => {
+    const d = 0.25 + i * 0.075;
+    css += edgeIn(e, d, 0.5);
+    nodeAt.set(e.to, d + 0.4);
+    css += nodeIn(nodes.get(e.to), d + 0.4, 0.5);
+    end = Math.max(end, d + 0.9);
+  });
+  const perParent = new Map();
+  for (const e of ctx.edges.filter((x) => x.from !== 'ROOT')) {
+    const j = perParent.get(e.from) ?? 0;
+    perParent.set(e.from, j + 1);
+    const d = (nodeAt.get(e.from) ?? 1) + 0.3 + j * 0.07;
+    css += edgeIn(e, d, 0.45);
+    css += nodeIn(nodes.get(e.to), d + 0.35, 0.45);
+    end = Math.max(end, d + 0.8);
+  }
+  return {
+    css: css + `.tr{stroke-width:1.8}.lent{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-opacity:.72}.trl{font:19px 'BDL Marcellus',Georgia,serif;text-anchor:middle}`,
+    nodeOver: { ROOT: svg },
+    duration: end,
+  };
+}
+
+// ---------------------------------------------------------------- build, verify, deploy
+// A snake: branch and verify across the top with the four stages fanned out
+// beneath, then the pipeline returns right to left along the bottom.
+function buildLayout(graph, chart) {
+  const cfg = cfgOf(chart);
+  const nodes = makeNodes(graph, cfg);
+  const N = (id) => nodes.get(id);
+  const top = ['T1', 'T2', 'T3', 'T4'].map(N);
+  const bottom = ['PR', 'CI', 'WB', 'LIVE'].map(N);
+  const colW = Math.max(...top.map((n) => n.w), ...bottom.map((n) => n.w)) + 38;
+  const X = (i) => i * colW;
+  const V = N('V');
+  const B = N('B');
+  V.cx = (X(1) + X(2)) / 2;
+  V.cy = 0;
+  B.cx = X(0);
+  B.cy = 0;
+  const rowH = Math.max(...top.map((n) => n.h));
+  const y1 = V.h / 2 + 108 + rowH / 2;
+  top.forEach((n, i) => {
+    n.cx = X(i);
+    n.cy = y1;
+  });
+  const rowH2 = Math.max(...bottom.map((n) => n.h));
+  const y2 = y1 + rowH / 2 + 78 + rowH2 / 2;
+  // right to left: PR under T4 ... LIVE under T1
+  bottom.forEach((n, i) => {
+    n.cx = X(3 - i);
+    n.cy = y2;
+  });
+  const E = (from, to) => graph.edges.findIndex((e) => e.from === from && e.to === to);
+  const edges = [];
+  const add = (from, to, segs, o = {}) => {
+    const i = E(from, to);
+    edges.push(makeEdge(graph.edges[i], i, { segs, ...o }, cfg));
+  };
+  add('B', 'V', smooth(anchor(B, 'R'), 'R', anchor(V, 'L'), 'L'));
+  add('V', 'T1', smooth(anchor(V, 'L'), 'L', anchor(top[0], 'T'), 'T', 70), { at: 0.66, dx: -4, dy: 6 });
+  add('V', 'T2', smooth(anchor(V, 'B'), 'B', anchor(top[1], 'T'), 'T', 54), { at: 0.62, dx: -6, dy: 4 });
+  add('V', 'T3', smooth(anchor(V, 'B'), 'B', anchor(top[2], 'T'), 'T', 54), { at: 0.6, dx: 66, dy: -10 });
+  add('V', 'T4', smooth(anchor(V, 'R'), 'R', anchor(top[3], 'T'), 'T', 70), { at: 0.66, dx: 4, dy: 6 });
+  add('T4', 'PR', smooth(anchor(top[3], 'B'), 'B', anchor(N('PR'), 'T'), 'T'));
+  add('PR', 'CI', smooth(anchor(N('PR'), 'L'), 'L', anchor(N('CI'), 'R'), 'R'), { dy: -52, labelWrap: colW - 70 });
+  add('CI', 'WB', smooth(anchor(N('CI'), 'L'), 'L', anchor(N('WB'), 'R'), 'R'), { dy: -18 });
+  add('WB', 'LIVE', smooth(anchor(N('WB'), 'L'), 'L', anchor(N('LIVE'), 'R'), 'R'));
+  return finish({ nodes: [...nodes.values()], edges }, 6);
+}
+
+// ---------------------------------------------------------------- harness
+export const TIERS = {
+  IMPL: ['sonnet', 'opus'],
+  VH: ['haiku'],
+  CRIT: ['opus'],
+  VER: ['sonnet'],
+  GATE: ['sonnet'],
+  FIX: ['sonnet', 'opus'],
+};
+
+function harnessLayout(graph, chart) {
+  const cfg = cfgOf(chart);
+  const nodes = makeNodes(graph, cfg);
+  const N = (id) => nodes.get(id);
+  for (const id of Object.keys(TIERS)) N(id).classes = ['you'];
+  const gap = 18;
+  const SORT = N('SORT');
+  SORT.cx = 0;
+  const rev = ['CRIT', 'VER', 'GATE'].map(N);
+  const revW = rev.reduce((s, n) => s + n.w, 0) + gap * 2;
+  let x = -revW / 2;
+  const revH = Math.max(...rev.map((n) => n.h));
+  const VH = N('VH');
+  VH.cx = 0;
+  VH.cy = 0;
+  const yRev = VH.h / 2 + 100 + revH / 2;
+  for (const n of rev) {
+    n.cx = x + n.w / 2;
+    n.cy = yRev;
+    x += n.w + gap;
+  }
+  const yDia = yRev + revH / 2 + 86 + SORT.h / 2;
+  SORT.cy = yDia;
+  const outcomes = ['STOP', 'DEF', 'DONE', 'PARK', 'FIX'].map(N);
+  const outGap = 18;
+  const outW = outcomes.reduce((s, n) => s + n.w, 0) + outGap * (outcomes.length - 1);
+  const outH = Math.max(...outcomes.map((n) => n.h));
+  const yOut = yDia + SORT.h / 2 + 96 + outH / 2;
+  x = -outW / 2;
+  for (const n of outcomes) {
+    n.cx = x + n.w / 2;
+    n.cy = yOut;
+    x += n.w + outGap;
+  }
+  const IMPL = N('IMPL');
+  const BRIEF = N('BRIEF');
+  IMPL.cx = VH.cx - VH.w / 2 - 44 - IMPL.w / 2;
+  IMPL.cy = 0;
+  BRIEF.cx = IMPL.cx - IMPL.w / 2 - 44 - BRIEF.w / 2;
+  BRIEF.cy = 0;
+  const box = cluster('REVIEW', graph.subs[0].title.toUpperCase(), ['CRIT', 'VER', 'GATE'], nodes, { x: 24, top: 30, bottom: 24 });
+  // Edges fan in across the top of the box and fold out of the bottom, so its
+  // title sits in the free space to its left, as a two-line annotation.
+  const words = box.lines[0].split(' ');
+  const cut = Math.ceil(words.length / 2) - 1;
+  box.titlePos = { x: box.x - 18, y: box.y + box.h / 2 - 4, anchor: 'end', lines: [words.slice(0, cut).join(' '), words.slice(cut).join(' ')] };
+
+  const edges = [];
+  let idx = 0;
+  const ge = (from, to) => graph.edges.find((e) => e.from === from && e.to === to);
+  const push = (g, segs, o = {}) => edges.push(makeEdge(g, idx++, { segs, ...o }, cfg));
+  push(ge('BRIEF', 'IMPL'), smooth(anchor(BRIEF, 'R'), 'R', anchor(IMPL, 'L'), 'L'));
+  push(ge('IMPL', 'VH'), smooth(anchor(IMPL, 'R'), 'R', anchor(VH, 'L'), 'L'));
+  // Mermaid draws VH -> REVIEW -> SORT as two edges on the subgraph; here the
+  // subgraph is drawn as its three seats, so the edge fans out and folds back.
+  const fanIn = ge('VH', 'REVIEW');
+  const foldOut = ge('REVIEW', 'SORT');
+  for (const n of rev) push({ ...fanIn, to: n.id }, smooth(anchor(VH, 'B'), 'B', anchor(n, 'T'), 'T', 40));
+  for (const n of rev) push({ ...foldOut, from: n.id }, smooth(anchor(n, 'B'), 'B', anchor(SORT, 'T'), 'T', 36));
+  for (const o of outcomes) {
+    const left = o.cx < SORT.cx - 4;
+    const right = o.cx > SORT.cx + 4;
+    const segs = left
+      ? smooth(anchor(SORT, 'L'), 'L', anchor(o, 'T'), 'T', 60)
+      : right
+        ? smooth(anchor(SORT, 'R'), 'R', anchor(o, 'T'), 'T', 60)
+        : smooth(anchor(SORT, 'B'), 'B', anchor(o, 'T'), 'T', 40);
+    push(ge('SORT', o.id), segs, { at: 0.6, labelWrap: 120 });
+  }
+  const FIX = N('FIX');
+  const rightX = Math.max(...outcomes.map((n) => n.cx + n.w / 2)) + 34;
+  push(ge('FIX', 'VH'), rounded([anchor(FIX, 'R'), [rightX, FIX.cy], [rightX, VH.cy], anchor(VH, 'R')], 18));
+  const model = finish({ nodes: [...nodes.values()], clusters: [box], edges }, 6);
+  const out0 = Math.min(...outcomes.map((n) => n.cx - n.w / 2));
+  model.legend = { x: out0, y: model.height + 22 };
+  model.height += 56;
+  return model;
+}
+
+
+// ---------------------------------------------------------------- served
+// A request dot goes Visitor -> Static Assets and back; a POST dot runs the
+// contact route (honeypot, rate limit, validate, daily cap, email); the failed
+// send pulses into KV and the daily cron's retry loops back to the email seat.
+function servedCompose(ctx) {
+  const { t, nodes, edges } = ctx;
+  const E = (a, b) => {
+    const e = edges.find((x) => x.from === a && x.to === b);
+    if (!e) throw new Error(`served: no edge ${a} > ${b}`);
+    return e;
+  };
+  const speed = 640;
+  let css = KEYFRAMES + RING_CSS(t.glow);
+  const under = {};
+  let tv = '';
+  let k = 0;
+  let end = 0;
+  const ring = (id, at) => {
+    const key = `${id}-${k++}`;
+    under[id] = (under[id] ?? '') + ringEl(nodes.get(id), key);
+    css += pulse(key, at);
+    end = Math.max(end, at + 0.95);
+  };
+  const run = (route, start) => {
+    const c = chain(route.map(([a, b]) => E(a, b)), speed);
+    tv += traveler(c.d, start, c.total, t.glow);
+    for (const a of c.arrivals) ring(a.node, start + a.at - 0.05);
+    end = Math.max(end, start + c.total);
+    return c;
+  };
+  ring('V', 0.1);
+  run([['V', 'SA'], ['SA', 'V']], 0.3);
+  const post = run([['V', 'W'], ['W', 'RL'], ['RL', 'CAP'], ['CAP', 'EM'], ['EM', 'INBOX']], 0.9);
+  const emAt = 0.9 + post.arrivals.find((a) => a.node === 'EM').at;
+  const held = run([['EM', 'KV']], emAt + 0.2);
+  run([['CRON', 'EM']], emAt + 0.2 + held.total + 0.3);
+  return { css, nodeUnder: under, over: tv, duration: end };
+}
+
+// ---------------------------------------------------------------- lab
+// Museum specimen labels: a double rule (drawn by render.mjs), an accession tab
+// on the top rule, and a slow settle in, source files first.
+function labCompose(ctx) {
+  const { t, nodes, edges, model, glyphs } = ctx;
+  const size = ctx.sizes.cluster;
+  let css = KEYFRAMES;
+  const over = {};
+  const pts = edges.flatMap((e) => sample(parsePath(e.d), 14));
+  model.nodes.forEach((n, i) => {
+    const text = `NO. ${String(i + 1).padStart(3, '0')}`;
+    glyphs.display += text;
+    const tw = textWidth('display', size, text, 0.16) + 16;
+    // the tab rides a corner of the top or bottom rule, on whichever has no edge arriving
+    const cands = [
+      { x: n.cx - n.w / 2 + 18, y: n.cy - n.h / 2, pen: 0 },
+      { x: n.cx + n.w / 2 - 18 - tw, y: n.cy - n.h / 2, pen: 0.2 },
+      { x: n.cx - n.w / 2 + 18, y: n.cy + n.h / 2, pen: 1 },
+      { x: n.cx + n.w / 2 - 18 - tw, y: n.cy + n.h / 2, pen: 1.2 },
+    ].map((c) => ({ ...c, score: pts.filter(([px, py]) => px > c.x - 14 && px < c.x + tw + 14 && py > c.y - 22 && py < c.y + 22).length * 10 + c.pen }));
+    const { x, y } = cands.sort((a, b) => a.score - b.score)[0];
+    over[n.id] =
+      `<g class="tab"><rect x="${f1(x)}" y="${f1(y - 9)}" width="${f1(tw)}" height="18" rx="9" fill="${t.field}" stroke="${n.focus ? t.accent : ctx.roleOf(n).stroke}" stroke-width="1"/>` +
+      `<text x="${f1(x + tw / 2)}" y="${f1(y + size * 0.36)}">${text}</text></g>`;
+  });
+  ctx.pairs.push({ where: 'accession tab on field', fg: t.muted, bg: t.field });
+  const { depth } = depths(nodes, edges);
+  const seen = new Map();
+  let end = 0;
+  const at = new Map();
+  for (const n of model.nodes) {
+    const d = depth.get(n.id) ?? 0;
+    const j = seen.get(d) ?? 0;
+    seen.set(d, j + 1);
+    const delay = 0.15 + d * 0.38 + j * 0.1;
+    at.set(n.id, delay);
+    css += nodeIn(n, delay, 0.6);
+    end = Math.max(end, delay + 0.6);
+  }
+  for (const e of edges) {
+    const d = (at.get(e.from) ?? 0) + 0.35;
+    css += edgeIn(e, d, 0.5);
+    end = Math.max(end, d + 0.55);
+  }
+  css += `.tab text{font:${size}px 'BDL Marcellus',Georgia,serif;letter-spacing:.16em;fill:${t.muted};text-anchor:middle}`;
+  return { css, nodeOver: over, duration: end };
+}
+
+// ---------------------------------------------------------------- build, verify, deploy
+// verify ticks off its four stages one by one, then a dot runs the deploy chain
+// and LIVE lands with a double pulse.
+function buildCompose(ctx) {
+  const { t, nodes, edges } = ctx;
+  const E = (a, b) => edges.find((x) => x.from === a && x.to === b);
+  let css = KEYFRAMES + RING_CSS(t.glow);
+  const under = {};
+  const over = {};
+  let k = 0;
+  let end = 0;
+  const ring = (id, at, dur) => {
+    const key = `${id}-${k++}`;
+    under[id] = (under[id] ?? '') + ringEl(nodes.get(id), key);
+    css += pulse(key, at, dur);
+    end = Math.max(end, at + (dur ?? 0.95));
+  };
+  ring('V', 0.15);
+  ['T1', 'T2', 'T3', 'T4'].forEach((id, i) => {
+    const n = nodes.get(id);
+    const at = 0.4 + i * 0.28;
+    const cx = n.cx + n.w / 2 - 6;
+    const cy = n.cy - n.h / 2 + 2;
+    over[id] =
+      `<g class="tk" id="tk-${id}"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="11.5"/>` +
+      `<path pathLength="1" d="M${f1(cx - 5.2)} ${f1(cy + 0.4)}l3.6 3.9l6.6-8"/></g>`;
+    css += `#tk-${id} circle{animation:bdl-fade .22s ease ${at}s both}#tk-${id} path{stroke-dasharray:1;animation:bdl-draw .3s ease ${at + 0.1}s both}`;
+    end = Math.max(end, at + 0.45);
+  });
+  css += `.tk circle{fill:${t.accent};stroke:${t.field};stroke-width:2.6}.tk path{fill:none;stroke:${t.onAccent};stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}`;
+  ctx.pairs.push({ where: 'tick on its badge', fg: t.onAccent, bg: t.accent });
+  const start = 0.4 + 3 * 0.28 + 0.45;
+  const c = chain([E('T4', 'PR'), E('PR', 'CI'), E('CI', 'WB'), E('WB', 'LIVE')], 520);
+  const dot = traveler(c.d, start, c.total, t.glow);
+  for (const a of c.arrivals) {
+    ring(a.node, start + a.at - 0.05);
+    if (a.node === 'LIVE') ring('LIVE', start + a.at + 0.18, 1.0);
+  }
+  end = Math.max(end, start + c.total);
+  return { css, nodeUnder: under, nodeOver: over, over: dot, duration: end };
+}
+
+// ---------------------------------------------------------------- harness
+// Seats are coloured by model tier; the flow reveals rank by rank, so the
+// review block fans out in parallel and folds back into the findings gate.
+const TIER_NAME = { haiku: 'Haiku', sonnet: 'Sonnet', opus: 'Opus' };
+function harnessCompose(ctx) {
+  const { t, nodes, edges, model } = ctx;
+  const tiers = t.tier;
+  let css = KEYFRAMES;
+  const over = {};
+  for (const [id, list] of Object.entries(TIERS)) {
+    const n = nodes.get(id);
+    const primary = tiers[list[0]];
+    const fill = mix(t.paper, primary, t.scheme === 'light' ? 0.16 : 0.2);
+    const detail = readable(fill, [t.muted, mix(t.muted, t.ink, 0.45), t.ink]);
+    css += `#n-${id} .s{fill:${fill};stroke:${primary};stroke-width:1.8}#n-${id} .d{fill:${detail}}`;
+    ctx.pairs.push({ where: `${id} detail on tier tint`, fg: detail, bg: fill });
+    ctx.pairs.push({ where: `${id} heading on tier tint`, fg: t.ink, bg: fill });
+    const x = n.cx - n.w / 2 + 7;
+    const y = n.cy - n.h / 2 + 9;
+    const h = n.h - 18;
+    const each = (h - (list.length - 1) * 3) / list.length;
+    over[id] = list
+      .map((tier, i) => `<rect x="${f1(x)}" y="${f1(y + i * (each + 3))}" width="5" height="${f1(each)}" rx="2.5" fill="${tiers[tier]}"/>`)
+      .join('');
+  }
+  for (const k of ['haiku', 'sonnet', 'opus']) {
+    ctx.pairs.push({ where: `${TIER_NAME[k]} tier colour on field (non-text, 3:1)`, fg: tiers[k], bg: t.field });
+  }
+  // legend, under the outcome row
+  const lg = model.legend;
+  const size = ctx.sizes.cluster;
+  let lx = lg.x;
+  ctx.glyphs.display += 'MODEL TIER';
+  let legend = `<text class="lgt" x="${f1(lx)}" y="${f1(lg.y + 5)}">MODEL TIER</text>`;
+  lx += textWidth('display', size, 'MODEL TIER', 0.2) + 22;
+  for (const key of ['haiku', 'sonnet', 'opus']) {
+    const label = TIER_NAME[key];
+    ctx.glyphs.display += label;
+    const w = textWidth('display', size + 1, label) + 30;
+    const fg = readable(tiers[key], [t.ink, t.field, '#ffffff']);
+    legend +=
+      `<rect x="${f1(lx)}" y="${f1(lg.y - 13)}" width="${f1(w)}" height="26" rx="13" fill="${tiers[key]}"/>` +
+      `<text class="lgc" x="${f1(lx + w / 2)}" y="${f1(lg.y + 5)}" fill="${fg}">${label}</text>`;
+    ctx.pairs.push({ where: `legend ${label} on its chip`, fg, bg: tiers[key] });
+    lx += w + 10;
+  }
+  css += `.lgt{font:${size}px 'BDL Marcellus',Georgia,serif;letter-spacing:.2em;fill:${t.muted}}.lgc{font:${size + 1}px 'BDL Marcellus',Georgia,serif;text-anchor:middle}`;
+  ctx.pairs.push({ where: 'legend title on field', fg: t.muted, bg: t.field });
+
+  // reveal rank by rank
+  const { depth, back } = depths(nodes, edges);
+  const STEP = 0.4;
+  const tN = (id) => 0.2 + (depth.get(id) ?? 0) * STEP;
+  let end = 0;
+  for (const n of model.nodes) {
+    css += nodeIn(n, tN(n.id), 0.5);
+    end = Math.max(end, tN(n.id) + 0.5);
+  }
+  css += anim('#c-REVIEW', 'fade', 0.6, tN('CRIT') - 0.1) + anim('#ct-REVIEW', 'fade', 0.6, tN('CRIT') - 0.1);
+  for (const e of edges) {
+    const isBack = back.has(`${e.from}>${e.to}`);
+    const d = isBack ? tN(e.from) + 0.55 : tN(e.from) + 0.3;
+    css += edgeIn(e, d, isBack ? 0.8 : 0.45);
+    end = Math.max(end, d + (isBack ? 0.9 : 0.55));
+  }
+  return { css, nodeOver: over, over: `<g class="lg">${legend}</g>`, duration: end };
+}
+
+
+export const specs = {
+  served: { compose: servedCompose },
+  'repo-map': { layout: repoLayout, compose: repoCompose },
+  'lab-specimens': { compose: labCompose },
+  'build-deploy': { layout: buildLayout, compose: buildCompose },
+  harness: { layout: harnessLayout, compose: harnessCompose },
+};

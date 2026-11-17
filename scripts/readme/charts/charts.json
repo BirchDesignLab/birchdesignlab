@@ -1,0 +1,140 @@
+{
+  "charts": [
+    {
+      "n": 1,
+      "name": "served",
+      "built": true,
+      "kind": "mermaid",
+      "title": "How the site is served",
+      "caption": "How the site is served",
+      "alt": "Flow diagram of how birchdesignlab.com is served. Page requests go to Cloudflare Static Assets, which serves the built site or its 404 page, while form and beacon posts go to the Worker, which checks a honeypot, a rate limit, validation and a daily cap before sending email and holds failed sends in KV for a daily cron to retry.",
+      "focus": [
+        "W"
+      ],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 14,
+        "rankSpacing": 40,
+        "padding": 12,
+        "wrap": 150
+      }
+    },
+    {
+      "n": 2,
+      "name": "repo-map",
+      "built": true,
+      "kind": "mermaid",
+      "title": "Repository map",
+      "caption": "Repository map",
+      "alt": "Tree of the repository. The root holds src, worker, tests, scripts, docs, share, assets, social, attic, .claude and public, and src, scripts and docs each branch into their main subfolders.",
+      "focus": [
+        "ROOT"
+      ],
+      "render": {
+        "direction": "LR",
+        "fontSize": 15,
+        "headSize": 17,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 12,
+        "rankSpacing": 60,
+        "padding": 9,
+        "wrap": 165
+      }
+    },
+    {
+      "n": 3,
+      "name": "lab-specimens",
+      "built": true,
+      "kind": "mermaid",
+      "title": "The Lab: specimens",
+      "caption": "The Lab: specimens",
+      "alt": "How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card.",
+      "focus": [
+        "DET"
+      ],
+      "nodeStyle": "specimen",
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 30,
+        "rankSpacing": 56,
+        "padding": 14,
+        "wrap": 250
+      }
+    },
+    {
+      "n": 4,
+      "name": "portal-schools",
+      "built": false,
+      "kind": "showpiece",
+      "title": "The Portal: design schools",
+      "caption": "The Portal: design schools",
+      "alt": "The Portal's source tree: shared copy, paths, registry and runtime feed each design school, and guards in tests and scripts check them."
+    },
+    {
+      "n": 5,
+      "name": "build-deploy",
+      "built": true,
+      "kind": "mermaid",
+      "title": "Build, verify and deploy",
+      "caption": "Build, verify and deploy",
+      "alt": "Pipeline from a feature branch to production. npm run verify runs unit tests, type checks, the build and the built output tests, a pull request then needs a green CI check before merging, and Cloudflare Workers Builds builds and deploys birchdesignlab.com.",
+      "focus": [
+        "LIVE"
+      ],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 24,
+        "rankSpacing": 40,
+        "padding": 12,
+        "wrap": 170,
+        "edgeWrap": 150
+      }
+    },
+    {
+      "n": 6,
+      "name": "harness",
+      "built": true,
+      "kind": "mermaid",
+      "title": "The Claude Code harness",
+      "caption": "The Claude Code harness",
+      "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion.",
+      "focus": [
+        "DONE"
+      ],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 26,
+        "rankSpacing": 42,
+        "padding": 12,
+        "wrap": 150,
+        "edgeWrap": 130
+      }
+    },
+    {
+      "n": 7,
+      "name": "timeline",
+      "built": false,
+      "kind": "showpiece",
+      "title": "Timeline",
+      "caption": "Timeline, July to November 2026",
+      "alt": "Timeline of Birch Design Lab from the founding on 2026-07-15 to the contact safety net and CI verify gate on 2026-11-17."
+    }
+  ]
+}
