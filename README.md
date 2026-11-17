@@ -1,6 +1,6 @@
 # Birch Design Lab
 
-The source of [birchdesignlab.com](https://birchdesignlab.com/): the business and portfolio site of Birch Design Lab, a web design studio founded in July 2026 on the Mississippi Gulf Coast. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-012) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
+The source of [birchdesignlab.com](https://birchdesignlab.com/): the business and portfolio site of Birch Design Lab, a solo custom software and web design studio founded in July 2026 on the Mississippi Gulf Coast. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-012) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
 
 ![The Birch Design Lab home page changing from one design school to the next through the Portal's view transitions, looping](assets/readme/portal-loop.webp)
 
