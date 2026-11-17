@@ -3,8 +3,8 @@ dist/
 .astro/
 .wrangler/
 public/og/
-# Knowledge graph lives outside the repo (C:\vault\graphify\birchdesignlab).
-# Blanket-ignore any stray local rebuild so it can never be committed again.
+# Retired graphify output (tool dropped 09-13-26). Blanket-ignore any stray
+# local rebuild so it can never be committed.
 graphify-out/
 docs/refs/
 # Founder working docs: prompt packs, harvest packs, copy reviews. Drafting
@@ -29,6 +29,11 @@ social/out/
 # Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
 scripts/themes/.out/
 scripts/footer/.out/
+scripts/readme/.out/
+
+# Private working material in a public repo: inventories, plans, exports,
+# ledgers. Never pushed. Founder call 11-17-26.
+docs/private/
 
 # Client briefs: never pushed (this repo is public). Founder call 10-22-26.
 docs/briefs/
