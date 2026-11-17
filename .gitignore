@@ -36,6 +36,7 @@ docs/briefs/
 # share.birchdesignlab.com Worker (share/README.md): the client pages it serves
 # never enter this public repo, only the Worker's own config and site files.
 share/.wrangler/
+share/pages.local.json
 share/public/*
 !share/public/_headers
 !share/public/robots.txt
