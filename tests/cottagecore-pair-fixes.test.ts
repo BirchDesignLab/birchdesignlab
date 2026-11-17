@@ -24,7 +24,11 @@ describe('cottagecore pair C fixes', () => {
 
   it('draws the hoop freehand: a satin and stem-stitch sprig and a running-stitch script (A2)', () => {
     const sampler = read('assets/Sampler.astro');
-    for (const c of ['sk-stem', 'sk-petal-rose', 'sk-knot-heart', 'sk-leaf']) expect(sampler).toContain(c);
+    for (const c of ['sk-stem', 'sk-chain-rose', 'sk-knot-heart', 'sk-leaf']) expect(sampler).toContain(c);
+    // Lazy daisies are open chain loops (unfilled), not satin teardrops.
+    const daisy = sampler.slice(sampler.indexOf('function lazyDaisy'), sampler.indexOf('// The sprig:'));
+    expect(daisy).toContain('chain(');
+    expect(daisy).not.toContain('satin(');
     expect(sampler).not.toMatch(/CHART|CELL/);
     const sig = read('assets/Signature.astro');
     expect(sig).toContain('sig-run');

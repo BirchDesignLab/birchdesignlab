@@ -694,6 +694,9 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
     linear-gradient(to var(--corner-dir), transparent calc(50% - 0.5px), var(--flap-edge) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
     linear-gradient(to var(--corner-dir), var(--flap) 50%, transparent 50%),
     linear-gradient(to var(--corner-dir), transparent 50%, var(--flap-shade) 50%, rgba(0, 0, 0, 0.2) 66%, transparent 90%);
+  /* No repeat: the square is a fractional size (1.15rem), and a repeating
+     tile wrapped a 1px sliver of the pale flap along its outer edges. */
+  background-repeat: no-repeat;
 }
 
 /* ---------- gingham ---------- */
@@ -867,8 +870,12 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 [data-theme='cottagecore'] .cc-sampler .sk-ticks { fill: none; stroke: color-mix(in srgb, var(--cc-stem) 50%, #fff); stroke-width: 0.6; opacity: 0.8; }
 [data-theme='cottagecore'] .cc-sampler .sk-leaf { fill: var(--cc-stem); stroke: var(--cc-leaf-edge); stroke-width: 0.5; }
 [data-theme='cottagecore'] .cc-sampler .sk-lie { fill: none; stroke: rgba(255, 255, 255, 0.34); stroke-width: 0.4; }
-[data-theme='cottagecore'] .cc-sampler .sk-petal-rose { fill: var(--cc-rose-petal); stroke: var(--cc-rose-edge); stroke-width: 0.5; }
-[data-theme='cottagecore'] .cc-sampler .sk-petal-butter { fill: var(--cc-heart); stroke: var(--cc-heart-deep); stroke-width: 0.5; }
+/* Lazy daisies: open chain loops, the thread drawn twice (darker edge under, lighter top). */
+[data-theme='cottagecore'] .cc-sampler .sk-under, [data-theme='cottagecore'] .cc-sampler .sk-over { fill: none; }
+[data-theme='cottagecore'] .cc-sampler .sk-chain-rose.sk-under { stroke: var(--cc-rose-edge); stroke-width: 2.1; }
+[data-theme='cottagecore'] .cc-sampler .sk-chain-rose.sk-over { stroke: var(--cc-rose-petal); stroke-width: 1.2; }
+[data-theme='cottagecore'] .cc-sampler .sk-chain-butter.sk-under { stroke: var(--cc-heart-deep); stroke-width: 2.1; }
+[data-theme='cottagecore'] .cc-sampler .sk-chain-butter.sk-over { stroke: var(--cc-heart); stroke-width: 1.2; }
 [data-theme='cottagecore'] .cc-sampler .sk-knot-heart { fill: var(--cc-heart-deep); stroke: var(--cc-heart); stroke-width: 0.4; }
 [data-theme='cottagecore'] .cc-sampler .sk-knot-rose { fill: var(--cc-rose-edge); stroke: var(--cc-rose-petal); stroke-width: 0.5; }
 [data-theme='cottagecore'] .cc-sampler .sk-knot-bud { fill: var(--cc-heart); stroke: var(--cc-heart-deep); stroke-width: 0.4; }

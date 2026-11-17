@@ -2,9 +2,9 @@
 /** The hoop's sprig, worked freehand (founder answer 2, 11-17-26: the first
     one was a counted cross-stitch chart, and cross-stitch lettering and grids
     belong to grandmillennial, S5). Embroidery by eye: a stem in stem stitch,
-    leaves and lazy-daisy petals in satin stitch (a solid fill with the
-    thread's lie drawn over it, each petal at its own slant), and French knots
-    at the hearts and on the buds. A seeded wobble moves every point, so no
+    leaves in satin stitch (a solid fill with the thread's lie drawn over it),
+    lazy-daisy petals as open chain loops each pinned by a tack at its tip,
+    and French knots at the hearts and on the buds. A seeded wobble moves every point, so no
     petal repeats and the line is never ruler-straight. Decorative; the rules
     are global in theme.css (the markup is set as HTML, so scoped CSS cannot
     reach it). */
@@ -63,11 +63,27 @@ function stem(from: Pt, c: Pt, to: Pt) {
   }
   add('sk-ticks', ticks);
 }
-/** A lazy daisy: `n` single-chain loops round a centre, each anchored by a tack. */
+/** A lazy daisy: `n` single-chain loops round a centre. Each petal is one
+    open loop of thread (a teardrop outline, never filled: the cloth shows
+    through), pinned at its tip by a short tack across the loop. The thread is
+    drawn twice, a darker edge under a lighter top, so it reads as a raised
+    strand rather than a line. */
+function chain(cls2: string, at: Pt, a: number, len: number, w: number) {
+  const dir: Pt = [Math.cos(a), Math.sin(a)];
+  const perp: Pt = [-dir[1], dir[0]];
+  const tip: Pt = [at[0] + dir[0] * len, at[1] + dir[1] * len];
+  const side = (s: number, t: number): Pt => [at[0] + dir[0] * len * t + perp[0] * w * s, at[1] + dir[1] * len * t + perp[1] * w * s];
+  const loop = `M${P(at)}C${P(side(1, 0.25))} ${P(side(0.95, 0.8))} ${P(tip)}C${P(side(-0.95, 0.8))} ${P(side(-1, 0.25))} ${P(at)}`;
+  // The tack: a short straight stitch over the loop's far end, slightly askew.
+  const k = 0.35 + jit(0.08);
+  const tack = `M${P([tip[0] - dir[0] * 1.4 + perp[0] * w * k, tip[1] - dir[1] * 1.4 + perp[1] * w * k])}L${P([tip[0] + dir[0] * 1.6 - perp[0] * w * k * 0.4, tip[1] + dir[1] * 1.6 - perp[1] * w * k * 0.4])}`;
+  add(`${cls2} sk-under`, loop + tack);
+  add(`${cls2} sk-over`, loop + tack);
+}
 function lazyDaisy(cls2: string, c: Pt, n: number, len: number, w: number, turn: number) {
   for (let i = 0; i < n; i++) {
     const a = turn + (i / n) * Math.PI * 2 + jit(0.08);
-    satin(cls2, [c[0] + Math.cos(a) * 3.2, c[1] + Math.sin(a) * 3.2], a, len + jit(1.2), w + jit(0.5));
+    chain(cls2, [c[0] + Math.cos(a) * 3.2, c[1] + Math.sin(a) * 3.2], a, len + jit(1.2), w + jit(0.5));
   }
 }
 
@@ -81,9 +97,9 @@ stem(fork, [36 + jit(2), 48], [22 + jit(1.5), 34]);
 stem(fork, [64 + jit(2), 46], [78 + jit(1.5), 33]);
 satin('sk-leaf', [48, 70], (-152 + jit(5)) * deg, 22 + jit(2), 6.4);
 satin('sk-leaf', [51, 62], (-30 + jit(5)) * deg, 23 + jit(2), 6.4);
-lazyDaisy('sk-petal-rose', [22, 31], 6, 10.5, 3.6, 0.3);
-lazyDaisy('sk-petal-rose', [78, 30], 6, 10.5, 3.6, 0.9);
-lazyDaisy('sk-petal-butter', [50, 24], 7, 12.5, 4, -1.2);
+lazyDaisy('sk-chain-rose', [22, 31], 6, 10.5, 3.6, 0.3);
+lazyDaisy('sk-chain-rose', [78, 30], 6, 10.5, 3.6, 0.9);
+lazyDaisy('sk-chain-butter', [50, 24], 7, 12.5, 4, -1.2);
 knot('sk-knot-heart', [22, 31], 2.1);
 knot('sk-knot-heart', [78, 30], 2.1);
 knot('sk-knot-rose', [50, 24], 2.6);

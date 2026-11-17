@@ -28,7 +28,9 @@ describe('cottagecore floaters', () => {
     expect(teardown).toMatch(/clearTimeout\(rectTimer\)/);
     const sweep = fx.slice(fx.indexOf('const sweep = () =>'), fx.indexOf('const scheduleRects'));
     expect(sweep).toMatch(/if \(!alive\) return;/);
-    expect(sweep).toMatch(/Math\.abs\(window\.scrollY - lastSy\) > 0\.5/);
+    expect(sweep).toMatch(/Math\.abs\(sy - sweepSy\) > 0\.5/);
+    // Its own scroll reading, so it settles with no draw loop running (hidden tab).
+    expect(sweep).not.toMatch(/lastSy/);
   });
 
   it('debounces resize (no synchronous sweep) and only re-staggers after a real pause', () => {

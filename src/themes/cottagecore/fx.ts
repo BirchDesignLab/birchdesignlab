@@ -649,18 +649,27 @@ export function mountFireflies(): void {
     };
     let rectTimer = 0;
     /** One full text sweep after `delay` ms, and never in the middle of a
-        scroll: if the page has moved since the last frame it asks again in
-        200 ms, so a sweep lands on a page that is still. */
+        scroll: if the page has moved since the sweep's own last look it asks
+        again in 200 ms, so a sweep lands on a page that is still. It keeps
+        its own scroll reading (not the draw loop's lastSy), so it settles
+        even when no frame is running (a hidden tab, or the loop at rest). */
+    let sweepSy = NaN;
     const sweep = () => {
       if (!alive) return;
-      if (Math.abs(window.scrollY - lastSy) > 0.5) {
+      const sy = window.scrollY;
+      if (Math.abs(sy - sweepSy) > 0.5) {
+        sweepSy = sy;
         rectTimer = window.setTimeout(sweep, 200);
         return;
       }
+      sweepSy = NaN;
       collectTextRects();
     };
     const scheduleRects = (delay = 150) => {
       clearTimeout(rectTimer);
+      // Seed the reading with where the page is now, so a page already at
+      // rest sweeps on the first try after `delay`.
+      sweepSy = window.scrollY;
       rectTimer = window.setTimeout(sweep, delay);
     };
 
