@@ -163,7 +163,7 @@ flowchart TB
 
 ## The Lab: specimens
 
-The Lab is one Astro content collection with a `type` discriminator. Experiments are self-initiated pieces. Studies are genre studies against fictional businesses, plus write-ups of work held elsewhere (the backlog says plainly which is which). Accession numbers are permanent and never reused. `/lab/<slug>/` URLs are flat.
+The Lab is one Astro content collection with a `type` discriminator. Experiments are self-initiated pieces. Studies are real client work. The two genre studies (sites for fictional businesses) keep a study page but carry a `genreStudy` flag that catalogues them with the experiments (`src/lib/lab-sets.ts`). Accession numbers are permanent and never reused. `/lab/<slug>/` URLs are flat.
 
 | Designation | Title | Type | Status | What it is |
 |---|---|---|---|---|
@@ -174,8 +174,8 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-005 | Cheer and Chatter Social Club | study | live | Ticketing site plus a live event app for game nights. It lives in a sibling repo; this is the write-up |
 | BDL-006 | The Regulator | experiment | live | A colour ramp that solves itself against WCAG, and a crown that retunes the bark live |
 | BDL-007 | The Shining Tree | experiment | live | The organic wordmark in 3D (three.js, Draco-compressed GLB), birch and moss breathing |
-| BDL-008 | Magnolia and Mane | study | live | Genre study: a Gulf Coast salon site, bilingual, booking on-site |
-| BDL-009 | Bayou Kitchen | study | live | Genre study: a Gulf Coast restaurant site, menu first |
+| BDL-008 | Magnolia and Mane | experiment (genre study) | live | Genre study: a Gulf Coast salon site, bilingual, booking on-site |
+| BDL-009 | Bayou Kitchen | experiment (genre study) | live | Genre study: a Gulf Coast restaurant site, menu first |
 | BDL-010 | The Portal | experiment | live | The whole site rebuilt in seven design schools with a page-morphing switcher |
 | BDL-011 | Field Guide to the Schools | study | forthcoming | What each school believes and forbids, and what it took to build it |
 | BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on, and where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
