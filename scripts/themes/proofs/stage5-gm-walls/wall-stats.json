@@ -1,0 +1,19 @@
+{
+  "tile": [
+    928,
+    544
+  ],
+  "halfDrop": "four hero columns at x=116 (y=114, 386), 348 (250, 522), 580 (182, 454), 812 (318, 46); drops 0, 136, 68, 204 against 272 spacing, so no two columns share a height",
+  "items": 70,
+  "byType": {
+    "vine": 8,
+    "leafpair": 16,
+    "rose": 12,
+    "bloom": 8,
+    "sprig": 12,
+    "bud": 14
+  },
+  "dots": 36,
+  "useElements": 123,
+  "bytes": 13332
+}

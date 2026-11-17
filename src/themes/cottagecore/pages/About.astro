@@ -7,15 +7,16 @@ import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Pressed from '../assets/Pressed.astro';
 import Sampler from '../assets/Sampler.astro';
+import Signature from '../assets/Signature.astro';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 const [etymLead, ...etymRest] = copy.etymology;
 ---
 <section class="herbarium cc-wrap">
-  <div class="sheet cc-paper">
+  <div class="sheet cc-paper cc-board">
     <div class="specimen" aria-hidden="true">
-      <Pressed kind="birch" seed={7} class="twig" />
+      <Pressed kind="birch" seed={7} class="sheet-twig" />
     </div>
     <div class="text">
       <h1>{copy.heading}</h1>
@@ -34,7 +35,7 @@ const [etymLead, ...etymRest] = copy.etymology;
       {copy.founder.body.map((para) => <p>{para}</p>)}
     </article>
   </div>
-  <span class="cc-tape cc-tape--rose letter-tape" aria-hidden="true"></span>
+  <span class="cc-tape cc-tape--rose cc-tape--cut letter-tape" aria-hidden="true"></span>
   <Pressed kind="rose" seed={61} class="letter-rose" />
   <Pressed kind="fern" seed={62} class="letter-fern" />
 </section>
@@ -44,6 +45,7 @@ const [etymLead, ...etymRest] = copy.etymology;
     <div class="cloth">
       <p class="manifesto">{copy.manifesto}</p>
       <Sampler class="motif" />
+      <Signature class="sig" />
     </div>
   </div>
   <a class="cc-label" href={hrefFor('contact', theme)}>{copy.cta}</a>
@@ -63,7 +65,10 @@ const [etymLead, ...etymRest] = copy.etymology;
   .specimen { position: relative; }
   /* The gummed mounting strips are drawn inside the twig SVG itself
      (Pressed.astro), so they scale and rotate with it in both schemes. */
-  .specimen :global(.twig) { width: 100%; max-width: 26rem; margin-inline: auto; rotate: -4deg; }
+  /* Not named .twig: the specimen's own twig paths carry that class, and this
+     rule's rotation turned the twig path -4deg about its own centre while the
+     lenticels, leaves and gum strips stayed put (they floated off the bark). */
+  .specimen :global(.sheet-twig) { width: 100%; max-width: 26rem; margin-inline: auto; rotate: -4deg; }
   h1 { font-size: clamp(3rem, 6.2vw, 5rem); line-height: 0.98; }
   /* The specimen label: double-ruled, the etymology written on it. */
   .label {
@@ -77,7 +82,7 @@ const [etymLead, ...etymRest] = copy.etymology;
   }
   .label :global(em) { font-family: var(--font-display); font-weight: 500; font-variation-settings: 'SOFT' 100, 'WONK' 1; }
   .label :global(strong) { color: var(--accent); }
-  .etym-more { margin-top: 1.4rem; color: var(--mark-muted); max-width: var(--measure); }
+  .etym-more { margin-top: 1.4rem; color: var(--mark); font-size: 1.02rem; max-width: var(--measure); }
 
   /* ---- the letter ---- */
   .letter-sec {
@@ -87,40 +92,39 @@ const [etymLead, ...etymRest] = copy.etymology;
   }
   .letter-lift { --tilt: 0.7deg; width: min(100%, 44rem); }
   /* Lined writing paper with a double margin rule; every line of text sits
-     on a ruled line because the heading and paragraphs share one rhythm. */
+     on a ruled line because the heading and paragraphs share one rhythm.
+     Whole pixels (brief item 4): a 30px pitch, every margin and padding a
+     whole number of lines, and the rule 1px at --rule-y, about 0.2em under
+     the baseline (theme.css, .cc-ruled). The lamp over the paper by night is
+     the --paper-lamp token, so no scheme-gated rule has to out-rank this one. */
   .letter {
-    --lh: 1.9rem;
+    --lh: 30px;
+    --rule-y: 24px;
+    --torn-x: -520px;
     background-color: var(--paper);
     background-image:
       linear-gradient(90deg, transparent 3.1rem, var(--margin-line) 3.1rem 3.2rem, transparent 3.2rem 3.45rem, var(--margin-line) 3.45rem 3.55rem, transparent 3.55rem),
-      linear-gradient(to top, var(--rule) 1px, transparent 1px);
-    background-size: 100% 100%, 100% var(--lh);
-    background-position: 0 0, 0 calc(var(--lh) * 0.72);
+      linear-gradient(to top, var(--rule) 1px, transparent 1px),
+      var(--paper-lamp);
+    background-size: 100% 100%, 100% var(--lh), 100% 100%;
+    background-position: 0 0, 0 calc(var(--rule-y) + 1px - var(--lh)), 0 0;
     /* One line of empty rule above the heading, not two: the sheet read as
        unfinished with a full blank line before any writing started. */
     padding: var(--lh) clamp(1.5rem, 5vw, 3.5rem) calc(var(--lh) * 2) clamp(4.4rem, 8vw, 5.6rem);
     line-height: var(--lh);
   }
-  [data-theme='cottagecore'][data-scheme='dark'] .letter {
-    background-image:
-      linear-gradient(90deg, transparent 3.1rem, var(--margin-line) 3.1rem 3.2rem, transparent 3.2rem 3.45rem, var(--margin-line) 3.45rem 3.55rem, transparent 3.55rem),
-      linear-gradient(to top, var(--rule) 1px, transparent 1px),
-      linear-gradient(165deg, rgba(255, 200, 120, 0.14), transparent 60%);
-    background-size: 100% 100%, 100% var(--lh), 100% 100%;
-    background-position: 0 0, 0 calc(var(--lh) * 0.72), 0 0;
-  }
   .letter h2 {
     font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: 2.6rem;
+    font-size: 2.9rem;
     line-height: calc(var(--lh) * 2);
-    color: var(--accent);
     letter-spacing: 0;
-    rotate: -1.5deg;
+    /* The Caveat heading puts its baseline ~45px down a 60px box, 9px over
+       the rule; 6px down lands it about 3px above, like the body lines. */
+    position: relative; top: 6px;
   }
   .letter p { margin-top: var(--lh); color: var(--mark); }
   .letter p:first-of-type { margin-top: 0; }
-  .letter-tape { top: calc(clamp(1rem, 3vw, 2rem) - 0.9rem); left: calc(50% - 3.75rem); --tape-tilt: 3deg; }
+  .letter-tape { top: calc(clamp(1rem, 3vw, 2rem) - 0.9rem); left: calc(50% - var(--tape-w) / 2); --tape-tilt: 3deg; --tape-w: 6.5rem; }
   .letter-sec :global(.letter-rose) {
     position: absolute; width: 8.5rem;
     right: calc(50% - 30rem); top: 14%; rotate: 24deg;
@@ -164,10 +168,12 @@ const [etymLead, ...etymRest] = copy.etymology;
     border-radius: 50%;
     display: grid; place-items: center; align-content: center; gap: 1.2rem;
     background-color: var(--hoop-cloth);
-    /* Aida cloth: the even weave cross-stitch is worked on. */
+    /* Linen: a fine, faint weave for freehand work (it was Aida, the counted
+       cross-stitch cloth, before the sprig and the maker's line were redrawn
+       freehand, S5). */
     background-image:
-      repeating-linear-gradient(0deg, rgba(var(--shadow), 0.05) 0 1px, transparent 1px 5px),
-      repeating-linear-gradient(90deg, rgba(var(--shadow), 0.05) 0 1px, transparent 1px 5px);
+      repeating-linear-gradient(0deg, rgba(var(--shadow), 0.04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(var(--shadow), 0.035) 0 1px, transparent 1px 4px);
     box-shadow: inset 0 0 0 2px rgba(var(--shadow), 0.18), inset 0 6px 18px rgba(var(--shadow), 0.12);
   }
   .cloth::after {
@@ -185,23 +191,25 @@ const [etymLead, ...etymRest] = copy.etymology;
     font-weight: 460;
     font-size: clamp(1.25rem, 2.6vw, 1.75rem);
     line-height: 1.3;
-    font-variation-settings: 'SOFT' 100, 'WONK' 1;
     color: var(--mark);
     text-wrap: balance;
   }
-  .cloth :global(.motif) { width: 5.5rem; }
+  .cloth :global(.motif) { width: 6.6rem; }
+  /* The maker's line, worked in running stitch script below the sprig. */
+  .cloth :global(.sig) { width: 8.4rem; margin-top: -0.2rem; }
 
   @media (max-width: 820px) {
     .sheet { grid-template-columns: 1fr; }
-    .specimen :global(.twig) { max-width: 17rem; }
+    .specimen :global(.sheet-twig) { max-width: 17rem; }
     .letter-sec :global(.letter-rose), .letter-sec :global(.letter-fern) { display: none; }
   }
   @media (max-width: 640px) {
-    .letter { --lh: 1.8rem; font-size: 1rem; }
-    .letter h2 { font-size: 2.3rem; }
+    .letter { font-size: 1rem; }
+    .letter h2 { font-size: 2.6rem; }
     .hoop { padding: 0.65rem; }
     .cloth { gap: 0.6rem; }
-    .cloth :global(.motif) { width: 4rem; }
+    .cloth :global(.motif) { width: 4.8rem; }
+    .cloth :global(.sig) { width: 6.4rem; margin-top: -0.4rem; }
     .manifesto { max-width: 76%; }
   }
 </style>

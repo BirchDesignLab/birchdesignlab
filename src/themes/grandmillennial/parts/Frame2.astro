@@ -1,0 +1,44 @@
+---
+/** The small second frame beside the oval (Stage 5 B1 task 2, a3 minor C3): an
+    arched gilt frame, a blue bird study on a bough in the same hand as the
+    wall. It hangs from a cord to a gilt nail with a little rosette round it.
+    The bough, bird and leaves are the shapes of ChinoiserieShapes.astro. */
+---
+<div class="gm-frame2" aria-hidden="true"><div class="mat"><svg viewBox="0 0 100 125" focusable="false"><path class="sc-limb" d="M-6 84C20 78 44 80 60 76C78 72 96 74 108 64L108 69C94 79 78 78 60 82C44 86 20 85-6 91Z"/><use href="#sc-pb" class="sc-birdB" transform="translate(60 78) scale(.52)"/><use href="#sc-l1" transform="translate(16 88) rotate(96) scale(.8)"/><use href="#sc-l2" transform="translate(28 84) rotate(80) scale(.7)"/><use href="#sc-l1" transform="translate(40 83) rotate(104) scale(.65)"/><use href="#sc-l2" transform="translate(82 79) rotate(88) scale(.8)"/><use href="#sc-l1" transform="translate(94 74) rotate(100) scale(.75)"/><use href="#sc-ck" transform="translate(70 82) rotate(4) scale(.9)"/><use href="#sc-l2" transform="translate(6 70) rotate(-70) scale(.7)"/><use href="#sc-l1" transform="translate(98 52) rotate(-110) scale(.7)"/></svg></div></div>
+
+<style>
+  .gm-frame2 {
+    position: absolute; z-index: 3;
+    right: -16%; bottom: -3%;
+    width: 36%;
+    aspect-ratio: 4 / 5;
+    padding: 6px;
+    background: var(--gilt);
+    box-shadow: inset 0 0 0 1px rgb(255 245 210 / 0.6), inset 0 0 0 3px rgb(122 90 28 / 0.3), 0 14px 22px -10px rgb(20 10 4 / 0.6);
+  }
+  .mat {
+    position: relative; width: 100%; height: 100%;
+    background: radial-gradient(closest-side, var(--oval), color-mix(in srgb, var(--oval), var(--ornament) 14%));
+    box-shadow: inset 0 0 0 2px var(--ornament-deep), inset 0 3px 8px rgb(0 0 0 / 0.3);
+    overflow: hidden;
+  }
+  .mat svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* The cord it hangs from, leaning off true, and the nail it ends on. */
+  .gm-frame2::before {
+    content: ''; position: absolute; left: 50%; bottom: 100%;
+    width: 1px; height: 2.5rem;
+    background: var(--ornament-deep);
+    rotate: 18deg; transform-origin: 50% 100%;
+  }
+  /* The cord's top end is 2.5rem along its lean: sin(18deg) across, cos(18deg) up. */
+  .gm-frame2::after {
+    content: ''; position: absolute;
+    left: calc(50% + 0.7725rem - 5px); bottom: calc(100% + 2.378rem - 5px);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f6e6ac, #c9a24c 50%, #7a5a1c);
+    box-shadow: 0 0 0 2px rgb(184 147 63 / 0.55), 0 0 0 3px rgb(122 90 28 / 0.35), 0 2px 3px rgb(30 16 6 / 0.5);
+  }
+  @media (max-width: 820px) {
+    .gm-frame2 { right: -22%; bottom: -4%; width: 38%; }
+  }
+</style>
