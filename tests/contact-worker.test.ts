@@ -321,6 +321,21 @@ describe('contact safety net: daily cap', () => {
     expect(env.CONTACT_KV.store.has(today())).toBe(false);
   });
 
+  it('fails open when the counter write throws after a good read', async () => {
+    const kv = makeKv();
+    kv.put.mockRejectedValue(new Error('too many writes'));
+    const env = makeEnv({ CONTACT_KV: kv });
+    const res = await worker.fetch(contactRequest(GOOD), env);
+    expect(res.status).toBe(303);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not count a per-IP 429 against the cap', async () => {
+    const env = makeEnv({ CONTACT_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } });
+    await worker.fetch(contactRequest(GOOD), env);
+    expect(env.CONTACT_KV.store.has(today())).toBe(false);
+  });
+
   it('fails open: a KV outage never blocks a real lead', async () => {
     const kv = makeKv();
     kv.get.mockRejectedValue(new Error('kv down'));
@@ -380,6 +395,24 @@ describe('contact safety net: daily retry (scheduled)', () => {
     const env = makeEnv({ CONTACT_KV: kv, EMAIL: { send: vi.fn().mockRejectedValue(new Error('still down')) } });
     await run(env);
     expect(kv.store.has('held:x:1')).toBe(true);
+  });
+
+  it('skips a corrupt held record and still sends the rest', async () => {
+    const kv = makeKv({ 'held:0:bad': '{', 'held:1:ok': held('1') });
+    const env = makeEnv({ CONTACT_KV: kv });
+    await run(env);
+    expect(env.EMAIL.send).toHaveBeenCalledTimes(1);
+    expect(kv.store.has('held:1:ok')).toBe(false);
+  });
+
+  it('logs loudly when a held record nears expiry and still fails', async () => {
+    const old = new Date(Date.now() - 27 * 864e5).toISOString();
+    const kv = makeKv({ [`held:${old}:z`]: held(old) });
+    const env = makeEnv({ CONTACT_KV: kv, EMAIL: { send: vi.fn().mockRejectedValue(new Error('still down')) } });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await run(env);
+    expect(spy.mock.calls.some((c) => c[0] === 'HELD CONTACT EXPIRING SOON')).toBe(true);
+    spy.mockRestore();
   });
 
   it('does nothing when nothing is held', async () => {

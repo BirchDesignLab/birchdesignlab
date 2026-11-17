@@ -45,9 +45,14 @@ const DAILY_CAP = 40;
 const HELD_TTL_SECONDS = 60 * 60 * 24 * 30;
 // The day counter only needs to outlive its own day.
 const COUNT_TTL_SECONDS = 60 * 60 * 48;
-// Most held submissions one cron run will try, so a backlog cannot blow the
-// run's subrequest budget.
-const RETRY_BATCH = 25;
+// Most held submissions one cron run will try: above DAILY_CAP so a full day
+// of failed sends drains in one run, and about 150 KV/email calls at most,
+// far under a run's subrequest budget.
+const RETRY_BATCH = 50;
+// A held submission this old is close to its TTL; the retry logs it loudly so
+// a lasting send failure (unverified destination, sending disabled) shows up
+// in Workers Logs instead of leads quietly expiring.
+const HELD_WARN_DAYS = 25;
 
 /** A contact submission as held in KV between a failed send and its retry. */
 interface HeldSubmission {
@@ -129,21 +134,30 @@ export default {
 async function retryHeld(env: Env): Promise<void> {
   const list = await env.CONTACT_KV.list({ prefix: 'held:', limit: RETRY_BATCH });
   for (const { name: key } of list.keys) {
-    const held = await env.CONTACT_KV.get<HeldSubmission>(key, 'json');
-    if (!held) continue;
+    // Everything per record sits inside the try: one corrupt value or KV
+    // error must not stop the rest of the batch (keys list oldest first, so a
+    // bad oldest record would otherwise block every retry until it expired).
     try {
+      const held = await env.CONTACT_KV.get<HeldSubmission>(key, 'json');
+      if (!held) continue;
       await env.EMAIL.send(contactEmail(held, true));
       await env.CONTACT_KV.delete(key);
     } catch (err) {
       console.error('held contact retry failed', key, err);
+      const ageDays = (Date.now() - Date.parse(key.slice('held:'.length, 'held:'.length + 24))) / 864e5;
+      if (ageDays > HELD_WARN_DAYS) {
+        console.error('HELD CONTACT EXPIRING SOON', key, Math.floor(ageDays), 'days old');
+      }
     }
   }
 }
 
 /** Count this submission against today's cap. True if it is over the cap.
  *  Fails open: if KV is unreachable a real lead must still go through. The
- *  read-then-write is not atomic, so a burst can overshoot by a few; for a
- *  flood guard that is fine. */
+ *  cap is soft: read-then-write is not atomic, KV caches reads per location
+ *  for up to 60s, and a put over KV's one-write-per-second-per-key limit
+ *  throws (and is allowed through). A bot spread across locations can pass
+ *  40; for a flood guard on a quiet inbox that is acceptable. */
 async function overDailyCap(env: Env): Promise<boolean> {
   try {
     const key = `count:${new Date().toISOString().slice(0, 10)}`;
@@ -230,7 +244,7 @@ async function handleContact(request: Request, env: Env, url: URL): Promise<Resp
         url,
         202,
         'Your message is saved',
-        'Our mail service hiccuped, so your message was saved and will be delivered within a day. No need to send it again.',
+        `Our mail service hiccuped, so your message was saved and will be delivered within a day. No need to send it again. If it is urgent, email ${CONTACT_PUBLIC}.`,
         theme,
       );
     }
