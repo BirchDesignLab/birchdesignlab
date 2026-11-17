@@ -150,9 +150,9 @@ const SEED = {
   fadeOut: 0.4,
   /** The fade, per frame, of a seed whose drawn shape is ON a line of text right
       now (not one the lookahead sees coming): text can arrive under a seed
-      between two frames (a wheel step), so it is gone in about two frames
-      instead of five, and no seed ink lingers on a line for 150 ms or more. */
-  fadeOutNow: 0.85,
+      between two frames (a wheel step), and a faded-but-lit seed on a line is
+      still seed ink on text, so it is gone on the first frame that sees it. */
+  fadeOutNow: 1,
   /** Sprite units to CSS px at size 1: 1.5 times the first proof's 0.62. */
   spriteScale: 0.93,
   /** Clear air (px) kept between a seed's drawn shape and any text. */
@@ -330,28 +330,52 @@ function inAnyBox(x: number, y: number, boxes: Box[], pad: number): boolean {
   return false;
 }
 
-/** Whether a seed drawn with its anchor at (x, y) at scale k would come
+/** Whether a seed drawn with its anchor at (x, y) at scale k, tilted by
+    `angle` (radians, as the draw rotates it about the anchor), would come
     within SEED.textPad of a text box. The drawing is a fan of filaments
     reaching 45 sprite units (pin-heads included) over the anchor, a hair
-    below it at most, and a thin stalk and body hanging 70 units under it; so
-    the test is that half disc plus a narrow strip, not the box around both.
-    A bounding box would keep a seed a whole fan's width from a line it only
-    passes beside. */
-function seedHitsText(x: number, y: number, k: number, boxes: Box[]): boolean {
+    below it at most, and a thin stalk and body hanging 70 units under it. The
+    tilt swings the stalk sideways (up to ~40 units at the foot of a 0.57 rad
+    tilt) and drops the fan's low tip below the anchor (its tips sit 38 units
+    out), so the test is the fan's half disc, lowered by the tilt, plus the
+    stalk as the tilted segment it is, not an upright strip: a seed whose
+    body hangs onto a line beside it is on that line. A bounding box would
+    keep a seed a whole fan's width from a line it only passes beside. */
+function seedHitsText(x: number, y: number, k: number, boxes: Box[], angle = 0): boolean {
   const pad = SEED.textPad;
+  const sin = Math.sin(angle);
+  const cos = Math.cos(angle);
   const reach = 45 * k + pad;
-  const low = y + 3 * k + pad;
+  const low = y + (3 + 38 * Math.abs(sin)) * k + pad;
   const half = 4 * k + pad;
-  const bottom = y + 70 * k + pad;
+  const footX = x - 70 * k * sin;
+  const footY = y + 70 * k * cos;
   for (const q of boxes) {
     if (q.t < low) {
       const cx = Math.min(Math.max(x, q.l), q.r);
       const cy = Math.min(Math.max(y, q.t), Math.min(q.b, low));
       if (Math.hypot(cx - x, cy - y) < reach) return true;
     }
-    if (x - half < q.r && x + half > q.l && y < q.b && bottom > q.t) return true;
+    if (segmentHitsBox(x, y, footX, footY, q.l - half, q.t - pad, q.r + half, q.b)) return true;
   }
   return false;
+}
+
+/** Whether the segment (x0, y0) to (x1, y1) crosses the box (Liang-Barsky). */
+function segmentHitsBox(x0: number, y0: number, x1: number, y1: number, l: number, t: number, r: number, b: number): boolean {
+  let u0 = 0;
+  let u1 = 1;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  for (const [p, q] of [[-dx, x0 - l], [dx, r - x0], [-dy, y0 - t], [dy, b - y0]] as const) {
+    if (p === 0) {
+      if (q < 0) return false;
+    } else {
+      const u = q / p;
+      if (p < 0) { if (u > u1) return false; if (u > u0) u0 = u; } else { if (u < u0) return false; if (u < u1) u1 = u; }
+    }
+  }
+  return true;
 }
 
 /** Where a firefly's flash is, 0-1, at time t. */
@@ -507,7 +531,7 @@ export function mountFireflies(): void {
     const seedVisible = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
       pointOnShow(x, y, sy) || drawnPoints(x, y, k, turn, angle).some(([px, py]) => pointOnShow(px, py, sy));
     const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
-      seedOnShow(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes);
+      seedOnShow(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle);
     /** Seconds a seat stays clear (fan on show, off text) riding its drift. */
     const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number) => {
       let t = SEED.seatStep;
@@ -807,15 +831,16 @@ export function mountFireflies(): void {
         // On a line right now (a wheel step can bring text under a seed between
         // two frames) fades fastest; a line the lookahead sees coming, a
         // little slower; nothing at all before the fonts have settled.
-        const onNow = seedHitsText(s.x, s.y + sy, kk, textBoxes);
-        const over = onNow || seedHitsText(ax, ay + sy, kk, textBoxes) || seedHitsText(s.x, s.y + sy + dsy, kk, textBoxes) || !fontsSettled;
+        const tilt = angleOf(s);
+        const onNow = seedHitsText(s.x, s.y + sy, kk, textBoxes, tilt);
+        const over = onNow || seedHitsText(ax, ay + sy, kk, textBoxes, tilt) || seedHitsText(s.x, s.y + sy + dsy, kk, textBoxes, tilt) || !fontsSettled;
         const target = over ? 0 : 1;
         s.cover = still ? target : s.cover + (target - s.cover) * (target < s.cover ? (onNow ? SEED.fadeOutNow : SEED.fadeOut) : SEED.fadeIn);
         // Fade in and out at the viewport's edges rather than popping.
         const a = s.alpha * s.cover * edgeFade(s);
         if (a < 0.01) continue;
         const turn = turnOf(s);
-        const angle = angleOf(s);
+        const angle = tilt;
         ctx.save();
         ctx.translate(s.x, s.y);
         ctx.rotate(angle);
@@ -844,7 +869,12 @@ export function mountFireflies(): void {
 
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
-      if (t - last < FRAME_MS) return;
+      // 30 fps, except while the page is scrolling by day: text slides under the
+      // seeds on every compositor frame, so a skipped frame would leave the last
+      // one's ink on a line for 33 ms. Seeds move by real dt, so a faster frame
+      // costs nothing but the work; the fireflies step per frame, so they keep 30.
+      const scrolling = root.dataset.scheme !== 'dark' && Math.abs(window.scrollY - lastSy) > 0.5;
+      if (t - last < FRAME_MS && !scrolling) return;
       const dt = Math.min(0.1, prev ? (t - prev) / 1000 : FRAME_MS / 1000);
       prev = t;
       last = t;

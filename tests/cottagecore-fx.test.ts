@@ -77,9 +77,27 @@ describe('cottagecore floaters', () => {
     expect(fn).not.toMatch(/40 \* k - SEED\.textPad/);
   });
 
-  it('takes a seed off a line it is on right now in about two frames', () => {
-    expect(fx).toMatch(/fadeOutNow: 0\.85/);
+  it('tests a seed as it is tilted: the stalk is the tilted segment and the fan drops with the tilt', () => {
+    const fn = fx.slice(fx.indexOf('function seedHitsText'), fx.indexOf('/** Where a firefly'));
+    expect(fn).toMatch(/boxes: Box\[\], angle = 0/);
+    expect(fn).toMatch(/const footX = x - 70 \* k \* sin/);
+    expect(fn).toMatch(/const footY = y \+ 70 \* k \* cos/);
+    expect(fn).toMatch(/const low = y \+ \(3 \+ 38 \* Math\.abs\(sin\)\) \* k \+ pad/);
+    expect(fn).toMatch(/segmentHitsBox\(x, y, footX, footY/);
+    // every caller passes the angle the draw uses
+    const calls = fx.match(/seedHitsText\([^)]*\)/g) ?? [];
+    expect(calls.filter((c) => /angle\)|tilt\)/.test(c)).length).toBe(calls.length - 0 - 1); // all but the declaration
+  });
+
+  it('takes a seed off a line it is on right now on the first frame that sees it', () => {
+    expect(fx).toMatch(/fadeOutNow: 1,/);
     expect(fx).toMatch(/onNow \? SEED\.fadeOutNow : SEED\.fadeOut/);
+  });
+
+  it('draws every compositor frame while the page scrolls by day, so no skipped frame leaves ink on a line', () => {
+    const tick = fx.slice(fx.indexOf('const tick = (t: number)'), fx.indexOf('const stop = ()'));
+    expect(tick).toMatch(/const scrolling = root\.dataset\.scheme !== 'dark' && Math\.abs\(window\.scrollY - lastSy\) > 0\.5/);
+    expect(tick).toMatch(/if \(t - last < FRAME_MS && !scrolling\) return/);
   });
 
   it('moves only a seed nobody can see, and counts a seed by its drawn fan', () => {

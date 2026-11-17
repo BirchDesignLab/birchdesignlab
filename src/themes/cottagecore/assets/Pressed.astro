@@ -503,11 +503,12 @@ if (kind === 'magnolia') {
     add(p.rib, 'petal-vein');
   };
   const foot: Pt = [c[0], c[1] + 14];
-  const lap: Pt = [c[0], c[1] + 30];
   // The back of the cup and its rim, drooping a little at the sides.
   for (const [a, len, w, bend] of [[-130, 62, 36, 0.06], [-50, 62, 36, -0.06], [-90, 72, 34, 0], [-172, 54, 40, -0.14], [-8, 54, 40, 0.14]] as const) {
     petal(foot, (a + jit(4)) * deg, len, w, bend, true);
   }
+  // The floor of the cup, between the back petals and the front lip.
+  add(`M${P([c[0] - 34, c[1] + 36])}a34 14 0 1 0 68 0a34 14 0 1 0 -68 0Z`, 'petal petal--back petal--cream');
   // The cone: tall, narrow, rounded at the tip, ridged with the carpels.
   const [cx, cy] = [c[0], c[1]];
   add(`M${P([cx - 12, cy + 28])}C${P([cx - 14, cy - 2])} ${P([cx - 7.5, cy - 40])} ${P([cx, cy - 60])}C${P([cx + 7.5, cy - 40])} ${P([cx + 14, cy - 2])} ${P([cx + 12, cy + 28])}Z`, 'cone');
@@ -530,13 +531,17 @@ if (kind === 'magnolia') {
   }
   add(stamens, 'stamen');
   add(tips, 'floret');
-  // The front: two inner petals cupping up round the cone's sides, two drooping over the stem.
-  petal(lap, (90 + jit(5)) * deg, 44, 38, 0, false);
-  for (const [a, len, w, bend] of [[148, 52, 42, -0.12], [32, 52, 42, 0.12]] as const) {
-    petal(lap, (a + jit(4)) * deg, len, w, bend, false);
-  }
-  for (const [a, len, w, bend] of [[-124, 46, 30, 0.05], [-56, 46, 30, -0.05]] as const) {
-    petal(lap, (a + jit(4)) * deg, len, w, bend, false);
+  // The front lip of the cup, seen from a little above: four broad petals rooted
+  // at different points along an ellipse under the cone, the outer pair tilted
+  // out, each overlapping the next. Their rounded tops make a scalloped rim that
+  // sits below the cone's foot and the stamen ring, so both stay in view.
+  for (const [dx, ry, a, len, w, bend] of [
+    [-34, 152, -114, 50, 40, 0.1],
+    [34, 152, -66, 50, 40, -0.1],
+    [-14, 169, -99, 46, 40, 0.03],
+    [14, 169, -81, 46, 40, -0.03],
+  ] as const) {
+    petal([c[0] + dx + jit(1.5), ry + jit(1.5)], (a + jit(3)) * deg, len, w, bend, false);
   }
 }
 

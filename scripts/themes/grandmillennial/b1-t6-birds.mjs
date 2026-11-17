@@ -66,7 +66,10 @@ for (const sz of SIZES) {
     const r = (e) => { const b = e.getBoundingClientRect(); return [b.left, b.top + scrollY, b.right, b.top + scrollY + b.height]; };
     /* cards grow by their outline (offset + width) so a bird touching the ring counts */
     const rg = (e) => { const cs = getComputedStyle(e), g = cs.outlineStyle === 'none' ? 0 : (parseFloat(cs.outlineOffset) || 0) + (parseFloat(cs.outlineWidth) || 0), b = r(e); return [b[0] - g, b[1] - g, b[2] + g, b[3] + g]; };
-    const vis = (s) => [...document.querySelectorAll(s)].filter((e) => getComputedStyle(e).display !== 'none').map(rg);
+    /* a card with a 50% radius (the gilt oval) covers an ELLIPSE, not its box: a bird in the box's
+       corner is in the open (B2 task 6 fix round 1: the box said "hidden", the picture showed a bird
+       half behind the frame's curve) */
+    const vis = (s) => [...document.querySelectorAll(s)].filter((e) => getComputedStyle(e).display !== 'none').map((e) => { return [...rg(e), getComputedStyle(e).borderTopLeftRadius === '50%']; });
     const wb = [...document.querySelectorAll('.wb')].find((e) => getComputedStyle(e.closest('svg')).display !== 'none');
     return {
       parts: [...document.querySelectorAll('.scene-part')].map(r),
@@ -97,6 +100,17 @@ function verdicts(m, b) {
     if ((ix * iy) / area < 0.3) return; // mostly off the room: not drawn
     let cov = 0;
     for (const c of m.cards) {
+      if (c[4]) {
+        /* sample the bird's box on a 16 x 16 grid against the ellipse */
+        const ex = (c[0] + c[2]) / 2, ey = (c[1] + c[3]) / 2, rx = (c[2] - c[0]) / 2, ry = (c[3] - c[1]) / 2;
+        let inside = 0;
+        for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+          const px = bb[0] + ((i + 0.5) / 16) * (bb[2] - bb[0]), py = bb[1] + ((j + 0.5) / 16) * (bb[3] - bb[1]);
+          if (((px - ex) / rx) ** 2 + ((py - ey) / ry) ** 2 <= 1) inside++;
+        }
+        cov = Math.max(cov, inside / 256);
+        continue;
+      }
       const cx = Math.max(0, Math.min(bb[2], c[2]) - Math.max(bb[0], c[0])), cy = Math.max(0, Math.min(bb[3], c[3]) - Math.max(bb[1], c[1]));
       cov = Math.max(cov, (cx * cy) / area);
     }

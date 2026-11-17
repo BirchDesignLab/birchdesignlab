@@ -446,22 +446,27 @@ bR.push(bough(T4, 1.0, -1, 70, 110, 0, 9, 3));
 const pb = (x, y, s, flip, cls) => out.birds.push(`<use href="#sc-pb" transform="translate(${tk(x)} ${tk(y)}) scale(${tk(flip * s)} ${tk(s)})" class="${cls}"/>`);
 const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" transform="translate(${tk(x)} ${tk(y)}) rotate(${tk(rot)}) scale(${tk(flip * s)} ${tk(s)})" class="${cls}"/>`);
 {
-  const f2 = bR[5](0.55).at;
   /* B1 fix (deferred minors, rc1-N1 and C4): the painted red bird that shared the live bird's branch is
      gone (the live bird's home perch touched it at 1440), and every painted bird is placed where no
      card half-covers it at 1440, 1280, 1024 or 820 (scripts/themes/grandmillennial/b1-t6-birds.mjs
      maps each bird into both rooms at each size and reports a PEEK when a card covers some of it).
      The live bird's branch (About.astro BIRD_WIDE/BIRD_PHONE) is left to it alone. */
-  pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
-  pb(626, 808, 1.1, 1, 'sc-birdA'); // on the T2 bough beside the trunk (a limb centreline point, see the --limbs search)
+  /* B2 task 6 fix round 1: at 390 the blue bird sat 58% behind the oval and the red one 36% behind a
+     card, and at 820 a red flyer lay half behind the oval's top (the probe counted the oval's box, a box
+     corner is open air; it now counts the ellipse, b1-t6-birds.mjs). Every bird below sits where the
+     probe reports no PEEK and no CUT at all five sizes and no collision: the perched pair on limb
+     centreline points (--limbs --scale 1.1; the blue one facing right on T3's upper bough, the red one
+     further along), the flyers at points --search finds clear. */
+  pb(950, 290, 1.1, 1, 'sc-birdB');
+  pb(1256, 284, 1.1, 1, 'sc-birdA');
   /* B2 task 6 (the B1 carry-overs C2 and rc1-N1): at 820 two flyers lay across the perched blue bird's
      tail, and at 390 the flyer at 640,260 showed as a 67% peek. The flyers that sat on the perched bird
      (930,235 and 980,330), the one on the T2 perch (540,840) and the 390 peek move to open wall that
      b1-t6-birds.mjs --search finds clear at all five sizes and clear of every other bird; the probe now
      also fails on two birds whose boxes overlap. */
-  fb(300, 780, 0.8, -8, 1, 'sc-birdA'); fb(240, 100, 1.0, -10, 1, 'sc-birdB'); fb(1320, 910, 0.8, -4, 1, 'sc-birdB');
-  fb(480, 120, 0.8, -6, 1, 'sc-birdA'); fb(300, 860, 0.8, -10, 1, 'sc-birdA');
-  fb(1080, 900, 0.8, 8, -1, 'sc-birdB');
+  fb(300, 780, 0.8, -8, 1, 'sc-birdA'); fb(360, 100, 0.8, -6, 1, 'sc-birdB'); fb(1320, 910, 0.8, -4, 1, 'sc-birdB');
+  fb(560, 270, 0.8, -6, 1, 'sc-birdA'); fb(300, 860, 0.8, -10, 1, 'sc-birdA');
+  fb(680, 640, 0.8, 8, 1, 'sc-birdB');
 }
 
 /* ---------- assemble ---------- */
