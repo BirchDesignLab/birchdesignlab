@@ -2,6 +2,7 @@ node_modules/
 dist/
 .astro/
 .wrangler/
+.dev.vars
 public/og/
 # Retired graphify output (tool dropped 09-13-26). Blanket-ignore any stray
 # local rebuild so it can never be committed.
