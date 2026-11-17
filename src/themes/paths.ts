@@ -1,11 +1,11 @@
 /**
  * URLs for the five business pages, on the root site and inside a school.
  *
- * Root links keep the exact hrefs the root pages have always used (no
- * trailing slash), because the theme-schools work promises those pages are
- * untouched. Portal links always carry the trailing slash: ClientRouter
- * fetches the href as written, and a slashless one would cost a redirect
- * hop on every navigation.
+ * Every link carries the trailing slash. Astro builds directory-format pages,
+ * so a slashless href costs a 307 hop on every click (root links were
+ * slashless until 11-17-26 to keep root pages byte-stable during the
+ * theme-schools work; that promise is retired). Portal links need it doubly:
+ * ClientRouter fetches the href as written.
  */
 export type PageId = 'home' | 'about' | 'services' | 'contact' | 'sent';
 export const PAGE_IDS: readonly PageId[] = ['home', 'about', 'services', 'contact', 'sent'];
@@ -21,9 +21,9 @@ const SEGMENT: Record<PageId, string> = {
 
 const ROOT_HREF: Record<PageId, string> = {
   home: '/',
-  about: '/about',
-  services: '/services',
-  contact: '/contact',
+  about: '/about/',
+  services: '/services/',
+  contact: '/contact/',
   sent: '/contact/sent/',
 };
 
@@ -71,7 +71,7 @@ export function schoolStaticPaths(): { params: { page: string | undefined }; pro
 
 /** Link targets copy can name: the pages, plus two that leave the school. */
 export function hrefFor(target: PageId | 'lab' | 'privacy', theme?: string): string {
-  if (target === 'lab') return theme ? '/lab/' : '/lab';
-  if (target === 'privacy') return theme ? '/privacy/' : '/privacy';
+  if (target === 'lab') return '/lab/';
+  if (target === 'privacy') return '/privacy/';
   return pagePath(target, theme);
 }

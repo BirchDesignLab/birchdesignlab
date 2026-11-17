@@ -243,7 +243,7 @@ export function mountStage(
   let yaw = 0, pitch = 0, zoom = 1;
   let yawVel = 0, pitchVel = 0;
   let dragging = false, everGrabbed = false;
-  let lastX = 0, lastY = 0;
+  let lastX = 0, lastY = 0, lastT = 0;
   let lastInteraction = performance.now();
   let pinchDist = 0;
   const pointers = new Map<number, { x: number; y: number }>();
@@ -438,6 +438,7 @@ ${shader.vertexShader}`;
       resetting = false;
       lastX = e.clientX;
       lastY = e.clientY;
+      lastT = e.timeStamp;
       markInteraction();
     } else if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
@@ -463,15 +464,22 @@ ${shader.vertexShader}`;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
+    // Seconds since the previous move, from the event's own clock. Phones at
+    // 120Hz deliver pointermove twice as often with half the travel, so a
+    // fixed 60Hz assumption made flicks coast half as far there. Clamped:
+    // the floor stops a near-zero gap (coalesced events) from spiking the
+    // velocity; the ceiling stops a stalled finger from reading as a fling.
+    const gap = THREE.MathUtils.clamp((e.timeStamp - lastT) / 1000, 1 / 240, 1 / 30);
+    lastT = e.timeStamp;
     const dYaw = dx * 0.005;
     const dPitch = dy * 0.004;
     yaw += dYaw;
     pitch = THREE.MathUtils.clamp(pitch + dPitch, -TILT_LIMIT, TILT_LIMIT);
-    // Store as a per-second velocity (reference cadence: 60Hz pointermove)
-    // so the momentum coast below can scale it by dt and stay frame-rate
-    // independent while feeling identical to the original 60Hz behavior.
-    yawVel = dYaw * 60;
-    pitchVel = dPitch * 60;
+    // Per-second velocity from the real event gap, so the momentum coast
+    // below (scaled by frame dt) goes the same distance at 60, 90 or 120Hz.
+    // At 60Hz the gap is 1/60 and this matches the original feel exactly.
+    yawVel = dYaw / gap;
+    pitchVel = dPitch / gap;
     lastInteraction = performance.now();
   };
   const releasePointer = (pointerId: number) => {
@@ -484,6 +492,7 @@ ${shader.vertexShader}`;
       dragging = true;
       lastX = remaining.x;
       lastY = remaining.y;
+      lastT = performance.now();
     } else if (pointers.size === 0) {
       dragging = false;
     }
