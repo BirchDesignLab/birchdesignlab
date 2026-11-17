@@ -109,3 +109,39 @@ the deferred minors (`bdl-task`, about 10 to 15 agents: implementer Sonnet
 verifyHead Haiku). Then merge main into the branch (three files changed on
 both sides: both schools' `Footer.astro` and `docs/lab-backlog.md`), run the
 end-of-pair gates, and open the PR.
+
+## Critic pass (Opus xhigh, 11-17-26)
+
+An independent critic verified the 15 calls against the 1x and 2x captures
+behind the sheets (`b2/s5-b2-t5/v-r2/head/nofx/`, every page at 1440, 1024,
+820 and 390, both schemes) and the briefs and proofs.
+
+- **Dropped:** 3 (three voices read at page scale; Sharp was the founder's
+  pick), 11 (postmark lettering is right as texture), 15 (the 820 footer row
+  is brief b2-3 item 1 word for word; the controller's flag was wrong).
+- **Applied without asking:** 1, 2 (8 to 10 broad pleats, larger button, two
+  short tails: the founder's B1 answer already said fewer, broader), 4 (head
+  up about 30%, stem ends at the baseline), 5 (dark only; brief b2-3 item 4),
+  7 (cupped bloom, tall cone, leathery leaves), 8, 9 (warm newsprint a step
+  darker than the board; fix the 1:1 focus ring in the same pass), 12 with 10
+  folded in (Sent and Contact both: ring beside the stamp, waves across its
+  lower-left corner, clear of the knot, muted cancel ink in dark), 13 (back to
+  at least the proof's 0.3 lit at 390 via a smaller halo and pad on phones,
+  not longer rests), 14 (a bug: tap is pointerup with no movement).
+- **Missed problems, applied without asking:** About in dark, the white
+  lenticel dashes float about 10px off the birch twig (1440 and 390); Contact
+  shows no Gulf Coast specimen below 1024 (tuck the wax myrtle under the
+  postcard edge at tablet and phone; D2 asks one hero species per page); the
+  textarea's resize grip shows on the ruled sheet.
+- Every deferred minor above is the fix task's too.
+
+## Answers (founder, 11-17-26)
+
+1. **Tablet cards:** one column below about 860px, about 32rem cards dealt
+   left and right (the brief's 60 to 70 characters at tablet wins over "two
+   columns to about 700").
+2. **Hoop sprig:** redraw the cross-stitch sprig in freehand stitch too (S5),
+   with the running-stitch maker's line.
+
+At the next stop the founder looks at 9 (the dark clipping) and 7 (the
+magnolia) only.
