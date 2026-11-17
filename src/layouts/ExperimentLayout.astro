@@ -6,6 +6,7 @@ import '@fontsource/spectral/600.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import HeadCommon from '../components/HeadCommon.astro';
+import { ogImageForLab } from '../lib/og/manifest';
 
 /** `title` is the full page title; `heading` is the specimen's own title,
     which is what the h1 says. Keeping them separate stops the heading from
@@ -22,12 +23,12 @@ const { title, description, designation, heading, noindex = false } = Astro.prop
 <!doctype html>
 <html lang="en" data-zone="lab">
   <head>
-    <HeadCommon title={title} description={description} noindex={noindex} ogImage="lab-experiment" />
+    <HeadCommon title={title} description={description} noindex={noindex} ogImage={ogImageForLab(designation, 'lab-experiment')} />
     <slot name="head" />
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
+    <a class="hatch smallcaps" href="/lab/">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
     <main id="main" tabindex="-1">
       {/* The stages are deliberately immersive, so the page's real heading is
           available to screen readers and crawlers without intruding on the

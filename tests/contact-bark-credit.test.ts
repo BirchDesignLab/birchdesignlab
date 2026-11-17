@@ -21,7 +21,7 @@ describe('BarkCredit extraction + home refactor', () => {
   it('home hero credits BDL-001 through BarkCredit, not an inline anchor', () => {
     const home = read('themes/quiet/pages/Home.astro');
     expect(home).toMatch(/import BarkCredit from '\.\.\/\.\.\/\.\.\/components\/BarkCredit\.astro'/);
-    expect(home).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
+    expect(home).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001\/"/);
     expect(read('content/copy/chrome.yaml')).toMatch(/^barkCredit: BDL-001 · The Bark Engine, live$/m);
     // the old inline credit anchor is gone
     expect(home).not.toMatch(/<a class="bark-credit smallcaps"/);
@@ -30,7 +30,7 @@ describe('BarkCredit extraction + home refactor', () => {
   it('/contact/sent credits BDL-001 with a link', () => {
     const sent = read('themes/quiet/pages/Sent.astro');
     expect(sent).toMatch(/import BarkCredit from '\.\.\/\.\.\/\.\.\/components\/BarkCredit\.astro'/);
-    expect(sent).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
+    expect(sent).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001\/"/);
   });
 
   it('/contact has the living bark + trust line, but no BDL-001 credit link', () => {

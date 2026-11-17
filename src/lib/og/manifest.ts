@@ -27,6 +27,22 @@ export const OG_LAB_CARDS: { name: string; title: string }[] = [
   { name: 'lab-study', title: 'Study' },
 ];
 
+/**
+ * Lab entries with a card of their own, for pieces made to be shared. The
+ * image is a committed capture (see the script named beside each); the
+ * generator copies it into public/og/ under `name` at prebuild. Everything
+ * else in the Lab keeps the two shared cards above.
+ */
+export const OG_LAB_CUSTOM: { designation: string; name: string; src: string }[] = [
+  // scripts/og/capture-bdl-012.mjs
+  { designation: 'BDL-012', name: 'bdl-012', src: 'src/experiments/bdl-012/og.png' },
+];
+
+/** The card for one Lab entry: its own if it has one, else the shared card. */
+export function ogImageForLab(designation: string, shared: string): string {
+  return OG_LAB_CUSTOM.find((c) => c.designation === designation)?.name ?? shared;
+}
+
 export function ogImageFor(pathname: string): string {
   const clean = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
   if (clean === '/lab' || clean.startsWith('/lab/')) return 'lab';

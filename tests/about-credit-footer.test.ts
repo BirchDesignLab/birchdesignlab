@@ -11,7 +11,7 @@ describe('About BDL-001 credit', () => {
   it('About hero credits BDL-001 through BarkCredit', () => {
     const about = read('themes/quiet/pages/About.astro');
     expect(about).toMatch(/import BarkCredit from '\.\.\/\.\.\/\.\.\/components\/BarkCredit\.astro'/);
-    expect(about).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001"/);
+    expect(about).toMatch(/<BarkCredit[^>]*href="\/lab\/bdl-001\/"/);
   });
 });
 

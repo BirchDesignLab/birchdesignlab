@@ -16,9 +16,9 @@ const working = entries.filter((e) => e.data.status === 'live').length;
     {/* Real links (crawlable, no-JS navigable) to the dedicated category pages.
         With JS they are hijacked into an in-place filter (see the script), so the
         catalog never reloads. aria-current marks the active set. */}
-    <a href="/lab" data-set="all" aria-current="true">All</a>
-    <a href="/lab/experiments" data-set="experiment">Experiments</a>
-    <a href="/lab/studies" data-set="study">Studies</a>
+    <a href="/lab/" data-set="all" aria-current="true">All</a>
+    <a href="/lab/experiments/" data-set="experiment">Experiments</a>
+    <a href="/lab/studies/" data-set="study">Studies</a>
   </nav>
 )}
 <div class="catalog" data-filter="all">

@@ -72,10 +72,10 @@ describe('theme registry', () => {
 });
 
 describe('paths', () => {
-  it('keeps the root hrefs the root pages have always used', () => {
-    expect(PAGE_IDS.map((p) => pagePath(p))).toEqual(['/', '/about', '/services', '/contact', '/contact/sent/']);
-    expect(hrefFor('lab')).toBe('/lab');
-    expect(hrefFor('privacy')).toBe('/privacy');
+  it('gives root links the trailing slash (no 307 hop)', () => {
+    expect(PAGE_IDS.map((p) => pagePath(p))).toEqual(['/', '/about/', '/services/', '/contact/', '/contact/sent/']);
+    expect(hrefFor('lab')).toBe('/lab/');
+    expect(hrefFor('privacy')).toBe('/privacy/');
   });
 
   it('gives school pages trailing-slash paths under /t/<id>/', () => {

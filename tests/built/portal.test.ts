@@ -344,13 +344,13 @@ describe("quiet's header lights the page it is on (root and portal alike)", () =
       .querySelectorAll('header nav a[aria-current="page"]')
       .map((a) => a.getAttribute('href'));
   const cases: [string, string[]][] = [
-    ['/contact/', ['/contact']],
+    ['/contact/', ['/contact/']],
     ['/contact/sent/', []],
     ['/t/quiet/contact/', ['/t/quiet/contact/']],
     ['/t/quiet/contact/sent/', []],
-    ['/lab/', ['/lab']],
-    ['/lab/experiments/', ['/lab']],
-    ['/lab/studies/', ['/lab']],
+    ['/lab/', ['/lab/']],
+    ['/lab/experiments/', ['/lab/']],
+    ['/lab/studies/', ['/lab/']],
   ];
   for (const [route, want] of cases) {
     it(`${route} lights ${want.length ? want.join(', ') : 'nothing'}`, () => {

@@ -154,6 +154,16 @@ export default defineConfig({
     }),
   ],
   vite: {
+    // Keep the dev watcher out of regenerable output. scripts/themes/.out
+    // alone held 121,000 PNGs by 11-16-26, and chokidar crawling it starved
+    // the dev server at startup: `astro dev` printed "[types] Generated" and
+    // then timed out in fetchModule without ever opening its port. None of
+    // these directories is source, so nothing here should trigger a reload.
+    server: {
+      watch: {
+        ignored: ['**/scripts/**/.out/**', '**/scripts/**/.cache/**', '**/social/out/**', '**/graphify-out/**', '**/.superpowers/**', '**/.wrangler/**'],
+      },
+    },
     plugins: [
       dropUnusedDracoDecoder(),
       ...restoreReferencedCss(),

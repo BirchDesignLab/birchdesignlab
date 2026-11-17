@@ -4,7 +4,11 @@ import { z } from 'astro/zod';
  * The Lab collection schema: a discriminated union on `type`.
  * - experiment: self-initiated work with an interactive stage (howto/href rule).
  * - study: finished work shown as a narrative page with a hero image and a
- *   live URL; client work, or a self-study (selfStudy: true, no client).
+ *   live URL; client work, a self-study (selfStudy: true, no client), or a
+ *   genre study (genreStudy: true: a fictional business built to argue what
+ *   a kind of site should do). Genre studies keep the study page but are
+ *   catalogued with the experiments (src/lib/lab-sets.ts), because they are
+ *   not client work.
  *
  * Exported as a factory because the study branch needs Astro's image()
  * helper, which only exists inside content.config's schema context. Tests
@@ -51,6 +55,9 @@ export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
           missing client is always a decision, never an omission. */
       client: z.string().min(1).optional(),
       selfStudy: z.literal(true).optional(),
+      /** A fictional business built as a demonstration (BDL-008, BDL-009).
+          Founder call 11-17-26: these are experiments, not case studies. */
+      genreStudy: z.literal(true).optional(),
       liveUrl: z.url(),
       hero: z.object({ src: image(), alt: z.string().min(1) }),
     })
@@ -63,10 +70,10 @@ export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
         message: 'experiments need a howto wall label (or an href)',
       });
     }
-    if (d.type === 'study' && (d.client === undefined) === (d.selfStudy === undefined)) {
+    if (d.type === 'study' && [d.client, d.selfStudy, d.genreStudy].filter((v) => v !== undefined).length !== 1) {
       ctx.addIssue({
         code: 'custom',
-        message: 'studies name a client, or declare selfStudy: true, and not both',
+        message: 'studies name a client, or declare selfStudy: true or genreStudy: true, exactly one',
       });
     }
   });

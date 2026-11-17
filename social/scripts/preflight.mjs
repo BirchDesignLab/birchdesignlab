@@ -2,7 +2,7 @@
  * Preflight: refuse to start a render run that is going to die halfway through.
  *
  * Checks, in order of how annoying it is to discover them late:
- *   1. node >= 20.11
+ *   1. node >= 24.22.1
  *   2. ffmpeg and ffprobe on PATH (the encoder and the verifier both shell out)
  *   3. playwright installed, and a chromium browser actually downloaded
  *
@@ -18,9 +18,10 @@ const notes = [];
 
 // --- 1. node -------------------------------------------------------------
 {
-  const [major, minor] = process.versions.node.split('.').map(Number);
-  const ok = major > 20 || (major === 20 && minor >= 11);
-  if (!ok) failures.push(`node ${process.versions.node} is too old; need >= 20.11`);
+  const [major, minor, patch] = process.versions.node.split('.').map(Number);
+  const ok =
+    major > 24 || (major === 24 && (minor > 22 || (minor === 22 && patch >= 1)));
+  if (!ok) failures.push(`node ${process.versions.node} is too old; need >= 24.22.1`);
   else notes.push(`node ${process.versions.node}`);
 }
 

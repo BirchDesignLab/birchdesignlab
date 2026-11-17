@@ -32,3 +32,15 @@ export const SITE_DESCRIPTION =
  * bare Organization. See organization.ts.
  */
 export const SERVICE_AREA = 'Mississippi Gulf Coast';
+
+/**
+ * The business's social profiles, in footer order. One list feeds the footer
+ * links (src/themes/quiet/Footer.astro) and `sameAs` in the structured data
+ * (organization.ts), so the two cannot drift. Brand names, not copy: they are
+ * the accounts' own names, so they live here with the URLs rather than in the
+ * copy collection.
+ */
+export const SOCIAL_PROFILES = [
+  { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/birchdesignlab/' },
+  { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/p/Birch-Design-Lab-61593412854284/' },
+] as const;

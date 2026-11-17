@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { SOCIAL_PROFILES } from '../src/lib/seo/site';
 import {
   buildOrganization,
   buildService,
@@ -54,8 +55,19 @@ describe('buildOrganization', () => {
     expect(serialized).not.toMatch(/"Person"/);
   });
 
-  it('omits sameAs entirely while no profiles exist, rather than emitting an empty array', () => {
-    expect('sameAs' in org).toBe(false);
+  it('lists the business social profiles in sameAs, the same ones the footer links', () => {
+    expect(org.sameAs).toEqual([
+      'https://www.instagram.com/birchdesignlab/',
+      'https://www.facebook.com/p/Birch-Design-Lab-61593412854284/',
+    ]);
+    expect(org.sameAs).toEqual(SOCIAL_PROFILES.map((p) => p.url));
+  });
+
+  it('keeps every profile on https and off any personal account path', () => {
+    for (const { url } of SOCIAL_PROFILES) {
+      expect(url).toMatch(/^https:\/\//);
+      expect(url).not.toMatch(/\/(profile\.php|people)/);
+    }
   });
 
   it('omits address and telephone, so nothing here is the founder to find', () => {

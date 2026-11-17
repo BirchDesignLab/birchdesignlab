@@ -1,0 +1,22 @@
+// share.birchdesignlab.com: a static, assets-only Worker for showing client
+// pieces temporarily (first use: the Cheer & Chatter data map, 10-06-26).
+// Separate from the main site: its own Worker, deployed by hand with
+//   npx wrangler deploy --config share/wrangler.jsonc
+// and never by Workers Builds. Remove everything with
+//   npx wrangler delete --config share/wrangler.jsonc
+// Pinned to the BDL account so a wrangler login with more than one account
+// cannot deploy it to the wrong place.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "bdl-share",
+  "account_id": "7fbf8e7139e90f0dd13dc110b9533aab",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "share.birchdesignlab.com", "custom_domain": true }
+  ],
+  "workers_dev": false
+}

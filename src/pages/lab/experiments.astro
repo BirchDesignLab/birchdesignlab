@@ -1,9 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
+import { catalogSet } from '../../lib/lab-sets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
 
-const entries = (await getCollection('lab', ({ data }) => data.type === 'experiment' && !data.noindex)).sort(
+const entries = (await getCollection('lab', ({ data }) => catalogSet(data) === 'experiment' && !data.noindex)).sort(
   (a, b) => b.data.designation.localeCompare(a.data.designation),
 );
 ---
@@ -14,7 +15,7 @@ const entries = (await getCollection('lab', ({ data }) => data.type === 'experim
 >
   <section class="wrap">
     <header class="intro">
-      <p class="smallcaps kicker"><a href="/lab">The Lab</a></p>
+      <p class="smallcaps kicker"><a href="/lab/">The Lab</a></p>
       <h1>Experiments</h1>
       <p>Self-initiated work. Everything we sell, practiced in the open.</p>
     </header>

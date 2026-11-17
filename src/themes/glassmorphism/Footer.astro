@@ -6,6 +6,7 @@
     footer's corner orbs as gutter colour that frosts nothing. */
 import { hrefFor } from '../paths';
 import type { CopyData } from '../../lib/copy';
+import { SOCIAL_PROFILES } from '../../lib/seo/site';
 
 interface Props { chrome: CopyData<'chrome'>; theme: string }
 const { chrome, theme } = Astro.props;
@@ -21,6 +22,9 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
     <nav class="pills" aria-label="Footer">
       {chrome.nav.map(({ to, label }) => (
         <a href={hrefFor(to, theme)} data-astro-reload={leaves(to)}>{label}</a>
+      ))}
+      {SOCIAL_PROFILES.map(({ label, url }) => (
+        <a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a>
       ))}
     </nav>
     <p class="fine">&copy; {year} {chrome.name} <span aria-hidden="true">&middot;</span> <a href={hrefFor('privacy', theme)} data-astro-reload={leaves('privacy')}>{chrome.privacy}</a></p>

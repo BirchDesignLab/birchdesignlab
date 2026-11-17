@@ -1,5 +1,7 @@
 # Birch Design Lab — Founding Record
 
+> **Historical record (10-22-26).** The founding record as written on 2026-07-15. Since then the credo has been retired as site copy (birch copy belongs only on About), and the lenticel-dash mark concept was superseded by the stem-and-chevron mark locked 2026-08-13 (see `assets/brand/README.md`). The name and its reasoning stand. Lightly edited 11-17-26.
+
 *The closing version of the naming handoff. The exploration is over; this is the record of what was decided, why, and what remains to be done. Supersedes the previous handoff document in full.*
 
 ---
@@ -18,7 +20,7 @@ It is one name with three ages, not three candidate names:
 
 Initialism: **BDL** (quiet monogram use only). Phone answer: *"Birch Design Lab, this is ___."* — the final test it passed.
 
-**Why the three-word form won:** the word-association triad. *Birch* = who (the tall, pale, strong thing that grows in the cold — the founder). *Design* = what (the good being sold). *Lab* = where (the bench where the work is actually done). It is the only form on the table that is a complete sentence, and it follows the oldest American business-naming formula: surname + trade + workplace (*Johnson Printing Works*, *Wright Brothers Cycle Shop*). The "feels twenty years old" filter was pointing at this structure the entire time. Rhythm: BIRCH-de-SIGN-LAB — ends on two hard beats, like a door closing.
+**Why the three-word form won:** the word-association triad. *Birch* = who (the tall, pale, strong thing that grows in the cold). *Design* = what (the good being sold). *Lab* = where (the bench where the work is actually done). It is the only form on the table that is a complete sentence, and it follows the oldest American business-naming formula: surname + trade + workplace (*Johnson Printing Works*, *Wright Brothers Cycle Shop*). The "feels twenty years old" filter was pointing at this structure the entire time. Rhythm: BIRCH-de-SIGN-LAB — ends on two hard beats, like a door closing.
 
 ---
 
@@ -43,7 +45,7 @@ For a business that builds the surfaces where small companies speak to the world
 The word forks tonally — shining renewal on one face, the disciplinary rod (the birch, the *fasces*) on the other. The earlier framework flagged this as instability. The final verdict: **the fork is the aesthetic.** Quiet luxury *is* chiaroscuro — dark leather against pale wood, restraint, shadow, patina. A brand that is bright bark *and* dark grain is not unstable; it is two-toned by design. Practically: the identity is **light/dark mode native**. Dark mode is the default face (founder's preference): charcoal grain field, bark-white lettering. Light mode is the inverse: bark-white field, charcoal marks.
 
 ### The surname effect
-"Birch built our site" parses as *a person built it*. Firms named after people read as established by default — the referral-economy advantage no other candidate had. The founder resembles the namesake (very tall, pale, suited to the north): the origin story clients will actually retell.
+"Birch built our site" parses as *a person built it*. Firms named after people read as established by default — the referral-economy advantage no other candidate had.
 
 ### The fathom sentence (retired name, retained meaning)
 The line that started the entire search stays in the brand's private mythology even though the name did not survive: **"to measure the unknown using yourself as the ruler."** It describes the discovery phase of every project. Usable in the about-page or process copy without ever mentioning the word as a name.
@@ -81,7 +83,6 @@ The line that started the entire search stays in the brand's private mythology e
 2. **The mouth lens (the decisive one):** a service firm's name is a sound event in other people's mouths — referrals, phone static, local accents. Test phonetic onset/coda, semantic hijack, the referral sentence ("___ built our site"), and the phone answer. Plosive onsets read solid; B is the sturdiest in the language.
 3. **Three legs: myth, mouth, availability.** Every candidate needed all three. Birch was the only word that ended with all three (myth thinnest but real — bark letters + pioneer species; mouth strongest; field most scattered).
 4. **The client's verb, not the founder's.** *To be understood / steered / kept* reads differently than *to understand / command / keep*. The client is the hero; the firm is the guide and the structure beneath.
-5. **Local field note:** the only nearby Birch-named businesses are an interior-goods seller running a bare myshopify.com subdomain (birchhousedesign.myshopify.com — different industry, different class, zero collision) and a steakhouse 1.5 hours away. The former is not a competitor; it is a portrait of the target customer.
 
 ---
 

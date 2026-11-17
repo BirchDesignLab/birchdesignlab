@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "description": "Self-contained social asset pipeline. Renders from the site's own dev server; never touches site source.",
   "engines": {
-    "node": ">=20.11"
+    "node": ">=24.22.1"
   },
   "scripts": {
     "preflight": "node scripts/preflight.mjs",

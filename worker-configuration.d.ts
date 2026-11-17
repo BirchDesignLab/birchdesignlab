@@ -3,6 +3,7 @@
 // Runtime types generated with workerd@1.20260722.1 2026-07-01 
 interface __BaseEnv_Env {
 	EMAIL: SendEmail;
+	CONTACT_KV: KVNamespace;
 	AR_ANALYTICS: AnalyticsEngineDataset;
 	ASSETS: Fetcher;
 	CONTACT_RATE_LIMITER: RateLimit;
