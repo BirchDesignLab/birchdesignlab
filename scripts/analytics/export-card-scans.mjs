@@ -12,7 +12,8 @@
 //   daily-totals.csv   scans per UTC day per channel, rebuilt from scans.csv
 //
 // Usage (PowerShell):
-//   $env:CF_ACCOUNT_ID = '<business account id>'
+//   $env:CF_ACCOUNT_ID = '<account id>'  # the one holding the birchdesignlab Worker:
+//                                        # same as account_id in share/wrangler.jsonc
 //   $env:CF_API_TOKEN  = '<token with Account Analytics: Read>'
 //   node scripts/analytics/export-card-scans.mjs [outDir]
 //
