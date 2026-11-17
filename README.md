@@ -1,6 +1,8 @@
 # Birch Design Lab
 
-The source of [birchdesignlab.com](https://birchdesignlab.com): the business and portfolio site of Birch Design Lab, a one-person web design studio founded in July 2026. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-011) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
+The source of [birchdesignlab.com](https://birchdesignlab.com/): the business and portfolio site of Birch Design Lab, a web design studio founded in July 2026 on the Mississippi Gulf Coast. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The interesting part is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-012) that double as the studio's portfolio, including a "Portal" that rebuilds the whole site in seven different design schools.
+
+![The Birch Design Lab home page changing from one design school to the next through the Portal's view transitions, looping](assets/readme/portal-loop.webp)
 
 Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchDesignLab/birchdesignlab). The site has been built since July 2026; this README maps the project for a reader joining it.
 
@@ -27,20 +29,21 @@ Repository: [github.com/BirchDesignLab/birchdesignlab](https://github.com/BirchD
 
 | Fact | Value |
 |---|---|
-| Live site | [https://birchdesignlab.com](https://birchdesignlab.com) |
+| Live site | [https://birchdesignlab.com/](https://birchdesignlab.com/) |
 | Framework | Astro 7 (static output), Svelte 5 islands, three.js for the 3D pieces |
 | Host | Cloudflare Workers (Static Assets plus one Worker), deployed by Workers Builds on merge to main |
-| Tests | Vitest (unit, about 50 files under tests/) plus a second Vitest config that inspects the built dist/ |
-| History | Built since 2026-07-15; about 100 pull requests by late October 2026 |
+| Tests | A Vitest suite under `tests/`, plus a second Vitest config (`tests/built/`) that inspects the built `dist/` |
+| CI | A GitHub Action runs `npm run verify` on every pull request; it is a required check before merge |
+| History | Built since 2026-07-15; over a hundred pull requests by mid November 2026 |
 | Dev tooling | Claude Code with saved multi-agent workflows (`bdl-task`, `bdl-wave`) and a strict model-tiering policy |
 
-Public pages: Home, About, Services, Contact (a real form), Privacy, the Lab index and one page per specimen, the Styleguide, three QR-card landings (`/hello`, `/showcase`, `/greetings`) and the Portal at `/t/<school>/` with five business pages per school.
+Public pages: Home, About, Services, Contact (a real form), Privacy, the Lab index and one page per specimen, the Styleguide, three QR-card landings (`/hello/`, `/showcase/`, `/greetings/`) and the Portal at `/t/<school>/` with five business pages per school. Routes are served with trailing slashes.
 
 ---
 
 ## How the site is served
 
-Everything static is served from the edge. The Worker only sees requests that match no file, which in practice means two POST endpoints.
+Everything static is served from the edge by the Static Assets layer. Only `/api/*` runs the Worker first (`run_worker_first` in `wrangler.jsonc`); that means two POST endpoints. Anything else that matches no file is answered by the assets layer itself, which serves Astro's `dist/404.html` (`not_found_handling: "404-page"`). The Worker is not involved in 404s.
 
 ```mermaid
 flowchart LR
@@ -48,25 +51,25 @@ flowchart LR
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    V[Visitor browser]:::you
-    subgraph CF[Cloudflare]
-        SA[Static Assets<br/>serves dist/]:::cloud
-        W[Worker<br/>worker/index.ts]:::cloud
-        RL[Rate limiter<br/>5 per IP per minute]:::cloud
-        EM[Email Sending binding<br/>from forms@]:::cloud
-        AE[Analytics Engine<br/>ar_card_scans]:::store
+    V["Visitor browser"]:::you
+    subgraph CF["Cloudflare"]
+        SA["Static Assets<br/>serves dist/ and its 404 page"]:::cloud
+        W["Worker<br/>worker/index.ts<br/>runs first for /api/* only"]:::cloud
+        RL["Rate limiter<br/>5 per IP per minute"]:::cloud
+        EM["Email Sending binding<br/>from forms@"]:::cloud
+        AE["Analytics Engine<br/>ar_card_scans"]:::store
     end
-    INBOX[Studio inbox<br/>verified Email Routing destination]:::store
+    INBOX["Studio inbox<br/>verified Email Routing destination"]:::store
 
-    V -->|GET any page or asset| SA
-    V -->|POST /api/contact| W
-    V -->|POST /api/beacon from a QR card landing| W
-    W -->|honeypot then| RL
-    RL -->|validate src/lib/contact/validate.ts| EM
+    V -->|"GET any page or asset"| SA
+    SA -->|"no matching file: dist/404.html"| V
+    V -->|"POST /api/contact"| W
+    V -->|"POST /api/beacon from a QR card landing"| W
+    W -->|"honeypot then"| RL
+    RL -->|"validate with src/lib/contact/validate.ts"| EM
     EM --> INBOX
-    W -->|303 to /contact/sent or /t/school/contact/sent| V
-    W -->|one data point, no PII| AE
-    SA -->|404| W
+    W -->|"303 to the sent page, root or school"| V
+    W -->|"one data point, no PII"| AE
 ```
 
 Notes that matter when touching this layer:
@@ -90,34 +93,35 @@ flowchart TB
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    ROOT[birchdesignlab/]
-    ROOT --> SRC[src/<br/>the Astro site]:::you
-    ROOT --> WORKER[worker/<br/>Cloudflare Worker]:::cloud
-    ROOT --> TESTS[tests/<br/>Vitest unit and dist tests]:::you
-    ROOT --> SCRIPTS[scripts/<br/>every script ever run, kept]:::store
-    ROOT --> DOCS[docs/<br/>backlog, live references, specs, archive]:::store
-    ROOT --> SHARE[share/<br/>share.birchdesignlab.com Worker, deployed by hand]:::cloud
-    ROOT --> ASSETS[assets/brand/<br/>logos, lockups, 3D marks, sponsor card]:::store
-    ROOT --> SOCIAL[social/<br/>video and card render pipeline]:::you
-    ROOT --> ATTIC[attic/<br/>parked work, BDL-004 The Loom]:::store
-    ROOT --> CLAUDE[.claude/<br/>agents, saved workflows]:::cloud
-    ROOT --> PUBLIC[public/<br/>favicons, robots, _headers, draco decoder]:::you
+    ROOT["birchdesignlab/"]
+    ROOT --> SRC["src/<br/>the Astro site"]:::you
+    ROOT --> WORKER["worker/<br/>Cloudflare Worker"]:::cloud
+    ROOT --> TESTS["tests/<br/>Vitest unit and dist tests"]:::you
+    ROOT --> SCRIPTS["scripts/<br/>every script ever run, kept"]:::store
+    ROOT --> DOCS["docs/<br/>backlog, live references, specs, archive"]:::store
+    ROOT --> SHARE["share/<br/>share.birchdesignlab.com Worker, deployed by hand"]:::cloud
+    ROOT --> ASSETS["assets/<br/>brand marks and this README's media"]:::store
+    ROOT --> SOCIAL["social/<br/>video and card render pipeline"]:::you
+    ROOT --> ATTIC["attic/<br/>parked work, BDL-004 The Loom (retired)"]:::store
+    ROOT --> CLAUDE[".claude/<br/>agents, saved workflows"]:::cloud
+    ROOT --> PUBLIC["public/<br/>favicons, robots, _headers, draco decoder"]:::you
 
-    SRC --> PAGES[pages/<br/>routes incl. lab/ and t/]
-    SRC --> CONTENT[content/<br/>copy/ and lab/ collections]
-    SRC --> EXP[experiments/<br/>bdl-001 002 003 006 007]
-    SRC --> THEMES[themes/<br/>seven schools plus portal/]
-    SRC --> LIB[lib/<br/>bark engine, color, oklch, contact, seo, og]
-    SRC --> COMP[components/ layouts/ styles/]
+    SRC --> PAGES["pages/<br/>routes incl. lab/ and t/"]
+    SRC --> CONTENT["content/<br/>copy/ and lab/ collections"]
+    SRC --> EXP["experiments/<br/>bdl-001 002 003 006 007 012"]
+    SRC --> THEMES["themes/<br/>seven schools plus portal/"]
+    SRC --> LIB["lib/<br/>bark engine, color, oklch, contact, seo, og"]
+    SRC --> COMP["components/ layouts/ styles/"]
 
-    SCRIPTS --> ST[themes/<br/>capture, film, probes, proofs, harness]
-    SCRIPTS --> SB[brand/ og/ lab/ docs/ ar-card/ workflows/ build/]
+    SCRIPTS --> ST["themes/<br/>capture, film, probes, proofs, harness"]
+    SCRIPTS --> SB["brand/ og/ lab/ docs/ ar-card/ workflows/ build/ and more"]
 
-    DOCS --> BACK[lab-backlog.md<br/>the only backlog]
-    DOCS --> LIVE[deploy.md analytics.md ar-card/<br/>live references]
-    DOCS --> SP[superpowers/specs/<br/>specs for live features]
-    DOCS --> TSR[superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs]
-    DOCS --> ARCH[archive/<br/>dated handoffs, finished plans, superseded specs]
+    DOCS --> BACK["lab-backlog.md<br/>the only site backlog"]
+    DOCS --> SOCB["socials-backlog.md<br/>the social pipeline backlog"]
+    DOCS --> LIVE["deploy.md analytics.md ar-card/<br/>live references"]
+    DOCS --> SP["superpowers/specs/<br/>specs for live features"]
+    DOCS --> TSR["superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs"]
+    DOCS --> ARCH["archive/<br/>dated handoffs, finished plans, superseded specs"]
 ```
 
 | Path | What lives there | Start with |
@@ -129,13 +133,14 @@ flowchart TB
 | [src/lib/bark](https://github.com/BirchDesignLab/birchdesignlab/tree/main/src/lib/bark) | The generative birch-bark engine that paints the site's background (BDL-001) | |
 | [worker/index.ts](https://github.com/BirchDesignLab/birchdesignlab/blob/main/worker/index.ts) | Contact and beacon endpoints | [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md) |
 | [scripts/themes](https://github.com/BirchDesignLab/birchdesignlab/tree/main/scripts/themes) | Playwright capture, film, strip and proof tooling for the Portal. Hundreds of probe scripts are kept on purpose (see House rules) | [snap.mjs](https://github.com/BirchDesignLab/birchdesignlab/blob/main/scripts/themes/snap.mjs), [stage-gates.mjs](https://github.com/BirchDesignLab/birchdesignlab/blob/main/scripts/themes/harness/stage-gates.mjs) |
-| [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) | The single backlog: open gates, parked items, future experiments, dependency queue | |
+| [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) | The site backlog: open gates, parked items, future experiments, dependency queue | |
+| [docs/socials-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/socials-backlog.md) | The social asset pipeline and its work items | [social/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/social/README.md) |
 | [docs/birch-design-lab-founding-record.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md) | Why the name, the brand foundation, the naming graveyard | |
 | [docs/brand-brief.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/brand-brief.md) | Visual identity brief | [assets/brand/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/assets/brand/README.md) |
 | [docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) | The WebAR business card project | |
 | [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) | Working rules for Claude Code sessions: model tiering, git flow, scripts policy, dependency policy | |
 | [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md) | The saved multi-agent workflows | |
-| [share/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/share) | A separate static Worker for sharing client pieces at share.birchdesignlab.com. Deployed by hand, never by Workers Builds; the pages it serves are not in git | [README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
+| [share/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/share) | A separate static Worker for sharing pieces at share.birchdesignlab.com. Deployed by hand, never by Workers Builds; the pages it serves are not in git | [README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
 
 ### Docs map: what is current
 
@@ -143,28 +148,29 @@ flowchart TB
 
 | Question | Current source |
 |---|---|
-| What is planned, parked or owed | [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) |
+| What is planned, parked or owed on the site | [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) |
+| What is planned for the social asset pipeline | [docs/socials-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/socials-backlog.md) |
 | Hosting, DNS, email, headers, dashboard steps | [docs/deploy.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/deploy.md) |
 | Analytics, consent, what the privacy page must say | [docs/analytics.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/analytics.md) |
 | Brand marks and how to use them | [assets/brand/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/assets/brand/README.md), [docs/brand-brief.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/brand-brief.md) |
 | The AR business card | [docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md) |
 | How a live feature was designed | [docs/superpowers/specs/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs) (finished and superseded ones are in `docs/archive/superpowers/`) |
 | Where the Portal stands | the newest stage report and handoff under [theme-schools-research/](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research) |
-| Why the name | [docs/birch-design-lab-founding-record.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md), read with its banner: the credo and the first mark concept are retired |
+| Why the name | [docs/birch-design-lab-founding-record.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/birch-design-lab-founding-record.md), read with its banner, which marks what is retired |
 | How to work in the repo | [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) |
 
 ---
 
 ## The Lab: specimens
 
-The Lab is one Astro content collection with a `type` discriminator. Experiments are self-initiated pieces. Studies are genre studies against fictional businesses (there is no client work yet, and the backlog says so plainly). Accession numbers are permanent and never reused; `/lab/<slug>` URLs are flat.
+The Lab is one Astro content collection with a `type` discriminator. Experiments are self-initiated pieces. Studies are genre studies against fictional businesses, plus write-ups of work held elsewhere (the backlog is plain about which is which). Accession numbers are permanent and never reused; `/lab/<slug>/` URLs are flat.
 
 | Designation | Title | Type | Status | What it is |
 |---|---|---|---|---|
 | BDL-001 | The Bark Engine | experiment | live | The generative birch system that paints the site's skin, exposed as a playable instrument |
 | BDL-002 | The Styleguide | experiment | live | The tuning room: palettes, typefaces, a colour checker, bark you can grow |
-| BDL-003 | Novgorod Letters | experiment | forthcoming | Medieval birch-bark letters, scratch to read. Specced July 2026, not shipped |
-| BDL-004 | The Loom | experiment | parked in attic/ | A weaving-draft instrument in Svelte. Built, then shelved with its tests |
+| BDL-003 | Novgorod Letters | experiment | forthcoming (parked) | Medieval birch-bark letters, scratch to read. The engine is built under `src/experiments/bdl-003/`; there is no live page, and it waits on a visual rework |
+| BDL-004 | The Loom | experiment | retired | A weaving-draft instrument in Svelte. Built, shipped, then pulled on purpose; the build sits in `attic/bdl-004/` and the designation is never reused |
 | BDL-005 | Cheer and Chatter Social Club | study | live | Ticketing site plus a live event app for game nights. A sibling repo; this is the write-up |
 | BDL-006 | The Regulator | experiment | live | A colour ramp that solves itself against WCAG, and a crown that retunes the bark live |
 | BDL-007 | The Shining Tree | experiment | live | The organic wordmark in 3D (three.js, Draco-compressed GLB), birch and moss breathing |
@@ -172,6 +178,7 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-009 | Bayou Kitchen | study | live | Genre study: a Gulf Coast restaurant site, menu first |
 | BDL-010 | The Portal | experiment | live | The whole site rebuilt in seven design schools with a page-morphing switcher |
 | BDL-011 | Field Guide to the Schools | study | forthcoming | What each school believes and forbids, and what it took to build it |
+| BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on: where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
 
 ```mermaid
 flowchart LR
@@ -179,20 +186,22 @@ flowchart LR
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    MD[src/content/lab/bdl-NNN.md<br/>frontmatter: designation, type, title, status, date]:::store
-    SCHEMA[src/lib/lab-schema.ts<br/>zod schema via content.config.ts]:::you
-    REG[src/experiments/registry.ts<br/>designation to component]:::you
-    SREG[src/studies/registry.ts<br/>study extras]:::you
-    IDX[/lab index<br/>one merged wall, newest first/]:::cloud
-    DET[/lab/slug detail page<br/>specimen plate, wall label, the piece/]:::cloud
-    OG[scripts/og/generate.ts<br/>prebuild: OG images per page]:::you
+    MD["src/content/lab/bdl-NNN.md<br/>frontmatter: designation, type, title, status, date"]:::store
+    SCHEMA["src/lib/lab-schema.ts<br/>zod schema via content.config.ts"]:::you
+    REG["src/experiments/registry.ts<br/>designation to component"]:::you
+    SREG["src/studies/registry.ts<br/>study extras"]:::you
+    IDX["/lab/ index<br/>one merged wall, newest first"]:::cloud
+    DET["/lab/slug/ detail page<br/>specimen plate, wall label, the piece"]:::cloud
+    OG["scripts/og/generate.ts<br/>prebuild: page cards, two shared Lab cards, BDL-012's own"]:::you
 
     MD --> SCHEMA --> IDX
     SCHEMA --> DET
     REG --> DET
     SREG --> DET
-    MD --> OG
+    DET -.->|"layout picks the lab-experiment or lab-study card"| OG
 ```
+
+Share images are not per entry. The generator renders cards for Home, Services, About, Contact and the Lab index, plus one shared card for experiments and one for studies; BDL-012 alone carries its own committed capture (`src/lib/og/manifest.ts`).
 
 Specimen plates, wall labels and accession numbers borrow museum framing: the Lab reads as a collection, not a case-study list. The home page's "From the lab" strip shows the three newest entries.
 
@@ -200,7 +209,7 @@ Specimen plates, wall labels and accession numbers borrow museum framing: the La
 
 ## The Portal: design schools
 
-BDL-010 is the biggest piece in the repo and where most of the last six weeks went. Each **school** is the full business site (Home, About, Services, Contact, Sent) rebuilt in one design language at `/t/<id>/`. Every word, link and form behaviour is fixed and shared; everything visual is the school's own. A fixed switcher morphs the page from one school to the next with view transitions, and the wordmark is the one element that pairs across schools.
+BDL-010 is the biggest piece in the repo. Each **school** is the full business site (Home, About, Services, Contact, Sent) rebuilt in one design language at `/t/<id>/`. Every word, link and form behaviour is fixed and shared; everything visual is the school's own. A fixed switcher morphs the page from one school to the next with view transitions, and the wordmark is the one element that pairs across schools.
 
 | School | Route | State at head of main |
 |---|---|---|
@@ -209,8 +218,8 @@ BDL-010 is the biggest piece in the repo and where most of the last six weeks we
 | bauhaus | `/t/bauhaus/` | Stage 4 revision merged (PR #95) |
 | glassmorphism | `/t/glassmorphism/` | Stage 3 revision merged (PR #93) |
 | vaporwave | `/t/vaporwave/` | Stage 3 revision merged (PR #93) |
-| grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision in progress on its branch |
-| cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision in progress on its branch |
+| grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
+| cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
 
 ```mermaid
 flowchart TB
@@ -218,19 +227,19 @@ flowchart TB
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    COPY[src/content/copy/<br/>every word, as data]:::store
-    PATHS[src/themes/paths.ts<br/>hrefFor, isCurrent, SCHOOL_ID]:::you
-    REG[src/themes/registry.ts<br/>globs every meta.ts<br/>THEMES = schools with an enabled route]:::you
-    PL[src/themes/portal/PortalLayout.astro<br/>owns the head and the switcher]:::cloud
-    RT[src/themes/portal/runtime.ts<br/>view transitions, draw-ahead, arrival]:::cloud
-    SW[src/themes/portal/switcher.ts]:::cloud
+    COPY["src/content/copy/<br/>every word, as data"]:::store
+    PATHS["src/themes/paths.ts<br/>hrefFor, isCurrent, SCHOOL_ID"]:::you
+    REG["src/themes/registry.ts<br/>globs every meta.ts<br/>THEMES = schools with an enabled route"]:::you
+    PL["src/themes/portal/PortalLayout.astro<br/>owns the head and the switcher"]:::cloud
+    RT["src/themes/portal/runtime.ts<br/>view transitions, draw-ahead, arrival"]:::cloud
+    SW["src/themes/portal/switcher.ts"]:::cloud
 
-    subgraph SCHOOL[src/themes/school/]
-        META[meta.ts]:::store
-        CSS[theme.css<br/>tokens for dark and light]:::you
-        HF[Header.astro and Footer.astro]:::you
-        PG[pages/Home About Services Contact Sent]:::you
-        FX[fx.ts optional background]:::you
+    subgraph SCHOOL["src/themes/school/"]
+        META["meta.ts"]:::store
+        CSS["theme.css<br/>tokens for dark and light"]:::you
+        HF["Header.astro and Footer.astro"]:::you
+        PG["pages/ Home About Services Contact Sent"]:::you
+        FX["fx.ts optional background"]:::you
     end
     ROUTE["src/pages/t/school/[...page].astro<br/>imports only this school"]:::cloud
 
@@ -245,8 +254,8 @@ flowchart TB
     PL --> RT
     PL --> SW
 
-    GUARD[Guards in tests/ and scripts/themes/<br/>word parity against quiet, contrast, one wordmark name,<br/>switcher holds still, blank under 68 ms]:::store
-    GUARD -.checks.-> SCHOOL
+    GUARD["Guards in tests/ and scripts/themes/<br/>word parity against quiet, contrast, one wordmark name,<br/>switcher holds still, blank-frame budget"]:::store
+    GUARD -.->|"checks"| SCHOOL
 ```
 
 How a school is built and judged:
@@ -254,7 +263,7 @@ How a school is built and judged:
 - Start a draft with `node scripts/themes/new-theme.mjs <id> "<Name>"`. While the route file is named `_[...page].astro` the school is invisible to the switcher and the build.
 - Decoration is `aria-hidden`; any visible word that is not in the copy fails **word parity**, which compares every school to quiet word for word.
 - Each school has a primary-source research **dossier** under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers), and revisions are judged against it.
-- The **stage gates** (`scripts/themes/harness/stage-gates.mjs`, about 75 minutes on a GPU machine) film every swap at five widths in both schemes, check the switcher holds still in every strip, time the arrival, and judge the wordmark morph.
+- The **stage gates** (`scripts/themes/harness/stage-gates.mjs`) film every swap at five widths in both schemes, check the switcher holds still in every strip, time the arrival, and judge the wordmark morph.
 - The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is next, then a transitions phase.
 
 ---
@@ -267,17 +276,18 @@ flowchart LR
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    B[feature branch]:::you --> V{npm run verify}:::you
-    V -->|vitest run| T1[unit tests]:::you
-    V -->|astro check| T2[types]:::you
-    V -->|npm run build<br/>prebuild renders OG images| T3[dist/]:::store
-    V -->|vitest dist config| T4[built-output tests:<br/>parity, attributes, portal]:::you
-    T4 --> PR[Pull request to main]:::you
-    PR -->|merge| WB[Cloudflare Workers Builds<br/>npm run build then wrangler deploy]:::cloud
-    WB --> LIVE[birchdesignlab.com]:::cloud
+    B["feature branch"]:::you --> V{"npm run verify"}:::you
+    V -->|"vitest run"| T1["unit tests"]:::you
+    V -->|"astro check"| T2["types"]:::you
+    V -->|"npm run build<br/>prebuild renders OG images"| T3["dist/"]:::store
+    V -->|"vitest dist config"| T4["built-output tests:<br/>parity, attributes, portal"]:::you
+    T4 --> PR["Pull request to main"]:::you
+    PR -->|"GitHub Action runs the same npm run verify,<br/>a required check"| CI{"green?"}:::cloud
+    CI -->|"merge"| WB["Cloudflare Workers Builds<br/>npm run build then wrangler deploy"]:::cloud
+    WB --> LIVE["birchdesignlab.com"]:::cloud
 ```
 
-- `npm run verify` is the gate and must be clean before any PR. It is one command on purpose; the three-part version was easy to skip.
+- `npm run verify` is the gate and must be clean before any PR. It is one command on purpose; the three-part version was easy to skip. A GitHub Action (`.github/workflows/verify.yml`) now runs the same command on every pull request, and the check is required, so a red run blocks the merge.
 - Merging to main **is** the production deploy. There is no staging environment. Reversibility is the safety net: revert the commit, redeploy.
 - `astro.config.mjs` carries two deliberate build patches: one drops three.js's unused Draco decoder copies from the bundle, one restores CSS that Astro 7 on Rolldown deletes. Both are documented inline with the symptom that found them.
 - Dependencies policy: newest stable, no sitting on reachable advisories, each major upgrade is its own PR with a browser pass. `npm audit` findings are triaged, not obeyed.
@@ -288,7 +298,7 @@ flowchart LR
 
 The repo is built with Claude Code and treats its own agent fleet as engineering infrastructure. Three things to know.
 
-**Model tiering is mandatory.** Every subagent dispatch sets a model and an effort. The table in CLAUDE.md maps work to seats (Haiku for enumeration, Sonnet for implementation and verification, Opus for critique, design and sensitive code). The rule exists because an untiered fleet "burned a month of usage in about ten minutes."
+**Model tiering is mandatory.** Every subagent dispatch sets a model and an effort. The table in CLAUDE.md maps work to seats (Haiku for enumeration, Sonnet for implementation and verification, Opus for critique, design and sensitive code). The rule exists because an untiered fleet of unset agents spends a month of usage very quickly.
 
 **Saved workflows run the visual work.** `bdl-task` takes one brief-sized task on a feature branch and runs it through implement, verify-head, parallel review, and up to two fix rounds. `bdl-wave` chains tasks and carries taste calls forward. A mock harness and a mutant suite under `scripts/workflows/` test the workflows themselves.
 
@@ -298,27 +308,27 @@ flowchart TB
     classDef cloud fill:#1f3a5f,stroke:#0d1b2e,color:#fff
     classDef you fill:#bfe3ff,stroke:#2b6cb0,color:#222
 
-    BRIEF[Brief in docs/<br/>owns, ports, films, school]:::store
-    IMPL[Implementer<br/>Sonnet medium, Opus medium if runtime]:::you
-    VH[verifyHead<br/>Haiku reads git, the only trusted head]:::you
-    subgraph REVIEW[Review in parallel on the verified head]
-        CRIT[Critic<br/>Opus high, diff against brief and dossier]:::cloud
-        VER[Verifier<br/>Sonnet high, films every case on GPU Chromium]:::you
-        GATE[Gate<br/>Sonnet low, verify-locked plus clean tree]:::you
+    BRIEF["Brief in docs/<br/>owns, ports, films, school"]:::store
+    IMPL["Implementer<br/>Sonnet medium, Opus medium if runtime"]:::you
+    VH["verifyHead<br/>Haiku reads git, the only trusted head"]:::you
+    subgraph REVIEW["Review in parallel on the verified head"]
+        CRIT["Critic<br/>Opus high, diff against brief and dossier"]:::cloud
+        VER["Verifier<br/>Sonnet high, films every case on GPU Chromium"]:::you
+        GATE["Gate<br/>Sonnet low, verify-locked plus clean tree"]:::you
     end
-    SORT{Findings}:::store
-    FIX[Fixer, then escalated fixer<br/>one seat up per surviving finding]:::you
-    FOUNDER[Founder stop<br/>taste calls, sheets, decisions]:::cloud
+    SORT{"Findings"}:::store
+    FIX["Fixer, then escalated fixer<br/>one seat up per surviving finding"]:::you
+    STOP["Studio stop<br/>taste calls, sheets, decisions"]:::cloud
 
     BRIEF --> IMPL --> VH --> REVIEW --> SORT
-    SORT -->|blocker or important| FIX --> VH
-    SORT -->|taste| FOUNDER
-    SORT -->|minor| DEF[deferred minors ledger]:::store
-    SORT -->|clean, gate green, films pass| DONE[complete]:::cloud
-    SORT -->|still open after maxRounds| PARK[parked: controller rules]:::store
+    SORT -->|"blocker or important"| FIX --> VH
+    SORT -->|"taste"| STOP
+    SORT -->|"minor"| DEF["deferred minors ledger"]:::store
+    SORT -->|"clean, gate green, films pass"| DONE["complete"]:::cloud
+    SORT -->|"still open after maxRounds"| PARK["parked: controller rules"]:::store
 ```
 
-**Everything is recorded.** Each stage ends with a founder report (for example [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)) listing what changed, what it cost in agents and tokens, the calls the founder owes, and what is owed on a real iPhone after deploy. Stage 4 cost about 150 agents and 15M subagent tokens over two days.
+**Everything is recorded.** Each stage ends with a report (for example [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)) listing what changed, the calls the studio owed, and what is owed on a real iOS device after deploy.
 
 ---
 
@@ -326,13 +336,13 @@ flowchart TB
 
 ```mermaid
 timeline
-    title Birch Design Lab, July to October 2026
+    title Birch Design Lab, July to November 2026
     2026-07-15 : Founding record and website spec
                : Initial commit
     2026-07-16 : BDL-001 Bark Engine and BDL-002 Styleguide live
                : BDL-003 and BDL-004 specced
     2026-07-29 : Moved from Cloudflare Pages to Workers
-               : BDL-005 study specced
+               : BDL-004 The Loom retired
     2026-08-03 : SEO pass, security headers
     2026-08-08 : Brand assets, lockups, sponsor card
     2026-08-18 : BDL-007 Shining Tree (3D wordmark)
@@ -345,60 +355,56 @@ timeline
     2026-10-02 : Saved workflows bdl-task and bdl-wave
     2026-10-03 : Stage 4 swiss and bauhaus merged (PR 95)
     2026-10-22 : Footer social links, Meta Pixel behind consent
+    2026-11-16 : BDL-012 The Data Map live
+    2026-11-17 : CI runs the verify gate on every PR
 ```
 
 ---
 
 ## Where it stands and how to help
 
-As of late October 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03) and Stage 5 is in progress on `feat/theme-schools-tier3-stage5`. The backlog file and the stage reports are the queue. The owner sets priorities; these are the open threads as the repo records them.
-
-**Owed to the founder, small and specific**
-
-- The bauhaus assembly pick: compare `?bh-assembly=a`, `b`, `c` on a bauhaus page on a phone, then remove the switch.
-- Five taste calls from the Stage 4 report (typophoto in the lab band, the Services diagonal, Sent's paper dot, two red bands on dark swiss Home, and the stretch items).
-- An iPhone pass: dragging bauhaus shapes by touch, iOS `:active` press states, the swiss grid key held by touch, plus Stage 3's owed checks.
+As of mid November 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03). Stage 5 is built on `feat/theme-schools-tier3-stage5` and has not merged. [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) and the stage reports are the queue, and the studio sets priorities. The Stage 4 taste calls were answered on 2026-10-03; what is left from that stage (two end-of-run layout nitpicks, the stretch interactables that were not built, and the temporary `?bh-assembly=` switch on bauhaus pages) is tracked in the backlog.
 
 **Next planned work**
 
 - Stage 5: pair C, grandmillennial and cottagecore, through the same dossier-driven revision.
 - The transitions phase: give every school its own arrival gesture, draw ahead on in-school links and on phones, fix the Back-to-a-scrolled-page wordmark morph, and film in WebKit as well as Chromium.
-- BDL-003 Novgorod Letters and BDL-011 Field Guide are both `forthcoming` with specs written.
+- BDL-011 Field Guide to the Schools is `forthcoming` with a spec written. BDL-003 Novgorod Letters is parked behind a visual rework.
 
 **Standing gaps a second person could own**
 
-- **Safari and iOS.** Every film so far is Chromium. Playwright WebKit on Windows is not iOS Safari, so a real-device tester with time is valuable in itself.
+- **Safari and iOS.** Every film so far is Chromium. Playwright WebKit on Windows is not iOS Safari, so a tester with a real iOS device and time is valuable in itself: touch dragging, `:active` press states, and a pass over the earlier stages' owed checks.
 - **Accessibility audit** across the seven schools: the word-parity and `aria-hidden` rules are strict, but nobody has done a screen-reader pass.
+- **A Mermaid check in the verify gate**, so the charts in this README stay valid as they change.
 - **The AR card** ([docs/ar-card/HANDOFF.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/ar-card/HANDOFF.md)): the remaining one-way door is ordering the etched wood card run.
 - **Dependency upgrades** per the policy in CLAUDE.md; the queue is in the backlog.
-- **The Loom (BDL-004)** sits in `attic/` with tests and could be revived as a specimen.
-- **Studies.** Every study so far is a fictional genre study. Real client work, written up as a study, is the thing the Lab is built to hold.
+- **Studies.** Real client work, written up as a study, is the thing the Lab is built to hold.
 
 **How contributions flow**
 
-1. Work on a fork or a branch, run `npm run verify`, open a pull request against `main`.
+1. Work on a fork or a branch, run `npm run verify`, open a pull request against `main`. CI runs the same command and must pass.
 2. Keep sensitive code (Worker, contact route, `_headers`, analytics, the verify gate) out of a first PR unless invited.
-3. For Portal work, read the school's dossier and the brief format in the stage directories before changing a school. The founder judges on film sheets, not on code.
+3. For Portal work, read the school's dossier and the brief format in the stage directories before changing a school. The studio judges Portal work on film sheets, not on code.
 4. Follow CLAUDE.md on scripts (commit them, no temp directories) and on no em dashes in visitor copy.
 
 ---
 
 ## What a clone does not have
 
-A clone or fork holds only the tracked files. These exist only on the founder's machine or in the owner's Cloudflare account, and are gitignored or external:
+A clone or fork holds only the tracked files. These exist only on the studio's machines or in the studio's Cloudflare account, and are gitignored or external:
 
 | Missing from a clone | Why | Effect |
 |---|---|---|
-| Cloudflare account, domain, Email Routing, rate limiter, Analytics Engine, Zaraz config | Bindings in `wrangler.jsonc` resolve only in the owner's account; analytics are configured in the dashboard | `npm run deploy` and `wrangler dev` will not work from a fork. Merging to a fork's main deploys nothing |
-| `docs/briefs/`, `docs/pricing/` | Client briefs and the rate card are kept out of this public repo on purpose | Nothing in the build reads them |
-| The pages under `share/public/` (except `_headers`, `robots.txt`, `404.html`) | Client pieces served at share.birchdesignlab.com, kept out of git on purpose | Never deploy `share/` from a clone: it would publish an empty site. See [share/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
+| Cloudflare account, domain, Email Routing, rate limiter, Analytics Engine, Zaraz config | Bindings in `wrangler.jsonc` resolve only in the studio's account; analytics are configured in the dashboard | `npm run deploy` and `wrangler dev` will not work from a fork. Merging to a fork's main deploys nothing |
+| `docs/briefs/`, `docs/pricing/` | Private business documents, kept out of this public repo on purpose | Nothing in the build reads them |
+| The pages under `share/public/` (except `_headers`, `robots.txt`, `404.html`) | Pieces served at share.birchdesignlab.com, kept out of git on purpose | Never deploy `share/` from a clone: it would publish an empty site. See [share/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/share/README.md) |
 | `public/og/` | Generated by `npm run og` during prebuild | Regenerates locally |
 | `scripts/themes/.out/`, `social/out/`, `docs/**/generated/`, `docs/**/*.pdf` | Capture, film, sheet and PDF outputs | The stage reports point at sheets you cannot see without re-running the harness on a GPU machine |
-| `docs/refs/`, four named founder working docs, `.superpowers/` | Founder drafting material and the superpowers plugin state | Some handoffs reference them; the tracked specs are the record |
+| `docs/refs/`, `docs/private/`, a few working docs, `.superpowers/` | Drafting material and the superpowers plugin state | Some handoffs reference them; the tracked specs are the record |
 | `graphify-out/`, an old knowledge graph | Retired tooling, local only | Not needed to build |
 | `assets/brand/logos/3d/*.obj` and `.mtl` | 60 MB or more per asset | The `.glb` exports are tracked and are what the site uses |
 | `.dev.vars` or any secret | None are needed; the Worker has no API keys | Nothing to configure |
-| The specimen sibling repos (Cheer and Chatter, the salon and restaurant builds) | Separate private repos, deliberately unnamed here | BDL-005, 008 and 009 are write-ups of work held elsewhere |
+| The specimen sibling repos | Separate private repos, deliberately unnamed here | BDL-005, 008 and 009 are write-ups of work held elsewhere |
 
 Builds, tests and the dev server all work without any of these.
 
@@ -409,13 +415,15 @@ Builds, tests and the dev server all work without any of these.
 ```bash
 git clone https://github.com/BirchDesignLab/birchdesignlab.git
 cd birchdesignlab
-nvm use            # .nvmrc; Node 20.11 or newer
+nvm use            # .nvmrc pins Node 24.22.1; package.json requires >=24.22.1
 npm install
 npm run dev        # http://localhost:4321
 npm run verify     # tests, astro check, build, dist tests
 ```
 
 Optional: `npx playwright install chromium` for the capture and film scripts under `scripts/themes/`. Those expect a GPU renderer; a software renderer fails the film gate by design.
+
+The hero loop at the top of this README is regenerated by `scripts/readme/portal-loop.mjs` against a local preview build; the usage is in that file's header comment.
 
 ---
 
@@ -424,10 +432,10 @@ Optional: `npx playwright install chromium` for the capture and film scripts und
 Pulled from [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) and the docs, in the order they will bite.
 
 - Branch and open a PR. Never commit to main. Merging deploys.
-- `npm run verify` as one command before every PR.
+- `npm run verify` as one command before every PR; CI enforces the same.
 - Scripts stay in the repo under `scripts/`, never in a temp directory. One-off probes included.
 - Every subagent sets model and effort. Fable is never a subagent model.
 - Newest stable dependencies; majors get their own PR and a browser pass.
 - No em dashes in anything a visitor can read. Studio "we".
-- A fictional specimen's hero is a screenshot. Studies never name the framework behind the specimens or cite build-speed figures.
+- A fictional specimen's hero is a screenshot. Studies never name the framework behind the specimens.
 - Accession numbers are immutable.
