@@ -145,3 +145,21 @@ behind the sheets (`b2/s5-b2-t5/v-r2/head/nofx/`, every page at 1440, 1024,
 
 At the next stop the founder looks at 9 (the dark clipping) and 7 (the
 magnolia) only.
+
+## Task 6 and the stop (11-17-26)
+
+Task 6 (`bdl-task`, run `wf_23e49562-d93`, 10 agents) applied every call
+above marked applied, the critic's missed problems, the deferred minors and
+both answers: complete in one fix round (commits c923ecb..5de6346), review
+clean, gate green, films pass. The controller then fixed its four deferred
+minors inline (109865a: lazy-daisy chain loops, the fx sweep settling with
+no draw loop, the dark tape seam, the cards and header evidence). Main was
+merged in (9709673; conflict only in `docs/lab-backlog.md`). End-of-pair
+gates all pass (`stage5-gates`); arrival timing against Stage 4 is flat
+overall, pair C about 10 ms slower on average (worst +40 ms, cottagecore
+switcher-warm).
+
+**Founder at the stop:** the dark clipping (call 9) and the magnolia (call 7)
+are good to go. Carried to Stage 6 from the ledger: the rosette's short tails
+(critic:C6). Carried to the copy pass: About's "one person's work" quote and
+the 860 to 1000px two-column cards.
