@@ -271,6 +271,10 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     text-decoration: underline wavy var(--clip-accent);
     text-decoration-thickness: 1px;
   }
+  /* A Tab focus must show on the slip in both schemes (the global amber ring
+     was about 1:1 on the dark newsprint): a 2px ring in the print ink, which
+     clears 4.5:1 on the slip (meta.contrast holds --clip-ink on --clip-paper). */
+  .specimens .des:focus-visible { outline: 2px solid var(--clip-ink); outline-offset: 3px; }
   .sum { color: var(--clip-ink-muted); }
   .lab-tape { top: -0.9rem; left: calc(50% - var(--tape-w) / 2); --tape-tilt: -2deg; --tape-w: 9rem; }
 
@@ -298,18 +302,29 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
   @media (max-width: 820px) {
     .hero { grid-template-columns: 1fr; }
     .specimen { justify-self: center; width: min(82%, 22rem); margin-top: 1.5rem; }
+    /* The sheet is smaller here, so the label's foot is nearer the sheet's
+       edge and the indigo tape at the bottom right ran across its frame
+       (390 sheet). Hold the tape on the bare corner at the bottom left. */
+    .t2 { right: auto; left: 6%; --tape-tilt: -6deg; }
   }
-  /* Tablet: two columns hold down to about 700px; the corner sprig gets room
-     below the last line so it never crosses text. */
+  /* Tablet: the corner sprig gets room below the last line so it never
+     crosses text. */
   @media (max-width: 1000px) {
     .card p.cc-ruled { padding-bottom: 2.4rem; }
   }
-  /* Stacked: capped at 32rem and dealt left then right, keeping their tilts. */
-  @media (max-width: 700px) {
+  /* One column below 860px (the founder's answer, 11-17-26: two columns here
+     set the cards at 25 to 30 characters a line, and 60 to 70 is the target):
+     cards dealt left then right, keeping their tilts and tape. About 32rem was
+     asked for; 36.5rem with 1.5rem sides is what sets the body at 60 to 62
+     characters a line in Lora at 17px (measured, b2-t6-probe.mjs "cards"; 32rem
+     gives 52). The corner sprig sits under the last line, so the text runs the
+     full card width. From 860 up the two columns stand. */
+  @media (max-width: 859px) {
     .cards { grid-template-columns: 1fr; gap: 3.2rem; }
-    .card { width: min(100%, 32rem); }
+    .card { width: min(100%, 36.5rem); padding-inline: 1.5rem; }
     .card:nth-child(1) { justify-self: start; }
     .card:nth-child(2) { justify-self: end; margin-top: 0; }
+    .card p.cc-ruled { padding-right: 0; }
   }
   /* The closer sprigs move to the gutter treatment a full breakpoint sooner
      than the rest of the page: the calc offset they use otherwise lands on

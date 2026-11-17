@@ -177,9 +177,12 @@ const { copy, theme } = Astro.props;
   @media (max-width: 1000px) {
     .recipe .body { padding-bottom: 2rem; }
   }
-  @media (max-width: 700px) {
+  /* One column below 860px (the founder's answer, 11-17-26), as on Home: cards
+     36.5rem wide with 1.5rem sides (60 to 62 characters a line), dealt left
+     then right. */
+  @media (max-width: 859px) {
     .offerings { grid-template-columns: 1fr; }
-    .recipe { width: min(100%, 32rem); }
+    .recipe { width: min(100%, 36.5rem); padding-inline: 1.5rem; }
     .recipe:nth-child(1) { justify-self: start; }
     .recipe:nth-child(2) { justify-self: end; margin-top: 0; }
   }

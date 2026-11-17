@@ -34,6 +34,7 @@ export const meta: ThemeMeta = {
     { fg: '--accent', bg: ['--glow', '--field'], min: 4.5, note: 'kickers under the lamp' },
     { fg: '--link', bg: ['--glow', '--field'], min: 4.5, note: 'links under the lamp' },
     { fg: '--mark', bg: ['--hoop-cloth'], min: 4.5, note: 'the stitched manifesto in the hoop' },
+    { fg: '--accent', bg: ['--hoop-cloth'], min: 4.5, note: "the maker's line: the running-stitch script on the hoop" },
     { fg: '--field-line', bg: ['--paper'], min: 3, note: 'the write-on line under a form field' },
     { fg: '--hand-kicker-ink', bg: ['--paper'], min: 4.5, note: 'kickers on a card' },
     { fg: '--hand-kicker-ink', bg: ['--note'], min: 4.5, note: 'kickers on a butter note' },
@@ -52,13 +53,13 @@ export const meta: ThemeMeta = {
     { fg: '--board-accent', bg: ['--board'], min: 4.5, note: 'emphasis in the specimen label on the board' },
     { fg: '--board-link', bg: ['--board'], min: 4.5, note: 'links on the board' },
     /* The printed clipping on the Home butter note (item 11). */
-    { fg: '--clip-ink', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: list text' },
+    { fg: '--clip-ink', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: list text, and the Tab focus ring (warm newsprint by lamplight, call 9)' },
     { fg: '--clip-ink-muted', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: summaries' },
     { fg: '--clip-accent', bg: ['--clip-paper'], min: 4.5, note: 'the clipping: accession numbers (links)' },
   ],
   assets: {
     provenance: 'original-vector',
-    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a cross-stitch motif charted stitch by stitch; southern magnolia, maypop passionflower and wax myrtle for the Gulf Coast pages; garden twine round the Services posy; an envelope with twine, a perforated stamp (value 3) and a lettered postmark; a running-stitch maker line; a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
+    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a freehand embroidered sprig (stem stitch, satin stitch, lazy daisies, French knots); southern magnolia, maypop passionflower and wax myrtle for the Gulf Coast pages; garden twine round the Services posy; an envelope with twine, a perforated stamp (value 3) and a lettered postmark; a running-stitch script for the maker line; a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
   },
   order: 4,
 };

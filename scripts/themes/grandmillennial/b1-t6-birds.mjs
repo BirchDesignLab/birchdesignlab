@@ -44,6 +44,15 @@ const box = (b) => {
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 };
 
+/* B2 task 6: two painted birds collide when their boxes overlap in the drawing (the box is the
+   outline with the tail, so the share is generous): more than 6% of the smaller box. */
+const overlap = (a, b) => {
+  const A = box(a), B = box(b);
+  const ix = Math.max(0, Math.min(A[2], B[2]) - Math.max(A[0], B[0])), iy = Math.max(0, Math.min(A[3], B[3]) - Math.max(A[1], B[1]));
+  return (ix * iy) / Math.min((A[2] - A[0]) * (A[3] - A[1]), (B[2] - B[0]) * (B[3] - B[1]));
+};
+const collides = (b) => birds.some((o) => o !== b && overlap(b, o) > 0.06);
+
 const CUTBAD = !process.argv.includes('--allowcut');
 const SEARCH = process.argv.includes('--search');
 const browser = await chromium.launch({ args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
@@ -116,7 +125,7 @@ if (SEARCH) {
   const good = [];
   for (let x = 120; x <= 1520; x += 20) for (let y = 100; y <= 1150; y += 20) {
     const b = { kind, x, y, sx: sc, sy: sc, rot: +arg('rot', 0) };
-    let open = 0, bad = 0;
+    let open = 0, bad = collides(b) ? 1 : 0;
     for (const m of M) for (const v of verdicts(m, b)) { if (v.verdict === 'PEEK' || (v.verdict === 'CUT' && CUTBAD)) bad++; else if (v.verdict === 'open') open++; }
     if (!bad && open >= +arg("minopen", M.length)) good.push([x, y, open]);
   }
@@ -125,6 +134,9 @@ if (SEARCH) {
 }
 
 let bad = 0;
+birds.forEach((a, i) => birds.forEach((b, j) => {
+  if (j > i && overlap(a, b) > 0.06) { bad++; console.log(`COLLISION bird#${i} ${a.kind} at ${Math.round(a.x)},${Math.round(a.y)} with bird#${j} ${b.kind} at ${Math.round(b.x)},${Math.round(b.y)}: ${Math.round(overlap(a, b) * 100)}% of the smaller box`); }
+}));
 for (const m of M) {
   const lines = [];
   birds.forEach((b, bi) => {

@@ -5,7 +5,9 @@ const ROOT = new URL('../src/themes/cottagecore/', import.meta.url);
 const fx = readFileSync(new URL('fx.ts', ROOT), 'utf8');
 const css = readFileSync(new URL('theme.css', ROOT), 'utf8');
 
-/* Stage 5 B2 task 5: the floaters (fireflies by lamplight, dandelion seeds by day). */
+/* Stage 5 B2 task 5: the floaters (fireflies by lamplight, dandelion seeds by day).
+   Task 6 (pair C fixes) changed the phone halo, the tap, the fonts wait and the
+   resize sweep; the tests below hold those. */
 describe('cottagecore floaters', () => {
   it('says where the canvas lives (D7 (a)) and keeps it over the cloth, under main', () => {
     expect(fx).toMatch(/D7 \(a\)/);
@@ -16,21 +18,51 @@ describe('cottagecore floaters', () => {
 
   it('reads no layout while scrolling: no scroll listener, text measured on mount and debounced', () => {
     expect(fx).not.toMatch(/addEventListener\('scroll'/);
-    expect(fx).toMatch(/new ResizeObserver\(scheduleRects\)/);
-    expect(fx).toMatch(/document\.fonts\?\.ready\.then\(scheduleRects\)/);
+    expect(fx).toMatch(/new ResizeObserver\(\(\) => scheduleRects\(\)\)/);
+    expect(fx).toMatch(/document\.fonts\.ready\.then\(onFonts\)/);
+  });
+
+  it('cancels the fonts-ready sweep on teardown and never sweeps mid-scroll', () => {
+    expect(fx).toMatch(/const onFonts = \(\) => \{\s*if \(!alive\) return;/);
+    const teardown = fx.slice(fx.indexOf('alive = false;'));
+    expect(teardown).toMatch(/clearTimeout\(rectTimer\)/);
+    const sweep = fx.slice(fx.indexOf('const sweep = () =>'), fx.indexOf('const scheduleRects'));
+    expect(sweep).toMatch(/if \(!alive\) return;/);
+    expect(sweep).toMatch(/Math\.abs\(window\.scrollY - lastSy\) > 0\.5/);
   });
 
   it('debounces resize (no synchronous sweep) and only re-staggers after a real pause', () => {
     const resize = fx.slice(fx.indexOf('const resize = () =>'), fx.indexOf('/* ----- fireflies ----- */'));
     // The only synchronous sweep is the first seating, guarded by "nothing seeded yet".
     expect(resize).toMatch(/if \(!fireflies\.length \|\| !seeds\.length\) \{\s*collectTextRects\(\);/);
-    expect(fx).toMatch(/const onResize = \(\) => \{\s*resize\(\);\s*sync\(\);\s*scheduleRects\(\);/);
+    // A height-only resize (a phone toolbar) waits for stillness; a width change sweeps soon.
+    expect(fx).toMatch(/const widthChanged = window\.innerWidth !== lastW;/);
+    expect(fx).toMatch(/scheduleRects\(widthChanged \? 150 : SETTLE_MS\)/);
+    expect(fx).toMatch(/const SETTLE_MS = 700/);
     expect(fx).toMatch(/const PAUSE_MS = 1500/);
     expect(fx).not.toMatch(/FRAME_MS \* 3/);
   });
 
-  it('keeps a halo clear of text by its peak radius', () => {
-    expect(fx).toMatch(/fireflyPad = \(r: number\) => r \* \(FIREFLY\.haloMin \+ FIREFLY\.haloGrow\)/);
+  it('keeps a halo clear of text by its peak radius, smaller on a phone', () => {
+    const pad = fx.slice(fx.indexOf('const fireflyPad'), fx.indexOf('const SEED = {'));
+    expect(pad).toMatch(/r \* \(FIREFLY\.haloMin \+ FIREFLY\.haloGrow\) \* FIREFLY\.padShare/);
+    expect(pad).toMatch(/r \* \(FIREFLY\.phoneHaloMin \+ FIREFLY\.phoneHaloGrow\) \* FIREFLY\.phonePadShare/);
+    // The halo and the pad are the only phone differences: the rests are the desktop's.
+    expect(fx).toMatch(/darkMin: 4000/);
+    expect(fx).toMatch(/darkMax: 8000/);
+    expect(fx).not.toMatch(/phoneDark/);
+  });
+
+  it('reacts to a touch only on a tap: a release with no movement and no scroll', () => {
+    const block = fx.slice(fx.indexOf('const presses = new Map'), fx.indexOf('const onPointerLeave'));
+    // A mouse click counts on the press; a touch or pen press only records itself.
+    expect(block).toMatch(/if \(e\.pointerType === 'mouse'\) \{[^}]*tap\.pending = true;[^}]*return;/s);
+    const up = block.slice(block.indexOf('const onPointerUp'));
+    expect(up).toMatch(/p\.moved/);
+    expect(up).toMatch(/TAP\.slop/);
+    expect(up).toMatch(/Math\.abs\(window\.scrollY - p\.sy\) > TAP\.maxScroll/);
+    expect(fx).toMatch(/addEventListener\('pointercancel', onPointerCancel/);
+    expect(fx).toMatch(/addEventListener\('pointerup', onPointerUp/);
   });
 
   it('draws the seeds 1.5 times larger and keeps some on the cloth in view', () => {
@@ -45,17 +77,35 @@ describe('cottagecore floaters', () => {
     expect(fn).not.toMatch(/40 \* k - SEED\.textPad/);
   });
 
-  it('moves only a seed nobody can see, and counts a seed by its fan', () => {
+  it('takes a seed off a line it is on right now in about two frames', () => {
+    expect(fx).toMatch(/fadeOutNow: 0\.85/);
+    expect(fx).toMatch(/onNow \? SEED\.fadeOutNow : SEED\.fadeOut/);
+  });
+
+  it('moves only a seed nobody can see, and counts a seed by its drawn fan', () => {
     const keep = fx.slice(fx.indexOf('let shown = 0;'), fx.indexOf('const pointerLive'));
     expect(keep).toMatch(/seedOnShow\(s\.x, s\.y/);
+    expect(keep).toMatch(/turnOf\(s\), angleOf\(s\)/);
     const gone = keep.slice(keep.indexOf('const gone'));
     expect(gone.split(String.fromCharCode(10))[0]).toMatch(/seedVisible/);
     expect(gone.split(String.fromCharCode(10))[0]).not.toMatch(/seedOnShow/);
-    // The fan (crown and both tips) is what counts as on show; the anchor may be under a sheet.
+    // The fan (crown and both tips) is what counts as on show, as it is DRAWN
+    // (squeezed by turn, tilted by angle); the anchor may be under a sheet.
     const show = fx.slice(fx.indexOf('const seedOnShow'), fx.indexOf('const seedVisible'));
-    expect(show).toMatch(/y - 42 \* k/);
-    expect(show).toMatch(/x - 40 \* k, y - 10 \* k/);
+    expect(show).toMatch(/drawnPoints\(x, y, k, turn, angle\)/);
     expect(show).not.toMatch(/pointOnShow\(x, y, sy\)/);
+    const pts = fx.slice(fx.indexOf('const drawnPoints'), fx.indexOf('const edgeFade'));
+    expect(pts).toMatch(/at\(0, -42 \* k\)/);
+    expect(pts).toMatch(/at\(-40 \* k \* turn, -10 \* k\)/);
+    expect(pts).toMatch(/x \+ px \* c - py \* n/);
+  });
+
+  it('shows and seats nothing until the fonts have settled', () => {
+    expect(fx).toMatch(/let fontsSettled = false;/);
+    expect(fx).toMatch(/if \(fontsSettled && \(switched \|\| t - lastKeepT > SEED\.keepEvery\)\)/);
+    expect(fx).toMatch(/\|\| !fontsSettled;/);
+    // No seed is set showing against the pre-font text.
+    expect(fx).not.toMatch(/seatSeed\(seeds\[i\], sy\)\) seeds\[i\]\.cover = 1/);
   });
 
   it('seats a cramped seed smaller, never under the size floor, and starts every seed unseen', () => {

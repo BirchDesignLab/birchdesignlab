@@ -17,10 +17,15 @@
  * sheets, cards and notes sit on top of the floaters and a seed or mote under
  * a sheet is simply hidden. Nothing here moves a floater above `main`.
  *
- * Fireflies (dark): count, colour, halo, drift, text avoidance and lifecycle
- * as they were; only the pulse changed. It is a burst: 2 to 4 flashes about
- * 500 ms apart, each a 120 to 180 ms rise and a 250 ms fall, then 4 to 8 s
- * fully dark. Each mote has its own clock, so they never flash together.
+ * Fireflies (dark): the pulse is a burst: 2 to 4 flashes about 500 ms apart,
+ * each a 120 to 180 ms rise and a 250 ms fall, then 4 to 8 s fully dark. Each
+ * mote has its own clock, so they never flash together. The halo grows from
+ * 7 to 14 mote radii over a flash (4.5 to 8 on a phone, where the screen is
+ * mostly text and the larger halo and its pad left no clear cloth to flash
+ * on); a mote fades out of any line of text within a pad of its halo's peak
+ * (just over half of it on a phone), measured line by line over the header,
+ * main and footer. Count, colour, drift and the burst's rests are unchanged
+ * from the first proof.
  *
  * Dandelions (light): pappus seeds, about 8 on desktop and 5 on a phone, each
  * on its own clock, riding a slow breeze up and across with a sway and a
@@ -34,16 +39,24 @@
  * fan, a narrow strip for the stalk), not a box around both; a view too
  * cramped for a seed at its own size gets it at a smaller one, never below
  * the smallest size, so a header that is mostly wordmark and nav still has
- * seeds in it. Every seed starts unseen and fades in where it is clear.
+ * seeds in it. Every seed starts unseen and fades in where it is clear, and
+ * none is seated or shown until the fonts have settled and the text has been
+ * measured against them, so the first frame never paints over a line that
+ * is about to reflow.
  *
  * Pointer (S3, passive, one listener per event type, no layout reads): a seed
- * drifts away from a passing cursor or a tap; a hovered or tapped firefly
- * flashes.
+ * drifts away from a passing mouse cursor; a seed is kicked and a firefly
+ * flashed by a tap. A mouse click is a tap on the press. A touch is a tap
+ * only on its release, with no meaningful movement since the press and no
+ * scroll (a touch that becomes a scroll never was one), so scrolling a phone
+ * does not scatter the seeds or flash the fireflies under the finger.
  *
  * Text (item 14): text is measured line by line, in document space, once on
- * mount and again, debounced, when the body resizes, the window resizes or
- * the fonts arrive. The draw subtracts scrollY. There is no scroll listener
- * and no layout read while scrolling.
+ * mount (after the fonts) and again, debounced, when the body resizes, the
+ * window's width changes or the fonts arrive. A resize that changes only the
+ * height (a phone's toolbar sliding mid-scroll) does not move the text, so
+ * its sweep waits until the page has been still. The draw subtracts scrollY.
+ * There is no scroll listener and no layout read while scrolling.
  */
 import { onMount } from '../../lib/lifecycle';
 
@@ -74,6 +87,17 @@ const FIREFLY = {
       peak of a flash. Core radius: 0.7 growing by 0.8 at the peak. */
   haloMin: 7,
   haloGrow: 7,
+  /** On a phone (narrower than SEED.phoneWidth) the halo is smaller, 4.5 growing
+      by 3.5: a phone's first screens are mostly text, and the desktop halo plus
+      its pad left almost no cloth for a mote to flash on (founder call 13,
+      11-17-26: 0.13 lit on average at 390, the proof's was 0.3). The lifecycle,
+      the rests, the colour and the count are the same. */
+  phoneHaloMin: 4.5,
+  phoneHaloGrow: 3.5,
+  /** The share of the halo's peak radius kept clear of text. The halo's outer
+      quarter is nearly transparent, so a phone keeps just over half. */
+  padShare: 1,
+  phonePadShare: 0.55,
   coreMin: 0.7,
   coreGrow: 0.8,
   /** A cursor this close (px) flashes a mote; a finger gets more room. */
@@ -86,8 +110,12 @@ const FIREFLY = {
   fadeOut: 0.25,
 };
 /** Clear air (px) kept between a mote's centre and any text: the halo's PEAK
-    radius, so a flashing mote never paints its halo over a line. */
-const fireflyPad = (r: number) => r * (FIREFLY.haloMin + FIREFLY.haloGrow);
+    radius (a share of it on a phone), so a flashing mote never paints a
+    visible halo over a line. */
+const fireflyPad = (r: number, phone: boolean) =>
+  phone
+    ? r * (FIREFLY.phoneHaloMin + FIREFLY.phoneHaloGrow) * FIREFLY.phonePadShare
+    : r * (FIREFLY.haloMin + FIREFLY.haloGrow) * FIREFLY.padShare;
 
 const SEED = {
   desktop: 8,
@@ -120,6 +148,11 @@ const SEED = {
   /** Per 30 fps frame, as for the fireflies. */
   fadeIn: 0.15,
   fadeOut: 0.4,
+  /** The fade, per frame, of a seed whose drawn shape is ON a line of text right
+      now (not one the lookahead sees coming): text can arrive under a seed
+      between two frames (a wheel step), so it is gone in about two frames
+      instead of five, and no seed ink lingers on a line for 150 ms or more. */
+  fadeOutNow: 0.85,
   /** Sprite units to CSS px at size 1: 1.5 times the first proof's 0.62. */
   spriteScale: 0.93,
   /** Clear air (px) kept between a seed's drawn shape and any text. */
@@ -144,6 +177,13 @@ const SEED = {
 };
 /** Ink-brown, the school's --cc-ink. The seeds are drawn in it. */
 const SEED_INK = '58, 42, 31';
+
+/** A tap, on a touch or a pen: a release within this many px of the press and
+    this long after it, with the page scrolled no more than maxScroll px. */
+const TAP = { slop: 10, maxMs: 600, maxScroll: 3 };
+/** A resize that changes only the viewport's height (a phone toolbar) re-measures
+    the text only after the page has been still this long (ms). */
+const SETTLE_MS = 700;
 
 /* ---------- types ---------- */
 interface Flash {
@@ -182,6 +222,7 @@ interface Seed {
   /** The size it was born with; a cramped seat may use a smaller one. */
   base: number;
 }
+type Pt = [number, number];
 interface Box {
   l: number;
   t: number;
@@ -395,6 +436,11 @@ export function mountFireflies(): void {
     let gustStart = -1e9;
     /** Which branch drew last frame, so a flip re-staggers the clocks. */
     let branch = '';
+    /** False until the fonts have settled and the text has been measured
+        against them; nothing is shown or seated before that. */
+    let fontsSettled = false;
+    /** False once torn down, so a late promise does nothing. */
+    let alive = true;
 
     /* Pointer: written by the listeners, read by the tick. */
     const pointer = { x: -1e4, y: -1e4, at: -1e9, fine: false };
@@ -431,26 +477,42 @@ export function mountFireflies(): void {
       s.cover = 0;
     };
 
+    /** How the draw turns and tilts a seed (the same two numbers the draw uses). */
+    const turnOf = (s: Seed) => 0.42 + 0.58 * Math.abs(Math.cos(s.turnPhase));
+    const angleOf = (s: Seed) => Math.sin(s.swayPhase) * 0.22 + Math.max(-0.35, Math.min(0.35, s.vx * 0.006));
+    /** The fan's crown and both tips and the body's middle as DRAWN (squeezed
+        by turn across the seed's width, then tilted by angle about the anchor),
+        not as an upright, full-width fan. */
+    const drawnPoints = (x: number, y: number, k: number, turn: number, angle: number): Pt[] => {
+      const c = Math.cos(angle);
+      const n = Math.sin(angle);
+      const at = (px: number, py: number): Pt => [x + px * c - py * n, y + px * n + py * c];
+      return [at(0, -42 * k), at(-40 * k * turn, -10 * k), at(40 * k * turn, -10 * k), at(0, 35 * k)];
+    };
     const edgeFade = (s: Seed) => Math.min(1, Math.max(0, Math.min(s.x + 30, width + 30 - s.x, s.y + 30, height + 30 - s.y) / 70));
     const onSheet = (x: number, y: number) => inAnyBox(x, y, coverBoxes, 0);
     const pointOnShow = (px: number, py: number, sy: number) => px >= 0 && px <= width && py >= 0 && py <= height && !onSheet(px, py + sy);
-    /** A seed is on show when its fan is: the crown and both tips inside the
-        viewport and off every sheet and band. The anchor and the body may be
-        tucked under a sheet; that is a seed drifting out from behind the
-        paper, and it is what a phone's mostly-sheet first screen has room for. */
-    const seedOnShow = (x: number, y: number, k: number, sy: number) =>
-      pointOnShow(x, y - 42 * k, sy) && pointOnShow(x - 40 * k, y - 10 * k, sy) && pointOnShow(x + 40 * k, y - 10 * k, sy);
-    /** Whether any of a seed's five drawn points (anchor, both tips, crown,
-        body middle) is on show. False means the seed is wholly under a sheet
-        or off the screen, so moving it loses nothing anyone can see. */
-    const seedVisible = (x: number, y: number, k: number, sy: number) =>
-      pointOnShow(x, y, sy) || pointOnShow(x - 40 * k, y - 10 * k, sy) || pointOnShow(x + 40 * k, y - 10 * k, sy) || pointOnShow(x, y - 42 * k, sy) || pointOnShow(x, y + 35 * k, sy);
-    const seatClear = (x: number, y: number, k: number, sy: number) => seedOnShow(x, y, k, sy) && !seedHitsText(x, y + sy, k, textBoxes);
+    /** A seed is on show when its fan is: the crown and both tips, as the
+        seed is drawn now (turned and tilted), inside the viewport and off every
+        sheet and band. The anchor and the body may be tucked under a sheet;
+        that is a seed drifting out from behind the paper, and it is what a
+        phone's mostly-sheet first screen has room for. */
+    const seedOnShow = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
+      const [crown, left, right] = drawnPoints(x, y, k, turn, angle);
+      return pointOnShow(crown[0], crown[1], sy) && pointOnShow(left[0], left[1], sy) && pointOnShow(right[0], right[1], sy);
+    };
+    /** Whether any of a seed's drawn points (anchor, crown, both tips, body
+        middle) is on show. False means the seed is wholly under a sheet or off
+        the screen, so moving it loses nothing anyone can see. */
+    const seedVisible = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
+      pointOnShow(x, y, sy) || drawnPoints(x, y, k, turn, angle).some(([px, py]) => pointOnShow(px, py, sy));
+    const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
+      seedOnShow(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes);
     /** Seconds a seat stays clear (fan on show, off text) riding its drift. */
-    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number) => {
+    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number) => {
       let t = SEED.seatStep;
       for (; t < SEED.seatHorizon; t += SEED.seatStep) {
-        if (!seatClear(x + vx * t, y + vy * t, k, sy)) break;
+        if (!seatClear(x + vx * t, y + vy * t, k, sy, turn, angle)) break;
       }
       return t;
     };
@@ -466,6 +528,8 @@ export function mountFireflies(): void {
       const vx = SEED.windX * s.drift;
       const vy = SEED.windY * s.drift;
       const sizes = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
+      const turn = turnOf(s);
+      const angle = angleOf(s);
       for (const size of sizes) {
         const k = size * SEED.spriteScale;
         let bx = 0;
@@ -475,7 +539,7 @@ export function mountFireflies(): void {
         for (let i = 0; i < SEED.seatTries && pool < SEED.seatPool; i++) {
           const x = rand(24, width - 24);
           const y = rand(24, height - 24);
-          if (!seatClear(x, y, k, sy) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy)) continue;
+          if (!seatClear(x, y, k, sy, turn, angle) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle)) continue;
           const apart = i < SEED.seatTries / 2 ? SEED.seatApart : SEED.seatApartTight;
           let crowded = false;
           for (const o of seeds) {
@@ -483,7 +547,7 @@ export function mountFireflies(): void {
           }
           if (crowded) continue;
           pool++;
-          const life = seatLife(x, y, k, vx, vy, sy) + Math.random() * 0.4;
+          const life = seatLife(x, y, k, vx, vy, sy, turn, angle) + Math.random() * 0.4;
           if (life > best) { best = life; bx = x; by = y; }
         }
         if (pool) {
@@ -501,7 +565,6 @@ export function mountFireflies(): void {
 
     const seedDandelions = () => {
       const count = width < SEED.phoneWidth ? SEED.phone : SEED.desktop;
-      const sy = window.scrollY;
       seeds = Array.from({ length: count }, (_, i) => {
         const size = rand(SEED.sizeMin, SEED.sizeMax);
         const s: Seed = {
@@ -521,17 +584,14 @@ export function mountFireflies(): void {
           alpha: rand(SEED.alphaMin, SEED.alphaMax),
           cover: 0,
         };
-        // Every seed starts unseen and fades in where it is clear, so none
-        // is ever drawn for a frame over a line of text (the first
-        // measurement can precede the fonts).
+        // Every seed starts unseen (cover 0) and fades in where it is clear,
+        // and nothing is seated or shown until the fonts have settled and the
+        // text has been measured against them (fontsSettled), so none is ever
+        // drawn over a line that is about to reflow. The opening view's
+        // first seeds are seated by the keep loop on its first tick after.
         spawnSeed(s, true);
         return s;
       });
-      // The first few go straight onto clear cloth, already showing, so the
-      // opening view has seeds in it (a phone's first screen is mostly text).
-      for (let i = 0; i < Math.min(SEED.minShown, seeds.length); i++) {
-        if (seatSeed(seeds[i], sy)) seeds[i].cover = 1;
-      }
     };
 
     /* Text, measured line by line in document space (item 14): once on mount,
@@ -564,9 +624,20 @@ export function mountFireflies(): void {
       coverBoxes = cover;
     };
     let rectTimer = 0;
-    const scheduleRects = () => {
+    /** One full text sweep after `delay` ms, and never in the middle of a
+        scroll: if the page has moved since the last frame it asks again in
+        200 ms, so a sweep lands on a page that is still. */
+    const sweep = () => {
+      if (!alive) return;
+      if (Math.abs(window.scrollY - lastSy) > 0.5) {
+        rectTimer = window.setTimeout(sweep, 200);
+        return;
+      }
+      collectTextRects();
+    };
+    const scheduleRects = (delay = 150) => {
       clearTimeout(rectTimer);
-      rectTimer = window.setTimeout(collectTextRects, 150);
+      rectTimer = window.setTimeout(sweep, delay);
     };
 
     const resize = () => {
@@ -578,8 +649,8 @@ export function mountFireflies(): void {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // A phone's toolbar resizes the viewport on scroll; keep the floaters
       // where they are rather than scattering them again. The text is
-      // measured once for the first seating; every later resize only
-      // schedules the debounced sweep (onResize).
+      // measured once here, for the first layout (and again once the fonts
+      // settle, onFonts); every later resize only schedules a sweep (onResize).
       if (!fireflies.length || !seeds.length) {
         collectTextRects();
         if (!fireflies.length) seedFireflies();
@@ -589,6 +660,7 @@ export function mountFireflies(): void {
 
     /* ----- fireflies ----- */
     const drawFireflies = (t: number, still: boolean, sy: number, dsy: number, switched: boolean) => {
+      const phone = width < SEED.phoneWidth;
       // The burst clock is absolute rAF time, so after a real pause (a flip
       // from the light scheme, a hidden tab) every rest has passed and the
       // whole swarm would flash on the same frame. Re-stagger each mote then.
@@ -634,7 +706,7 @@ export function mountFireflies(): void {
         // Keep motes out of the reading column: fade toward invisible, on an
         // ease rather than a hard cut, while one sits within a halo's peak
         // radius of a line of text.
-        const pad = fireflyPad(m.r);
+        const pad = fireflyPad(m.r, phone);
         const target = inAnyBox(m.x, m.y + sy, textBoxes, pad) || inAnyBox(m.x, m.y + sy + dsy, textBoxes, pad) ? 0 : 1;
         m.cover = still ? target : m.cover + (target - m.cover) * (target < m.cover ? FIREFLY.fadeOut : FIREFLY.fadeIn);
         let env = 0;
@@ -645,7 +717,7 @@ export function mountFireflies(): void {
         }
         const lit = env * m.cover;
         if (lit < 0.01) continue;
-        const haloR = m.r * (FIREFLY.haloMin + FIREFLY.haloGrow * env);
+        const haloR = m.r * (phone ? FIREFLY.phoneHaloMin + FIREFLY.phoneHaloGrow * env : FIREFLY.haloMin + FIREFLY.haloGrow * env);
         ctx.globalAlpha = lit;
         ctx.drawImage(halo, m.x - haloR, m.y - haloR, haloR * 2, haloR * 2);
         ctx.globalAlpha = 1;
@@ -675,16 +747,16 @@ export function mountFireflies(): void {
         // Keep the cloth in view from going bare: when fewer than minShown
         // seeds are showing, a seed that has faded out (or is hidden under a
         // sheet) is seated on a clear patch and fades in there.
-        if (switched || t - lastKeepT > SEED.keepEvery) {
+        if (fontsSettled && (switched || t - lastKeepT > SEED.keepEvery)) {
           lastKeepT = t;
           let shown = 0;
-          for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy)) shown++;
+          for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s))) shown++;
           for (const s of seeds) {
             if (shown >= SEED.minShown) break;
             // Only a seed nobody can see is moved: one that has faded out, or
             // is wholly under a sheet or off the screen. A seed part way out
             // from behind a sheet, or leaving at an edge, finishes its fade.
-            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedVisible(s.x, s.y, s.size * SEED.spriteScale, sy);
+            const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedVisible(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s));
             if (gone && seatSeed(s, sy)) shown++;
           }
         }
@@ -732,14 +804,18 @@ export function mountFireflies(): void {
         const ax = s.x + s.vx * SEED.lookAhead;
         const ay = s.y + s.vy * SEED.lookAhead;
         const kk = s.size * SEED.spriteScale;
-        const over = seedHitsText(s.x, s.y + sy, kk, textBoxes) || seedHitsText(ax, ay + sy, kk, textBoxes) || seedHitsText(s.x, s.y + sy + dsy, kk, textBoxes);
+        // On a line right now (a wheel step can bring text under a seed between
+        // two frames) fades fastest; a line the lookahead sees coming, a
+        // little slower; nothing at all before the fonts have settled.
+        const onNow = seedHitsText(s.x, s.y + sy, kk, textBoxes);
+        const over = onNow || seedHitsText(ax, ay + sy, kk, textBoxes) || seedHitsText(s.x, s.y + sy + dsy, kk, textBoxes) || !fontsSettled;
         const target = over ? 0 : 1;
-        s.cover = still ? target : s.cover + (target - s.cover) * (target < s.cover ? SEED.fadeOut : SEED.fadeIn);
+        s.cover = still ? target : s.cover + (target - s.cover) * (target < s.cover ? (onNow ? SEED.fadeOutNow : SEED.fadeOut) : SEED.fadeIn);
         // Fade in and out at the viewport's edges rather than popping.
         const a = s.alpha * s.cover * edgeFade(s);
         if (a < 0.01) continue;
-        const turn = 0.42 + 0.58 * Math.abs(Math.cos(s.turnPhase));
-        const angle = Math.sin(s.swayPhase) * 0.22 + Math.max(-0.35, Math.min(0.35, s.vx * 0.006));
+        const turn = turnOf(s);
+        const angle = angleOf(s);
         ctx.save();
         ctx.translate(s.x, s.y);
         ctx.rotate(angle);
@@ -789,8 +865,13 @@ export function mountFireflies(): void {
     };
 
     /* One passive listener per event type. Touch moves are scrolls, so only a
-       mouse or pen is tracked as a passing cursor; every pointer type can tap. */
+       mouse or pen is tracked as a passing cursor. A tap is a mouse press, or a
+       touch or pen RELEASE with no meaningful movement since its press and no
+       scroll (pointercancel is the browser taking the touch for a scroll). */
+    const presses = new Map<number, { x: number; y: number; sy: number; at: number; moved: boolean }>();
     const onPointerMove = (e: PointerEvent) => {
+      const p = presses.get(e.pointerId);
+      if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > TAP.slop) p.moved = true;
       if (e.pointerType === 'touch') return;
       pointer.x = e.clientX;
       pointer.y = e.clientY;
@@ -798,9 +879,26 @@ export function mountFireflies(): void {
       pointer.fine = true;
     };
     const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') {
+        tap.x = e.clientX;
+        tap.y = e.clientY;
+        tap.pending = true;
+        return;
+      }
+      presses.set(e.pointerId, { x: e.clientX, y: e.clientY, sy: window.scrollY, at: performance.now(), moved: false });
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      const p = presses.get(e.pointerId);
+      presses.delete(e.pointerId);
+      if (!p || p.moved) return;
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > TAP.slop) return;
+      if (performance.now() - p.at > TAP.maxMs || Math.abs(window.scrollY - p.sy) > TAP.maxScroll) return;
       tap.x = e.clientX;
       tap.y = e.clientY;
       tap.pending = true;
+    };
+    const onPointerCancel = (e: PointerEvent) => {
+      presses.delete(e.pointerId);
     };
     const onPointerLeave = () => {
       pointer.fine = false;
@@ -809,25 +907,44 @@ export function mountFireflies(): void {
     resize();
     sync();
 
-    // Debounced only: no synchronous text sweep on a resize.
+    /* The fonts have settled: measure the text against them, then (and only
+       then) let the seeds be seated and shown. */
+    const onFonts = () => {
+      if (!alive) return;
+      collectTextRects();
+      fontsSettled = true;
+      if (reduced.matches) sync();
+    };
+    // Debounced only: no synchronous text sweep on a resize. A change of width
+    // moves the text, so it is re-measured soon; a change of height alone (a
+    // phone toolbar) does not, so it waits until the page is still.
+    let lastW = window.innerWidth;
     const onResize = () => {
+      const widthChanged = window.innerWidth !== lastW;
+      lastW = window.innerWidth;
       resize();
       sync();
-      scheduleRects();
+      scheduleRects(widthChanged ? 150 : SETTLE_MS);
     };
     const observer = new MutationObserver(sync);
     observer.observe(root, { attributes: true, attributeFilter: ['data-scheme'] });
-    const bodyObserver = new ResizeObserver(scheduleRects);
+    const bodyObserver = new ResizeObserver(() => scheduleRects());
     bodyObserver.observe(document.body);
     window.addEventListener('resize', onResize);
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    window.addEventListener('pointerup', onPointerUp, { passive: true });
+    window.addEventListener('pointercancel', onPointerCancel, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave, { passive: true });
     document.addEventListener('visibilitychange', sync);
     reduced.addEventListener('change', sync);
-    document.fonts?.ready.then(scheduleRects);
+    // After the first layout (resize() above forced it), so the font loads it
+    // began are pending and `ready` waits for them. Cancelled by `alive`.
+    if (document.fonts) document.fonts.ready.then(onFonts);
+    else onFonts();
 
     return () => {
+      alive = false;
       stop();
       clearTimeout(rectTimer);
       observer.disconnect();
@@ -835,6 +952,9 @@ export function mountFireflies(): void {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+      presses.clear();
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', sync);
       reduced.removeEventListener('change', sync);

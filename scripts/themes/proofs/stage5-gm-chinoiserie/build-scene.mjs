@@ -454,8 +454,13 @@ const fb = (x, y, s, rot, flip, cls) => out.birds.push(`<use href="#sc-fb" trans
      The live bird's branch (About.astro BIRD_WIDE/BIRD_PHONE) is left to it alone. */
   pb(f2[0] + 4, f2[1] + 1, 1.15, -1, 'sc-birdB');
   pb(626, 808, 1.1, 1, 'sc-birdA'); // on the T2 bough beside the trunk (a limb centreline point, see the --limbs search)
-  fb(640, 260, 0.8, -8, 1, 'sc-birdA'); fb(240, 100, 1.0, -10, 1, 'sc-birdB'); fb(930, 235, 0.8, -4, 1, 'sc-birdB');
-  fb(980, 330, 0.9, -6, -1, 'sc-birdA'); fb(540, 840, 0.75, -10, 1, 'sc-birdA');
+  /* B2 task 6 (the B1 carry-overs C2 and rc1-N1): at 820 two flyers lay across the perched blue bird's
+     tail, and at 390 the flyer at 640,260 showed as a 67% peek. The flyers that sat on the perched bird
+     (930,235 and 980,330), the one on the T2 perch (540,840) and the 390 peek move to open wall that
+     b1-t6-birds.mjs --search finds clear at all five sizes and clear of every other bird; the probe now
+     also fails on two birds whose boxes overlap. */
+  fb(300, 780, 0.8, -8, 1, 'sc-birdA'); fb(240, 100, 1.0, -10, 1, 'sc-birdB'); fb(1320, 910, 0.8, -4, 1, 'sc-birdB');
+  fb(480, 120, 0.8, -6, 1, 'sc-birdA'); fb(300, 860, 0.8, -10, 1, 'sc-birdA');
   fb(1080, 900, 0.8, 8, -1, 'sc-birdB');
 }
 
@@ -487,9 +492,13 @@ writeFileSync(join(HERE, 'scene.json'), JSON.stringify({ defs, sceneG, perchedBi
 reseed(2210);
 {
   const o = { limbs: [], twigs: [], leaves: [], cats: [], trunk: [], ground: [] };
-  const trk = [[98, 282], [100, 224], [98, 168], [102, 112], [100, 58], [101, 6], [100, -60]];
+  /* The trunk used to run to y -60, the file's own top edge, so the file cut it off flat inside the
+     oval (B2 task 6, the B1 carry-over C3). It now ends inside the file at y -24, tapering over its
+     last fifth to a thin leader that parts into three twigs with leaves and a catkin (the crown),
+     so the drawing finishes the tree and the file edge never meets it. */
+  const trk = [[98, 282], [100, 224], [98, 168], [102, 112], [100, 58], [101, 6], [100, -24]];
   const pts = catmull(trk, 10);
-  const wf = (t) => 33 - 15 * t + 1.4 * Math.sin(t * 13);
+  const wf = (t) => (33 - 15 * t + 1.4 * Math.sin(t * 13)) * (1 - 0.78 * Math.pow(Math.max(0, (t - 0.8) / 0.2), 1.4));
   const rb = ribbon(pts, wf);
   // trunk: a flat paper wash, a shade wash laid a hair off, then the ink
   o.trunk.push(`<path class="bb-trunk" d="${poly(rb.poly)}"/>`);
@@ -554,6 +563,13 @@ reseed(2210);
       if (k % 2 === 1) o.cats.push(uw('bb-ck', ex + ra(-3, 3), ey + 1, ra(-10, 10), ra(0.78, 1)));
     }
   }
+  // the crown: the leader parts into three twigs, each ending in a leaf, one with a catkin
+  for (const [ex, ey, rot, alt] of [[84, -34, -128, false], [117, -36, -52, true], [100, -42, -92, false]]) {
+    o.twigs.push(`<path class="bb-twig" d="M100.5 -22Q${tk((100.5 + ex) / 2)} ${tk(ey - 2)} ${tk(ex)} ${tk(ey)}"/>`);
+    lfAt(ex, ey, rot, 0.85, alt);
+    lfAt((100.5 + ex) / 2, (ey - 22) / 2 + 2, rot + (ex < 100 ? 30 : -30), 0.6, !alt);
+  }
+  o.cats.push(uw('bb-ck', 117, -35, 8, 0.8));
   // the faint ground line: a low swell, three stones and a few blades
   const g = new Path();
   g.M(-30, 272).C(10 + ra(-4, 4), 266, 54, 275, 98, 271).C(140, 267, 190, 276, 270, 270);

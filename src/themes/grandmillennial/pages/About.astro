@@ -60,10 +60,15 @@ const FONT: Record<string, string> = {
   Y: 'X...XX...X.X.X...X....X....X....X..', Z: 'XXXXX....X...X...X...X...X....XXXXX',
 };
 const ABC_CELL = 3;
-/** The filled cells of the letters laid out in the given rows, and the size of the sheet. */
+/** The filled cells of the letters laid out in the given rows, and the size of the sheet.
+    A row shorter than the longest is centred on the sheet, as a counted sampler centres
+    a short last line (B2 fix call 1: the phone's 7/7/7/5, the last row no longer
+    hangs left): its offset is half the missing letters, in whole cells. */
 function abcLayout(rows: string[]) {
   let d = '';
+  const cols = Math.max(...rows.map((letters) => letters.length));
   rows.forEach((letters, r) => {
+    const lead = Math.floor(((cols - letters.length) * 6) / 2);
     [...letters].forEach((ch, i) => {
       const g = FONT[ch];
       for (let y = 0; y < 7; y++) {
@@ -72,13 +77,12 @@ function abcLayout(rows: string[]) {
           if (g[y * 5 + x] !== 'X') { x++; continue; }
           let run = x;
           while (run < 5 && g[y * 5 + run] === 'X') run++;
-          d += `M${(i * 6 + x) * ABC_CELL} ${(r * 9 + y) * ABC_CELL}h${(run - x) * ABC_CELL}v${ABC_CELL}h${-(run - x) * ABC_CELL}z`;
+          d += `M${(lead + i * 6 + x) * ABC_CELL} ${(r * 9 + y) * ABC_CELL}h${(run - x) * ABC_CELL}v${ABC_CELL}h${-(run - x) * ABC_CELL}z`;
           x = run;
         }
       }
     });
   });
-  const cols = Math.max(...rows.map((letters) => letters.length));
   // the last letter has no trailing column, the last row no trailing gap
   return { d, w: (cols * 6 - 1) * ABC_CELL, h: (rows.length * 9 - 2) * ABC_CELL };
 }

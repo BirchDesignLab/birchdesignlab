@@ -25,7 +25,7 @@ const { copy, theme } = Astro.props;
       <path class="twine" d="M214 80C212 140 216 200 212 262M198 190c8-10 26-10 30 2-10 8-26 8-30-2Z" />
     </svg>
     <Stamp class="env-stamp" seed={123} />
-    <Postmark class="env-postmark" arcId="pm-arc-sent" flip />
+    <Postmark class="env-postmark" arcId="pm-arc-sent" />
   </div>
   <div class="words">
     <h1>{copy.heading}</h1>
@@ -55,12 +55,14 @@ const { copy, theme } = Astro.props;
   .twine { fill: none; stroke: var(--cc-rose-edge); stroke-width: 2.4; stroke-linecap: round; }
   .envelope :global(.env-lav) { position: absolute; width: 30%; left: 20%; top: -34%; rotate: -16deg; }
   .envelope :global(.env-daisy) { position: absolute; width: 34%; left: 40%; top: -40%; rotate: 12deg; }
-  /* The same stamp and postmark as the Contact postcard: the stamp in the
-     pocket's upper right, the ring in the pocket's lower middle clear of the
-     stamp and the twine loop (cream ink on the stamp's cream edge was
-     illegible in the dark scheme), the wavy cancel running off to the left. */
-  .envelope :global(.env-stamp) { position: absolute; right: 3%; top: 56%; width: 19%; aspect-ratio: 5.6 / 6.6; rotate: 5deg; }
-  .envelope :global(.env-postmark) { position: absolute; right: 36.5%; bottom: 3%; width: 46%; height: auto; opacity: 0.8; rotate: -9deg; }
+  /* The same stamp and cancel as the Contact postcard (founder calls 10 and
+     12, 11-17-26), both on the pocket, the flap side: the stamp in the
+     pocket's lower right, the ring to its left and the wavy cancel running
+     right across the stamp's lower-left corner, as on the card. The ring sits
+     below the twine knot and left of it, the waves pass the single cord under
+     the knot, so nothing crosses the knot itself. */
+  .envelope :global(.env-stamp) { position: absolute; right: 3%; top: 59%; width: 19%; aspect-ratio: 5.6 / 6.6; rotate: 5deg; }
+  .envelope :global(.env-postmark) { position: absolute; right: 14%; top: 75%; width: 44%; height: auto; opacity: 0.8; rotate: -9deg; }
   .envelope {
     --kraft: #e8d3ad;
     --kraft-deep: #cdb080;

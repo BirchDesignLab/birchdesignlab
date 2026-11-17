@@ -1,9 +1,12 @@
 ---
-/** A ribbon rosette, drawn for this school: nine broad pleats round a covered
-    button, a smaller nine between them, in the bow's oxblood. Each pleat is a
-    fan folded down its middle (one half lit, one half in shade) with a soft
-    rounded edge, so the ring reads as gathered ribbon and not as a starburst
-    (B1 fix call 8: the first pass drew sixty knife pleats). It takes the
+/** A ribbon rosette, drawn for this school: nine broad pleats round a large
+    covered button, two short notched tails hanging under it, all in the bow's
+    oxblood. Each pleat is a fan folded down its middle (one half lit, one
+    half in shade) with a soft rounded edge, so the ring reads as gathered
+    ribbon and not as a starburst (B1 fix call 8: the first pass drew sixty
+    knife pleats) or a dahlia (11-17-26, call 2: eighteen two-tone pleats round
+    a small button, no tails; now one ring of nine, a button about a third of
+    the rosette across and the two tails of a prize rosette). It takes the
     ribbon bow's place on Services' ask (B1 task 4, decision C: Home's and
     Sent's bows stay, this one is trimmed). */
 interface Props { class?: string }
@@ -15,30 +18,26 @@ function pleat(r0: number, r1: number, w: number) {
     `M0 ${t(-r0)}L${t(s * w * 0.3)} ${t(-r0)}C${t(s * w * 0.8)} ${t(-r1 * 0.5)} ${t(s * w)} ${t(-r1 * 0.82)} ${t(s * w * 0.62)} ${t(-r1 * 0.96)}Q${t(s * w * 0.3)} ${t(-r1 * 1.03)} 0 ${t(-r1)}Z`;
   return { lit: half(-1), shade: half(1), fold: `M0 ${t(-r0)}L0 ${t(-r1 * 0.94)}` };
 }
-const ring = (n: number, off: number, r0: number, r1: number, w: number) =>
-  Array.from({ length: n }, (_, i) => off + (i * 360) / n).map((a) => ({ a, ...pleat(r0, r1, w) }));
-const outer = ring(9, 0, 7, 38, 15);
-const inner = ring(9, 20, 5, 25, 10.5);
+/** Nine broad pleats, each wide enough to lie a third over its neighbour. */
+const ring = Array.from({ length: 9 }, (_, i) => ({ a: (i * 360) / 9, ...pleat(9, 37, 14.5) }));
+/** A tail: a ribbon hanging from the centre, its end cut in a swallow-tail. */
+const TAIL = 'M-6 0L6 0L7.4 45L0 38.4L-7.4 45Z';
 ---
-<svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 84" aria-hidden="true" focusable="false">
-  <circle class="disc" r="24" />
-  {outer.map((p) => (
+<svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 96" aria-hidden="true" focusable="false">
+  <g transform="rotate(14)"><path class="tail" d={TAIL} /><path class="tail-fold" d="M0 4L0 36" /></g>
+  <g transform="rotate(-14)"><path class="tail" d={TAIL} /><path class="tail-fold" d="M0 4L0 36" /></g>
+  <circle class="disc" r="26" />
+  {ring.map((p) => (
     <g transform={`rotate(${p.a})`}>
       <path class="lit" d={p.lit} />
       <path class="shade" d={p.shade} />
       <path class="fold" d={p.fold} />
     </g>
   ))}
-  {inner.map((p) => (
-    <g transform={`rotate(${p.a})`}>
-      <path class="lit deep" d={p.lit} />
-      <path class="shade deep" d={p.shade} />
-      <path class="fold" d={p.fold} />
-    </g>
-  ))}
-  <circle class="button" r="7.2" />
-  <path class="gather" d="M-5 -2.2Q0 -5 5 -2.2M-5.6 1Q0 -2.2 5.6 1M-4.6 4Q0 1.4 4.6 4" />
-  <circle class="shine" cx="-2.2" cy="-2.6" r="1.8" />
+  <circle class="button" r="12.5" />
+  <circle class="gather-ring" r="9.4" />
+  <path class="gather" d="M-8.4 -4.2Q0 -9 8.4 -4.2M-9.6 1.4Q0 -4.2 9.6 1.4M-8 6.6Q0 2 8 6.6" />
+  <circle class="shine" cx="-3.6" cy="-4.4" r="2.8" />
 </svg>
 
 <style>
@@ -46,11 +45,12 @@ const inner = ring(9, 20, 5, 25, 10.5);
   .disc { fill: var(--bow-deep); }
   .lit { fill: var(--bow); }
   .shade { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 55%); }
-  .deep.lit { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 22%); }
-  .deep.shade { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 72%); }
   .lit, .shade { stroke: var(--bow-deep); stroke-width: 0.6; stroke-linejoin: round; }
   .fold { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; stroke-linecap: round; opacity: 0.7; }
+  .tail { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 40%); stroke: var(--bow-deep); stroke-width: 0.6; stroke-linejoin: round; }
+  .tail-fold { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; stroke-linecap: round; opacity: 0.55; }
   .button { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1; }
+  .gather-ring { fill: none; stroke: var(--bow-deep); stroke-width: 0.4; opacity: 0.45; }
   .gather { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; stroke-linecap: round; opacity: 0.55; }
   .shine { fill: rgb(255 235 235 / 0.5); }
 </style>

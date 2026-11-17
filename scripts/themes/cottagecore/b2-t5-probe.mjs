@@ -70,7 +70,10 @@ async function install(page) {
         });
         return out;
       },
-      scan(minA, minArea) {
+      /* minA/minArea pick the blobs that count as lit (a firefly's core, a seed's ink); textMinA is
+         the alpha at which a pixel counts toward 'on text', so the halo counts, not only its core
+         (B2 task 6, critic C6: 60 saw only the inner fifth of a halo; 8 sees all of it). */
+      scan(minA, minArea, textMinA = minA) {
         // Max-pool the alpha channel into 4 px blocks (hairlines survive), label
         // 8-connected blobs on the pooled grid dilated by one block, and report
         // each blob's centre, area (CSS px squared of pooled cells) and peak alpha.
@@ -92,10 +95,14 @@ async function install(page) {
         const lines = this.lines();
         let lit = 0, onText = 0;
         const grid = new Uint8Array(gw * gh);
+        let haloPx = 0;
         for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
           if (peakG[y * gw + x] >= minA) {
             grid[y * gw + x] = 1;
             lit++;
+          }
+          if (peakG[y * gw + x] >= textMinA) {
+            haloPx++;
             const cx = ((x + 0.5) * step) / k, cy = ((y + 0.5) * step) / k;
             for (const r of lines) if (cx >= r[0] && cx <= r[2] && cy >= r[1] && cy <= r[3]) { onText++; break; }
           }
@@ -161,7 +168,7 @@ async function film(scheme, sizeId, path, name, seconds = scheme === 'dark' ? 30
   while (Date.now() - t0 < seconds * 1000) {
     const at = (Date.now() - t0) / 1000;
     const buf = await page.screenshot({ type: 'jpeg', quality: 70 });
-    const m = await page.evaluate((dark) => window.__t5.scan(dark ? 60 : 14, dark ? 6 : 150), scheme === 'dark');
+    const m = await page.evaluate((dark) => window.__t5.scan(dark ? 60 : 14, dark ? 6 : 150, dark ? 8 : 14), scheme === 'dark');
     frames.push({ at, buf, m });
     await sleep(every);
   }
@@ -266,7 +273,15 @@ if (stages.includes('cost')) {
    dark, then bring the cursor (1440) or a finger (390) to it and look for a
    flash there within 700 ms. Light: a seed is followed while a cursor sweeps
    through it (1440) or a tap lands behind it (390). */
-async function pointerDark(id) {
+/* A touch on a phone: a tap, or (mode 'scroll') a swipe that starts at the same point and scrolls the
+   page, dispatched as touch input through CDP so the page sees pointerdown then pointercancel, as a
+   real finger scroll gives. B2 task 6 (call 14): a scroll must not kick the seeds or flash a firefly. */
+async function touch(page, x, y, mode) {
+  if (mode !== 'scroll') { await page.touchscreen.tap(x, y); return; }
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.synthesizeScrollGesture', { x, y, yDistance: -260, speed: 700, gestureSourceType: 'touch' });
+}
+async function pointerDark(id, mode = 'tap') {
   const s = sz(id);
   const { context, page } = await open('dark', s);
   await go(page, '', 'dark');
@@ -304,7 +319,7 @@ async function pointerDark(id) {
   };
   const before = await shoot('before');
   const tStart = Date.now();
-  if (s.mobile) await page.touchscreen.tap(spot.x + 6, spot.y + 4);
+  if (s.mobile) await touch(page, spot.x + 6, spot.y + 4, mode);
   else { await page.mouse.move(spot.x - 120, spot.y + 40); await page.mouse.move(spot.x + 4, spot.y + 2, { steps: 12 }); }
   let peak = 0;
   for (let i = 0; i < 6; i++) {
@@ -313,12 +328,12 @@ async function pointerDark(id) {
     await sleep(90);
   }
   await strip(frames.map((f) => ({ buf: f.buf, caption: `${id} dark ${f.caption}` })), join(out, `pointer-dark__${id}.jpg`), 4);
-  report.pointer[`dark/${id}`] = { found: true, spot, darkBefore: before.length === 0, flashPeakAlpha: peak, flashed: peak >= 150 };
-  console.log('pointer dark', id, JSON.stringify(report.pointer[`dark/${id}`]));
+  report.pointer[`dark/${id}${mode === 'scroll' ? '-scroll' : ''}`] = { found: true, spot, darkBefore: before.length === 0, flashPeakAlpha: peak, flashed: peak >= 150 };
+  console.log('pointer dark', id, mode, JSON.stringify(report.pointer[`dark/${id}${mode === 'scroll' ? '-scroll' : ''}`]));
   await context.close();
 }
 
-async function pointerLight(id) {
+async function pointerLight(id, mode = 'tap') {
   const s = sz(id);
   const { context, page } = await open('light', s);
   await go(page, '', 'light');
@@ -360,7 +375,7 @@ async function pointerLight(id) {
   const at = track[track.length - 1];
   const tPass = Date.now();
   const fromX = at.x > s.w / 2 ? at.x + 200 : Math.max(5, at.x - 200);
-  if (s.mobile) await page.touchscreen.tap(Math.max(5, Math.min(s.w - 5, at.x - 40)), at.y + 30);
+  if (s.mobile) await touch(page, Math.max(5, Math.min(s.w - 5, at.x - 40)), at.y + 30, mode);
   else {
     await page.mouse.move(Math.min(s.w - 2, fromX), at.y + 20);
     await page.mouse.move(at.x + (at.x > s.w / 2 ? -20 : 20), at.y + 10, { steps: 25 });
@@ -376,13 +391,15 @@ async function pointerLight(id) {
     }
   }
   await strip(frames, join(out, `pointer-light__${id}.jpg`), 3);
-  report.pointer[`light/${id}`] = { found: true, start: { x: seed.x, y: seed.y }, breezePxPerS: { x: Math.round(v0.x), y: Math.round(v0.y) }, offTrackPx: Math.round(worst), track: track.map((p) => ({ x: p.x, y: p.y })) };
-  console.log('pointer light', id, JSON.stringify(report.pointer[`light/${id}`]));
+  report.pointer[`light/${id}${mode === 'scroll' ? '-scroll' : ''}`] = { found: true, start: { x: seed.x, y: seed.y }, breezePxPerS: { x: Math.round(v0.x), y: Math.round(v0.y) }, offTrackPx: Math.round(worst), track: track.map((p) => ({ x: p.x, y: p.y })) };
+  console.log('pointer light', id, mode, JSON.stringify(report.pointer[`light/${id}${mode === 'scroll' ? '-scroll' : ''}`]));
   await context.close();
 }
 if (stages.includes('pointer')) {
   await pointerDark('1440'); await pointerDark('390');
   await pointerLight('1440'); await pointerLight('390');
+  // Call 14: a touch scroll at the same spot must do nothing (seeds on track, no flash).
+  await pointerDark('390', 'scroll'); await pointerLight('390', 'scroll');
 }
 
 /* The real switcher: toggle the scheme, then swap in school (About link), and
@@ -431,6 +448,93 @@ if (stages.includes('swap')) {
     console.log('swap', id, JSON.stringify(report.swap[id]));
     await context.close();
   }
+}
+
+/* B2 task 6, seeds on text under wheel steps (1440 light) and on the first frame after load.
+   Wheel: a wheel step of 300 px every 1.5 s for 24 s, the canvas scanned every ~40 ms from the step
+   to 400 ms after it, counting the frames that show any seed ink (alpha >= 14) inside a line of
+   text and the peak alpha of such ink: the critic's film had 4 of 75 frames with peak 135 within
+   200 ms of a step. First: 20 fresh loads, the canvas scanned in a tight loop from navigation
+   start to 3 s, counting the loads whose very first frames show seed ink on text. */
+if (stages.includes('wheel')) {
+  const s = sz('1440');
+  const { context, page } = await open('light', s);
+  await go(page, '', 'light');
+  await install(page);
+  let frames = 0, hit = 0, peak = 0, steps = 0;
+  for (let k = 0; k < 16; k++) {
+    await page.mouse.move(700, 400);
+    await page.mouse.wheel(0, k % 8 < 4 ? 300 : -300);
+    steps++;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 400) {
+      const m = await page.evaluate(() => window.__t5.scan(14, 150));
+      frames++;
+      if (m.onText > 0) { hit++; }
+      await sleep(30);
+    }
+    await sleep(1100);
+  }
+  report.wheel = { steps, frames, framesWithSeedOnText: hit };
+  console.log('wheel 1440 light', JSON.stringify(report.wheel));
+  await context.close();
+}
+if (stages.includes('first')) {
+  const res = [];
+  for (const id of ['1440', '390']) {
+    let loadsWithInk = 0, px = 0;
+    for (let n = 0; n < 12; n++) {
+      const { context, page } = await open('light', sz(id));
+      await page.addInitScript(() => {
+        window.__first = [];
+        const lines = () => {
+          const out = [];
+          const range = document.createRange();
+          document.querySelectorAll('header, main, footer').forEach((region) => {
+            const w = document.createTreeWalker(region, NodeFilter.SHOW_TEXT);
+            for (let n = w.nextNode(); n; n = w.nextNode()) {
+              if (!n.nodeValue.trim()) continue;
+              range.selectNodeContents(n);
+              for (const r of range.getClientRects()) if (r.width > 1 && r.height > 1) out.push([r.left, r.top, r.right, r.bottom]);
+            }
+          });
+          return out;
+        };
+        const poll = () => {
+          const c = document.querySelector('[data-cc-motes]');
+          if (c) {
+            try {
+              const ctx = c.getContext('2d');
+              const k = c.width / innerWidth;
+              const d = ctx.getImageData(0, 0, c.width, c.height).data;
+              const L = lines();
+              let ink = 0, onText = 0;
+              for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) {
+                if (d[(y * c.width + x) * 4 + 3] >= 14) {
+                  ink++;
+                  const cx = x / k, cy = y / k;
+                  for (const r of L) if (cx >= r[0] && cx <= r[2] && cy >= r[1] && cy <= r[3]) { onText++; break; }
+                }
+              }
+              window.__first.push([ink, onText]);
+            } catch {}
+          }
+          if (window.__first.length < 240) requestAnimationFrame(poll);
+        };
+        requestAnimationFrame(poll);
+      });
+      await page.goto(`${base}/t/cottagecore/`, { waitUntil: 'domcontentloaded' });
+      await sleep(3200);
+      const first = await page.evaluate(() => window.__first || []);
+      // Seed ink inside a line of text, counted every frame from the first frame the canvas exists.
+      if (first.some((v) => v[1] > 0)) loadsWithInk++;
+      px += first.reduce((a, v) => a + v[1], 0);
+      await context.close();
+    }
+    res.push({ size: id, loads: 12, loadsWithSeedInkOnTextInFirstFrames: loadsWithInk, seedInkPxOnText: px });
+  }
+  report.first = res;
+  console.log('first frame', JSON.stringify(res));
 }
 
 /* Whole-page sheets, both schemes, five sizes, Home and About. */

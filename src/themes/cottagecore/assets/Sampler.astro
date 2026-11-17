@@ -1,42 +1,92 @@
 ---
-/** A cross-stitch motif, worked stitch by stitch from a chart: a sprig of
-    three little flowers between two leaves. Decorative. */
-interface Props { class?: string }
-const { class: cls } = Astro.props;
+/** The hoop's sprig, worked freehand (founder answer 2, 11-17-26: the first
+    one was a counted cross-stitch chart, and cross-stitch lettering and grids
+    belong to grandmillennial, S5). Embroidery by eye: a stem in stem stitch,
+    leaves and lazy-daisy petals in satin stitch (a solid fill with the
+    thread's lie drawn over it, each petal at its own slant), and French knots
+    at the hearts and on the buds. A seeded wobble moves every point, so no
+    petal repeats and the line is never ruler-straight. Decorative; the rules
+    are global in theme.css (the markup is set as HTML, so scoped CSS cannot
+    reach it). */
+interface Props { class?: string; seed?: number }
+const { class: cls, seed = 17 } = Astro.props;
 
-/* r = rose, b = butter, g = sage, . = bare cloth */
-const CHART = [
-  '..r.....r.....r..',
-  '.rbr...rbr...rbr.',
-  '..r.....r.....r..',
-  '..g.....g.....g..',
-  '...g....g....g...',
-  'gg..g...g...g..gg',
-  '.ggg.g..g..g.ggg.',
-  '......g.g.g......',
-  '........g........',
-];
-const CELL = 6;
-const stitches: Record<string, string> = { r: '', b: '', g: '' };
-CHART.forEach((row, y) => {
-  [...row].forEach((c, x) => {
-    if (c === '.') return;
-    const x0 = x * CELL + 1;
-    const y0 = y * CELL + 1;
-    const s = CELL - 2;
-    stitches[c] += `M${x0} ${y0}l${s} ${s}M${x0 + s} ${y0}l${-s} ${s}`;
-  });
-});
+function rng(s: number) {
+  let a = (s * 2654435761) >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = rng(seed);
+const jit = (v: number) => (rand() * 2 - 1) * v;
+const r1 = (v: number) => Math.round(v * 10) / 10;
+type Pt = [number, number];
+const P = (p: Pt) => `${r1(p[0])} ${r1(p[1])}`;
+const deg = Math.PI / 180;
+let markup = '';
+const add = (cls2: string, d: string) => { markup += `<path class="${cls2}" d="${d}"/>`; };
+
+/** A satin-stitched petal or leaf: a teardrop from `at` along `a` (radians),
+    `len` long and `w` wide, with the thread's lie drawn over it in a few lines
+    that fan slightly (the fan is what makes satin read as satin). */
+function satin(cls2: string, at: Pt, a: number, len: number, w: number) {
+  const dir: Pt = [Math.cos(a), Math.sin(a)];
+  const perp: Pt = [-dir[1], dir[0]];
+  const tip: Pt = [at[0] + dir[0] * len, at[1] + dir[1] * len];
+  const side = (s: number, t: number): Pt => [at[0] + dir[0] * len * t + perp[0] * w * s, at[1] + dir[1] * len * t + perp[1] * w * s];
+  add(cls2, `M${P(at)}C${P(side(0.9, 0.2))} ${P(side(0.8, 0.78))} ${P(tip)}C${P(side(-0.8, 0.78))} ${P(side(-0.9, 0.2))} ${P(at)}Z`);
+  let lie = '';
+  for (let k = -2; k <= 2; k++) {
+    const s = k * 0.3;
+    lie += `M${P([at[0] + perp[0] * s * 0.6, at[1] + perp[1] * s * 0.6])}L${P(side(s * 0.85, 0.86))}`;
+  }
+  add('sk-lie', lie);
+}
+/** A French knot: a small raised ball of thread with a bright catch of light. */
+function knot(cls2: string, p: Pt, r: number) {
+  add(cls2, `M${P([p[0] - r, p[1]])}a${r1(r)} ${r1(r)} 0 1 0 ${r1(2 * r)} 0a${r1(r)} ${r1(r)} 0 1 0 ${r1(-2 * r)} 0Z`);
+  add('sk-glint', `M${P([p[0] - r * 0.45, p[1] - r * 0.35])}l${r1(r * 0.4)} ${r1(-r * 0.15)}`);
+}
+/** Stem stitch: a rope of short overlapping stitches along a curve. */
+function stem(from: Pt, c: Pt, to: Pt) {
+  add('sk-stem', `M${P(from)}Q${P(c)} ${P(to)}`);
+  let ticks = '';
+  for (let i = 1; i < 14; i++) {
+    const t = i / 14;
+    const u = 1 - t;
+    const x = u * u * from[0] + 2 * u * t * c[0] + t * t * to[0];
+    const y = u * u * from[1] + 2 * u * t * c[1] + t * t * to[1];
+    ticks += `M${P([x - 1.1, y + 0.9])}l2.2 -1.8`;
+  }
+  add('sk-ticks', ticks);
+}
+/** A lazy daisy: `n` single-chain loops round a centre, each anchored by a tack. */
+function lazyDaisy(cls2: string, c: Pt, n: number, len: number, w: number, turn: number) {
+  for (let i = 0; i < n; i++) {
+    const a = turn + (i / n) * Math.PI * 2 + jit(0.08);
+    satin(cls2, [c[0] + Math.cos(a) * 3.2, c[1] + Math.sin(a) * 3.2], a, len + jit(1.2), w + jit(0.5));
+  }
+}
+
+// The sprig: a main stem and two side stems, two satin leaves, three lazy
+// daisies, French knots on the hearts and on the buds.
+const base: Pt = [50 + jit(1), 84];
+const fork: Pt = [50 + jit(1), 52];
+stem(base, [47 + jit(2), 68], fork);
+stem(fork, [49, 38], [50 + jit(1.5), 30]);
+stem(fork, [36 + jit(2), 48], [22 + jit(1.5), 34]);
+stem(fork, [64 + jit(2), 46], [78 + jit(1.5), 33]);
+satin('sk-leaf', [48, 70], (-152 + jit(5)) * deg, 22 + jit(2), 6.4);
+satin('sk-leaf', [51, 62], (-30 + jit(5)) * deg, 23 + jit(2), 6.4);
+lazyDaisy('sk-petal-rose', [22, 31], 6, 10.5, 3.6, 0.3);
+lazyDaisy('sk-petal-rose', [78, 30], 6, 10.5, 3.6, 0.9);
+lazyDaisy('sk-petal-butter', [50, 24], 7, 12.5, 4, -1.2);
+knot('sk-knot-heart', [22, 31], 2.1);
+knot('sk-knot-heart', [78, 30], 2.1);
+knot('sk-knot-rose', [50, 24], 2.6);
+for (const [x, y] of [[35, 14], [66, 12], [42, 6], [58, 4], [13, 44], [88, 42]] as Array<[number, number]>) knot('sk-knot-bud', [x + jit(1), y + jit(1)], 1.5);
 ---
-<svg class:list={['cc-sampler', cls]} viewBox={`0 0 ${CHART[0].length * CELL} ${CHART.length * CELL}`} aria-hidden="true" focusable="false">
-  <path class="x-g" d={stitches.g} />
-  <path class="x-r" d={stitches.r} />
-  <path class="x-b" d={stitches.b} />
-</svg>
-
-<style>
-  path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
-  .x-r { stroke: var(--cc-rose-edge); }
-  .x-b { stroke: var(--cc-heart); }
-  .x-g { stroke: var(--cc-stem); }
-</style>
+<svg class:list={['cc-sampler', cls]} viewBox="0 0 100 90" aria-hidden="true" focusable="false" set:html={markup} />

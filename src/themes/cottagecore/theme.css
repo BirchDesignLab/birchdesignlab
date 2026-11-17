@@ -109,6 +109,8 @@
   --cc-rose-petal: #e8aeaa;
   --cc-rose-edge: #b8747a;
   --cc-blush: #fff4e4;
+  /* The felted underside of a southern magnolia leaf. */
+  --cc-rust: #a8714d;
   /* Pressed flat (brief item 3). A specimen mounted on paper casts nothing
      but a hairline of contact; a sprig lying loose on the cloth keeps a very
      soft contact shadow, so none floats. */
@@ -225,6 +227,7 @@
   --cc-rose-petal: #cf928f;
   --cc-rose-edge: #8a4d53;
   --cc-blush: #f0dcc0;
+  --cc-rust: #8c5d40;
   --press-shadow: drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.3));
   --press-shadow-mounted: none;
   --paper-lamp: linear-gradient(165deg, rgba(255, 200, 120, 0.14), transparent 60%);
@@ -245,12 +248,16 @@
   --board-ink-muted: #4f3a2b;
   --board-accent: #702a36;
   --board-link: #2f4a2a;
-  /* The clipping by lamplight: a dim grey print slip, not the cream board. */
-  --clip-paper: #c4c2b8;
-  --clip-ink: #2a211a;
-  --clip-ink-muted: #4a3d32;
-  --clip-accent: #702a36;
-  --clip-rule: rgba(42, 33, 26, 0.34);
+  /* The clipping by lamplight (founder call 9, 11-17-26): warm, darker
+     newsprint, one step under the board (#cfc1a1, L 0.54; this is L 0.37, a
+     1.39:1 step), so it is no longer the brightest surface after the board
+     and still reads as a slip on the butter note (4.54:1 against it).
+     Contrast on the paper: ink 6.99, muted 5.24, accent 4.94. */
+  --clip-paper: #b0a483;
+  --clip-ink: #22190f;
+  --clip-ink-muted: #3b2f26;
+  --clip-accent: #5f1f2c;
+  --clip-rule: rgba(34, 25, 15, 0.34);
   --board-rule: rgba(58, 42, 31, 0.3);
   --board-lamp-foot: 0.1;
   --board-lamp:
@@ -291,7 +298,6 @@
 [data-theme='cottagecore'] :is(h1, h2, h3) {
   font-family: var(--font-display);
   font-weight: 560;
-  font-variation-settings: 'SOFT' 100, 'WONK' 1;
   line-height: 1.06;
   letter-spacing: -0.012em;
   text-wrap: balance;
@@ -337,10 +343,8 @@
    a whole page and not only in a crop. */
 [data-theme='cottagecore'] .cc-hand {
   font-family: var(--font-hand);
-  font-weight: var(--hand-kicker-wght);
   font-size: clamp(1.6rem, 2.4vw, 2rem);
   line-height: 1.05;
-  color: var(--hand-kicker-ink);
   letter-spacing: 0;
 }
 /* Specificity: the pages' scoped rules are (0,3,1) on some labels, so the
@@ -426,7 +430,7 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   --cc-lav: #a596c9; --cc-lav-edge: #6f5f98; --cc-fern: #95ae86;
   --cc-twig: #6d5140; --cc-lenticel: #f7efdf; --cc-catkin: #c9a672;
   --cc-rose-petal: #e5b1ad; --cc-rose-edge: #b8747a; --cc-blush: #fef4e5;
-  --cc-gum-strip: #ece0c4;
+  --cc-gum-strip: #ece0c4; --cc-rust: #a8714d;
 }
 /* By lamplight the board takes its own inks and stays cream, with a visible
    edge (a lit top lip, a dark thickness) in place of the soft paper lift. The
@@ -526,66 +530,76 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 
 /* ---------- washi tape ---------- */
 
+/* A tape's body is four custom properties (colour, pattern, pattern size,
+   outline) that the element paints on itself. By lamplight the body moves to
+   ::before instead (below), because the lifted corner opens a hole in it and
+   a shadow falls through the hole; the variants set only the properties, so
+   nothing is written twice. */
 [data-theme='cottagecore'] .cc-tape {
   position: absolute;
   z-index: 2;
   width: var(--tape-w, 7.5rem);
   height: 1.9rem;
   rotate: var(--tape-tilt, -4deg);
-  background-color: var(--tape-sage);
-  background-image:
+  --tb-color: var(--tape-sage);
+  --tb-image:
     linear-gradient(90deg, var(--tape-sage-thread) 50%, transparent 0),
     linear-gradient(var(--tape-sage-thread) 50%, transparent 0);
-  background-size: 10px 10px;
+  --tb-size: 10px 10px;
   /* Torn little zigzags at both ends. */
-  clip-path: polygon(
+  --tb-clip: polygon(
     3% 0, 97% 0, 100% 12%, 97% 25%, 100% 38%, 97% 50%, 100% 62%, 97% 75%, 100% 88%, 97% 100%,
     3% 100%, 0 88%, 3% 75%, 0 62%, 3% 50%, 0 38%, 3% 25%, 0 12%
   );
+  background-color: var(--tb-color);
+  background-image: var(--tb-image);
+  background-size: var(--tb-size);
+  clip-path: var(--tb-clip);
   /* Inert but touchable: the free corner lifts on hover or tap (below). */
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   /* The free corner: which end and which side, and how big the curl. */
   --c-x: 100%; --o-x: 0%; --c-y: 100%; --o-y: 0%;
   --curl: 1.15rem;
+  --corner-dir: bottom right;
 }
 [data-theme='cottagecore'] .cc-tape--rose {
-  background-color: var(--tape-rose);
-  background-image: radial-gradient(circle, var(--tape-rose-dot) 2px, transparent 2.5px);
-  background-size: 12px 12px;
+  --tb-color: var(--tape-rose);
+  --tb-image: radial-gradient(circle, var(--tape-rose-dot) 2px, transparent 2.5px);
+  --tb-size: 12px 12px;
 }
 [data-theme='cottagecore'] .cc-tape--butter {
-  background-color: var(--tape-butter);
-  background-image: repeating-linear-gradient(-45deg, var(--tape-butter-stripe) 0 5px, transparent 5px 11px);
-  background-size: auto;
+  --tb-color: var(--tape-butter);
+  --tb-image: repeating-linear-gradient(-45deg, var(--tape-butter-stripe) 0 5px, transparent 5px 11px);
+  --tb-size: auto;
 }
 /* The one indigo thread (D8): indigo-and-white gingham, no text on it. */
 [data-theme='cottagecore'] .cc-tape--indigo {
-  background-color: var(--tape-indigo);
-  background-image:
+  --tb-color: var(--tape-indigo);
+  --tb-image:
     linear-gradient(90deg, var(--tape-indigo-thread) 50%, transparent 0),
     linear-gradient(var(--tape-indigo-thread) 50%, transparent 0);
-  background-size: 8px 8px;
+  --tb-size: 8px 8px;
 }
 /* Cut ends (brief item 9): torn at both ends is the default; these are the
    others a roll of washi gives, so no two tapes on a page share an outline.
    Every instance also sets its own --tape-w. */
 [data-theme='cottagecore'] .cc-tape--cut {
-  clip-path: polygon(2.5% 0, 100% 0, 97.5% 100%, 0 100%);
+  --tb-clip: polygon(2.5% 0, 100% 0, 97.5% 100%, 0 100%);
 }
 [data-theme='cottagecore'] .cc-tape--half {
-  clip-path: polygon(
+  --tb-clip: polygon(
     0 0, 100% 0, 100% 100%, 0 100%, 2.5% 88%, 0 76%, 3% 62%, 0 50%, 2.5% 36%, 0 22%, 3% 10%
   );
 }
 [data-theme='cottagecore'] .cc-tape--ragged {
-  clip-path: polygon(
+  --tb-clip: polygon(
     1% 0, 99% 0, 100% 20%, 96% 41%, 99% 63%, 97% 84%, 100% 100%,
     2% 100%, 0 76%, 4% 58%, 1% 33%, 3% 14%
   );
 }
 [data-theme='cottagecore'] .cc-tape--pinked {
-  clip-path: polygon(
+  --tb-clip: polygon(
     0 0, 100% 0, 98% 17%, 100% 33%, 98% 50%, 100% 67%, 98% 83%, 100% 100%,
     0 100%, 2% 83%, 0 67%, 2% 50%, 0 33%, 2% 17%
   );
@@ -617,15 +631,69 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   );
   clip-path: polygon(var(--c-x) var(--c-y), var(--o-x) var(--c-y), var(--c-x) var(--o-y));
 }
-[data-theme='cottagecore'] .cc-tape--cut { --c-y: 0%; --o-y: 100%; --fold-dir: bottom left; }
+[data-theme='cottagecore'] .cc-tape--cut { --c-y: 0%; --o-y: 100%; --fold-dir: bottom left; --corner-dir: top right; }
 [data-theme='cottagecore'] .cc-tape--half { --curl: 1.4rem; }
-[data-theme='cottagecore'] .cc-tape--ragged { --c-x: 0%; --o-x: 100%; --c-y: 0%; --o-y: 100%; --fold-dir: bottom right; --curl: 1.3rem; }
-[data-theme='cottagecore'] .cc-tape--pinked { --c-x: 0%; --o-x: 100%; --fold-dir: top right; --curl: 1.25rem; }
+[data-theme='cottagecore'] .cc-tape--ragged { --c-x: 0%; --o-x: 100%; --c-y: 0%; --o-y: 100%; --fold-dir: bottom right; --corner-dir: top left; --curl: 1.3rem; }
+[data-theme='cottagecore'] .cc-tape--pinked { --c-x: 0%; --o-x: 100%; --fold-dir: top right; --corner-dir: bottom left; --curl: 1.25rem; }
 [data-theme='cottagecore'] .cc-tape[data-lift]::before,
 [data-theme='cottagecore'] .cc-tape[data-lift]::after { scale: 1; }
 @media (hover: hover) and (pointer: fine) {
   [data-theme='cottagecore'] .cc-tape:hover::before,
   [data-theme='cottagecore'] .cc-tape:hover::after { scale: 1; }
+}
+
+/* By lamplight the lift is a corner peeled off the paper, not a highlight
+   painted on the tape (founder call 5, 11-17-26; light stays as it is). The
+   body is ::before, so the corner can open a hole in it: where the corner
+   was, the paper (or the cloth) shows through with the lifted flap's shadow
+   falling on it. The flap itself is folded back over the tape as translucent
+   washi, its back: a pale film that lets the tape's pattern through, with a
+   thin lit edge along the fold. */
+[data-theme='cottagecore'][data-scheme='dark'] .cc-tape {
+  background: none;
+  clip-path: none;
+  --flap: rgba(255, 244, 224, 0.2);
+  --flap-edge: rgba(255, 244, 224, 0.5);
+  --flap-shade: rgba(0, 0, 0, 0.5);
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-tape::before {
+  left: 0; top: 0; width: 100%; height: 100%;
+  translate: none; scale: 1; transform-origin: 50% 50%;
+  background-color: var(--tb-color);
+  background-image: var(--tb-image);
+  background-size: var(--tb-size);
+  clip-path: var(--tb-clip);
+  /* The hole: the whole body, less the corner triangle (zero size at rest). */
+  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(to var(--corner-dir), #0000 50%, #000 50%);
+  mask-image: linear-gradient(#000, #000), linear-gradient(to var(--corner-dir), #0000 50%, #000 50%);
+  -webkit-mask-size: 100% 100%, 0 0;
+  mask-size: 100% 100%, 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 0, var(--c-x) var(--c-y);
+  mask-position: 0 0, var(--c-x) var(--c-y);
+  -webkit-mask-composite: source-out;
+  mask-composite: subtract;
+  transition: -webkit-mask-size 170ms ease-out, mask-size 170ms ease-out;
+}
+[data-theme='cottagecore'][data-scheme='dark'] .cc-tape[data-lift]::before {
+  -webkit-mask-size: 100% 100%, var(--curl) var(--curl);
+  mask-size: 100% 100%, var(--curl) var(--curl);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='cottagecore'][data-scheme='dark'] .cc-tape:hover::before {
+    -webkit-mask-size: 100% 100%, var(--curl) var(--curl);
+    mask-size: 100% 100%, var(--curl) var(--curl);
+  }
+}
+/* The square at the free corner holds both halves: the flap on the tape's
+   side of the fold, the shadow in the corner triangle the flap left. */
+[data-theme='cottagecore'][data-scheme='dark'] .cc-tape::after {
+  clip-path: none;
+  background:
+    linear-gradient(to var(--corner-dir), transparent calc(50% - 0.5px), var(--flap-edge) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(to var(--corner-dir), var(--flap) 50%, transparent 50%),
+    linear-gradient(to var(--corner-dir), transparent 50%, var(--flap-shade) 50%, rgba(0, 0, 0, 0.2) 66%, transparent 90%);
 }
 
 /* ---------- gingham ---------- */
@@ -722,10 +790,7 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 [data-theme='cottagecore'] .cc-note-link {
   display: inline-flex; align-items: center; gap: 0.4em;
   font-family: var(--font-hand);
-  font-weight: var(--hand-note-wght);
-  font-size: 2rem;
   line-height: 1.1;
-  color: var(--hand-note-ink);
   text-decoration: none;
 }
 @media (hover: hover) {
@@ -771,7 +836,18 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 /* Gulf Coast specimens (Stage 5 D2 b): magnolia's glossy leaf, the maypop's
    lavender tepals and banded corona, wax myrtle's waxy berries. Built from the
    existing tokens, so both schemes and the board retint them. */
-[data-theme='cottagecore'] .pressed .leaf--dark { fill: color-mix(in srgb, var(--cc-leaf) 72%, var(--cc-leaf-edge)); stroke-width: 0.8; }
+[data-theme='cottagecore'] .pressed .leaf--dark { fill: color-mix(in srgb, var(--cc-leaf) 48%, var(--cc-leaf-edge)); stroke-width: 0.8; }
+/* The magnolia: a leathery leaf turned over to its rust underside, a heavy
+   midrib, the bloom's thick creamy petals with a shaded strip each, and the
+   tall cone with its ridged carpels. */
+[data-theme='cottagecore'] .pressed .leaf--rust { fill: var(--cc-rust); stroke: color-mix(in srgb, var(--cc-rust) 55%, var(--cc-leaf-edge)); stroke-width: 0.8; }
+[data-theme='cottagecore'] .pressed .vein--bold { stroke-width: 1.1; opacity: 0.85; }
+[data-theme='cottagecore'] .pressed .vein--pale { stroke: color-mix(in srgb, var(--cc-rust) 45%, var(--cc-blush)); opacity: 0.8; }
+[data-theme='cottagecore'] .pressed .petal--cream { fill: color-mix(in srgb, var(--cc-petal) 80%, var(--cc-heart)); stroke-width: 0.9; }
+[data-theme='cottagecore'] .pressed .petal--cream.petal--back { fill: color-mix(in srgb, var(--cc-petal-back) 78%, var(--cc-heart)); }
+[data-theme='cottagecore'] .pressed .petal-shade { fill: var(--cc-petal-back); opacity: 0.5; stroke: none; }
+[data-theme='cottagecore'] .pressed .cone { fill: color-mix(in srgb, var(--cc-heart) 55%, var(--cc-petal)); stroke: var(--cc-heart-deep); stroke-width: 0.8; }
+[data-theme='cottagecore'] .pressed .cone-line { fill: none; stroke: var(--cc-heart-deep); stroke-width: 0.5; opacity: 0.7; }
 [data-theme='cottagecore'] .pressed .petal--lav { fill: color-mix(in srgb, var(--cc-lav) 30%, var(--cc-petal)); stroke: var(--cc-lav-edge); stroke-width: 0.5; }
 [data-theme='cottagecore'] .pressed .petal--lav.petal--back { fill: color-mix(in srgb, var(--cc-lav) 42%, var(--cc-petal-back)); }
 [data-theme='cottagecore'] .pressed .corona { fill: none; stroke: var(--cc-lav-edge); stroke-width: 0.8; }
@@ -779,6 +855,30 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 [data-theme='cottagecore'] .pressed .corona--short { stroke: var(--cc-lav); stroke-width: 0.9; }
 [data-theme='cottagecore'] .pressed .berry { fill: color-mix(in srgb, var(--cc-petal) 62%, #7f949a); stroke: var(--cc-leaf-edge); stroke-width: 0.5; }
 [data-theme='cottagecore'] .pressed .gum-strip { fill: var(--cc-gum-strip); stroke: rgba(var(--shadow), 0.18); stroke-width: 0.6; }
+
+/* ---------- the hoop: a freehand sprig and the maker's line ---------- */
+
+/* Sampler.astro and Signature.astro set their markup as HTML, so their rules
+   live here. Embroidery by eye, never counted (S5): stem stitch, satin stitch,
+   French knots, lazy daisies, and a running-stitch script. */
+[data-theme='cottagecore'] .cc-sampler { overflow: visible; }
+[data-theme='cottagecore'] .cc-sampler path { stroke-linecap: round; stroke-linejoin: round; }
+[data-theme='cottagecore'] .cc-sampler .sk-stem { fill: none; stroke: var(--cc-stem); stroke-width: 1.7; }
+[data-theme='cottagecore'] .cc-sampler .sk-ticks { fill: none; stroke: color-mix(in srgb, var(--cc-stem) 50%, #fff); stroke-width: 0.6; opacity: 0.8; }
+[data-theme='cottagecore'] .cc-sampler .sk-leaf { fill: var(--cc-stem); stroke: var(--cc-leaf-edge); stroke-width: 0.5; }
+[data-theme='cottagecore'] .cc-sampler .sk-lie { fill: none; stroke: rgba(255, 255, 255, 0.34); stroke-width: 0.4; }
+[data-theme='cottagecore'] .cc-sampler .sk-petal-rose { fill: var(--cc-rose-petal); stroke: var(--cc-rose-edge); stroke-width: 0.5; }
+[data-theme='cottagecore'] .cc-sampler .sk-petal-butter { fill: var(--cc-heart); stroke: var(--cc-heart-deep); stroke-width: 0.5; }
+[data-theme='cottagecore'] .cc-sampler .sk-knot-heart { fill: var(--cc-heart-deep); stroke: var(--cc-heart); stroke-width: 0.4; }
+[data-theme='cottagecore'] .cc-sampler .sk-knot-rose { fill: var(--cc-rose-edge); stroke: var(--cc-rose-petal); stroke-width: 0.5; }
+[data-theme='cottagecore'] .cc-sampler .sk-knot-bud { fill: var(--cc-heart); stroke: var(--cc-heart-deep); stroke-width: 0.4; }
+[data-theme='cottagecore'] .cc-sampler .sk-glint { fill: none; stroke: rgba(255, 255, 255, 0.7); stroke-width: 0.5; }
+[data-theme='cottagecore'] .cc-signature { overflow: visible; }
+[data-theme='cottagecore'] .cc-signature path { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
+/* A running stitch: short threads and short gaps along the pen path. */
+[data-theme='cottagecore'] .cc-signature .sig-run { stroke-width: 1.15; stroke-dasharray: 2.6 1.5; }
+[data-theme='cottagecore'] .cc-signature .sig-swash { stroke-width: 0.9; stroke-dasharray: 2.2 1.7; opacity: 0.85; }
+[data-theme='cottagecore'] .cc-signature .sig-dot { stroke-width: 2.1; }
 
 /* ---------- lamplight pools (dark only) ---------- */
 

@@ -22,11 +22,15 @@ const cx = flip ? 115 : 35;
 </svg>
 
 <style>
-  .postmark { fill: none; stroke: var(--mark-muted); stroke-width: 1.5; }
+  /* The ink: the muted mark colour. By lamplight that is a cream, which on the
+     kraft envelope and the dark card shouted over the stamp (founder call 10,
+     11-17-26), so the dark cancel is the same ink at about half strength. */
+  .postmark { --pm-ink: var(--mark-muted); fill: none; stroke: var(--pm-ink); stroke-width: 1.5; }
+  :global([data-theme='cottagecore'][data-scheme='dark']) .postmark { --pm-ink: color-mix(in srgb, var(--mark-muted) 55%, transparent); }
   .pm-dots { stroke-width: 2.2; }
   .pm-rule { stroke-width: 0.8; }
   .pm-arc, .pm-date {
-    fill: var(--mark-muted); stroke: none;
+    fill: var(--pm-ink); stroke: none;
     font-family: var(--font-body); font-weight: 700; text-transform: uppercase;
   }
   .pm-arc { font-size: 7.4px; letter-spacing: 1.3px; }

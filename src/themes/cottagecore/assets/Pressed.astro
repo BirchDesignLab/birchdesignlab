@@ -12,8 +12,12 @@ interface Props {
   kind: 'daisy' | 'lavender' | 'fern' | 'birch' | 'rose' | 'leaf' | 'magnolia' | 'passion' | 'myrtle';
   seed?: number;
   class?: string;
+  /** Daisy only: a short stem, for the wordmark (a big head on a stub that
+      ends on the baseline). Same petals, same jitter, so it is the same
+      flower as the long one. */
+  short?: boolean;
 }
-const { kind, seed = 1, class: cls } = Astro.props;
+const { kind, seed = 1, class: cls, short = false } = Astro.props;
 
 type Pt = [number, number];
 
@@ -207,12 +211,17 @@ const add = (d: string, c: string, op?: number) => shapes.push({ d: compact(d), 
 const deg = Math.PI / 180;
 
 if (kind === 'daisy') {
-  viewBox = '0 0 140 250';
+  viewBox = short ? '16 0 108 152' : '0 0 140 250';
   const head: Pt = [70 + jit(4), 60];
   const stemTop: Pt = [head[0], head[1] + 8];
-  add(`M${P(stemTop)}Q${P([56 + jit(8), 150])} ${P([66 + jit(6), 248])}`, 'stem');
-  for (const [t, a, l] of [[0.52, -140, 46], [0.7, -38, 40]] as const) {
-    const at = quad(stemTop, [56, 150], [66, 248], t).p;
+  // The long stem runs to y 248; the wordmark's stub ends at y 150, so the
+  // foot of its viewBox is the baseline it stands on.
+  const stemMid: Pt = [56 + jit(8), short ? 112 : 150];
+  const stemEnd: Pt = [66 + jit(6), short ? 150 : 248];
+  add(`M${P(stemTop)}Q${P(stemMid)} ${P(stemEnd)}`, 'stem');
+  for (const [t, a, l] of [[0.52, -140, short ? 34 : 46], [0.7, -38, short ? 30 : 40]] as const) {
+    // Leaves attach to the un-jittered stem, as they always have.
+    const at = quad(stemTop, [56, short ? 112 : 150], [66, short ? 150 : 248], t).p;
     const lf = leaf(at, (a + jit(8)) * deg, l + jit(5), 10 + jit(1.5), { bend: 0.12, widest: 0.62, teeth: 5, depth: 0.28, lobed: true });
     add(lf.outline, 'leaf');
     add(lf.rib, 'vein');
@@ -306,13 +315,27 @@ if (kind === 'birch') {
     ([x, y]) => [x + jit(5), y + jit(4)] as Pt,
   );
   add(smooth(nodes, false), 'twig');
+  // Lenticels sit ON the twig. The twig is a midpoint spline (smooth() above):
+  // it passes through the midpoints between nodes, not through the nodes, so
+  // dashes placed along the straight node-to-node chords floated up to 10px
+  // off it (on cream-on-cream in light they were invisible; on the dark
+  // board they showed). Each piece of the spline is one quadratic, so the
+  // dashes are sampled on that.
+  const mid2 = (p: Pt, q: Pt): Pt => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const pieces: [Pt, Pt, Pt][] = [];
+  let from: Pt = nodes[0];
+  for (let i = 1; i < nodes.length - 1; i++) {
+    const to = mid2(nodes[i], nodes[i + 1]);
+    pieces.push([from, nodes[i], to]);
+    from = to;
+  }
+  // The spline ends with a straight line to the last node.
+  pieces.push([from, mid2(from, nodes[nodes.length - 1]), nodes[nodes.length - 1]]);
   let lenticels = '';
-  for (let i = 0; i < nodes.length - 1; i++) {
-    const [a, b] = [nodes[i], nodes[i + 1]];
-    for (let k = 0.25; k < 1; k += 0.3) {
-      const x = a[0] + (b[0] - a[0]) * k;
-      const y = a[1] + (b[1] - a[1]) * k;
-      lenticels += `M${P([x - 1.8, y + jit(0.6)])}h3.6`;
+  for (const [a, c, b] of pieces) {
+    for (const k of [0.25, 0.55, 0.85]) {
+      const { p } = quad(a, c, b, k);
+      lenticels += `M${P([p[0] - 1.8, p[1] + jit(0.6)])}h3.6`;
     }
   }
   add(lenticels, 'lenticel');
@@ -437,58 +460,84 @@ if (kind === 'leaf') {
    jitter so no two presses match. */
 
 if (kind === 'magnolia') {
-  // Southern magnolia, Magnolia grandiflora: two glossy oblong leaves and
-  // one wide cupped bloom with a central cone of stamens.
+  // Southern magnolia, Magnolia grandiflora (founder call 7, 11-17-26: the
+  // first drawing, twelve flat petals round a yellow disc, read as a dog-rose).
+  // A cupped bloom seen at three-quarter view: a few broad, thick, creamy
+  // petals, the back ones rising behind a tall central cone (the gynoecium)
+  // and the front ones cupping up around its foot or drooping over the stem;
+  // a ring of short stamens at the cone's base; and two leathery leaves, one
+  // showing its glossy dark face, one turned over to its rust, felted
+  // underside. Not a flat radial flower, and no daisy disc.
   viewBox = '0 0 200 270';
-  const base: Pt = [96, 268];
-  const ctrl: Pt = [84 + jit(4), 176];
-  const top: Pt = [100, 104];
+  const base: Pt = [94, 268];
+  const ctrl: Pt = [78 + jit(4), 200];
+  const top: Pt = [100, 134];
   add(`M${P(base)}Q${P(ctrl)} ${P(top)}`, 'stem');
-  for (const [t, a, l, w] of [[0.3, -154, 104, 40], [0.5, -26, 94, 36]] as const) {
+  // Leaves: oblong, pointed, glossy, a heavy midrib and few, faint side veins.
+  for (const [t, a, l, w, rust] of [[0.3, -156, 112, 42, false], [0.52, -24, 96, 36, true]] as const) {
     const at = quad(base, ctrl, top, t).p;
-    const ang = (a + jit(6)) * deg;
-    const lf = leaf(at, ang, l + jit(5), w + jit(2), { n: 24, bend: 0.07 * (a < -90 ? -1 : 1), widest: 0.46 });
-    add(lf.outline, 'leaf leaf--dark');
-    add(lf.rib, 'vein');
-    // Side veins run out from the midrib toward the edge.
+    const ang = (a + jit(5)) * deg;
+    const lf = leaf(at, ang, l + jit(5), w + jit(2), { n: 28, bend: 0.06 * (a < -90 ? -1 : 1), widest: 0.5 });
+    add(lf.outline, rust ? 'leaf leaf--rust' : 'leaf leaf--dark');
+    add(lf.rib, rust ? 'vein vein--pale' : 'vein vein--bold');
     let veins = '';
     const dir: Pt = [Math.cos(ang), Math.sin(ang)];
     const perp: Pt = [-dir[1], dir[0]];
-    for (let v = 1; v <= 8; v++) {
-      const s = v / 10;
+    for (let v = 1; v <= 7; v++) {
+      const s = v / 9;
       const m: Pt = [at[0] + dir[0] * l * s, at[1] + dir[1] * l * s];
-      const reach = w * 0.38 * Math.sin(Math.PI * Math.pow(s, 0.8));
+      const reach = w * 0.34 * Math.sin(Math.PI * Math.pow(s, 0.8));
       for (const sd of [-1, 1]) {
         veins += `M${P(m)}L${P([m[0] + perp[0] * reach * sd + dir[0] * reach * 0.8, m[1] + perp[1] * reach * sd + dir[1] * reach * 0.8])}`;
       }
     }
-    add(veins, 'vein');
+    add(veins, rust ? 'vein vein--pale' : 'vein');
   }
-  const c: Pt = [100 + jit(2), 66];
-  for (const ring of [0, 1]) {
-    const count = 6;
-    for (let i = 0; i < count; i++) {
-      const a = ((i + ring * 0.5) / count) * Math.PI * 2 + jit(0.1) - Math.PI / 2;
-      const len = (ring ? 45 : 50) + jit(3);
-      const base2: Pt = [c[0] + Math.cos(a) * 5, c[1] + Math.sin(a) * 5];
-      const p = leaf(base2, a, len, (ring ? 34 : 36) + jit(2), { n: 16, widest: 0.6, bend: jit(0.06) });
-      add(p.outline, ring ? 'petal' : 'petal petal--back');
-      add(p.rib, 'petal-vein');
-    }
+  const c: Pt = [100 + jit(2), 86];
+  /** A thick creamy petal: its outline, a shaded strip down one side, its midrib. */
+  const petal = (from: Pt, a: number, len: number, w: number, bend: number, back: boolean) => {
+    const p = leaf(from, a, len + jit(3), w + jit(2), { n: 18, widest: 0.6, bend });
+    add(p.outline, back ? 'petal petal--back petal--cream' : 'petal petal--cream');
+    const sh = leaf(from, a, len * 0.94, w * 0.46, { n: 14, widest: 0.6, bend: bend * 1.4 });
+    add(sh.outline, 'petal-shade');
+    add(p.rib, 'petal-vein');
+  };
+  const foot: Pt = [c[0], c[1] + 14];
+  const lap: Pt = [c[0], c[1] + 30];
+  // The back of the cup and its rim, drooping a little at the sides.
+  for (const [a, len, w, bend] of [[-130, 62, 36, 0.06], [-50, 62, 36, -0.06], [-90, 72, 34, 0], [-172, 54, 40, -0.14], [-8, 54, 40, 0.14]] as const) {
+    petal(foot, (a + jit(4)) * deg, len, w, bend, true);
   }
-  add(`M${P([c[0] - 9, c[1]])}a9 9 0 1 0 18 0a9 9 0 1 0 -18 0Z`, 'heart');
+  // The cone: tall, narrow, rounded at the tip, ridged with the carpels.
+  const [cx, cy] = [c[0], c[1]];
+  add(`M${P([cx - 12, cy + 28])}C${P([cx - 14, cy - 2])} ${P([cx - 7.5, cy - 40])} ${P([cx, cy - 60])}C${P([cx + 7.5, cy - 40])} ${P([cx + 14, cy - 2])} ${P([cx + 12, cy + 28])}Z`, 'cone');
+  let ridges = '';
+  for (let r = 0; r < 10; r++) {
+    const y = cy + 24 - r * 8.5;
+    const wdt = 11 * Math.sin(Math.PI * Math.pow((cy + 28 - y + 4) / 96, 0.7)) + 1.4;
+    ridges += `M${P([cx - wdt, y])}q${n1(wdt)} ${n1(3.4)} ${n1(wdt * 2)} 0`;
+  }
+  add(ridges, 'cone-line');
+  // A ring of short stamens at the cone's foot, each ending in a dot.
   let stamens = '';
   let tips = '';
-  for (let i = 0; i < 30; i++) {
-    const a = (i / 30) * Math.PI * 2 + jit(0.1);
-    const l = 11 + jit(2.5);
-    const e: Pt = [c[0] + Math.cos(a) * l, c[1] + Math.sin(a) * l];
-    stamens += `M${P([c[0] + Math.cos(a) * 4, c[1] + Math.sin(a) * 4])}L${P(e)}`;
-    tips += `M${P([e[0] - 1, e[1]])}a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z`;
+  for (let i = 0; i < 28; i++) {
+    const a = Math.PI + (i / 27) * Math.PI + jit(0.04);
+    const r0: Pt = [cx + Math.cos(a) * 12, cy + 26 + Math.sin(a) * -4];
+    const r1: Pt = [cx + Math.cos(a) * (21 + jit(2)), cy + 26 + Math.sin(a) * -9 + 2];
+    stamens += `M${P(r0)}L${P(r1)}`;
+    tips += `M${P([r1[0] - 0.9, r1[1]])}a.9 .9 0 1 0 1.8 0a.9 .9 0 1 0 -1.8 0Z`;
   }
   add(stamens, 'stamen');
   add(tips, 'floret');
-  add(`M${P([c[0] - 4.5, c[1]])}a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0Z`, 'pistil');
+  // The front: two inner petals cupping up round the cone's sides, two drooping over the stem.
+  petal(lap, (90 + jit(5)) * deg, 44, 38, 0, false);
+  for (const [a, len, w, bend] of [[148, 52, 42, -0.12], [32, 52, 42, 0.12]] as const) {
+    petal(lap, (a + jit(4)) * deg, len, w, bend, false);
+  }
+  for (const [a, len, w, bend] of [[-124, 46, 30, 0.05], [-56, 46, 30, -0.05]] as const) {
+    petal(lap, (a + jit(4)) * deg, len, w, bend, false);
+  }
 }
 
 if (kind === 'passion') {

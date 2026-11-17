@@ -89,11 +89,24 @@ describe('grandmillennial B1 calls', () => {
     expect(services).toContain('0 0 0 8px var(--lacquer-yellow)');
     expect(services).not.toContain('0 0 0 8px var(--field)');
   });
-  it('the rosette is a handful of broad pleats round a covered button', () => {
+  it('the rosette is one ring of 8 to 10 broad pleats, a large covered button and two short tails', () => {
     const rosette = read('parts/Rosette.astro');
-    expect(rosette).toMatch(/ring\(9, 0,/);
-    expect(rosette).toMatch(/ring\(9, 20,/);
-    expect(rosette).toContain('class="button"');
+    const n = Number(rosette.match(/Array\.from\(\{ length: (\d+) \}/)?.[1]);
+    expect(n).toBeGreaterThanOrEqual(8);
+    expect(n).toBeLessThanOrEqual(10);
+    // No second ring of pleats behind the first (the dahlia).
+    expect(rosette).not.toMatch(/inner/);
+    // The button is at least 11 units of the 84-unit rosette.
+    expect(Number(rosette.match(/class="button" r="([\d.]+)"/)?.[1])).toBeGreaterThanOrEqual(11);
+    // Two tails, in the bow's oxblood.
+    expect(rosette.match(/class="tail"/g)).toHaveLength(2);
+    expect(rosette).toContain('var(--bow-deep)');
+  });
+  it('the phone alphabet keeps 7/7/7/5 and centres the short last row', () => {
+    const about = read('pages/About.astro');
+    expect(about).toContain("['ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ']");
+    expect(about).toMatch(/const lead = Math\.floor\(\(\(cols - letters\.length\) \* 6\) \/ 2\)/);
+    expect(about).toContain('(lead + i * 6 + x) * ABC_CELL');
   });
   it("the sampler's Greek key turns four corners and repeats whole motifs", () => {
     const about = read('pages/About.astro');
