@@ -20,7 +20,7 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   <h1 class="billboard">
     {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span>{word}</span></>)}
   </h1>
-  <span class="bark-credit-pin" data-parity-skip><BarkCredit href="/lab/bdl-001" label={chrome.barkCredit} reload={!!theme} /></span>
+  <span class="bark-credit-pin" data-parity-skip><BarkCredit href="/lab/bdl-001/" label={chrome.barkCredit} reload={!!theme} /></span>
 </section>
 
 <section class="wrap opener">
@@ -46,6 +46,11 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     <div class="wrap loud-inner">
       <p class="smallcaps kicker">{copy.lab.kicker}</p>
       <p class="pull">{copy.lab.pull}</p>
+      {copy.lab.proof && (
+        <p class="proof" data-parity-skip>
+          <a href="/lab/bdl-005/" data-astro-reload={theme ? '' : undefined}>{copy.lab.proof}</a>
+        </p>
+      )}
       <ul class="specimens" role="list" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li class="specimen">
@@ -142,6 +147,11 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     font-family: var(--font-display); font-size: var(--text-2xl);
     line-height: 1.2; max-width: 34ch; margin-top: var(--space-3);
   }
+  /* The result line: plain prose under the pull, the whole sentence its link
+     to the study it comes from (BDL-005). */
+  .proof { margin-top: var(--space-3); max-width: 46ch; }
+  .proof a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 0.2em; }
+  .proof a:hover, .proof a:focus-visible { color: var(--gf-link-hover); }
   .specimens {
     list-style: none; padding: 0; margin-top: var(--space-5);
     display: flex; flex-direction: column; gap: var(--space-2);

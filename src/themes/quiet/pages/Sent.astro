@@ -12,7 +12,7 @@ const { copy, chrome, theme } = Astro.props;
 <header class="hero">
   <BarkField density={170} lockAspect />
   <h1>{copy.heading}</h1>
-  <span class="bark-credit-pin" data-parity-skip><BarkCredit href="/lab/bdl-001" label={chrome.barkCredit} reload={!!theme} /></span>
+  <span class="bark-credit-pin" data-parity-skip><BarkCredit href="/lab/bdl-001/" label={chrome.barkCredit} reload={!!theme} /></span>
 </header>
 <section class="wrap prose">
   <p class="subline">{copy.body}</p>

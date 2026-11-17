@@ -61,7 +61,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
       <div class="hero-veil"></div>
       <div class="hero-text wrap">
         <p class="designation smallcaps">
-          {designation} &middot; Study
+          {designation} &middot; {entry.data.genreStudy ? 'Genre study' : 'Study'}
           <span class="live">live</span>
         </p>
         <h1>{title}</h1>
@@ -106,7 +106,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
       <Content />
     </SpecimenPlate>
     <noscript>
-      <p class="wrap">This experiment requires JavaScript; the specimen plate below describes it.</p>
+      <p class="wrap">This experiment requires JavaScript; the specimen plate above describes it.</p>
     </noscript>
   </ExperimentLayout>
 )}

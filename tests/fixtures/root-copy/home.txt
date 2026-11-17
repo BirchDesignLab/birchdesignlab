@@ -13,6 +13,7 @@ A site that loads instantly, reads clearly, and presents your business as the on
 How we build
 From the lab
 Everything we sell, we practice in the open.
+One recent build went live on day thirteen. Its first nights sold out.
 Visit the lab
 Ready when you are.
 Let's start your project

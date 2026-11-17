@@ -1,8 +1,8 @@
 ---
-interface Props { type: 'experiment' | 'study' }
-const { type } = Astro.props;
+interface Props { label: string }
+const { label } = Astro.props;
 ---
-<span class="badge">{type}</span>
+<span class="badge">{label}</span>
 
 <style>
   .badge {
