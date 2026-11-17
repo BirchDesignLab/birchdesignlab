@@ -30,5 +30,8 @@ export function mermaidBlocks(text = readmeText()) {
   return [...text.matchAll(/```mermaid\n([\s\S]*?)```/g)].map((m) => normalizeMermaid(m[1]));
 }
 
-export const svgName = (chart, scheme) => `${chart.n}-${chart.name}.${scheme}.svg`;
-export const svgPath = (chart, scheme) => resolve(OUT_DIR, svgName(chart, scheme));
+export const svgName = (chart, scheme, variant = 'desktop') =>
+  `${chart.n}-${chart.name}${variant === 'phone' ? '.phone' : ''}.${scheme}.svg`;
+export const svgPath = (chart, scheme, variant = 'desktop') => resolve(OUT_DIR, svgName(chart, scheme, variant));
+/** Variants a chart is built in: every chart has a desktop SVG; `phone` adds a tall one. */
+export const variantsOf = (chart) => (chart.phone ? ['desktop', 'phone'] : ['desktop']);

@@ -30,10 +30,10 @@ export function width(face, size, text, ls = 0) {
  * broken after a slash or hyphen if it has one, so paths wrap at a path boundary
  * instead of mid-word.
  */
-export function wrap(face, size, text, maxW) {
+export function wrap(face, size, text, maxW, ls = 0) {
   const pieces = [];
   for (const word of text.split(/\s+/).filter(Boolean)) {
-    if (width(face, size, word) <= maxW) pieces.push({ t: word, space: true });
+    if (width(face, size, word, ls) <= maxW) pieces.push({ t: word, space: true });
     else {
       const parts = word.match(/[^/\-]+[/\-]?|[/\-]/g) ?? [word];
       parts.forEach((p, i) => pieces.push({ t: p, space: i === parts.length - 1 }));
@@ -44,7 +44,7 @@ export function wrap(face, size, text, maxW) {
   let curSpace = false;
   for (const p of pieces) {
     const joined = cur === '' ? p.t : cur + (curSpace ? ' ' : '') + p.t;
-    if (cur !== '' && width(face, size, joined) > maxW) {
+    if (cur !== '' && width(face, size, joined, ls) > maxW) {
       lines.push(cur);
       cur = p.t;
     } else cur = joined;
@@ -52,4 +52,10 @@ export function wrap(face, size, text, maxW) {
   }
   if (cur) lines.push(cur);
   return lines;
+}
+
+/** Width of `text` set in a pinned, subset face (the ttf from fonts.subsetPinned). */
+export function measureTtf(ttf, size, text, ls = 0) {
+  const f = opentype.parse(ttf.buffer.slice(ttf.byteOffset, ttf.byteOffset + ttf.byteLength));
+  return f.getAdvanceWidth(text, size, { kerning: true }) + text.length * ls * size;
 }

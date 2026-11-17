@@ -9,6 +9,7 @@ import { anchor, cluster, finish, makeEdge, makeNodes, rounded, smooth } from '.
 import { f1, parsePath, rng, sample } from './geometry.mjs';
 import { KEYFRAMES, RING_CSS, anim, chain, depths, edgeIn, nodeIn, pulse, ringEl, traveler } from './motion.mjs';
 import { mix, readable } from './theme.mjs';
+import { buildPhone, harnessPhone, labPhone, servedPhone } from './phone.mjs';
 import { width as textWidth } from './textmetrics.mjs';
 
 const cfgOf = (chart) => {
@@ -20,13 +21,14 @@ const cfgOf = (chart) => {
 // A birch trunk with the first-level folders branching off both sides and
 // their subfolders hanging off those. A pure tree, so it is laid out as a tidy
 // tree rather than ranked by dagre.
-function repoLayout(graph, chart) {
+function repoLayout(graph, chart, variant = 'desktop') {
+  const phone = variant === 'phone';
   const cfg = cfgOf(chart);
   const nodes = makeNodes(graph, { ...cfg, wrapFor: (id) => (id === 'ROOT' ? 400 : cfg.wrap) });
   const kids = (id) => graph.edges.filter((e) => e.from === id).map((e) => e.to);
   const root = nodes.get('ROOT');
   root.shape = 'trunk';
-  root.w = 54;
+  root.w = phone ? 34 : 54;
   const children = kids('ROOT');
   const slots = (id) => Math.max(1, kids(id).length);
   const total = children.reduce((s, c) => s + slots(c), 0);
@@ -41,14 +43,16 @@ function repoLayout(graph, chart) {
       split = i + 1;
     }
   });
-  const sides = [
-    { dir: -1, ids: children.slice(0, split) },
-    { dir: 1, ids: children.slice(split) },
-  ];
+  const sides = phone
+    ? [{ dir: 1, ids: children }]
+    : [
+        { dir: -1, ids: children.slice(0, split) },
+        { dir: 1, ids: children.slice(split) },
+      ];
   const gapLeaf = 10;
   const gapGroup = 22;
-  const gap1 = 52;
-  const gap2 = 30;
+  const gap1 = phone ? 30 : 52;
+  const gap2 = phone ? 16 : 30;
   const half = root.w / 2;
   let sideMax = 0;
   for (const side of sides) {
@@ -481,10 +485,12 @@ function harnessCompose(ctx) {
 }
 
 
+const pick = (desktop, phone) => (graph, chart, variant) => (variant === 'phone' ? phone(graph, chart) : desktop(graph, chart));
+
 export const specs = {
-  served: { compose: servedCompose },
+  served: { layout: pick(null, servedPhone), layoutVariants: ['phone'], compose: servedCompose },
   'repo-map': { layout: repoLayout, compose: repoCompose },
-  'lab-specimens': { compose: labCompose },
-  'build-deploy': { layout: buildLayout, compose: buildCompose },
-  harness: { layout: harnessLayout, compose: harnessCompose },
+  'lab-specimens': { layout: pick(null, labPhone), layoutVariants: ['phone'], compose: labCompose },
+  'build-deploy': { layout: pick(buildLayout, buildPhone), compose: buildCompose },
+  harness: { layout: pick(harnessLayout, harnessPhone), compose: harnessCompose },
 };

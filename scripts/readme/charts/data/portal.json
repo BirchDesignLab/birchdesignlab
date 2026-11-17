@@ -1,0 +1,275 @@
+{
+ "copy": "A design lab, not an agency.",
+ "wordmark": [
+  "Birch",
+  "Design Lab"
+ ],
+ "schools": [
+  {
+   "id": "quiet",
+   "name": "Quiet",
+   "css": "src/styles/tokens.css",
+   "baseScheme": "dark",
+   "base": [
+    ":root",
+    ":root, :root[data-scheme='dark']"
+   ],
+   "alt": [
+    ":root[data-scheme='light']"
+   ],
+   "face": {
+    "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+    "pin": {}
+   }
+  },
+  {
+   "id": "swiss",
+   "name": "Swiss",
+   "css": "src/themes/swiss/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='swiss']"
+   ],
+   "alt": [
+    ":root[data-theme='swiss'][data-scheme='dark']"
+   ],
+   "face": {
+    "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+    "pin": {
+     "wght": 700
+    }
+   }
+  },
+  {
+   "id": "bauhaus",
+   "name": "Bauhaus",
+   "css": "src/themes/bauhaus/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='bauhaus']"
+   ],
+   "alt": [
+    ":root[data-theme='bauhaus'][data-scheme='dark']"
+   ],
+   "face": {
+    "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+    "pin": {
+     "wght": 700
+    }
+   }
+  },
+  {
+   "id": "glassmorphism",
+   "name": "Glassmorphism",
+   "css": "src/themes/glassmorphism/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='glassmorphism']"
+   ],
+   "alt": [
+    ":root[data-theme='glassmorphism'][data-scheme='dark']"
+   ],
+   "face": {
+    "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+    "pin": {
+     "wght": 600,
+     "opsz": 28
+    }
+   }
+  },
+  {
+   "id": "vaporwave",
+   "name": "Vaporwave",
+   "css": "src/themes/vaporwave/theme.css",
+   "baseScheme": "dark",
+   "base": [
+    ":root[data-theme='vaporwave']"
+   ],
+   "alt": [
+    ":root[data-theme='vaporwave'][data-scheme='light']"
+   ],
+   "face": {
+    "src": "@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2",
+    "pin": {}
+   }
+  },
+  {
+   "id": "grandmillennial",
+   "name": "Grandmillennial",
+   "css": "src/themes/grandmillennial/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='grandmillennial']"
+   ],
+   "alt": [
+    ":root[data-theme='grandmillennial'][data-scheme='dark']"
+   ],
+   "face": {
+    "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+    "pin": {
+     "wght": 600
+    },
+    "italic": true
+   }
+  },
+  {
+   "id": "cottagecore",
+   "name": "Cottagecore",
+   "css": "src/themes/cottagecore/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='cottagecore']"
+   ],
+   "alt": [
+    ":root[data-theme='cottagecore'][data-scheme='dark']"
+   ],
+   "face": {
+    "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-italic.woff2",
+    "pin": {
+     "wght": 600
+    },
+    "italic": true
+   }
+  }
+ ],
+ "tokens": {
+  "field": "--field",
+  "raised": "--field-raised",
+  "mark": "--mark",
+  "muted": "--mark-muted",
+  "accent": "--accent",
+  "onAccent": "--on-accent"
+ },
+ "groups": [
+  {
+   "title": "Shared by every school",
+   "nodes": [
+    "PATHS",
+    "REG"
+   ]
+  },
+  {
+   "title": "The Portal",
+   "nodes": [
+    "PL",
+    "RT",
+    "SW"
+   ]
+  },
+  {
+   "title": "src/themes/school/",
+   "cluster": "SCHOOL",
+   "nodes": [
+    "META",
+    "CSS",
+    "HF",
+    "PG",
+    "FX"
+   ]
+  },
+  {
+   "title": "One route, and the guards",
+   "nodes": [
+    "ROUTE",
+    "GUARD"
+   ]
+  }
+ ],
+ "copyNode": "COPY",
+ "nodes": [
+  {
+   "id": "COPY",
+   "lines": [
+    "src/content/copy/",
+    "every word, as data"
+   ]
+  },
+  {
+   "id": "PATHS",
+   "lines": [
+    "src/themes/paths.ts",
+    "hrefFor, isCurrent, SCHOOL_ID"
+   ]
+  },
+  {
+   "id": "REG",
+   "lines": [
+    "src/themes/registry.ts",
+    "globs every meta.ts",
+    "THEMES = schools with an enabled route"
+   ]
+  },
+  {
+   "id": "PL",
+   "lines": [
+    "src/themes/portal/PortalLayout.astro",
+    "owns the head and the switcher"
+   ]
+  },
+  {
+   "id": "RT",
+   "lines": [
+    "src/themes/portal/runtime.ts",
+    "view transitions, draw-ahead, arrival"
+   ]
+  },
+  {
+   "id": "SW",
+   "lines": [
+    "src/themes/portal/switcher.ts"
+   ]
+  },
+  {
+   "id": "SCHOOL",
+   "lines": [
+    "src/themes/school/"
+   ]
+  },
+  {
+   "id": "META",
+   "lines": [
+    "meta.ts"
+   ]
+  },
+  {
+   "id": "CSS",
+   "lines": [
+    "theme.css",
+    "tokens for dark and light"
+   ]
+  },
+  {
+   "id": "HF",
+   "lines": [
+    "Header.astro and Footer.astro"
+   ]
+  },
+  {
+   "id": "PG",
+   "lines": [
+    "pages/ Home About Services Contact Sent"
+   ]
+  },
+  {
+   "id": "FX",
+   "lines": [
+    "fx.ts optional background"
+   ]
+  },
+  {
+   "id": "ROUTE",
+   "lines": [
+    "src/pages/t/school/[...page].astro",
+    "imports only this school"
+   ]
+  },
+  {
+   "id": "GUARD",
+   "lines": [
+    "Guards in tests/ and scripts/themes/",
+    "word parity against quiet, contrast, one wordmark name,",
+    "switcher holds still, blank-frame budget"
+   ]
+  }
+ ]
+}

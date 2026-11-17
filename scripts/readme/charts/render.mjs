@@ -14,14 +14,17 @@ import { fontCss } from './fonts.mjs';
 import { width as textWidth } from './textmetrics.mjs';
 
 export const CANVAS_W = 830; // the README column: the SVG's intrinsic width
-const MARGIN_X = 36;
-const MARGIN_TOP = 64;
-const MARGIN_BOTTOM = 40;
-const CAP_SIZE = 15;
+export const MARGIN_X = 36;
+export const MARGIN_TOP = 64;
+export const MARGIN_BOTTOM = 40;
+export const CAP_SIZE = 15;
+
+/** Does this chart use its own layout (rather than dagre's) in this variant? */
+export const handLaid = (spec, variant) => !!spec?.layout && (spec.layoutVariants ?? ['desktop', 'phone']).includes(variant);
 
 /** Geometry shared by both schemes. `spec.adjust` may rewrite the model first. */
-export function prepare(chart, { graph, model }, spec) {
-  const m = spec?.layout ? spec.layout(graph, chart) : structuredClone(model);
+export function prepare(chart, { graph, model }, spec, variant = 'desktop') {
+  const m = handLaid(spec, variant) ? spec.layout(graph, chart, variant) : structuredClone(model);
   if (spec?.adjust) spec.adjust(m, chart);
   const nodes = new Map();
   for (const n of m.nodes) {
@@ -50,9 +53,10 @@ export function prepare(chart, { graph, model }, spec) {
       len: polyLength(sample(segs)),
     };
   });
-  const W = Math.ceil(m.width) + MARGIN_X * 2;
+  const mx = variant === 'phone' ? 24 : MARGIN_X;
+  const W = Math.ceil(m.width) + mx * 2;
   const H = Math.ceil(m.height) + MARGIN_TOP + MARGIN_BOTTOM;
-  return { chart, spec, model: m, nodes, edges, W, H, scale: CANVAS_W / W, off: { x: MARGIN_X, y: MARGIN_TOP } };
+  return { chart, spec, variant, model: m, nodes, edges, W, H, scale: (variant === 'phone' ? 360 : CANVAS_W) / W, off: { x: mx, y: MARGIN_TOP }, mx };
 }
 
 function nodeBlock(n, sizes, glyphs) {
@@ -94,7 +98,7 @@ function nodeShape(n, style) {
   return `<rect class="s" x="${f1(x)}" y="${f1(y)}" width="${f1(n.w)}" height="${f1(n.h)}" rx="11"/>`;
 }
 
-function barkDashes(seed, W, H, t) {
+export function barkDashes(seed, W, H, t, mx = MARGIN_X) {
   const r = rng(seed);
   let d = '';
   const strip = (x0, x1, y0, y1, count) => {
@@ -105,10 +109,10 @@ function barkDashes(seed, W, H, t) {
       d += `M${f1(x)} ${f1(y)}h${f1(len)}`;
     }
   };
-  const edgeW = MARGIN_X - 14;
+  const edgeW = mx - 14;
   strip(10, 10 + edgeW, 16, H - 16, Math.round(H / 26));
   strip(W - 10 - edgeW, W - 10, 16, H - 16, Math.round(H / 26));
-  strip(MARGIN_X + 20, W - MARGIN_X - 20, H - MARGIN_BOTTOM + 14, H - 14, Math.round(W / 70));
+  strip(mx + 20, W - mx - 20, H - MARGIN_BOTTOM + 14, H - 14, Math.round(W / 70));
   return `<path class="bark" d="${d}"/>`;
 }
 
@@ -132,7 +136,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
   };
 
   // ---- compose hook (spec-specific decoration and motion) ----
-  const ctx = { chart, scheme, t, P, nodes, edges, model, sizes, glyphs, off, roleOf, styleKind, pairs };
+  const ctx = { chart, scheme, t, P, variant: P.variant, nodes, edges, model, sizes, glyphs, off, roleOf, styleKind, pairs };
   const extra = P.spec?.compose?.(ctx) ?? {};
   const nodeUnder = extra.nodeUnder ?? {};
   const nodeOver = extra.nodeOver ?? {};
@@ -156,7 +160,8 @@ export function renderScheme(P, scheme, { sourceHash }) {
     ].map((k) => {
       const x0 = k.a === 'start' ? k.x - 4 : k.x - tw;
       const hits = edgePts.filter(([px, py]) => px > x0 && px < x0 + tw + 8 && py > k.y - th && py < k.y + 6).length;
-      return { ...k, score: hits * 10 + k.pen };
+      const onNode = model.nodes.filter((n) => x0 < n.cx + n.w / 2 && x0 + tw > n.cx - n.w / 2 && k.y - th < n.cy + n.h / 2 && k.y + 6 > n.cy - n.h / 2).length;
+      return { ...k, score: hits * 10 + onNode * 1000 + k.pen };
     });
     const best = cand.sort((a, b) => a.score - b.score)[0];
     if (c.titlePos) {
@@ -225,14 +230,15 @@ export function renderScheme(P, scheme, { sourceHash }) {
   pairs.push({ where: 'caption on field', fg: t.muted, bg: t.field });
   pairs.push({ where: 'caption number on field', fg: t.accentStrong, bg: t.field });
   const cap =
-    `<text class="cap" x="${MARGIN_X}" y="38"><tspan class="capn">FIG. ${chart.n}</tspan>` +
+    `<text class="cap" x="${P.mx}" y="38"><tspan class="capn">FIG. ${chart.n}</tspan>` +
     `<tspan dx="16">${esc(capTitle)}</tspan></text>`;
 
+  const capSize = P.variant === 'phone' ? Math.min(17, Math.max(CAP_SIZE, Math.ceil(11.4 / P.scale))) : CAP_SIZE;
   const css = [
     fontCss(glyphs),
     `.card{fill:${t.field};stroke:${t.line};stroke-width:1}`,
     `.bark{fill:none;stroke:${t.dash};stroke-opacity:${t.dashOpacity};stroke-width:2.6;stroke-linecap:round}`,
-    `.cap{font:${CAP_SIZE}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted}}.capn{fill:${t.accentStrong}}`,
+    `.cap{font:${capSize}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted}}.capn{fill:${t.accentStrong}}`,
     `.cb{fill:${t.clusterFill};stroke:${t.clusterStroke};stroke-width:1.2}`,
     `.ct{font:${sizes.cluster}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted};paint-order:stroke;stroke:${t.clusterFill};stroke-width:6px;stroke-linejoin:round}`,
     `.el{fill:none;stroke:${t.edge};stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}`,
@@ -253,12 +259,13 @@ export function renderScheme(P, scheme, { sourceHash }) {
     .filter(Boolean)
     .join('\n');
 
-  const dashes = barkDashes(chart.n * 7919 + (scheme === 'light' ? 1 : 2), W, H, t);
-  const svgH = Math.round((H * CANVAS_W) / W);
+  const dashes = barkDashes(chart.n * 7919 + (scheme === 'light' ? 1 : 2) + (P.variant === 'phone' ? 31 : 0), W, H, t, P.mx);
+  const svgW = P.variant === 'phone' ? W : CANVAS_W;
+  const svgH = Math.round((H * svgW) / W);
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${CANVAS_W}" height="${svgH}" role="img" aria-labelledby="t d">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${svgW}" height="${svgH}" role="img" aria-labelledby="t d">` +
     `<title id="t">${esc(chart.title)}</title><desc id="d">${esc(chart.alt)}</desc>` +
-    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-motion-s="${f1(extra.duration ?? 0)}"></metadata>` +
+    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-variant="${P.variant}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-motion-s="${f1(extra.duration ?? 0)}"></metadata>` +
     `<style>${css}</style>` +
     `<rect class="card" x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="22"/>` +
     dashes +
@@ -269,7 +276,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
     (extra.over ?? '') +
     '</g></svg>\n';
 
-  const used = [sizes.head, CAP_SIZE];
+  const used = [sizes.head, capSize];
   if (model.clusters.length) used.push(sizes.cluster);
   if (model.nodes.some((n) => n.lines.length > (n.headN ?? 1))) used.push(sizes.body);
   if (edges.some((e) => e.label)) used.push(sizes.edge);

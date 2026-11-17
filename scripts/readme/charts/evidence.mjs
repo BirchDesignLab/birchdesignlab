@@ -11,7 +11,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import { REPO, registry, svgPath } from './source.mjs';
+import { REPO, registry, svgPath, variantsOf } from './source.mjs';
 
 const require = createRequire(resolve(REPO, 'package.json'));
 const { chromium } = require('playwright');
@@ -28,12 +28,13 @@ const browser = await chromium.launch();
 const sheet = [];
 try {
   for (const chart of charts) {
+   for (const variant of variantsOf(chart)) {
     for (const scheme of ['light', 'dark']) {
-      const file = svgPath(chart, scheme);
+      const file = svgPath(chart, scheme, variant);
       const svg = readFileSync(file, 'utf8');
       const dur = Number(svg.match(/data-motion-s="([\d.]+)"/)?.[1] ?? 0);
-      const base = `${chart.n}-${chart.name}.${scheme}`;
-      for (const width of [830, 360]) {
+      const base = `${chart.n}-${chart.name}${variant === 'phone' ? '.phone' : ''}.${scheme}`;
+      for (const width of variant === 'phone' ? [360] : [830, 360]) {
         const page = await browser.newPage({ viewport: { width: width + 40, height: 600 }, deviceScaleFactor: 1 });
         await page.setContent(
           `<body style="margin:0;padding:20px;background:${BG[scheme]}"><img id="i" src="data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}" style="display:block;max-width:100%;width:${width}px"></body>`,
@@ -43,9 +44,10 @@ try {
         await page.waitForTimeout(Math.ceil((dur + 1.2) * 1000));
         const p = resolve(out, 'stills', `${base}.${width}.png`);
         await page.screenshot({ path: p, fullPage: true });
-        sheet.push({ kind: 'still', chart, scheme, width, p });
+        sheet.push({ kind: 'still', chart, scheme, width, variant, p });
         await page.close();
       }
+      if (variant === 'phone') continue;
       // filmstrip
       const page = await browser.newPage({ viewport: { width: 870, height: 600 }, deviceScaleFactor: 1 });
       const frames = [];
@@ -76,17 +78,19 @@ try {
       const fp = resolve(out, 'film', `${base}.png`);
       await strip.screenshot({ path: fp, fullPage: true });
       await strip.close();
-      sheet.push({ kind: 'film', chart, scheme, p: fp });
+      sheet.push({ kind: 'film', chart, scheme, variant, p: fp });
     }
+   }
   }
   // contact sheet
   const cell = (s) =>
-    `<figure style="margin:0 0 10px"><figcaption style="font:12px monospace;color:#999;margin:0 0 4px">${s.kind} ${s.chart.n}-${s.chart.name} ${s.scheme}${s.width ? ' ' + s.width : ''}</figcaption><img style="width:100%;display:block;border:1px solid #8884" src="data:image/png;base64,${readFileSync(s.p).toString('base64')}"></figure>`;
+    `<figure style="margin:0 0 10px"><figcaption style="font:12px monospace;color:#999;margin:0 0 4px">${s.kind} ${s.chart.n}-${s.chart.name} ${s.variant} ${s.scheme}${s.width ? ' ' + s.width : ''}</figcaption><img style="width:100%;display:block;border:1px solid #8884" src="data:image/png;base64,${readFileSync(s.p).toString('base64')}"></figure>`;
   const rows = charts
     .map((c) => {
       const mine = sheet.filter((s) => s.chart === c);
-      const g = (kind, scheme, w) => mine.find((s) => s.kind === kind && s.scheme === scheme && (w ? s.width === w : true));
-      return `<section style="display:grid;grid-template-columns:2fr 2fr 1fr 1fr;gap:12px;margin:0 0 28px">${[g('still', 'light', 830), g('still', 'dark', 830), g('still', 'light', 360), g('still', 'dark', 360)].map(cell).join('')}<div style="grid-column:1/3">${cell(g('film', 'light'))}</div><div style="grid-column:3/5">${cell(g('film', 'dark'))}</div></section>`;
+      const g = (kind, scheme, w, variant = 'desktop') => mine.find((s) => s.kind === kind && s.scheme === scheme && s.variant === variant && (w ? s.width === w : true));
+      const ph = [g('still', 'light', 360, 'phone'), g('still', 'dark', 360, 'phone')].filter(Boolean);
+      return `<section style="display:grid;grid-template-columns:2fr 2fr 1fr 1fr 1fr 1fr;gap:12px;margin:0 0 28px">${[g('still', 'light', 830), g('still', 'dark', 830), g('still', 'light', 360), g('still', 'dark', 360)].map(cell).join('')}${ph.map(cell).join('')}<div style="grid-column:1/3">${cell(g('film', 'light'))}</div><div style="grid-column:3/5">${cell(g('film', 'dark'))}</div></section>`;
     })
     .join('');
   const page = await browser.newPage({ viewport: { width: 2400, height: 1000 } });

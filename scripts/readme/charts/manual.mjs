@@ -153,7 +153,7 @@ export function finish({ nodes, clusters = [], edges }, pad = 10) {
     grow(c.x + c.w, c.y + c.h);
     if (c.titlePos) {
       const tw = Math.max(...c.titlePos.lines.map((l) => width('display', 13, l, 0.2)));
-      grow(c.titlePos.x - tw, c.titlePos.y - 20);
+      grow(c.titlePos.anchor === 'start' ? c.titlePos.x + tw : c.titlePos.x - tw, c.titlePos.y - 20);
     }
   }
   for (const e of edges) {

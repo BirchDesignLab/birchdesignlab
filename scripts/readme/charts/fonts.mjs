@@ -6,7 +6,8 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ROOT } from './layout.mjs';
 
 const SOURCES = {
@@ -77,3 +78,34 @@ export function fontCss(glyphs) {
   }
   return out.join('\n');
 }
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * One face for a showpiece, pinned to a weight and subset to `text`. `src` is a
+ * path under node_modules/@fontsource*. Returns the woff2 and a ttf of the same
+ * subset (opentype.js cannot read woff2, and measuring the subset itself gives
+ * the widths of the pinned weight rather than the font's default).
+ */
+export function subsetPinned(src, text, pins = {}) {
+  const key = `${src}|${JSON.stringify(pins)}|${[...new Set(text)].sort().join('')}`;
+  if (cache.has(key)) return cache.get(key);
+  const file = resolve(ROOT, 'node_modules', src);
+  if (!existsSync(file)) throw new Error(`missing font file ${file}`);
+  const dir = mkdtempSync(join(tmpdir(), 'bdl-font-'));
+  try {
+    const textFile = join(dir, 'text.txt');
+    writeFileSync(textFile, [...new Set(text + ' ')].sort().join(''), 'utf8');
+    const out = { woff2: join(dir, 'o.woff2'), ttf: join(dir, 'o.ttf') };
+    const script = resolve(here, 'subset_font.py');
+    execFileSync('python', [script, file, textFile, out.woff2, out.ttf, JSON.stringify(pins)], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const res = { woff2: readFileSync(out.woff2), ttf: readFileSync(out.ttf) };
+    cache.set(key, res);
+    return res;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+export const fontFace = (family, style, woff2) =>
+  `@font-face{font-family:'${family}';font-style:${style};font-weight:400;src:url(data:font/woff2;base64,${woff2.toString('base64')}) format('woff2')}`;

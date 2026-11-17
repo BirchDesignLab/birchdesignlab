@@ -20,8 +20,18 @@
         "nodeSpacing": 14,
         "rankSpacing": 40,
         "padding": 12,
-        "wrap": 150
-      }
+        "wrap": 150,
+        "phone": {
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 15,
+          "padding": 10,
+          "wrap": 150,
+          "edgeWrap": 100
+        }
+      },
+      "phone": true
     },
     {
       "n": 2,
@@ -43,8 +53,17 @@
         "nodeSpacing": 12,
         "rankSpacing": 60,
         "padding": 9,
-        "wrap": 165
-      }
+        "wrap": 165,
+        "phone": {
+          "wrap": 125,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 14.5,
+          "clusterSize": 13.5,
+          "padding": 9
+        }
+      },
+      "phone": true
     },
     {
       "n": 3,
@@ -67,17 +86,28 @@
         "nodeSpacing": 30,
         "rankSpacing": 56,
         "padding": 14,
-        "wrap": 250
-      }
+        "wrap": 250,
+        "phone": {
+          "wrap": 280,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 13.5,
+          "padding": 12
+        }
+      },
+      "phone": true
     },
     {
       "n": 4,
       "name": "portal-schools",
-      "built": false,
+      "built": true,
       "kind": "showpiece",
       "title": "The Portal: design schools",
       "caption": "The Portal: design schools",
-      "alt": "The Portal's source tree: shared copy, paths, registry and runtime feed each design school, and guards in tests and scripts check them."
+      "alt": "The seven design schools of the Portal side by side, each shown in its own real colours and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards.",
+      "phone": true,
+      "data": "scripts/readme/charts/data/portal.json"
     },
     {
       "n": 5,
@@ -100,8 +130,18 @@
         "rankSpacing": 40,
         "padding": 12,
         "wrap": 170,
-        "edgeWrap": 150
-      }
+        "edgeWrap": 150,
+        "phone": {
+          "wrap": 190,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 13.5,
+          "padding": 11,
+          "edgeWrap": 150
+        }
+      },
+      "phone": true
     },
     {
       "n": 6,
@@ -124,17 +164,29 @@
         "rankSpacing": 42,
         "padding": 12,
         "wrap": 150,
-        "edgeWrap": 130
-      }
+        "edgeWrap": 130,
+        "phone": {
+          "wrap": 200,
+          "fontSize": 15,
+          "headSize": 17,
+          "edgeSize": 15,
+          "clusterSize": 14.5,
+          "padding": 10,
+          "edgeWrap": 120
+        }
+      },
+      "phone": true
     },
     {
       "n": 7,
       "name": "timeline",
-      "built": false,
+      "built": true,
       "kind": "showpiece",
       "title": "Timeline",
       "caption": "Timeline, July to November 2026",
-      "alt": "Timeline of Birch Design Lab from the founding on 2026-07-15 to the contact safety net and CI verify gate on 2026-11-17."
+      "alt": "Timeline of Birch Design Lab as a birch trunk, from the founding on 2026-07-15 and the first pieces live on 2026-07-16, through the Portal merge on 2026-09-23, to the CI verify gate and the contact safety net on 2026-11-17.",
+      "phone": true,
+      "data": "scripts/readme/charts/data/timeline.json"
     }
   ]
 }

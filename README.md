@@ -54,6 +54,8 @@ The contact route is more than a form handler. It runs a safety net so a lead is
 5. The email send. If it fails, the submission is held in KV for 30 days, the visitor sees a plain "your message is saved" page, and a daily cron (`17 14 * * *`, handled by `scheduled()`) retries every held submission until it sends or expires.
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/1-served.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/1-served.phone.light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/1-served.dark.svg">
   <img src="assets/readme/charts/1-served.light.svg" alt="Flow diagram of how birchdesignlab.com is served. Page requests go to Cloudflare Static Assets, which serves the built site or its 404 page, while form and beacon posts go to the Worker, which checks a honeypot, a rate limit, validation and a daily cap before sending email and holds failed sends in KV for a daily cron to retry." width="830">
 </picture>
@@ -115,6 +117,8 @@ The Worker, the contact route, secrets, `_headers`, analytics consent and the ve
 ## Repository map
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/2-repo-map.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/2-repo-map.phone.light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/2-repo-map.dark.svg">
   <img src="assets/readme/charts/2-repo-map.light.svg" alt="Tree of the repository. The root holds src, worker, tests, scripts, docs, share, assets, social, attic, .claude and public, and src, scripts and docs each branch into their main subfolders." width="830">
 </picture>
@@ -218,6 +222,8 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on, and where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/3-lab-specimens.phone.light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.dark.svg">
   <img src="assets/readme/charts/3-lab-specimens.light.svg" alt="How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card." width="830">
 </picture>
@@ -268,6 +274,16 @@ BDL-010 is the biggest piece in the repo. Each **school** is the full business s
 | grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
 | cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
 
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/4-portal-schools.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/4-portal-schools.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/4-portal-schools.dark.svg">
+  <img src="assets/readme/charts/4-portal-schools.light.svg" alt="The seven design schools of the Portal side by side, each shown in its own real colours and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart TB
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -305,6 +321,8 @@ flowchart TB
     GUARD -.->|"checks"| SCHOOL
 ```
 
+</details>
+
 How a school is built and judged:
 
 - Start a draft with `node scripts/themes/new-theme.mjs <id> "<Name>"`. While the route file is named `_[...page].astro`, the switcher and the build ignore the school.
@@ -318,6 +336,8 @@ How a school is built and judged:
 ## Build, verify and deploy
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/5-build-deploy.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/5-build-deploy.phone.light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/5-build-deploy.dark.svg">
   <img src="assets/readme/charts/5-build-deploy.light.svg" alt="Pipeline from a feature branch to production. npm run verify runs unit tests, type checks, the build and the built output tests, a pull request then needs a green CI check before merging, and Cloudflare Workers Builds builds and deploys birchdesignlab.com." width="830">
 </picture>
@@ -362,6 +382,8 @@ The repo is built with Claude Code, and we treat its agent fleet as engineering 
 **Saved workflows run the visual work.** `bdl-task` takes one brief-sized task on a feature branch and runs it through implement, verify-head, parallel review and up to two fix rounds. `bdl-wave` chains tasks and carries taste calls forward. Their args, roles and stop points are in [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md). A mock harness and a mutant suite under `scripts/workflows/` test the workflows themselves, and `verify-locked.mjs` there runs the gate while holding the render lock.
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/6-harness.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/6-harness.phone.light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/6-harness.dark.svg">
   <img src="assets/readme/charts/6-harness.light.svg" alt="Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion." width="830">
 </picture>
@@ -405,6 +427,16 @@ flowchart TB
 
 Dates are local (US Central).
 
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/7-timeline.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/7-timeline.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/7-timeline.dark.svg">
+  <img src="assets/readme/charts/7-timeline.light.svg" alt="Timeline of Birch Design Lab as a birch trunk, from the founding on 2026-07-15 and the first pieces live on 2026-07-16, through the Portal merge on 2026-09-23, to the CI verify gate and the contact safety net on 2026-11-17." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 timeline
     title Birch Design Lab, July to November 2026
@@ -434,6 +466,8 @@ timeline
                : Contact safety net (PR 111)
                : Genre studies recatalogued as experiments (PR 112)
 ```
+
+</details>
 
 ---
 
