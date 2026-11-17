@@ -19,7 +19,7 @@ const { title, description, designation, noindex = false } = Astro.props;
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <a class="hatch smallcaps" href="/lab">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
+    <a class="hatch smallcaps" href="/lab/">&larr; Lab &middot; <span class="hatch-id">{designation}</span></a>
     <main id="main" tabindex="-1">
       <slot />
     </main>
