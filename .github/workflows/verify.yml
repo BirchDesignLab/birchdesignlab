@@ -1,0 +1,38 @@
+# The verify gate, run by GitHub instead of by memory.
+#
+# Merging to main deploys production (Cloudflare Workers Builds runs
+# `npm run build` only), so this is the one place tests, astro check and the
+# built-site tests run before a merge. Make the `verify` job a required status
+# check in the "PRs Only" ruleset so a red run blocks the merge.
+#
+# Deliberately small: one job, one command, the same `npm run verify` you run
+# locally. No deploy, no secrets, read-only token.
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
