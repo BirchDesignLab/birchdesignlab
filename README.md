@@ -281,7 +281,7 @@ How a school is built and judged:
 - Decoration is `aria-hidden`. Any visible word that is not in the copy fails **word parity**, which compares every school to quiet word for word.
 - Each school has a **dossier** of primary-source research under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers). Revisions are judged against it.
 - The **stage gates** (`scripts/themes/harness/stage-gates.mjs`) run in steps. They time every school's arrival, film the switcher at desktop, mobile and phone sizes in both schemes and check that it holds still in every strip, run an "unname" control that must fail, and film the wordmark morph. They need a GPU Chromium (`BDL_GPU=1`).
-- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is built and in review on `feat/theme-schools-tier3-stage5`, not yet merged. Its reports and handoff live on that branch. A transitions phase comes next, and Stage 6 and the copy pass follow Stage 5 (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
+- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is built and in review on `feat/theme-schools-tier3-stage5`, not yet merged. Its reports and handoff live on that branch. After it come a Stage 6 re-review of the whole set, the transitions phase, then a second tranche of schools; the big copy pass waits until the schools and transitions ship (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
 
 ---
 
@@ -394,6 +394,7 @@ As of mid November 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03). 
 **Next planned work**
 
 - Stage 5: pair C, grandmillennial and cottagecore, through the same dossier-driven revision. It is built and in review.
+- Stage 6: a re-review of all seven schools as a set, plus two interactables Stage 4 left unbuilt.
 - The transitions phase: give every school its own arrival gesture, draw ahead on in-school links and on phones, fix the Back-to-a-scrolled-page wordmark morph, and film in WebKit as well as Chromium.
 - BDL-011 Field Guide to the Schools is `forthcoming`, with a spec written. BDL-003 Novgorod Letters is parked behind a visual rework.
 
@@ -455,12 +456,12 @@ Optional: `npx playwright install chromium` for the capture and film scripts und
 
 ## House rules
 
-Pulled from [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) and [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md), in the order you are likely to hit them.
+Pulled from [CLAUDE.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/CLAUDE.md) and [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md), plus the studio's writing rules, in the order you are likely to hit them.
 
 - Branch and open a PR. Never commit to main. Merging deploys.
 - Run `npm run verify` as one command before every PR. CI enforces the same.
 - Scripts stay in the repo under `scripts/`, never in a temp directory. One-off probes included.
-- Every subagent sets model and effort. Fable is never a subagent model.
+- Every subagent sets model and effort.
 - Newest stable dependencies; majors get their own PR and a browser pass.
 - No em dashes in anything a visitor can read. We write as the studio, "we".
 - A fictional specimen's hero is a screenshot. No study names the framework behind the specimens.
