@@ -57,5 +57,20 @@
     }
   ],
 
+  // Contact form safety net (worker/index.ts): a per-day submission counter
+  // for the global daily cap, and a holding area for any submission whose
+  // email failed to send. Keys expire on their own (TTL), so nothing piles up.
+  "kv_namespaces": [
+    {
+      "binding": "CONTACT_KV",
+      "id": "bc5fbae77c55423696a6c899150788aa"
+    }
+  ],
+
+  // Daily retry of held contact submissions (scheduled() in worker/index.ts).
+  // 14:17 UTC is mid-morning on the Gulf Coast, so a delayed lead lands in
+  // working hours.
+  "triggers": { "crons": ["17 14 * * *"] },
+
   "observability": { "enabled": true }
 }
