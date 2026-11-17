@@ -21,9 +21,10 @@ const { copy, theme } = Astro.props;
       <p class="subline">{copy.subline}</p>
     </header>
 
-    <!-- No-JS-first: a plain POST the Worker answers with a redirect to
+    {/* No-JS-first: a plain POST the Worker answers with a redirect to
          /contact/sent. The `company` field is the honeypot; humans never see
-         it, bots autofill it and get silently dropped (worker/index.ts). -->
+         it, bots autofill it and get silently dropped (worker/index.ts).
+         An Astro comment, not HTML, so it never ships to the page. */}
     <form class="contact-form" method="post" action="/api/contact" data-astro-reload={theme ? '' : undefined}>
       <div class="field">
         <label for="cf-name">{copy.labels.name}</label>
