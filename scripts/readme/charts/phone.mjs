@@ -54,10 +54,12 @@ export function labPhone(graph, chart) {
 // the command that runs it as a caption above it.
 export function buildPhone(graph, chart) {
   const cfg = cfgOf(chart);
+  for (const v of graph.vertices) if (v.id === 'V') v.shape = 'rect'; // a command that runs, not a decision
   const nodes = makeNodes(graph, { ...cfg, wrapFor: (id) => (['T1', 'T2', 'T3', 'T4', 'PR', 'WB', 'LIVE'].includes(id) ? 200 : cfg.wrap) });
   const N = (id) => nodes.get(id);
   const stages = ['T1', 'T2', 'T3', 'T4'].map(N);
   const chain = ['PR', 'CI', 'WB', 'LIVE'].map(N);
+  N('LIVE').w += 30; // room for the live dot
   const colW = Math.max(...stages.map((n) => n.w), ...chain.map((n) => n.w));
   const B = N('B');
   const V = N('V');
@@ -91,7 +93,7 @@ export function buildPhone(graph, chart) {
   for (const n of stages) {
     // the caption (the edge label) sits above its node, left-aligned with it
     const lines = labelFor(n.id);
-    add('V', n.id, railTo(anchor(V, 'B'), railX, n), { at: 0.5, dx: 0, dy: 0 });
+    add('V', n.id, railTo(anchor(V, 'B'), railX, n), { at: 0.5, dx: 0, dy: 0, labelWrap: colW });
     const e = edges[edges.length - 1];
     if (e.label) {
       e.label.cx = colLeft + e.label.w / 2;

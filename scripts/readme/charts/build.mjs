@@ -53,7 +53,36 @@ for (const c of charts.filter((x) => x.kind === 'mermaid')) {
     reqs.push({ chart: c, eff, variant, req: { src, dagre: !handLaid(spec, variant), ...eff.render } });
   }
 }
-const models = await layoutAll(reqs.map((r) => r.req));
+// Text floor: nothing may render under MIN_PX at the README's width (830 desktop, 360
+// phone). A chart's type sizes are raised until its scale (rendered width over layout
+// width) lets the smallest land on the floor; a bigger size changes the layout, so lay
+// out again until nothing moves.
+const MIN_PX = 12.6;
+let models;
+for (let pass = 0; pass < 6; pass++) {
+  models = await layoutAll(reqs.map((r) => r.req));
+  let changed = false;
+  reqs.forEach((r, i) => {
+    const P = prepare(r.eff, models[i], specs[r.chart.name], r.variant);
+    const need = Math.ceil((MIN_PX / P.scale) * 10) / 10;
+    const rr = r.eff.render;
+    const next = { headSize: Math.max(rr.headSize, need), fontSize: Math.max(rr.fontSize, need), edgeSize: Math.max(rr.edgeSize, need), clusterSize: Math.max(rr.clusterSize, need) };
+    if (Object.keys(next).some((k) => next[k] !== rr[k])) {
+      r.eff.render = { ...rr, ...next };
+      r.req = { ...r.req, ...next };
+      changed = true;
+    }
+  });
+  if (!changed) break;
+}
+
+/** The smallest font size the finished SVG draws, in px at the README's width. */
+function minFontPx(svg, width) {
+  const vb = Number(/viewBox="0 0 ([\d.]+) /.exec(svg)[1]);
+  const sans = svg.replace(/url\(data:[^)]*\)/g, '');
+  const sizes = [...sans.matchAll(/font(?:-size)?:\s*(?:italic\s+)?([\d.]+)px/g)].map((m) => Number(m[1]));
+  return Math.min(...sizes) * (width / vb);
+}
 
 const report = { charts: [] };
 let stale = 0;
@@ -95,7 +124,7 @@ for (const { chart, variant, scheme, out } of jobs) {
     variant,
     scheme,
     bytes,
-    minRenderedTextPx: Number(out.minRendered.toFixed(1)),
+    minRenderedTextPx: Number(Math.min(out.minRendered, minFontPx(out.svg, variant === 'phone' ? 360 : 830)).toFixed(1)),
     fit: out.fit,
     pairs: out.pairs.map((p) => ({ where: p.where, fg: p.fg, bg: p.bg, ratio: Number(p.ratio.toFixed(2)) })),
   };
@@ -108,8 +137,8 @@ for (const { chart, variant, scheme, out } of jobs) {
   );
   if (bytes > 150 * 1024) throw new Error(`${file} is over 150 KB`);
   if (bad.length) process.exitCode = 1;
-  if (out.minRendered < 11) {
-    console.error(`  text renders below 11px (${out.minRendered.toFixed(1)})`);
+  if (entry.minRenderedTextPx < 12.5) {
+    console.error(`  text renders below 12.5px (${entry.minRenderedTextPx})`);
     process.exitCode = 1;
   }
 }

@@ -271,8 +271,8 @@ BDL-010 is the biggest piece in the repo. Each **school** is the full business s
 | bauhaus | `/t/bauhaus/` | Stage 4 revision merged (PR #95) |
 | glassmorphism | `/t/glassmorphism/` | Stage 3 revision merged (PR #93) |
 | vaporwave | `/t/vaporwave/` | Stage 3 revision merged (PR #93) |
-| grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
-| cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
+| grandmillennial | `/t/grandmillennial/` | Stage 5 revision merged (PR #117) |
+| cottagecore | `/t/cottagecore/` | Stage 5 revision merged (PR #117) |
 
 <picture>
   <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/4-portal-schools.phone.dark.svg">
@@ -329,7 +329,7 @@ How a school is built and judged:
 - Decoration is `aria-hidden`. Any visible word that is not in the copy fails **word parity**, which compares every school to quiet word for word.
 - Each school has a **dossier** of primary-source research under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers). Revisions are judged against it.
 - The **stage gates** (`scripts/themes/harness/stage-gates.mjs`) run in steps. They time every school's arrival, film the switcher at desktop, mobile and phone sizes in both schemes and check that it holds still in every strip, run an "unname" control that must fail, and film the wordmark morph. They need a GPU Chromium (`BDL_GPU=1`).
-- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is built and in review on `feat/theme-schools-tier3-stage5`, not yet merged. Its reports and handoff live on that branch. After it come a Stage 6 re-review of the whole set, the transitions phase, then a second tranche of schools; the big copy pass waits until the schools and transitions ship (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
+- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03 and Stage 5 (grandmillennial and cottagecore) merged 2026-11-17 (PR #117). The stage reports and handoffs live in the stage directories under that research folder. After them come a Stage 6 re-review of the whole set, the transitions phase, then a second tranche of schools; the big copy pass waits until the schools and transitions ship (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
 
 ---
 
@@ -465,6 +465,7 @@ timeline
     2026-11-17 : CI runs the verify gate on every PR
                : Contact safety net (PR 111)
                : Genre studies recatalogued as experiments (PR 112)
+               : Stage 5 merged (PR 117)
 ```
 
 </details>
@@ -473,11 +474,10 @@ timeline
 
 ## Where it stands and how to help
 
-As of mid November 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03). Stage 5 is built on `feat/theme-schools-tier3-stage5` and has not merged. [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) and the stage reports are the queue, and the studio sets priorities. The Stage 4 taste calls were answered 2026-10-03 and 10-04. What is left from that stage is tracked in the backlog: two end-of-run layout nitpicks, the stretch interactables that were not built, and the temporary `?bh-assembly=` switch on bauhaus pages.
+As of mid November 2026, the last Portal merge is Stage 5 (PR #117, 2026-11-17), which followed Stage 4 (PR #95, 2026-10-03). [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) and the stage reports are the queue, and the studio sets priorities. The Stage 4 taste calls were answered 2026-10-03 and 10-04. What is left from that stage is tracked in the backlog: two end-of-run layout nitpicks, the stretch interactables that were not built, and the temporary `?bh-assembly=` switch on bauhaus pages.
 
 **Next planned work**
 
-- Stage 5: pair C, grandmillennial and cottagecore, through the same dossier-driven revision. It is built and in review.
 - Stage 6: a re-review of all seven schools as a set, plus two interactables Stage 4 left unbuilt.
 - The transitions phase: give every school its own arrival gesture, draw ahead on in-school links and on phones, fix the Back-to-a-scrolled-page wordmark morph, and film in WebKit as well as Chromium.
 - BDL-011 Field Guide to the Schools is `forthcoming`, with a spec written. BDL-003 Novgorod Letters is parked behind a visual rework.

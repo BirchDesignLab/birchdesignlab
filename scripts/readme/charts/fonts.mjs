@@ -1,8 +1,10 @@
 // Font embedding for the README charts. Marcellus (display) and Spectral (body,
 // regular and italic) come from the @fontsource packages the site already uses.
-// Each SVG gets a subset holding only the glyphs it draws, made with fonttools'
-// pyftsubset (python, `pip install fonttools brotli`), embedded as base64 woff2.
-// Subsetting is deterministic: the head table's modified stamp is left alone.
+// Each SVG gets a subset holding only the glyphs it draws, made by subset_font.py
+// (python fonttools, `pip install fonttools brotli`), embedded as base64 woff2.
+// Subsetting is deterministic: the head table's modified stamp is left alone. The
+// subset step fails when the face has no glyph for a requested character, so a
+// letter can never silently fall back to a system font.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -18,47 +20,11 @@ const SOURCES = {
 
 const cache = new Map();
 
-function pyftsubset(args) {
-  for (const exe of ['pyftsubset', 'python']) {
-    try {
-      const a = exe === 'python' ? ['-m', 'fontTools.subset', ...args] : args;
-      return execFileSync(exe, a, { stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch (e) {
-      if (e.code !== 'ENOENT') throw e;
-    }
-  }
-  throw new Error('pyftsubset not found: pip install fonttools brotli');
-}
-
-/** Subset one face to `text`. Returns a woff2 Buffer. */
+/** Subset one face to `text`. Returns a woff2 Buffer. Fails if the face lacks a glyph the text needs. */
 export function subset(face, text) {
-  const chars = [...new Set(text + ' ')].sort().join('');
-  const key = `${face}|${chars}`;
-  if (cache.has(key)) return cache.get(key);
   const src = SOURCES[face];
-  const file = resolve(ROOT, 'node_modules/@fontsource', src.pkg, 'files', src.file);
-  if (!existsSync(file)) throw new Error(`missing font file ${file}`);
-  const dir = mkdtempSync(join(tmpdir(), 'bdl-font-'));
-  try {
-    const textFile = join(dir, 'text.txt');
-    const outFile = join(dir, 'out.woff2');
-    writeFileSync(textFile, chars, 'utf8');
-    pyftsubset([
-      file,
-      `--text-file=${textFile}`,
-      `--output-file=${outFile}`,
-      '--flavor=woff2',
-      '--layout-features=kern,liga,calt',
-      '--no-hinting',
-      '--desubroutinize',
-      '--drop-tables+=DSIG',
-    ]);
-    const buf = readFileSync(outFile);
-    cache.set(key, buf);
-    return buf;
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const rel = `@fontsource/${src.pkg}/files/${src.file}`;
+  return subsetPinned(rel, text, {}).woff2;
 }
 
 /**

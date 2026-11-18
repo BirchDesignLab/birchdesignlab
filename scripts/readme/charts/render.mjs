@@ -9,6 +9,7 @@ import {
   arrowD, endOf, endTangent, esc, f1, parsePath, pathToD, polyLength, rhombusD, rng, sample, startOf, startTangent,
   trimEnd, trimStart,
 } from './geometry.mjs';
+import { MAX_MOTION, fitMotion } from './motion.mjs';
 import { BUILDER_VERSION, FONT_STACK, contrast, mix, paletteHash, palette, role } from './theme.mjs';
 import { fontCss } from './fonts.mjs';
 import { width as textWidth } from './textmetrics.mjs';
@@ -66,7 +67,7 @@ function nodeBlock(n, sizes, glyphs) {
       const lh = 17;
       const y0 = n.cy - ((n.lines.length - 1) * lh) / 2 + 5;
       return {
-        svg: `<text class="bl">${n.lines.map((l, i) => { glyphs.display += l; return `<tspan x="${f1(n.cx)}" y="${f1(y0 + i * lh)}">${esc(l)}</tspan>`; }).join('')}</text>`,
+        svg: `<text class="bl"${n.plainCase ? ' style="letter-spacing:0"' : ''}>${n.lines.map((l, i) => { glyphs.display += l; return `<tspan x="${f1(n.cx)}" y="${f1(y0 + i * lh)}">${esc(l)}</tspan>`; }).join('')}</text>`,
         needed: n.lines.length * lh + 8,
       };
     }
@@ -120,29 +121,6 @@ function nodeShape(n, style) {
     );
   }
   return `<rect class="s" x="${f1(x)}" y="${f1(y)}" width="${f1(n.w)}" height="${f1(n.h)}" rx="11"/>`;
-}
-
-export function barkDashes(seed, W, H, t, mx = MARGIN_X) {
-  // One deliberate bark edge down the left of the card: paired lenticels with a
-  // rhythm (a long dash and a short one, light and heavy), not scattered noise.
-  const r = rng(seed);
-  const x0 = 13;
-  const room = Math.max(8, mx - 22);
-  let thin = '';
-  let heavy = '';
-  let y = 34 + r() * 10;
-  while (y < H - 26) {
-    const a = Math.min(room, 9 + r() * (room - 4));
-    const b = Math.max(5, a * (0.4 + r() * 0.25));
-    const off = r() * (room - a);
-    const heavyPair = r() < 0.3;
-    const d1 = `M${f1(x0 + off)} ${f1(y)}h${f1(a)}`;
-    const d2 = `M${f1(x0 + (r() < 0.5 ? 0 : room - b))} ${f1(y + 7)}h${f1(b)}`;
-    if (heavyPair) heavy += d1 + d2;
-    else thin += d1 + d2;
-    y += 24 + r() * 22;
-  }
-  return `<path class="bark" d="${thin}"/><path class="bark" style="stroke-width:3.8" d="${heavy}"/>`;
 }
 
 export function renderScheme(P, scheme, { sourceHash }) {
@@ -253,7 +231,7 @@ export function renderScheme(P, scheme, { sourceHash }) {
     pairs.push({ where: `${k} detail on fill`, fg: r.detail, bg: r.fill });
   }
 
-  // ---- caption, bark dashes, background ----
+  // ---- caption ----
   const capTitle = chart.caption.toUpperCase();
   glyphs.display += `FIG. ${chart.n} ${capTitle}`;
   pairs.push({ where: 'caption on field', fg: t.muted, bg: t.field });
@@ -262,14 +240,13 @@ export function renderScheme(P, scheme, { sourceHash }) {
     `<text class="cap" x="${P.mx}" y="38"><tspan class="capn">FIG. ${chart.n}</tspan>` +
     `<tspan dx="16">${esc(capTitle)}</tspan></text>`;
 
-  const capSize = P.variant === 'phone' ? Math.min(17, Math.max(CAP_SIZE, Math.ceil(11.4 / P.scale))) : CAP_SIZE;
+  const capSize = Math.max(CAP_SIZE, Math.ceil((12.6 / P.scale) * 10) / 10);
   const css = [
     fontCss(glyphs),
     `.card{fill:${t.field};stroke:${t.line};stroke-width:1}`,
-    `.bark{fill:none;stroke:${t.dash};stroke-opacity:${t.dashOpacity};stroke-width:2.2;stroke-linecap:round}`,
-    `.cap{font:${capSize}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted}}.capn{fill:${t.accentStrong}}`,
+    `.cap{font:${capSize}px ${FONT_STACK.display};letter-spacing:${P.variant === 'phone' ? '.06em' : '.2em'};fill:${t.muted}}.capn{fill:${t.accentStrong}}`,
     `.cb{fill:${t.clusterFill};stroke:${t.clusterStroke};stroke-width:1.2}`,
-    `.ct{font:${sizes.cluster}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted};paint-order:stroke;stroke:${t.clusterFill};stroke-width:6px;stroke-linejoin:round}`,
+    `.ct{font:${sizes.cluster}px ${FONT_STACK.display};letter-spacing:.2em;fill:${t.muted};paint-order:stroke;stroke:${t.clusterFill};stroke-width:11px;stroke-linejoin:round}`,
     `.el{fill:none;stroke:${t.edge};stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}`,
     `.el.dot{stroke-dasharray:.1 7;stroke-width:2.8}`,
     `.eh{fill:${t.edge};stroke:${t.edge};stroke-width:1.2;stroke-linejoin:round}`,
@@ -289,22 +266,21 @@ export function renderScheme(P, scheme, { sourceHash }) {
     .filter(Boolean)
     .join('\n');
 
-  const dashes = barkDashes(chart.n * 7919 + (scheme === 'light' ? 1 : 2) + (P.variant === 'phone' ? 31 : 0), W, H, t, P.mx);
   const svgW = P.variant === 'phone' ? W : CANVAS_W;
   const svgH = Math.round((H * svgW) / W);
-  const svg =
+  const svg0 =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${svgW}" height="${svgH}" role="img" aria-labelledby="t d">` +
     `<title id="t">${esc(chart.title)}</title><desc id="d">${esc(chart.alt)}</desc>` +
-    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-variant="${P.variant}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-palette-hash="${extra.paletteHash ?? paletteHash()}" data-motion-s="${f1(extra.duration ?? 0)}"></metadata>` +
+    `<metadata data-chart="${chart.n}" data-scheme="${scheme}" data-variant="${P.variant}" data-source-hash="${sourceHash}" data-builder-version="${BUILDER_VERSION}" data-palette-hash="${extra.paletteHash ?? paletteHash()}" data-motion-s="${f1(Math.min(extra.duration ?? 0, MAX_MOTION))}"></metadata>` +
     `<style>${css}</style>` +
     `<rect class="card" x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="22"/>` +
-    dashes +
     cap +
     `<g transform="translate(${off.x} ${off.y})">` +
     (extra.under ?? '') +
     `<g class="cls">${clusters}</g><g class="eds">${edgeSvg}</g><g class="clts">${clusterTitles}</g><g class="nds">${nodeSvg}</g><g class="lbs">${labelSvg}</g>` +
     (extra.over ?? '') +
     '</g></svg>\n';
+  const { svg } = fitMotion(svg0, extra.duration ?? 0);
 
   const used = [sizes.head, capSize];
   if (model.clusters.length) used.push(sizes.cluster);

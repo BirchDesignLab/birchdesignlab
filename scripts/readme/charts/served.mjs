@@ -16,10 +16,10 @@ const cfgOf = (chart) => {
   return { head: r.headSize, body: r.fontSize, edge: r.edgeSize, wrap: r.wrap, padX: r.padding + 6, padY: r.padding - 1, edgeWrap: r.edgeWrap ?? 150 };
 };
 
-/** A synthetic checkpoint bar carrying an edge label in small caps. */
+/** A synthetic checkpoint bar carrying an edge label, in the label's own case (it holds a path). */
 function labelBar(id, text, w, cfg, size) {
-  const lines = wrap('display', size, text.toUpperCase(), w - 36, 0.14);
-  return { id, classes: ['cloud'], shape: 'bar', barLabel: true, cx: 0, cy: 0, w, h: lines.length * 17 + 14, lines, headN: lines.length, scale: 1 };
+  const lines = wrap('display', size, text, w - 36, 0);
+  return { id, classes: ['cloud'], shape: 'bar', barLabel: true, plainCase: true, cx: 0, cy: 0, w, h: lines.length * 17 + 14, lines, headN: lines.length, scale: 1 };
 }
 
 const edgeText = (graph, from, to) => graph.edges.find((e) => e.from === from && e.to === to).text;
@@ -147,15 +147,15 @@ export function servedLayout(graph, chart, variant = 'desktop') {
     push(pick('V', 'SA'), smooth(anchor(V, 'B', -62), 'B', anchor(SA, 'T', 8), 'T', 34), { at: 0.5, dx: 22, dy: -4, labelWrap: 72 });
     push(pick('SA', 'V'), rounded([anchor(SA, 'L'), [railL, SA.cy], [railL, V.cy], anchor(V, 'L')], 16), { at: 0.42, dx: 54, dy: 0, labelWrap: 84 });
     push(pick('V', 'W', 0), smooth(anchor(V, 'B', 30), 'B', anchor(W, 'T', -50), 'T', 40), { at: 0.3, dx: 14, dy: 0, labelWrap: 80 });
-    push(pick('V', 'W', 1), smooth(anchor(V, 'B', 72), 'B', anchor(W, 'T', -2), 'T', 40), { at: 0.72, dx: 18, dy: 0, labelWrap: 100 });
+    push(pick('V', 'W', 1), smooth(anchor(V, 'B', 72), 'B', anchor(W, 'T', -2), 'T', 40), { at: 0.72, dx: 52, dy: 0, labelWrap: 96 });
     push(pick('W', 'V'), rounded([anchor(W, 'R'), [W.cx + W.w / 2 + 20, W.cy], [W.cx + W.w / 2 + 20, V.cy], anchor(V, 'R')], 16), { at: 0.86, dx: 0, dy: 0, labelWrap: 92 });
     push(pick('W', 'AE'), smooth(anchor(W, 'L', 18), 'L', anchor(AE, 'T'), 'T', 40), { at: 0.55, dx: 46, dy: 6, labelWrap: 100 });
     push(pick('W', 'RL'), smooth(anchor(W, 'B'), 'B', anchor(N('RL'), 'T'), 'T'), { noLabel: true });
     push(pick('RL', 'CAP'), smooth(anchor(N('RL'), 'B'), 'B', anchor(N('CAP'), 'T'), 'T'), { noLabel: true });
-    push(pick('CAP', 'EM'), smooth(anchor(N('CAP'), 'B'), 'B', anchor(EM, 'T'), 'T'), { at: 0.5, dx: -62, labelWrap: 90 });
+    push(pick('CAP', 'EM'), smooth(anchor(N('CAP'), 'B'), 'B', anchor(EM, 'T'), 'T'), { at: 0.5, dx: 70, labelWrap: 90 });
     push(pick('EM', 'INBOX'), smooth(anchor(EM, 'B'), 'B', anchor(INBOX, 'T'), 'T'));
     push(pick('CAP', 'KV'), smooth(anchor(N('CAP'), 'L'), 'L', anchor(KV, 'T', 20), 'T', 40), { at: 0.5, dx: -30, dy: -16, labelWrap: 80 });
-    push(pick('EM', 'KV'), smooth(anchor(EM, 'L', -12), 'L', anchor(KV, 'R', -4), 'R'), { at: 0.5, dx: 0, dy: -24, labelWrap: 90 });
+    push(pick('EM', 'KV'), smooth(anchor(EM, 'L', -12), 'L', anchor(KV, 'R', -4), 'R'), { at: 0.5, dx: 4, dy: -32, labelWrap: 84 });
     push(pick('CRON', 'KV'), smooth(anchor(CRON, 'T'), 'T', anchor(KV, 'B'), 'B'), { at: 0.5, dx: -44, labelWrap: 80 });
     push(pick('CRON', 'EM'), smooth(anchor(CRON, 'R'), 'R', anchor(EM, 'B', -50), 'B', 30), { at: 0.5, dx: 0, dy: 22, labelWrap: 90 });
   }

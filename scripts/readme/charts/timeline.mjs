@@ -5,18 +5,18 @@
 import { fontCss } from './fonts.mjs';
 import { esc, f1, rng } from './geometry.mjs';
 import { KEYFRAMES, RING_CSS, anim } from './motion.mjs';
-import { eye, growClip, lenticels, trunkOutline } from './birch.mjs';
-import { shell } from './shell.mjs';
+import { eye, growClip, lenticels, scar, trunkOutline } from './birch.mjs';
+import { captionGlyphs, shell } from './shell.mjs';
 import { CAP_SIZE, MARGIN_BOTTOM, MARGIN_TOP } from './render.mjs';
 import { FONT_STACK, contrast, palette } from './theme.mjs';
 import { width, wrapBalanced as wrap } from './textmetrics.mjs';
 
 const DATE = 15;
 const ITEM = 15.5;
-const CHIP = 13.5;
 
 export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
   const phone = variant === 'phone';
+  const CHIP = phone ? 15 : 13.5;
   const t = palette(scheme);
   const glyphs = { display: '', body: '', italic: '' };
   const pairs = [];
@@ -50,16 +50,22 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
   const x0 = trunkX;
   const markYs = entries.map((e) => e.y + 9);
   const growStart = 0;
-  const growDur = 2.4;
-  const len = lenticels({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, junctions: markYs, seed: 7007 });
+  const growDur = 1.6;
+  const len = lenticels({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, junctions: markYs, seed: 7007, scars: 0 });
   let body =
     growClip('grow', { x: x0 - trunkW / 2 - 30, y: trunkTop - 12, w: trunkW + 60, h: trunkBottom - trunkTop + 26, up: false, dur: growDur, begin: growStart }) +
-    `<g clip-path="url(#grow)"><path d="${trunkOutline({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, seed: 911, taper: 0.12 })}" fill="${fill}" stroke="${mark}" stroke-width="1.8" stroke-linejoin="round"/>` +
-    `<path class="lent" d="${len.thin}" style="stroke:${mark}"/><path class="lent" d="${len.heavy}" style="stroke:${mark};stroke-width:3.8"/></g>`;
+    `<g clip-path="url(#grow)"><path d="${trunkOutline({ cx: x0, top: trunkTop, bottom: trunkBottom, w: trunkW, seed: 911, taper: 0.12 })}" fill="${fill}" stroke="${mark}" stroke-opacity=".25" stroke-width="1" stroke-linejoin="round"/>` +
+    `<path class="lt" d="${len.thin}" style="stroke:${mark}"/>` +
+    // one branch scar, under Portal day
+    entries
+      .filter((e) => e.pick?.role === 'portal')
+      .map((e) => scar(x0 - (e.side === 'L' ? -1 : 1) * 9, e.y + 9 + 17, mark, phone ? 0.9 : 1))
+      .join('') +
+    '</g>';
 
   // ---- entries ----
   let css = KEYFRAMES + RING_CSS(t.glow);
-  css += `.lent{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.78}`;
+  css += `.lt{fill:none;stroke-linecap:round;stroke-width:1.4;stroke-opacity:.28}`;
   let end = growStart + growDur;
   entries.forEach((e, i) => {
     const toLeft = e.side === 'L';
@@ -113,8 +119,8 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
     if (hot) {
       const ring = `<circle class="ring" id="r-ev${i}" cx="${f1(x0)}" cy="${f1(markY)}" r="${f1(trunkW / 2 + 12)}"/>`;
       body += ring;
-      css += anim(`#r-ev${i}`, 'ring', 1.0, at + 0.2, 'ease-out');
-      end = Math.max(end, at + 1.2);
+      css += anim(`#r-ev${i}`, 'ring', 0.7, at + 0.1, 'ease-out');
+      end = Math.max(end, at + 0.8);
     }
     end = Math.max(end, at + 0.5);
   });
@@ -124,7 +130,7 @@ export function buildTimeline(chart, data, scheme, variant, { sourceHash }) {
   pairs.push({ where: 'picked-out date on field', fg: t.accent, bg: t.field });
   pairs.push({ where: 'trunk against field (non-text, 3:1)', fg: scheme === 'light' ? t.ink : t.ink, bg: t.field });
 
-  glyphs.display += 'x';
+  glyphs.display += captionGlyphs(chart);
   css =
     fontCss(glyphs) +
     '\n' +

@@ -17,12 +17,40 @@
    "alt": [
     ":root[data-scheme='light']"
    ],
-   "face": {
-    "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
-    "pin": {}
+   "meta": "src/themes/quiet/meta.ts",
+   "corners": "square",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "billboard": "--billboard-color"
    },
-   "signature": {
-    "kind": "quiet"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.12,
+     "color": "billboard",
+     "size": 34
+    },
+    "wm2": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.12,
+     "color": "billboard",
+     "size": 34
+    },
+    "copy": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "none",
+     "ls": 0,
+     "color": "mark",
+     "size": 14
+    }
    }
   },
   {
@@ -36,14 +64,48 @@
    "alt": [
     ":root[data-theme='swiss'][data-scheme='dark']"
    ],
-   "face": {
-    "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
-    "pin": {
-     "wght": 700
-    }
+   "meta": "src/themes/swiss/meta.ts",
+   "corners": "square",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "red": "--red-field"
    },
-   "signature": {
-    "kind": "swiss"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": -0.045,
+     "color": "mark",
+     "size": 50,
+     "phoneSize": 55
+    },
+    "wm2": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": -0.045,
+     "color": "mark",
+     "size": 50,
+     "phoneSize": 55
+    },
+    "copy": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 600
+     },
+     "case": "none",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 14
+    }
    }
   },
   {
@@ -57,18 +119,47 @@
    "alt": [
     ":root[data-theme='bauhaus'][data-scheme='dark']"
    ],
-   "face": {
-    "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
-    "pin": {
-     "wght": 700
-    }
+   "meta": "src/themes/bauhaus/meta.ts",
+   "corners": "square",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "red": "--red",
+    "yellow": "--yellow",
+    "blue": "--blue"
    },
-   "signature": {
-    "kind": "bauhaus",
-    "tokens": {
-     "red": "--red",
-     "yellow": "--yellow",
-     "blue": "--blue"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 800
+     },
+     "case": "lower",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 42
+    },
+    "wm2": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 800
+     },
+     "case": "lower",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 42
+    },
+    "copy": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "lower",
+     "ls": -0.01,
+     "color": "mark",
+     "size": 13
     }
    }
   },
@@ -83,24 +174,56 @@
    "alt": [
     ":root[data-theme='glassmorphism'][data-scheme='dark']"
    ],
-   "face": {
-    "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
-    "pin": {
-     "wght": 600,
-     "opsz": 28
-    }
+   "meta": "src/themes/glassmorphism/meta.ts",
+   "corners": "round",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "raised": "--field-raised",
+    "vibA": "--vibrant-a",
+    "vibB": "--vibrant-b",
+    "violetHi": "--blob-violet-hi",
+    "violet": "--blob-violet",
+    "orangeHi": "--blob-cyan-hi",
+    "orange": "--blob-cyan",
+    "coralHi": "--blob-peach-hi",
+    "coral": "--blob-peach"
    },
-   "signature": {
-    "kind": "glass",
-    "tokens": {
-     "light": {
-      "a": "--blob-violet-hi",
-      "b": "--blob-pink-hi"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 740,
+      "opsz": 32
      },
-     "dark": {
-      "a": "--blob-violet",
-      "b": "--blob-pink"
-     }
+     "case": "none",
+     "ls": -0.022,
+     "color": "mark",
+     "size": 34
+    },
+    "wm2": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 740,
+      "opsz": 32
+     },
+     "case": "none",
+     "ls": -0.022,
+     "color": "vibrant",
+     "size": 34
+    },
+    "copy": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 650,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.025,
+     "color": "mark",
+     "size": 13
     }
    }
   },
@@ -115,19 +238,66 @@
    "alt": [
     ":root[data-theme='vaporwave'][data-scheme='light']"
    ],
-   "face": {
-    "src": "@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2",
-    "pin": {}
-   },
-   "signature": {
-    "kind": "vaporwave",
-    "tokens": {
-     "grid": "--hz-grid",
-     "sunA": "--hz-sun-a",
-     "sunB": "--hz-sun-b",
-     "sunC": "--hz-sun-c"
+   "meta": "src/themes/vaporwave/meta.ts",
+   "corners": "square",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "accent": "--accent",
+    "skyTop": "--hz-sky-top",
+    "skyMid": "--hz-sky-mid",
+    "horizon": "--hz-horizon",
+    "plain": "--bb-plain",
+    "pink": "--neon-pink",
+    "cyan": "--neon-cyan",
+    "depth": "--bb-depth",
+    "kana": {
+     "light": "--accent",
+     "dark": "--neon-pink"
     }
-   }
+   },
+   "rawTokens": {
+    "chrome": "--bb-chrome"
+   },
+   "spans": {
+    "kicker": {
+     "src": "@fontsource/dela-gothic-one/files/dela-gothic-one-japanese-400-normal.woff2",
+     "pins": {},
+     "case": "none",
+     "ls": 0.4,
+     "color": "kana",
+     "size": 12.5
+    },
+    "wm1": {
+     "src": "@fontsource/dela-gothic-one/files/dela-gothic-one-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.03,
+     "color": "chrome",
+     "size": 50
+    },
+    "wm2": {
+     "src": "@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.62,
+     "color": "plain",
+     "size": 13
+    },
+    "copy": {
+     "src": "@fontsource-variable/exo-2/files/exo-2-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 400
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "plain",
+     "size": 13
+    }
+   },
+   "kickerText": "バーチ・デザイン・ラボ"
   },
   {
    "id": "grandmillennial",
@@ -140,18 +310,56 @@
    "alt": [
     ":root[data-theme='grandmillennial'][data-scheme='dark']"
    ],
-   "face": {
-    "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
-    "pin": {
-     "wght": 600
-    },
-    "italic": true
+   "meta": "src/themes/grandmillennial/meta.ts",
+   "corners": "gilt",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "accent": "--accent",
+    "gilt": "--ornament",
+    "giltDeep": "--ornament-deep",
+    "oval": "--oval",
+    "raised": "--field-raised",
+    "stripeA": "--stripe-a",
+    "stripeB": "--stripe-b",
+    "ground": "--c-ground",
+    "rose": "--c-rose",
+    "leaf": "--c-leaf"
    },
-   "signature": {
-    "kind": "grandmillennial",
-    "tokens": {
-     "gold": "--gold",
-     "lace": "--c-rose-lt"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+     "pins": {
+      "wght": 600
+     },
+     "case": "none",
+     "ls": -0.01,
+     "color": "mark",
+     "size": 40,
+     "italic": true
+    },
+    "wm2": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 500
+     },
+     "case": "upper",
+     "ls": 0.3,
+     "color": "accent",
+     "size": 12.5
+    },
+    "copy": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+     "pins": {
+      "wght": 500
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "mark",
+     "size": 13.5,
+     "italic": true
     }
    }
   },
@@ -166,29 +374,66 @@
    "alt": [
     ":root[data-theme='cottagecore'][data-scheme='dark']"
    ],
-   "face": {
-    "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-italic.woff2",
-    "pin": {
-     "wght": 600
-    },
-    "italic": true
+   "meta": "src/themes/cottagecore/meta.ts",
+   "corners": "paper",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "link": "--link",
+    "hand": "--hand-kicker-ink",
+    "scribble": "--scribble",
+    "sage": "--cc-sage",
+    "ground": "--gingham-ground",
+    "paper": "--paper",
+    "petal": "--cc-petal",
+    "heart": "--cc-heart",
+    "stem": "--cc-stem",
+    "leaf": "--cc-leaf",
+    "tape": "--cc-sage"
    },
-   "signature": {
-    "kind": "cottagecore",
-    "tokens": {
-     "sage": "--cc-sage"
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2",
+     "pins": {
+      "wght": 600,
+      "SOFT": 100,
+      "WONK": 1,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.03,
+     "color": "mark",
+     "size": 54
+    },
+    "wm2": {
+     "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-italic.woff2",
+     "pins": {
+      "wght": 380,
+      "SOFT": 100,
+      "WONK": 1,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.015,
+     "color": "link",
+     "size": 32,
+     "italic": true
+    },
+    "copy": {
+     "src": "@fontsource-variable/caveat/files/caveat-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "hand",
+     "size": 21
     }
    }
   }
  ],
- "tokens": {
-  "field": "--field",
-  "raised": "--field-raised",
-  "mark": "--mark",
-  "muted": "--mark-muted",
-  "accent": "--accent",
-  "onAccent": "--on-accent"
- },
  "groups": [
   {
    "title": "Shared by every school",

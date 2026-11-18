@@ -7,12 +7,15 @@
 // Charts 1 and 3 use Mermaid's own dagre layout and only compose.
 import { anchor, cluster, finish, makeEdge, makeNodes, rounded, smooth } from './manual.mjs';
 import { f1, parsePath, rng, sample } from './geometry.mjs';
-import { eye, growClip, lenticels, trunkOutline } from './birch.mjs';
+import { eye, growClip, lenticels, scar, trunkOutline } from './birch.mjs';
 import { KEYFRAMES, RING_CSS, anim, chain, depths, drawCss, edgeIn, nodeIn, pulse, ringEl, traveler } from './motion.mjs';
 import { mix, readable } from './theme.mjs';
 import { buildPhone, harnessPhone, labPhone } from './phone.mjs';
 import { servedCompose, servedLayout } from './served.mjs';
-import { width as textWidth } from './textmetrics.mjs';
+import { width as textWidth, wrap as wrapText } from './textmetrics.mjs';
+
+/** Cluster title wrapped to `maxW` in the tracked caps the renderer draws it in. */
+const wrapTitle = (title, maxW, size) => wrapText('display', size, title, maxW, 0.2);
 
 const cfgOf = (chart) => {
   const r = chart.render;
@@ -117,14 +120,17 @@ function repoCompose(ctx) {
   const eyes = rootEdges
     .map((e) => {
       const [ex, ey] = parsePath(e.d)[0].pts[0];
-      return eye(ex, ey, nodes.get(e.to).cx > trunk.cx ? 1 : -1, mark, fill, ctx.variant === 'phone' ? 0.9 : 1);
+      const dir = nodes.get(e.to).cx > trunk.cx ? 1 : -1;
+      // a branch scar under the two biggest junctions (src/ and docs/)
+      const big = e.to === 'SRC' || e.to === 'DOCS' ? scar(ex - dir * 13, ey + 15, mark, ctx.variant === 'phone' ? 0.9 : 1) : '';
+      return eye(ex, ey, dir, mark, fill, ctx.variant === 'phone' ? 0.9 : 1) + big;
     })
     .join('');
   const svg =
     growClip('grow', { x: trunk.cx - trunk.w / 2 - 26, y: top - 14, w: trunk.w + 52, h: trunk.h + 28, dur: growDur, begin: 0 }) +
     `<g clip-path="url(#grow)">` +
-    `<path d="${trunkOutline({ cx: trunk.cx, top, bottom, w: trunk.w, seed: 911 })}" fill="${fill}" stroke="${mark}" stroke-width="1.8" stroke-linejoin="round"/>` +
-    `<path class="lent" d="${len.thin}" style="stroke:${mark}"/><path class="lent" d="${len.heavy}" style="stroke:${mark};stroke-width:3.8"/>` +
+    `<path d="${trunkOutline({ cx: trunk.cx, top, bottom, w: trunk.w, seed: 911 })}" fill="${fill}" stroke="${mark}" stroke-opacity=".25" stroke-width="1" stroke-linejoin="round"/>` +
+    `<path class="lt" d="${len.thin}" style="stroke:${mark}"/><path class="lh" d="${len.heavy}" style="stroke:${mark}"/>` +
     eyes +
     `<text class="trl" transform="rotate(-90 ${f1(trunk.cx)} ${f1(trunk.cy)})" x="${f1(trunk.cx)}" y="${f1(trunk.cy + 6)}" style="fill:${mark}">${label}</text>` +
     '</g>';
@@ -153,7 +159,7 @@ function repoCompose(ctx) {
     end = Math.max(end, d + 0.8);
   }
   return {
-    css: css + `.lent{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.78}.trl{font:19px 'BDL Marcellus',Georgia,serif;text-anchor:middle}.el{stroke:${light2};stroke-width:2}`,
+    css: css + `.lt,.lh{fill:none;stroke-linecap:round}.lt{stroke-width:1.4;stroke-opacity:.28}.lh{stroke-width:2.6;stroke-opacity:.55}.trl{font:19px 'BDL Marcellus',Georgia,serif;text-anchor:middle}.el{stroke:${light2};stroke-width:2}`,
     nodeOver: { ROOT: svg },
     duration: end,
     textSizes: [19],
@@ -165,6 +171,8 @@ function repoCompose(ctx) {
 // beneath, then the pipeline returns right to left along the bottom.
 function buildLayout(graph, chart) {
   const cfg = cfgOf(chart);
+  // `npm run verify` is a command that runs, not a yes/no question: draw it as a step (only "green?" is a decision)
+  for (const v of graph.vertices) if (v.id === 'V') v.shape = 'rect';
   const nodes = makeNodes(graph, cfg);
   const N = (id) => nodes.get(id);
   const top = ['T1', 'T2', 'T3', 'T4'].map(N);
@@ -261,11 +269,12 @@ function harnessLayout(graph, chart) {
   BRIEF.cx = IMPL.cx - IMPL.w / 2 - 44 - BRIEF.w / 2;
   BRIEF.cy = 0;
   const box = cluster('REVIEW', graph.subs[0].title.toUpperCase(), ['CRIT', 'VER', 'GATE'], nodes, { x: 24, top: 30, bottom: 24 });
-  // Edges fan in across the top of the box and fold out of the bottom, so its
-  // title sits in the free space to its left, as a two-line annotation.
-  const words = box.lines[0].split(' ');
-  const cut = Math.ceil(words.length / 2) - 1;
-  box.titlePos = { x: box.x - 18, y: box.y + box.h / 2 - 4, anchor: 'end', lines: [words.slice(0, cut).join(' '), words.slice(cut).join(' ')] };
+  // Edges fan in across the top of the box and fold out of the bottom, so the box
+  // gets a quiet column on its left and the title sits in it, inside the box.
+  const titleCol = 150;
+  box.x -= titleCol;
+  box.w += titleCol;
+  box.titlePos = { x: box.x + 20, y: box.y + box.h / 2 - 20, anchor: 'start', lines: wrapTitle(box.lines[0], titleCol - 24, cfg.head ? chart.render.clusterSize : 14) };
 
   const edges = [];
   let idx = 0;
@@ -434,7 +443,7 @@ function harnessCompose(ctx) {
       .join('');
     // a text chip per tier on the top rule, so the tier reads without colour or the legend
     let cx = n.cx + n.w / 2 - 12;
-    const chipSize = ctx.sizes.cluster - 0.5;
+    const chipSize = ctx.sizes.cluster;
     for (const tier of [...list].reverse()) {
       const label = TIER_NAME[tier];
       ctx.glyphs.display += label;
@@ -470,11 +479,11 @@ function harnessCompose(ctx) {
   }
   // the fixer follows the implementer's seat; the escalated fixer steps one up (.claude/workflows/README.md)
   const note = ctx.variant === 'phone' ? ['The fixer is the implementer’s seat;', 'the escalated fixer steps one tier up.'] : ['The fixer is the implementer’s seat; the escalated fixer steps one tier up.'];
+  const noteSize = Math.max(ctx.variant === 'phone' ? 15 : 14, Math.ceil((12.6 / ctx.P.scale) * 10) / 10);
   note.forEach((l, i) => {
     ctx.glyphs.italic += l;
-    legend += `<text class="lgn" x="${f1(lg.x)}" y="${f1(lg.y + 30 + i * 17)}">${l}</text>`;
+    legend += `<text class="lgn" x="${f1(lg.x)}" y="${f1(lg.y + 30 + i * noteSize * 1.25)}">${l}</text>`;
   });
-  const noteSize = ctx.variant === 'phone' ? 15 : 14;
   css += `.lgn{font:italic ${noteSize}px 'BDL Spectral',Georgia,serif;fill:${t.muted}}`;
   ctx.pairs.push({ where: 'legend note on field', fg: t.muted, bg: t.field });
   css += `.lgt{font:${size}px 'BDL Marcellus',Georgia,serif;letter-spacing:.2em;fill:${t.muted}}.lgc{font:${size + 1}px 'BDL Marcellus',Georgia,serif;text-anchor:middle}`;
@@ -482,7 +491,7 @@ function harnessCompose(ctx) {
 
   // reveal rank by rank
   const { depth, back } = depths(nodes, edges);
-  const STEP = 0.3;
+  const STEP = 0.2;
   const tN = (id) => 0.15 + (depth.get(id) ?? 0) * STEP;
   let end = 0;
   for (const n of model.nodes) {
@@ -499,7 +508,7 @@ function harnessCompose(ctx) {
   // then the work flows: three dots leave verifyHead together, land in parallel and fold into
   // Findings; one dot then runs the blocker loop, Fixer back to verifyHead, once
   const E = (a, b) => edges.find((x) => x.from === a && x.to === b);
-  const speed = ctx.variant === 'phone' ? 380 : 520;
+  const speed = ctx.variant === 'phone' ? 560 : 800;
   let tv = '';
   let k = 0;
   const under = {};
@@ -528,7 +537,7 @@ function harnessCompose(ctx) {
   const fixLen = chain([E('SORT', 'FIX'), E('FIX', 'VH')], speed);
   ring('FIX', t0 + fixLen.arrivals[0].at - 0.05);
   ring('VH', t0 + fixLen.total - 0.05);
-  return { css, nodeUnder: under, nodeOver: over, over: `<g class="lg">${legend}</g>${tv}`, duration: end, textSizes: [size, size + 1, size - 0.5, ctx.variant === 'phone' ? 15 : 14] };
+  return { css, nodeUnder: under, nodeOver: over, over: `<g class="lg">${legend}</g>${tv}`, duration: end, textSizes: [size, size + 1, noteSize] };
 }
 
 

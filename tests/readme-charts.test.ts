@@ -227,6 +227,17 @@ describe('README charts', () => {
       expect(recorded, `README chart ${c.n} was drawn with an older palette or builder: run node scripts/readme/charts/build.mjs`).toBe(want);
     });
 
+    it.each(cases)('%s %s SVG draws no text under 12.5px (at 830 wide, or 360 on a phone) and moves for at most 2.5s', (v, s) => {
+      const svg = readFileSync(svgPath(c, s, v), 'utf8').replace(/url\(data:[^)]*\)/g, '');
+      const viewW = Number(svg.match(/viewBox="0 0 ([\d.]+) /)![1]);
+      const sizes = [...svg.matchAll(/font(?:-size)?:\s*(?:italic\s+)?([\d.]+)px/g)].map((m) => Number(m[1]));
+      expect(sizes.length).toBeGreaterThan(0);
+      const smallest = Math.min(...sizes) * ((v === 'phone' ? 360 : 830) / viewW);
+      expect(smallest, `smallest text renders at ${smallest.toFixed(2)}px`).toBeGreaterThanOrEqual(12.5);
+      const motion = Number(svg.match(/data-motion-s="([\d.]+)"/)![1]);
+      expect(motion).toBeLessThanOrEqual(2.5);
+    });
+
     it.each(cases)('%s %s SVG is safe to show through <img>', (v, s) => {
       const file = svgPath(c, s, v);
       if (!existsSync(file)) return;

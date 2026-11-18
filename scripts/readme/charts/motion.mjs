@@ -137,3 +137,21 @@ export function traveler(path, begin, dur, color) {
     .join('');
   return `<g class="tvg">${out}</g>`;
 }
+
+/** The longest a chart's motion may run, in seconds: it plays once, then holds. */
+export const MAX_MOTION = 2.4;
+
+/**
+ * Scale every time in an SVG's motion (CSS `animation` shorthands and SMIL
+ * `begin` / `dur`) by `k`, so a sequence that was written naturally ends inside
+ * MAX_MOTION. Returns the svg and the duration it now runs for.
+ */
+export function fitMotion(svg, duration) {
+  if (!(duration > MAX_MOTION)) return { svg, duration };
+  const k = MAX_MOTION / duration;
+  const t = (v) => (Math.round(Number(v) * k * 100) / 100).toString();
+  const out = svg
+    .replace(/(animation:[\w-]+ )([\d.]+)s( .*? )(-?[\d.]+)s( both)/g, (_, a, d, e, l, z) => `${a}${t(d)}s${e}${t(l)}s${z}`)
+    .replace(/(begin|dur)="([\d.]+)s"/g, (_, a, v) => `${a}="${t(v)}s"`);
+  return { svg: out, duration: MAX_MOTION };
+}
