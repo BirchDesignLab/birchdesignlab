@@ -74,6 +74,9 @@
     let inkR = 0; // px the ink ends inside the advance
     let gap = 24; // the grid's gutter, px
     let ready = false;
+    // A resize or a font load that landed while the dial held the word: the
+    // geometry is stale and is re-measured as soon as the word is at rest.
+    let stale = false;
 
     const clamp = (s: number) => Math.min(max, Math.max(MIN, s));
     /** The word's advance at width s, interpolated over the table. */
@@ -158,6 +161,20 @@
       render();
     };
 
+    /** Measure now if the word is at rest, otherwise mark the geometry stale
+        (layout resets the word, so it cannot run under a drag or the keys). */
+    const remeasure = () => {
+      if (active || pending) { stale = true; return; }
+      stale = false;
+      layout();
+    };
+    /** The word has just come back to rest: catch up on a skipped measure,
+        else just redraw. */
+    const relayout = () => {
+      if (stale && !pending) { stale = false; layout(); return; }
+      render();
+    };
+
     /** Everything that follows the width: the word, the slider's values, the
         readout and the bar on the word's right edge. */
     const render = () => {
@@ -217,7 +234,7 @@
       delete dial.dataset.active;
       cur = rest;
       setWidth(null);
-      render();
+      relayout();
     };
 
     /** Travel to a width at the constant speed, then stop dead. */
@@ -250,7 +267,7 @@
       delete dial.dataset.active;
       cur = rest;
       setWidth(null);
-      render();
+      relayout();
     };
 
     const schedule = () => {
@@ -307,12 +324,14 @@
       pending = false;
       try { dial.releasePointerCapture(e.pointerId); } catch { /* already gone */ }
       if (was) snapBack();
+      else if (stale) remeasure();
     };
     const lost = () => {
       if (pointerId === -1) return;
       pointerId = -1;
       pending = false;
       if (active) snapBack();
+      else if (stale) remeasure();
     };
 
     // Keyboard: arrows 1, Shift or PageUp and PageDown 10, Home the narrowest,
@@ -418,10 +437,10 @@
     document.addEventListener('astro:before-preparation', beforePreparation);
     document.addEventListener('visibilitychange', hide);
     window.addEventListener('blur', winBlur);
-    const ro = new ResizeObserver(() => { if (!active && !pending) layout(); });
+    const ro = new ResizeObserver(() => remeasure());
     ro.observe(hero);
     layout();
-    void document.fonts.ready.then(() => { if (!active && !pending) layout(); });
+    void document.fonts.ready.then(() => remeasure());
 
     return () => {
       ro.disconnect();

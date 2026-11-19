@@ -34,6 +34,18 @@ describe('swiss width dial', () => {
     expect(dial).toMatch(/const SPEED = 0\.2/);
     expect(dial).toMatch(/const HOLD = 100/);
   });
+  it('re-measures when the word comes back to rest after a resize it skipped', () => {
+    // The observer and the fonts both go through remeasure, which marks the
+    // geometry stale while a drag or the keys hold the word.
+    expect(dial).toContain('new ResizeObserver(() => remeasure())');
+    expect(dial).toMatch(/if \(active \|\| pending\) \{ stale = true; return; \}/);
+    // finish() and reset() both catch up; so do a press that never engaged.
+    const finish = dial.slice(dial.indexOf('const finish = () =>'), dial.indexOf('const schedule'));
+    expect(finish).toContain('relayout()');
+    const reset = dial.slice(dial.indexOf('const reset = () =>'), dial.indexOf('/** Travel'));
+    expect(reset).toContain('relayout()');
+    expect(dial).toMatch(/else if \(stale\) remeasure\(\)/);
+  });
   it('has the keys: arrows, page keys, Home, End, Esc', () => {
     for (const k of ['ArrowRight', 'ArrowLeft', 'PageUp', 'PageDown', 'Home', 'End', 'Escape']) expect(dial).toContain(`'${k}'`);
   });
