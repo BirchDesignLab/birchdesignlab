@@ -117,7 +117,7 @@ const icons = ['violet', 'cyan'];
   </div>
   {/* The lens's poster (plain CSS, no script dependency): visible until the
       real lens's first WebGL frame, again on context loss, and permanently
-      when WebGL is unavailable, with reduced transparency, or in the
+      when WebGL is unavailable, with more contrast, or in the
       portal's drawn-ahead copy (which strips every script, so lens.ts never
       runs there at all). .lens-host is where lens.ts appends the canvas, the
       hit control and the shadows once it mounts; empty and inert without
@@ -384,10 +384,11 @@ const icons = ['violet', 'cyan'];
       linear-gradient(135deg, rgb(255 255 255 / 0.05), transparent 45%, transparent 60%, rgb(20 10 40 / 0.05)),
       rgb(255 255 255 / 0.22);
   }
-  /* E10 (reduced transparency or more contrast): the canvas is off and the
-     poster stands in for good, so it keeps round 4's frosted disc there,
-     which reads without a see-through backdrop. */
-  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  /* E10 (more contrast): the canvas is off and the poster stands in for
+     good, so it keeps round 4's frosted disc there, which reads without a
+     see-through backdrop. Stage 6, stop 1 call 1 (a): reduced transparency
+     no longer triggers this; the Portal ignores it for glass. */
+  @media (prefers-contrast: more) {
     .lens-poster,
     :global(html[data-glass-tint='tinted']) .lens-poster,
     :global(html[data-scheme='dark'][data-glass-tint='tinted']) .lens-poster {

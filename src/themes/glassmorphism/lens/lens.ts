@@ -29,10 +29,12 @@
  *   (src/components/BarkField.astro's pattern) and README's list.
  * - The poster (`.lens-poster`, plain CSS, no script dependency) is the
  *   fallback: visible until the canvas's first real frame, again on context
- *   loss, and permanently when WebGL is unavailable or the E10 off state
- *   applies. It needs no code here to show correctly in the portal's
- *   drawn-ahead copy or with reduced transparency: those paths never run
- *   this script at all (drawn-ahead copies strip every `<script>`; a failed
+ *   loss, and permanently when WebGL is unavailable or the high-contrast
+ *   off state applies (`prefers-contrast: more`; since Stage 6 reduced
+ *   transparency no longer turns the lens off). It needs no code here to
+ *   show correctly in the portal's drawn-ahead copy or with more contrast:
+ *   those paths never run this script at all (home-boot.ts mounts no lens
+ *   under more contrast; drawn-ahead copies strip every `<script>`; a failed
  *   `mountLens()` call below leaves the poster exactly as the server
  *   rendered it). The same poster-first gate also covers a live scheme flip
  *   (dawn/day/dusk, or light/dark): `loadTexture()` re-shows the poster and
@@ -69,7 +71,7 @@
  *   a vertical scan across the seam measures the offset while scrolling.
  *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, type Bounds, type RectLike, type ChosenStart } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, nearestOpenSpot, discCoverage, findStartPosition, type Bounds, type RectLike, type ChosenStart } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -501,6 +503,9 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     tintTarget: opts.initialTint === 'tinted' ? 1 : 0,
     e: 0, ang: 0, liftV: 0, tintV: opts.initialTint === 'tinted' ? 1 : 0,
     box: 0,
+    /** Stage 6 (diagnosis B): where the lens is easing to after it came to
+        rest more than half under a pane (checkRest); null when it is not. */
+    settle: null as [number, number] | null,
   };
 
   let tod: TimeOfDay = opts.initialTod;
@@ -614,8 +619,38 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     document.documentElement.classList.remove('lens-held');
   }
 
+  /* ---------- never at rest under a pane (Stage 6, diagnosis B) ---------- */
+  // The hit button sits under every pane (z-index -1, by design), so a lens
+  // that comes to rest mostly under the hero window or the Control Centre
+  // could not be grabbed again. When more than half the disc is covered at
+  // rest, it eases (no spring) to the nearest spot with at most 20% cover;
+  // a new pointerdown or arrow key cancels the ease.
+  const REST_MAX_COVER = 0.5;
+  const SETTLE_MAX_COVER = 0.2;
+  const SETTLE_TAU = 0.12; // s
+  function checkRest() {
+    if (s.held || destroyed) return;
+    const obstructions = collectObstructions();
+    const cover = discCoverage(s.x, s.y, radius, obstructions);
+    if (cover <= REST_MAX_COVER) return;
+    const bounds = computeBounds();
+    let spot: { x: number; y: number } | null = nearestOpenSpot(bounds, radius, [s.x, s.y], obstructions, SETTLE_MAX_COVER);
+    if (!spot) {
+      // No spot that open exists at this viewport (a pane spans the whole
+      // travel box, e.g. the hero window at about 1088 px): take the
+      // least-covered point instead, the start search's own fallback, but
+      // only when it is clearly better than staying put.
+      const least = findStartPosition(bounds, radius, obstructions, []);
+      if (discCoverage(least.x, least.y, radius, obstructions) < cover - 0.05) spot = least;
+    }
+    if (!spot) return;
+    s.settle = [spot.x, spot.y];
+    invalidate();
+  }
+
   function onPointerDown(ev: PointerEvent) {
     ev.preventDefault();
+    s.settle = null;
     try { hit.setPointerCapture(ev.pointerId); } catch { /* a non-live pointerId: ignore, as a real drag never hits this */ }
     s.held = true;
     s.vx = 0;
@@ -648,6 +683,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     [s.vx, s.vy] = capThrow(v[0], v[1]);
     s.samples = [];
     invalidate();
+    if (s.vx === 0 && s.vy === 0) checkRest();
   }
   hit.addEventListener('pointerdown', onPointerDown);
   hit.addEventListener('pointermove', onPointerMove);
@@ -671,11 +707,15 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     ev.preventDefault();
     s.vx = 0;
     s.vy = 0;
+    s.settle = null;
     const bounds = computeBounds();
     [s.x, s.y] = clampToBounds(s.x + dx, s.y + dy, bounds);
     invalidate();
   }
   hit.addEventListener('keydown', onKeyDown);
+  // Arrow keys may leave the lens under a pane; leaving the control settles it.
+  function onBlur() { checkRest(); }
+  hit.addEventListener('blur', onBlur);
 
   /* ---------- context loss ---------- */
   function onContextLost(ev: Event) {
@@ -747,6 +787,17 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       const bounds = computeBounds();
       const next = stepGlide(s.x, s.y, s.vx, s.vy, dt, bounds);
       s.x = next.x; s.y = next.y; s.vx = next.vx; s.vy = next.vy;
+      invalidate();
+      if (s.vx === 0 && s.vy === 0) checkRest();
+    } else if (!s.held && s.settle) {
+      // An exponential ease toward the open spot, no spring, no overshoot.
+      const k = 1 - Math.exp(-dt / SETTLE_TAU);
+      s.x += (s.settle[0] - s.x) * k;
+      s.y += (s.settle[1] - s.y) * k;
+      if (Math.hypot(s.settle[0] - s.x, s.settle[1] - s.y) < 0.25) {
+        [s.x, s.y] = s.settle;
+        s.settle = null;
+      }
       invalidate();
     } else if (!s.held && dirty) {
       // Only re-clamp when something already invalidated this frame (a
@@ -887,6 +938,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       hit.removeEventListener('pointerup', release);
       hit.removeEventListener('pointercancel', release);
       hit.removeEventListener('keydown', onKeyDown);
+      hit.removeEventListener('blur', onBlur);
       canvas.removeEventListener('webglcontextlost', onContextLost, false);
       canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
       document.removeEventListener('visibilitychange', onVisibilityChange);

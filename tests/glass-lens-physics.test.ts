@@ -19,6 +19,7 @@ import {
   chooseStart,
   cornerStart,
   circleIntersections,
+  nearestOpenSpot,
   type RectLike,
   type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
@@ -387,5 +388,40 @@ describe('cornerStart (round 5, R1 and R3)', () => {
     const a = cornerStart(win, 64, bounds, [cc], [peach, pink]);
     const b = cornerStart(win, 64, bounds, [cc], [pink, peach]);
     expect(a).toEqual(b);
+  });
+});
+
+describe('nearestOpenSpot (Stage 6, diagnosis B)', () => {
+  const bounds: Bounds = [0, 0, 1000, 800];
+  const pane: RectLike = { left: 200, top: 100, right: 700, bottom: 600, radius: 24 };
+  it('moves a disc resting deep under a pane to the nearest spot with at most 20% cover', () => {
+    const got = nearestOpenSpot(bounds, 60, [650, 350], [pane], 0.2);
+    expect(got).not.toBeNull();
+    expect(got!.cover).toBeLessThanOrEqual(0.2);
+    expect(discCoverage(got!.x, got!.y, 60, [pane])).toBeLessThanOrEqual(0.2);
+    // Nearest: out past the pane's right edge, not across to the left side.
+    expect(got!.x).toBeGreaterThan(700);
+    expect(Math.abs(got!.y - 350)).toBeLessThan(30);
+  });
+  it('stays on the search grid inside the travel box', () => {
+    const b: Bounds = [100, 100, 900, 700];
+    const got = nearestOpenSpot(b, 60, [450, 350], [pane], 0.2)!;
+    expect(got.x).toBeGreaterThanOrEqual(100);
+    expect(got.x).toBeLessThanOrEqual(900);
+    expect(got.y).toBeGreaterThanOrEqual(100);
+    expect(got.y).toBeLessThanOrEqual(700);
+  });
+  it('returns a point near the start when the start already qualifies', () => {
+    const got = nearestOpenSpot(bounds, 60, [880, 700], [pane], 0.2)!;
+    expect(Math.hypot(got.x - 880, got.y - 700)).toBeLessThan(25);
+    expect(got.cover).toBe(0);
+  });
+  it('honours maxCover: 0 demands a fully clear disc', () => {
+    const got = nearestOpenSpot(bounds, 60, [700, 350], [pane], 0)!;
+    expect(got.cover).toBe(0);
+    expect(circleRectGap(got.x, got.y, 60, pane)).toBeGreaterThanOrEqual(0);
+  });
+  it('returns null when every point is covered past maxCover', () => {
+    expect(nearestOpenSpot(bounds, 60, [500, 400], [{ left: -100, top: -100, right: 1100, bottom: 900 }], 0.2)).toBeNull();
   });
 });

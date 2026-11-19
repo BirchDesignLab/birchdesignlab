@@ -317,6 +317,34 @@ export function chooseStart(bounds: Bounds, radius: number, preferred: [number, 
   return { ...found, cover: foundCover, source: 'search' };
 }
 
+/** Stage 6 (diagnosis B): the nearest point to `from`, on the same grid
+    `findStartPosition` searches inside `bounds`, where at most `maxCover` of
+    the disc sits under `obstructions`. The lens eases there when it comes to
+    rest more than half under a pane (lens.ts checkRest), so it is never lost
+    where it cannot be grabbed. Ties on distance go to the less covered
+    point. Null when no grid point qualifies. */
+export function nearestOpenSpot(bounds: Bounds, radius: number, from: [number, number], obstructions: RectLike[], maxCover = 0.2): { x: number; y: number; cover: number } | null {
+  const [x0, y0, x1, y1] = bounds;
+  const w = Math.max(1, x1 - x0);
+  const h = Math.max(1, y1 - y0);
+  const cols = Math.max(1, Math.min(48, Math.round(w / 22)));
+  const rows = Math.max(1, Math.min(36, Math.round(h / 22)));
+  let best: { x: number; y: number; cover: number; d: number } | null = null;
+  for (let iy = 0; iy <= rows; iy++) {
+    const y = y0 + (h * iy) / rows;
+    for (let ix = 0; ix <= cols; ix++) {
+      const x = x0 + (w * ix) / cols;
+      const d = Math.hypot(x - from[0], y - from[1]);
+      if (best && d > best.d + 0.5) continue;
+      const clear = obstructions.every((rect) => circleRectGap(x, y, radius, rect) >= 0);
+      const cover = clear ? 0 : discCoverage(x, y, radius, obstructions);
+      if (cover > maxCover) continue;
+      if (!best || d < best.d - 0.5 || cover < best.cover) best = { x, y, cover, d };
+    }
+  }
+  return best ? { x: best.x, y: best.y, cover: best.cover } : null;
+}
+
 /** The points where two circles' edges cross (none when they do not). */
 export function circleIntersections(ax: number, ay: number, ar: number, bx: number, by: number, br: number): [number, number][] {
   const dx = bx - ax;

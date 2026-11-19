@@ -54,17 +54,16 @@ function bendSupported(): boolean {
   return blink && grammar;
 }
 
-/** E10's off state (theme.css, prefers-reduced-transparency/prefers-contrast)
-    turns every pane's blur off in CSS, but mountPanes() used to write the
-    bevel's url(#...) into each pane's inline style unconditionally, and an
-    inline style always wins over a stylesheet rule regardless of the media
-    query it is gated on. Checked live (not cached) so a mid-session OS
-    setting change is picked up by the matchMedia listener below. */
-function transparencyReduced(): boolean {
-  return (
-    window.matchMedia('(prefers-reduced-transparency: reduce)').matches ||
-    window.matchMedia('(prefers-contrast: more)').matches
-  );
+/** E10's off state (theme.css, prefers-contrast: more) turns every pane's
+    blur off in CSS, but mountPanes() used to write the bevel's url(#...)
+    into each pane's inline style unconditionally, and an inline style always
+    wins over a stylesheet rule regardless of the media query it is gated
+    on. Checked live (not cached) so a mid-session OS setting change is
+    picked up by the matchMedia listener below. Stage 6, stop 1 call 1 (a):
+    prefers-reduced-transparency no longer counts; the Portal ignores it for
+    glass. */
+function fallbackActive(): boolean {
+  return window.matchMedia('(prefers-contrast: more)').matches;
 }
 
 /** Signed distance from (x, y) to a rounded rect of size w x h and corner
@@ -302,7 +301,7 @@ export function mountPanes(): (() => void) | void {
 
   function buildOne(el: HTMLElement) {
     if (!el.isConnected) return;
-    if (transparencyReduced() || !bendable(el)) {
+    if (fallbackActive() || !bendable(el)) {
       el.style.removeProperty('backdrop-filter');
       return;
     }
@@ -364,7 +363,7 @@ export function mountPanes(): (() => void) | void {
 
   const rebuildAll = () => {
     if (!ready) return;
-    if (transparencyReduced()) {
+    if (fallbackActive()) {
       // The CSS off state wins the look either way; drop any inline filter
       // a previous build left so the stylesheet's `none` is not shadowed by
       // an inline value that no longer matches the current preference.
@@ -378,15 +377,13 @@ export function mountPanes(): (() => void) | void {
     ? new ResizeObserver((entries) => enqueue(entries.map((e) => e.target as HTMLElement)))
     : null;
 
-  // A light/dark toggle or a reduced-transparency change does not itself
+  // A light/dark toggle or a contrast-preference change does not itself
   // resize any pane, so nothing else would ask for a rebuild; a resize past
   // the 720px breakpoint usually does reflow panes (caught by the
   // ResizeObserver), but the token can change without a reflow, so the
   // breakpoint is listened to directly too.
-  const rtMq = window.matchMedia('(prefers-reduced-transparency: reduce)');
   const contrastMq = window.matchMedia('(prefers-contrast: more)');
   const phoneMq = window.matchMedia('(max-width: 720px)');
-  rtMq.addEventListener('change', rebuildAll);
   contrastMq.addEventListener('change', rebuildAll);
   phoneMq.addEventListener('change', rebuildAll);
   /* A live scheme flip remaps the orb hues (dark's --blob-* set), so the
@@ -488,7 +485,6 @@ export function mountPanes(): (() => void) | void {
     window.removeEventListener('scroll', scheduleTint);
     window.removeEventListener('resize', scheduleTint);
     document.removeEventListener('visibilitychange', onVisibility);
-    rtMq.removeEventListener('change', rebuildAll);
     contrastMq.removeEventListener('change', rebuildAll);
     phoneMq.removeEventListener('change', rebuildAll);
     settingsObserver.disconnect();

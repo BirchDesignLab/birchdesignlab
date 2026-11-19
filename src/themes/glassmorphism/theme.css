@@ -205,15 +205,19 @@
   }
 }
 
-/* E10: reduced transparency and increased contrast go solid, flat and still.
-   Every material token becomes the opaque fallback, every blur turns off,
-   the wallpaper flattens (its saturated stops are exactly what reduced
-   transparency exists to remove), and orb and scroll-driven motion stop.
-   prefers-contrast: more also raises the edge to a solid line-strength
-   border, since the 1px highlight is the light cue the rest of the recipe
-   leans on. forced-colors gets a sanity pass: real borders, no reliance on
-   a background alone. */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+/* E10: increased contrast goes solid, flat and still. Every material token
+   becomes the opaque fallback, every blur turns off, the wallpaper
+   flattens, and orb and scroll-driven motion stop. prefers-contrast: more
+   also raises the edge to a solid line-strength border, since the 1px
+   highlight is the light cue the rest of the recipe leans on. forced-colors
+   gets a sanity pass: real borders, no reliance on a background alone.
+   Stage 6, stop 1 call 1 (a), founder 11-19-26: the Portal ignores
+   prefers-reduced-transparency for glass. E10 used to take this same
+   fallback for reduced transparency too, and Windows reports reduce
+   whenever "Transparency effects" is off, so many visitors (the founder
+   included) never saw the school at all. Only prefers-contrast: more keeps
+   the fallback now, here and in the two E10 blocks further down. */
+@media (prefers-contrast: more) {
   /* B2 update: the Control Centre's Tinted setting also overrides --mat-*
      (below, "Clear/Tinted"), at specificity (0,3,0) light / (0,4,0) dark, so
      these fallback rules pick up one and two extra doubled [data-theme]
@@ -571,7 +575,7 @@
    each pane's fill toward the colour of the largest orb it overlaps, capped
    low enough to stay inside the margin meta.ts already proved against the
    worst-case orb directly under a pane. Painted as its own layer, not mixed
-   into --mat-*, so a pane with no script (reduced transparency, a failed
+   into --mat-*, so a pane with no script (more contrast, a failed
    mount) just shows its plain material. Defaults to invisible. */
 :where([data-theme='glassmorphism']) :is(.glass, .glass-strong)::before {
   content: '';
@@ -664,9 +668,10 @@
    above: those match this media block's ealier override on specificity
    (0,3,0 each, :root[data-theme][data-scheme=dark) vs plain attribute
    selectors), so whichever comes later in the file wins. This repeats the
-   turn-off here, after them, so reduced transparency still beats dark's
-   literal blur in Safari/WebKit too. */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+   turn-off here, after them, so more contrast still beats dark's literal
+   blur in Safari/WebKit too (Stage 6: reduced transparency no longer
+   triggers E10; see the first E10 block). */
+@media (prefers-contrast: more) {
   /* The prefixed none in its own @supports block, as in the first E10 block
      (the minifier merges same-selector twins and keeps one). */
   @supports (-webkit-backdrop-filter: none) {
@@ -680,8 +685,8 @@
   /* Dark's own main::before wallpaper rule (:root[data-theme][data-scheme=
      dark] main::before, specificity 0,3,2, further down this file at "dark
      main::before") outranks the earlier flat-field override the same way
-     the material tokens did, so the wallpaper stayed lit under reduced
-     transparency in dark. Repeated here, after it, at matching specificity
+     the material tokens did, so the wallpaper stayed lit under the
+     fallback in dark. Repeated here, after it, at matching specificity
      for the same reason as the tokens block above. */
   [data-theme='glassmorphism'][data-theme='glassmorphism'][data-scheme='dark'] main::before {
     background-image: none;
@@ -1424,12 +1429,13 @@ html.lens-held :where(*) {
 }
 
 /* E10: the lens's off state (proofs/lens.md, "what a WebKit run would need
-   to check", item 10). Reduced transparency or increased contrast turns the
-   canvas and its shadows off outright (the poster, plain CSS, already reads
+   to check", item 10). Increased contrast turns the canvas and its shadows
+   off outright (Stage 6: no longer reduced transparency, which the Portal
+   ignores for glass; home-boot.ts then mounts no lens at all) (the poster, plain CSS, already reads
    fine on its own); lens.ts never fights this because it only ever sets
    `visibility` back to '' after its own successful frame, which cannot
    un-set an !important rule. */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+@media (prefers-contrast: more) {
   :where([data-theme='glassmorphism']) :is(.lens-canvas, .lens-shadow, .lens-hit) {
     display: none !important;
   }
