@@ -1,0 +1,105 @@
+/* Stage 6 wave 1, task 7: the R2 proof's styles (proof.js says what each
+   piece is). Injected after the build's own CSS by serve.mjs. */
+
+/* The WebGL lens steps aside while the proof's lens is up. */
+html.r2-on :is(.lens-host, .lens-poster, .lens-canvas, .lens-hit, .lens-shadow) {
+  display: none !important;
+}
+
+/* A glass object in the top layer. The popover UA sheet centres and boxes
+   it; this undoes that and places it by transform (proof.js). */
+.r2-glass {
+  position: fixed;
+  inset: 0 auto auto 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  color: inherit;
+  pointer-events: none;
+  will-change: transform;
+  /* The contact shadow and a hairline rim. No blur anywhere: the backdrop
+     filter (inline, url(#r2-...-f)) is displacement only. */
+  box-shadow:
+    0 14px 34px -10px rgb(10 14 40 / 0.35),
+    0 2px 6px rgb(10 14 40 / 0.18),
+    inset 0 0 0 1px rgb(255 255 255 / 0.55),
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    inset 0 -10px 18px -8px rgb(10 14 40 / 0.22);
+}
+.r2-glass.r2-held {
+  box-shadow:
+    0 24px 48px -12px rgb(10 14 40 / 0.4),
+    0 4px 10px rgb(10 14 40 / 0.2),
+    inset 0 0 0 1px rgb(255 255 255 / 0.65),
+    inset 0 1px 1px rgb(255 255 255 / 0.95),
+    inset 0 -10px 18px -8px rgb(10 14 40 / 0.22);
+}
+:root[data-scheme='dark'] .r2-glass {
+  box-shadow:
+    0 14px 34px -10px rgb(0 0 0 / 0.6),
+    0 2px 6px rgb(0 0 0 / 0.35),
+    inset 0 0 0 1px rgb(255 255 255 / 0.28),
+    inset 0 1px 1px rgb(255 255 255 / 0.55),
+    inset 0 -10px 18px -8px rgb(0 0 0 / 0.4);
+}
+.r2-glass::backdrop { display: none; }
+
+/* The specular: one soft highlight up and to the left, and a thin bright
+   arc along the lower right where light leaves the glass. */
+.r2-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 30% at 32% 18%, rgb(255 255 255 / 0.42), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 70% 86%, transparent 72%, rgb(255 255 255 / 0.3) 82%, transparent 92%);
+}
+:root[data-scheme='dark'] .r2-sheen {
+  background:
+    radial-gradient(ellipse 46% 30% at 32% 18%, rgb(255 255 255 / 0.2), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 70% 86%, transparent 72%, rgb(255 255 255 / 0.16) 82%, transparent 92%);
+}
+
+/* The rim handle: the whole box, clipped (inline clip-path, even-odd) to a
+   ring, so only the ring hit-tests and the face passes the pointer through. */
+.r2-rim {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.r2-held .r2-rim { cursor: grabbing; }
+.r2-rim:focus-visible {
+  outline: none;
+  background: rgb(255 255 255 / 0.35);
+}
+:root[data-scheme='dark'] .r2-rim:focus-visible { background: rgb(255 255 255 / 0.22); }
+
+/* The header bar as a clear rod. fx.ts's frost and rim layers step aside,
+   the fill drops to a whisper, and one unblurred displacement layer
+   (proof.js mountBar) bends what scrolls beneath. */
+html.r2-on .site-header .bar { background: rgb(255 255 255 / 0.1); }
+html.r2-on[data-scheme='dark'] .site-header .bar { background: rgb(16 20 46 / 0.16); }
+html.r2-on .site-header .bar > :is(.glass-rim, .glass-frost) { display: none; }
+/* R1's scroll-edge fade blurs and washes the band behind the bar, so the
+   rod would only bend a blur. It steps aside too: in R2 the bending is the
+   cue that content is passing under glass. */
+html.r2-on .site-header::after { display: none; }
+html.r2-on .site-header .bar { -webkit-backdrop-filter: none; backdrop-filter: none !important; }
+.r2-bar-lens {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
