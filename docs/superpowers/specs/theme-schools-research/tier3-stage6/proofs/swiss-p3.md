@@ -15,7 +15,7 @@ serves a frozen build and injects `proof.css` and `proof.js` into
 `/t/swiss/` only, as the R2 proof does for glass. So the markup, the
 styles, the width dial and the grid key are all the real ones, after task
 4's changes. The proof sets `data-p3` and `--cols` / `--div` on `<html>`
-and re-places Home's bands by column line (`proof.css`, about 130 lines,
+and re-places Home's bands by column line (`proof.css`, about 170 lines,
 one block per band per division, wide and phone). Header and footer keep
 their native count (they are the portal's chrome, not the programme); the
 grid key's layer draws the division. `?div=2|3|4|6` starts on a division.
@@ -27,29 +27,47 @@ Films and sheets: `BDL_GPU=1 node scripts/themes/stage6/w1-t8-proof.mjs`.
 ## The four layouts
 
 Page heights are of the whole page (as built, 2, 3, 4, 6). 1440: 2476,
-2716, 2464, 2632, 2356. 390: 3386, 3709, 3722, 3386, 3722. At 390 four
+2716, 2464, 2680, 2464. 390: 3386, 3709, 3722, 3386, 3506. At 390 four
 columns is the page as built (the phone is a four-column sheet already).
+
+**Which lines belong to whom.** Each division's lines, as fractions of the
+sheet: 2 has 0, 1/2; 3 has 0, 1/3, 2/3; 4 has 0, 1/4, 1/2, 3/4; 6 has 0,
+1/6, 1/3, 1/2, 2/3, 5/6. Adjacent divisions share lines (3 and 6 share 1/3
+and 2/3; 2, 4 and 6 share 1/2), so a layout only reads as its own when
+blocks hang from the lines that are its own: 4 from 1/4 and 3/4, 6 from 1/6
+and 5/6, 3 from 1/3 and 2/3, 2 from 1/2. The placements are chosen that way,
+and the left edge of every block is measured per division
+(`w1-t8-edges.mjs`, `edges.json`): at 1440 the lede is at 730, 506, 394, 282
+(2, 3, 4, 6), the second door at 730, 954, 1066, 954, the link under the lab
+at 730, 954, 1066, 1178. No two divisions share a lede line, and no two
+share the closing button's line. The one repeat is the second door at 3 and
+at 6 (2/3), which is a line both have; the first door (506 against 282) and
+the button tell them apart.
 
 **1440 (the giant spans the frame in all four).**
 
 | | Lede | Doors | Lab sheet | Close |
 |---|---|---|---|---|
-| 2 | row 2, col 2 | kicker over, one door per column | kicker, pull full width; designation col 1, summary col 2, link col 2 | lead full, button col 2 below |
-| 3 | row 2, cols 2-3 | kicker col 1, doors cols 2 and 3 (one row) | kicker col 1 beside pull cols 2-3; summary cols 2-3 | lead cols 1-2, button col 3 |
-| 4 | row 2, cols 3-4 | kicker over, doors two columns each | kicker over, pull cols 1-3; summary cols 3-4 | lead cols 1-3, button col 4 |
-| 6 | beside the name on its last baseline, cols 5-6 | kicker cols 1-2, doors cols 3-4 and 5-6 | kicker cols 1-2 beside pull cols 3-6; summary cols 3-5; link cols 5-6 | lead cols 1-4, button cols 5-6 |
+| 2 | row 2, col 2 (1/2) | kicker over, one door per column | kicker, pull full width; designation col 1, summary col 2, link col 2 | lead full, button col 2 below |
+| 3 | row 2, col 2 on (1/3) | kicker col 1, doors cols 2 and 3 (one row) | kicker col 1 beside pull cols 2-3; summary cols 2-3 | lead cols 1-2, button col 3 |
+| 4 | row 2, col 2 on (1/4) | kicker over, door cols 2-3, door col 4 (1/4 and 3/4) | kicker over, pull cols 2-4; summary cols 2-3, link col 4 | lead cols 1-3, button col 4 |
+| 6 | row 2, col 2 on (1/6) | kicker col 1, doors cols 2-3 and 5-6, link col 6 (5/6) | kicker col 1 beside pull cols 2-6; summary cols 2-5, link col 6 | lead cols 1-5, button col 6 (5/6) |
 
-At 2, 3 and 4 the lede cannot sit beside the name ("Design" at 125 is more
-than half the sheet), so it drops to its own row and hangs from a column
-line. At 6 it sits beside the name as the page does on twelve; the dial
-keeps its 125 rest because the lede's top clears the word's descender.
+In every division the lede drops to its own row under the name and hangs
+from column 2 ("Design" at 125 is more than half the sheet at 2, 3 and 4,
+and at 6 and 1024 its widest cut meets a lede set beside it: round 1 moved
+the lede below at 6, so the dial keeps its 125 rest at 1024 and 1440 in all
+four divisions, measured). On twelve the page sets the lede beside the name;
+that is the one thing the cycle does not show.
 
-**390.** Doors side by side at 2; stacked and hung from column 2 at 3;
-as built at 4; stacked and hung from column 3 at 6. The lede and subline
-hang from column 2 (2, 3, 4) or 3 (6). Lab: designation beside its summary
-at 2; summary indented one column at 3; designation over the summary
-indented two columns at 6. Close: button from column 2, 2, or 3.
-At 6 a column is about 50px wide: the hanging indents are what show it.
+**390.** Doors side by side at 2; stacked and hung from column 2 at 3 (1/3,
+at 139px) and at 6 (1/6, at 78px); as built at 4. Lede and subline from
+column 2 of the division. Lab: designation beside its summary at 2; summary
+indented to column 2 at 3 and at 6 (pull too at 6). Close: button from
+column 2 in 2, 3 and 6. At 6 a column is about 50px wide, so the indent is
+a narrow hang (78px against 139px at 3): the phone is the weakest width for
+telling 4 and 6 apart, 4 being as built with everything at the margin and
+6 hung in from it.
 
 Word parity holds: the visible text of `main` is identical in all four
 divisions at 1440, 1024, 820 and 390, both schemes (`results.json`,
@@ -145,7 +163,7 @@ remembered, and an arrival or a swap resets to the page as built.
   same poster with different small type; if the founder wants the giant
   itself to re-divide (a half-width stacked name at 2) that is a further
   design, not a restyle. (4) Phone at 6 columns is about 50px a column:
-  everything hangs on a column line but only the indents show it. (5) The
+  everything hangs on a column line but only the indent shows it. (5) The
   re-lay clip is on `main`, so a bleed block's 100vw fill is clipped to
   the panel edges (right: it reads as the same sheet clearing), but any
   fixed child of `main` would not be clipped.
