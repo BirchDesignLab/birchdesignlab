@@ -224,10 +224,14 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
     againBtn.focus();
   }
 
+  // One per colour bar: drops any grab and puts the bar back home at once.
+  const dragResets: Array<() => void> = [];
+
   function again(): void {
     window.clearTimeout(revealTimer);
     const wasRevealed = revealed;
     revealed = false;
+    dragResets.forEach((r) => r());
     clearPick();
     fills = emptyFills();
     key.hidden = true;
@@ -310,11 +314,23 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
       fall = later(() => { bar.style.transition = ''; bar.style.translate = ''; }, FALL_MS + 60);
     };
 
+    dragResets.push(() => {
+      grab = null;
+      setOver(null);
+      window.clearTimeout(fall);
+      bar.removeAttribute('data-held');
+      bar.style.transition = '';
+      bar.style.translate = '';
+    });
+
     bar.addEventListener(
       'pointerdown',
       (e) => {
         if (revealed || grab || (e.pointerType === 'mouse' && e.button !== 0)) return;
         grab = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+        // Captured at the press, so a fast flick off the bar still reaches
+        // this bar's move and up events (a mouse has no implicit capture).
+        try { bar.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
       },
       opts,
     );
@@ -322,12 +338,13 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
       'pointermove',
       (e) => {
         if (!grab || e.pointerId !== grab.id) return;
+        // No button down means the release was missed: end the grab here.
+        if (e.buttons === 0) { release(e); return; }
         const dx = e.clientX - grab.x;
         const dy = e.clientY - grab.y;
         if (!grab.moved) {
           if (Math.hypot(dx, dy) < DRAG_PX) return;
           grab.moved = true;
-          try { bar.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
           window.clearTimeout(fall);
           bar.style.transition = 'none';
           bar.setAttribute('data-held', '');
@@ -360,6 +377,7 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
 
   return () => {
     abort.abort();
+    dragResets.forEach((r) => r());
     timers.forEach((t) => window.clearTimeout(t));
     timers.clear();
     window.clearTimeout(revealTimer);
