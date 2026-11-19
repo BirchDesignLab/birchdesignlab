@@ -156,6 +156,29 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     border-radius: var(--r-xl);
     overflow: hidden;
   }
+  /* Stage 6 R1 (G15): the solid cream block out-shouted the thin head card,
+     so it takes a Mica-like surface instead: mostly opaque, the wallpaper
+     behind it showing through a heavy blur, so it tints toward whatever
+     band it sits over. Still no glass on glass inside it (E7). The prefixed
+     literal sits in its own @supports block (the minifier keeps one of a
+     prefixed and unprefixed twin in one rule; theme.css's note). More
+     contrast keeps the solid surface. */
+  @supports (-webkit-backdrop-filter: none) {
+    .settings-pane { -webkit-backdrop-filter: blur(40px) saturate(1.2); }
+  }
+  .settings-pane {
+    background: var(--surface-mica);
+    backdrop-filter: blur(40px) saturate(1.2);
+  }
+  @media (prefers-contrast: more) {
+    @supports (-webkit-backdrop-filter: none) {
+      .settings-pane.settings-pane { -webkit-backdrop-filter: none; }
+    }
+    .settings-pane.settings-pane {
+      background: var(--surface-solid);
+      backdrop-filter: none;
+    }
+  }
   .settings-list { list-style: none; padding: 0; display: grid; }
   /* E5: the stagger (every other tile riding lower) had no visible reason
      once the steps are one grouped, evenly-baselined pane (E1); dropped so
