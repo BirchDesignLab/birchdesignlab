@@ -4,6 +4,7 @@
     beside an abstract tall pale tree, and the manifesto on a yellow slab. */
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Questionnaire from '../parts/Questionnaire.astro';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -41,6 +42,8 @@ const [lead, ...rest] = copy.founder.body;
     </div>
   </div>
 </section>
+
+<Questionnaire />
 
 <section class="manifesto block-yellow">
   <svg class="manifesto-shapes" viewBox="0 0 300 300" aria-hidden="true" focusable="false" data-reveal>
@@ -159,3 +162,11 @@ const [lead, ...rest] = copy.founder.body;
     .tree { max-width: 200px; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initQuestionnaire } from '../parts/questionnaire';
+
+  // The questionnaire card: memory only, reset on every visit (parts/questionnaire.ts).
+  onMount(() => initQuestionnaire(document.querySelector<HTMLElement>('[data-quiz]')));
+</script>
