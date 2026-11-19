@@ -20,7 +20,11 @@ export const meta: ThemeMeta = {
      type. In dark the lab band is a white field (--white-field) with black
      type, --grey-on-white for secondary type and a black button with white
      type. The last rows are the focus rings (3px, 3:1) on paper, on the
-     black sheet, on red and on the white field. */
+     black sheet, on red and on the white field.
+     The lab band's photograph (Stage 6, P4) adds no ink or surface: its marks
+     are drawn in the sheet's own type colour and each line of type over it
+     carries the sheet's own ground (--black, or --white-field in dark), so the
+     pairs above are the ones that hold. */
   contrast: [
     { fg: '--on-red', bg: ['--red-field'], min: 4.5, note: 'white type on the red field' },
     { fg: '--on-red', bg: ['--black'], min: 4.5, note: 'a button inside the red field' },

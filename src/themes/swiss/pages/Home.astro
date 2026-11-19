@@ -7,6 +7,14 @@
 import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import WidthDial from '../WidthDial.astro';
+/* The lab band's photograph: a hard threshold of birch bark, one colour in
+   the alpha channel (black marks on clear). Made by
+   scripts/themes/stage6/w1-t6-photos.mjs; sources in
+   src/assets/swiss-photos-SOURCE.md. It is decorative, so it has no alt. */
+import bandAvif1200 from '../../../assets/swiss-lab-band-1200.avif';
+import bandAvif2000 from '../../../assets/swiss-lab-band-2000.avif';
+import bandWebp1200 from '../../../assets/swiss-lab-band-1200.webp';
+import bandWebp2000 from '../../../assets/swiss-lab-band-2000.webp';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -41,8 +49,15 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
 {featured.length > 0 && (
   <section class="sw-row lab-wrap">
     <div class="sw-sheet sw-white lab sw-bleed">
-      <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
-      <p class="sw-lead pull">{copy.lab.pull}</p>
+      <div class="lab-head">
+        <picture class="lab-photo" aria-hidden="true">
+          <source type="image/avif" srcset={`${bandAvif1200.src} 1200w, ${bandAvif2000.src} 2000w`} sizes="100vw" />
+          <source type="image/webp" srcset={`${bandWebp1200.src} 1200w, ${bandWebp2000.src} 2000w`} sizes="100vw" />
+          <img src={bandWebp2000.src} width="2000" height="1125" alt="" loading="lazy" decoding="async" />
+        </picture>
+        <p class="sw-kicker lab-kicker"><span class="cut">{copy.lab.kicker}</span></p>
+        <p class="sw-lead pull"><span class="cut">{copy.lab.pull}</span></p>
+      </div>
       <ul class="specimens" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li>
@@ -197,7 +212,51 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     row-gap: var(--u);
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 2);
   }
-  :where(.lab) > * { grid-column: 1 / -1; min-width: 0; }
+  :where(.lab) > *, :where(.lab-head) > * { grid-column: 1 / -1; min-width: 0; }
+  /* The band's photograph (Stage 6, P4, typophoto): a hard threshold of birch
+     bark across the head of the sheet, running to the viewport edges and cut
+     by them, the kicker and the pull set over it. One colour in the alpha
+     channel, printed in the sheet's own type colour: white marks on the black
+     sheet in light, and the same file turned black on the white field in dark
+     (the field is the page's negative there, and the marks stay the type's
+     colour). Each line of type carries the sheet's ground behind it, so no mark
+     ever sits under a letter: a reversed label, not a shadow. */
+  .lab { --ground: var(--black); }
+  :global([data-theme='swiss'][data-scheme='dark']) .lab { --ground: var(--white-field); }
+  .lab-head {
+    position: relative;
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: var(--u);
+    align-content: space-between;
+  }
+  .lab-head > :not(.lab-photo) { position: relative; z-index: 1; }
+  .lab-photo {
+    position: absolute;
+    z-index: 0;
+    top: calc(var(--u) * -0.5);
+    bottom: calc(var(--u) * -1);
+    left: calc(50% - 50vw);
+    width: 100vw;
+    max-width: none;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .lab-photo img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: 80% 50%;
+    filter: invert(1);
+  }
+  :global([data-theme='swiss'][data-scheme='dark']) .lab-photo img { filter: none; }
+  .cut {
+    background: var(--ground);
+    padding-inline-end: 0.3em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
   .pull {
     margin-top: calc(var(--u) * 2);
     max-width: 20em;
@@ -223,12 +282,15 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   .lab-more { grid-column: 1 / -1; }
 
   @media (min-width: 640px) {
+    /* The photograph's band has height of its own, the kicker at the head of
+       it and the pull at its foot. */
+    .lab-head { min-height: clamp(260px, 30vw, 520px); }
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / -1; }
     .lab-more { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .lab-kicker { grid-row: 1; grid-column: 1 / 7; }
+    .lab-kicker { grid-column: 1 / 7; }
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / 9; }
     .lab-more { grid-column: 10 / -1; }

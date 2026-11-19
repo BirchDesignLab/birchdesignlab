@@ -2,15 +2,23 @@
 /** Swiss about: the name's meaning set beside the title at poster scale, the
     founder as a lead and two columns of text with the page's own capital
     turned up the frame edge, the manifesto in the red field that holds the
-    Shining Tree. */
-import { Image } from 'astro:assets';
+    birch-trunk photograph, its type hung at the field's foot. */
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
-/* The field's one image, and the only place it is named. To use another logo
-   or photograph, swap this file (or this import) and set --fld-ratio on
-   .manifesto to the new image's height over width. It is decorative, so it
-   has no alt. Made by scripts/themes/swiss/make-field-image.mjs. */
-import fieldImage from '../../../assets/swiss-field.webp';
+/* The field's one photograph, and the only place it is named: a birch trunk
+   seen from below as a red duotone (Stage 6, P4, typophoto). The files hold
+   paper-coloured pixels whose alpha is the tone, so over the field's red the
+   mix is the duotone and the red is never an image's to get wrong. To use
+   another photograph, rerun scripts/themes/stage6/w1-t6-photos.mjs on it and
+   set --fld-ratio on .manifesto to the new image's height over width. It is
+   decorative, so it has no alt. Sources and the processing applied:
+   src/assets/swiss-photos-SOURCE.md. */
+import fieldAvif720 from '../../../assets/swiss-field-720.avif';
+import fieldAvif1200 from '../../../assets/swiss-field-1200.avif';
+import fieldAvif1800 from '../../../assets/swiss-field-1800.avif';
+import fieldWebp720 from '../../../assets/swiss-field-720.webp';
+import fieldWebp1200 from '../../../assets/swiss-field-1200.webp';
+import fieldWebp1800 from '../../../assets/swiss-field-1800.webp';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -34,16 +42,11 @@ const [founderLead, ...founderRest] = copy.founder.body;
 
 <section class="sw-row manifesto-wrap">
   <div class="sw-red manifesto">
-    <Image
-      class="field-img"
-      src={fieldImage}
-      alt=""
-      widths={[480, 760, 1120, 1597]}
-      sizes="(min-width: 1280px) 560px, (min-width: 1024px) 400px, min(72vw, 380px)"
-      quality={82}
-      loading="lazy"
-      decoding="async"
-    />
+    <picture class="field-img" aria-hidden="true">
+      <source type="image/avif" srcset={`${fieldAvif720.src} 720w, ${fieldAvif1200.src} 1200w, ${fieldAvif1800.src} 1800w`} sizes="(min-width: 1024px) 1100px, 125vw" />
+      <source type="image/webp" srcset={`${fieldWebp720.src} 720w, ${fieldWebp1200.src} 1200w, ${fieldWebp1800.src} 1800w`} sizes="(min-width: 1024px) 1100px, 125vw" />
+      <img src={fieldWebp1800.src} width="1800" height="1250" alt="" loading="lazy" decoding="async" />
+    </picture>
     <p class="sw-lead manifesto-text">{copy.manifesto}</p>
     <a class="sw-btn cta" href={hrefFor('contact', theme)}>{copy.cta}</a>
   </div>
@@ -175,14 +178,19 @@ const [founderLead, ...founderRest] = copy.founder.body;
 
   /* The manifesto: a true viewport-bleed red field. Its content keeps to the
      frame's columns (the padding gives back what the negative margin takes);
-     the tree is the field's image, an <img> so the browser can load it late.
-     Phone and tablet: the tree is a band across the top, the type on flat
-     red below it. */
+     the photograph is the field's image, a <picture> so the browser can load
+     it late. Its pixels are paper over the field's own red (see the import),
+     and the manifesto and the button hang at the field's foot at every size,
+     so the type and the image share its height. Phone and tablet: the trunk
+     is a band across the top, cut by the sheet's edges, the type on flat red
+     below it, the button last. Desktop: the trunk stands on the right and is
+     cropped by the sheet edge; the type is hung from the field's foot on the
+     left columns, clear of the trunk's base. */
   .manifesto-wrap { padding-bottom: calc(var(--u) * 4); }
   .manifesto {
     /* Height over width of the field image. */
-    --fld-ratio: 1.7244;
-    --fld-w: min(72vw, 380px);
+    --fld-ratio: 0.6944;
+    --fld-w: min(125vw, 900px);
     position: relative;
     overflow: clip;
     display: grid;
@@ -199,39 +207,41 @@ const [founderLead, ...founderRest] = copy.founder.body;
     z-index: 0;
     grid-column: auto;
     top: 0;
-    left: calc((100% - var(--fld-w)) * 0.62);
+    left: calc((100% - var(--fld-w)) * 0.5);
     width: var(--fld-w);
-    height: auto;
     max-width: none;
     pointer-events: none;
   }
+  .manifesto :global(.field-img img) { width: 100%; height: auto; max-width: none; }
   .manifesto-text { max-width: 20em; }
   @media (min-width: 640px) {
-    .manifesto :global(.field-img) { left: calc((100% - var(--fld-w)) * 0.78); }
+    .manifesto { --fld-w: min(100vw, 820px); }
+    .manifesto :global(.field-img) { left: auto; right: -6vw; }
     .cta { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    /* The tree stands on the right, cropped by the sheet edge; the manifesto
-       keeps to the left columns on flat red. The extra height is free space
-       under the stack, not stretched rows. */
+    /* The extra height is free space above the stack: the rows hang from the
+       foot (align-content: end), the image runs the field's height. */
     .manifesto {
       padding-block: calc(var(--u) * 1.5) var(--u);
       min-height: clamp(640px, 54vw, 1000px);
-      align-content: start;
+      align-content: end;
     }
     .manifesto :global(.field-img) {
-      left: auto;
-      right: 3vw;
+      top: 0;
+      bottom: 0;
+      left: 46%;
+      right: auto;
       width: auto;
       height: 100%;
     }
+    .manifesto :global(.field-img img) { width: auto; height: 100%; }
     .manifesto-text {
       grid-column: 1 / 7;
     }
     .cta { grid-column: 1 / 4; }
   }
   @media (min-width: 1280px) {
-    .manifesto :global(.field-img) { top: -2%; height: 108%; }
     .manifesto-text {
       grid-column: 1 / 8;
     }
