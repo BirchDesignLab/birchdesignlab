@@ -394,6 +394,51 @@ if (ONLY.includes('trace')) {
   }
 }
 
+// ONLY=tap (fix round 1, critic C1): a touch tap at 390 must hold data-lit
+// for about 650 ms, not drop it on the finger lift's pointerleave. A
+// MutationObserver logs every data-lit change; a strip films the hold.
+if (ONLY.includes('tap')) {
+  metrics.tap = {};
+  await mkdir(join(OUT, 'tap'), { recursive: true });
+  for (const scheme of ['light', 'dark']) {
+    for (const [path, sel] of [['services/', '.glass-strong, .glass'], ['about/', '.glass'], ['', '.glass, .glass-strong']]) {
+      const { context, page } = await contextFor(390, 844, scheme, { mobile: true, dsf: 2 });
+      await open(page, path);
+      const box = await page.evaluate((s) => {
+        const vh = innerHeight;
+        for (const el of document.querySelectorAll(s)) {
+          const r = el.getBoundingClientRect();
+          if (r.top > 70 && r.bottom < vh - 20 && r.height > 60) { el.setAttribute('data-tap-probe', ''); return { x: r.left + r.width / 2, y: r.top + Math.min(40, r.height / 2) }; }
+        }
+        return null;
+      }, sel);
+      const tag = `${(path || 'home').replace(/\//g, '')}__${scheme}`;
+      if (!box) { metrics.tap[tag] = { error: 'no pane in view' }; await context.close(); continue; }
+      await page.evaluate(() => {
+        window.__lit = [];
+        const t0 = performance.now();
+        new MutationObserver((ms) => { for (const m of ms) window.__lit.push({ t: +(performance.now() - t0).toFixed(1), on: m.target.hasAttribute('data-lit'), probe: m.target.hasAttribute('data-tap-probe') }); })
+          .observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-lit'] });
+      });
+      const frames = [];
+      const t0 = Date.now();
+      await page.touchscreen.tap(box.x, box.y);
+      for (const at of [0, 150, 300, 450, 600, 750, 900, 1100]) {
+        const wait = at - (Date.now() - t0);
+        if (wait > 0) await page.waitForTimeout(wait);
+        const lit = await page.evaluate(() => !!document.querySelector('[data-tap-probe][data-lit]'));
+        frames.push({ buf: await page.screenshot(), t: Date.now() - t0, note: lit ? 'lit' : 'off' });
+      }
+      const log = await page.evaluate(() => window.__lit);
+      const on = log.find((e) => e.probe && e.on), off = log.find((e) => e.probe && !e.on && on && e.t > on.t);
+      metrics.tap[tag] = { log, heldMs: on && off ? +(off.t - on.t).toFixed(1) : null };
+      console.log('tap', tag, JSON.stringify(metrics.tap[tag]));
+      await strip(frames, join(OUT, 'tap', `${tag}.png`), 4, 300);
+      await context.close();
+    }
+  }
+}
+
 await writeFile(join(OUT, `metrics-${ONLY.join('-')}.json`), JSON.stringify(metrics, null, 2));
 await browser.close();
 console.log('done', OUT);

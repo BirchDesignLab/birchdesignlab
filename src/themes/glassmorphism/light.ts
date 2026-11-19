@@ -70,7 +70,11 @@ export function mountLight(): (() => void) | void {
     light(paneAt(e));
     tapTimer = window.setTimeout(() => light(null), 650);
   };
-  const onLeave = () => {
+  // Chromium fires pointerleave on html for a touch the moment the finger
+  // lifts; the tap timer alone owns touch, or the 650 ms highlight is gone
+  // in a frame or two.
+  const onLeave = (e: PointerEvent) => {
+    if (e.pointerType === 'touch') return;
     light(null);
     pointer = null;
     kick();
