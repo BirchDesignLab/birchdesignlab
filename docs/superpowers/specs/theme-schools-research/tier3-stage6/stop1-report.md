@@ -327,3 +327,17 @@ Then the close as planned (merge main, gates, report, PR). If three waves
 is more than you want before transitions, the cleanest trim is to move wave
 3 to its own stage after transitions; waves 1 and 2 are what even the set
 out.
+
+## Answers (founder, 11-19-26)
+
+"All recommendations": every recommendation above is taken. 1 (a), the
+Portal ignores `prefers-reduced-transparency` for glass and keeps the
+high-contrast setting; 2 R1 in wave 1, an R2 Home-only proof shown at stop 2,
+the wallpaper repaint straight in; 3 (a) P4 typophoto if a photograph is
+supplied or approved, a P3 Home-only proof at stop 2, and P1, P2, P5 (P5
+before the dial); 4 bauhaus diagram and unequal boxes, grandmillennial swag,
+swiss timetable; 5 the card's words approved with "This room builds on his
+answer." and the title wink; 6 bleed, and the once-per-visit hint; 7 build
+every interactable, cheap ones in wave 3 first, no elevator sound; 8 the
+ribbon trust strip; 9 swiss's dark lab band turns white; 10 every taste call
+as bracketed; 11 (a) three waves, a stop after each.
