@@ -81,6 +81,12 @@
   --surface-solid: var(--field-raised);
   --glass-fallback: rgb(251 251 255 / 0.94);
   --well: rgb(255 255 255 / 0.62);
+  /* Stage 6 R1 fix round 1 (critic C1): the Control Centre's small labels
+     (11-12px, no plate) sit on --cc-well inside the regular pane, and the
+     pane can sit over a painted band as well as an orb. --band-worst is the
+     band the labels' ink loses the most over: the deepest blue (light). */
+  --cc-well: var(--well);
+  --band-worst: #142c74;
   --line: rgb(28 44 110 / 0.16);
   --thumb: #ffffff;
   --edge: rgb(255 255 255 / 0.75);
@@ -183,6 +189,12 @@
   --glass-fallback: rgb(22 26 58 / 0.96);
   /* A light tint, not a hole: form fields frost instead of recessing to black. */
   --well: rgb(255 255 255 / 0.12);
+  /* The Control Centre tiles smoke instead (critic C1): a white tint over
+     the bright amber band took the 11-12px labels under 4.5. --band-worst
+     is the brightest painted band (dark-dusk's amber crest stop; the 1px
+     crest line itself blurs away under the pane). */
+  --cc-well: rgb(8 12 32 / 0.45);
+  --band-worst: #f4a24e;
   --line: rgb(255 255 255 / 0.16);
   --thumb: rgb(255 255 255 / 0.16);
   --edge: rgb(255 255 255 / 0.13);
@@ -1341,7 +1353,7 @@ html.lens-held :where(*) {
   min-height: 84px;
   padding: 0.7rem 0.5rem;
   border-radius: var(--r-md);
-  background: var(--well);
+  background: var(--cc-well);
   border: 1px solid var(--line);
 }
 :where([data-theme='glassmorphism']) .cc-tile-label {

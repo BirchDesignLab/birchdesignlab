@@ -49,6 +49,14 @@ export const meta: ThemeMeta = {
     { fg: '--mark', bg: overOrb('--mat-thin'), min: 3, note: 'display type in the thin showpiece, no plate (D2 = C)' },
     { fg: '--mark', bg: ['--surface-mica', '--blob-worst'], min: 4.5, note: 'Services settings pane text, Mica surface over the worst orb (G15)' },
     { fg: '--mark-muted', bg: ['--surface-mica', '--blob-worst'], min: 4.5, note: 'Services settings pane stepper text over the worst orb (G15)' },
+    /* Critic C1 (fix round 1): the Control Centre's small labels and
+       segments (.cc-tile-label, .cc-seg, .cc-locale-value, 11-12px) have no
+       plate; they sit on --cc-well in the regular pane, measured over the
+       worst orb and over the worst painted band (--band-worst). */
+    { fg: '--mark-muted', bg: ['--cc-well', '--mat-regular', '--blob-worst'], min: 4.5, note: 'Control Centre labels and segments over the worst orb' },
+    { fg: '--mark-muted', bg: ['--cc-well', '--mat-regular', '--band-worst'], min: 4.5, note: 'Control Centre labels and segments over the worst painted band' },
+    { fg: '--mark', bg: ['--thumb', '--cc-well', '--mat-regular', '--blob-worst'], min: 4.5, note: 'Control Centre checked segment over the worst orb' },
+    { fg: '--mark', bg: ['--thumb', '--cc-well', '--mat-regular', '--band-worst'], min: 4.5, note: 'Control Centre checked segment over the worst painted band' },
     { fg: '--mark', bg: overOrb('--mat-thick'), min: 4.5, note: 'nav bar and glass pills over the worst orb' },
     { fg: '--mark-muted', bg: overOrb('--mat-thick'), min: 4.5, note: 'nav items over the worst orb' },
     { fg: '--mark', bg: ['--thumb', '--mat-thick', '--blob-worst'], min: 4.5, note: 'current nav segment' },

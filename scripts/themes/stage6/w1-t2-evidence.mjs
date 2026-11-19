@@ -135,8 +135,14 @@ function laplacian({ data, info }) {
   return +(s / n).toFixed(3);
 }
 
+/* Fix round 1: besides the mean, the share of pixels that are themselves
+   mauve to violet (hue 255-345, chroma at least 0.06) and the mean's
+   resultant strength R (0 to 1). A box that is half blue and half warm has
+   an R near 0.2, and its mean hue lands between the two (about 290) whether
+   or not a single pixel is mauve; the mauve share says whether the frost
+   actually made any. */
 function hueOf({ data }) {
-  let sx = 0, sy = 0, sc = 0, n = 0;
+  let sx = 0, sy = 0, sc = 0, n = 0, mauve = 0;
   for (let i = 0; i < data.length; i += 3) {
     const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
     const mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
@@ -144,12 +150,14 @@ function hueOf({ data }) {
     if (c < 1e-6) continue;
     let h;
     if (mx === r) h = ((g - b) / c) % 6; else if (mx === g) h = (b - r) / c + 2; else h = (r - g) / c + 4;
+    const hd = ((h * 60) % 360 + 360) % 360;
+    if (c >= 0.06 && hd >= 255 && hd < 345) mauve++;
     h *= Math.PI / 3;
     sx += c * Math.cos(h); sy += c * Math.sin(h); sc += c;
   }
   let deg = (Math.atan2(sy, sx) * 180) / Math.PI;
   if (deg < 0) deg += 360;
-  return { hue: +deg.toFixed(1), chroma: +(sc / n).toFixed(3) };
+  return { hue: +deg.toFixed(1), chroma: +(sc / n).toFixed(3), R: +(Math.hypot(sx, sy) / (sc || 1)).toFixed(2), mauve: +(mauve / n).toFixed(3) };
 }
 
 function meanAbs(a, b) {
@@ -247,7 +255,7 @@ if (ONLY.includes('metrics')) {
         const o = hueOf(await grab(page, info.box));
         await page.evaluate((i) => { document.querySelector(`[data-t2probe="${i}"]`).style.visibility = ''; }, i);
         let gap = Math.abs(s.hue - o.hue); if (gap > 180) gap = 360 - gap;
-        rows.push({ scroll: y, pane: info.cls.replace(/astro-\w+/g, '').trim(), pane_hue: s.hue, pane_chroma: s.chroma, behind_hue: o.hue, behind_chroma: o.chroma, gap: +gap.toFixed(1) });
+        rows.push({ scroll: y, pane: info.cls.replace(/astro-\w+/g, '').trim(), pane_hue: s.hue, pane_chroma: s.chroma, pane_R: s.R, pane_mauve: s.mauve, behind_hue: o.hue, behind_chroma: o.chroma, behind_R: o.R, behind_mauve: o.mauve, gap: +gap.toFixed(1) });
         void sel;
       }
     }

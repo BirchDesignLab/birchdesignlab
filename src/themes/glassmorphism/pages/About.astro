@@ -44,8 +44,16 @@ const { copy, theme } = Astro.props;
     behind the words themselves. */}
 <section class="promise wrap">
   <Orbs orbs={[
-    { hue: 'violet', x: '78%', y: '30%', mx: '88%', my: '10%', size: 'clamp(220px, 28vw, 400px)', drift: 3 },
-    { hue: 'peach', x: '18%', y: '80%', mx: '10%', my: '90%', size: 'clamp(200px, 26vw, 360px)', drift: 1 },
+    /* Stage 6 R1 fix round 1 (film palette-hue-light): the coral orb sat
+       low-left, where the manifesto enters over the wallpaper's fixed deep
+       blue corner, and blurred coral into blue is mauve (9% of the pane's
+       pixels at 1440, scroll 900, against 0% behind it). The blue orb takes
+       the low-left place instead (blue blurred into the warm bands goes
+       neutral, not violet: 3%), set a little lower so at the end of the
+       page it sits mostly below the pane; coral moves to the upper right,
+       where the pane meets it over the warm bands. */
+    { hue: 'peach', x: '78%', y: '30%', mx: '88%', my: '10%', size: 'clamp(220px, 28vw, 400px)', drift: 3 },
+    { hue: 'violet', x: '18%', y: '88%', mx: '10%', my: '90%', size: 'clamp(200px, 26vw, 360px)', drift: 1 },
     { hue: 'cyan', x: '50%', y: '54%', mx: '60%', my: '60%', size: 'clamp(120px, 15vw, 220px)', drift: 2 },
   ]} />
   <div class="promise-inner">
