@@ -564,7 +564,10 @@ if (want('trace')) {
       const presented = sum.frameStates.STATE_PRESENTED_ALL ?? 0;
       const frames = Math.max(1, presented);
       const per = (ms) => +(ms / frames).toFixed(2);
-      R.trace[`${run}__${s}`] = { ...sum, presentedPerSec: +(presented / sum.secs).toFixed(1), raf: { ...raf, median: +raf.median.toFixed(2), p95: +raf.p95.toFixed(2), max: +raf.max.toFixed(2) }, perFrameMs: { gpuMain: per(sum.gpuMainBusyMs), viz: per(sum.vizBusyMs), compositor: per(sum.compositorBusyMs), rendererMain: per(sum.rendererMainBusyMs) }, errors };
+      // Busy ms per second of trace window: the comparable figure when two
+      // runs present different frame counts (per frame divides by them).
+      const perSec = (ms) => +(ms / sum.secs).toFixed(1);
+      R.trace[`${run}__${s}`] = { ...sum, presentedPerSec: +(presented / sum.secs).toFixed(1), raf: { ...raf, median: +raf.median.toFixed(2), p95: +raf.p95.toFixed(2), max: +raf.max.toFixed(2) }, busyMsPerSec: { gpuMain: perSec(sum.gpuMainBusyMs), viz: perSec(sum.vizBusyMs), compositor: perSec(sum.compositorBusyMs), rendererMain: perSec(sum.rendererMainBusyMs) }, perFrameMs: { gpuMain: per(sum.gpuMainBusyMs), viz: per(sum.vizBusyMs), compositor: per(sum.compositorBusyMs), rendererMain: per(sum.rendererMainBusyMs) }, errors };
       console.log('trace', run, s, JSON.stringify(R.trace[`${run}__${s}`]));
       await context.close();
     }

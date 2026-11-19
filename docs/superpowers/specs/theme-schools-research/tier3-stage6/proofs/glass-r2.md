@@ -85,34 +85,49 @@ Visible flaws, all inherent to the recipe as built:
 ## Frame cost
 
 A scripted 3 s circular rim drag (lens runs) and a 60-tick wheel scroll (bar
-runs), Chrome trace per run (`traces/*.json`). "Per frame" is busy time on a
-thread over the trace window divided by presented frames. The WebGL rows are
+runs), Chrome trace per run (`traces/*.json`). The busy columns are busy
+time on a thread in milliseconds per second of trace window (`busyMsPerSec`
+in `results.json`, computed from the raw `*BusyMs` and `secs`). Per second,
+not per presented frame: runs that present different frame counts cannot be
+compared per frame (the 390 drags presented 120 and 181). The WebGL rows are
 the page as built (`?r2=off`), dragging today's lens.
 
 | run | size | presented/s | rAF p95 | renderer main | compositor | viz | GPU main |
 |---|---|---|---|---|---|---|---|
-| R2 lens drag | 1440 | 59.5 | 16.8 ms | 1.45 ms | 5.86 ms | 3.14 ms | 1.45 ms |
-| WebGL lens drag | 1440 | 59.7 | 16.7 ms | 2.82 ms | 5.64 ms | 3.17 ms | 1.72 ms |
-| R2 bar, scroll | 1440 | (see note) | 33.4 ms | 1.65 ms | 4.68 ms | 2.63 ms | 2.72 ms |
-| as built, scroll | 1440 | (see note) | 33.4 ms | 2.35 ms | 4.72 ms | 2.61 ms | 2.63 ms |
-| R2 lens drag | 390 | 39.6 | 16.7 ms | 1.38 ms | 3.34 ms | 2.16 ms | 0.75 ms |
-| WebGL lens drag | 390 | 59.7 | 16.8 ms | 2.48 ms | 2.51 ms | 1.31 ms | 0.98 ms |
-| R2 bar, scroll | 390 | (see note) | 33.4 ms | 1.64 ms | 4.19 ms | 2.52 ms | 2.91 ms |
-| as built, scroll | 390 | (see note) | 33.4 ms | 1.91 ms | 3.26 ms | 2.03 ms | 2.84 ms |
+| R2 lens drag | 1440 | 59.5 | 16.8 ms | 86 | 348 | 187 | 86 |
+| WebGL lens drag | 1440 | 59.7 | 16.7 ms | 168 | 337 | 189 | 103 |
+| R2 bar, scroll | 1440 | (see note) | 33.4 ms | 150 | 426 | 240 | 248 |
+| as built, scroll | 1440 | (see note) | 33.4 ms | 197 | 396 | 220 | 221 |
+| R2 lens drag | 390 | 39.6 | 16.7 ms | 54 | 132 | 86 | 30 |
+| WebGL lens drag | 390 | 59.7 | 16.8 ms | 148 | 150 | 78 | 58 |
+| R2 bar, scroll | 390 | (see note) | 33.4 ms | 102 | 261 | 157 | 181 |
+| as built, scroll | 390 | (see note) | 33.4 ms | 120 | 205 | 128 | 179 |
 
 Reading it:
 
-- **Drag: R2 is no dearer than today's lens, and halves the main-thread
-  work.** No dropped frames in any drag run, rAF steady at 16.7 ms. The
+- **Drag at 1440: R2 costs about the same as today's lens and halves the
+  main-thread work.** Compositor 3% more, viz level, GPU main 17% less,
+  renderer main 49% less. No dropped frames, rAF steady at 16.7 ms. The
   WebGL lens redraws its canvas from script every frame; the R2 lens only
-  moves a transform and lets the compositor re-filter. The 390 R2 run
-  presented 40/s with 61 "no update desired" frames: the mouse moves landed
-  slower than vsync in that context, not missed frames (rAF p95 16.7 ms).
-- **Scroll: parity.** The bar's displacement layer costs about 0.1 ms of GPU
-  time per frame over the frosted bar it replaces. The p95 of 33 ms is the
-  same in both and is headless wheel delivery, not the page. Presented/s in
-  scroll runs counts two frame sources (main and compositor) and reads over
-  60; ignore it, compare the busy columns.
+  moves a transform and lets the compositor re-filter.
+- **Drag at 390: not a like-for-like comparison.** The R2 run presented only
+  120 frames (40/s, 61 "no update desired": the mouse moves landed slower
+  than vsync in that context; rAF p95 stayed 16.7 ms, so no missed frames),
+  the WebGL run 181. Per second R2 reads cheaper on compositor and GPU, but
+  it did a third less frame work, so that does not show R2 is cheaper on a
+  phone. Viz is already 10% higher on fewer frames. A matched 390 drag is
+  owed before any phone cost claim.
+- **Scroll: the clear bar costs more compositor and viz time than the
+  frosted bar, most at 390.** At 1440: compositor 8%, viz 9% and GPU main
+  12% more, renderer main 24% less. At 390: compositor 27% more (261 vs
+  205 ms/s) and viz 23% more (157 vs 128), GPU main level, renderer main
+  15% less, with near-equal presented frames (264 vs 265). The p95 of 33 ms
+  is the same in both and is headless wheel delivery, not the page.
+  Presented/s in scroll runs counts two frame sources (main and compositor)
+  and reads over 60; ignore it, compare the busy columns.
+- **So "no dearer" holds only for the lens drag at 1440.** The bar is
+  measurably dearer, by a quarter on the compositor at phone width, on this
+  machine's GPU.
 - **Caveat.** This laptop GPU is far stronger than a phone's. The R2 cost
   is per covered pixel per frame (a backdrop read plus one displacement
   pass under the lens, the ruler and the bar), so a real phone trace on
@@ -139,13 +154,46 @@ itself: what the eye sees at a point on the face came from up to 36px
 nearer the centre, so near the face's edge a visible link is not the thing
 under the pointer (every mismatch was "link seen, something else hit"; none
 the other way round). Clicking dead centre is always right. Options for the
-build: (a) accept it (a lens is for looking; the centre is honest), (b) make
-the face a click target that re-dispatches to the element under the sampled
-point (`elementFromPoint` of pointer plus displacement; the map is already
-in script), so you click what you see, or (c) drop magnification and keep
-only the rim bend, so the face is 1:1. Recommend (b) if R2 is built: about
-40 lines, and it keeps hover, focus and the cursor honest if it also
-forwards `pointermove` for hover styles.
+build:
+
+- **(a) Accept it.** A lens is for looking; the centre is honest, and the
+  face stays a true pass-through, so every native behaviour under it is the
+  browser's own.
+- **(b) Click what you see.** Make the face a hit target that re-dispatches
+  to the element under the sampled point (`elementFromPoint` of pointer plus
+  displacement; the map is already in script). This gives up the brief's
+  pass-through face, and script cannot forward most of what the browser does
+  natively:
+  - **Hover and active.** Synthetic `pointermove`/`mouseover` do not set CSS
+    `:hover` or `:active`. Every hover style under the lens (nav links,
+    buttons, Control Centre tiles) would need a mirrored class and a second
+    selector, kept in step by hand.
+  - **Cursor.** The cursor comes from the face; script must copy the
+    target's computed `cursor` on every move.
+  - **Native link behaviour.** A forwarded click is untrusted. Middle-click
+    and Ctrl/Cmd/Shift-click to a new tab or window (Chromium may treat a
+    scripted new-window open as a popup), the link context menu (open in new
+    tab, copy link address), dragging a link out, and the status-bar URL
+    preview all stop working on the face; at best they are rebuilt in part.
+  - **Text selection.** Press and drag on the face selects nothing in the
+    page; selecting a word under the lens would need a hand-built
+    `caretPositionFromPoint` range.
+  - **Touch.** A touch that starts on the face hits the face, so a pan must
+    still chain to the page and a tap must be told apart from it before
+    forwarding; neither was tested here.
+  - **Focus.** Forwarded clicks need to focus the target themselves, or
+    keyboard users lose their place after a pointer click on a control.
+
+  Realistic size: a few hundred lines plus a hover-class convention across
+  the glass styles, a test per forwarded behaviour, and the list above still
+  only partly covered.
+- **(c) Bend only.** Drop magnification and keep the rim bend, so the face
+  is 1:1 and pass-through is exact; the lens loses its main read.
+
+Recommend (a) if R2 is built: the mismatch is confined to the face's outer
+band, never steals a click the other way, and every native link behaviour
+keeps working. (b) costs far more than it looks and still leaves gaps; (c)
+loses the effect.
 
 ## Chromium only
 
@@ -180,8 +228,14 @@ Its own stage, as stop 1 recommended. Roughly six tasks:
    rule carry over. Risk: the view-transition lifecycle (arrival, in-school
    swap, drawing ahead) must film clean; the lens must not appear in the old
    or new snapshot mid-transition.
-2. **Click what you see** (hit-testing option b), with hover forwarding and
-   a test that a link at the face edge receives the click.
+2. **Hit testing as the founder rules it.** Under (a), the recommendation:
+   keep the face pass-through and test that a click at the centre lands on
+   what is seen, and that middle-click, the link context menu and text
+   selection work through the face. Only if (b) is chosen: forwarding
+   clicks, focus and cursor, a mirrored hover class across the glass
+   styles, touch tap and pan handling, and a test per forwarded behaviour,
+   with new-tab clicks, the link context menu and link drag still lost on
+   the face. That is a task of its own, larger than the lens path.
 3. **The clear header and footer bars.** fx.ts grows a "rod" map mode beside
    the rim band; the scroll-edge fade is retired for Chromium only; a quiet
    plate under the nav pill and wordmark; meta.ts contrast pairs for the
@@ -204,7 +258,9 @@ away without the small blur.
 ## Founder calls for stop 2
 
 1. R2 as its own stage, yes or no.
-2. If yes: click what you see (b), accept the mismatch (a), or bend only (c).
+2. If yes: accept the mismatch (a, recommended), click what you see (b,
+   gives up native link behaviour on the face; see Hit testing), or bend
+   only (c).
 3. The bar: fully clear rod as shown, or keep a little frost behind the
    wordmark and nav.
 4. The stepped edges: accept, or allow a 0.3px antialias blur.
