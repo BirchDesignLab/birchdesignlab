@@ -29,7 +29,8 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
     letter-spacing: -0.06em;
     margin-top: calc(var(--u) * 3);
     margin-bottom: var(--u);
-    margin-left: -0.04em;
+    /* Optical flush-left (S3): the S's measured bearing at this size. */
+    margin-left: -0.0462em;
   }
   /* The page's one typographic mark, in the red field (never remapped). */
   .stop { color: var(--red-field); }

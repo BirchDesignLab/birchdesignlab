@@ -58,11 +58,14 @@ const { copy, theme } = Astro.props;
     font-size: min(18.5cqw, 13rem);
     max-width: 6.2em;
     margin-bottom: var(--u);
+    /* Optical flush-left (S3): the first letter is a T (measured 0.0265em at
+       width 100, 0.0215em at the phones' 85). */
+    margin-inline-start: -0.0265em;
   }
   .subline { max-width: 26em; }
   /* Phones: "properly." fills the measure, cut condensed. */
   @media (max-width: 639.98px) {
-    .title { font-size: calc(30.6cqw); font-stretch: 85%; max-width: none; }
+    .title { font-size: calc(30.6cqw); --sw-s: 85; max-width: none; margin-inline-start: -0.0215em; }
   }
   @media (min-width: 640px) {
     .title { font-size: min(15.2cqw, 13rem); }
@@ -105,6 +108,14 @@ const { copy, theme } = Astro.props;
     letter-spacing: -0.05em;
     margin-bottom: var(--u);
   }
+  /* Optical flush-left (Stage 6, S3): each digit keeps its own left bearing
+     (measured from pixels at 1440, 1024, 820 and 390: 1 is 0.100em, 2 0.053,
+     3 0.045, 4 0.031), so each steps left by its own, and the ink starts on
+     the same line as the title under it. */
+  .step:nth-child(1) .num { margin-inline-start: -0.1em; }
+  .step:nth-child(2) .num { margin-inline-start: -0.053em; }
+  .step:nth-child(3) .num { margin-inline-start: -0.045em; }
+  .step:nth-child(4) .num { margin-inline-start: -0.031em; }
   .step-title { font-size: var(--fs-body); line-height: var(--u); letter-spacing: -0.01em; margin-bottom: calc(var(--u) * 0.5); }
   .step-body { max-width: 24em; }
   @media (min-width: 640px) {

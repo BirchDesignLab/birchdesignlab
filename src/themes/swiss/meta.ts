@@ -17,8 +17,10 @@ export const meta: ThemeMeta = {
      (white --on-red on --red-field, never remapped in dark), the black sheet
      (paper type on --black, the lab band in light) and the ink block
      (--field on --mark). Buttons inside red are black fields with white
+     type. In dark the lab band is a white field (--white-field) with black
+     type, --grey-on-white for secondary type and a black button with white
      type. The last rows are the focus rings (3px, 3:1) on paper, on the
-     black sheet and on red. */
+     black sheet, on red and on the white field. */
   contrast: [
     { fg: '--on-red', bg: ['--red-field'], min: 4.5, note: 'white type on the red field' },
     { fg: '--on-red', bg: ['--black'], min: 4.5, note: 'a button inside the red field' },
@@ -28,10 +30,14 @@ export const meta: ThemeMeta = {
     { fg: '--grey-on-black', bg: ['--black'], min: 4.5, note: 'secondary type on that black sheet' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a form field' },
     { fg: '--ink-muted', bg: ['--mark'], min: 4.5, note: 'secondary type on the ink block' },
+    { fg: '--black', bg: ['--white-field'], min: 4.5, note: 'type on the white field (the dark lab band)' },
+    { fg: '--grey-on-white', bg: ['--white-field'], min: 4.5, note: 'secondary type on the white field' },
+    { fg: '--white-field', bg: ['--black'], min: 4.5, note: 'the black button on the white field, its label' },
     { fg: '--red-field', bg: ['--black'], min: 3, note: 'the Sent full stop (large type) on the black page' },
     { fg: '--mark', bg: ['--field'], min: 3, note: 'focus ring on paper' },
     { fg: '--on-red', bg: ['--black'], min: 3, note: 'focus ring on the black sheet' },
     { fg: '--on-red', bg: ['--red-field'], min: 3, note: 'focus ring on the red field' },
+    { fg: '--black', bg: ['--white-field'], min: 3, note: 'focus ring on the white field' },
   ],
   order: 2,
 };

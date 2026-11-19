@@ -54,11 +54,14 @@ const { copy, theme } = Astro.props;
     font-size: min(16.9cqw, 12.5rem);
     margin-bottom: var(--u);
     max-width: 7em;
+    /* Optical flush-left (S3): the first letter is an S (measured 0.041em at
+       width 100, 0.0372em at the phones' 85). */
+    margin-inline-start: -0.041em;
   }
   .subline { max-width: 18em; }
   /* Phones: "conversation" fills the measure, cut condensed. */
   @media (max-width: 639.98px) {
-    .title { font-size: calc(20.15cqw); font-stretch: 85%; max-width: none; }
+    .title { font-size: calc(20.15cqw); --sw-s: 85; max-width: none; margin-inline-start: -0.0372em; }
   }
   @media (min-width: 640px) {
     .subline { grid-column: 3 / -1; }

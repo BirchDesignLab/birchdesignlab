@@ -33,6 +33,10 @@
      and --grey-on-ink swap in dark). */
   --paper-fixed: #fafaf7;
   --grey-on-black: #a6a6a2;
+  /* The white field (the dark page's lab band, Stage 6 call 9): white, with
+     black type and --grey-on-white for secondary type, whichever scheme. */
+  --white-field: #ffffff;
+  --grey-on-white: #5a5a58;
 
   /* Semantic tokens (light is native, and what a no-JS visitor sees). */
   --field: var(--paper);
@@ -224,6 +228,20 @@
   letter-spacing: -0.045em;
   line-height: 0.86;
 }
+/* Optical flush-left (Stage 6, S3). Archivo 700 keeps a left bearing that
+   grows with the width axis (measured from pixels: 0.049em at width 62, 0.076
+   at 100, 0.091 at 125, close to 0.0078em + 0.000675em per width unit), so a
+   giant set flush to its column starts its ink 16px right of the column line
+   at 1440. --sw-s is the giant's width (a number, 100 by default; a phone cut
+   sets 85), the width axis follows it, and the box steps left by the bearing
+   so the ink sits on the line. The selector ties the reset of margins on
+   headings above (and comes after it) but loses to a page's own scoped
+   rules, so a page's size, width and margin still win. */
+:where([data-theme='swiss']) h1.sw-display {
+  --sw-s: 100;
+  font-stretch: calc(var(--sw-s) * 1%);
+  margin-inline-start: calc(-1em * (0.0078 + 0.000675 * var(--sw-s)));
+}
 /* One word per line where a headline is set as a stack. */
 [data-theme='swiss'] .sw-display > .ln { display: block; }
 
@@ -302,6 +320,31 @@
   --btn-bg-alt: var(--black);
   --btn-fg-alt: var(--paper);
 }
+/* The sheet turned white in the dark scheme (Home's lab band, Stage 6 call 9):
+   on the black page the red close is the one red field, and the sheet above
+   it is the page's own negative, a white field with black type. In light it
+   stays the black sheet. Its button is a black field with white type, its
+   focus ring and press block are black. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white {
+  background: var(--white-field);
+  color: var(--black);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--black);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--black);
+}
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:active,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--black); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:hover { box-shadow: inset 0 0 0 2px var(--black); }
+}
+
 /* The black sheet that stays black in both schemes (Contact's hero): paper
    type on black, where .sw-sheet turns red in dark. It restates the field
    tokens so everything inside it reads as on a black page. */
@@ -337,6 +380,7 @@
 [data-theme='swiss'] .sw-red.sw-bleed { --bleed-fill: var(--red-field); }
 [data-theme='swiss'] .sw-sheet.sw-bleed { --bleed-fill: var(--black); }
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-bleed { --bleed-fill: var(--red-field); }
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white.sw-bleed { --bleed-fill: var(--white-field); }
 
 /* The button: one rule. A field two lines tall (48px) with its label bottom
    left, on the baseline of the lower line, the way a poster sets a block of
