@@ -16,7 +16,10 @@ const { copy, theme } = Astro.props;
     { hue: 'pink', x: '44%', y: '98%', mx: '12%', my: '80%', size: 'clamp(80px, 9vw, 140px)', drift: 1 },
   ]} />
 
-  <div class="intro glass">
+  {/* Stage 6 R1 (G12): the intro is the page's showpiece thin pane (the
+      heading over the clearest glass); the form, whose fields are opaque
+      wells, takes the regular material. */}
+  <div class="intro glass thin">
     <p class="chip">{copy.kicker}</p>
     <h1>{copy.heading}</h1>
     <p class="subline">{copy.subline}</p>
@@ -25,7 +28,7 @@ const { copy, theme } = Astro.props;
     </div>
   </div>
 
-  <form class="form glass thin" method="post" action="/api/contact" data-astro-reload>
+  <form class="form glass" method="post" action="/api/contact" data-astro-reload>
     {/* E12: the field group is the pointer-light's command group here (the
         three fields as one unit, not per-field), wired from reveal.ts. */}
     <div class="field-group">

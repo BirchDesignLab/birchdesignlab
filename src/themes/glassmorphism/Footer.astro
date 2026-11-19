@@ -35,6 +35,7 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
   import { onMount } from '../../lib/lifecycle';
   import { mountOrbs, mountPanes } from './fx';
   import { mountReveal } from './reveal';
+  import { mountLight } from './light';
   import { registerBeforeSwap, applySettingsNow } from './lens/session-hold';
 
   /* mountOrbs pauses every .orbs group's animation off-screen: this is the
@@ -48,6 +49,9 @@ const leaves = (to: string) => (to === 'lab' || to === 'privacy' ? '' : undefine
   /* E12: one mount point for every page (Footer ships everywhere), same as
      mountOrbs/mountPanes above. */
   onMount(mountReveal);
+  /* Stage 6 R1 (G7): the pointer light on every pane and the orbs that
+     ease away from the cursor (light.ts). */
+  onMount(mountLight);
 
   /* The Control Centre's session hold (settings.ts): registerBeforeSwap runs
      once, at module scope, and keeps working across every later navigation

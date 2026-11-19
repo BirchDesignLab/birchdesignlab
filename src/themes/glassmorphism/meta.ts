@@ -40,9 +40,9 @@ export const meta: ThemeMeta = {
   ],
   contrast: [
     { fg: '--mark', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel body text on its plate over the worst orb' },
-    { fg: '--mark', bg: onPlate('--mat-thin'), min: 4.5, note: 'body copy inside a thin showpiece (Home .sub, Services sublines, Contact labels) on its plate over the worst orb' },
+    { fg: '--mark', bg: onPlate('--mat-thin'), min: 4.5, note: 'body copy inside a thin showpiece (Home .sub, Services sublines, the Contact intro subline) on its plate over the worst orb' },
     { fg: '--mark-muted', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel secondary text on its plate over the worst orb' },
-    { fg: '--mark-muted', bg: onPlate('--mat-thin'), min: 4.5, note: 'form labels in the thin Contact pane on their plate over the worst orb' },
+    { fg: '--mark-muted', bg: onPlate('--mat-thin'), min: 4.5, note: 'secondary text in a thin showpiece on its plate over the worst orb' },
     { fg: '--accent', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel kickers and numerals on a plate over the worst orb' },
     { fg: '--link', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel links (in body text, the mail link) on a plate over the worst orb' },
     { fg: '--mark', bg: overOrb('--mat-regular'), min: 3, note: 'display type in a regular pane, no plate (D2 = C)' },
@@ -60,6 +60,11 @@ export const meta: ThemeMeta = {
     { fg: '--mark', bg: overOrb('--mat-thick'), min: 4.5, note: 'nav bar and glass pills over the worst orb' },
     { fg: '--mark-muted', bg: overOrb('--mat-thick'), min: 4.5, note: 'nav items over the worst orb' },
     { fg: '--mark', bg: ['--thumb', '--mat-thick', '--blob-worst'], min: 4.5, note: 'current nav segment' },
+    /* Stage 6 R1 (G6): the header bar is clear now (--mat-bar, about 0.35).
+       The wordmark is --mark straight on it; the nav track carries --plate. */
+    { fg: '--mark', bg: overOrb('--mat-bar'), min: 4.5, note: 'header wordmark on the clear bar over the worst orb' },
+    { fg: '--mark-muted', bg: onPlate('--mat-bar'), min: 4.5, note: 'header nav labels on the track plate over the worst orb' },
+    { fg: '--mark', bg: ['--thumb', '--plate', '--mat-bar', '--blob-worst'], min: 4.5, note: 'current nav segment on the clear bar' },
     /* E7 (no glass on glass): the kicker chip, trust chip, form fields,
        footer pills and .btn-glass are opaque solid surfaces now (not a
        second translucent well nested inside a pane's own blur), so each is

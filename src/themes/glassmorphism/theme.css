@@ -74,7 +74,18 @@
   --mat-thin: rgb(255 255 255 / 0.18);
   --mat-regular: rgb(255 255 255 / 0.32);
   --mat-thick: rgb(255 255 255 / 0.7);
+  /* Stage 6 R1 (G6): the header bar, the one place content passes under
+     glass, is clear now: fill about 0.35, the rim band, a scroll-edge fade.
+     Its nav sits on --plate (Header.astro) and its wordmark is --mark, both
+     measured over the worst orb in meta.ts. */
+  --mat-bar: rgb(255 255 255 / 0.35);
   --plate: rgb(255 255 255 / 0.5);
+  /* Stage 6 R1 (G7): the pointer-tracked light on every pane, the specular
+     rim's peak alpha and the soft highlight's (theme.css, "Light that
+     moves"). The scroll-edge fade's wash (theme.css, "The scroll edge"). */
+  --spec-rim: 1;
+  --spec-glow: 0.42;
+  --edge-fade: rgb(255 244 232 / 0.4);
   /* Services' settings pane (G15): a Mica-like surface, the wallpaper
      showing through a heavy blur instead of a solid cream block. */
   --surface-mica: rgb(255 252 248 / 0.72);
@@ -110,9 +121,12 @@
      its literal declarations below step in three fixed stages instead,
      keyed off data-glass-frost-step (also written by lens/settings.ts). */
   --glass-frost: 0.5;
-  --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px)) saturate(1.2);
-  --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px)) saturate(1.15);
-  --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 15px)) saturate(1.1);
+  /* Stage 6 R1 (G9): Tinted reads thicker as well as warmer, so its rule
+     (below, "Clear/Tinted") raises this blur factor; Clear keeps 1. */
+  --glass-thicken: 1;
+  --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px * var(--glass-thicken))) saturate(1.2);
+  --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px * var(--glass-thicken))) saturate(1.15);
+  --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 15px * var(--glass-thicken))) saturate(1.1);
 
   --font-head: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
   --font-body: 'Inter Variable', 'Inter Variable fallback', system-ui, sans-serif;
@@ -183,7 +197,11 @@
   --mat-thin: rgb(16 20 46 / 0.35);
   --mat-regular: rgb(20 24 56 / 0.46);
   --mat-thick: rgb(20 24 56 / 0.76);
+  --mat-bar: rgb(16 20 46 / 0.42);
   --plate: rgb(14 18 44 / 0.5);
+  --spec-rim: 0.75;
+  --spec-glow: 0.2;
+  --edge-fade: rgb(6 12 36 / 0.5);
   --surface-mica: rgb(16 26 64 / 0.74);
   --surface-solid: var(--field-raised);
   --glass-fallback: rgb(22 26 58 / 0.96);
@@ -202,9 +220,9 @@
   --edge-rim: rgb(255 255 255 / 0.3);
   --shadow: 0 34px 70px -24px rgb(0 0 0 / 0.65), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   --shadow-sm: 0 12px 26px -12px rgb(0 0 0 / 0.6);
-  --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px)) saturate(1.2);
-  --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px)) saturate(1.15);
-  --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 15px)) saturate(1.1);
+  --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px * var(--glass-thicken))) saturate(1.2);
+  --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px * var(--glass-thicken))) saturate(1.15);
+  --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 15px * var(--glass-thicken))) saturate(1.1);
 
   /* Own saturated gradient: pastel light buttons go soft and disabled-looking
      against luminous orbs, so dark gets colour that lights like they do. */
@@ -238,6 +256,7 @@
       --mat-thin: var(--glass-fallback);
       --mat-regular: var(--glass-fallback);
       --mat-thick: var(--glass-fallback);
+      --mat-bar: var(--glass-fallback);
     }
   }
 }
@@ -266,6 +285,7 @@
     --mat-thin: var(--glass-fallback);
     --mat-regular: var(--glass-fallback);
     --mat-thick: var(--glass-fallback);
+    --mat-bar: var(--glass-fallback);
   }
   /* Dark's own token block (:root[data-theme][data-scheme=dark], specificity
      0,3,0) outranks a :where()-wrapped override, so the fallback above never
@@ -277,6 +297,7 @@
     --mat-thin: var(--glass-fallback);
     --mat-regular: var(--glass-fallback);
     --mat-thick: var(--glass-fallback);
+    --mat-bar: var(--glass-fallback);
   }
   /* Real (non-:where()) selectors here on purpose, and the attribute
      selector doubled: the base .glass/.glass.thin/.glass-strong/.orb/
@@ -505,15 +526,22 @@
    agree. Specificity above both schemes' base --mat-* blocks, and safely
    below the (doubled-attribute) E10 fallback above, which must always win
    over a Control Centre setting regardless of Tinted. */
+/* Stage 6 R1 (G9): Tinted reads clearly warmer (an amber cream in light, a
+   warm umber in dark, where it used to be a near-white and a navy) and
+   thicker (more fill, and 1.6 times the blur through --glass-thicken; the
+   unprefixed property only, Safari's literal steps keep Clear's blur). */
 :root[data-theme='glassmorphism'][data-glass-tint='tinted'] {
-  --mat-thin: rgb(255 250 244 / 0.4);
-  --mat-regular: rgb(255 250 244 / 0.68);
-  --mat-thick: rgb(255 250 244 / 0.8);
+  --mat-thin: rgb(255 232 200 / 0.5);
+  --mat-regular: rgb(255 232 200 / 0.72);
+  --mat-thick: rgb(255 232 200 / 0.84);
+  --mat-bar: rgb(255 232 200 / 0.62);
+  --glass-thicken: 1.6;
 }
 :root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-tint='tinted'] {
-  --mat-thin: rgb(20 22 50 / 0.66);
-  --mat-regular: rgb(22 26 58 / 0.8);
-  --mat-thick: rgb(22 26 58 / 0.86);
+  --mat-thin: rgb(54 34 26 / 0.68);
+  --mat-regular: rgb(54 34 26 / 0.8);
+  --mat-thick: rgb(48 30 24 / 0.88);
+  --mat-bar: rgb(48 30 24 / 0.7);
 }
 :where([data-theme='glassmorphism']) :is(img, svg, canvas) { max-width: 100%; display: block; }
 :where([data-theme='glassmorphism']) ::selection { background: var(--blob-cyan-hi); color: var(--mark); }
@@ -646,7 +674,7 @@
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-  padding: 1.25px;
+  padding: 1.5px;
   background: linear-gradient(135deg, var(--edge-rim) 0%, transparent 32%, transparent 68%, var(--edge-rim) 100%);
   opacity: 0.9;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -654,6 +682,71 @@
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
   pointer-events: none;
+}
+/* The rim band (Stage 6 R1, G4; fx.ts buildOne()). Chromium only: fx.ts
+   adds these two layers to each pane and sets the pane's own
+   backdrop-filter to none. .glass-rim bends the crisp backdrop along the
+   edge (its backdrop-filter is the displacement alone, written inline) and
+   shows through the band mask; .glass-frost frosts the interior through the
+   mask's complement. Both sit at z-index -1: over the pane's fill, under
+   its tint, plates, text and rim ring. Without the layers (Safari, Firefox,
+   no script) the pane's own frost above is unchanged. */
+:where([data-theme='glassmorphism']) :is(.glass-rim, .glass-frost) {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+:where([data-theme='glassmorphism']) .glass-rim {
+  mask-image: var(--rim-mask);
+}
+:where([data-theme='glassmorphism']) .glass-frost {
+  backdrop-filter: var(--blur);
+  mask-image: var(--rim-mask), linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+:where([data-theme='glassmorphism']) .glass.thin > .glass-frost {
+  backdrop-filter: var(--blur-thin);
+}
+:where([data-theme='glassmorphism']) :is(.glass-strong, .glass.thick) > .glass-frost {
+  backdrop-filter: var(--blur-thick);
+}
+@media (prefers-contrast: more) {
+  :where([data-theme='glassmorphism']) :is(.glass-rim, .glass-frost) {
+    display: none;
+  }
+}
+/* Light that moves (Stage 6 R1, G7; light.ts). Every pane carries a
+   specular rim and a soft highlight centred on the pointer: light.ts writes
+   --spec-x/--spec-y (px in the pane's box) and toggles [data-lit] while a
+   fine pointer is over the pane, or briefly where a touch lands. --spec-a
+   eases 0 to 1, so the light fades in and out instead of switching. The
+   rim rides the rim ring (::after, already masked to the edge); the
+   highlight rides the tint layer (::before), under the plates, so body
+   text keeps its measured ground. */
+@property --spec-a {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong) {
+  transition: --spec-a 380ms ease;
+}
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong)[data-lit] {
+  --spec-a: 1;
+}
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong)::after {
+  background:
+    radial-gradient(240px circle at var(--spec-x, 50%) var(--spec-y, 0%), rgb(255 255 255 / calc(var(--spec-a) * var(--spec-rim))), transparent 70%),
+    linear-gradient(135deg, var(--edge-rim) 0%, transparent 32%, transparent 68%, var(--edge-rim) 100%);
+}
+:where([data-theme='glassmorphism']) :is(.glass, .glass-strong)::before {
+  background:
+    radial-gradient(280px circle at var(--spec-x, 50%) var(--spec-y, 0%), rgb(255 255 255 / calc(var(--spec-a) * var(--spec-glow))), transparent 70%),
+    rgb(var(--pane-tint-rgb, 255 255 255) / var(--pane-tint-alpha, 0));
 }
 /* The inner plate (Stage 6 R1, G3): the clear material no longer carries
    body-text contrast on its own, so body text (paragraphs, form labels, the
@@ -1047,9 +1140,9 @@
      after dark's, so it wins the tie on source order. */
   :root[data-theme='glassmorphism'],
   :root[data-theme='glassmorphism'][data-scheme='dark'] {
-    --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 8px)) saturate(1.2);
-    --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px)) saturate(1.15);
-    --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px)) saturate(1.1);
+    --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 8px * var(--glass-thicken))) saturate(1.2);
+    --blur: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 10px * var(--glass-thicken))) saturate(1.15);
+    --blur-thick: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 12px * var(--glass-thicken))) saturate(1.1);
   }
   /* Same phone-cheap values, literal for -webkit- (mirrors the tokens just
      above). Dark's literal rules above are 0,3,0 too, so dark gets its own
@@ -1188,6 +1281,12 @@ html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+/* Stage 6 R1: the bar's rim band and frost layers (fx.ts) carry
+   backdrop-filters too, so they leave with the bar's own frost while it is
+   named. */
+html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header > .bar > :is(.glass-rim, .glass-frost) {
+  display: none;
+}
 html[data-theme='glassmorphism']:is([data-to-theme='glassmorphism'], [data-from-theme='glassmorphism']:not([data-to-theme])) .site-header::before {
   content: '';
   position: absolute; inset: 0;
@@ -1212,6 +1311,52 @@ html[data-theme='glassmorphism']::view-transition-group(glassmorphism-header) {
 }
 @keyframes glassmorphism-wordmark-out { 30%, 100% { opacity: 0; } }
 @keyframes glassmorphism-wordmark-in { 0%, 25% { opacity: 0; } 100% { opacity: 1; } }
+
+/* ---------- the scroll edge (Stage 6 R1, G6) ----------
+ *
+ * Content scrolling up under the header bar first passes a soft edge: a
+ * full-width band fixed to the top of the viewport, behind the bar (the
+ * header is its stacking context), that blurs a little and washes toward
+ * the room's own light, fading out downward. It fades in over the first
+ * 64px of scroll, so the top of every page is untouched. The timeline sits
+ * in its own block: in one rule lightningcss folds it into the animation
+ * shorthand, which Chromium rejects (the round-5 critic; the same split as
+ * the Home orbs above). */
+:where([data-theme='glassmorphism']) .site-header::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 112px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--edge-fade), transparent);
+  backdrop-filter: blur(6px);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  opacity: 0;
+}
+@supports (animation-timeline: scroll(root)) {
+  :where([data-theme='glassmorphism']) .site-header::after {
+    animation: glass-edge-fade linear both;
+  }
+}
+@supports (animation-range: 0 1px) {
+  :where([data-theme='glassmorphism']) .site-header::after {
+    animation-timeline: scroll(root);
+    animation-range: 0 64px;
+  }
+}
+@keyframes glass-edge-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 720px) {
+  :where([data-theme='glassmorphism']) .site-header::after { height: 92px; }
+}
+@media (prefers-contrast: more) {
+  :where([data-theme='glassmorphism']) .site-header::after { display: none; }
+}
 
 /* ---------- the production lens (B2) ---------- */
 
@@ -1423,9 +1568,11 @@ html.lens-held :where(*) {
 /* The hero switch (Clear/Tinted), now a real control: a button in place of
    the old decorative span, reset to the same 60x34 track the design already
    had. The thumb slides between the two ends instead of sitting fixed at the
-   right, so the control reads its own state. */
+   right, so the control reads its own state. Stage 6 R1 (G9): the
+   window-bar switch is retired; the Control Centre's tile is the one
+   control, and these rules keep both selectors for the old markup. */
 /* .cc-switch (the Control Centre's own Clear/Tinted tile, B2 fix round item
-   4, cc-tint-tile.ts) gets every one of these rules by class LIST, not by
+   4) gets every one of these rules by class LIST, not by
    reusing the class name "switch": `.hero .switch` is a live selector in
    the B2 critic/verify scripts (b2-glass-critic-probe.mjs and others),
    written back when there was only one .switch under .hero (the window-bar

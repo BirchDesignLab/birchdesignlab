@@ -39,27 +39,14 @@ const [first, ...rest] = chrome.wordmark;
     padding: 8px 8px 8px 18px;
     border-radius: 999px;
   }
-  /* E16: a cheap adaptive shadow (Liquid Glass's own), deepening once the
-     reader has scrolled content beneath the bar. A drop-shadow filter, not
-     an animated box-shadow: .bar's box-shadow already comes from .glass/
-     .glass-strong (theme.css) and differs between schemes (dark layers in
-     extra inset edge light), so animating box-shadow directly here would
-     replace that scheme-aware value for the whole scroll range (fill-mode
-     both holds the keyframe's own from/to outside 0-80px too) instead of
-     adding to it. filter is untouched by .bar otherwise, so this only adds
-     depth, never overrides the pane's own shadow. Guarded by @supports; S1
-     dropped the reduced-motion requirement for the portal. */
-  @supports (animation-timeline: scroll(root)) {
-    .bar {
-      animation: glass-header-shadow linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 80px;
-    }
-    @keyframes glass-header-shadow {
-      from { filter: drop-shadow(0 0 0 transparent); }
-      to { filter: drop-shadow(0 18px 26px rgb(20 10 40 / 0.28)); }
-    }
-  }
+  /* Stage 6 R1 (G6): the clear bar. Fill about 0.35 (--mat-bar), with the
+     rim band every pane carries (fx.ts) and the scroll-edge fade behind it
+     (theme.css, "The scroll edge"), so content scrolling beneath visibly
+     passes under glass. E16's scroll-linked drop-shadow is gone: a filter on
+     the bar makes it a backdrop root, which would cut its rim and frost
+     layers off from the page behind them (and lightningcss had folded its
+     timeline into the shorthand, so it never ran in the build). */
+  .bar { background: var(--mat-bar); }
   .wordmark {
     display: inline-flex; align-items: center; gap: 0.3em;
     min-height: 44px;
@@ -71,7 +58,10 @@ const [first, ...rest] = chrome.wordmark;
     white-space: nowrap;
   }
   .wm-a { font-weight: 800; }
-  .wm-b { font-weight: 500; color: var(--mark-muted); }
+  /* --mark, not --mark-muted (Stage 6 R1, G6): the clearer bar has no
+     plate under the wordmark, and only --mark holds 4.5 over the worst orb
+     through it (meta.ts). The weight still sets the two words apart. */
+  .wm-b { font-weight: 500; color: var(--mark); }
   .wm-orb {
     width: 1.35em; height: 1.35em; margin-right: 0.3em;
     border-radius: 50%;
@@ -83,13 +73,16 @@ const [first, ...rest] = chrome.wordmark;
 
   /* E7: no glass on glass. The track used to be its own translucent well
      nested inside the bar's blur, a second frosted layer stacked on the
-     first; it is now a hairline-outlined track with no fill of its own. The
-     thumb (below) stays the one solid element that lifts out of it. */
+     first; it is a hairline-outlined track on the plate, with no blur of its
+     own. The thumb (below) stays the one solid element that lifts out of it. */
   .seg {
     display: flex; gap: 2px;
     padding: 4px;
     border-radius: 999px;
-    background: transparent;
+    /* Stage 6 R1 (G6): the nav labels sit on the soft --plate (the inner
+       plate every body text has, no blur of its own), so --mark-muted keeps
+       4.5 over the worst orb through the clearer bar (meta.ts). */
+    background: var(--plate);
     border: 1px solid var(--line);
   }
   .seg a {

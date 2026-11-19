@@ -158,6 +158,13 @@ const { copy, theme } = Astro.props;
     border-radius: var(--r-lg);
   }
 
+  /* Stage 6 R1 (G11): from 721 to 1279px the reading pane's overlap
+     reached the title's descenders (the h1's 0.92 line height leaves them
+     outside its line box). The title card's bottom padding grows by the
+     overlap there, so the pane rides up only into padding again. */
+  @media (min-width: 721px) and (max-width: 1279px) {
+    .title-card { padding-bottom: calc(clamp(1.5rem, 4vw, 3rem) + clamp(2rem, 3.6vw, 3rem)); }
+  }
   @media (max-width: 860px) {
     .intro { grid-template-columns: 1fr; }
     .title-card, .reading { grid-column: 1; }

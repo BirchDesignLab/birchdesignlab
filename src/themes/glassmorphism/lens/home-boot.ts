@@ -59,7 +59,7 @@ export function mountHomeGlass(): (() => void) | void {
   const poster = document.querySelector<HTMLElement>('.lens-poster');
   if (!host || !poster) return;
 
-  const switchBtn = document.querySelector<HTMLButtonElement>('.hero .window-bar .switch');
+  const switchBtn = document.querySelector<HTMLButtonElement>('.control-centre .cc-tint-switch');
   const frostInput = document.querySelector<HTMLInputElement>('.cc-frost');
   const todButtons = [...document.querySelectorAll<HTMLButtonElement>('.cc-seg')];
 
