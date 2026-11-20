@@ -3,7 +3,7 @@
  * Reports, at each width, the specimens' box, the cards' rows and per-row counts,
  * and whether a lone card is centred. Writes a whole-band shot per width.
  *
- *   BASE=http://127.0.0.1:4470 node scripts/themes/stage6/w2-t14-specimens.mjs [shotDir]
+ *   [SCROLLBARS=1] BASE=http://127.0.0.1:4470 node scripts/themes/stage6/w2-t14-specimens.mjs [shotDir]
  */
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
@@ -14,9 +14,11 @@ import { suppressPrompt } from '../lib/portal-prompt.mjs';
 const BASE = (process.env.BASE || process.env.SNAP_BASE || 'http://127.0.0.1:4470').replace(/\/$/, '');
 const OUT = process.argv[2] || join(dirname(fileURLToPath(import.meta.url)), '..', '.out', 'stage6', 'w2', 't14', 'specimens');
 await mkdir(OUT, { recursive: true });
-const browser = await chromium.launch({ args: ['--hide-scrollbars', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
+/* SCROLLBARS=1: classic 15px scrollbars shown, as on a Windows desktop (the band is 15px narrower than the media width). */
+const SB = process.env.SCROLLBARS === '1';
+const browser = await chromium.launch({ args: [...(SB ? [] : ['--hide-scrollbars']), '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'], ...(SB ? { ignoreDefaultArgs: ['--hide-scrollbars'] } : {}) });
 let bad = 0;
-for (const w of [390, 480, 560, 561, 600, 650, 695, 696, 699, 761, 820, 861, 900, 956, 957, 960, 999, 1100, 1280, 1440]) {
+for (const w of [390, 480, 560, 561, 575, 576, 580, 600, 650, 695, 696, 699, 700, 705, 710, 711, 712, 713, 761, 820, 861, 876, 900, 956, 957, 960, 970, 972, 973, 999, 1100, 1280, 1440]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, colorScheme: 'light' });
   await suppressPrompt(ctx);
   await ctx.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
@@ -38,7 +40,7 @@ for (const w of [390, 480, 560, 561, 600, 650, 695, 696, 699, 761, 820, 861, 900
   const widths = r.rows.map((row) => row.length).join('+');
   console.log(String(w).padStart(5), 'ul', r.ul.w, 'rows', widths, 'card w', r.rows[0][0].w, lone.length ? (centred ? 'lone card centred' : 'LONE CARD OFF CENTRE') : '');
   if (lone.length && !centred) bad++;
-  await page.locator('.lab .band').screenshot({ path: join(OUT, `specimens-${w}.png`) }).catch(() => {});
+  await page.locator('.lab .band').screenshot({ path: join(OUT, `specimens-${SB ? "sb-" : ""}${w}.png`) }).catch(() => {});
   await ctx.close();
 }
 await browser.close();

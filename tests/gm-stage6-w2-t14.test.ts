@@ -75,15 +75,34 @@ describe('grandmillennial Stage 6 wave 2 task 14', () => {
     expect(f).toMatch(/\.run::before \{[^}]*background: var\(--c-leaf\)/);
   });
 
-  it('the lone third specimen card is centred where two abreast fit', () => {
+  it('the lone third specimen card is centred where two abreast fit, by container width not viewport', () => {
     const h = read('pages/Home.astro');
-    expect(h).toContain('(min-width: 561px) and (max-width: 695px), (min-width: 861px) and (max-width: 956px)');
+    // a media query on the viewport stranded the card with a 15px scrollbar (696 to 711, 957 to 972)
+    expect(h).not.toContain('(min-width: 561px) and (max-width: 695px)');
+    expect(h).toContain('.band-copy { container-type: inline-size; }');
+    expect(h).toContain('@container (26.25rem <= width < 40rem)');
     expect(h).toContain('.specimens li:nth-child(3):last-child');
+    // 26.25rem = 2 x 12.5rem + 1.25rem; 40rem = 3 x 12.5rem + 2 x 1.25rem: the grid's own min card and gap
+    expect(h).toContain('minmax(12.5rem, 1fr)); gap: 1.25rem');
   });
 
-  it('GM4: from 701 to 820 the live bird has its own pair, further left on the same limb', () => {
+  it('GM4: from 701 to 820 the live bird has its own pair, and both points sit ON a painted limb', () => {
     const a = read('pages/About.astro');
-    expect(a).toContain('BIRD_TABLET = { home: [240, 271, 0.5, -1], away: [261, 259, 0.5, 1] }');
     expect(a).toContain('BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [357, 204, 0.5, 1] }'); // 390 keeps the phone pair
+    const m = a.match(/BIRD_TABLET = \{ home: \[(\d+), (\d+), [\d.]+, -?1\], away: \[(\d+), (\d+), [\d.]+, -?1\] \}/);
+    expect(m).not.toBeNull();
+    const scene = JSON.parse(readFileSync(new URL('../scripts/themes/proofs/stage5-gm-chinoiserie/scene.json', import.meta.url), 'utf8'));
+    const pts = [[+m![1], +m![2]], [+m![3], +m![4]]];
+    // the centreline, sampled at every 1 unit between its own samples (never extended past an end)
+    const dist = (x: number, y: number) => Math.min(...scene.limbs.map((l: number[][]) => {
+      let best = Infinity;
+      for (let i = 0; i < l.length - 1; i++) {
+        for (let t = 0; t <= 1; t += 0.02) best = Math.min(best, Math.hypot(l[i][0] + (l[i + 1][0] - l[i][0]) * t - x, l[i][1] + (l[i + 1][1] - l[i][1]) * t - y));
+      }
+      return best;
+    }));
+    for (const [x, y] of pts) expect(dist(x, y)).toBeLessThanOrEqual(2);
+    // and not in a trunk: trunk 1 is centred near x = 255, about 80 wide
+    for (const [x] of pts) expect(x).toBeGreaterThan(300);
   });
 });

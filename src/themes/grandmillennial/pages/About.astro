@@ -24,11 +24,14 @@ const { copy, theme } = Astro.props;
 const BIRD_WIDE = { home: [575, 119, 1.05, -1], away: [644, 89, 1.0, 1] } as const;
 const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [357, 204, 0.5, 1] } as const;
 /* GM4 (Stage 6 w2 task 14): from 701 to 820 the phone pair (above) put the bird half under the gilt oval's rim,
-   its tail running under the frame. That band takes its own pair, 96 units further left along the same limb
-   (limb 2 of scene.json: y = 252 - 0.57 * (x - 273)). At 390 the phone pair sits right of the oval and stays:
-   moving it left there puts the bird behind the oval. scripts/themes/stage6/w2-t14-livebird.mjs maps the
-   bird's cover along the limb at each width. */
-const BIRD_TABLET = { home: [240, 271, 0.5, -1], away: [261, 259, 0.5, 1] } as const;
+   its tail running under the frame. Sliding it left along limb 2 does not cure it: the limb leaves the trunk at
+   x = 273 and the oval covers 30 to 90% of a bird on its first 100 units at 701 to 760. So that band perches on
+   limb 3 of scene.json, the bough that forks off limb 2 at (485, 134) and runs out to (653, 85): its centreline
+   passes (594, 68), (606, 68), (618, 70), (630, 73), and both points below are read off it, not off a line
+   extended past a limb's end. The bird is clear of the oval and the cards at 701, 720, 760, 800 and 820 (under 5%).
+   At 390 the phone pair sits right of the oval and stays. scripts/themes/stage6/w2-t14-livebird.mjs (LIMB=3)
+   maps the bird's cover along a real limb at each width. */
+const BIRD_TABLET = { home: [600, 68, 0.5, -1], away: [626, 72, 0.5, 1] } as const;
 
 /* The sampler's cross-stitch border motif: a heart between two flowers, one
    cross per cell. r = the stitch thread, g = leaf green. */

@@ -446,15 +446,22 @@ const [first, ...rest] = chrome.name.split(' ');
     .specimens { grid-template-columns: 1fr; max-width: 22rem; }
   }
   /* The lone third card (Stage 6 w2 task 14, ledger B1 T3 N2). Where the band's measure holds two
-     cards abreast and not three (about 561 to 695px wide, and again 861 to 956 beside the jar,
-     measured with scripts/themes/stage6/w2-t14-specimens.mjs), auto-fit left the third alone on
-     the left of a second row. These widths take two explicit columns, and the third sits centred
-     under the pair at one card's width. */
-  @media (min-width: 561px) and (max-width: 695px), (min-width: 861px) and (max-width: 956px) {
-    .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .specimens li:nth-child(3):last-child {
-      grid-column: 1 / -1; justify-self: center;
-      width: calc((100% - 1.25rem) / 2);
+     cards abreast and not three, auto-fit left the third alone on the left of a second row. The
+     switch is on the copy column's own width (a container query), not the viewport's: a classic
+     15px scrollbar narrows the column without moving any media query, which stranded the card at
+     696 to 711 and 957 to 972. Two abreast is 2 x 12.5rem + 1.25rem = 26.25rem; three is
+     3 x 12.5rem + 2 x 1.25rem = 40rem. In between the grid takes two explicit columns and the
+     third sits centred under the pair at one card's width. Measured with
+     scripts/themes/stage6/w2-t14-specimens.mjs (scrollbars shown and hidden). The column is only a
+     box above 560px (below it is display: contents and the cards stack). */
+  @media (min-width: 561px) {
+    .band-copy { container-type: inline-size; }
+    @container (26.25rem <= width < 40rem) {
+      .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .specimens li:nth-child(3):last-child {
+        grid-column: 1 / -1; justify-self: center;
+        width: calc((100% - 1.25rem) / 2);
+      }
     }
   }
 </style>
