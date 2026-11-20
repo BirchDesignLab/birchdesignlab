@@ -51,17 +51,20 @@
  * fan, a narrow strip for the stalk), not a box around both; a view too
  * cramped for a seed at its own size gets it at a smaller one, never below
  * the smallest size, so a header that is mostly wordmark and nav still has
- * seeds in it. Every seed starts unseen and fades in where it is clear, and
- * none is seated or shown until the fonts have settled and the text has been
- * measured against them, so the first frame never paints over a line that
- * is about to reflow.
+ * seeds in it. Every seed starts held (not drawn, not moved) and is seated by
+ * the keep loop on a strict seat, where it fades in, and none is seated or
+ * shown until the fonts have settled and the text has been measured against
+ * them, so the first frame never paints over a line that is about to reflow.
  *
  * Seats (Stage 6 CC3): the keep loop counts a seat only when the whole drawn
  * seed (fan and stalk) clears the viewport edges, every sheet and
- * every line of text with a margin, prefers the side gutters, spaces seats by
- * counting a seed seated in the last two seconds as there, and lets minShown
- * fall to what fits: a view with no such seat gets fewer seeds, never one
- * wedged into the strip under the header or onto the right edge.
+ * every line of text with a margin and stays clear for a couple of seconds of
+ * drift, prefers the upwind (left) gutter, spaces seats by counting a seed
+ * seated in the last two seconds as there, and lets minShown fall to what
+ * fits: a view with no such seat gets fewer seeds, never one wedged into the
+ * strip under the header or onto the right edge. There is no looser tier,
+ * and no seed is shown that has not been seated (a seed that drifts out of
+ * view re-enters from an edge and may cross a sheet, as before).
  *
  * Pointer (S3, passive, one listener per event type, no layout reads): a seed
  * drifts away from a passing mouse cursor; a seed is kicked and a firefly
@@ -227,10 +230,12 @@ const SEED = {
       (px) inside the viewport and clear of every sheet and line of text, so
       none is wedged into the strip under the header or onto the right edge.
       Seats near the side gutters (within gutterShare of the width) are
-      preferred by gutterBonus seconds of life. A seed seated in the last
+      preferred by gutterBonus seconds of life (the upwind one only). A seed seated in the last
       seatSettleMs still counts as there for the spacing test. */
   seatMargin: 8,
   gutterShare: 0.22,
+  /** A seat must stay clear this long (s) riding its drift. */
+  seatMinLife: 2,
   gutterBonus: 1.5,
   seatSettleMs: 2000,
 };
@@ -286,6 +291,9 @@ interface Seed {
   base: number;
   /** When the keep loop last seated it (ms). */
   seatedAt: number;
+  /** True from mount until the keep loop has found it a strict seat: a held
+      seed is not moved or drawn, so none fades in anywhere it was thrown. */
+  held: boolean;
 }
 type Pt = [number, number];
 interface Box {
@@ -602,63 +610,34 @@ export function mountFireflies(): void {
         the screen, so moving it loses nothing anyone can see. */
     const seedVisible = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
       pointOnShow(x, y, sy) || drawnPoints(x, y, k, turn, angle).some(([px, py]) => pointOnShow(px, py, sy));
-    /** The drawn seed, fan and stalk (CC3). The fan (crown, both tips and two
-        points along each arc) must be wholly inside the viewport by
-        SEED.seatMargin and off every sheet by half of it: a fan half under a
-        sheet, in the strip below the header, or over the right edge is a
-        sliver, not a seat. The stalk and body may hang behind a sheet (a seed
-        drifting out from behind the paper, what a phone's mostly-sheet first
-        screen has room for) but must be on the screen. */
+    /** The drawn seed, fan and stalk (CC3). Every drawn point (the crown, both
+        tips, two points along each arc, the anchor and two along the stalk)
+        must be inside the viewport by SEED.seatMargin and off every sheet by
+        half of it: a fan half under a sheet, a stalk running behind one, a
+        seed in the strip under the header or over the right edge is a sliver,
+        not a seat. There is no looser tier: a view with no such seat gets
+        fewer seeds (minShown falls to what fits), never a wedged one. */
     const seedFits = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
       const m = SEED.seatMargin;
       const c = Math.cos(angle);
       const n = Math.sin(angle);
       const at = (px: number, py: number): Pt => [x + px * c - py * n, y + px * n + py * c];
-      const fan: Pt[] = [...drawnPoints(x, y, k, turn, angle).slice(0, 3), at(-30 * k * turn, -30 * k), at(30 * k * turn, -30 * k)];
-      for (const [px, py] of fan) {
+      const pts: Pt[] = [...drawnPoints(x, y, k, turn, angle).slice(0, 3), at(-30 * k * turn, -30 * k), at(30 * k * turn, -30 * k), [x, y], at(0, 35 * k), at(0, 70 * k)];
+      for (const [px, py] of pts) {
         if (px < m || px > width - m || py < m || py > height - m) return false;
         if (inAnyBox(px, py + sy, coverBoxes, m / 2)) return false;
       }
-      return stalkOnScreen(x, y, k, angle);
-    };
-    /** The relaxed seat's fan: the crown, both tips, the anchor and a point
-        along each arc all on show (in view, off every sheet), so a fan with its
-        base tucked under a sheet's edge is not a seat. */
-    const fanWhole = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
-      if (!seedOnShow(x, y, k, sy, turn, angle) || !pointOnShow(x, y, sy)) return false;
-      const c = Math.cos(angle);
-      const n = Math.sin(angle);
-      for (const side of [-1, 1]) {
-        const px = side * 30 * k * turn;
-        const py = -30 * k;
-        if (!pointOnShow(x + px * c - py * n, y + px * n + py * c, sy)) return false;
-      }
       return true;
     };
-    const stalkOnScreen = (x: number, y: number, k: number, angle: number) => {
-      const c = Math.cos(angle);
-      const n = Math.sin(angle);
-      for (const d of [35, 70]) {
-        const px = x - d * k * n;
-        const py = y + d * k * c;
-        if (px < 0 || px > width || py > height) return false;
-      }
-      return true;
-    };
-    /** A seat, in two tiers. Strict (CC3): the whole fan clear with a margin,
-        the stalk on screen, and a margin of air from text. Where a view has no
-        strict seat at all (a phone's first screen is mostly sheet) the relaxed
-        tier is the fan whole and on show with the stalk on screen and the plain text pad,
-        so a cramped view keeps a few seeds rather than none. */
-    const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number, strict: boolean) =>
-      strict
-        ? seedFits(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle, SEED.seatMargin)
-        : fanWhole(x, y, k, sy, turn, angle) && stalkOnScreen(x, y, k, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle);
-    /** Seconds a seat stays clear (fan on show, off text) riding its drift. */
-    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number, strict: boolean) => {
+    /** A seat: the whole drawn seed clear with a margin, and a margin of air
+        from text. */
+    const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
+      seedFits(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle, SEED.seatMargin);
+    /** Seconds a seat stays clear (whole seed on show, off text) riding its drift. */
+    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number) => {
       let t = SEED.seatStep;
       for (; t < SEED.seatHorizon; t += SEED.seatStep) {
-        if (!seatClear(x + vx * t, y + vy * t, k, sy, turn, angle, strict)) break;
+        if (!seatClear(x + vx * t, y + vy * t, k, sy, turn, angle)) break;
       }
       return t;
     };
@@ -676,7 +655,7 @@ export function mountFireflies(): void {
       const sizes = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
       const turn = turnOf(s);
       const angle = angleOf(s);
-      for (const [strict, size] of [true, false].flatMap((st) => sizes.map((sz) => [st, sz] as const))) {
+      for (const size of sizes) {
         const k = size * SEED.spriteScale;
         let bx = 0;
         let by = 0;
@@ -685,7 +664,7 @@ export function mountFireflies(): void {
         for (let i = 0; i < SEED.seatTries && pool < SEED.seatPool; i++) {
           const x = rand(24, width - 24);
           const y = rand(24, height - 24);
-          if (!seatClear(x, y, k, sy, turn, angle, strict) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle, strict)) continue;
+          if (!seatClear(x, y, k, sy, turn, angle) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle)) continue;
           const apart = i < SEED.seatTries / 2 ? SEED.seatApart : SEED.seatApartTight;
           // A seed seated in the last two seconds still has cover 0 (it fades
           // in), so it counts as there: three seats made in one pass must not
@@ -695,11 +674,18 @@ export function mountFireflies(): void {
             if (o !== s && (o.cover > 0.3 || t - o.seatedAt < SEED.seatSettleMs) && Math.hypot(o.x - x, o.y - y) < apart) { crowded = true; break; }
           }
           if (crowded) continue;
+          // A seat that is gone in a second or two is not a seat: the seed
+          // would be wedged where it is seated and then slide out of the
+          // clear patch across a sheet or off the edge.
+          const clear = seatLife(x, y, k, vx, vy, sy, turn, angle);
+          if (clear < SEED.seatMinLife) continue;
           pool++;
-          // The side gutters are where a seat lasts and nothing is crossed:
-          // a seat near either side edge is worth gutterBonus seconds more.
-          const gutter = Math.min(x, width - x) < width * SEED.gutterShare ? SEED.gutterBonus : 0;
-          const life = seatLife(x, y, k, vx, vy, sy, turn, angle, strict) + Math.random() * 0.4 + gutter;
+          // The side gutters are where a seat lasts and nothing is crossed.
+          // The breeze runs right, so only the upwind (left) gutter earns the
+          // bonus: a seat in the right one is out of the edge within seconds,
+          // which is how seeds got stacked down the right edge.
+          const gutter = x < width * SEED.gutterShare ? SEED.gutterBonus : 0;
+          const life = clear + Math.random() * 0.4 + gutter;
           if (life > best) { best = life; bx = x; by = y; }
         }
         if (pool) {
@@ -710,10 +696,26 @@ export function mountFireflies(): void {
           s.vy = vy;
           s.cover = 0;
           s.seatedAt = t;
+          s.held = false;
           return true;
         }
       }
       return false;
+    };
+
+    /** Seat the seeds still held (those thrown nowhere at mount) on strict
+        seats: up to minShown at once and one more a tick, or all of them when
+        `all` (the still frame). `shown` is how many are on show now. Returns
+        how many it seated and whether the view had no seat for the next. */
+    const seatHeld = (sy: number, t: number, shown: number, all: boolean) => {
+      let placed = 0;
+      for (const s of seeds) {
+        if (!s.held) continue;
+        if (!all && shown + placed >= SEED.minShown && placed >= 1) break;
+        if (!seatSeed(s, sy, t)) return { placed, noRoom: true };
+        placed++;
+      }
+      return { placed, noRoom: false };
     };
 
     const seedDandelions = () => {
@@ -737,6 +739,7 @@ export function mountFireflies(): void {
           alpha: rand(SEED.alphaMin, SEED.alphaMax),
           cover: 0,
           seatedAt: -1e9,
+          held: false,
         };
         // Every seed starts unseen (cover 0) and fades in where it is clear,
         // and nothing is seated or shown until the fonts have settled and the
@@ -744,6 +747,7 @@ export function mountFireflies(): void {
         // drawn over a line that is about to reflow. The opening view's
         // first seeds are seated by the keep loop on its first tick after.
         spawnSeed(s, true);
+        s.held = true;
         return s;
       });
     };
@@ -1017,9 +1021,16 @@ export function mountFireflies(): void {
         if (fontsSettled && (switched || t - lastKeepT > SEED.keepEvery)) {
           lastKeepT = t;
           let shown = 0;
-          for (const s of seeds) if (s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s))) shown++;
+          for (const s of seeds) if (!s.held && s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s))) shown++;
+          // The seeds held since mount are seated first: minShown at once, then
+          // one more a tick, so the rest fade in a few at a time. None is shown
+          // without a strict seat; when the view has none, the rest stay held.
+          const held = seatHeld(sy, t, shown, false);
+          shown += held.placed;
+          if (held.noRoom) shown = SEED.minShown;
           for (const s of seeds) {
             if (shown >= SEED.minShown) break;
+            if (s.held) continue;
             // Only a seed nobody can see is moved: one that has faded out, or
             // is wholly under a sheet or off the screen. A seed part way out
             // from behind a sheet, or leaving at an edge, finishes its fade.
@@ -1032,9 +1043,11 @@ export function mountFireflies(): void {
           }
         }
       }
+      else if (fontsSettled) seatHeld(sy, t, 0, true);
       const pointerLive = pointer.fine && t - pointer.at < SEED.pointerIdle;
       const relax = 1 - Math.exp(-dt / SEED.settle);
       for (const s of seeds) {
+        if (s.held) continue;
         if (!still) {
           s.swayPhase += s.swayRate * dt;
           s.turnPhase += s.turnRate * dt;

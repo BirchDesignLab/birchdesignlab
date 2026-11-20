@@ -72,22 +72,35 @@ describe('cottagecore seeds (CC3)', () => {
     const fits = fx.slice(fx.indexOf('const seedFits'), fx.indexOf('const seatClear'));
     expect(fits).toMatch(/drawnPoints\(x, y, k, turn, angle\)\.slice\(0, 3\)/);
     expect(fits).toMatch(/px < m \|\| px > width - m \|\| py < m \|\| py > height - m/);
-    expect(fits).toMatch(/px < 0 \|\| px > width \|\| py > height/);
+    // the stalk points are tested as the fan's are: inside by the margin and off every sheet
+    expect(fits).toMatch(/at\(0, 35 \* k\), at\(0, 70 \* k\)/);
     expect(fits).toMatch(/inAnyBox\(px, py \+ sy, coverBoxes, m \/ 2\)/);
     expect(fx).toMatch(/seedHitsText\(x, y \+ sy, k, textBoxes, angle, SEED\.seatMargin\)/);
   });
 
-  it('seats strictly first and falls back to the fan-on-show seat only where a view has no strict one', () => {
-    expect(fx).toMatch(/\[true, false\]\.flatMap\(\(st\) => sizes\.map/);
+  it('has no looser seat tier: a view with no strict seat gets fewer seeds, not a wedged one', () => {
+    expect(fx).not.toMatch(/fanWhole|stalkOnScreen|strict: boolean/);
+    expect(fx).toMatch(/for \(const size of sizes\)/);
     const clear = fx.slice(fx.indexOf('const seatClear'), fx.indexOf('const seatLife'));
-    expect(clear).toMatch(/strict\s*\? seedFits\(/);
-    expect(clear).toMatch(/: fanWhole\(x, y, k, sy, turn, angle\) && stalkOnScreen\(/);
-    const whole = fx.slice(fx.indexOf('const fanWhole'), fx.indexOf('const stalkOnScreen'));
-    expect(whole).toMatch(/!pointOnShow\(x, y, sy\)/);
+    expect(clear).toMatch(/seedFits\(x, y, k, sy, turn, angle\) && !seedHitsText/);
+    // a seat must last, so a seed is not seated on a patch it slides off in a second
+    expect(fx).toMatch(/seatMinLife: 2,/);
+    expect(fx).toMatch(/if \(clear < SEED\.seatMinLife\) continue;/);
+  });
+
+  it('holds every seed unseen from mount until a strict seat is found: none fades in where it was thrown', () => {
+    expect(fx).toMatch(/spawnSeed\(s, true\);\s*s\.held = true;/);
+    expect(fx).toMatch(/s\.held = false;/);
+    const draw = fx.slice(fx.indexOf('const drawDandelions'), fx.indexOf('const draw = '));
+    // a held seed is neither moved nor drawn, and is seated in the still frame too
+    expect(draw).toMatch(/if \(s\.held\) continue;\s*if \(!still\) \{/);
+    expect(draw).toMatch(/else if \(fontsSettled\) seatHeld\(sy, t, 0, true\);/);
+    expect(draw).toMatch(/seatHeld\(sy, t, shown, false\)/);
   });
 
   it('prefers the side gutters, counts a fresh seat as there, and lets minShown fall to what fits', () => {
-    expect(fx).toMatch(/Math\.min\(x, width - x\) < width \* SEED\.gutterShare \? SEED\.gutterBonus : 0/);
+    // the breeze runs right, so only the upwind gutter earns the bonus (a right-edge seat is out in seconds)
+    expect(fx).toMatch(/x < width \* SEED\.gutterShare \? SEED\.gutterBonus : 0/);
     expect(fx).toMatch(/t - o\.seatedAt < SEED\.seatSettleMs/);
     expect(fx).toMatch(/if \(!seatSeed\(s, sy, t\)\) break;/);
   });
