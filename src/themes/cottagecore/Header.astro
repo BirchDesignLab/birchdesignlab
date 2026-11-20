@@ -83,7 +83,9 @@ const [first, ...rest] = chrome.wordmark;
     color: var(--mark); text-decoration: none;
     white-space: nowrap;
   }
-  .wordmark:hover { text-decoration: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .wordmark:hover { text-decoration: none; }
+  }
   /* The daisy (founder call 4, 11-17-26): a head about 30% bigger on a short
      stem that ends on the wordmark's baseline. It tips about its foot, so the
      stem stays on the line. */
@@ -122,7 +124,7 @@ const [first, ...rest] = chrome.wordmark;
     padding-block: 0.3rem;
     transition: color 160ms ease;
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     nav a:hover { color: var(--accent); text-decoration: none; }
   }
   /* Current page: a running stitch in rose, sewn just under the word. */

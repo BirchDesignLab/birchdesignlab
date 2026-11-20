@@ -165,7 +165,10 @@
   /* A distinctly warm, ochre-lit paper by lamplight: the butter note must
      still read as butter, not as the same brown as everything else. */
   --note: #4a3818;
-  --hoop-cloth: #2e241b;
+  /* CC5 (founder, stop 1 call 10): the linen in the hoop is the D4 (c) board
+     the herbarium sheets use, not table brown; its inks and its thread
+     palette are set on `.hoop .cloth` below. */
+  --hoop-cloth: var(--board);
   /* The brightest point of a lamp pool, laid over the field. */
   --glow: rgba(240, 165, 80, 0.26);
   --hand-kicker-ink: var(--accent); /* amber */
@@ -310,7 +313,11 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
 }
-[data-theme='cottagecore'] a:hover { text-decoration-style: wavy; text-decoration-color: var(--accent); }
+/* A hover is a pointer's: a tap on a touch screen would leave the wavy
+   underline stuck. Focus never waits for a pointer. */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='cottagecore'] a:hover { text-decoration-style: wavy; text-decoration-color: var(--accent); }
+}
 [data-theme='cottagecore'] ::selection { background: var(--cc-butter); color: var(--cc-ink); }
 [data-theme='cottagecore'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 [data-theme='cottagecore'] main:focus { outline: none; }
@@ -387,7 +394,7 @@ html[data-theme='cottagecore']:root :is(.no, .num):is(.no, .num):is(.no, .num) {
     color: var(--hand-note-ink);
   }
 }
-@media (max-width: 640px) and (hover: hover) {
+@media (max-width: 640px) and (hover: hover) and (pointer: fine) {
   html[data-theme='cottagecore'] .cc-chrome nav a:hover { color: var(--accent); }
 }
 
@@ -463,6 +470,27 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
     0 2px 0 #a2936c,
     0 3px 0 rgba(0, 0, 0, 0.4),
     0 24px 36px -18px rgba(0, 0, 0, 0.8);
+}
+/* The hoop's linen by lamplight is the same dimmed-cream board, so the
+   manifesto and the maker's line take the board's inks. The board's pressed
+   palette is drawn for cream and is too pale to read as embroidery on this
+   darker stock (stem 1.78:1, wild-rose top thread 1.05:1, butter 1.07:1), so
+   the threads are deepened here to what the light cloth shows: stems 3.1:1,
+   leaf edges 4.3:1, the dark thread under each chain 3.8 to 4.9:1, the
+   running-stitch script and the dashed ring in the board's own rose. */
+[data-theme='cottagecore'][data-scheme='dark'] .hoop .cloth {
+  color: var(--board-ink);
+  --mark: var(--board-ink);
+  --mark-muted: var(--board-ink-muted);
+  --accent: var(--board-accent);
+  --stitch-rose: rgba(112, 42, 54, 0.7);
+  --shadow: 58, 42, 31;
+  --cc-stem: #56704a;
+  --cc-leaf-edge: #3f5a36;
+  --cc-rose-petal: #b85f6c;
+  --cc-rose-edge: #7a3440;
+  --cc-heart: #c48f10;
+  --cc-heart-deep: #7a5410;
 }
 /* The plate mark a mounted print leaves in its board. */
 [data-theme='cottagecore'][data-scheme='dark'] .cc-board::after {
@@ -776,7 +804,7 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 }
 /* Hover lift only where there is a real hover; a tap never leaves a label
    tilted. Pressed is flat: the label sits down on the table. */
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   [data-theme='cottagecore'] .cc-label:hover {
     rotate: -1.2deg; translate: 0 -1px;
     text-decoration: none;
@@ -796,7 +824,7 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   line-height: 1.1;
   text-decoration: none;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   [data-theme='cottagecore'] .cc-note-link:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.18em; }
 }
 [data-theme='cottagecore'] .cc-note-link svg {
@@ -804,7 +832,7 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
   fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
   transition: translate 220ms ease;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   [data-theme='cottagecore'] .cc-note-link:hover svg { translate: 4px 0; }
 }
 

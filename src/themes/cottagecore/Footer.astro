@@ -65,7 +65,9 @@ const year = new Date().getFullYear();
   }
   nav { display: flex; flex-wrap: wrap; gap: 0.3rem 1.3rem; justify-content: center; }
   nav a { color: var(--mark); text-decoration: none; white-space: nowrap; }
-  nav a:hover { color: var(--accent); text-decoration: underline wavy var(--accent) 1px; }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { color: var(--accent); text-decoration: underline wavy var(--accent) 1px; }
+  }
   .fine { color: var(--mark-muted); font-size: 0.95rem; text-align: right; }
   .fine a { color: var(--mark-muted); }
   .sep { color: var(--accent); margin-inline: 0.2em; }

@@ -228,7 +228,9 @@ const { copy, theme } = Astro.props;
     padding-bottom: 0.25rem;
     overflow-wrap: anywhere;
   }
-  .mail:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.15em; }
+  @media (hover: hover) and (pointer: fine) {
+    .mail:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.15em; }
+  }
   .addr-line { height: 1px; background: var(--rule); }
   .addr-line.short { width: 62%; }
   .fine { margin-top: 1.6rem; font-size: 0.98rem; color: var(--mark-muted); }

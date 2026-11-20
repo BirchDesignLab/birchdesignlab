@@ -24,8 +24,20 @@
  * mostly text and the larger halo and its pad left no clear cloth to flash
  * on); a mote fades out of any line of text within a pad of its halo's peak
  * (just over half of it on a phone), measured line by line over the header,
- * main and footer. Count, colour, drift and the burst's rests are unchanged
- * from the first proof.
+ * main and footer. Colour and drift are unchanged from the first proof.
+ *
+ * Fireflies keep loop (Stage 6 CC1): like the seeds, the motes are kept where
+ * they can be seen. Every 400 ms a mote under a sheet, within the pad of a
+ * line or off the screen is re-seated on open cloth in view (away from the
+ * others) and bursts within about two seconds. On a phone there are about 10
+ * motes on 2.5 to 5 s rests, and the loop keeps a burst showing about every
+ * 2 s: when no mote on clear cloth is bursting or about to, one is called
+ * early. Nothing is seated before the fonts have settled.
+ *
+ * The tap (CC2, dark): a tap on clear cloth (no link, control, sheet or line
+ * of text under it) calls the nearest mote within 160 px to drift there and
+ * burst twice; with none that near, a new mote lights at the tap and joins
+ * the swarm (at most six of these stay, the oldest goes first).
  *
  * Dandelions (light): pappus seeds, about 8 on desktop and 5 on a phone, each
  * on its own clock, riding a slow breeze up and across with a sway and a
@@ -43,6 +55,13 @@
  * none is seated or shown until the fonts have settled and the text has been
  * measured against them, so the first frame never paints over a line that
  * is about to reflow.
+ *
+ * Seats (Stage 6 CC3): the keep loop counts a seat only when the whole drawn
+ * seed (fan and stalk) clears the viewport edges, every sheet and
+ * every line of text with a margin, prefers the side gutters, spaces seats by
+ * counting a seed seated in the last two seconds as there, and lets minShown
+ * fall to what fits: a view with no such seat gets fewer seeds, never one
+ * wedged into the strip under the header or onto the right edge.
  *
  * Pointer (S3, passive, one listener per event type, no layout reads): a seed
  * drifts away from a passing mouse cursor; a seed is kicked and a firefly
@@ -100,9 +119,39 @@ const FIREFLY = {
   phonePadShare: 0.55,
   coreMin: 0.7,
   coreGrow: 0.8,
+  /** On a phone the swarm is bigger (about 10) and the rests shorter (2.5 to
+      5 s): below the first screen, with most of the cloth under sheets and
+      text, 7 motes on 4 to 8 s rests put a burst on clear cloth one second
+      in four (CC1, Stage 6 critic: 0.16 of frames lit on average at 390). */
+  phoneCount: 10,
+  phoneDarkMin: 2500,
+  phoneDarkMax: 5000,
   /** A cursor this close (px) flashes a mote; a finger gets more room. */
   hoverRadius: 26,
   tapRadius: 44,
+  /** The tap (CC2): a tap on clear cloth calls the nearest mote within
+      callRadius (px) to drift to it and burst twice; with none that close a
+      new mote lights there and joins the swarm. A called mote takes callMs to
+      arrive, and its first flash comes callLead ms after the tap, so the
+      answer shows at once. At most extraMax lit-by-tap motes stay (the
+      oldest goes first). */
+  callRadius: 160,
+  callMs: 900,
+  callLead: 220,
+  extraMax: 6,
+  /** The keep loop (CC1): how often (ms) the motes are checked for any
+      resting where nobody can see them, how far apart (px) two seats must be
+      (relaxed in the second half of the tries), and how long (ms) a seated
+      mote may wait for its first burst. On a phone the loop also keeps a
+      burst showing: if no mote on clear cloth is bursting or about to, one is
+      called early, so the gap between two visible bursts stays near 2 s. */
+  keepEvery: 400,
+  seatTries: 60,
+  seatApart: 56,
+  seatApartTight: 30,
+  seatWait: [250, 2000] as const,
+  paceAhead: 1200,
+  paceWait: [150, 800] as const,
   /** A touched mote will not be touched again for this long (ms). */
   touchCooldown: 1400,
   /** Per 30 fps frame: how fast a mote fades off text and back on. */
@@ -174,6 +223,16 @@ const SEED = {
   seatApartTight: 70,
   /** How often (ms) the loop checks that enough seeds are showing. */
   keepEvery: 400,
+  /** CC3: a seat counts only with the whole drawn seed (fan and stalk) this far
+      (px) inside the viewport and clear of every sheet and line of text, so
+      none is wedged into the strip under the header or onto the right edge.
+      Seats near the side gutters (within gutterShare of the width) are
+      preferred by gutterBonus seconds of life. A seed seated in the last
+      seatSettleMs still counts as there for the spacing test. */
+  seatMargin: 8,
+  gutterShare: 0.22,
+  gutterBonus: 1.5,
+  seatSettleMs: 2000,
 };
 /** Ink-brown, the school's --cc-ink. The seeds are drawn in it. */
 const SEED_INK = '58, 42, 31';
@@ -203,6 +262,10 @@ interface Firefly {
   /** When the next burst starts; -1 until the first frame sets it. */
   rest: number;
   touched: number;
+  /** A mote called by a tap: where it is drifting to, and until when (ms). */
+  call: { x: number; y: number; until: number } | null;
+  /** Lit by a tap with no mote near; the oldest of these goes past extraMax. */
+  extra: number;
 }
 interface Seed {
   x: number;
@@ -221,6 +284,8 @@ interface Seed {
   cover: number;
   /** The size it was born with; a cramped seat may use a smaller one. */
   base: number;
+  /** When the keep loop last seated it (ms). */
+  seatedAt: number;
 }
 type Pt = [number, number];
 interface Box {
@@ -341,8 +406,8 @@ function inAnyBox(x: number, y: number, boxes: Box[], pad: number): boolean {
     stalk as the tilted segment it is, not an upright strip: a seed whose
     body hangs onto a line beside it is on that line. A bounding box would
     keep a seed a whole fan's width from a line it only passes beside. */
-function seedHitsText(x: number, y: number, k: number, boxes: Box[], angle = 0): boolean {
-  const pad = SEED.textPad;
+function seedHitsText(x: number, y: number, k: number, boxes: Box[], angle = 0, margin = 0): boolean {
+  const pad = SEED.textPad + margin;
   const sin = Math.sin(angle);
   const cos = Math.cos(angle);
   const reach = 45 * k + pad;
@@ -457,6 +522,7 @@ export function mountFireflies(): void {
     let lastFireflyT = -1e9;
     let lastSeedT = -1e9;
     let lastKeepT = -1e9;
+    let lastFireflyKeepT = -1e9;
     let gustStart = -1e9;
     /** Which branch drew last frame, so a flip re-staggers the clocks. */
     let branch = '';
@@ -468,23 +534,29 @@ export function mountFireflies(): void {
 
     /* Pointer: written by the listeners, read by the tick. */
     const pointer = { x: -1e4, y: -1e4, at: -1e9, fine: false };
-    const tap = { x: 0, y: 0, pending: false };
+    /** `clear` is whether the tap landed on clear cloth (no link, control, text
+        line or sheet under it, measured when it happened). */
+    const tap = { x: 0, y: 0, pending: false, clear: false };
+    let extras = 0;
 
+    const newFirefly = (x: number, y: number, r = 1.3 + Math.random() * 1.1): Firefly => ({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: (Math.random() - 0.5) * 0.14,
+      r,
+      wander: Math.random() * Math.PI * 2,
+      cover: 1,
+      flashes: [],
+      rest: -1,
+      touched: -1e9,
+      call: null,
+      extra: 0,
+    });
     const seedFireflies = () => {
-      // Few, and fewer on a phone: a scatter, not a swarm.
-      const count = Math.round(Math.min(18, Math.max(7, (width * height) / 70000)));
-      fireflies = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.14,
-        r: 1.3 + Math.random() * 1.1,
-        wander: Math.random() * Math.PI * 2,
-        cover: 1,
-        flashes: [],
-        rest: -1,
-        touched: -1e9,
-      }));
+      // A scatter, not a swarm; about 10 on a phone (CC1).
+      const count = width < SEED.phoneWidth ? FIREFLY.phoneCount : Math.round(Math.min(18, Math.max(7, (width * height) / 70000)));
+      fireflies = Array.from({ length: count }, () => newFirefly(Math.random() * width, Math.random() * height));
     };
 
     const spawnSeed = (s: Seed, anywhere: boolean) => {
@@ -530,13 +602,63 @@ export function mountFireflies(): void {
         the screen, so moving it loses nothing anyone can see. */
     const seedVisible = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
       pointOnShow(x, y, sy) || drawnPoints(x, y, k, turn, angle).some(([px, py]) => pointOnShow(px, py, sy));
-    const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number) =>
-      seedOnShow(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle);
+    /** The drawn seed, fan and stalk (CC3). The fan (crown, both tips and two
+        points along each arc) must be wholly inside the viewport by
+        SEED.seatMargin and off every sheet by half of it: a fan half under a
+        sheet, in the strip below the header, or over the right edge is a
+        sliver, not a seat. The stalk and body may hang behind a sheet (a seed
+        drifting out from behind the paper, what a phone's mostly-sheet first
+        screen has room for) but must be on the screen. */
+    const seedFits = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
+      const m = SEED.seatMargin;
+      const c = Math.cos(angle);
+      const n = Math.sin(angle);
+      const at = (px: number, py: number): Pt => [x + px * c - py * n, y + px * n + py * c];
+      const fan: Pt[] = [...drawnPoints(x, y, k, turn, angle).slice(0, 3), at(-30 * k * turn, -30 * k), at(30 * k * turn, -30 * k)];
+      for (const [px, py] of fan) {
+        if (px < m || px > width - m || py < m || py > height - m) return false;
+        if (inAnyBox(px, py + sy, coverBoxes, m / 2)) return false;
+      }
+      return stalkOnScreen(x, y, k, angle);
+    };
+    /** The relaxed seat's fan: the crown, both tips, the anchor and a point
+        along each arc all on show (in view, off every sheet), so a fan with its
+        base tucked under a sheet's edge is not a seat. */
+    const fanWhole = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
+      if (!seedOnShow(x, y, k, sy, turn, angle) || !pointOnShow(x, y, sy)) return false;
+      const c = Math.cos(angle);
+      const n = Math.sin(angle);
+      for (const side of [-1, 1]) {
+        const px = side * 30 * k * turn;
+        const py = -30 * k;
+        if (!pointOnShow(x + px * c - py * n, y + px * n + py * c, sy)) return false;
+      }
+      return true;
+    };
+    const stalkOnScreen = (x: number, y: number, k: number, angle: number) => {
+      const c = Math.cos(angle);
+      const n = Math.sin(angle);
+      for (const d of [35, 70]) {
+        const px = x - d * k * n;
+        const py = y + d * k * c;
+        if (px < 0 || px > width || py > height) return false;
+      }
+      return true;
+    };
+    /** A seat, in two tiers. Strict (CC3): the whole fan clear with a margin,
+        the stalk on screen, and a margin of air from text. Where a view has no
+        strict seat at all (a phone's first screen is mostly sheet) the relaxed
+        tier is the fan whole and on show with the stalk on screen and the plain text pad,
+        so a cramped view keeps a few seeds rather than none. */
+    const seatClear = (x: number, y: number, k: number, sy: number, turn: number, angle: number, strict: boolean) =>
+      strict
+        ? seedFits(x, y, k, sy, turn, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle, SEED.seatMargin)
+        : fanWhole(x, y, k, sy, turn, angle) && stalkOnScreen(x, y, k, angle) && !seedHitsText(x, y + sy, k, textBoxes, angle);
     /** Seconds a seat stays clear (fan on show, off text) riding its drift. */
-    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number) => {
+    const seatLife = (x: number, y: number, k: number, vx: number, vy: number, sy: number, turn: number, angle: number, strict: boolean) => {
       let t = SEED.seatStep;
       for (; t < SEED.seatHorizon; t += SEED.seatStep) {
-        if (!seatClear(x + vx * t, y + vy * t, k, sy, turn, angle)) break;
+        if (!seatClear(x + vx * t, y + vy * t, k, sy, turn, angle, strict)) break;
       }
       return t;
     };
@@ -548,13 +670,13 @@ export function mountFireflies(): void {
         seeds popping in and out every second. A view with no room at the
         seed's own size gets it at a smaller one (never under sizeMin). False
         if the view has none at all. */
-    const seatSeed = (s: Seed, sy: number): boolean => {
+    const seatSeed = (s: Seed, sy: number, t: number): boolean => {
       const vx = SEED.windX * s.drift;
       const vy = SEED.windY * s.drift;
       const sizes = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
       const turn = turnOf(s);
       const angle = angleOf(s);
-      for (const size of sizes) {
+      for (const [strict, size] of [true, false].flatMap((st) => sizes.map((sz) => [st, sz] as const))) {
         const k = size * SEED.spriteScale;
         let bx = 0;
         let by = 0;
@@ -563,15 +685,21 @@ export function mountFireflies(): void {
         for (let i = 0; i < SEED.seatTries && pool < SEED.seatPool; i++) {
           const x = rand(24, width - 24);
           const y = rand(24, height - 24);
-          if (!seatClear(x, y, k, sy, turn, angle) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle)) continue;
+          if (!seatClear(x, y, k, sy, turn, angle, strict) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle, strict)) continue;
           const apart = i < SEED.seatTries / 2 ? SEED.seatApart : SEED.seatApartTight;
+          // A seed seated in the last two seconds still has cover 0 (it fades
+          // in), so it counts as there: three seats made in one pass must not
+          // pile onto one patch.
           let crowded = false;
           for (const o of seeds) {
-            if (o !== s && o.cover > 0.3 && Math.hypot(o.x - x, o.y - y) < apart) { crowded = true; break; }
+            if (o !== s && (o.cover > 0.3 || t - o.seatedAt < SEED.seatSettleMs) && Math.hypot(o.x - x, o.y - y) < apart) { crowded = true; break; }
           }
           if (crowded) continue;
           pool++;
-          const life = seatLife(x, y, k, vx, vy, sy, turn, angle) + Math.random() * 0.4;
+          // The side gutters are where a seat lasts and nothing is crossed:
+          // a seat near either side edge is worth gutterBonus seconds more.
+          const gutter = Math.min(x, width - x) < width * SEED.gutterShare ? SEED.gutterBonus : 0;
+          const life = seatLife(x, y, k, vx, vy, sy, turn, angle, strict) + Math.random() * 0.4 + gutter;
           if (life > best) { best = life; bx = x; by = y; }
         }
         if (pool) {
@@ -581,6 +709,7 @@ export function mountFireflies(): void {
           s.vx = vx;
           s.vy = vy;
           s.cover = 0;
+          s.seatedAt = t;
           return true;
         }
       }
@@ -607,6 +736,7 @@ export function mountFireflies(): void {
           turnRate: (Math.PI * 2) / rand(7, 13),
           alpha: rand(SEED.alphaMin, SEED.alphaMax),
           cover: 0,
+          seatedAt: -1e9,
         };
         // Every seed starts unseen (cover 0) and fades in where it is clear,
         // and nothing is seated or shown until the fonts have settled and the
@@ -643,7 +773,7 @@ export function mountFireflies(): void {
         }
         region.querySelectorAll('input, textarea, select, button').forEach((el) => push(text, el.getBoundingClientRect()));
       });
-      document.querySelectorAll('.cc-paper, .cc-torn, .cc-gingham').forEach((el) => push(cover, el.getBoundingClientRect()));
+      document.querySelectorAll('.cc-paper, .cc-torn, .cc-gingham, .hoop').forEach((el) => push(cover, el.getBoundingClientRect()));
       textBoxes = text;
       coverBoxes = cover;
     };
@@ -692,6 +822,90 @@ export function mountFireflies(): void {
     };
 
     /* ----- fireflies ----- */
+    /** How long a mote rests in the dark between bursts (ms): 4 to 8 s, and 2.5
+        to 5 s on a phone. */
+    const restFor = (phone: boolean) => (phone ? rand(FIREFLY.phoneDarkMin, FIREFLY.phoneDarkMax) : rand(FIREFLY.darkMin, FIREFLY.darkMax));
+
+    /** Whether a mote's place is one anybody can see it from: on the screen,
+        clear of every line of text by its halo's pad, and not under a sheet. */
+    const fireflyPlaceOk = (m: Firefly, sy: number, phone: boolean) =>
+      m.x >= 0 && m.x <= width && m.y >= 0 && m.y <= height &&
+      !inAnyBox(m.x, m.y + sy, textBoxes, fireflyPad(m.r, phone)) &&
+      !inAnyBox(m.x, m.y + sy, coverBoxes, m.r * 2);
+
+    /** The seeds' keep loop, for the fireflies (CC1): put a mote that nobody
+        can see (under a sheet, within the pad of a line, off the screen) on a
+        patch of open cloth in view, away from the other motes, and let it
+        burst within about two seconds. False if the view has no such patch. */
+    const seatFirefly = (m: Firefly, t: number, sy: number, phone: boolean): boolean => {
+      const pad = fireflyPad(m.r, phone);
+      for (let i = 0; i < FIREFLY.seatTries; i++) {
+        const x = rand(14, width - 14);
+        const y = rand(14, height - 14);
+        if (inAnyBox(x, y + sy, textBoxes, pad) || inAnyBox(x, y + sy, coverBoxes, m.r * 2)) continue;
+        const apart = i < FIREFLY.seatTries / 2 ? FIREFLY.seatApart : FIREFLY.seatApartTight;
+        let crowded = false;
+        for (const o of fireflies) {
+          if (o !== m && Math.hypot(o.x - x, o.y - y) < apart && fireflyPlaceOk(o, sy, phone)) { crowded = true; break; }
+        }
+        if (crowded) continue;
+        const wait = t + rand(FIREFLY.seatWait[0], FIREFLY.seatWait[1]);
+        m.x = x;
+        m.y = y;
+        m.cover = 0;
+        m.flashes = [];
+        m.rest = m.rest < 0 ? wait : Math.min(m.rest, wait);
+        return true;
+      }
+      return false;
+    };
+
+    const keepFireflies = (t: number, sy: number, phone: boolean) => {
+      for (const m of fireflies) {
+        // A mote a tap has just called is where the finger put it.
+        if (m.call || t - m.touched < FIREFLY.callMs + 600) continue;
+        if (!fireflyPlaceOk(m, sy, phone)) seatFirefly(m, t, sy, phone);
+      }
+      if (!phone) return;
+      // A burst showing about every 2 s: when no mote on clear cloth is
+      // bursting or about to, the soonest one is called early.
+      let live = false;
+      let soonest: Firefly | null = null;
+      for (const m of fireflies) {
+        if (!fireflyPlaceOk(m, sy, phone)) continue;
+        if (m.flashes.length || (m.rest >= 0 && m.rest <= t + FIREFLY.paceAhead)) { live = true; break; }
+        if (!soonest || m.rest < soonest.rest) soonest = m;
+      }
+      if (!live && soonest) soonest.rest = t + rand(FIREFLY.paceWait[0], FIREFLY.paceWait[1]);
+    };
+
+    /** The tap (CC2), on clear cloth in the dark: the nearest mote within
+        callRadius drifts to the finger and bursts twice; with none that near, a
+        new mote lights at the tap and joins the swarm. */
+    const answerTap = (t: number, phone: boolean) => {
+      let nearest: Firefly | null = null;
+      let best = FIREFLY.callRadius;
+      for (const m of fireflies) {
+        const d = Math.hypot(m.x - tap.x, m.y - tap.y);
+        if (d < best) { best = d; nearest = m; }
+      }
+      const m = nearest ?? newFirefly(tap.x, tap.y, 1.8);
+      if (nearest) {
+        m.call = { x: tap.x, y: tap.y, until: t + FIREFLY.callMs };
+      } else {
+        m.extra = ++extras;
+        fireflies.push(m);
+        const lit = fireflies.filter((o) => o.extra > 0);
+        if (lit.length > FIREFLY.extraMax) {
+          const oldest = lit.reduce((a, b) => (a.extra < b.extra ? a : b));
+          fireflies.splice(fireflies.indexOf(oldest), 1);
+        }
+      }
+      m.touched = t;
+      m.flashes = makeBurst(t + (nearest ? FIREFLY.callLead : 100), 2);
+      m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + restFor(phone);
+    };
+
     const drawFireflies = (t: number, still: boolean, sy: number, dsy: number, switched: boolean) => {
       const phone = width < SEED.phoneWidth;
       // The burst clock is absolute rAF time, so after a real pause (a flip
@@ -701,29 +915,47 @@ export function mountFireflies(): void {
       if (switched || t - lastFireflyT > PAUSE_MS) {
         for (const m of fireflies) {
           m.flashes = [];
-          m.rest = t + rand(0, FIREFLY.darkMax);
+          m.rest = t + rand(0, phone ? FIREFLY.phoneDarkMax : FIREFLY.darkMax);
         }
       }
       lastFireflyT = t;
+      if (!still) {
+        if (tap.pending && tap.clear) answerTap(t, phone);
+        // Nothing is seated before the fonts have settled and the text has been
+        // measured against them, as for the seeds.
+        if (fontsSettled && (switched || t - lastFireflyKeepT > FIREFLY.keepEvery)) {
+          lastFireflyKeepT = t;
+          keepFireflies(t, sy, phone);
+        }
+      }
       for (const m of fireflies) {
         if (!still) {
-          m.wander += (Math.random() - 0.5) * 0.08;
-          m.vx = m.vx * 0.985 + Math.cos(m.wander) * 0.006;
-          m.vy = m.vy * 0.985 + Math.sin(m.wander) * 0.005 - 0.0015;
-          m.x += m.vx * 2;
-          m.y += m.vy * 2;
-          if (m.x < -20) m.x = width + 20;
-          if (m.x > width + 20) m.x = -20;
-          if (m.y < -20) m.y = height + 20;
-          if (m.y > height + 20) m.y = -20;
+          if (m.call) {
+            // Drifting to the finger: an ease, not a jump.
+            m.x += (m.call.x - m.x) * 0.14;
+            m.y += (m.call.y - m.y) * 0.14;
+            m.vx = m.vy = 0;
+            if (t >= m.call.until) m.call = null;
+          } else {
+            m.wander += (Math.random() - 0.5) * 0.08;
+            m.vx = m.vx * 0.985 + Math.cos(m.wander) * 0.006;
+            m.vy = m.vy * 0.985 + Math.sin(m.wander) * 0.005 - 0.0015;
+            m.x += m.vx * 2;
+            m.y += m.vy * 2;
+            if (m.x < -20) m.x = width + 20;
+            if (m.x > width + 20) m.x = -20;
+            if (m.y < -20) m.y = height + 20;
+            if (m.y > height + 20) m.y = -20;
+          }
         }
-        // The burst clock: each mote rests 4 to 8 s, flashes 2 to 4 times,
-        // rests again. First rest is random so no two ever line up.
+        // The burst clock: each mote rests 4 to 8 s (2.5 to 5 on a phone),
+        // flashes 2 to 4 times, rests again. First rest is random so no two
+        // ever line up.
         if (!still) {
-          if (m.rest < 0) m.rest = t + rand(0, FIREFLY.darkMax);
+          if (m.rest < 0) m.rest = t + rand(0, phone ? FIREFLY.phoneDarkMax : FIREFLY.darkMax);
           if (!m.flashes.length && t >= m.rest) {
             m.flashes = makeBurst(t);
-            m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + rand(FIREFLY.darkMin, FIREFLY.darkMax);
+            m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + restFor(phone);
           }
           // A cursor on a mote, or a finger near one, sets it flashing.
           if (t - m.touched > FIREFLY.touchCooldown) {
@@ -732,7 +964,7 @@ export function mountFireflies(): void {
             if (near || tapped) {
               m.touched = t;
               m.flashes = makeBurst(t, 2);
-              m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + rand(FIREFLY.darkMin, FIREFLY.darkMax);
+              m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + restFor(phone);
             }
           }
         }
@@ -741,7 +973,9 @@ export function mountFireflies(): void {
         // radius of a line of text.
         const pad = fireflyPad(m.r, phone);
         const target = inAnyBox(m.x, m.y + sy, textBoxes, pad) || inAnyBox(m.x, m.y + sy + dsy, textBoxes, pad) ? 0 : 1;
-        m.cover = still ? target : m.cover + (target - m.cover) * (target < m.cover ? FIREFLY.fadeOut : FIREFLY.fadeIn);
+        // A mote a tap has just called comes up quickly where the finger put it.
+        const rise = m.call || t - m.touched < FIREFLY.callMs + 600 ? FIREFLY.fadeOut : FIREFLY.fadeIn;
+        m.cover = still ? target : m.cover + (target - m.cover) * (target < m.cover ? FIREFLY.fadeOut : rise);
         let env = 0;
         if (still) env = 0.7;
         else {
@@ -790,7 +1024,11 @@ export function mountFireflies(): void {
             // is wholly under a sheet or off the screen. A seed part way out
             // from behind a sheet, or leaving at an edge, finishes its fade.
             const gone = s.alpha * s.cover * edgeFade(s) < 0.05 || !seedVisible(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s));
-            if (gone && seatSeed(s, sy)) shown++;
+            if (!gone) continue;
+            // minShown falls to what fits: when the view has no clear seat for a
+            // seed, the next one will not find one either.
+            if (!seatSeed(s, sy, t)) break;
+            shown++;
           }
         }
       }
@@ -908,6 +1146,15 @@ export function mountFireflies(): void {
        touch or pen RELEASE with no meaningful movement since its press and no
        scroll (pointercancel is the browser taking the touch for a scroll). */
     const presses = new Map<number, { x: number; y: number; sy: number; at: number; moved: boolean }>();
+    /** Whether a tap landed on clear cloth: not on a link or control, not on a
+        sheet, and far enough from every line of text that a mote lit there
+        (at its largest) would not fade out. */
+    const tapIsClear = (e: PointerEvent) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (el?.closest('a, button, input, textarea, select, label, summary, [role="button"], .cc-paper, .cc-torn, .cc-gingham')) return false;
+      const sy = window.scrollY;
+      return !inAnyBox(e.clientX, e.clientY + sy, textBoxes, fireflyPad(2.4, width < SEED.phoneWidth)) && !onSheet(e.clientX, e.clientY + sy);
+    };
     const onPointerMove = (e: PointerEvent) => {
       const p = presses.get(e.pointerId);
       if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > TAP.slop) p.moved = true;
@@ -921,6 +1168,7 @@ export function mountFireflies(): void {
       if (e.pointerType === 'mouse') {
         tap.x = e.clientX;
         tap.y = e.clientY;
+        tap.clear = tapIsClear(e);
         tap.pending = true;
         return;
       }
@@ -934,6 +1182,7 @@ export function mountFireflies(): void {
       if (performance.now() - p.at > TAP.maxMs || Math.abs(window.scrollY - p.sy) > TAP.maxScroll) return;
       tap.x = e.clientX;
       tap.y = e.clientY;
+      tap.clear = tapIsClear(e);
       tap.pending = true;
     };
     const onPointerCancel = (e: PointerEvent) => {
