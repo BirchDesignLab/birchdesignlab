@@ -23,6 +23,12 @@ const { copy, theme } = Astro.props;
    same drawing cropped differently, so each has its own pair. */
 const BIRD_WIDE = { home: [575, 119, 1.05, -1], away: [644, 89, 1.0, 1] } as const;
 const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [357, 204, 0.5, 1] } as const;
+/* GM4 (Stage 6 w2 task 14): from 701 to 820 the phone pair (above) put the bird half under the gilt oval's rim,
+   its tail running under the frame. That band takes its own pair, 96 units further left along the same limb
+   (limb 2 of scene.json: y = 252 - 0.57 * (x - 273)). At 390 the phone pair sits right of the oval and stays:
+   moving it left there puts the bird behind the oval. scripts/themes/stage6/w2-t14-livebird.mjs maps the
+   bird's cover along the limb at each width. */
+const BIRD_TABLET = { home: [240, 271, 0.5, -1], away: [261, 259, 0.5, 1] } as const;
 
 /* The sampler's cross-stitch border motif: a heart between two flowers, one
    cross per cell. r = the stitch thread, g = leaf green. */
@@ -140,6 +146,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     <div class="scene-art" aria-hidden="true"></div>
     <WallBird class="wide" colour="B" home={[...BIRD_WIDE.home]} away={[...BIRD_WIDE.away]} par="xMidYMin slice" />
     <WallBird class="phone" home={[...BIRD_PHONE.home]} away={[...BIRD_PHONE.away]} par="xMinYMin slice" />
+    <WallBird class="tablet" home={[...BIRD_TABLET.home]} away={[...BIRD_TABLET.away]} par="xMinYMin slice" />
     <section class="intro gm-wrap">
       <figure class="sitter" aria-hidden="true">
         <svg class="wire" viewBox="0 0 100 44" focusable="false">
@@ -233,7 +240,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
   :global(html[data-scheme='dark']) .b .scene-art { background-image: url('../assets/chinoiserie-darkroom.svg'); }
   :global(.gm-wall-band.mid) { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38), 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
 
-  .scene-part :global(.wall-bird-layer.phone) { display: none; }
+  .scene-part :global(.wall-bird-layer.phone), .scene-part :global(.wall-bird-layer.tablet) { display: none; }
 
   /* ---------- The sitter and the story ---------- */
   /* Above the live bird's layer (z 0): the oval, its wire and the story lie over the wall bird,
@@ -460,5 +467,10 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     .scene-part :global(.wall-bird-layer.wide) { display: none; }
     .scene-part :global(.wall-bird-layer.phone) { display: block; }
     .sampler { box-shadow: 0 0 0 12px var(--field), 0 0 0 14px var(--rule); }
+  }
+  /* 701 to 820: the live bird's own pair (BIRD_TABLET), clear of the oval's rim (GM4). */
+  @media (min-width: 701px) and (max-width: 820px) {
+    .scene-part :global(.wall-bird-layer.phone) { display: none; }
+    .scene-part :global(.wall-bird-layer.tablet) { display: block; }
   }
 </style>

@@ -12,7 +12,7 @@ interface Props { copy: CopyData<'services'>; chrome: CopyData<'chrome'>; theme:
 const { copy, theme } = Astro.props;
 const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 ---
-<section class="intro gm-wrap">
+<section class="intro gm-trellis">
   <p class="gm-kicker ruled">{copy.kicker}</p>
   <h1>{copy.heading}</h1>
   <div class="sublines">
@@ -48,6 +48,25 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     <ol class="steps" role="list">
       {copy.process.steps.map((step, i) => (
         <li>
+          {i % 2 === 0 && (
+            <svg class="swag swag-h" viewBox="0 0 100 68" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path class="rb-edge" d="M0 12Q50 92 100 12" />
+              <path class="rb-body" d="M0 12Q50 92 100 12" />
+              <path class="rb-stitch" d="M0 12Q50 92 100 12" />
+            </svg>
+          )}
+          <svg class="swag swag-v" viewBox="0 0 30 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path class="rb-edge" d="M5 0C30 28 30 72 5 100" />
+            <path class="rb-body" d="M5 0C30 28 30 72 5 100" />
+            <path class="rb-stitch" d="M5 0C30 28 30 72 5 100" />
+          </svg>
+          <svg class="end" viewBox="-14 -14 28 66" aria-hidden="true" focusable="false">
+            <g transform="rotate(12)"><path class="end-tail" d="M-4.5 0L4.5 0L6 40L0 34.5L-6 40Z" /></g>
+            <g transform="rotate(-12)"><path class="end-tail" d="M-4.5 0L4.5 0L6 35L0 29.5L-6 35Z" /></g>
+            <circle class="end-knob" r="10" />
+            <circle class="end-ring" r="6.6" />
+            <circle class="end-nail" r="3" />
+          </svg>
           <span class="cameo" aria-hidden="true"><span>{roman[i]}</span></span>
           <h3>{step.title}</h3>
           <p>{step.body}</p>
@@ -68,6 +87,8 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     display: grid; justify-items: center; text-align: center;
     /* The gap to the first offering is about 30% tighter than it was (B1 item 8). */
     padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.1rem, 4.2vw, 3.15rem);
+    /* The trellis lattice (theme.css .gm-trellis) lies behind the intro edge to edge (GM3); the text keeps the wrap's measure. */
+    padding-inline: max(var(--gutter), calc((100% - var(--wrap)) / 2));
   }
   .intro h1 {
     font-style: italic;
@@ -208,27 +229,71 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   .offer-text p + p { margin-top: 1rem; }
 
   /* ---------- Four cameos ---------- */
+  /* The band butts the toile wall's lower ticking (GM2, Stage 6 w2 task 14: it
+     stood 72px clear at 1440, a strip of plain field between two stripes); the
+     ticking's own gold rule is the band's top edge, so only the foot has one. */
   .process {
-    margin-top: clamp(3rem, 6vw, 4.5rem);
+    margin-top: 0;
     padding-block: clamp(3.5rem, 7vw, 5rem);
-    border-block: 1px solid var(--rule);
+    border-block-end: 1px solid var(--rule);
     /* The page's one saturated surface in the day room: buttery lacquer yellow,
        hunter text (the trellis lies over it). */
     background-color: var(--lacquer-yellow);
+    background-image: var(--lacquer-gloss);
   }
+  .process .gm-kicker { color: var(--lacquer-accent); }
   /* One axis per step (B1 item 8): the medallion, the title and the text all hang
      from the left. Each step is three rows of a shared grid (subgrid), so the
      paragraph tops line up across the four columns whatever the titles do. */
   .steps {
+    --top: 12px;   /* where the swag leaves its nails, below the top of the list */
+    --sag: 40px;   /* how far it sags at its lowest */
+    --tie: 40px;   /* the ribbon a cameo hangs on, from the swag to the cameo's top */
+    --gap: clamp(1.75rem, 3vw, 2.75rem);
     list-style: none; padding: 0;
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    column-gap: clamp(1.75rem, 3vw, 2.75rem); row-gap: 0;
+    column-gap: var(--gap); row-gap: 0;
     margin-top: 3rem;
   }
   .steps li {
+    position: relative;
     display: grid; grid-row: span 3; grid-template-rows: subgrid;
     justify-items: start; align-content: start; text-align: left; row-gap: 0.75rem;
   }
+
+  /* ---------- The swag (Stage 6 w2 task 14, stop 1 call 4) ----------
+     The four cameos hang from ONE oxblood ribbon swag (a ribbon looped between
+     two nails over the list, the same ribbon as the rosette's), each on its
+     own tie, at the heights the swag's curve gives them: a parabola 40px deep,
+     so the cameos stagger down and up along it (their hang points are the
+     cameos' own centres, 2.3rem in from each column's left, about 3%, 29%, 55%
+     and 81% of the way along the run). The curve is the first list item's SVG,
+     stretched over the run (non-scaling strokes keep the ribbon's width), and
+     the cameo's margin-top reads the same parabola, y = sag * 4u(1 - u), so
+     the two agree to within a pixel or two at every width the four columns
+     hold (the tie runs a few pixels up under the ribbon, so none shows).
+     Titles and text keep their shared rows. All of it is aria-hidden. */
+  .swag { position: absolute; z-index: 1; overflow: visible; max-width: none; pointer-events: none; filter: drop-shadow(0 3px 3px rgb(40 10 10 / 0.28)); }
+  .swag path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: butt; }
+  .rb-edge { stroke: var(--bow-deep); stroke-width: 19px; }
+  .rb-body { stroke: var(--bow); stroke-width: 16px; }
+  /* The gold stitching down the ribbon's middle, picked up from the sampler. */
+  .rb-stitch { stroke: var(--gold-light); stroke-width: 1px; stroke-dasharray: 5 4; opacity: 0.85; }
+  .swag-h { left: 0; top: 0; width: calc(4 * 100% + 3 * var(--gap)); height: 68px; }
+  .steps li:nth-child(3) .swag-h { display: none; }
+  .swag-v { display: none; }
+  /* The end of the swag: a ribbon button over the nail, a swallow-tailed pair hanging from it. */
+  .end { position: absolute; z-index: 2; display: none; width: 28px; height: 66px; top: calc(var(--top) - 14px); overflow: visible; filter: drop-shadow(0 2px 2px rgb(40 10 10 / 0.3)); pointer-events: none; }
+  .steps li:nth-child(1) .end { display: block; left: -14px; }
+  .steps li:nth-child(4) .end { display: block; right: -14px; }
+  .end-tail { fill: color-mix(in srgb, var(--bow), var(--bow-deep) 40%); stroke: var(--bow-deep); stroke-width: 0.6; stroke-linejoin: round; }
+  .end-knob { fill: var(--bow); stroke: var(--bow-deep); stroke-width: 1; }
+  .end-ring { fill: none; stroke: var(--bow-deep); stroke-width: 0.5; opacity: 0.6; }
+  .end-nail { fill: var(--gold-light); stroke: var(--gold-deep); stroke-width: 0.8; }
+  .steps li:nth-child(1) { --f: 0.124; }
+  .steps li:nth-child(2) { --f: 0.827; }
+  .steps li:nth-child(3) { --f: 0.989; }
+  .steps li:nth-child(4) { --f: 0.613; }
   .cameo {
     display: grid; place-items: center;
     width: 4.6rem; height: 5.8rem;
@@ -236,6 +301,24 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     background: radial-gradient(closest-side, var(--porcelain), var(--porcelain-deep));
     box-shadow: 0 0 0 3px var(--plate), 0 0 0 4px var(--ornament), 0 0 0 8px var(--lacquer-yellow), 0 0 0 9px var(--ornament), 0 8px 14px 6px rgb(0 0 0 / 0.12);
     margin-bottom: 0.75rem;
+    position: relative;
+    margin-top: calc(var(--top) + var(--sag) * var(--f) + var(--tie));
+  }
+  /* The tie: a ribbon from under the swag down to the cameo's frame, its foot swallow-cut,
+     and a gilt bead where it meets the frame. */
+  .cameo::before {
+    content: '';
+    position: absolute; left: calc(50% - 5px); bottom: 100%;
+    width: 10px; height: calc(var(--tie) + 4px);
+    background: linear-gradient(90deg, var(--bow-deep), var(--bow) 28% 72%, var(--bow-deep));
+    filter: drop-shadow(0 2px 2px rgb(40 10 10 / 0.3));
+  }
+  .cameo::after {
+    content: '';
+    position: absolute; left: calc(50% - 4px); top: -13px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold-light);
+    box-shadow: 0 0 0 1px var(--gold-deep);
   }
   .cameo span {
     font-family: var(--font-display);
@@ -265,15 +348,46 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   @media (max-width: 980px) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .steps li:nth-child(-n + 2) { padding-bottom: 3rem; }
+    /* Two columns, two swags: one over each row of two, the cameos hung at their own centres
+       (about 5% and 56% along each run). */
+    .swag-h { width: calc(2 * 100% + var(--gap)); }
+    .steps li:nth-child(3) .swag-h { display: block; }
+    .steps li:nth-child(odd) { --f: 0.186; }
+    .steps li:nth-child(even) { --f: 0.984; }
+    .steps li:nth-child(n) .end { display: block; }
+    .steps li:nth-child(odd) .end { left: -14px; right: auto; }
+    .steps li:nth-child(even) .end { right: -14px; left: auto; }
   }
   @media (max-width: 720px) {
     .offering, .offering.flip { grid-template-columns: 1fr; gap: 2.75rem; }
     .offering .swatch-hang, .offering.flip .swatch-hang { order: 0; width: 100%; margin: 0; --rot: -1.2deg; --lift-rot: -0.4deg; }
     .offering.flip .swatch-hang { --rot: 1.2deg; --lift-rot: 0.4deg; }
     .swatch { aspect-ratio: 16 / 9; }
-    .steps { grid-template-columns: 1fr; row-gap: 2.5rem; }
-    .steps li { grid-row: auto; grid-template-rows: none; }
+    .steps { --ind: 2.6rem; grid-template-columns: 1fr; row-gap: 2.5rem; }
+    .steps li { grid-row: auto; grid-template-rows: none; margin-left: var(--ind); }
     .steps li:nth-child(-n + 2) { padding-bottom: 0; }
+    /* A phone: the swag runs down the left edge, a festoon of ribbon from nail to nail, and each cameo
+       hangs from its nail on a short tie to the side (the cameo's centre is 2.9rem down its box). */
+    .swag-h, .steps li:nth-child(3) .swag-h { display: none; }
+    .swag-v {
+      display: block;
+      left: calc(2px - var(--ind)); top: 2.9rem; width: 30px;
+      height: calc(100% + 2.5rem);
+    }
+    .steps li:nth-child(4) .swag-v { display: none; }
+    .swag-v .rb-edge { stroke-width: 14px; }
+    .swag-v .rb-body { stroke-width: 11px; }
+    .steps li:nth-child(n) .end { display: block; left: calc(7px - 14px - var(--ind)); right: auto; top: calc(2.9rem - 14px); }
+    .steps li:nth-child(1) .end { transform: rotate(180deg); transform-origin: 14px 14px; }
+    /* The two nails between hold only the button (it covers the join of two festoons), no tails. */
+    .steps li:nth-child(2) .end-tail, .steps li:nth-child(3) .end-tail { display: none; }
+    .cameo { margin-top: 0; }
+    .cameo::before {
+      left: auto; right: 100%; bottom: auto; top: calc(50% - 5px);
+      width: calc(var(--ind) - 7px); height: 10px;
+      background: linear-gradient(var(--bow-deep), var(--bow) 28% 72%, var(--bow-deep));
+    }
+    .cameo::after { left: -13px; top: calc(50% - 4px); }
   }
 </style>
 

@@ -20,12 +20,18 @@ function pleat(r0: number, r1: number, w: number) {
 }
 /** Nine broad pleats, each wide enough to lie a third over its neighbour. */
 const ring = Array.from({ length: 9 }, (_, i) => ({ a: (i * 360) / 9, ...pleat(9, 37, 14.5) }));
-/** A tail: a ribbon hanging from the centre, its end cut in a swallow-tail. */
-const TAIL = 'M-6 0L6 0L7.4 45L0 38.4L-7.4 45Z';
+/** A tail: a ribbon hanging from the centre, its end cut in a swallow-tail. About 95
+    units long (the pleats reach 37, so about 58 hang clear below the ring), 6 either side
+    of the centre at the button widening to 8.5 at the cut, the notch 8 deep (GM1, Stage 6 w2
+    task 14: the 45-unit tails of Stage 5 left about 10px under the pleats and read as stubs). */
+const tail = (len: number) => `M-6 0L6 0L8.5 ${len}L0 ${len - 8.2}L-8.5 ${len}Z`;
+const TAIL_A = tail(95);
+/** The other tail about 7 units shorter, so the pair looks tied by hand and not stamped. */
+const TAIL_B = tail(88);
 ---
-<svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 96" aria-hidden="true" focusable="false">
-  <g transform="rotate(14)"><path class="tail" d={TAIL} /><path class="tail-fold" d="M0 4L0 36" /></g>
-  <g transform="rotate(-14)"><path class="tail" d={TAIL} /><path class="tail-fold" d="M0 4L0 36" /></g>
+<svg class:list={['gm-rosette', cls]} viewBox="-42 -42 84 145" aria-hidden="true" focusable="false">
+  <g transform="rotate(17)"><path class="tail" d={TAIL_A} /><path class="tail-fold" d="M0 4L0 86" /></g>
+  <g transform="rotate(-17)"><path class="tail" d={TAIL_B} /><path class="tail-fold" d="M0 4L0 79" /></g>
   <circle class="disc" r="26" />
   {ring.map((p) => (
     <g transform={`rotate(${p.a})`}>

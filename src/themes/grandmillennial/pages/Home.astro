@@ -445,4 +445,16 @@ const [first, ...rest] = chrome.name.split(' ');
   @media (max-width: 560px) {
     .specimens { grid-template-columns: 1fr; max-width: 22rem; }
   }
+  /* The lone third card (Stage 6 w2 task 14, ledger B1 T3 N2). Where the band's measure holds two
+     cards abreast and not three (about 561 to 695px wide, and again 861 to 956 beside the jar,
+     measured with scripts/themes/stage6/w2-t14-specimens.mjs), auto-fit left the third alone on
+     the left of a second row. These widths take two explicit columns, and the third sits centred
+     under the pair at one card's width. */
+  @media (min-width: 561px) and (max-width: 695px), (min-width: 861px) and (max-width: 956px) {
+    .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .specimens li:nth-child(3):last-child {
+      grid-column: 1 / -1; justify-self: center;
+      width: calc((100% - 1.25rem) / 2);
+    }
+  }
 </style>

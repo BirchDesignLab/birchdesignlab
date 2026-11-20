@@ -22,10 +22,10 @@
     "curl": "#e4dcc0"
   },
   "dark": {
-    "ground": "#0b1f15", "ground2": "#102a1c", "hill1": "#11301f", "hill2": "#15382a",
+    "ground": "#1e2e25", "ground2": "#25392d", "hill1": "#283f31", "hill2": "#2d483c",
     "line": "#d9c58d", "lent": "#1d1b15", "trunk": "#cfc6a6", "shade": "#a89e80",
     "limb": "#7a6342", "hl": "#e6d6a0", "lf": "#2e6a49", "lf2": "#4a8660", "cat": "#b99a55",
-    "oxb": "#b8505e", "blue": "#6f94c9", "gold": "#c9a95c", "rock": "#1d3a2b", "rockshade": "#15301f",
+    "oxb": "#b8505e", "blue": "#6f94c9", "gold": "#c9a95c", "rock": "#334a3d", "rockshade": "#2a4031",
     "curl": "#e4dcc0"
   }
 }

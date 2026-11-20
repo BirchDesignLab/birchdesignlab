@@ -13,10 +13,10 @@ const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro
 <Tag class:list={['gm-framed', `tone-${tone}`, { 'is-chintz': border === 'chintz' }, cls]}>
   {border === 'chintz' ? (
     <span class="strip" aria-hidden="true">
-      <svg class="run top"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg>
-      <svg class="run bottom"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg>
-      <svg class="run left"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg>
-      <svg class="run right"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg>
+      <span class="run top"><svg class="cells"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg></span>
+      <span class="run bottom"><svg class="cells"><rect class="r" width="100%" height="26" fill="url(#gm-meander)" /></svg></span>
+      <span class="run left"><svg class="cells"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg></span>
+      <span class="run right"><svg class="cells"><rect class="r" width="26" height="100%" fill="url(#gm-meander-v)" /></svg></span>
       <svg class="knot tl" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
       <svg class="knot tr" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
       <svg class="knot bl" viewBox="0 0 26 26"><use href="#gm-corner" /></svg>
@@ -64,13 +64,30 @@ const { tag: Tag = 'div', class: cls, tone = 'raised', border = 'gilt' } = Astro
     box-shadow: 0 0 0 1px var(--rule), 0 0 0 5px var(--field), 0 0 0 6px var(--rule);
     pointer-events: none;
   }
-  .strip svg { position: absolute; overflow: hidden; }
-  .run.top, .run.bottom { left: var(--strip); right: var(--strip); width: calc(100% - 2 * var(--strip)); height: var(--strip); }
+  .strip .run { position: absolute; }
+  .run.left, .run.right { display: flex; flex-direction: column; justify-content: center; }
+  .strip .knot { position: absolute; overflow: hidden; }
+  .run.top, .run.bottom { left: var(--strip); right: var(--strip); height: var(--strip); }
   .run.top { top: 0; }
   .run.bottom { bottom: 0; }
-  .run.left, .run.right { top: var(--strip); bottom: var(--strip); height: calc(100% - 2 * var(--strip)); width: var(--strip); }
+  .run.left, .run.right { top: var(--strip); bottom: var(--strip); width: var(--strip); }
   .run.left { left: 0; }
   .run.right { right: 0; }
+  /* Every run ends in whole cells (Stage 6 w2 task 14, ledger B1 T3 N1: a run was cut at
+     whatever width the card had, so one end or both stopped in half a rose, at 820, 1024
+     and 1440). The cells' own svg is the run's length rounded DOWN to a multiple of the
+     48-unit cell and centred, so a run begins and ends on a join (half a forget-me-not
+     blue dot, never half a rose); the slack, under 24px a side, is a plain stem of the
+     same vine drawn straight through the run's centre line to the corner rosette.
+     (Where round() is unknown the svg keeps the whole run, as before.) */
+  .cells { display: block; overflow: hidden; max-width: none; flex: none; }
+  .run.top .cells, .run.bottom .cells { margin-inline: auto; }
+  .run.top .cells, .run.bottom .cells { width: 100%; width: round(down, 100%, 48px); height: var(--strip); }
+  .run.left .cells, .run.right .cells { height: 100%; height: round(down, 100%, 48px); width: var(--strip); }
+  .run::before { content: ''; position: absolute; background: var(--c-leaf); }
+  .run.top::before, .run.bottom::before { left: 0; right: 0; top: calc(50% - 0.7px); height: 1.4px; }
+  .run.left::before, .run.right::before { top: 0; bottom: 0; left: calc(50% - 0.7px); width: 1.4px; }
+  .cells { position: relative; }
   /* The 26-unit cell is centred in the strip, so a thinner strip (phone) trims the vine's edges, not one side. */
   .run.top .r, .run.bottom .r { transform: translateY(calc((var(--strip) - 26px) / 2)); }
   .run.left .r, .run.right .r { transform: translateX(calc((var(--strip) - 26px) / 2)); }
