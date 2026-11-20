@@ -136,3 +136,45 @@ guard. About 75 to 90 agents, ending at stop 3.
   constructed question mark; modest in size against the page.
 - **R2 proof:** the lens visibly bends the real headline. **P3 proof:** the
   first screen is the same in all four programmes.
+
+## Answers (founder, 11-20-26)
+
+The taste call count: wave 1 raised 11; the list above has 10 because task
+7's (where the R2 lens rests on arrival) is call 1's sub-call. The founder
+asked for an adversarial critique of call 3 and of the taste calls before
+deciding: `stop2-critique.md` (three read-only critics, Opus). Answers:
+
+1. **R2: yes, its own stage after Stage 6**, the lens resting off the text
+   on arrival.
+2. **P3: parked**, proof kept. The founder wanted to see the swiss Home that
+   ships without it: sent (the task 6 round 2 sheets, 1440 light and dark,
+   390 light).
+3. **Swiss photo: keep it in the lab section**, for the critic's reasons
+   (business order; the billboard's black type would fight the bark's black
+   mass; birch copy stays on About), and fix the 390 band (taller, or the
+   pull under the photo there) and the flat crop of the black mass (ledger
+   T6 C3).
+4. **Taste calls: every critic verdict**, which changes several of the
+   bracketed recommendations:
+   - Glass G1: accept the two corners at 1024 through Stage 6 (R2 does not
+     fix Safari or Firefox); the fallback picks the nearest open corner and
+     never glides under the window.
+   - Glass G2: one plate per text block with a wider feather; not lighter
+     at 390 unless a contrast re-measure passes; thin the pane fill at 390
+     instead.
+   - Glass G3: Services "04" icon to teal or sky blue; one of the twin
+     amber orbs to pale sky blue. No coral, no cream, no pink.
+   - Glass G4: in light, Tinted becomes a neutral white frost; dark keeps
+     its warm umber.
+   - Glass G5: soften the header bar's vertical bend, one number, the bar
+     only; the R2 header's artefacts go to the R2 stage.
+   - Swiss S1: snap-back speed 0.2 to 0.25 units/ms (about 352 ms, constant
+     speed kept).
+   - Swiss S2: no letters-only test; hold about 95 at 1024 to 1152 and set
+     the CSS rest to match so nothing jumps after load (closes T4 C2).
+   - Bauhaus B1: the match stamp touches the key shape's corner from
+     outside (offset only).
+   - Bauhaus B2a: no "used" marker on the colour bars.
+   - Bauhaus B2b: on an empty form, "show the answer" shows the key with no
+     tally, and the screen-reader status drops "none" too.
+   - P3 stall: moot.
