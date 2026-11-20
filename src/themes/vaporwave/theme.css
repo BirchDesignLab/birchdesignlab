@@ -257,7 +257,9 @@
 :where([data-theme='vaporwave'] :is(h1, h2, h3, p, ul, ol, figure)) { margin: 0; }
 :where([data-theme='vaporwave'] :is(h1, h2, h3)) { font-weight: 400; }
 :where([data-theme='vaporwave'] a) { color: var(--link); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
-:where([data-theme='vaporwave'] a:hover) { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  :where([data-theme='vaporwave'] a:hover) { text-decoration-thickness: 2px; }
+}
 [data-theme='vaporwave'] ::selection { background: var(--neon-pink); color: #1a0536; }
 [data-theme='vaporwave'] :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
 [data-theme='vaporwave'] main:focus { outline: none; }

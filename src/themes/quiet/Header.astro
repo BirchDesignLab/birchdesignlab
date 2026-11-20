@@ -65,7 +65,8 @@ const current = (to: (typeof links)[number]['to'], href: string) => {
     color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm);
     transition: color var(--dur-1) var(--ease-weighted);
   }
-  nav a:hover, nav a[aria-current='page'] { color: var(--mark); }
+  nav a[aria-current='page'] { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) { nav a:hover { color: var(--mark); } }
   .skip {
     position: absolute; left: -100vw; top: 0; background: var(--field-raised);
     color: var(--mark); padding: var(--space-2) var(--space-3);

@@ -327,8 +327,13 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   /* The designation is a link to its entry. On the CRT a live line answers in
      inverse video, the terminal's own highlight, on hover and on focus. */
   .designation { justify-self: start; padding-inline: 0.15em; margin-inline: -0.15em; text-decoration: none; }
-  .designation:hover, .designation:focus-visible {
+  .designation:focus-visible {
     color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover {
+      color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+    }
   }
   .designation:focus-visible { outline-color: var(--crt-phos); }
   .summary { color: var(--crt-ink); font-size: 1rem; }

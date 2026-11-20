@@ -507,10 +507,17 @@ const icons = ['violet', 'cyan'];
   }
   /* The designation links to its entry: a clean underline on hover and on
      focus, the theme's ring rounded to match the soft glass corners. */
-  .designation:hover, .designation:focus-visible {
+  .designation:focus-visible {
     text-decoration: underline;
     text-decoration-thickness: 1.5px;
     text-underline-offset: 0.25em;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 0.25em;
+    }
   }
   .summary { font-size: 0.975rem; line-height: 1.5; }
 
