@@ -222,8 +222,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
      off at the first specimen line; in dark the sheet is itself the white
      field, so the same marks sit on it with no edge. Each line of type carries
      the sheet's ground behind it (black in light, white in dark) and a clear
-     zone after it (1em, never under 40px), so no mark sits under a letter or lands against a
-     line's end like punctuation: a reversed label, not a shadow. */
+     zone after it (1em, never under 40px, painted outside the line box), so no
+     mark sits under a letter or lands against a line's end like punctuation:
+     a reversed label. */
   .lab { --ground: var(--black); }
   :global([data-theme='swiss'][data-scheme='dark']) .lab { --ground: var(--white-field); }
   .lab-head {
@@ -255,7 +256,11 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   }
   .cut {
     background: var(--ground);
-    padding-inline-end: max(1em, 2.5rem);
+    /* The clear zone is a shadow, not padding: padding sits inside the line box,
+       so it widens the last line past the pull's measure (a widow) and hangs
+       past the column on every other line (sideways scroll on a phone); a
+       shadow takes no room and adds no scrollable overflow. */
+    box-shadow: max(1em, 2.5rem) 0 0 var(--ground);
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }

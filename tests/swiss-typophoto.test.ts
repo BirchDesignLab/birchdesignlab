@@ -37,7 +37,10 @@ describe('swiss typophoto (P4)', () => {
     // zone (1em, 40px at least) after each line so no mark lands against a line's end.
     expect(home).not.toMatch(/filter: invert/);
     expect(home).toMatch(/\.lab-photo \{[^}]*background: var\(--white-field\);/);
-    expect(home).toMatch(/\.cut \{[^}]*padding-inline-end: max\(1em, 2\.5rem\);/);
+    // The zone is a shadow, never padding: padding widened the pull past its
+    // measure (a widow) and hung past the column on a phone (sideways scroll).
+    expect(home).toMatch(/\.cut \{[^}]*box-shadow: max\(1em, 2\.5rem\) 0 0 var\(--ground\);/);
+    expect(home).not.toMatch(/\.cut \{[^}]*\n\s+padding[a-z-]*:/);
   });
   it("hangs About's manifesto and button from the foot of the field on a desktop", () => {
     expect(about).toMatch(/min-height: clamp\(640px, 54vw, 1000px\);\s+align-content: end;/);
