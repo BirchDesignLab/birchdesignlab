@@ -4,6 +4,12 @@ Stage 6 wave 1, task 7 (11-19-26). Source: `../a1-critic-glassmorphism.md`
 G5 and R2; stop 1 call 2 (an R2 Home-only proof shown at stop 2; if taken, R2
 becomes its own stage). A proof: nothing under `src/` changed.
 
+**Stop 2 answer (11-20-26).** R2 becomes its own stage after Stage 6, not
+part of it. On arrival the lens rests off the text (it does not park on the
+headline). This doc is the starting brief for that stage; the corrections
+made after the proof's review are listed at the end ("Corrections, 11-20-26")
+and the body below already carries them.
+
 ## What it is
 
 `scripts/themes/proofs/stage6-glass-r2/` holds `proof.js`, `proof.css` and
@@ -21,14 +27,24 @@ open http://127.0.0.1:4470/t/glassmorphism/        (?r2=off: the page as built)
 It adds three things over the page:
 
 1. **The lens.** A 248px disc (148px under 720px wide) in the top layer (a
-   manual popover, so it sits above the header, panes, switcher and any
-   dialog). Its `backdrop-filter` is `url(#r2-lens-f)`: one feImage
+   manual popover, so it sits above the header, panes and switcher; it is
+   not above everything: top-layer content opened later sits above it, a
+   modal dialog makes it inert, and pressing the rim re-raises it,
+   `proof.js:215`). Its `backdrop-filter` is `url(#r2-lens-f)`: one feImage
    displacement map into feDisplacementMap, no blur. The map magnifies the
    face about 1.45x and pulls a ring of the backdrop into the rim (a thick
    bent edge, 18px of extra pull easing out over 30px). A sheen and an inset
    hairline draw the glass; there is no fill. The face ignores the pointer.
-   Only a 16px ring along the rim (a real `<button>`, clipped to the ring
-   with an even-odd `clip-path`, which hit testing honours) grabs it. Arrow
+   Only a 16px ring along the rim (18px on phones, `proof.js:307`; a real
+   `<button>`, clipped to the ring with an even-odd `clip-path`, which hit
+   testing honours) grabs it. A ring under 24px is below the 24px target
+   minimum, so a build must make it 24px (see "What building it for real
+   would take"). Touch grab is by pointer events with `touch-action: none` on
+   the ring and was filmed only as a mouse-driven drag on a 390 viewport,
+   never on a touch device; Android Chrome's touch adjustment, which can
+   move a tap near a link onto the link, is not tested against the
+   pass-through face. Under `prefers-contrast: more` (E10) the proof mounts
+   no lens, no ruler and no clear bar, and the page stays as built. Arrow
    keys move it 12px (Shift: 48px) while the button has focus. Today's WebGL
    lens is hidden while the proof runs.
 2. **The header as a clear rod.** The bar's fx.ts frost and rim layers, its
@@ -89,44 +105,59 @@ runs), Chrome trace per run (`traces/*.json`). The busy columns are busy
 time on a thread in milliseconds per second of trace window (`busyMsPerSec`
 in `results.json`, computed from the raw `*BusyMs` and `secs`). Per second,
 not per presented frame: runs that present different frame counts cannot be
-compared per frame (the 390 drags presented 120 and 181). The WebGL rows are
+compared per frame (the 390 drags presented 124 and 181). The WebGL rows are
 the page as built (`?r2=off`), dragging today's lens.
+
+The table is the 11-20-26 re-run (GPU Chromium, ANGLE D3D11, RTX 3070, same
+script, `w1-t7-proof.mjs --trace`), which also writes `busyMsPerSec` into
+`results.json`; the first run (11-19-26) lacked that field and its numbers
+sit within about 10% of these on every column except the 1440 scroll
+renderer-main (150 and 197 then, 142 and 199 now).
 
 | run | size | presented/s | rAF p95 | renderer main | compositor | viz | GPU main |
 |---|---|---|---|---|---|---|---|
-| R2 lens drag | 1440 | 59.5 | 16.8 ms | 86 | 348 | 187 | 86 |
-| WebGL lens drag | 1440 | 59.7 | 16.7 ms | 168 | 337 | 189 | 103 |
-| R2 bar, scroll | 1440 | (see note) | 33.4 ms | 150 | 426 | 240 | 248 |
-| as built, scroll | 1440 | (see note) | 33.4 ms | 197 | 396 | 220 | 221 |
-| R2 lens drag | 390 | 39.6 | 16.7 ms | 54 | 132 | 86 | 30 |
-| WebGL lens drag | 390 | 59.7 | 16.8 ms | 148 | 150 | 78 | 58 |
-| R2 bar, scroll | 390 | (see note) | 33.4 ms | 102 | 261 | 157 | 181 |
-| as built, scroll | 390 | (see note) | 33.4 ms | 120 | 205 | 128 | 179 |
+| R2 lens drag | 1440 | 59.3 | 16.8 ms | 71 | 319 | 174 | 75 |
+| WebGL lens drag | 1440 | 59.5 | 16.7 ms | 150 | 309 | 175 | 92 |
+| R2 bar, scroll | 1440 | (see note) | 33.4 ms | 142 | 398 | 222 | 231 |
+| as built, scroll | 1440 | (see note) | 33.4 ms | 199 | 377 | 211 | 213 |
+| R2 lens drag | 390 | 41.1 | 16.8 ms | 42 | 119 | 77 | 26 |
+| WebGL lens drag | 390 | 59.5 | 16.7 ms | 132 | 135 | 67 | 51 |
+| R2 bar, scroll | 390 | (see note) | 33.4 ms | 94 | 240 | 145 | 168 |
+| as built, scroll | 390 | (see note) | 33.4 ms | 110 | 187 | 113 | 161 |
 
 Reading it:
 
 - **Drag at 1440: R2 costs about the same as today's lens and halves the
-  main-thread work.** Compositor 3% more, viz level, GPU main 17% less,
-  renderer main 49% less. No dropped frames, rAF steady at 16.7 ms. The
+  main-thread work.** Compositor 3% more, viz level, GPU main 19% less,
+  renderer main 53% less. No dropped frames, rAF steady at 16.7 ms. The
   WebGL lens redraws its canvas from script every frame; the R2 lens only
   moves a transform and lets the compositor re-filter.
 - **Drag at 390: not a like-for-like comparison.** The R2 run presented only
-  120 frames (40/s, 61 "no update desired": the mouse moves landed slower
-  than vsync in that context; rAF p95 stayed 16.7 ms, so no missed frames),
+  124 frames (41/s, 57 "no update desired": the mouse moves landed slower
+  than vsync in that context; rAF p95 stayed 16.8 ms, so no missed frames),
   the WebGL run 181. Per second R2 reads cheaper on compositor and GPU, but
   it did a third less frame work, so that does not show R2 is cheaper on a
-  phone. Viz is already 10% higher on fewer frames. A matched 390 drag is
+  phone. Viz is already 15% higher on fewer frames. A matched 390 drag is
   owed before any phone cost claim.
-- **Scroll: the clear bar costs more compositor and viz time than the
-  frosted bar, most at 390.** At 1440: compositor 8%, viz 9% and GPU main
-  12% more, renderer main 24% less. At 390: compositor 27% more (261 vs
-  205 ms/s) and viz 23% more (157 vs 128), GPU main level, renderer main
-  15% less, with near-equal presented frames (264 vs 265). The p95 of 33 ms
-  is the same in both and is headless wheel delivery, not the page.
-  Presented/s in scroll runs counts two frame sources (main and compositor)
-  and reads over 60; ignore it, compare the busy columns.
+- **Scroll: both builds lose real frames at 1440, and the clear bar costs
+  more compositor and viz time than the frosted bar, most at 390.** The 33 ms
+  p95 is real frame loss, not headless wheel delivery (an earlier version of
+  this doc said the latter with no support). At 1440 the trace counts 41
+  dropped frames in the R2 scroll run and 44 in the as-built one (first run:
+  49 and 57), and rAF intervals over 20 ms number 53 of 247 and 60 of 243
+  (first run: 68 of 238 and 93 of 230). At 390 the rAF intervals over 20 ms
+  are 53 of 195 and 54 of 196, with 0 and 3 dropped in the trace and
+  roughly 105 partial frames in each. So the as-built bar already drops
+  frames in this scripted scroll; R2 does not make it worse and does not fix
+  it. The headless wheel path may add to it; that was not separated out.
+  Busy time at 1440: compositor 6%, viz 5% and GPU main 8% more, renderer
+  main 29% less. At 390: compositor 29% more (240 vs 187 ms/s) and viz 28%
+  more (145 vs 113), GPU main level (4% more), renderer main 15% less, with
+  near-equal presented frames (262 vs 267). Presented/s in scroll runs
+  counts two frame sources (main and compositor) and reads over 60; ignore
+  it, compare the busy columns.
 - **So "no dearer" holds only for the lens drag at 1440.** The bar is
-  measurably dearer, by a quarter on the compositor at phone width, on this
+  measurably dearer, by over a quarter on the compositor at phone width, on this
   machine's GPU.
 - **Caveat.** This laptop GPU is far stronger than a phone's. The R2 cost
   is per covered pixel per frame (a backdrop read plus one displacement
@@ -206,9 +237,12 @@ loses the effect.
   Not wired in the proof. That means the iPhone, likely the most common
   phone in the audience, never sees R2's main effect.
 - **Top layer:** the lens and ruler are manual popovers, so they sit above
-  the switcher and any dialog. In a build they must close (hidePopover) when
-  the portal's switcher or another school takes the top layer, and must not
-  carry a `view-transition-name` (they would fly in arrivals).
+  the header, panes and switcher, in top-layer order: anything shown later
+  (a dialog, the portal's switcher) sits above them, a modal dialog makes
+  them inert, and pressing the rim re-raises the lens (`proof.js:215`). In a
+  build they must close (hidePopover) when the portal's switcher or another
+  school takes the top layer, and must not carry a `view-transition-name`
+  (they would fly in arrivals).
 - **The bar's backdrop root:** the bar layer only sees the page because the
   bar is not a backdrop root (no filter, opacity or mask on `.bar`). R1
   already relies on this; any later filter on the header breaks both.
@@ -225,7 +259,11 @@ Its own stage, as stop 1 recommended. Roughly six tasks:
    `lens-hit` keyboard contract (the rim button replaces the full-disc hit;
    task 1's rest rules about panes stop mattering, since the lens is now on
    top of them). Session hold, idle-after-arrival and the one-lens-per-visit
-   rule carry over. Risk: the view-transition lifecycle (arrival, in-school
+   rule carry over, and so does the E10 off state: under
+   `prefers-contrast: more` there is no lens and no clear bar (the WebGL
+   lens and the frosted bar stay, as today). The rim ring is 24px at every
+   width (the proof's 16px, 18px on phones, is under the 24px target
+   minimum; a 24px ring on a 148px phone lens leaves a 100px face). Risk: the view-transition lifecycle (arrival, in-school
    swap, drawing ahead) must film clean; the lens must not appear in the old
    or new snapshot mid-transition.
 2. **Hit testing as the founder rules it.** Under (a), the recommendation:
@@ -264,3 +302,41 @@ away without the small blur.
 3. The bar: fully clear rod as shown, or keep a little frost behind the
    wordmark and nav.
 4. The stepped edges: accept, or allow a 0.3px antialias blur.
+
+## Corrections, 11-20-26
+
+Made after the proof's review (wave 1 task 7 deferred minors, applied in
+wave 2 task 11). The body above already carries them.
+
+- **Stop 2 answer** added to the head: R2 is its own stage after Stage 6;
+  the lens rests off the text on arrival.
+- **Scroll p95.** The claim that the 33 ms p95 "is headless wheel delivery,
+  not the page" had no support. The traces show dropped frames in both the R2
+  and the as-built scroll runs at 1440 (49 and 57 in the first run, 41 and
+  44 in the re-run). It is now stated as real frame loss in both. The frame
+  cost table was re-run on GPU Chromium and its percentages restated.
+- **`busyMsPerSec`.** The doc cited a field `results.json` did not have
+  (the first run predates it). The trace stage was re-run and the field now
+  exists.
+- **E10.** The build plan gains the `prefers-contrast: more` off state for
+  the lens and the clear bar. `proof.js` `mount()` honours it (no lens, no
+  ruler, no clear bar; `html[data-r2="contrast"]`) and `proof.css` applies
+  the clear bar's fill override and the frost-layer hiding only under
+  `not (prefers-contrast: more)`, with a media query that also hides the
+  lens, ruler and bar layer if the setting changes while the page is open.
+  Filmed by `w2-t11-contrast.mjs` at 1440, light and dark: under `more` 0
+  lens objects, 0 bar layers, the bar keeps its own frosted fill (alpha 0.94
+  and 0.96) and the WebGL lens shows; under no preference 2 objects, 1 bar
+  layer, bar fill 0.1 (light) and 0.16 (dark).
+- **"Above any dialog" was wrong.** Later top-layer content sits above the
+  lens, a modal makes it inert, and pressing the rim re-raises it. The 16px
+  ring is 18px on phones, below the 24px target minimum; a 24px ring is now
+  a build requirement. Touch grab and Android touch adjustment over links
+  are noted as untested.
+- **`serve.mjs`.** It compared a normalized path with a raw `dist`, so a
+  forward-slash Windows path through the module API answered 403 to every
+  request. Both sides are now normalized (`resolve`); the contrast script
+  passes a forward-slash path to prove it (all pages 200).
+- **The task 7 report** (gitignored `.out/`, not edited) summarised the
+  frame cost and the top layer in the earlier wording; this section and the
+  body are the record.

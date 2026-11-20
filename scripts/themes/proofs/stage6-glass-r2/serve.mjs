@@ -15,7 +15,7 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, dirname, extname, normalize } from 'node:path';
+import { join, dirname, extname, normalize, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { TYPES } from '../../lib/serve-dist.mjs';
 
@@ -24,7 +24,11 @@ const REPO = join(HERE, '..', '..', '..', '..');
 const HOME = '/t/glassmorphism/';
 const TAGS = '<link rel="stylesheet" href="/__r2/proof.css"><script type="module" src="/__r2/proof.js"></script>';
 
-export function serveProof(port, dist) {
+export function serveProof(port, distIn) {
+  // Both sides normalized: a forward-slash Windows path through the module
+  // API would otherwise never match normalize()'s backslashes (403 on every
+  // request).
+  const dist = resolve(distIn);
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (path === '/__r2/proof.js' || path === '/__r2/proof.css') {
@@ -46,9 +50,9 @@ export function serveProof(port, dist) {
     res.writeHead(status, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
     res.end(body);
   });
-  return new Promise((resolve, reject) => {
+  return new Promise((resolveP, reject) => {
     server.once('error', reject);
-    server.listen(port, '127.0.0.1', () => resolve(server));
+    server.listen(port, '127.0.0.1', () => resolveP(server));
   });
 }
 

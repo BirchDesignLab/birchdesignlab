@@ -3,6 +3,13 @@
 Stage 6 wave 1, task 8, 11-19-26. A proof: nothing under `src/themes/swiss/`
 changed. Source: `../a1-critic-swiss.md` (P3), stop 1 call 3.
 
+**Stop 2 answer (11-20-26).** P3 is parked and the proof is kept; nothing is
+built from it now. The reasons given: the first screen is identical across
+the programmes (the giant spans the frame in all four divisions, so only
+the small type walks), and the two-column programme stalls. A later look
+reads this doc as the record; the corrections made after the proof's review
+are in "Corrections, 11-20-26" at the end.
+
 **What it is.** A division key sits beside the grid key in swiss Home's
 header. Each press moves the page's programme to the next of 2, 3, 4, 6
 columns (the page as built is where it starts and is not in the cycle).
@@ -80,15 +87,28 @@ clock of the arrival), as one Web Animation on `main`: hard steps, no ease.
 The old layout is cleared panel by panel from the left on the old
 division's column lines (steps after each of the first three beats: 1/2/3
 panels of four, 1/3/4 of six, 3/6/9 of twelve, 1/2/2 of three, 1/1/1 of
-two); the sheet holds bare 285 to 345ms; at 320ms the division changes
-(under the bare sheet); the new layout is laid panel by panel on the new
+two); the sheet holds bare from 300 to 333ms (rAF timing, below); at 320ms the
+division changes (under the bare sheet); the new layout is laid panel by panel on the new
 division's lines, the last beat landing at 640ms. The header does not
 move. Strips: `strips/press-<n>__<scheme>__<size>.png` (timestamped from the
 press; 1440 and 390, light and dark). The strip at 1440 to 3 shows the
 old sheet cleared to "gn|", bare at +389, then laid. A rapid second press
 finishes the first re-lay and steps on from the division it was heading to
-(three presses in 80ms from as built end on 4; found and fixed in this
-proof: the first version stepped from the old value and ended on 3).
+(three presses 80ms apart from as built end on 4; found and fixed in this
+proof: the first version stepped from the old value and ended on 3. The
+round 1 films of the rapid press ended on 3 and predate the fix; they are
+stale. Re-run 11-20-26 on GPU Chromium by `w1-t8-rapid.mjs` at 1440 and
+390, light: presses dispatched in-page, the page ends on 4 columns at both
+(status line "The page is laid on 4 columns", no clip left on `main`, no
+page errors); strip `rapid__light__<size>.png` in the run's scratch).
+
+**Timing, and what the strips' timestamps mean.** The strips'
+`+<ms>` labels are measured from the moment the script called Playwright's
+click, so they include its click latency (tens of ms) and read late: the
+"bare at +389" above is that. The real clock is the page's own rAF timing:
+the sheet is bare from 300 to 333ms after the press and the division swaps
+at 317ms (the 320ms timer, landing on a frame), against the 640ms the
+animation takes in all.
 
 Scroll position is kept; a shorter new layout clamps it. A real build would
 choose (keep, or anchor on the block at the top of the viewport).
@@ -97,8 +117,9 @@ choose (keep, or anchor on the block at the top of the viewport).
 
 A real `<button>`, 24px square with a 44px touch pad (the grid key's own
 size and pad), 48px between the two keys' centres so the pads do not
-overlap (measured: 24px between faces, the edge between them lands on the
-header bar). Its face is N ink bars (the current division), inverted while
+overlap (measured: 24px between faces; the strip between the two keys
+lands on the header bar at 1440 only, at 390 it hits the wordmark link).
+Its face is N ink bars (the current division), inverted while
 pressed. Tab reaches it straight after the grid key; Enter and Space
 cycle; focus stays on the key through the re-lay (measured). The ring is
 the school's global one. No hover rule. Touch works as a tap; the key sets
@@ -146,7 +167,10 @@ remembered, and an arrival or a swap resets to the page as built.
 - **Width dial and grid key.** The dial's cap is measured against the lede
   per layout and needs a `remeasure()` call (the proof nudges the hero's
   box to make its observer fire); the grid key's `collect()` and `span()`
-  already read `--cols` and grid placement, so they follow with no change.
+  read `--cols` and grid placement, so for Home's bands they follow the
+  division with no change, but not for the footer: it keeps its native
+  count in the proof, so its guides and tags stay on the native grid and a
+  build has to give `collect()` and `span()` the footer's division too.
   The header's key and the footer would be real parts.
 - **Tests.** Contrast pairs do not change (no new ink). New: word parity
   per page per division (snapshot of `innerText`); no overflow and no
@@ -180,4 +204,34 @@ remembered, and an arrival or a swap resets to the page as built.
 (`sheet-1440-<scheme>.png`, `sheet-390-<scheme>.png`, with-built, 1024, 820),
 `strips/`, `frames/` (whole page per size, scheme and division), `results.json`.
 GPU: ANGLE, NVIDIA GeForce RTX 3070 Laptop GPU, Direct3D11, for every
-frame.
+frame. The rapid-press re-run is in `scripts/themes/.out/stage6/w2/t11/rapid/`
+(same GPU).
+
+## Known issue for any future build
+
+**The division key crowds the "Services" link from 1024 to 1279.** In that
+band the key's face sits about 8px from the link's text at 1024 and its
+44px touch pad overlaps the link's box; at rest the key reads as a checkbox
+beside the link. The proof does not fix it (a header layout change, not a
+proof tweak). A build must give the key its own room in the header at those
+widths (or move it), and check its pad against the nav links at every width
+from 1024 up.
+
+## Corrections, 11-20-26
+
+Made after the proof's review (wave 1 task 8 deferred minors, applied in
+wave 2 task 11). The body above already carries them.
+
+- **Stop 2 answer** added to the head: parked, proof kept, with the reasons.
+- **Key spacing.** The doc said the strip between the two keys lands on the
+  header bar. That is true at 1440 only; at 390 it hits the wordmark link.
+- **Rapid-press evidence.** The old films ended on 3 and predated the fixed
+  handler, which ends on 4. Re-run on GPU Chromium at 1440 and 390 (light):
+  both end on 4. `scripts/themes/stage6/w1-t8-rapid.mjs` now takes the port
+  as a required `--port` argument and launches with the GPU flags (it exits
+  on a software renderer).
+- **Strip timestamps** include Playwright's click latency; the rAF timing
+  (sheet bare 300 to 333ms, swap at 317ms) is the real clock.
+- **Grid key.** `collect()` and `span()` follow the division for Home's
+  bands, not for the footer (it keeps its native count).
+- **Services crowding** from 1024 to 1279 recorded above as a known issue.

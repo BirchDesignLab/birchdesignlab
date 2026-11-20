@@ -6,6 +6,14 @@ html.r2-on :is(.lens-host, .lens-poster, .lens-canvas, .lens-hit, .lens-shadow) 
   display: none !important;
 }
 
+/* E10 off state: under prefers-contrast: more the proof's lens, ruler and
+   clear bar are gone (proof.js mount() also refuses to mount). This covers
+   the setting changing while the page is open. */
+@media (prefers-contrast: more) {
+  .r2-glass, .r2-bar-lens { display: none !important; }
+  html.r2-on :is(.lens-host, .lens-poster, .lens-canvas, .lens-hit, .lens-shadow) { display: revert !important; }
+}
+
 /* A glass object in the top layer. The popover UA sheet centres and boxes
    it; this undoes that and places it by transform (proof.js). */
 .r2-glass {
@@ -88,9 +96,11 @@ html.r2-on :is(.lens-host, .lens-poster, .lens-canvas, .lens-hit, .lens-shadow) 
 /* The header bar as a clear rod. fx.ts's frost and rim layers step aside,
    the fill drops to a whisper, and one unblurred displacement layer
    (proof.js mountBar) bends what scrolls beneath. */
-html.r2-on .site-header .bar { background: rgb(255 255 255 / 0.1); }
-html.r2-on[data-scheme='dark'] .site-header .bar { background: rgb(16 20 46 / 0.16); }
-html.r2-on .site-header .bar > :is(.glass-rim, .glass-frost) { display: none; }
+@media not (prefers-contrast: more) {
+  html.r2-on .site-header .bar { background: rgb(255 255 255 / 0.1); }
+  html.r2-on[data-scheme='dark'] .site-header .bar { background: rgb(16 20 46 / 0.16); }
+  html.r2-on .site-header .bar > :is(.glass-rim, .glass-frost) { display: none; }
+}
 /* R1's scroll-edge fade blurs and washes the band behind the bar, so the
    rod would only bend a blur. It steps aside too: in R2 the bending is the
    cue that content is passing under glass. */
