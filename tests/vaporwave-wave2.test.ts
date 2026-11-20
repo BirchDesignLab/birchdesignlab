@@ -26,6 +26,11 @@ describe('V1 services kana', () => {
   it('stops the sublines short of the kana by its width plus a gap, and keeps 60rem where there is room', () => {
     expect(services).toContain('max-width: min(60rem, calc(100% - var(--kana-size) - var(--kana-gap)))');
   });
+  it('keeps no kana reserve on a phone, where the kana is hidden', () => {
+    const phone = services.slice(services.indexOf('@media (max-width: 760px)'));
+    expect(phone).toMatch(/\.sublines \{ grid-template-columns: 1fr; max-width: 60rem; \}/);
+    expect(phone).toContain('.intro-kana { display: none; }');
+  });
 });
 
 describe('V2 home hero palms on a tablet', () => {

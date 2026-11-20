@@ -190,7 +190,8 @@ const steps = copy.process.steps.length;
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 760px) {
-    .sublines { grid-template-columns: 1fr; }
+    /* V1: the kana is hidden here, so the sublines keep no reserve for it. */
+    .sublines { grid-template-columns: 1fr; max-width: 60rem; }
     .intro-kana { display: none; }
     /* minmax(0, 1fr): a bare 1fr track keeps the grid item's default
        min-width:auto, so custom_software.exe's own menu bar (an unbreakable
