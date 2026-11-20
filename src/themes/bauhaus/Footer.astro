@@ -40,11 +40,19 @@ const year = new Date().getFullYear();
     overflow: hidden;
     background: var(--poster);
     color: var(--on-poster);
-    /* In dark, --poster no longer flips to paper (see theme.css), so main
-       and the footer are both near-black; this rule is what separates
-       them instead of a colour change. */
+    /* Light: the ink footer meets the closing colour band directly, with no
+       paper stripe between them to read as a gap (Stage 6 w2 task 12, B4).
+       The rule's 6px moves into the padding, so the footer is the same height
+       in both schemes and the corner shapes hang from the band's edge. */
+    border-top: 0;
+    padding-block: calc(clamp(3rem, 7vw, 5.5rem) + var(--rule)) 0.75rem;
+  }
+  /* In dark, --poster no longer flips to paper (see theme.css), so main and
+     the footer are both near-black; the paper rule is what separates them
+     instead of a colour change. */
+  :global([data-theme='bauhaus'][data-scheme='dark']) .site-footer {
     border-top: var(--rule) solid var(--on-poster);
-    padding-block: clamp(3rem, 7vw, 5.5rem) 0.75rem;
+    padding-top: clamp(3rem, 7vw, 5.5rem);
   }
   .site-footer a { color: var(--on-poster); }
   .corner {

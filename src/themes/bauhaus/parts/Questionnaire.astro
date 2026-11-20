@@ -127,7 +127,7 @@ const QMARK = [
 
   .qcard {
     --mark: var(--ink);
-    --mark-muted: #474541;
+    --mark-muted: var(--card-muted);
     --accent: var(--ink);
     --on-accent: var(--paper);
     --field: var(--paper);
@@ -220,7 +220,6 @@ const QMARK = [
   .qbar[data-pick='red'] .qswatch { background: var(--red); }
   .qbar[data-pick='blue'] .qswatch { background: var(--blue); }
   .qbar[aria-pressed='true'] .qswatch { box-shadow: 0 6px 0 var(--ink); translate: 0 -6px; }
-  .qbar.is-used .qswatch::after { content: ''; position: absolute; right: 6px; top: 50%; width: 10px; height: 10px; translate: 0 -50%; background: var(--paper); border: 2px solid var(--ink); }
   .qbar[data-held] { z-index: 3; cursor: grabbing; pointer-events: none; }
   .qbar[data-held] .qswatch { box-shadow: 0 6px 0 var(--ink); }
 
@@ -245,14 +244,22 @@ const QMARK = [
   .qkey { display: flex; flex-direction: column; gap: 1rem; padding-top: 0.5rem; }
   .qkey-rule { display: block; height: 6px; background: var(--ink); transform-origin: left center; animation: qrule 200ms var(--ease-snap) both; }
   .qkey-head { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.05; letter-spacing: -0.02em; text-transform: lowercase; }
-  .qkey-row { display: flex; align-items: flex-end; gap: 48px; margin: 0; padding: 0; list-style: none; }
+  /* The top padding is room for the stamps, which sit outside the shapes. */
+  .qkey-row { display: flex; align-items: flex-end; gap: 48px; margin: 0; padding: 14px 0 0; list-style: none; }
   .qkey-item { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
   .qkey-box { position: relative; display: block; width: calc(var(--w) * 0.7 * var(--qs)); aspect-ratio: 1; }
   .qkey-box svg:first-child { width: 100%; height: 100%; overflow: visible; }
+  /* The match stamp stands outside its shape, its bottom left corner just
+     touching the shape's upper right, diagonally (--sx, --sy: that point on
+     the shape, in the key box). The square's corner, the circle's 45 degree
+     point, the triangle's apex. It covers no part of the shape. */
+  .qkey-item[data-key='triangle'] { --sx: 50%; --sy: 5%; }
+  .qkey-item[data-key='square'] { --sx: 96%; --sy: 4%; }
+  .qkey-item[data-key='circle'] { --sx: 82.5%; --sy: 17.5%; }
   .qstamp {
     position: absolute;
-    right: -14px;
-    top: -14px;
+    left: var(--sx);
+    top: calc(var(--sy) - 26px);
     width: 26px;
     height: 26px;
     background: var(--red);
@@ -284,8 +291,14 @@ const QMARK = [
     .quiz-q { display: none; }
     .qcard { grid-column: 1 / -1; max-width: none; --qs: 0.82; }
     .qshapes, .qkey-row { gap: 24px; }
-    .qcolours { gap: 8px; }
-    .qswatch { width: 96px; height: 44px; }
+    /* Fluid: three bars share the card's inner width, up to 96px each, so
+       they hold at 360 and 375 as well as 390. */
+    .qcolours { display: grid; grid-template-columns: repeat(3, minmax(0, 96px)); gap: 8px; }
+    .qswatch { width: 100%; height: 44px; }
     .qbar { min-height: 44px; }
+  }
+  /* At 360 the three shapes and their two gaps run 7px past the card's padding, so the gaps close up. */
+  @media (max-width: 380px) {
+    .qshapes, .qkey-row { gap: 12px; }
   }
 </style>

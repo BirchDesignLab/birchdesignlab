@@ -16,10 +16,10 @@ const doorShape = ['circle', 'square'] as const;
     <h1 class="billboard">
       {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class={`w w${i}`}>{word}</span></>)}
     </h1>
-    <svg class="poster" viewBox="0 0 600 700" role="group" aria-label="Poster shapes" focusable="false">
+    <svg class="poster" data-beat="home" viewBox="0 0 600 700" role="group" aria-label="Poster shapes" focusable="false">
       <rect class="asm" x="0" y="410" width="600" height="22" fill="var(--mark)" style="--from: scaleX(0); --d: 0ms; --beat: 0; --sub: 0ms" />
       <circle class="asm loose" data-loose role="button" tabindex="0" aria-label="Blue circle, drag to move" cx="390" cy="215" r="185" fill="var(--blue)" style="--from: translateY(-70%) scale(0.4); --d: 160ms; --beat: 1; --sub: 0ms" />
-      <rect class="asm loose" data-loose role="button" tabindex="0" aria-label="Red square, drag to move" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms; --beat: 1; --sub: 70ms" />
+      <rect class="asm loose" data-loose data-pick-me role="button" tabindex="0" aria-label="Red square, drag to move" x="20" y="230" width="180" height="180" fill="var(--red)" style="--from: translateX(-120%); --d: 300ms; --beat: 1; --sub: 70ms" />
       <polygon class="asm loose" data-loose role="button" tabindex="0" aria-label="Yellow triangle, drag to move" points="460,460 590,690 330,690" fill="var(--yellow)" style="--from: translateY(60%) rotate(-90deg); --d: 420ms; --beat: 2; --sub: 0ms" />
       <rect class="asm" x="286" y="432" width="8" height="268" fill="var(--poster-mark)" style="--from: scaleY(0); --d: 560ms; --beat: 0; --sub: 70ms" />
       <circle class="asm" cx="110" cy="118" r="62" fill="var(--poster-mark)" style="--from: scale(0); --d: 640ms; --beat: 2; --sub: 70ms" />
@@ -170,6 +170,11 @@ const doorShape = ['circle', 'square'] as const;
     padding: clamp(1.5rem, 3vw, 2.75rem);
     border: var(--rule) solid var(--mark);
   }
+  /* The second skeleton (Stage 6 w2 task 12, B1): two boxes at unequal
+     widths, 7 columns and 5, as a poster divides a field, down to 761px.
+     Phones stack them, as before. */
+  .door:nth-child(1) { grid-column: span 7; }
+  .door:nth-child(2) { grid-column: span 5; }
   .door.block-yellow { border-color: var(--yellow); }
   .door-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
   .door :global(.num) { font-size: clamp(4rem, 7vw, 6.5rem); }
@@ -250,10 +255,15 @@ const doorShape = ['circle', 'square'] as const;
   /* Below 900px the shapes can no longer keep clear of the band's text, so
      they drop beneath it instead of behind it. */
   @media (max-width: 900px) {
-    .door { grid-column: 1 / -1; }
     .lab { padding-bottom: clamp(9rem, 26vw, 11rem); }
     .lab-shapes { right: -28px; width: 140px; }
     .lab-body { grid-column: 2 / -1; }
+  }
+  /* The two doors keep their 7 and 5 split through the tablet range (820 has
+     the room: the narrow door is about 305px, its text wraps cleanly); they
+     stack only on phones. */
+  @media (max-width: 760px) {
+    .door:nth-child(n) { grid-column: 1 / -1; }
   }
   @media (max-width: 640px) {
     .hero-grid { min-height: 0; padding-top: 1.5rem; row-gap: 1.5rem; }

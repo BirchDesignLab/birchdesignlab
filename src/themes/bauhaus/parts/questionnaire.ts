@@ -51,6 +51,12 @@ const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 const stateLabel = (shape: Shape, fill: Colour | null): string => `${cap(shape)}, ${fill ?? 'no colour yet'}`;
 const tallyWords = (n: number): string => (n === 0 ? 'none' : `${n} of 3`);
 
+/** The status line once the answer shows. An empty form has nothing to tally, so it carries no tally and no "none"; a filled form that matches nothing still says so. */
+export function revealStatus(fills: Fills): string {
+  const key = "Kandinsky's answer: yellow triangle, red square, blue circle.";
+  return filledCount(fills) === 0 ? key : `${key} You agree on ${tallyWords(agreeCount(fills))}.`;
+}
+
 export function initQuestionnaire(root: HTMLElement | null): (() => void) | void {
   if (!root) return;
   const card = root;
@@ -153,7 +159,6 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
       const on = SHAPES.find((s) => fills[s] === c);
       b.setAttribute('aria-label', on ? `${cap(c)}, on the ${on}` : cap(c));
       b.setAttribute('aria-pressed', String(selColour === c));
-      b.classList.toggle('is-used', !!on);
     }
     shapeRow?.querySelectorAll<HTMLElement>('[data-shape]').forEach((b, i) => {
       b.tabIndex = i === rove.shapes ? 0 : -1;
@@ -217,11 +222,16 @@ export function initQuestionnaire(root: HTMLElement | null): (() => void) | void
       if (fills[s] === ANSWER[s]) li.setAttribute('data-match', '');
       else li.removeAttribute('data-match');
     });
-    key.querySelectorAll<HTMLElement>('[data-tally]').forEach((el) => { el.hidden = Number(el.getAttribute('data-tally')) !== n; });
+    // An empty form has nothing to tally: the key shows alone, and the status leaves "none" out too.
+    const empty = filledCount(fills) === 0;
+    key.querySelectorAll<HTMLElement>('[data-tally]').forEach((el) => { el.hidden = empty || Number(el.getAttribute('data-tally')) !== n; });
+    const tally = key.querySelector<HTMLElement>('.qtally');
+    if (tally) tally.hidden = empty;
     key.hidden = false;
-    say(`Kandinsky's answer: yellow triangle, red square, blue circle. You agree on ${tallyWords(n)}.`);
+    say(revealStatus(fills));
     render();
-    againBtn.focus();
+    // preventScroll: focusing the button must not drag the page to it (the key is taller than the card was).
+    againBtn.focus({ preventScroll: true });
   }
 
   // One per colour bar: drops any grab and puts the bar back home at once.

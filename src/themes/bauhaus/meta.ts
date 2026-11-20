@@ -27,6 +27,7 @@ export const meta: ThemeMeta = {
     { fg: '--mark', bg: ['--field-raised'], min: 4.5, note: 'text on a raised panel (process band, contact panel)' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a raised panel' },
     { fg: '--ink', bg: ['--paper'], min: 4.5, note: 'questionnaire card (a paper sheet in both schemes)' },
+    { fg: '--card-muted', bg: ['--paper'], min: 4.5, note: 'questionnaire card secondary text (paper in both schemes)' },
   ],
   order: 1,
 };

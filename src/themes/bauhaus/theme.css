@@ -30,6 +30,9 @@
   --w-small: 450;
   --mark: var(--ink);
   --mark-muted: #474541;
+  /* The questionnaire card is a paper sheet in both schemes, so its secondary
+     text is this one value in both (meta.contrast checks it on --paper). */
+  --card-muted: #474541;
   --accent: var(--ink);
   --link: var(--ink);
   --on-accent: var(--paper);
@@ -442,10 +445,31 @@
 
 /* The loose shapes (E-interactable): the Home hero's circle, square and
    triangle, and Sent's trio, can be picked up (parts/loose.ts). touch-action
-   keeps a vertical swipe scrolling the page unless the touch starts on one. */
-[data-theme='bauhaus'] .loose { cursor: grab; touch-action: none; }
+   is pan-y: a vertical swipe that starts on a shape scrolls the page, and the
+   script picks a shape up after a 200 ms press or a mostly horizontal move. */
+[data-theme='bauhaus'] .loose {
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: translate 120ms var(--ease-snap);
+}
 [data-theme='bauhaus'] .loose[data-held] { cursor: grabbing; }
 [data-theme='bauhaus'] svg.is-carrying { position: relative; z-index: 2; overflow: visible; }
+/* The hover lift (Stage 6 w2 task 12, B2): a real hover pointer lifts the
+   shape 4px up and left over a hard block of ink, the shape's own silhouette
+   (a clone, parts/loose.ts) left where it was. --lift is 4 screen pixels in
+   the svg's own units. The svg only lets the lifted edge show; it does not
+   change its stacking, so the billboard type stays above the poster. */
+[data-theme='bauhaus'] svg.is-lifting { overflow: visible; }
+[data-theme='bauhaus'] .lshadow { pointer-events: none; }
+[data-theme='bauhaus'] .lshadow:not([data-on]) { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] .loose[data-lift]:not([data-held]) {
+    translate: calc(-1 * var(--lift, 0px)) calc(-1 * var(--lift, 0px));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   [data-theme='bauhaus'] .asm { animation: none; }
   [data-theme='bauhaus'] .btn,
