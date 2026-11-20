@@ -59,7 +59,8 @@ for (const scheme of ['light', 'dark']) for (const mode of ['more', 'none']) {
   const r = await page.evaluate(() => {
     const bar = document.querySelector('.site-header .bar');
     const vis = (el) => !!el && getComputedStyle(el).display !== 'none';
-    const hostEl = document.querySelector('.lens-host, .lens-canvas, .lens-hit');
+    const canvasEl = document.querySelector('.lens-canvas');
+    const posterEl = document.querySelector('.lens-poster');
     return {
       contrastMore: matchMedia('(prefers-contrast: more)').matches,
       r2: document.documentElement.dataset.r2 ?? null,
@@ -68,7 +69,9 @@ for (const scheme of ['light', 'dark']) for (const mode of ['more', 'none']) {
       barLens: [...document.querySelectorAll('.r2-bar-lens')].filter(vis).length,
       barBg: bar && getComputedStyle(bar).backgroundColor,
       barFrostLayers: [...document.querySelectorAll('.site-header .bar > :is(.glass-rim, .glass-frost)')].filter(vis).length,
-      webglLensShown: vis(hostEl),
+      lensCanvasExists: !!canvasEl,
+      lensCanvasShown: canvasEl ? getComputedStyle(canvasEl).display !== 'none' : false,
+      lensPosterShown: vis(posterEl),
     };
   });
   R[`${mode}__${scheme}`] = { status: resp.status(), ...r, errors };

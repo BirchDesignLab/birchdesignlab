@@ -261,7 +261,8 @@ Its own stage, as stop 1 recommended. Roughly six tasks:
    top of them). Session hold, idle-after-arrival and the one-lens-per-visit
    rule carry over, and so does the E10 off state: under
    `prefers-contrast: more` there is no lens and no clear bar (the WebGL
-   lens and the frosted bar stay, as today). The rim ring is 24px at every
+   poster disc and the solid, unblurred header bar stay, as today; no WebGL
+   lens mounts under `more`). The rim ring is 24px at every
    width (the proof's 16px, 18px on phones, is under the 24px target
    minimum; a 24px ring on a 148px phone lens leaves a 100px face). Risk: the view-transition lifecycle (arrival, in-school
    swap, drawing ahead) must film clean; the lens must not appear in the old
@@ -325,8 +326,9 @@ wave 2 task 11). The body above already carries them.
   `not (prefers-contrast: more)`, with a media query that also hides the
   lens, ruler and bar layer if the setting changes while the page is open.
   Filmed by `w2-t11-contrast.mjs` at 1440, light and dark: under `more` 0
-  lens objects, 0 bar layers, the bar keeps its own frosted fill (alpha 0.94
-  and 0.96) and the WebGL lens shows; under no preference 2 objects, 1 bar
+  lens objects, 0 bar layers, the bar keeps its opaque fallback fill (alpha
+  0.94 and 0.96, blurs off) and the poster disc stands in for the lens (no
+  WebGL canvas mounts; the shipped build hides it under `more`); under no preference 2 objects, 1 bar
   layer, bar fill 0.1 (light) and 0.16 (dark).
 - **"Above any dialog" was wrong.** Later top-layer content sits above the
   lens, a modal makes it inert, and pressing the rim re-raises it. The 16px

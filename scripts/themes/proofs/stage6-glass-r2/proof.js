@@ -281,7 +281,7 @@ function mount() {
     return;
   }
   // E10 off state: under prefers-contrast: more there is no lens and no
-  // clear bar; the page stays as built (WebGL lens, frosted bar). proof.css
+  // clear bar; the page stays as built (poster disc, solid unblurred bar). proof.css
   // repeats this as a media query so a live change of the setting also
   // takes effect.
   if (window.matchMedia('(prefers-contrast: more)').matches) {
