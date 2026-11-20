@@ -90,6 +90,14 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     /* The trellis lattice (theme.css .gm-trellis) lies behind the intro edge to edge (GM3); the text keeps the wrap's measure. */
     padding-inline: max(var(--gutter), calc((100% - var(--wrap)) / 2));
   }
+  /* The rest of that 30% (Stage 6 w2 task 15, ledger B1 T3 C7): B1 trimmed only the lede's own
+     bottom padding, so the whole gap from the lede to the first offering (that padding, the band
+     and the room's top padding) was 12% tighter, not 30%. The room's top padding here is 60% of
+     the shared one, which brings the whole gap to about 70% of what it was (measured by
+     scripts/themes/stage6/w2-t15-measure.mjs services). Higher specificity than theme.css's rule. */
+  :global([data-theme='grandmillennial']) .gm-wall-room {
+    padding-top: calc(clamp(2.75rem, 6vw, 4.75rem) * 0.6);
+  }
   .intro h1 {
     font-style: italic;
     font-size: clamp(2.8rem, 7vw, 5.2rem);

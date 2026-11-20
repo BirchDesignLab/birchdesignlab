@@ -309,7 +309,9 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
-[data-theme='grandmillennial'] a:hover { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] a:hover { text-decoration-thickness: 2px; }
+}
 [data-theme='grandmillennial'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 [data-theme='grandmillennial'] main:focus { outline: none; }
 [data-theme='grandmillennial'] .skip { position: absolute; left: -100vw; top: 0; }
@@ -666,11 +668,14 @@ html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) 
    under the canopy's content on the page, so the picture's background carries
    the same two layers beneath --lamp and --field's paint, sized to the
    viewport so they land where the body's do (the canopy is at the viewport's
-   top left in the new state). Light sets both to none. */
+   top left in the new state). Wide is the picture's own width (100%), which is the page's
+   width without a classic scrollbar, as the fixed body::before is; 100vw counted the
+   scrollbar and put the vignette's edges 15px off (Stage 6 w2 task 15, ledger B1 T1 r2-N4).
+   Light sets both to none. */
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
   background:
-    var(--vignette) 0 0 / 100vw 100vh no-repeat,
-    var(--sheen) 0 0 / 100vw 100vh no-repeat,
+    var(--vignette) 0 0 / 100% 100vh no-repeat,
+    var(--sheen) 0 0 / 100% 100vh no-repeat,
     var(--lamp) 0 0 / 100% 3000px no-repeat,
     var(--field);
 }

@@ -28,7 +28,7 @@ const { chrome, theme } = Astro.props;
           <path class="bp-skirt" d="M-4 12.2h8c2.4 6 4.6 11 6.4 20h-20.8c1.8-9 4-14 6.4-20z" />
           <path class="bp-band" d="M-8.2 21h16.4v2.6h-16.4z" />
           <path class="bp-fringe" d="M-10.4 32.2v9M-7.8 32.2v11M-5.2 32.2v12M-2.6 32.2v12.6M0 32.2v13M2.6 32.2v12.6M5.2 32.2v12M7.8 32.2v11M10.4 32.2v9" />
-          <rect class="bp-hit" x="-14" y="-4" width="28" height="52" />
+          <rect class="bp-hit" x="-18" y="-4" width="36" height="52" />
         </g>
       </svg>
     </div>
@@ -175,7 +175,10 @@ const { chrome, theme } = Astro.props;
     opacity: 0;
     transition: opacity 180ms ease;
   }
-  nav a:hover::after, nav a[aria-current='page']::after { opacity: 1; }
+  nav a[aria-current='page']::after { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover::after { opacity: 1; }
+  }
   nav a[aria-current='page'] { color: var(--accent); }
 
   @media (max-width: 760px) {
@@ -188,7 +191,9 @@ const { chrome, theme } = Astro.props;
     .wm-first { font-size: 2.3rem; }
     /* A shorter pull on phones, tucked into the corner so the nav row is clear. */
     .bell-pull { top: 28px; right: 0.9rem; width: 20px; }
-    nav { gap: 0.9rem; font-size: 1.05rem; letter-spacing: 0.1em; }
+    /* Tracking 0.14em (Stage 6 w2 task 15, ledger B1 T3 C8: the brief asked 0.14 to 0.16);
+       the gap gives back what the wider letters cost so the row still holds at 360. */
+    nav { gap: 0.5rem; font-size: 1.05rem; letter-spacing: 0.14em; }
     nav a:nth-child(2), nav a:nth-child(3) { margin: 0; }
     nav a { padding: 0.75rem 0.4rem; }
     /* On Home the hero's cartouche says the name 500px below, so the
@@ -215,10 +220,13 @@ const { chrome, theme } = Astro.props;
   import { onMount } from '../../lib/lifecycle';
 
   /* The bell pull: drag or tug it down and it stretches a little, then springs
-     back with one damped swing (it hangs, so a small overshoot is allowed). A
-     click or tap is a short tug. Inert: nothing here is focusable or announced.
-     Nothing runs unless the pull is touched. Units are the SVG's own (28 x 112). */
-  const REST = 58, MAX = 26, TUG = 9;
+     back with one damped swing (it hangs, so a small overshoot is allowed). The
+     press itself pulls it a fixed PRESS down at once (Stage 6 w2 task 15, ledger
+     B1 T5: a click or tap used to do nothing until release, then jumped), the move
+     tracks the finger or the mouse from there, and the release springs from wherever
+     it is, so a click or tap is a short tug. Inert: nothing here is focusable or
+     announced. Nothing runs unless the pull is touched. Units are the SVG's own (28 x 112). */
+  const REST = 58, MAX = 26, PRESS = 7;
   const DECAY = 7, OMEGA = 14, K = DECAY * DECAY + OMEGA * OMEGA, C = 2 * DECAY;
 
   function setup(root: SVGSVGElement): () => void {
@@ -252,20 +260,22 @@ const { chrome, theme } = Astro.props;
       };
       raf = requestAnimationFrame(step);
     }
-    let drag: { id: number; y0: number; d: number; moved: boolean; scale: number } | null = null;
+    let drag: { id: number; y0: number; d: number; scale: number } | null = null;
     const down = (e: PointerEvent) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       stop();
       const box = root.getBoundingClientRect();
-      drag = { id: e.pointerId, y0: e.clientY, d: 0, moved: false, scale: 112 / (box.height || 112) };
+      drag = { id: e.pointerId, y0: e.clientY, d: PRESS, scale: 112 / (box.height || 112) };
+      show(PRESS);
       hit.setPointerCapture(e.pointerId);
       e.preventDefault();
     };
+    /* Tracks the pointer from the press: never less than the press's own pull, so the
+       tassel does not jump back up when the first move arrives. */
     const move = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return;
       const dy = (e.clientY - drag.y0) * drag.scale;
-      if (Math.abs(dy) > 3) drag.moved = true;
-      drag.d = MAX * Math.tanh(Math.max(0, dy) / MAX);
+      drag.d = Math.max(PRESS, MAX * Math.tanh(Math.max(0, dy) / MAX));
       show(drag.d);
     };
     const up = (e: PointerEvent) => {
@@ -273,7 +283,7 @@ const { chrome, theme } = Astro.props;
       const was = drag;
       drag = null;
       if (hit.hasPointerCapture(e.pointerId)) hit.releasePointerCapture(e.pointerId);
-      spring(was.moved ? was.d : TUG);
+      spring(was.d);
     };
     hit.addEventListener('pointerdown', down);
     hit.addEventListener('pointermove', move);

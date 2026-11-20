@@ -83,7 +83,10 @@ const { copy, theme } = Astro.props;
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: var(--gap);
-    align-items: center;
+    /* The envelope sits level with the form's top, not centred against it: centred, the wall
+       showed a 143px band above it at 1024 (Stage 6 w2 task 15, ledger B1 T3 C5). Under 860
+       the desk is one column and this changes nothing. */
+    align-items: start;
   }
 
   /* ---------- Stationery ---------- */
