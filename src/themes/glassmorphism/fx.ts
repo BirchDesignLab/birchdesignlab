@@ -171,6 +171,21 @@ const SVGNS = 'http://www.w3.org/2000/svg';
     (Stage 6 wave 2, G5, founder: about a third, the bar only). */
 const HEADER_Y_SCALE = 1 / 3;
 
+/** The rim band's source is softened by this many px before it is displaced
+    (Stage 6 wave 2, T2 C3). The bevel (max shift 0.9 of the band, t^1.6)
+    folds: the band shows a thin strip of what lies about one band inside the
+    edge, magnified several times, and feDisplacementMap samples nearest
+    pixel, so a crisp 1 to 2px highlight at that depth (the light wallpaper's
+    wave crest under the hero window's bottom-left) smeared into a white
+    smudge at every Frost setting, plainest at Frost 0. A small blur ahead of
+    the displacement leaves the bend and the edge the same and spreads the
+    highlight before it is magnified. Lowering the shift instead stopped the
+    fold but left the wave's crisp edge in hard pixel steps along the band
+    (scripts/themes/stage6/w2-t9-smudge.mjs). The header bar keeps a crisp
+    source: its vertical shift (HEADER_Y_SCALE) never folds, and text passing
+    under it must stay readable (G5). */
+const RIM_SOFTEN = 1.5;
+
 /** The largest orb overlapping a pane's rect, and its colour, for the
     adaptive tint. Reads the orb's own --lo custom property by applying it
     to a probe element appended inside the orb (so it inherits the right
@@ -351,7 +366,8 @@ export function mountPanes(): (() => void) | void {
     const r = Math.max(0, Math.min((parseFloat(cs.borderTopLeftRadius) || 0) - border, w / 2, h / 2));
     const band = Math.max(6, Math.min(24, r * 0.85, Math.min(w, h) * 0.22));
     const max = Math.min(30, band * 0.9);
-    const maps = rimMaps(w, h, r, band, max, el.matches('.site-header .bar') ? HEADER_Y_SCALE : 1);
+    const isBar = el.matches('.site-header .bar');
+    const maps = rimMaps(w, h, r, band, max, isBar ? HEADER_Y_SCALE : 1);
     if (!maps) return;
     let id = ids.get(el);
     if (!id) {
@@ -372,9 +388,11 @@ export function mountPanes(): (() => void) | void {
     filter.setAttribute('filterUnits', 'userSpaceOnUse');
     filter.setAttribute('primitiveUnits', 'userSpaceOnUse');
     filter.setAttribute('color-interpolation-filters', 'sRGB');
+    const soften = isBar ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${RIM_SOFTEN}" edgeMode="duplicate" result="soft"/>`;
     filter.innerHTML =
+      soften +
       `<feImage href="${maps.map}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="map"/>` +
-      `<feDisplacementMap in="SourceGraphic" in2="map" scale="${2 * max}" xChannelSelector="R" yChannelSelector="G"/>`;
+      `<feDisplacementMap in="${isBar ? 'SourceGraphic' : 'soft'}" in2="map" scale="${2 * max}" xChannelSelector="R" yChannelSelector="G"/>`;
     const { rim, frost } = layersFor(el);
     rim.style.backdropFilter = `url(#${id})`;
     rim.style.setProperty('--rim-mask', `url("${maps.mask}")`);
