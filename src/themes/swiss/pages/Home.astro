@@ -216,11 +216,14 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   /* The band's photograph (Stage 6, P4, typophoto): a hard threshold of birch
      bark across the head of the sheet, running to the viewport edges and cut
      by them, the kicker and the pull set over it. One colour in the alpha
-     channel, printed in the sheet's own type colour: white marks on the black
-     sheet in light, and the same file turned black on the white field in dark
-     (the field is the page's negative there, and the marks stay the type's
-     colour). Each line of type carries the sheet's ground behind it, so no mark
-     ever sits under a letter: a reversed label, not a shadow. */
+     channel, printed as it is made: black marks on a white band, in both
+     schemes (the brief's reading, the marks echoing the site's bark dashes).
+     In light the band is a white field at the head of the black sheet, ruled
+     off at the first specimen line; in dark the sheet is itself the white
+     field, so the same marks sit on it with no edge. Each line of type carries
+     the sheet's ground behind it (black in light, white in dark) and a clear
+     zone after it (1em, never under 40px), so no mark sits under a letter or lands against a
+     line's end like punctuation: a reversed label, not a shadow. */
   .lab { --ground: var(--black); }
   :global([data-theme='swiss'][data-scheme='dark']) .lab { --ground: var(--white-field); }
   .lab-head {
@@ -235,12 +238,13 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     position: absolute;
     z-index: 0;
     top: calc(var(--u) * -0.5);
-    bottom: calc(var(--u) * -1);
+    bottom: calc(var(--u) * -2);
     left: calc(50% - 50vw);
     width: 100vw;
     max-width: none;
     overflow: hidden;
     pointer-events: none;
+    background: var(--white-field);
   }
   .lab-photo img {
     width: 100%;
@@ -248,12 +252,10 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     max-width: none;
     object-fit: cover;
     object-position: 80% 50%;
-    filter: invert(1);
   }
-  :global([data-theme='swiss'][data-scheme='dark']) .lab-photo img { filter: none; }
   .cut {
     background: var(--ground);
-    padding-inline-end: 0.3em;
+    padding-inline-end: max(1em, 2.5rem);
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }

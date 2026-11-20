@@ -33,9 +33,11 @@ describe('swiss typophoto (P4)', () => {
     // Every line of type over it carries the sheet's ground.
     expect(home).toMatch(/<p class="sw-kicker lab-kicker"><span class="cut">/);
     expect(home).toMatch(/<p class="sw-lead pull"><span class="cut">/);
-    // White marks on the black sheet in light; the same file, uninverted, in dark.
-    expect(home).toMatch(/filter: invert\(1\);/);
-    expect(home).toMatch(/\[data-scheme='dark'\]\) \.lab-photo img \{ filter: none; \}/);
+    // Black marks on a white band in both schemes (never inverted), and a clear
+    // zone (1em, 40px at least) after each line so no mark lands against a line's end.
+    expect(home).not.toMatch(/filter: invert/);
+    expect(home).toMatch(/\.lab-photo \{[^}]*background: var\(--white-field\);/);
+    expect(home).toMatch(/\.cut \{[^}]*padding-inline-end: max\(1em, 2\.5rem\);/);
   });
   it("hangs About's manifesto and button from the foot of the field on a desktop", () => {
     expect(about).toMatch(/min-height: clamp\(640px, 54vw, 1000px\);\s+align-content: end;/);

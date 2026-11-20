@@ -22,7 +22,7 @@ export const meta: ThemeMeta = {
      type. The last rows are the focus rings (3px, 3:1) on paper, on the
      black sheet, on red and on the white field.
      The lab band's photograph (Stage 6, P4) adds no ink or surface: its marks
-     are drawn in the sheet's own type colour and each line of type over it
+     are black on a white band (--white-field) and each line of type over it
      carries the sheet's own ground (--black, or --white-field in dark), so the
      pairs above are the ones that hold. */
   contrast: [

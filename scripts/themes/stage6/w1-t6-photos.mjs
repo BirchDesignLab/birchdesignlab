@@ -9,9 +9,9 @@
  *
  *   swiss-lab-band-<w>.avif|webp     Home's lab band: a hard threshold of the
  *       birch bark. One colour, carried by the alpha channel: black marks on
- *       transparent. The page paints it as the sheet's own type colour (white
- *       marks on the black sheet in light, a CSS invert in dark gives black
- *       marks on the white field), so one file serves both schemes.
+ *       transparent. The page shows it as it is, on a white band (a white field
+ *       at the head of the black sheet in light, the white sheet in dark), so
+ *       one file serves both schemes.
  *   swiss-field-<w>.avif|webp        About's red field: the upward trunk as
  *       a red duotone. Paper-coloured pixels whose alpha is the tone, so over
  *       the field's own red (#da0016, never remapped in dark) the mix between

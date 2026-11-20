@@ -27,10 +27,9 @@ written as AVIF and as WebP; the page serves AVIF and falls back to WebP.
 wide, taken to grey, blurred (sigma 2.2) so grain does not become speckle, and
 cut at grey 150 of 255: at or below is a mark, above is clear. The result is
 one colour carried by the alpha channel (black marks on transparent), about
-27 percent marked. The page paints it in the sheet's own type colour: the
-black sheet in light gets white marks (the image inverted in CSS), the white
-field in dark gets the file as it is, black marks. One file serves both
-schemes, and a mark is always exactly the colour the type is.
+27 percent marked. The page shows it as it is, black marks, on a white band:
+in light a white field at the head of the black sheet, in dark the sheet itself
+(a white field). One file serves both schemes, with no CSS inversion.
 
 **About's field, a red duotone.** The original is cropped 4 percent off the
 left, resized to 720, 1200 and 1800 px wide, and its red channel run through
