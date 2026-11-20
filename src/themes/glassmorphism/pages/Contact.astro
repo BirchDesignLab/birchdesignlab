@@ -50,9 +50,11 @@ const { copy, theme } = Astro.props;
   </form>
 
   <div class="direct glass">
-    <p class="invite">{copy.invite}</p>
-    <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
-    <p class="fine">{copy.fine}</p>
+    <div class="direct-body plate">
+      <p class="invite">{copy.invite}</p>
+      <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
+      <p class="fine">{copy.fine}</p>
+    </div>
   </div>
 </section>
 
@@ -140,6 +142,9 @@ const { copy, theme } = Astro.props;
     padding: clamp(1.5rem, 3.5vw, 2.5rem);
     border-radius: var(--r-lg);
   }
+  /* One plate behind the note (Stage 6 wave 2, G2), at the pane's own
+     rhythm. */
+  .direct-body { display: grid; justify-items: start; gap: 0.8rem; }
   .invite {
     font-family: var(--font-head);
     font-size: clamp(1.25rem, 2.2vw, 1.55rem);

@@ -13,7 +13,14 @@
  *    clock and get the same offset there, lens/orbs-clock.ts) ease away from
  *    a fine pointer (orb-repel.ts). The offset is a margin: the orb's
  *    transform and translate already belong to its drift and scroll
- *    animations, which an inline value cannot override.
+ *    animations, which an inline value cannot override. Each orb's target
+ *    is taken once per pointer move or scroll (Stage 6 wave 2, T3 C2), not
+ *    every frame: the box includes the drift transform, so a per-frame
+ *    target kept moving and the loop never settled under a still pointer.
+ *
+ * E10 (prefers-contrast: more) is flat and still: no pane lights and no orb
+ * is pushed (Stage 6 wave 2, T3 C3); turning it on mid-visit drops the light
+ * and eases every orb home.
  *
  * Mounted from Footer.astro (every glass page), via onMount.
  */
@@ -24,6 +31,7 @@ const PANES = '.glass, .glass-strong';
 export function mountLight(): (() => void) | void {
   if (document.documentElement.dataset.theme !== 'glassmorphism') return;
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const contrast = window.matchMedia('(prefers-contrast: more)');
 
   /* ---- 1. the pane light ---- */
   let lit: HTMLElement | null = null;
@@ -38,7 +46,8 @@ export function mountLight(): (() => void) | void {
     lit.style.setProperty('--spec-x', `${(px - r.left).toFixed(1)}px`);
     lit.style.setProperty('--spec-y', `${(py - r.top).toFixed(1)}px`);
   };
-  const light = (pane: HTMLElement | null) => {
+  const light = (next: HTMLElement | null) => {
+    const pane = contrast.matches ? null : next;
     if (pane === lit) return;
     lit?.removeAttribute('data-lit');
     lit = pane;
@@ -86,30 +95,36 @@ export function mountLight(): (() => void) | void {
   };
 
   /* ---- 2. the orbs ease away ---- */
-  interface Tracked { el: HTMLElement; group: HTMLElement; ox: number; oy: number }
+  interface Tracked { el: HTMLElement; group: HTMLElement; ox: number; oy: number; tx: number; ty: number }
   const tracked: Tracked[] = [];
   for (const el of document.querySelectorAll<HTMLElement>('.orbs:not([data-js-driven]) .orb')) {
     const group = el.closest<HTMLElement>('.orbs');
-    if (group) tracked.push({ el, group, ox: 0, oy: 0 });
+    if (group) tracked.push({ el, group, ox: 0, oy: 0, tx: 0, ty: 0 });
   }
   let pointer: { x: number; y: number } | null = null;
   let orbRaf = 0;
   let last = 0;
+  /** Each orb's target for the pointer where it is now: read once here, on
+      a pointer move, a scroll or the pointer leaving, never per frame. */
+  const retarget = () => {
+    for (const o of tracked) {
+      o.tx = 0;
+      o.ty = 0;
+      if (pointer && o.group.hasAttribute('data-live')) {
+        const r = o.el.getBoundingClientRect();
+        // The resting centre: the box's centre less the offset already applied.
+        [o.tx, o.ty] = repelTarget(r.left + r.width / 2 - o.ox, r.top + r.height / 2 - o.oy, r.width / 2, pointer.x, pointer.y);
+      }
+    }
+  };
   const frame = (now: number) => {
     orbRaf = 0;
     const dt = last ? Math.min(64, now - last) : 16;
     last = now;
     let moving = false;
     for (const o of tracked) {
-      let tx = 0;
-      let ty = 0;
-      if (pointer && o.group.hasAttribute('data-live')) {
-        const r = o.el.getBoundingClientRect();
-        // The resting centre: the box's centre less the offset already applied.
-        [tx, ty] = repelTarget(r.left + r.width / 2 - o.ox, r.top + r.height / 2 - o.oy, r.width / 2, pointer.x, pointer.y);
-      }
-      const nx = easeStep(o.ox, tx, dt);
-      const ny = easeStep(o.oy, ty, dt);
+      const nx = easeStep(o.ox, o.tx, dt);
+      const ny = easeStep(o.oy, o.ty, dt);
       if (nx !== o.ox || ny !== o.oy) {
         moving = true;
         o.ox = nx;
@@ -122,11 +137,18 @@ export function mountLight(): (() => void) | void {
     else last = 0;
   };
   const kick = () => {
+    retarget();
     if (tracked.length && !orbRaf) orbRaf = requestAnimationFrame(frame);
   };
   const pointerMoved = () => {
     if (!fine.matches || tracked.length === 0) return;
-    pointer = { x: px, y: py };
+    pointer = contrast.matches ? null : { x: px, y: py };
+    kick();
+  };
+  const onContrast = () => {
+    if (!contrast.matches) return;
+    light(null);
+    pointer = null;
     kick();
   };
 
@@ -134,12 +156,14 @@ export function mountLight(): (() => void) | void {
   document.addEventListener('pointerdown', onDown, { passive: true });
   document.documentElement.addEventListener('pointerleave', onLeave);
   window.addEventListener('scroll', onScroll, { passive: true });
+  contrast.addEventListener('change', onContrast);
 
   return () => {
     document.removeEventListener('pointermove', onMove);
     document.removeEventListener('pointerdown', onDown);
     document.documentElement.removeEventListener('pointerleave', onLeave);
     window.removeEventListener('scroll', onScroll);
+    contrast.removeEventListener('change', onContrast);
     cancelAnimationFrame(spotRaf);
     cancelAnimationFrame(orbRaf);
     clearTimeout(tapTimer);

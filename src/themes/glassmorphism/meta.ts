@@ -13,9 +13,22 @@ import interOpsz from '@fontsource-variable/inter/files/inter-latin-opsz-normal.
    over the worst orb (onPlate). Display type (headings, the lead, pull
    quotes, the vibrant headline) has no plate and is measured over the
    material over the worst orb at the D2 = C 3:1 floor. Thick chrome keeps
-   its fill and its 4.5 pairs. The painted wallpaper bands are not in the
-   stack (as before): orbs sit on top of it and are the colour a pane is
-   placed to frost. */
+   its fill and its 4.5 pairs.
+   What the bound covers (Stage 6 wave 2, T2 C2): --blob-worst bounds the
+   ORBS, the colour a pane is placed to frost. Since Stage 6 R1 the painted
+   wallpaper bands go past it: in light the deep blue bands (#142c74 at the
+   dusk corner, #1d3a9c at day) are darker than the deepest orb (#2f55c8),
+   and in dark the amber bands and crest (to #f4a24e, --band-worst) are
+   brighter than the brightest orb highlight (#f08a3c). So these token pairs
+   are a bound over orbs only, not over every pixel behind a pane. Over the
+   bands the stack is measured on the page instead, from GPU screenshots
+   with the text made transparent (scripts/themes/stage6/
+   w2-t9-evidence.mjs, section contrast: the 5th percentile of each text
+   box's background against its ink): plated body text holds 4.5 there at
+   1440 and 390 in both schemes; the vibrant headline, display type with no
+   plate, does not hold 3:1 at its worst points over the deep bands (light
+   390). The Control Centre labels, which have no plate, are bounded over
+   --band-worst as well (below). */
 const overOrb = (layer: string) => [layer, '--blob-worst'];
 const onPlate = (layer: string) => ['--plate', layer, '--blob-worst'];
 
@@ -43,6 +56,13 @@ export const meta: ThemeMeta = {
     { fg: '--mark', bg: onPlate('--mat-thin'), min: 4.5, note: 'body copy inside a thin showpiece (Home .sub, Services sublines, the Contact intro subline) on its plate over the worst orb' },
     { fg: '--mark-muted', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel secondary text on its plate over the worst orb' },
     { fg: '--mark-muted', bg: onPlate('--mat-thin'), min: 4.5, note: 'secondary text in a thin showpiece on its plate over the worst orb' },
+    /* Stage 6 wave 2 (G2): phones thin the regular pane (light) rather than
+       lightening the plate; body text on its plate over the thinner pane. */
+    { fg: '--mark', bg: onPlate('--mat-regular-phone'), min: 4.5, note: 'panel body text on its plate over the phone regular pane over the worst orb' },
+    { fg: '--mark-muted', bg: onPlate('--mat-regular-phone'), min: 4.5, note: 'panel secondary text on its plate over the phone regular pane over the worst orb' },
+    { fg: '--accent', bg: onPlate('--mat-regular-phone'), min: 4.5, note: 'panel kickers and numerals on a plate over the phone regular pane' },
+    { fg: '--link', bg: onPlate('--mat-regular-phone'), min: 4.5, note: 'panel links on a plate over the phone regular pane' },
+    { fg: '--mark', bg: overOrb('--mat-regular-phone'), min: 3, note: 'display type in a phone regular pane, no plate (D2 = C)' },
     { fg: '--accent', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel kickers and numerals on a plate over the worst orb' },
     { fg: '--link', bg: onPlate('--mat-regular'), min: 4.5, note: 'panel links (in body text, the mail link) on a plate over the worst orb' },
     { fg: '--mark', bg: overOrb('--mat-regular'), min: 3, note: 'display type in a regular pane, no plate (D2 = C)' },
@@ -89,7 +109,7 @@ export const meta: ThemeMeta = {
     { fg: '#ffffff', bg: ['--blob-violet'], min: 4.5, note: 'app icon numeral, violet (default, no icon override)' },
     { fg: '#ffffff', bg: ['--icon-cyan'], min: 4.5, note: 'app icon numeral, cyan' },
     { fg: '#ffffff', bg: ['--icon-peach'], min: 4.5, note: 'app icon numeral, peach' },
-    { fg: '#ffffff', bg: ['--icon-pink'], min: 4.5, note: 'app icon numeral, pink' },
+    { fg: '#ffffff', bg: ['--icon-pink'], min: 4.5, note: 'app icon numeral, pink class (deep teal in light since Stage 6 wave 2, G3)' },
   ],
   order: 6,
 };

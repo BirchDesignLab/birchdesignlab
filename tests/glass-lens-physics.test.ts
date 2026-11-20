@@ -20,6 +20,8 @@ import {
   cornerStart,
   circleIntersections,
   nearestOpenSpot,
+  leastCoveredNearest,
+  glideIntoCover,
   type RectLike,
   type Bounds,
 } from '../src/themes/glassmorphism/lens/physics';
@@ -423,5 +425,46 @@ describe('nearestOpenSpot (Stage 6, diagnosis B)', () => {
   });
   it('returns null when every point is covered past maxCover', () => {
     expect(nearestOpenSpot(bounds, 60, [500, 400], [{ left: -100, top: -100, right: 1100, bottom: 900 }], 0.2)).toBeNull();
+  });
+});
+
+describe('leastCoveredNearest (Stage 6 wave 2, G1)', () => {
+  // A window spanning the whole travel box but for two shallow notches at
+  // its top corners, like the hero window at about 1088 px: no spot is 20%
+  // open, and the two corners tie on cover.
+  const bounds: Bounds = [100, 100, 900, 600];
+  const win: RectLike = { left: 40, top: 130, right: 960, bottom: 700, radius: 0 };
+  it('picks the nearest of the least covered spots, not the first found', () => {
+    const right = leastCoveredNearest(bounds, 80, [820, 420], [win]);
+    expect(right.x).toBeGreaterThan(700);
+    expect(right.y).toBeLessThan(200);
+    const left = leastCoveredNearest(bounds, 80, [180, 420], [win]);
+    expect(left.x).toBeLessThan(300);
+    expect(left.y).toBeLessThan(200);
+  });
+  it('stays within the slack of the least cover found', () => {
+    const got = leastCoveredNearest(bounds, 80, [500, 590], [win], 0.05);
+    let least = Infinity;
+    for (let x = 100; x <= 900; x += 800 / 36) least = Math.min(least, discCoverage(x, 100, 80, [win]));
+    expect(got.cover).toBeLessThanOrEqual(least + 0.05 + 1e-9);
+  });
+  it('with slack 0, returns a clear spot when one exists', () => {
+    expect(leastCoveredNearest([0, 0, 1000, 800], 60, [500, 400], [{ left: 200, top: 100, right: 700, bottom: 600 }], 0).cover).toBe(0);
+  });
+});
+
+describe('glideIntoCover (Stage 6 wave 2, G1)', () => {
+  it('stops a step that carries the disc deeper than the limit', () => {
+    expect(glideIntoCover(0.1, 0.25)).toBe(true);
+    expect(glideIntoCover(0.3, 0.35)).toBe(true);
+  });
+  it('stops a disc gliding on fully hidden, or level under a pane', () => {
+    expect(glideIntoCover(1, 1)).toBe(true);
+    expect(glideIntoCover(0.5, 0.5)).toBe(true);
+  });
+  it('lets a step stay open or come out from under', () => {
+    expect(glideIntoCover(0, 0.15)).toBe(false);
+    expect(glideIntoCover(0.2, 0.2)).toBe(false);
+    expect(glideIntoCover(0.6, 0.4)).toBe(false);
   });
 });

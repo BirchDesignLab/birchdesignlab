@@ -77,7 +77,7 @@ const icons = ['violet', 'cyan'];
           exact class name on this second control would make every such
           selector match two elements and throw under Playwright's
           strict-mode click. cc-switch gets the identical CSS (theme.css's
-          :is(.switch, .cc-switch) rules) without that collision. */}
+          .cc-switch rules) without that collision. */}
       <button type="button" class="cc-switch cc-tint-switch" role="switch" aria-checked="false" aria-label="Tinted glass">
         <span class="switch-track" aria-hidden="true">
           <i class="switch-thumb"></i>
@@ -155,7 +155,7 @@ const icons = ['violet', 'cyan'];
         <p class="pull">{copy.lab.pull}</p>
         <a class="btn" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more} <span class="arw" aria-hidden="true">&rarr;</span></a>
       </div>
-      <ul class="cells" role="list" data-parity-skip>
+      <ul class="cells plate" role="list" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li class="cell">
             <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
@@ -241,7 +241,7 @@ const icons = ['violet', 'cyan'];
      the real hit target and stays unsized here (it takes the track's own
      size by default); .switch-track carries the track's look, so a
      phone-width min-height on the button alone cannot stretch it. */
-  :is(.switch, .cc-switch) {
+  .cc-switch {
     display: flex; align-items: center; justify-content: center;
   }
   .switch-track {
@@ -251,10 +251,10 @@ const icons = ['violet', 'cyan'];
     background: var(--well);
     box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
   }
-  :is(.switch, .cc-switch) i {
+  .cc-switch i {
     /* B2: no longer margin-left: auto (a fixed right anchor). The thumb now
        rests at the track's left end by default and theme.css's
-       .switch[aria-checked='true'] rule slides it to the right, so Clear and
+       .cc-switch[aria-checked='true'] rule slides it to the right, so Clear and
        Tinted read as two different, opposite positions instead of both
        looking like the same right-parked dot. */
     display: block; width: 26px; height: 26px;
@@ -482,11 +482,12 @@ const icons = ['violet', 'cyan'];
     text-wrap: balance;
   }
   /* E7: no glass on glass. A hairline-divided list, not a second translucent
-     well fill nested inside the lab panel's own blur. */
+     well fill nested inside the lab panel's own blur. Stage 6 wave 2 (G2):
+     the list is one text block, so it carries the one soft plate (theme.css,
+     .plate) where each designation and summary used to carry its own. */
   .cells {
     list-style: none; padding: 0;
     border-radius: var(--r-lg);
-    background: transparent;
     border: 1px solid var(--line);
     overflow: hidden;
   }
@@ -584,16 +585,16 @@ const icons = ['violet', 'cyan'];
     .cc-seg-row { padding: 3px; gap: 1px; }
     .cc-locale-value { white-space: normal; text-align: center; }
     .window { border-radius: 30px; }
-    /* B2 item 4: the button (.switch) grows to the 44px minimum; the track
+    /* B2 item 4: the button (.cc-switch) grows to the 44px minimum; the track
        stays its own compact 48x28, centred inside the larger real hit
        area, so the visible pill does not also grow. */
-    :is(.switch, .cc-switch) { min-width: 44px; min-height: 44px; }
+    .cc-switch { min-width: 44px; min-height: 44px; }
     /* Round 5 (R2): the phone window bar is the 28px track's height (the
        retired switch's 44px target used to overhang it), so the phone window
        is B1's height and the hero orbs sit at B1's spots. */
     .window-bar { min-height: 28px; }
     .switch-track { width: 48px; height: 28px; }
-    :is(.switch, .cc-switch) i { width: 20px; height: 20px; }
+    .cc-switch i { width: 20px; height: 20px; }
     .ask { justify-items: center; text-align: center; }
     /* B2 fix round, item 4: "a 2 by 2 grid on phones" (founder). theme.css's
        .control-centre is a 4-column grid by default; only the column count

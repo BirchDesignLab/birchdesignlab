@@ -41,6 +41,11 @@
  * the translate this loop already writes, and a frame in which an offset is
  * still easing counts as a move (onMove, so the lens redraws with it); once
  * every offset has settled the loop is idle again.
+ *
+ * Stage 6 wave 2 (T3 C4, C3): a scroll under a still cursor re-targets the
+ * push, as light.ts does on every other page (the target is relative to the
+ * orb's place in the viewport, which a scroll moves); and under
+ * prefers-contrast: more (E10, flat and still) no orb is pushed.
  */
 import { repelTarget, easeStep } from '../orb-repel';
 
@@ -143,13 +148,20 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
   // The cursor, fine pointers only (orb-repel.ts); null while away.
   const fine =
     typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const contrast = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-contrast: more)') : null;
   let pointer: { x: number; y: number } | null = null;
   let easing = false;
   const onPointer = (e: PointerEvent) => {
     if (e.pointerType === 'touch') return;
-    pointer = { x: e.clientX, y: e.clientY };
+    pointer = contrast?.matches ? null : { x: e.clientX, y: e.clientY };
     easing = true;
   };
+  const onContrast = () => {
+    if (!contrast?.matches) return;
+    pointer = null;
+    easing = true;
+  };
+  contrast?.addEventListener('change', onContrast);
   const onPointerLeave = () => {
     pointer = null;
     easing = true;
@@ -182,6 +194,9 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
     const dt = lastT ? Math.min(64, now - lastT) : 16;
     lastT = now;
     let eased = false;
+    // A scroll moves every orb under a still cursor: take the push's target
+    // again (T3 C4), as a pointer move would.
+    if (pointer && scrollY !== lastScrollY) easing = true;
     if (easing) {
       for (const o of tracked) {
         if (!o.group.hasAttribute('data-live')) continue;
@@ -214,6 +229,7 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
 
   return () => {
     cancelAnimationFrame(raf);
+    contrast?.removeEventListener('change', onContrast);
     if (fine) {
       window.removeEventListener('pointermove', onPointer);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);

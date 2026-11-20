@@ -71,7 +71,7 @@
  *   a vertical scan across the seam measures the offset while scrolling.
  *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, nearestOpenSpot, discCoverage, findStartPosition, type Bounds, type RectLike, type ChosenStart } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, nearestOpenSpot, leastCoveredNearest, glideIntoCover, discCoverage, type Bounds, type RectLike, type ChosenStart } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -549,6 +549,9 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   }
   [s.x, s.y] = startPosition();
   placePoster(poster, s.x, s.y, radius);
+  /** The half-covered corner start (phones, portrait tablets), kept for the
+      rest check's margin (T1 C1); null for every other start. */
+  const cornerSpot: [number, number] | null = plan.source === 'corner' ? [s.x, s.y] : null;
 
   /* ---------- wallpaper texture ---------- */
   // A small CPU-side copy of whichever wallpaper image is current, for the
@@ -625,27 +628,62 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   // could not be grabbed again. When more than half the disc is covered at
   // rest, it eases (no spring) to the nearest spot with at most 20% cover;
   // a new pointerdown or arrow key cancels the ease.
+  // Stage 6 wave 2 (T1 C1): the phone and portrait-tablet corner start is
+  // half covered by design and measures exactly 0.500, so a strict 0.5
+  // limit kept it only by a tie; REST_MARGIN lets a layout nudge (a font
+  // swap, a reflow) leave the approved spot where it is. The margin holds at
+  // that spot only (within 2 px of it): everywhere else the limit stays 0.5.
   const REST_MAX_COVER = 0.5;
+  const REST_MARGIN = 0.05;
   const SETTLE_MAX_COVER = 0.2;
   const SETTLE_TAU = 0.12; // s
-  function checkRest() {
-    if (s.held || destroyed) return;
-    const obstructions = collectObstructions();
-    const cover = discCoverage(s.x, s.y, radius, obstructions);
-    if (cover <= REST_MAX_COVER) return;
+  /** Starts the ease to the nearest spot with at most SETTLE_MAX_COVER, or,
+      where no spot is that open (a pane spanning the whole travel box, e.g.
+      the hero window at about 1088 px), to the nearest of the least covered
+      spots (G1: by distance, never across the box under a pane), but only
+      when that is clearly better than `cover`, the cover where it is now. */
+  function settleFrom(obstructions: RectLike[], cover: number) {
     const bounds = computeBounds();
     let spot: { x: number; y: number } | null = nearestOpenSpot(bounds, radius, [s.x, s.y], obstructions, SETTLE_MAX_COVER);
     if (!spot) {
-      // No spot that open exists at this viewport (a pane spans the whole
-      // travel box, e.g. the hero window at about 1088 px): take the
-      // least-covered point instead, the start search's own fallback, but
-      // only when it is clearly better than staying put.
-      const least = findStartPosition(bounds, radius, obstructions, []);
-      if (discCoverage(least.x, least.y, radius, obstructions) < cover - 0.05) spot = least;
+      const least = leastCoveredNearest(bounds, radius, [s.x, s.y], obstructions);
+      if (least.cover < cover - 0.05) spot = least;
     }
     if (!spot) return;
     s.settle = [spot.x, spot.y];
     invalidate();
+  }
+  function checkRest() {
+    if (s.held || destroyed) return;
+    const obstructions = collectObstructions();
+    const cover = discCoverage(s.x, s.y, radius, obstructions);
+    const atCorner = !!cornerSpot && Math.hypot(s.x - cornerSpot[0], s.y - cornerSpot[1]) <= 2;
+    if (cover <= REST_MAX_COVER + (atCorner ? REST_MARGIN : 0)) return;
+    settleFrom(obstructions, cover);
+  }
+  /** One glide frame (G1, founder: a throw never travels hidden under a
+      pane). A step that would carry the disc deeper than SETTLE_MAX_COVER
+      under a pane is dropped; the glide slides along the pane's edge on the
+      other axis where that axis stays clear (as it slides along a wall),
+      else it stops there. A lens stopped more than SETTLE_MAX_COVER under
+      (it started there, e.g. the half-covered phone corner) eases to the
+      nearest open spot. */
+  function glideStep(dt: number) {
+    const bounds = computeBounds();
+    const obstructions = collectObstructions();
+    const before = discCoverage(s.x, s.y, radius, obstructions);
+    const tries: Array<[number, number]> = [[s.vx, s.vy], [s.vx, 0], [0, s.vy]];
+    for (const [vx, vy] of tries) {
+      if (vx === 0 && vy === 0) continue;
+      const next = stepGlide(s.x, s.y, vx, vy, dt, bounds);
+      if (glideIntoCover(before, discCoverage(next.x, next.y, radius, obstructions), SETTLE_MAX_COVER)) continue;
+      s.x = next.x; s.y = next.y; s.vx = next.vx; s.vy = next.vy;
+      if (s.vx === 0 && s.vy === 0) checkRest();
+      return;
+    }
+    s.vx = 0;
+    s.vy = 0;
+    if (before > SETTLE_MAX_COVER) settleFrom(obstructions, before);
   }
 
   function onPointerDown(ev: PointerEvent) {
@@ -749,7 +787,25 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   document.addEventListener('visibilitychange', onVisibilityChange);
 
   /* ---------- resize / scroll / scheme ---------- */
-  function onResize() { invalidate(); }
+  // Stage 6 wave 2 (T1 C2): once a resize settles, the lens is clamped into
+  // the new travel box and the rest check runs, so a narrower window can no
+  // longer leave it mostly under a pane until the next touch. Width changes
+  // only: a phone's toolbar showing or hiding mid-scroll changes the height
+  // alone and must not move the lens under the reader's thumb.
+  let resizeTimer = 0;
+  let lastWidth = window.innerWidth;
+  function onResize() {
+    invalidate();
+    if (window.innerWidth === lastWidth) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      lastWidth = window.innerWidth;
+      if (destroyed || s.held) return;
+      [s.x, s.y] = clampToBounds(s.x, s.y, computeBounds());
+      invalidate();
+      if (s.vx === 0 && s.vy === 0) checkRest();
+    }, 200);
+  }
   window.addEventListener('resize', onResize);
   // Natural document scroll moves every `.orb` in the viewport with no JS
   // involved (they are absolutely positioned, not fixed); the browser has
@@ -784,11 +840,8 @@ export function mountLens(opts: LensOptions): LensHandle | null {
 
     const gliding = !s.held && (s.vx !== 0 || s.vy !== 0);
     if (gliding) {
-      const bounds = computeBounds();
-      const next = stepGlide(s.x, s.y, s.vx, s.vy, dt, bounds);
-      s.x = next.x; s.y = next.y; s.vx = next.vx; s.vy = next.vy;
+      glideStep(dt);
       invalidate();
-      if (s.vx === 0 && s.vy === 0) checkRest();
     } else if (!s.held && s.settle) {
       // An exponential ease toward the open spot, no spring, no overshoot.
       const k = 1 - Math.exp(-dt / SETTLE_TAU);
@@ -943,6 +996,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       canvas.removeEventListener('webglcontextrestored', onContextRestored, false);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('resize', onResize);
+      clearTimeout(resizeTimer);
       window.removeEventListener('scroll', onScroll);
       io.disconnect();
       schemeObserver.disconnect();

@@ -51,10 +51,11 @@
   --blob-cyan: #f08424;
   --blob-peach-hi: #ffb4a2;
   --blob-peach: #ec5b49;
-  /* Stage 6 R1 (G13): the rose orb (#d63c73) is amber now; the class
-     name stays. */
-  --blob-pink-hi: #ffe39a;
-  --blob-pink: #e89e1c;
+  /* Stage 6 R1 (G13): the rose orb (#d63c73) went amber; Stage 6 wave 2
+     (G3, founder): amber twinned the ember orb beside it, so it is a pale
+     sky blue now (no coral, cream or pink). The class name stays. */
+  --blob-pink-hi: #e4f4ff;
+  --blob-pink: #86c4ee;
   --blob-worst: var(--blob-violet);
   --orb-glow: 0 0 0 transparent;
 
@@ -73,6 +74,10 @@
      type sits on the clear glass at the D2 = C 3:1 floor. */
   --mat-thin: rgb(255 255 255 / 0.18);
   --mat-regular: rgb(255 255 255 / 0.32);
+  /* Stage 6 wave 2 (G2, founder): on phones the regular pane thins instead
+     of the plate lightening, to fight the milkiness there (the phone block
+     below swaps it in); meta.ts measures body text on its plate over it. */
+  --mat-regular-phone: rgb(255 255 255 / 0.2);
   --mat-thick: rgb(255 255 255 / 0.7);
   /* Stage 6 R1 (G6): the header bar, the one place content passes under
      glass, is clear now: fill about 0.35, the rim band, a scroll-edge fade.
@@ -149,8 +154,11 @@
   --icon-cyan: #a8460a;
   --icon-peach-hi: #f08a7a;
   --icon-peach: #b3322a;
-  --icon-pink-hi: #e88aa8;
-  --icon-pink: #9e1f4e;
+  /* Stage 6 wave 2 (G3, founder): the Services "04" icon, the last
+     raspberry in light, is a deep teal, so the step row reads blue, warm,
+     warm, blue. The class name stays. */
+  --icon-pink-hi: #62c9d4;
+  --icon-pink: #0e6878;
 }
 
 :root[data-theme='glassmorphism'][data-scheme='dark'] {
@@ -196,13 +204,17 @@
      its fill until the header pass. */
   --mat-thin: rgb(16 20 46 / 0.35);
   --mat-regular: rgb(20 24 56 / 0.46);
+  /* Light only (G2): dark's navy fill does not read milky. */
+  --mat-regular-phone: var(--mat-regular);
   --mat-thick: rgb(20 24 56 / 0.76);
   --mat-bar: rgb(16 20 46 / 0.42);
   --plate: rgb(14 18 44 / 0.5);
   --spec-rim: 0.75;
   --spec-glow: 0.2;
   --edge-fade: rgb(6 12 36 / 0.5);
-  --surface-mica: rgb(16 26 64 / 0.74);
+  /* Stage 6 wave 2 (T2 C4): a greener navy and a little more of it, so the
+     coral blurred under the pane no longer mixes into plum midtones. */
+  --surface-mica: rgb(10 32 56 / 0.82);
   --surface-solid: var(--field-raised);
   --glass-fallback: rgb(22 26 58 / 0.96);
   /* A light tint, not a hole: form fields frost instead of recessing to black. */
@@ -338,6 +350,12 @@
   }
   [data-theme='glassmorphism'][data-theme='glassmorphism'] :is(.glass, .glass-strong)::before {
     display: none;
+  }
+  /* Flat and still (Stage 6 wave 2, T3 C3): the pointer light never shows
+     on the opaque ring, even if a pane is still marked lit when the
+     setting turns on (light.ts also stops lighting and pushing). */
+  [data-theme='glassmorphism'][data-theme='glassmorphism'] :is(.glass, .glass-strong)[data-lit] {
+    --spec-a: 0;
   }
 }
 @media (prefers-contrast: more) {
@@ -526,22 +544,24 @@
    agree. Specificity above both schemes' base --mat-* blocks, and safely
    below the (doubled-attribute) E10 fallback above, which must always win
    over a Control Centre setting regardless of Tinted. */
-/* Stage 6 R1 (G9): Tinted reads clearly warmer (an amber cream in light, a
-   warm umber in dark, where it used to be a near-white and a navy) and
-   thicker (more fill, and 1.6 times the blur through --glass-thicken; the
-   unprefixed property only, Safari's literal steps keep Clear's blur). */
+/* Stage 6 R1 (G9): Tinted reads thicker (more fill, and more blur through
+   --glass-thicken; the unprefixed property only, Safari's literal steps
+   keep Clear's blur). Stage 6 wave 2 (G4, founder): in light it is a
+   neutral white frost, close to Apple's own Tinted: the amber cream mixed
+   to grey-lilac over the blue bands. Dark keeps its warm umber. */
 :root[data-theme='glassmorphism'][data-glass-tint='tinted'] {
-  --mat-thin: rgb(255 232 200 / 0.5);
-  --mat-regular: rgb(255 232 200 / 0.72);
-  --mat-thick: rgb(255 232 200 / 0.84);
-  --mat-bar: rgb(255 232 200 / 0.62);
-  --glass-thicken: 1.6;
+  --mat-thin: rgb(255 255 255 / 0.5);
+  --mat-regular: rgb(255 255 255 / 0.66);
+  --mat-thick: rgb(255 255 255 / 0.84);
+  --mat-bar: rgb(255 255 255 / 0.6);
+  --glass-thicken: 1.8;
 }
 :root[data-theme='glassmorphism'][data-scheme='dark'][data-glass-tint='tinted'] {
   --mat-thin: rgb(54 34 26 / 0.68);
   --mat-regular: rgb(54 34 26 / 0.8);
   --mat-thick: rgb(48 30 24 / 0.88);
   --mat-bar: rgb(48 30 24 / 0.7);
+  --glass-thicken: 1.6;
 }
 :where([data-theme='glassmorphism']) :is(img, svg, canvas) { max-width: 100%; display: block; }
 :where([data-theme='glassmorphism']) ::selection { background: var(--blob-cyan-hi); color: var(--mark); }
@@ -759,11 +779,19 @@
    text against this plate over the pane over the worst orb.
    position: relative paints the plate above the pane's tint layer
    (::before), still under the rim ring (::after). */
-:where([data-theme='glassmorphism']) :where(.glass:not(.thick, .glass-strong)) :is(p:not(.chip, .lead, .pull, .ask-lead), label, .summary, .designation, .mail) {
+/* Stage 6 wave 2 (G2, founder): one plate per text block, with a wider
+   feather. Adjacent paragraph plates overlapped into darker seams (Services'
+   offer panes), so a block of body text (.plate: the Services sublines and
+   offer bodies, About's reading pane and founder body, the Lab list,
+   Contact's direct note) carries one plate and its text none. The feather
+   scales with the viewport so it stays inside the pane's padding on
+   phones. */
+:where([data-theme='glassmorphism']) :where(.glass:not(.thick, .glass-strong)) :is(p:not(.chip, .lead, .pull, .ask-lead), label, .summary, .designation, .mail):where(:not(.plate *)),
+:where([data-theme='glassmorphism']) :where(.glass:not(.thick, .glass-strong)) .plate {
   position: relative;
   background: var(--plate);
-  box-shadow: 0 0 12px 8px var(--plate);
-  border-radius: 10px;
+  box-shadow: 0 0 clamp(14px, 1.8vw, 26px) clamp(8px, 1vw, 14px) var(--plate);
+  border-radius: 12px;
 }
 /* A short label's plate hugs its words instead of running the pane's width
    (it stays on its own line). */
@@ -1138,6 +1166,11 @@
      override (0,2,0), so dark phones used to keep the desktop blur (B1
      re-critic nit); the dark selector is listed too, and this block sits
      after dark's, so it wins the tie on source order. */
+  /* Stage 6 wave 2 (G2): the thinner regular pane (light; dark's token
+     block, 0,3,0, and Tinted's both outrank this, as they should). */
+  :root[data-theme='glassmorphism'] {
+    --mat-regular: var(--mat-regular-phone);
+  }
   :root[data-theme='glassmorphism'],
   :root[data-theme='glassmorphism'][data-scheme='dark'] {
     --blur-thin: blur(calc((var(--glass-frost) * 1.6 + 0.2) * 8px * var(--glass-thicken))) saturate(1.2);
@@ -1570,16 +1603,12 @@ html.lens-held :where(*) {
    had. The thumb slides between the two ends instead of sitting fixed at the
    right, so the control reads its own state. Stage 6 R1 (G9): the
    window-bar switch is retired; the Control Centre's tile is the one
-   control, and these rules keep both selectors for the old markup. */
-/* .cc-switch (the Control Centre's own Clear/Tinted tile, B2 fix round item
-   4) gets every one of these rules by class LIST, not by
-   reusing the class name "switch": `.hero .switch` is a live selector in
-   the B2 critic/verify scripts (b2-glass-critic-probe.mjs and others),
-   written back when there was only one .switch under .hero (the window-bar
-   one); giving this second control the same class name would make every
-   such selector match two elements and throw under Playwright's
-   strict-mode click. */
-:where([data-theme='glassmorphism']) :is(.window-bar .switch, .control-centre .cc-switch) {
+   control (Stage 6 wave 2 dropped the old `.window-bar .switch` and
+   `.switch` selectors, which matched nothing). */
+/* .cc-switch, not "switch": `.hero .switch` was a live selector in the B2
+   critic/verify scripts (b2-glass-critic-probe.mjs and others), written
+   when the window-bar switch was the only one under .hero. */
+:where([data-theme='glassmorphism']) .control-centre .cc-switch {
   appearance: none;
   -webkit-appearance: none;
   border: 0;
@@ -1600,7 +1629,7 @@ html.lens-held :where(*) {
   transition: transform 83ms linear;
 }
 /* E11: the same brief press feedback as the other Control Centre controls. */
-:where([data-theme='glassmorphism']) :is(.switch, .cc-switch):active { transform: scale(0.97); }
+:where([data-theme='glassmorphism']) .cc-switch:active { transform: scale(0.97); }
 :where([data-theme='glassmorphism']) .switch-thumb {
   transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1608,10 +1637,10 @@ html.lens-held :where(*) {
    no longer margin-rights it). Tinted (checked) slides it to the track's
    right end: the track is 60px with 4px padding each side (52px inside) and
    the thumb is 26px, so the full rightward travel is 52 - 26 = 26px. */
-:where([data-theme='glassmorphism']) :is(.switch, .cc-switch)[aria-checked='true'] .switch-thumb {
+:where([data-theme='glassmorphism']) .cc-switch[aria-checked='true'] .switch-thumb {
   transform: translateX(26px);
 }
-:where([data-theme='glassmorphism']) :is(.switch, .cc-switch):focus-visible {
+:where([data-theme='glassmorphism']) .cc-switch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -1643,7 +1672,7 @@ html.lens-held :where(*) {
   /* .cc-seg-row and .cc-locale-value's phone rules: Home.astro (scoped). */
   /* Home.astro's own phone rule shrinks the track to 48px (4px padding, 20px
      thumb): the rightward travel becomes 40 - 20 = 20px. */
-  :where([data-theme='glassmorphism']) :is(.switch, .cc-switch)[aria-checked='true'] .switch-thumb {
+  :where([data-theme='glassmorphism']) .cc-switch[aria-checked='true'] .switch-thumb {
     transform: translateX(20px);
   }
 }
@@ -1654,11 +1683,12 @@ html.lens-held :where(*) {
 
 /* E10: the lens's off state (proofs/lens.md, "what a WebKit run would need
    to check", item 10). Increased contrast turns the canvas and its shadows
-   off outright (Stage 6: no longer reduced transparency, which the Portal
-   ignores for glass; home-boot.ts then mounts no lens at all) (the poster, plain CSS, already reads
-   fine on its own); lens.ts never fights this because it only ever sets
-   `visibility` back to '' after its own successful frame, which cannot
-   un-set an !important rule. */
+   off outright, and the poster (plain CSS) reads fine on its own. Since
+   Stage 6 reduced transparency no longer counts (the Portal ignores it for
+   glass), and home-boot.ts mounts no lens at all while contrast is more,
+   tearing a live one down if the setting turns on mid-visit. lens.ts never
+   fights this rule: it only ever sets `visibility` after its own
+   successful frame, which cannot un-set an !important rule. */
 @media (prefers-contrast: more) {
   :where([data-theme='glassmorphism']) :is(.lens-canvas, .lens-shadow, .lens-hit) {
     display: none !important;

@@ -105,8 +105,13 @@ function roundedRectSdf(x: number, y: number, w: number, h: number, r: number) {
 
     Both cover the pane's padding box (the layers sit inside the border).
     Only the band along the rim is computed; everything else is a flat fill,
-    so a big pane costs a thin ring of SDF work instead of its whole area. */
-function rimMaps(w: number, h: number, r: number, band: number, max: number): { map: string; mask: string } | null {
+    so a big pane costs a thin ring of SDF work instead of its whole area.
+
+    `yScale` scales the vertical shift alone (Stage 6 wave 2, G5): the
+    header bar passes HEADER_Y_SCALE, so text scrolling under its flat
+    bottom edge bends instead of smearing into vertical streaks; every other
+    pane keeps 1. */
+function rimMaps(w: number, h: number, r: number, band: number, max: number, yScale = 1): { map: string; mask: string } | null {
   // One map pixel per CSS pixel: at 2 the displaced rim stepped in 2px
   // blocks and smeared text passing under the header into streaks.
   const scale = 1;
@@ -152,7 +157,7 @@ function rimMaps(w: number, h: number, r: number, band: number, max: number): { 
       const t = Math.min(1, Math.max(0, 1 - d / band));
       const shift = max * Math.pow(t, 1.6);
       disp.img.data[k] = Math.round(128 + ((-nx * shift) / max) * 127);
-      disp.img.data[k + 1] = Math.round(128 + ((-ny * shift) / max) * 127);
+      disp.img.data[k + 1] = Math.round(128 + ((-ny * shift * yScale) / max) * 127);
     }
   }
   disp.g.putImageData(disp.img, 0, 0);
@@ -161,6 +166,10 @@ function rimMaps(w: number, h: number, r: number, band: number, max: number): { 
 }
 
 const SVGNS = 'http://www.w3.org/2000/svg';
+
+/** The header bar's vertical rim shift, as a share of every other pane's
+    (Stage 6 wave 2, G5, founder: about a third, the bar only). */
+const HEADER_Y_SCALE = 1 / 3;
 
 /** The largest orb overlapping a pane's rect, and its colour, for the
     adaptive tint. Reads the orb's own --lo custom property by applying it
@@ -342,7 +351,7 @@ export function mountPanes(): (() => void) | void {
     const r = Math.max(0, Math.min((parseFloat(cs.borderTopLeftRadius) || 0) - border, w / 2, h / 2));
     const band = Math.max(6, Math.min(24, r * 0.85, Math.min(w, h) * 0.22));
     const max = Math.min(30, band * 0.9);
-    const maps = rimMaps(w, h, r, band, max);
+    const maps = rimMaps(w, h, r, band, max, el.matches('.site-header .bar') ? HEADER_Y_SCALE : 1);
     if (!maps) return;
     let id = ids.get(el);
     if (!id) {

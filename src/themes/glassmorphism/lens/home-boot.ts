@@ -145,25 +145,48 @@ export function mountHomeGlass(): (() => void) | void {
     /* Geometry only: a failure leaves the CSS spot, exactly as before. */
   }
 
-  const stopIdle = afterArrivalIdle(() => {
+  function mount(usePlan: ReturnType<typeof planLensStart> | null) {
     // One lens per Home visit (Stage 6, diagnosis C): a second call must
     // never overwrite a live lens without destroying it.
     if (lens || lensHidden()) return;
     const settings = currentSettings();
     lens = mountLens({
-      host,
-      poster,
+      host: host!,
+      poster: poster!,
       phone: window.innerWidth <= 600,
       initialTint: settings.tint,
       initialTod: settings.tod,
       scheme,
       chromeInsets,
       probe: probeParam(),
-      plan: Math.abs(window.scrollY - planScrollY) > 1 ? plan : null,
+      plan: usePlan,
     });
+  }
+  let idleDone = false;
+  const stopIdle = afterArrivalIdle(() => {
+    idleDone = true;
+    mount(Math.abs(window.scrollY - planScrollY) > 1 ? plan : null);
   });
+
+  // Stage 6 wave 2 (T1 C3): the contrast setting can change mid-visit.
+  // Turning more contrast on tears the lens down (its CSS hides the canvas
+  // anyway; this also stops its loop and listeners); turning it off mounts
+  // a fresh lens, planned against the layout as it is now. Before the idle
+  // mount has run, the idle mount itself reads the setting.
+  const contrastMq = window.matchMedia('(prefers-contrast: more)');
+  function onContrast() {
+    if (!idleDone) return;
+    if (contrastMq.matches) {
+      lens?.destroy();
+      lens = null;
+    } else {
+      mount(null);
+    }
+  }
+  contrastMq.addEventListener('change', onContrast);
   return () => {
     stopIdle();
+    contrastMq.removeEventListener('change', onContrast);
     lens?.destroy();
     lens = null;
     stopOrbClock?.();
