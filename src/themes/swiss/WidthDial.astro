@@ -40,15 +40,17 @@
   const MIN = 62;
   const TOP = 125;
   const STOPS = [62, 75, 87.5, 100, 112.5, 125];
-  const SPEED = 0.2;
+  const SPEED = 0.25;
   const HOLD = 100;
   const ENGAGE = 6;
   const BEAT = 180;
   const HINT_KEY = 'bdl-swiss-dial-hint';
   /** The right side bearing of the word's last letter as a fraction of the
-      size (measured from pixels): the bar sits a gutter past the ink, not
-      past the advance. */
-  const INK_INSET = 0.018;
+      size, INK_A + INK_B * width (a least-squares fit of pixel measures at
+      62 to 125, w2-t10-rsb.mjs: it grows with the cut, from about -0.006 to
+      0.021): the bar sits a gutter past the ink, not past the advance. */
+  const INK_A = -0.0309;
+  const INK_B = 0.000434;
 
   onMount(() => {
     const dial = document.querySelector<HTMLElement>('[data-sw-dial]');
@@ -66,12 +68,16 @@
     const wide = window.matchMedia('(min-width: 1024px)');
 
     // Geometry, measured on mount, when the fonts are ready, and on resize.
-    let table: number[] = []; // advance of the word in px at each stop
+    // The word's right edge in px from the hero's left at each stop. Not its
+    // advance: Home.astro steps the word left by 0.000675em per width unit, so
+    // the edge moves less than the advance grows, and the drag and the bar
+    // follow the edge (Stage 6 wave 2, T4 C3).
+    let table: number[] = [];
     let rest = 100;
     let max = TOP;
     let cur = 100;
     let left = 0; // the word's left, from the hero's left
-    let inkR = 0; // px the ink ends inside the advance
+    let size = 0; // the word's font size, px
     let gap = 24; // the grid's gutter, px
     let ready = false;
     // A resize or a font load that landed while the dial held the word: the
@@ -79,7 +85,7 @@
     let stale = false;
 
     const clamp = (s: number) => Math.min(max, Math.max(MIN, s));
-    /** The word's advance at width s, interpolated over the table. */
+    /** The word's right edge at width s, interpolated over the table. */
     const W = (s: number) => {
       if (s <= STOPS[0]) return table[0];
       for (let i = 1; i < STOPS.length; i++) {
@@ -87,7 +93,7 @@
       }
       return table[table.length - 1];
     };
-    /** The width at which the word's advance is px. */
+    /** The width at which the word's right edge is at px from the hero's left. */
     const Winv = (px: number) => {
       if (px <= table[0]) return STOPS[0];
       for (let i = 1; i < table.length; i++) {
@@ -107,18 +113,17 @@
       const cssRest = parseFloat(getComputedStyle(h1).getPropertyValue('--sw-rest')) || 100;
       const heroR = hero.getBoundingClientRect();
       const lineR = word.getBoundingClientRect();
-      // The word's advance at each stop.
+      // The word's right edge at each stop.
       table = STOPS.map((s) => {
         setWidth(s);
-        return range.getBoundingClientRect().width;
+        return range.getBoundingClientRect().right - heroR.left;
       });
       setWidth(null);
       if (!(table[0] > 0) || !(table[table.length - 1] > table[0])) return;
       const textR = range.getBoundingClientRect();
       const fs = parseFloat(getComputedStyle(word).fontSize);
-      left = textR.left - heroR.left;
       gap = parseFloat(getComputedStyle(hero).columnGap) || 24;
-      inkR = INK_INSET * fs;
+      size = fs;
       // The font's baseline and cap height in this line, for the bar.
       const cs = getComputedStyle(word);
       const c = document.createElement('canvas').getContext('2d');
@@ -138,16 +143,23 @@
       let top = TOP;
       if (wide.matches) {
         const ledeR = lede.getBoundingClientRect();
-        if (ledeR.top < base + desc) top = Math.min(TOP, Math.max(MIN, Winv(ledeR.left - gap - textR.left)));
+        if (ledeR.top < base + desc) top = Math.min(TOP, Math.max(MIN, Winv(ledeR.left - gap - heroR.left)));
       }
       max = wide.matches ? top : TOP;
       rest = wide.matches ? max : cssRest;
-      if (rest !== cssRest) h1.style.setProperty('--sw-rest', rest.toFixed(2));
+      // The CSS rest is written to match the cap (Home.astro, 1024 to 1195):
+      // when they agree to a quarter of a unit the CSS keeps the word, so
+      // nothing moves after mount.
+      if (Math.abs(rest - cssRest) <= 0.25) rest = cssRest;
+      else h1.style.setProperty('--sw-rest', rest.toFixed(2));
       if (!active) cur = rest;
+      // The word's left at rest: the dial and the hairline are measured from it.
+      setWidth(null);
+      left = range.getBoundingClientRect().left - heroR.left;
       // The dial's box: over the word's line, as wide as the word at its top.
       dial.style.left = `${left}px`;
       dial.style.top = `${lineR.top - heroR.top}px`;
-      dial.style.width = `${W(max)}px`;
+      dial.style.width = `${W(max) - left}px`;
       dial.style.height = `${lineR.height}px`;
       dial.style.setProperty('--base', `${base - lineR.top}px`);
       dial.style.setProperty('--cap-top', `${base - cap - lineR.top}px`);
@@ -183,8 +195,8 @@
       dial.setAttribute('aria-valuenow', String(shown));
       dial.setAttribute('aria-valuetext', `${shown} percent`);
       read.textContent = String(shown);
-      // In the dial's own coordinates: its left is the word's advance edge.
-      const bar = W(cur) - inkR + gap;
+      // In the dial's own coordinates: its left is the word's left at rest.
+      const bar = W(cur) - left - (INK_A + INK_B * cur) * size + gap;
       dial.style.setProperty('--bar-x', `${bar}px`);
       // The hairline runs from the frame's left edge (a bearing to the left
       // of the dial's) to the bar.

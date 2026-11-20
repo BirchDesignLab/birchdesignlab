@@ -24,7 +24,10 @@ export const meta: ThemeMeta = {
      The lab band's photograph (Stage 6, P4) adds no ink or surface: its marks
      are black on a white band (--white-field) and each line of type over it
      carries the sheet's own ground (--black, or --white-field in dark), so the
-     pairs above are the ones that hold. */
+     pairs above are the ones that hold. Stage 6 wave 2 adds hairlines only (the
+     band's foot, in --mark-muted on the sheet; the trunk band's foot, --black
+     on the red field) and puts the phone pull on the sheet's own ground with
+     no label: lines, not type, and the sheet's type pairs above. */
   contrast: [
     { fg: '--on-red', bg: ['--red-field'], min: 4.5, note: 'white type on the red field' },
     { fg: '--on-red', bg: ['--black'], min: 4.5, note: 'a button inside the red field' },

@@ -42,13 +42,33 @@ image is not flipped, recoloured otherwise or retouched.
 
 ## Weight
 
-| | Before | After |
-|---|---|---|
-| About's field | `swiss-field.webp`, 190,250 bytes, re-encoded to WebP at 480 to 1597 px | AVIF 34,461 (720) / 74,603 (1200) / 132,395 (1800); WebP 52,110 / 137,042 / 284,764 |
-| Home's lab band | none | AVIF 6,343 (1200) / 12,939 (2000); WebP 8,674 / 21,366 |
+Re-measured in Stage 6 wave 2 (task 10), in Chromium at DPR 1 on frozen builds
+(`scripts/themes/stage6/w2-t10-weights.mjs`), summing what the page fetched.
 
-A visitor on a current browser downloads one AVIF per image (the browser picks
-the width): about 75 KB for About at a desktop, about 13 KB for Home's band.
-`src/assets/swiss-field.webp` is gone; `scripts/themes/swiss/make-field-image.mjs`
-and `tree-still-large.png` (the Shining Tree duotone it made) are kept as the
-record of the retired image and are no longer part of the build.
+**About's field image.** Before (`stage6-base`: the Shining Tree, served by
+Astro's image service as WebP in four widths): 45,246 B at 480w, 85,750 B at
+760w, 142,226 B at 1120w, 190,726 B at 1477w. The 190,250 B this note first
+quoted as the "before" was the source file's size, not what any visitor was sent. After:
+AVIF 34,461 B (720w), 74,603 B (1200w), 132,395 B (1800w), with WebP fallbacks
+52,110 / 137,042 / 284,764 B.
+
+| What a visitor fetches | Before | After |
+|---|---|---|
+| About at 1440, DPR 1 | 85,750 B (760w WebP) | 74,603 B (1200w AVIF), 13 percent less |
+| About at 1024 and 820, DPR 1 | 45,246 B (480w WebP) | 74,603 B (1200w AVIF), 29,357 B more |
+| About at 390, DPR 1 | 45,246 B (480w WebP) | 34,461 B (720w AVIF), 24 percent less |
+| Home's lab band at 1440 / 1024, 820 and 390 | none | 12,939 B (2000w AVIF) / 6,343 B (1200w AVIF) |
+
+So the change per visitor is 85.7 KB to 74.6 KB at a desktop, a little more at
+a tablet and less on a phone, and Home gains a 6 to 13 KB picture. WebP
+fallbacks (browsers without AVIF) are 52 to 285 KB for About and 9 to 21 KB
+for Home's band. `src/assets/swiss-field.webp` is gone;
+`scripts/themes/swiss/make-field-image.mjs` and `tree-still-large.png` (the
+Shining Tree duotone it made) are kept as the record of the retired image and
+are no longer part of the build.
+
+**`sizes` on About** (Stage 6 wave 2): the field image renders min(125vw,
+900px) wide below 640, min(100vw, 820px) from 640 to 1023, and from 1024 it
+runs the field's height (clamp(640px, 54vw, 1000px)) at 1800:1250, so
+clamp(922px, 77.8vw, 1440px) wide. The attribute says exactly that. Home's
+band is `100vw`.

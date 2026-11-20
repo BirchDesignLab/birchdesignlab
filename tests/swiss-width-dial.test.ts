@@ -30,8 +30,8 @@ describe('swiss width dial', () => {
     expect(dial).toMatch(/const ENGAGE = 6/);
     expect(dial).toMatch(/cursor: ew-resize/);
   });
-  it('snaps back at a constant 0.2 units a millisecond after a 100ms hold', () => {
-    expect(dial).toMatch(/const SPEED = 0\.2/);
+  it('snaps back at a constant 0.25 units a millisecond after a 100ms hold', () => {
+    expect(dial).toMatch(/const SPEED = 0\.25;/);
     expect(dial).toMatch(/const HOLD = 100/);
   });
   it('re-measures when the word comes back to rest after a resize it skipped', () => {
@@ -60,7 +60,7 @@ describe('swiss width dial', () => {
   });
   it('caps the word below the lede on a desktop', () => {
     expect(dial).toMatch(/ledeR\.top < base \+ desc/);
-    expect(dial).toMatch(/Winv\(ledeR\.left - gap - textR\.left\)/);
+    expect(dial).toMatch(/Winv\(ledeR\.left - gap - heroR\.left\)/);
   });
   it('the bar is the red field, 6px and 4px on phones', () => {
     expect(dial).toMatch(/background: var\(--red-field\)/);
@@ -70,8 +70,12 @@ describe('swiss width dial', () => {
 });
 
 describe('swiss poster scale and flush-left', () => {
-  it('rests the dial word at 125 from 1280, the billboard 1.2x on a desktop', () => {
-    expect(home).toMatch(/min-width: 1280px\) \{\s*\.billboard \{ --sw-rest: 125; \}/);
+  it('rests the dial word at the dial\'s own cap, in CSS: 94.7 from 1024, 125 once the hero is 1100px', () => {
+    expect(home).toMatch(/min-width: 1024px\) \{\s*\.billboard \{ --sw-rest: 94\.7; \}/);
+    expect(home).toMatch(/@container \(min-width: 1100px\) \{\s*\.billboard \{ --sw-rest: 125; \}/);
+    expect(home).not.toMatch(/min-width: 1280px\) \{\s*\.billboard \{ --sw-rest/);
+    // The script leaves the CSS rest alone when the cap agrees to a quarter of a unit.
+    expect(dial).toMatch(/Math\.abs\(rest - cssRest\) <= 0\.25/);
     expect(home).toContain('--bb: min(20.2cqw, 21rem)');
   });
   it('steps every giant left by its measured bearing', () => {
