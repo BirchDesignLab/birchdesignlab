@@ -17,6 +17,9 @@ interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: st
 const { copy, theme } = Astro.props;
 const [etymLead, ...etymRest] = copy.etymology;
 const [founderLead, ...founderRest] = copy.founder.body;
+// V13: one block span per sentence (below), so no line holds the end of one
+// sentence and the start of the next. The copy is the same string.
+const manifestoSentences = copy.manifesto.split(/(?<=[.!?])\s+/);
 ---
 <header class="temple">
   <div class="sky" aria-hidden="true"><div class="vw-sun temple-sun"></div></div>
@@ -50,7 +53,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
     <div class="centerpiece-stage" data-marble-stage>
       <canvas class="centerpiece-canvas" data-marble-canvas aria-hidden="true" tabindex="-1"></canvas>
       <div class="centerpiece-poster" data-marble-poster aria-hidden="true">
-        <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} />
+        <Still class="centerpiece-prop" avif={bustAvif} webp={bustWebp} size={1024} eager />
       </div>
     </div>
     <div class="centerpiece-steps" aria-hidden="true">
@@ -66,7 +69,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
   <p class="etym-lead" set:html={rich(etymLead)} />
   <div class="etym-grid">
     <Rune class="rune" />
-    <Win title="beorc.txt" class="etym-win">
+    <Win title="beorc.txt" class="etym-win" inactive>
       {etymRest.map((para) => <p set:html={rich(para)} />)}
     </Win>
   </div>
@@ -86,7 +89,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
   <div class="plinth">
     <Marble id="plinth" seed={41} />
     <Meander id="meander-plinth" class="plinth-frieze" />
-    <p class="manifesto">{copy.manifesto}</p>
+    <p class="manifesto">{manifestoSentences.map((sentence, i) => <>{i > 0 && ' '}<span class="manifesto-s">{sentence}</span></>)}</p>
   </div>
   <div class="plinth-base" aria-hidden="true">
     <div class="tier tier-1"></div>
@@ -99,7 +102,20 @@ const [founderLead, ...founderRest] = copy.founder.body;
   /* ---------- the temple header ---------- */
   .temple {
     position: relative; overflow: hidden; isolation: isolate;
-    min-height: clamp(460px, 62vh, 640px);
+    /* V5 (Stage 6 wave 2): the live bust was undersized to drag (164px wide
+       at 820, 260 at 1440, with about 250px of dead sky above it at 820).
+       --cp-w is the centrepiece's width, clamp(200px, 32vw, 380px) (262px at
+       820, 380 from 1188), and the header is at least as tall as the title
+       block (--title-bottom, the padding, the kana line, the heading) plus a
+       gap, the stage (84% of --cp-w, a square), the three tiers (58px) and
+       the 34px it stands above the frieze, so the bigger bust never rides up
+       into the heading. Desktop keeps its old 62vh as a floor; the tablet
+       band is sized by the bust alone, which is what takes the dead sky out
+       at 820. */
+    --cp-w: clamp(200px, 32vw, 380px);
+    --title-bottom: calc(clamp(3rem, 8vh, 5rem) + 2rem + 0.98 * clamp(3rem, 8.5vw, 7rem));
+    --temple-need: calc(var(--title-bottom) + 3rem + var(--cp-w) * 0.84 + 58px + 34px);
+    min-height: max(clamp(460px, 62vh, 640px), var(--temple-need));
     display: grid; justify-items: center;
     padding: clamp(3rem, 8vh, 5rem) var(--gutter) 3.5rem;
   }
@@ -138,7 +154,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
      this). */
   .centerpiece {
     position: absolute; left: 50%; bottom: 34px; translate: -50% 0; z-index: 1;
-    display: grid; justify-items: center; width: clamp(160px, 20vw, 260px);
+    display: grid; justify-items: center; width: var(--cp-w);
   }
   /* Re-measured for the Venus poster (B2): measure-still-bbox.mjs --solid
      (alpha >= 200/255, the opaque silhouette alone, not the still's own
@@ -269,6 +285,10 @@ const [founderLead, ...founderRest] = copy.founder.body;
     color: var(--inscription);
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
   }
+  /* V13: a sentence is a block, so it starts its own line and a line never
+     carries the end of one sentence into the start of the next. It balances
+     on its own (a block span is its own wrapping box), at any width. */
+  .manifesto-s { display: block; text-wrap: balance; }
   /* A deliberate stepped base: two tiers, each wider than the plaque above
      it by about 12px a side, instead of one flat neon bar. An explicit width
      here (matching .plinth's own track) gives the tiers' percentage widths
@@ -291,6 +311,13 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .plinth-base .tier-1 { width: calc(min(100%, 980px) + min(1rem, 2 * var(--gutter))); }
   .plinth-base .tier-2 { width: calc(min(100%, 980px) + min(2.5rem, 2 * var(--gutter))); margin-top: -1px; }
 
+  /* V5: the tablet band has no vh floor (62vh of a 1180px tablet is the 640
+     cap, which left the bust a sky of dead space above it): the header is as
+     tall as the bust needs and no taller. */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .temple { min-height: max(460px, var(--temple-need)); }
+  }
+
   @media (max-width: 760px) {
     /* Scaled down and pulled fully on-screen: a whole column each side, not
        a sliced half read as a rendering accident. */
@@ -299,7 +326,8 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .temple :global(.col-r) { right: 6px; }
     .etym-grid { grid-template-columns: 1fr; }
     .etym-grid :global(.rune) { width: min(220px, 70%); margin-inline: auto; }
-    .centerpiece { width: clamp(120px, 34vw, 180px); bottom: 24px; }
+    .temple { --cp-w: clamp(120px, 34vw, 180px); }
+    .centerpiece { bottom: 24px; }
   }
 </style>
 

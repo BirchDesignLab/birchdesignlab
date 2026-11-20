@@ -16,13 +16,20 @@ const year = new Date().getFullYear();
       <p class="foot-name">{chrome.name}</p>
       <p class="foot-loc">{chrome.location}</p>
     </div>
+    {/* V7: two deliberate rows, the site links and then the socials, so a
+        social never wraps alone onto a second row (FACEBOOK did, at 600,
+        1280 and 1440). The order and the links are as before. */}
     <nav aria-label="Footer">
-      {chrome.nav.map(({ to, label }) => (
-        <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
-      ))}
-      {SOCIAL_PROFILES.map(({ label, url }) => (
-        <a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a>
-      ))}
+      <div class="nav-row">
+        {chrome.nav.map(({ to, label }) => (
+          <a href={hrefFor(to, theme)} data-astro-reload={to === 'lab' ? '' : undefined}>{label}</a>
+        ))}
+      </div>
+      <div class="nav-row">
+        {SOCIAL_PROFILES.map(({ label, url }) => (
+          <a href={url} rel="me noopener noreferrer" target="_blank" aria-label={`${chrome.name} on ${label} (opens in a new tab)`}>{label}</a>
+        ))}
+      </div>
     </nav>
     <p class="fine">&copy; {year} {chrome.name} <span class="sep" aria-hidden="true">&#9670;</span> <a href={hrefFor('privacy', theme)} data-astro-reload>{chrome.privacy}</a></p>
   </div>
@@ -86,7 +93,8 @@ const year = new Date().getFullYear();
     font-family: var(--font-mono); font-size: 1.4rem; line-height: 1; color: var(--accent);
     text-transform: uppercase; letter-spacing: 0.08em;
   }
-  nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; justify-content: flex-end; }
+  nav { display: grid; gap: 1rem; justify-items: end; }
+  .nav-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; justify-content: flex-end; }
   /* Phone touch targets (12): a 44px hit area with a matching negative
      margin, so the row's visual spacing holds while the tap target grows. */
   nav a {
@@ -179,12 +187,13 @@ const year = new Date().getFullYear();
   /* E10: the tablet band tightens the nav so its four links fit one line
      instead of stranding CONTACT alone on a wrap. */
   @media (max-width: 860px) and (min-width: 721px) {
-    nav { gap: 0.4rem 1rem; }
+    .nav-row { gap: 0.4rem 1rem; }
     nav a { letter-spacing: 0.14em; font-size: 0.75rem; }
   }
   @media (max-width: 720px) {
     .foot-grid { grid-template-columns: 1fr; }
-    nav { justify-content: flex-start; }
+    nav { justify-items: start; }
+    .nav-row { justify-content: flex-start; }
     .foot-name { letter-spacing: 0.18em; }
   }
 </style>

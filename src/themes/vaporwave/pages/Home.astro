@@ -532,6 +532,18 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1.05;
   }
 
+  /* V2 (Stage 6 wave 2): on a tablet the hero is as tall as 980px but only
+     820 to 1100 wide, so palms sized by that height (66% and 78%) met in the
+     middle and left 44px of clear sky against a sun about 420px wide. A
+     band of their own: palms about 50% and 58% high, pushed out to the
+     edges (-14% and -18%), which leaves the whole sun clear. Desktop (1101
+     and up) and the phone band below are untouched. */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .hero :global(.palm) { height: 50%; }
+    .hero :global(.palm-l) { left: -14%; }
+    .hero :global(.palm-r) { right: -18%; height: 58%; }
+  }
+
   @media (max-width: 760px) {
     .opener { grid-template-columns: 1fr; }
     .subline { max-width: 52ch; }
@@ -560,8 +572,24 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      the sphere here, rather than the old 760px cut, covers .lab's own
      `.vw-still { display: block }` tie too (ancestor-scoped `.lab` still
      outweighs it), so no separate 390px-only rule is needed. */
+  /* V3 (Stage 6 wave 2): the pair is no longer hidden below 900px, which left
+     the phone and tablet lobby one lone column. Seated instead in front of
+     the stand's lower corners, each at clamp(64px, 14vw, 96px) with its
+     outer edge on the stand's own edge (the stand is min(100%, 640px) of
+     .kiosk, so its half-width from the centre is min(50%, 320px)); on a
+     tablet, where the stand leaves room beside it, a prop steps out by up to
+     a third of its width so it overlaps the corner rather than hiding in it.
+     The vertical anchor (bottom: 0.4rem and each prop's own translateY) is
+     the desktop's, so the bases land on the stand's floor line as before. */
   @media (max-width: 900px) {
-    .lab :global(.kiosk-prop) { display: none; }
-    .lab :global(.kiosk-prop-venus) { display: none; }
+    .lab :global(.kiosk-prop) {
+      --prop-w: clamp(64px, 14vw, 96px);
+      width: var(--prop-w);
+      left: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
+    }
+    .lab :global(.kiosk-prop-venus) {
+      left: auto;
+      right: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
+    }
   }
 </style>

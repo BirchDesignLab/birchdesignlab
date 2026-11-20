@@ -23,6 +23,15 @@ const MAX_DPR = 1.5;
    ceiling; a mouse-driven wide viewport keeps the sharper 1.5. */
 const MAX_DPR_COARSE = 1.25;
 const COARSE_BREAKPOINT = 760;
+/* V11 (Stage 6 wave 2): the phone horizon. Where the horizon line sits, in
+   canvas heights up from the bottom (0.3 on other portrait screens, 0.32 on
+   landscape ones); how high the sun's centre sits above it, in sun radii (0.12
+   everywhere else); and the caps on the floor's fade-in and haze, in canvas
+   heights (dark's tokens are 0.1 and 0.08; light's are already under both). */
+const PHONE_SUN_RISE = 0.34;
+const PHONE_HORIZON = 0.36;
+const PHONE_FADE = 0.05;
+const PHONE_HAZE = 0.04;
 /** The frame drawn under reduced motion: stars lit, stripes mid-drift. */
 const STILL_TIME = 7.3;
 /**
@@ -70,11 +79,13 @@ uniform float uScroll;
 uniform float uStripe;
 uniform float uHorizonY;
 uniform float uSunR;
+uniform float uSunRise;
 uniform float uStars;
 uniform float uGlow;
 uniform float uFade;
 uniform float uHaze;
 uniform float uGridGlow;
+uniform float uGapDark;
 uniform float uSeam;
 uniform vec3 uSkyTop;
 uniform vec3 uSkyMid;
@@ -125,7 +136,7 @@ void main() {
 
     // The sun: a vertical gradient, slit in its lower half, the slits
     // widening downward and drifting slowly.
-    vec2 sc = vec2(0.0, uSunR * 0.12);
+    vec2 sc = vec2(0.0, uSunR * uSunRise);
     float d = length(p - sc);
     col += uSunB * 0.3 * exp(-max(d - uSunR, 0.0) * 7.0);
     float k = clamp((p.y - (sc.y - uSunR)) / (2.0 * uSunR), 0.0, 1.0);
@@ -138,6 +149,11 @@ void main() {
       cut = step(band, mix(0.08, 0.6, clamp(below / 0.65, 0.0, 1.0)));
     }
     float disc = smoothstep(uSunR, uSunR - 1.5 * px, d);
+    // V11: through a slit the sky shows, and near the horizon that sky is the
+    // same hot pink as the sun's own lower stripes, so on a dark phone the
+    // gaps vanished. uGapDark (0 except on a dark phone) pulls the gap toward
+    // the sky's mid purple, the dark slit a sunset like this is drawn with.
+    col = mix(col, mix(col, uSkyMid, uGapDark), disc * cut);
     col = mix(col, sun, disc * (1.0 - cut));
 
     // Mountains: parted in the middle so the sun sets between them.
@@ -298,12 +314,27 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   const uStripe = u('uStripe');
   const uHorizonY = u('uHorizonY');
   const uSunR = u('uSunR');
+  const uSunRise = u('uSunRise');
   const uStars = u('uStars');
   const uGlow = u('uGlow');
   const uFade = u('uFade');
   const uHaze = u('uHaze');
   const uGridGlow = u('uGridGlow');
+  const uGapDark = u('uGapDark');
   const uSeam = u('uSeam');
+
+  // V11: below the phone breakpoint the scheme's fade and haze (dark: 0.1 and
+  // 0.08 of the canvas height, over 80px on a phone hero) are capped, so the
+  // floor's grid picks up near the horizon instead of dissolving into haze.
+  let tokenFade = 0.1;
+  let tokenHaze = 0.08;
+  let phone = false;
+  let tokenGap = 0;
+  const applyHaze = () => {
+    gl.uniform1f(uGapDark, phone ? tokenGap : 0);
+    gl.uniform1f(uFade, phone ? Math.min(tokenFade, PHONE_FADE) : tokenFade);
+    gl.uniform1f(uHaze, phone ? Math.min(tokenHaze, PHONE_HAZE) : tokenHaze);
+  };
 
   const setColors = () => {
     const cs = getComputedStyle(document.documentElement);
@@ -312,8 +343,10 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
     }
     gl.uniform1f(uStars, parseFloat(cs.getPropertyValue('--hz-stars')) || 0);
     gl.uniform1f(uGlow, parseFloat(cs.getPropertyValue('--hz-glow')) || 0);
-    gl.uniform1f(uFade, parseFloat(cs.getPropertyValue('--hz-fade')) || 0.1);
-    gl.uniform1f(uHaze, parseFloat(cs.getPropertyValue('--hz-haze')) || 0.08);
+    tokenFade = parseFloat(cs.getPropertyValue('--hz-fade')) || 0.1;
+    tokenHaze = parseFloat(cs.getPropertyValue('--hz-haze')) || 0.08;
+    tokenGap = parseFloat(cs.getPropertyValue('--hz-gap-dark')) || 0;
+    applyHaze();
     gl.uniform1f(uGridGlow, parseFloat(cs.getPropertyValue('--hz-grid-glow')) || 0.35);
   };
 
@@ -332,7 +365,16 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
     // never outgrows the width and the billboard keeps the sky.
     const aspect = w / h;
     gl.uniform1f(uSunR, Math.min(0.22, 0.36 * aspect));
-    gl.uniform1f(uHorizonY, aspect < 1 ? 0.3 : 0.32);
+    // V11: on a phone the whole horizon rides higher (the floor takes 0.36 of
+    // the height, not 0.3, so its grid has room to arrive), and the sun sits
+    // higher on it (its centre 0.34 of a radius above the line, not 0.12), so
+    // its slitted lower part rides in the sky's own purple instead of sinking
+    // into the horizon's pink glow, where the gaps between the stripes
+    // vanished.
+    phone = canvas.clientWidth < COARSE_BREAKPOINT;
+    gl.uniform1f(uHorizonY, phone ? PHONE_HORIZON : aspect < 1 ? 0.3 : 0.32);
+    gl.uniform1f(uSunRise, phone ? PHONE_SUN_RISE : 0.12);
+    applyHaze();
   };
 
   // seam-throttle fix (round 1) found the 30fps throttle could skip the one

@@ -45,7 +45,7 @@ const steps = copy.process.steps.length;
 
 <section class="wizard vw-wrap">
   {/* E14: one mixed-script decorative title bar. */}
-  <Win title="サービス setup.exe" class="wizard-win">
+  <Win title="サービス setup.exe" class="wizard-win" inactive>
     <h2>{copy.process.heading}</h2>
     <ol class="steps">
       {copy.process.steps.map((step, i) => (
@@ -67,7 +67,7 @@ const steps = copy.process.steps.length;
     <p class="pull">{copy.pull}</p>
     <a class="vw-btn" href={hrefFor('contact', theme)}>{copy.cta}</a>
   </div>
-  <div class="ask-band"><Lobby class="ask-lobby" /></div>
+  <div class="ask-band"><Lobby class="ask-lobby" variant="mall" /></div>
 </section>
 
 <script>
@@ -81,7 +81,15 @@ const steps = copy.process.steps.length;
   /* ---------- intro ---------- */
   .intro {
     position: relative;
+    /* V1: the kana's size is one token, so the sublines can be measured
+       against the kana they sit beside (below). Capped near 4.5rem from 761
+       to 1100, where the column it hangs in is tightest. */
+    --kana-size: clamp(3rem, 9vw, 7.5rem);
+    --kana-gap: 1.5rem;
     padding-block: clamp(3.5rem, 8vw, 6.5rem) clamp(3rem, 6vw, 4.5rem);
+  }
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .intro { --kana-size: min(4.5rem, clamp(3rem, 9vw, 7.5rem)); }
   }
   /* E10: the chromatic split scales with the type instead of a flat 3px. */
   h1 {
@@ -97,7 +105,10 @@ const steps = copy.process.steps.length;
   .sublines {
     position: relative; z-index: 1;
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem 3rem;
-    margin-top: 2.2rem; max-width: 60rem;
+    /* V1: the sublines stop short of the kana by its width plus a gap (a
+       max-width, not padding: where the kana is clear of them already, at
+       1280 and up, the measure stays 60rem and the lines do not reflow). */
+    margin-top: 2.2rem; max-width: min(60rem, calc(100% - var(--kana-size) - var(--kana-gap)));
   }
   .sublines p { font-size: 1.12rem; color: var(--mark-muted); padding-left: 1rem; border-left: 3px solid var(--accent); }
   .sublines p + p { border-left-color: var(--link); }
@@ -109,7 +120,11 @@ const steps = copy.process.steps.length;
        Weight stays 900: outlined display kana (transparent fill, stroke),
        not filled text. */
     font-family: var(--font-kana); font-weight: 900;
-    font-size: clamp(3rem, 9vw, 7.5rem); line-height: 1; letter-spacing: 0.06em;
+    font-size: var(--kana-size); line-height: 1; letter-spacing: 0.06em;
+    /* V1: one column always. An absolutely positioned vertical box with an
+       auto height is limited to the space under its top, so a tall four-kana
+       run wrapped into a second column from 1280 up and orphaned ス. */
+    white-space: nowrap;
     color: transparent; -webkit-text-stroke: 1.5px var(--accent); opacity: 0.7;
   }
 
