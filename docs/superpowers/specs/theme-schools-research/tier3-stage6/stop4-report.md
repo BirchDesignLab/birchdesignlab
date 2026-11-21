@@ -145,9 +145,11 @@ the controller's whole-set capture at eb81233 beside the stop 1 captures:
    PR for you to merge. **Recommend as planned.** Alternative: close now and
    send the minors to the backlog.
 
-Before deciding: at stops 2 and 3 you asked for an adversarial critique of
-the taste calls first (three read-only Opus critics, about an hour). Say if
-you want one here too.
+Critique done (founder asked, 11-21-26): `stop4-critique.md`. It corrects
+two facts above: the cottagecore clock and stamp already nudge once on
+touch (call 1), and the four Lab components hold 5 ungated hover rules, not
+ten, with more in two layouts and five experiments (call 3). Its verdicts
+change or reject 10 of the 14 recommendations.
 
 ## Going in without a call
 
