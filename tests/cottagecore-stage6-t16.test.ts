@@ -52,9 +52,10 @@ describe('cottagecore the tap (CC2)', () => {
   it('calls the nearest mote within 160 px to drift there and burst twice, or lights a new one', () => {
     expect(fx).toMatch(/callRadius: 160,/);
     const fn = fx.slice(fx.indexOf('const answerTap'), fx.indexOf('const drawFireflies'));
-    expect(fn).toMatch(/m\.call = \{ x: tap\.x, y: tap\.y, until: t \+ FIREFLY\.callMs \}/);
+    // task 23 added `rise` (the clock's tap lifts the mote off) and four flashes for that tap; the tap on the cloth is unchanged
+    expect(fn).toMatch(/m\.call = \{ x: tap\.x, y: tap\.y, until: t \+ FIREFLY\.callMs, rise: tap\.rise \}/);
     expect(fn).toMatch(/nearest \?\? newFirefly\(tap\.x, tap\.y, 1\.8\)/);
-    expect(fn).toMatch(/makeBurst\(t \+ \(nearest \? FIREFLY\.callLead : 100\), 2\)/);
+    expect(fn).toMatch(/makeBurst\(t \+ \(nearest \? FIREFLY\.callLead : 100\), tap\.rise \? 4 : 2\)/);
     expect(fn).toMatch(/lit\.length > FIREFLY\.extraMax/);
     expect(fx).toMatch(/if \(tap\.pending && tap\.clear\) answerTap\(t, phone\)/);
   });
@@ -93,7 +94,8 @@ describe('cottagecore seeds (CC3)', () => {
     expect(fx).toMatch(/s\.held = false;/);
     const draw = fx.slice(fx.indexOf('const drawDandelions'), fx.indexOf('const draw = '));
     // a held seed is neither moved nor drawn, and is seated in the still frame too
-    expect(draw).toMatch(/if \(s\.held\) continue;\s*if \(!still\) \{/);
+    // (task 23: a puff from the clock that has run its course is dropped between the two)
+    expect(draw).toMatch(/if \(s\.held\) continue;\s*if \(s\.puff && t >= \(s\.dieAt \?\? 0\)\) \{ spent = true; continue; \}\s*if \(!still\) \{/);
     expect(draw).toMatch(/else if \(fontsSettled\) seatHeld\(sy, t, 0, true\);/);
     expect(draw).toMatch(/seatHeld\(sy, t, shown, false\)/);
   });

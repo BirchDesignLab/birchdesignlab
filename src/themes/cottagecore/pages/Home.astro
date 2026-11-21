@@ -7,6 +7,7 @@ import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/cop
 import { hrefFor } from '../../paths';
 import Pressed from '../assets/Pressed.astro';
 import Arrow from '../assets/Arrow.astro';
+import Dandelion from '../assets/Dandelion.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -100,6 +101,7 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
 <section class="closer cc-wrap cc-lamp">
   <Pressed kind="lavender" seed={51} class="c-left" />
   <Pressed kind="rose" seed={52} class="c-right" />
+  <Dandelion class="c-clock" />
   <p class="closer-lead">{copy.closer.lead}</p>
   <a class="cc-label" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
 </section>
@@ -310,6 +312,10 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
      headline as the viewport narrows toward the breakpoint below. */
   .closer :global(.c-left) { left: max(0px, calc(50% - 25rem)); rotate: -24deg; }
   .closer :global(.c-right) { right: max(0px, calc(50% - 25rem)); rotate: 20deg; }
+  /* The dandelion clock (Stage 6 w3 task 23): standing on the cloth beside the lavender, in the gutter
+     the lavender leaves, clear of the headline. Pressed, it blows seeds into the seed canvas (toys.ts). */
+  .closer :global(.c-clock) { position: absolute; bottom: -1rem; width: 7.6rem; left: max(0px, calc(50% - 25rem - 8.6rem)); rotate: -4deg; }
+  @media (min-width: 1001px) and (max-width: 1100px) { .closer :global(.c-clock) { width: 6.1rem; } }
 
   @media (max-width: 820px) {
     .hero { grid-template-columns: 1fr; }
@@ -363,9 +369,15 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
      than the rest of the page: the calc offset they use otherwise lands on
      the centred headline between 820 and 1000px. */
   @media (max-width: 1000px) {
-    .closer :global(.c-left), .closer :global(.c-right) { width: 4rem; bottom: 4.2rem; }
+    .closer :global(.c-left), .closer :global(.c-right) { width: 4rem; bottom: 15.8rem; }
     .closer :global(.c-left) { left: 0; }
     .closer :global(.c-right) { right: 0; }
+    /* The sprigs and the headline take the gutters and the width, so the clock stands under the button
+       and the closer grows by the room it takes (11.6rem: a released seed is seated clear of the button's
+       lettering, so the head stands about 2rem under the button and the seeds have cloth to leave over;
+       the sprigs keep their place against the button). */
+    .closer { padding-bottom: 11.6rem; }
+    .closer :global(.c-clock) { width: 5.6rem; left: calc(50% - 2.8rem); bottom: 0.6rem; rotate: 0deg; }
   }
   @media (max-width: 640px) {
     /* SOFT 0 sets the line narrower than the soft cut did, so it fits one

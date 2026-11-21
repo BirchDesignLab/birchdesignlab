@@ -78,6 +78,15 @@
  * scroll (a touch that becomes a scroll never was one), so scrolling a phone
  * does not scatter the seeds or flash the fireflies under the finger.
  *
+ * The clock (Stage 6 w3 task 23): the dandelion clock on the closer and the sent page (toys.ts) sends one
+ * `cc:blow` window event when it is pressed. By day that releases the 6 to 10 seeds it lost into this canvas as
+ * puffs: ordinary seeds that leave the head with a kick and then ride the breeze like the rest, off text by the
+ * same fade. A puff is seated by the seat rules (the whole drawn seed clear of the viewport edges, every sheet and
+ * every line of text, and clear for seatMinLife s of drift; a seed with no such seat is not released), is kept
+ * out of the keep loop (it is never re-seated), at most puffCap live at once (the oldest fade first), and goes
+ * when it leaves the view or after puffLife. By lamplight the same event is a tap on clear cloth at the clock,
+ * and the mote it calls (or lights) rises from there.
+ *
  * Text (item 14): text is measured line by line, in document space, once on
  * mount (after the fonts) and again, debounced, when the body resizes, the
  * window's width changes or the fonts arrive. A resize that changes only the
@@ -253,6 +262,9 @@ const SEED = {
   gutterBonus: 1.5,
   seatSettleMs: 2000,
 };
+/** The clock's release (Stage 6 w3 task 23): at most puffCap released seeds live at once, each for puffLife ms
+    (the last puffFade ms of it a fade), leaving the head with a kick (px/s) that the breeze takes back over. */
+const PUFF = { cap: 30, life: 42000, fade: 2500, kickX: [20, 85], kickY: [15, 60], tries: 14, window: 1200 } as const;
 /** Ink-brown, the school's --cc-ink. The seeds are drawn in it. */
 const SEED_INK = '58, 42, 31';
 
@@ -282,7 +294,7 @@ interface Firefly {
   rest: number;
   touched: number;
   /** A mote called by a tap: where it is drifting to, and until when (ms). */
-  call: { x: number; y: number; until: number } | null;
+  call: { x: number; y: number; until: number; rise: boolean } | null;
   /** Lit by a tap with no mote near; the oldest of these goes past extraMax. */
   extra: number;
 }
@@ -308,6 +320,9 @@ interface Seed {
   /** True from mount until the keep loop has found it a strict seat: a held
       seed is not moved or drawn, so none fades in anywhere it was thrown. */
   held: boolean;
+  /** A seed released by the clock: outside the keep loop, gone at dieAt (ms). */
+  puff?: boolean;
+  dieAt?: number;
 }
 type Pt = [number, number];
 interface Box {
@@ -558,7 +573,9 @@ export function mountFireflies(): void {
     const pointer = { x: -1e4, y: -1e4, at: -1e9, fine: false };
     /** `clear` is whether the tap landed on clear cloth (no link, control, text
         line or sheet under it, measured when it happened). */
-    const tap = { x: 0, y: 0, pending: false, clear: false };
+    const tap = { x: 0, y: 0, pending: false, clear: false, rise: false };
+    /** The clock's release waiting for the next frame (see the header). */
+    let blow: { at: number; x: number; y: number; r: number; n: number; points: Array<{ x: number; y: number }> } | null = null;
     let extras = 0;
 
     const newFirefly = (x: number, y: number, r = 1.3 + Math.random() * 1.1): Firefly => ({
@@ -922,8 +939,10 @@ export function mountFireflies(): void {
       }
       const m = nearest ?? newFirefly(tap.x, tap.y, 1.8);
       if (nearest) {
-        m.call = { x: tap.x, y: tap.y, until: t + FIREFLY.callMs };
+        m.call = { x: tap.x, y: tap.y, until: t + FIREFLY.callMs, rise: tap.rise };
       } else {
+        // From the clock a new mote lifts off the head.
+        if (tap.rise) { m.vy = -1.4; m.vx = (Math.random() - 0.5) * 0.2; }
         m.extra = ++extras;
         fireflies.push(m);
         const lit = fireflies.filter((o) => o.extra > 0);
@@ -933,7 +952,8 @@ export function mountFireflies(): void {
         }
       }
       m.touched = t;
-      m.flashes = makeBurst(t + (nearest ? FIREFLY.callLead : 100), 2);
+      // From the clock four flashes, so the mote is seen rising; a tap on the cloth keeps two.
+      m.flashes = makeBurst(t + (nearest ? FIREFLY.callLead : 100), tap.rise ? 4 : 2);
       m.rest = flashEnd(m.flashes[m.flashes.length - 1]) + restFor(phone);
     };
 
@@ -966,7 +986,11 @@ export function mountFireflies(): void {
             m.x += (m.call.x - m.x) * 0.14;
             m.y += (m.call.y - m.y) * 0.14;
             m.vx = m.vy = 0;
-            if (t >= m.call.until) m.call = null;
+            if (t >= m.call.until) {
+              // A mote called to the clock lifts off it.
+              if (m.call.rise) m.vy = -1.4;
+              m.call = null;
+            }
           } else {
             m.wander += (Math.random() - 0.5) * 0.08;
             m.vx = m.vx * 0.985 + Math.cos(m.wander) * 0.006;
@@ -1048,7 +1072,7 @@ export function mountFireflies(): void {
         if (fontsSettled && (switched || t - lastKeepT > SEED.keepEvery)) {
           lastKeepT = t;
           let shown = 0;
-          for (const s of seeds) if (!s.held && s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s))) shown++;
+          for (const s of seeds) if (!s.held && !s.puff && s.cover > 0.5 && edgeFade(s) > 0.5 && seedOnShow(s.x, s.y, s.size * SEED.spriteScale, sy, turnOf(s), angleOf(s))) shown++;
           // The seeds held since mount are seated first: minShown at once, then
           // one more a tick, so the rest fade in a few at a time. None is shown
           // without a strict seat; when the view has none, the rest stay held.
@@ -1057,7 +1081,7 @@ export function mountFireflies(): void {
           if (held.noRoom) shown = SEED.minShown;
           for (const s of seeds) {
             if (shown >= SEED.minShown) break;
-            if (s.held) continue;
+            if (s.held || s.puff) continue;
             // Only a seed nobody can see is moved: one that has faded out, or
             // is wholly under a sheet or off the screen. A seed part way out
             // from behind a sheet, or leaving at an edge, finishes its fade.
@@ -1073,8 +1097,10 @@ export function mountFireflies(): void {
       else if (fontsSettled) seatHeld(sy, t, 0, true);
       const pointerLive = pointer.fine && t - pointer.at < SEED.pointerIdle;
       const relax = 1 - Math.exp(-dt / SEED.settle);
+      let spent = false;
       for (const s of seeds) {
         if (s.held) continue;
+        if (s.puff && t >= (s.dieAt ?? 0)) { spent = true; continue; }
         if (!still) {
           s.swayPhase += s.swayRate * dt;
           s.turnPhase += s.turnRate * dt;
@@ -1108,7 +1134,11 @@ export function mountFireflies(): void {
           }
           s.x += s.vx * dt;
           s.y += s.vy * dt;
-          if (s.x > width + 50 || s.y < -60 || s.x < -90 || s.y > height + 90) spawnSeed(s, false);
+          if (s.x > width + 50 || s.y < -60 || s.x < -90 || s.y > height + 90) {
+            // A released seed that leaves the view is gone; the others come back in from an edge.
+            if (s.puff) { s.dieAt = t; continue; }
+            spawnSeed(s, false);
+          }
         }
         // Fade off text, looking ahead along the drift so a seed is gone
         // before it reaches a line, not after.
@@ -1124,7 +1154,7 @@ export function mountFireflies(): void {
         const target = over ? 0 : 1;
         s.cover = still ? target : s.cover + (target - s.cover) * (target < s.cover ? (onNow ? SEED.fadeOutNow : SEED.fadeOut) : SEED.fadeIn);
         // Fade in and out at the viewport's edges rather than popping.
-        const a = s.alpha * s.cover * edgeFade(s);
+        const a = s.alpha * s.cover * edgeFade(s) * (s.puff ? Math.min(1, Math.max(0, ((s.dieAt ?? 0) - t) / PUFF.fade)) : 1);
         if (a < 0.01) continue;
         const turn = turnOf(s);
         const angle = tilt;
@@ -1136,7 +1166,84 @@ export function mountFireflies(): void {
         ctx.drawImage(seedSprites[s.sprite], -SEED_ANCHOR.x * kk, -SEED_ANCHOR.y * kk, SEED_SPRITE_SIZE * kk, SEED_SPRITE_SIZE * kk);
         ctx.restore();
       }
+      if (spent) seeds = seeds.filter((s) => !(s.puff && t >= (s.dieAt ?? 0)));
       ctx.globalAlpha = 1;
+    };
+
+    /** The clock's release by day: up to rel.n seeds leave the head, each only where it has a strict seat. */
+    const releasePuff = (t: number, sy: number, rel: NonNullable<typeof blow>) => {
+      if (!fontsSettled || !rel.points.length) return;
+      // Room for them: the oldest puffs fade first.
+      const live = seeds.filter((s) => s.puff);
+      const over = live.length + rel.n - PUFF.cap;
+      if (over > 0) {
+        live.sort((a, b) => (a.dieAt ?? 0) - (b.dieAt ?? 0));
+        for (const s of live.slice(0, over)) s.dieAt = Math.min(s.dieAt ?? 0, t + 700);
+      }
+      for (let i = 0; i < rel.n; i++) {
+        const from = rel.points[i % rel.points.length];
+        const drift = rand(0.7, 1.35);
+        const vx = SEED.windX * drift;
+        const vy = SEED.windY * drift;
+        const base = rand(SEED.sizeMin, SEED.sizeMax);
+        const s: Seed = {
+          x: from.x,
+          y: from.y,
+          vx,
+          vy,
+          size: base,
+          base,
+          sprite: i % 2,
+          drift,
+          swayPhase: Math.random() * Math.PI * 2,
+          swayRate: (Math.PI * 2) / rand(3.6, 6.4),
+          swayAmp: rand(5, 11),
+          turnPhase: Math.random() * Math.PI * 2,
+          turnRate: (Math.PI * 2) / rand(7, 13),
+          alpha: rand(SEED.alphaMin, SEED.alphaMax),
+          cover: 0,
+          seatedAt: t,
+          held: false,
+          puff: true,
+          dieAt: t + PUFF.life + rand(-4000, 4000),
+        };
+        const turn = turnOf(s);
+        const angle = angleOf(s);
+        const sizes = [base, SEED.sizeMin + (base - SEED.sizeMin) / 2, SEED.sizeMin];
+        let placed = false;
+        for (let k = 0; k < PUFF.tries && !placed; k++) {
+          // Off the head's rim, a few px round the seed's own place, with a kick up and across that the
+          // breeze then takes back over (the same settle as a tap's kick). The seat is tested along that
+          // path, not only along the drift it settles to: where the kick would carry the seed into a line
+          // of text it would only fade out, and a seed that fades out was never seated.
+          const x = from.x + rand(-7, 7);
+          const y = from.y + rand(-7, 7);
+          const kx = rand(PUFF.kickX[0], PUFF.kickX[1]);
+          const ky = rand(PUFF.kickY[0], PUFF.kickY[1]);
+          // Where the kick has carried it once the breeze has the seed again (the kick's own travel is its speed times the settle).
+          const sx = x + kx * SEED.settle;
+          const sy2 = y - ky * SEED.settle;
+          for (const size of sizes) {
+            const kk = size * SEED.spriteScale;
+            const along = SEED.lookAhead;
+            if (
+              !seatClear(x, y, kk, sy, turn, angle) ||
+              !seatClear(x + (vx + kx) * along, y + (vy - ky) * along, kk, sy, turn, angle) ||
+              !seatClear(sx, sy2, kk, sy, turn, angle) ||
+              seatLife(sx, sy2, kk, vx, vy, sy, turn, angle) < SEED.seatMinLife
+            ) continue;
+            s.x = x;
+            s.y = y;
+            s.size = size;
+            s.vx = vx + kx;
+            s.vy = vy - ky;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) continue;
+        seeds.push(s);
+      }
     };
 
     const draw = (t: number, dt: number, still: boolean) => {
@@ -1149,9 +1256,24 @@ export function mountFireflies(): void {
       const now = root.dataset.scheme === 'dark' ? 'dark' : 'light';
       const switched = now !== branch;
       branch = now;
+      if (blow) {
+        const b = blow;
+        blow = null;
+        if (t - b.at < PUFF.window) {
+          if (now === 'dark') {
+            // A tap on clear cloth at the clock; the mote it calls rises.
+            tap.x = b.x;
+            tap.y = b.y;
+            tap.clear = true;
+            tap.rise = true;
+            tap.pending = true;
+          } else releasePuff(t, sy, b);
+        }
+      }
       if (now === 'dark') drawFireflies(t, still, sy, dsy, switched);
       else drawDandelions(t, dt, still, sy, dsy, switched);
       tap.pending = false;
+      tap.rise = false;
     };
 
     const tick = (t: number) => {
@@ -1189,6 +1311,8 @@ export function mountFireflies(): void {
     /** Whether a tap landed on clear cloth: not on a link or control, not on a
         sheet, and far enough from every line of text that a mote lit there
         (at its largest) would not fade out. */
+    /** A press on a toy (the clock, the date stamp) is the toy's, not a tap on the cloth. */
+    const onToy = (e: PointerEvent) => e.target instanceof Element && !!e.target.closest('[data-cc-toy]');
     const tapIsClear = (e: PointerEvent) => {
       const el = e.target instanceof Element ? e.target : null;
       if (el?.closest('a, button, input, textarea, select, label, summary, [role="button"], .cc-paper, .cc-torn, .cc-gingham')) return false;
@@ -1205,6 +1329,7 @@ export function mountFireflies(): void {
       pointer.fine = true;
     };
     const onPointerDown = (e: PointerEvent) => {
+      if (onToy(e)) return;
       if (e.pointerType === 'mouse') {
         tap.x = e.clientX;
         tap.y = e.clientY;
@@ -1227,6 +1352,10 @@ export function mountFireflies(): void {
     };
     const onPointerCancel = (e: PointerEvent) => {
       presses.delete(e.pointerId);
+    };
+    const onBlow = (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      if (d && Number.isFinite(d.x) && Number.isFinite(d.y)) blow = { at: performance.now(), x: d.x, y: d.y, r: d.r, n: d.n, points: d.points ?? [] };
     };
     const onPointerLeave = () => {
       pointer.fine = false;
@@ -1263,6 +1392,7 @@ export function mountFireflies(): void {
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     window.addEventListener('pointercancel', onPointerCancel, { passive: true });
+    window.addEventListener('cc:blow', onBlow);
     document.documentElement.addEventListener('pointerleave', onPointerLeave, { passive: true });
     document.addEventListener('visibilitychange', sync);
     reduced.addEventListener('change', sync);
@@ -1282,6 +1412,8 @@ export function mountFireflies(): void {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
+      window.removeEventListener('cc:blow', onBlow);
+      blow = null;
       presses.clear();
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', sync);
