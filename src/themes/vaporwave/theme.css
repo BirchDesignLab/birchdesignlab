@@ -366,6 +366,27 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 [data-theme='vaporwave'] .vw-win-btns .close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+/* Stage 6 wave 3, task 25: a window's X that is a real button (Win.astro
+   closeLabel; Sent's desktop windows). The same bevelled key as the span
+   above, which presses on :active, with a focus ring and a larger target for
+   a finger. Its X glyph is the .close pair of strokes. */
+[data-theme='vaporwave'] .vw-win-btns button.close {
+  appearance: none; position: relative; margin: 0; padding: 0; cursor: pointer;
+  width: 22px; height: 20px;
+  background: #efe6ff;
+  border: 2px solid; border-color: #ffffff #3a1a66 #3a1a66 #ffffff;
+}
+[data-theme='vaporwave'] .vw-win-btns button.close:active { border-color: #3a1a66 #ffffff #ffffff #3a1a66; }
+[data-theme='vaporwave'] .vw-win-btns button.close:active::before,
+[data-theme='vaporwave'] .vw-win-btns button.close:active::after { translate: 1px 1px; }
+[data-theme='vaporwave'] .vw-win-btns button.close:focus-visible { outline: 2px dotted var(--bar-ink); outline-offset: 2px; box-shadow: 0 0 0 2px #ffffff; }
+[data-theme='vaporwave'] .vw-win-bar.inactive .vw-win-btns button.close { opacity: 0.55; }
+@media (pointer: coarse) {
+  [data-theme='vaporwave'] .vw-win-btns button.close { width: 30px; height: 28px; }
+}
+/* A window that drags under a finger (data-touch-drag, windows.ts) keeps a
+   vertical swipe on its bar for the page. */
+[data-theme='vaporwave'] .vw-win[data-touch-drag] .vw-win-bar { touch-action: pan-y; }
 /* B2 vw-3, item 2 (fix round 3): a caption button presses. The bevel
    inverts while a held pointer sits over it and releases on up or on leave.
    `:active` alone did not reliably clear on leave (the B2 verifier's real

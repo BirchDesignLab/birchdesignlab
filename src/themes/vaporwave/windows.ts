@@ -24,6 +24,17 @@
 const THEME = 'vaporwave';
 const DESKTOP = '(hover: hover) and (pointer: fine)';
 
+/** Dispatched on a `.vw-win` to bring it to the front with the one active
+    caption (mountWindowActivation listens). Task 25. */
+export const ACTIVATE_EVENT = 'vw-activate';
+/** Task 25: a window marked data-touch-drag also drags by its title bar under
+    a finger, after a 200 ms press or a mostly horizontal move over 8px (the
+    bauhaus `.loose` rule); a vertical swipe on the bar scrolls. Off at phone
+    width, where windows open full width and have nowhere to go. */
+const TOUCH_HOLD_MS = 200;
+const TOUCH_SLOP_PX = 8;
+const PHONE = '(max-width: 700px)';
+
 /**
  * Pressing any window activates it (Stage 6 wave 3, task 24; a1-critic V9).
  * The overlap group is the whole page: a press anywhere on a window (not only
@@ -75,17 +86,24 @@ export function mountWindowActivation(): (() => void) | void {
       if (event.pointerId === touchId) touchId = -1;
     };
     const onFocus = () => activate(win);
+    // Task 25: a script brings a window forward by dispatching ACTIVATE_EVENT
+    // on it (the elevator, a desktop icon opening a window, a closed window
+    // handing the front to the next one), so the caption and z-order stay
+    // this function's alone.
+    const onRequest = () => activate(win);
     // Capture, so the window activates before the title bar's own drag
     // handler (mountWindowDrag) sees the same press.
     win.addEventListener('pointerdown', onDown, true);
     win.addEventListener('pointerup', onUp, true);
     win.addEventListener('pointercancel', onCancel, true);
     win.addEventListener('focusin', onFocus);
+    win.addEventListener(ACTIVATE_EVENT, onRequest);
     cleanups.push(() => {
       win.removeEventListener('pointerdown', onDown, true);
       win.removeEventListener('pointerup', onUp, true);
       win.removeEventListener('pointercancel', onCancel, true);
       win.removeEventListener('focusin', onFocus);
+      win.removeEventListener(ACTIVATE_EVENT, onRequest);
     });
   }
 
@@ -117,6 +135,8 @@ export function mountWindowDrag(): (() => void) | void {
     // moves that outrun a style recalc).
     let curX = 0;
     let curY = 0;
+    type Armed = { id: number; x: number; y: number; hold: number };
+    let armed: Armed | null = null;
 
     const onPointerDown = (event: PointerEvent) => {
       // B2 fix round: a caption button (min/max/close) still brings its
@@ -125,20 +145,56 @@ export function mountWindowDrag(): (() => void) | void {
       // still inverts the bevel (theme.css) and the press behaves like any
       // other button press instead of moving the window underneath it.
       if ((event.target as Element | null)?.closest('.vw-win-btns')) return;
+      if (event.pointerType === 'touch') {
+        // Task 25: a finger drags only a window that opted in (data-touch-drag),
+        // not at phone width, and only after a short press or a mostly
+        // horizontal move (onPointerMove); a vertical swipe on the bar scrolls.
+        if (!win.hasAttribute('data-touch-drag') || matchMedia(PHONE).matches || armed) return;
+        const a: Armed = { id: event.pointerId, x: event.clientX, y: event.clientY, hold: 0 };
+        a.hold = window.setTimeout(() => {
+          if (armed === a) {
+            armed = null;
+            beginDrag(a.id, a.x, a.y);
+          }
+        }, TOUCH_HOLD_MS);
+        armed = a;
+        return;
+      }
       if (event.button !== 0 || !matchMedia(DESKTOP).matches) return;
-      dragging = true;
-      pointerId = event.pointerId;
-      startX = event.clientX;
-      startY = event.clientY;
-      bar.setPointerCapture(pointerId);
-      win.classList.add('dragging');
-      root.classList.add('vw-drag-lock');
+      beginDrag(event.pointerId, event.clientX, event.clientY);
       // Stops the pointerdown from also starting a text selection as the
       // drag begins (the WebKit lens run's finding on glass's own drag).
       event.preventDefault();
     };
 
+    const beginDrag = (id: number, x: number, y: number) => {
+      dragging = true;
+      pointerId = id;
+      startX = x;
+      startY = y;
+      try {
+        bar.setPointerCapture(id);
+      } catch {
+        /* the pointer is gone */
+      }
+      win.classList.add('dragging');
+      root.classList.add('vw-drag-lock');
+    };
+    const disarm = () => {
+      if (armed) window.clearTimeout(armed.hold);
+      armed = null;
+    };
+
     const onPointerMove = (event: PointerEvent) => {
+      if (armed && event.pointerId === armed.id && !dragging) {
+        const dx = event.clientX - armed.x;
+        const dy = event.clientY - armed.y;
+        if (Math.hypot(dx, dy) < TOUCH_SLOP_PX) return;
+        const a = armed;
+        disarm();
+        if (Math.abs(dx) <= Math.abs(dy)) return;
+        beginDrag(a.id, a.x, a.y);
+      }
       if (!dragging || event.pointerId !== pointerId) return;
       const rect = win.getBoundingClientRect();
       // rect already carries curX/curY; subtracting them back out gives the
@@ -160,6 +216,7 @@ export function mountWindowDrag(): (() => void) | void {
     };
 
     const endDrag = (event: PointerEvent) => {
+      if (armed && event.pointerId === armed.id) disarm();
       if (!dragging || event.pointerId !== pointerId) return;
       dragging = false;
       win.classList.remove('dragging');
@@ -167,12 +224,20 @@ export function mountWindowDrag(): (() => void) | void {
       if (bar.hasPointerCapture(pointerId)) bar.releasePointerCapture(pointerId);
     };
 
+    // Once a finger has the window, the page must not scroll under it.
+    const onTouchMove = (event: TouchEvent) => {
+      if (dragging && event.cancelable) event.preventDefault();
+    };
+
     bar.addEventListener('pointerdown', onPointerDown);
     bar.addEventListener('pointermove', onPointerMove);
     bar.addEventListener('pointerup', endDrag);
     bar.addEventListener('pointercancel', endDrag);
+    bar.addEventListener('touchmove', onTouchMove, { passive: false });
 
     cleanups.push(() => {
+      disarm();
+      bar.removeEventListener('touchmove', onTouchMove);
       bar.removeEventListener('pointerdown', onPointerDown);
       bar.removeEventListener('pointermove', onPointerMove);
       bar.removeEventListener('pointerup', endDrag);
