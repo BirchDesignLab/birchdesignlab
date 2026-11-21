@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every change runs the gauntlet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --field:#1c1a17; --raised:#272319; --pine:#22322a; --ink:#f4f0e6; --muted:#a89f8f;
+  --moss:#a3bd8f; --fern:#6f9678; --caramel:#bf9468; --red:#d9534a; --red-soft:#f0867d;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --hard:cubic-bezier(0.9,0,1,0.55);
+  --yt:310px;
+  --ph:440px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--field);color:var(--ink);font-family:'Spectral',Georgia,serif;overflow-x:hidden}
+body{min-height:100vh;
+  background:
+    radial-gradient(900px 430px at 50% 56%, rgba(34,50,42,.95), transparent 72%),
+    radial-gradient(1100px 600px at 100% 100%, rgba(191,148,104,.07), transparent 70%),
+    radial-gradient(700px 400px at 0% 0%, rgba(111,150,120,.07), transparent 70%),
+    var(--field);
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.09;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:49;
+  background:radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--moss);outline-offset:3px}
+
+/* mode swapping */
+body[data-mode="plain"] .hood{display:none !important}
+body[data-mode="hood"] .plain{display:none !important}
+.plain,.hood{animation:swapin .45s var(--ease)}
+@keyframes swapin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.world{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;padding-bottom:22px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:32px 56px 0;position:relative;z-index:8}
+.eyebrow{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--caramel);margin-bottom:12px}
+h1{font:400 clamp(30px,3.4vw,46px)/1.04 'Marcellus',serif;letter-spacing:.005em;
+  background:linear-gradient(180deg,#fbf8ef,#d9d2c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin-top:10px;font:italic 400 18px/1.3 'Spectral',serif;color:var(--muted)}
+.ctrls{display:flex;align-items:center;gap:14px;padding-top:4px;flex-wrap:wrap;justify-content:flex-end}
+.replay{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:99px;border:1px solid rgba(244,240,230,.18);
+  background:rgba(244,240,230,.04);font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);transition:background .3s var(--ease),border-color .3s,transform .3s var(--ease)}
+.replay:hover{background:rgba(244,240,230,.1);border-color:rgba(163,189,143,.6);transform:translateY(-1px)}
+.replay svg{width:14px;height:14px;transition:transform .6s var(--ease)}
+.replay:hover svg{transform:rotate(-200deg)}
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;height:38px;padding:3px;border-radius:99px;border:1px solid rgba(244,240,230,.18);background:rgba(0,0,0,.28)}
+.seg .pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:99px;background:linear-gradient(180deg,rgba(163,189,143,.28),rgba(163,189,143,.14));border:1px solid rgba(163,189,143,.5);transition:transform .5s var(--ease)}
+body[data-mode="hood"] .seg .pill{transform:translateX(100%)}
+.seg button{position:relative;z-index:1;padding:0 16px;font:500 12.5px/1 'Spectral',serif;color:var(--muted);white-space:nowrap;transition:color .3s}
+.seg button[aria-pressed="true"]{color:var(--ink)}
+
+/* pipeline */
+.pipe{position:relative;height:var(--ph);margin-top:10px;z-index:4}
+.track{position:relative;height:var(--ph)}
+.track>*{position:absolute}
+.rail{left:0;right:0;top:calc(var(--yt) + 41px);height:2px;z-index:1}
+.rail .glow{position:absolute;left:0;right:0;top:-7px;height:16px;background:linear-gradient(90deg,transparent,rgba(163,189,143,.28) 8%,rgba(163,189,143,.28) 92%,transparent);filter:blur(7px)}
+.rail .line{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(163,189,143,.65) 6%,rgba(163,189,143,.65) 94%,transparent)}
+.rail .dash{position:absolute;left:0;right:0;top:5px;height:4px;opacity:.5;
+  background:repeating-linear-gradient(90deg,rgba(191,148,104,.8) 0 10px,transparent 10px 44px);animation:railmove .34s linear infinite}
+.rail .dash2{top:-8px;opacity:.28}
+@keyframes railmove{to{background-position-x:44px}}
+.world.frozen .rail .dash{animation-play-state:paused}
+
+/* gate back (recess + light curtain) */
+.gb{width:88px;height:214px;margin-left:-44px;top:calc(var(--yt) - 162px);z-index:2;border-radius:44px 44px 0 0;overflow:hidden;
+  background:linear-gradient(180deg,#0c0b09,#13130f 60%,#101a14);box-shadow:inset 0 0 22px rgba(0,0,0,.9);transition:opacity .4s}
+.gb::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(163,189,143,.2) 50%,transparent);animation:curtain 3.4s ease-in-out infinite;transition:background .3s}
+.gb::after{content:"";position:absolute;left:0;right:0;top:0;height:60px;background:linear-gradient(180deg,rgba(163,189,143,.35),transparent);opacity:.35;animation:scan 3.4s ease-in-out infinite;transition:background .3s}
+@keyframes curtain{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes scan{0%{transform:translateY(-70px)}100%{transform:translateY(300px)}}
+.gb.flash::before{background:linear-gradient(90deg,transparent,rgba(163,189,143,.85) 50%,transparent)}
+.gb.fail::before{background:linear-gradient(90deg,transparent,rgba(217,83,74,.7) 50%,transparent);animation:none}
+.gb.fail::after{background:linear-gradient(180deg,rgba(217,83,74,.5),transparent)}
+
+/* gate front (arch, pillars, blade, status) */
+.gf{width:120px;height:230px;margin-left:-60px;top:calc(var(--yt) - 178px);z-index:4;pointer-events:none;
+  --led:rgba(163,189,143,.30);--ledg:0 0 0 rgba(0,0,0,0);--lip:rgba(191,148,104,.85);transition:opacity .4s}
+.gf.flash{--led:#c4dab0;--ledg:0 0 12px 1px rgba(163,189,143,.95),0 0 28px rgba(163,189,143,.5)}
+.gf.fail{--led:#ff6a5e;--ledg:0 0 12px 2px rgba(217,83,74,1),0 0 34px rgba(217,83,74,.8);--lip:#ee6c61}
+.gf .cap{position:absolute;left:0;top:0;width:120px;height:60px;border-radius:60px 60px 0 0;
+  background:radial-gradient(circle at 50% 100%,transparent 0 43px,var(--lip) 43px 45px,#3a382f 45px 48px,#2a2a23 48px 57px,#1d1d18 57px 60px);
+  box-shadow:inset 0 1px 0 rgba(244,240,230,.28);transition:filter .3s}
+.gf .pl{position:absolute;top:59px;bottom:0;width:16px;
+  background:linear-gradient(90deg,#171611,#34332a 45%,#25251d 70%,#12110d)}
+.gf .pl.l{left:0}.gf .pl.r{right:0}
+.gf .pl::before{content:"";position:absolute;top:6px;bottom:16px;width:3px;border-radius:2px;background:var(--led);box-shadow:var(--ledg);transition:background .25s,box-shadow .25s}
+.gf .pl.l::before{left:3px}.gf .pl.r::before{right:3px}
+.gf .pl::after{content:"";position:absolute;top:0;bottom:16px;width:2px;background-image:radial-gradient(circle,rgba(191,148,104,.7) 1.1px,transparent 1.6px);background-size:100% 30px}
+.gf .pl.l::after{right:4px}.gf .pl.r::after{left:4px}
+.gf .pb{position:absolute;left:-9px;right:-9px;bottom:0;height:14px;border-radius:3px;background:linear-gradient(#3a382f,#14130f);border-top:1px solid rgba(191,148,104,.6);box-shadow:0 8px 16px rgba(0,0,0,.6)}
+.gf .lt{position:absolute;left:50%;top:1px;width:15px;height:15px;margin-left:-7.5px;border-radius:50%;background:#0d0c09;border:1px solid rgba(191,148,104,.6)}
+.gf .lt::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--led);box-shadow:var(--ledg);transition:background .25s,box-shadow .25s}
+.gf .bw{position:absolute;left:16px;right:16px;top:16px;bottom:0;border-radius:44px 44px 0 0;overflow:hidden}
+.gf .blade{position:absolute;inset:0;transform:translateY(-102%);
+  background:
+    linear-gradient(180deg,transparent 78%,rgba(217,83,74,.55)),
+    repeating-linear-gradient(180deg,rgba(0,0,0,.4) 0 2px,transparent 2px 15px),
+    linear-gradient(90deg,#1b1a15,#3a382f 30%,#2c2b24 60%,#17160f);
+  border-bottom:4px solid var(--red);box-shadow:0 0 22px rgba(217,83,74,.9)}
+.gf .blade::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin-left:-15px;border:2px solid rgba(240,134,125,.8);border-radius:50%}
+.gf .blade::after{content:"";position:absolute;left:50%;top:calc(38% + 14px);width:2px;height:2px;margin-left:-1px;background:transparent;
+  box-shadow:0 0 0 0 transparent}
+.gf .blade.slam{animation:slam .5s forwards}
+.gf .blade.lift{animation:lift .8s var(--ease) forwards}
+@keyframes slam{
+  0%{transform:translateY(-102%);animation-timing-function:cubic-bezier(.95,0,1,.5)}
+  50%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.8,.3,1)}
+  68%{transform:translateY(-4%);animation-timing-function:ease-in}
+  84%,100%{transform:translateY(0)}
+}
+@keyframes lift{from{transform:translateY(0)}to{transform:translateY(-102%)}}
+.gf::after{content:"";position:absolute;inset:-60px -70px;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:radial-gradient(closest-side,rgba(217,83,74,.45),transparent);mix-blend-mode:screen}
+.gf.fail::after{opacity:1}
+.gf.fail .cap{filter:drop-shadow(0 0 10px rgba(217,83,74,.7))}
+
+/* labels */
+.lab{width:164px;margin-left:-82px;top:calc(var(--yt) + 66px);z-index:5;text-align:center;transition:opacity .4s}
+.lab .ln{display:block;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;color:var(--caramel);margin-bottom:7px}
+.lab .lp{display:block;font:400 15px/1.2 'Spectral',serif;color:var(--ink)}
+.lab .lh{display:block;font:400 10.5px/1.45 'IBM Plex Mono',monospace;color:var(--muted)}
+.lab.fail .ln,.lab.fail .lp{color:var(--red-soft)}
+.lab.fail .lh{color:var(--red-soft)}
+.lab.fail .ln::after{content:" · closed";color:var(--red-soft)}
+
+/* cards */
+.co{left:0;top:0;z-index:5;will-change:transform}
+.cw{position:absolute;left:0;top:0;transform:translate(-50%,-50%)}
+.card{position:relative;width:108px;padding:8px 9px 8px;border-radius:10px;
+  background:linear-gradient(160deg,rgba(244,240,230,.16),rgba(244,240,230,.05));
+  border:1px solid rgba(244,240,230,.24);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 10px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18)}
+.card.wide{width:132px}
+.card .c-tag{font:500 8.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--caramel);margin-bottom:5px}
+.card .c-title{font:500 12.5px/1.18 'Spectral',serif;color:var(--ink)}
+.card .c-chip{margin-top:6px;display:inline-block;max-width:100%;padding:3px 6px;border-radius:5px;font:500 9px/1.2 'IBM Plex Mono',monospace;color:#ffb1a9;
+  background:rgba(217,83,74,.2);border:1px solid rgba(217,83,74,.65);box-shadow:0 0 12px rgba(217,83,74,.35);white-space:nowrap}
+.card .c-pips{display:flex;gap:4px;margin-top:7px}
+.card .c-pips i{width:11px;height:3px;border-radius:2px;background:rgba(244,240,230,.18);transition:background .3s,box-shadow .3s}
+.card .c-pips i.on{background:var(--moss);box-shadow:0 0 6px rgba(163,189,143,.8)}
+.card .crack{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}
+.card .crack path{fill:none;stroke:#ff8a80;stroke-width:1.6;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:200;stroke-dashoffset:200}
+.card.cracked{border-color:rgba(217,83,74,.9);box-shadow:0 0 26px rgba(217,83,74,.6),0 10px 24px rgba(0,0,0,.45)}
+.card.cracked .crack{opacity:1}
+.card.cracked .crack path{animation:draw .3s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cw.shard{pointer-events:none}
+.cw.hidden{visibility:hidden}
+.world.frozen .co:not(.blocked) .card{opacity:.5;transition:opacity .35s}
+.card{transition:opacity .35s}
+.world.frozen .gb:not(.fail),.world.frozen .gf:not(.fail),.world.frozen .lab:not(.fail){opacity:.5}
+
+/* live portal */
+.live{left:0;top:calc(var(--yt) - 100px);width:100px;height:200px;margin-left:-50px;z-index:2}
+.live .core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(closest-side,rgba(163,189,143,.6),rgba(163,189,143,.16) 62%,transparent);filter:blur(2px);animation:livepulse 3s ease-in-out infinite}
+.live .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(163,189,143,.7);box-shadow:0 0 22px rgba(163,189,143,.5),inset 0 0 22px rgba(163,189,143,.35);animation:ringpulse 3.2s ease-in-out infinite}
+.live .ring.b{inset:14px 11px;border-color:rgba(191,148,104,.6);box-shadow:0 0 14px rgba(191,148,104,.35);animation-delay:-1.1s}
+.live .ring.c{inset:34px 21px;border-color:rgba(244,240,230,.55);box-shadow:none;animation-delay:-2.1s}
+@keyframes livepulse{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes ringpulse{0%,100%{transform:scale(.97)}50%{transform:scale(1.03)}}
+.live .lbl{position:absolute;left:0;right:0;top:50%;transform:translateY(-62%);text-align:center;font:400 25px/1 'Marcellus',serif;color:#e9f3dc;text-shadow:0 0 18px rgba(163,189,143,.95)}
+.live .cnt{position:absolute;left:-30px;right:-30px;top:calc(100% + 14px);text-align:center;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--moss)}
+.live.pulse .ring{animation:livehit .7s var(--ease)}
+@keyframes livehit{0%{transform:scale(1);filter:brightness(1)}30%{transform:scale(1.12);filter:brightness(1.7)}100%{transform:scale(1);filter:brightness(1)}}
+
+/* ripples */
+.rip{z-index:6;pointer-events:none;border-radius:50%;border:1.5px solid rgba(163,189,143,.8);box-shadow:0 0 14px rgba(163,189,143,.5);
+  width:50px;height:130px;margin:-65px 0 0 -25px;animation:rip .95s var(--ease) forwards}
+.rip.red{border-color:rgba(255,106,94,.9);box-shadow:0 0 22px rgba(217,83,74,.8);width:70px;height:200px;margin:-100px 0 0 -35px;animation-duration:1.1s}
+.rip.d2{animation-delay:.12s;opacity:0}
+@keyframes rip{0%{transform:scale(.35);opacity:.95}100%{transform:scale(2.1);opacity:0}}
+
+/* callout */
+.callout{z-index:9;width:400px;bottom:calc(var(--ph) - (var(--yt) - 204px));padding:11px 15px 12px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(54,22,20,.92),rgba(30,18,16,.94));border:1px solid rgba(217,83,74,.7);
+  box-shadow:0 0 0 1px rgba(0,0,0,.4),0 18px 50px rgba(0,0,0,.6),0 0 40px rgba(217,83,74,.3);backdrop-filter:blur(10px);
+  opacity:0;visibility:hidden;transform:translateY(10px) scale(.97);transform-origin:var(--cx) 100%;transition:opacity .35s var(--ease),transform .5s var(--ease),visibility 0s .35s}
+.callout.show{opacity:1;visibility:visible;transform:none;transition:opacity .25s,transform .5s var(--ease),visibility 0s}
+.callout::after{content:"";position:absolute;left:var(--cx);top:100%;width:1px;height:26px;background:linear-gradient(rgba(217,83,74,.9),rgba(217,83,74,0))}
+.callout::before{content:"";position:absolute;left:calc(var(--cx) - 3px);top:calc(100% + 22px);width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red)}
+.callout .tg{display:block;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--red-soft);margin-bottom:7px}
+.callout p.plain{font:400 15.5px/1.28 'Spectral',serif;color:var(--ink)}
+.callout p.plain b{font-weight:500;color:var(--red-soft)}
+.callout p.hood{font:400 11.5px/1.5 'IBM Plex Mono',monospace;color:#e8dccb}
+.callout p.hood b{font-weight:500;color:var(--red-soft)}
+
+/* log strip */
+.logwrap{position:relative;z-index:4;margin:30px 56px 0;padding:10px 16px 8px;border-radius:12px;border:1px solid rgba(244,240,230,.1);background:rgba(0,0,0,.28);height:100px;overflow:hidden}
+.logwrap .lt2{display:block;font:500 9px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:rgba(168,159,143,.7);margin-bottom:6px}
+.lgbox{display:flex;flex-direction:column;justify-content:flex-end;height:60px}
+.lg{display:grid;grid-template-columns:18px 1fr auto;gap:8px;font:400 11.5px/20px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap;overflow:hidden;animation:lgin .5s var(--ease)}
+.lg b{font-weight:500}
+.lg.ok b{color:var(--moss)}
+.lg.no{color:var(--red-soft)}
+.lg.no b{color:#ff6a5e}
+.lg em{font-style:normal;color:rgba(168,159,143,.65);justify-self:end}
+.lg span{overflow:hidden;text-overflow:ellipsis}
+@keyframes lgin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+body[data-mode="plain"] .lg{font:400 14px/20px 'Spectral',serif}
+body[data-mode="plain"] .lg em{font:italic 400 13px/20px 'Spectral',serif}
+
+/* tray */
+.tray{position:relative;z-index:6;margin:auto 56px 0;padding-top:16px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.tray .tl{max-width:230px}
+.tray .tl h2{font:400 17px/1.15 'Marcellus',serif;color:var(--ink)}
+.tray .tl p{font:italic 400 13px/1.3 'Spectral',serif;color:var(--muted);margin-top:4px}
+.tokens{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;flex:1}
+.tok{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 16px 0 12px;border-radius:99px;border:1px solid rgba(217,83,74,.4);
+  background:linear-gradient(180deg,rgba(217,83,74,.14),rgba(217,83,74,.05));font:500 13.5px/1 'Spectral',serif;color:var(--ink);
+  transition:transform .35s var(--ease),border-color .3s,box-shadow .3s,background .3s}
+.tok svg{width:18px;height:18px;color:var(--red-soft)}
+.tok:hover{transform:translateY(-3px);border-color:rgba(255,106,94,.9);box-shadow:0 8px 22px rgba(217,83,74,.28)}
+.tok:active{transform:translateY(0) scale(.96)}
+.tok.sent{animation:tsent .6s var(--ease)}
+@keyframes tsent{0%{box-shadow:0 0 0 0 rgba(217,83,74,.9)}100%{box-shadow:0 0 0 22px rgba(217,83,74,0)}}
+.tally{font:500 12px/1 'IBM Plex Mono',monospace;color:var(--muted);letter-spacing:.04em;text-align:right;min-width:230px}
+.tally b{font-weight:500;color:var(--ink)}
+.tally .okn{color:var(--moss);text-shadow:0 0 12px rgba(163,189,143,.7)}
+
+#fx{position:fixed;inset:0;z-index:40;pointer-events:none}
+.redflash{position:fixed;inset:0;z-index:45;pointer-events:none;opacity:0;background:radial-gradient(circle at var(--fx,50%) var(--fy,50%),rgba(217,83,74,.5),rgba(217,83,74,.12) 45%,transparent 75%)}
+.redflash.go{animation:rf 1s ease-out}
+@keyframes rf{0%{opacity:1}100%{opacity:0}}
+
+/* narrow screens */
+@media (max-width:900px){
+  .top{flex-direction:column;padding:22px 18px 0;gap:14px}
+  .ctrls{justify-content:flex-start;padding-top:0}
+  .sub{font-size:16px}
+  .eyebrow{line-height:1.5}
+  .pipe{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;margin-top:6px}
+  .pipe::-webkit-scrollbar{display:none}
+  .logwrap{margin:6px 18px 0}
+  .tray{margin:14px 18px 0;flex-direction:column;align-items:stretch}
+  .tray .tl{max-width:none}
+  .tally{text-align:left}
+  .callout{width:340px}
+  body::before{display:none}
+}
+</style>
+</head>
+<body data-mode="plain">
+<canvas id="fx"></canvas>
+<div class="redflash" id="redflash"></div>
+
+<div class="world" id="world">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Birch Design Lab &middot; seven gates, every client site</div>
+      <h1>Every change runs the gauntlet.</h1>
+      <p class="sub">Nothing ships until all seven say yes.</p>
+    </div>
+    <div class="ctrls">
+      <button class="replay" id="replay" type="button" aria-label="Replay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Replay
+      </button>
+      <div class="seg" role="group" aria-label="Language of the labels">
+        <span class="pill"></span>
+        <button type="button" id="mPlain" aria-pressed="true">Plain English</button>
+        <button type="button" id="mHood" aria-pressed="false">Under the hood</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="pipe" id="pipe" aria-label="Pipeline of seven checks">
+    <div class="track" id="track">
+      <div class="rail"><div class="glow"></div><div class="line"></div><div class="dash"></div><div class="dash dash2"></div></div>
+      <div class="live" id="live"><div class="core"></div><div class="ring"></div><div class="ring b"></div><div class="ring c"></div><div class="lbl">Live</div><div class="cnt" id="liveCnt">0 changes shipped</div></div>
+      <div class="callout" id="callout" role="status" aria-live="polite">
+        <span class="tg" id="coTag">Gate 05 closed</span>
+        <p class="plain" id="coPlain"></p>
+        <p class="hood" id="coHood"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="logwrap" aria-label="Check output">
+    <span class="lt2"><span class="plain">What we checked</span><span class="hood">build output</span></span>
+    <div class="lgbox" id="log"></div>
+  </section>
+
+  <section class="tray" aria-label="Try to sneak a bug past the gates">
+    <div class="tl"><h2>Your turn.</h2><p>Pick a bug and send it down the line. Try to sneak one past.</p></div>
+    <div class="tokens" id="tokens"></div>
+    <div class="tally" id="tally">Bugs tried: <b id="tried">0</b> &middot; Bugs shipped: <b class="okn">0</b></div>
+  </section>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="bug" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="14" rx="4.6" ry="6"/><path d="M9.5 8.2C9.5 6 10.6 4.6 12 4.6s2.5 1.4 2.5 3.6M12 8v12M7.4 11.5L3.5 9.5M7.2 15H3M7.6 18.6L4 21M16.6 11.5l3.9-2M16.8 15H21M16.4 18.6L20 21M10 4.5L8.4 2.6M14 4.5l1.6-1.9"/></g></symbol>
+</svg>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const world = $('#world'), pipe = $('#pipe'), track = $('#track');
+const calloutEl = $('#callout');
+const logBox = $('#log');
+
+/* ---------- content ---------- */
+const GATES = [
+  { plain: 'Types line up',             hood: 'astro check',                              ok: 'astro check · 0 errors',                okp: 'Types line up' },
+  { plain: 'About 1,000 tests',         hood: 'vitest run · Workers pool · 1,025 cases',  ok: 'vitest run · 1,025 passed',             okp: 'About 1,000 tests pass' },
+  { plain: 'A real build',              hood: 'astro build · 41 specs inspect dist/',     ok: 'astro build · 41 specs ok',             okp: 'A real build, inspected' },
+  { plain: 'Security suite',            hood: 'playwright · e2e-security · 3 configs',    ok: 'e2e-security · 3 configs green',        okp: 'Security suite is green' },
+  { plain: 'No secrets leak',           hood: 'check:secrets · scans dist/ for key shapes', ok: 'check:secrets · no key shapes in dist/', okp: 'No secrets in the output' },
+  { plain: 'Every word translated',     hood: 'i18n coverage walker · unreviewed = no build', ok: 'i18n walker · 0 unreviewed',        okp: 'Every word is translated' },
+  { plain: 'Fast, findable, accessible', hood: 'lhci · perf/a11y/BP ≥ 0.95 · SEO = 1.0',  ok: 'lhci · every floor met',                okp: 'Fast, findable, accessible' },
+];
+
+const CLEAN = [
+  ['content', 'New brunch menu'], ['fix', 'Fix booking link'], ['i18n', 'Add Spanish FAQ'],
+  ['content', 'Update opening hours'], ['content', 'Swap team photo'], ['feat', 'Gift card page'],
+  ['fix', 'Fix footer link'], ['content', 'Holiday banner'], ['content', 'Refresh price list'], ['i18n', 'Add French hours'],
+];
+
+const BAD = {
+  key: { tag: 'fix', title: 'Contact form update', chip: 'sk_live_••••••••3f9a', gate: 4,
+    plain: '<b>Caught:</b> a live key in the build output. Nothing ships.',
+    hood: '<b>check:secrets</b> matched a Stripe live-key shape in dist/_astro/contact.js. <b>Exit 1.</b>' },
+  spanish: { tag: 'i18n', title: 'Spanish menu update', chip: 'es: 1 missing', gate: 5,
+    plain: '<b>Caught:</b> one line not translated yet. The Spanish site waits.',
+    hood: '<b>i18n coverage walker:</b> 1 unreviewed string in es/menu. Build refused. <b>Exit 1.</b>' },
+  noindex: { tag: 'seo', title: 'Hide a page from Google', chip: 'noindex', gate: 2,
+    plain: '<b>Caught:</b> a live page set to noindex. The build refuses.',
+    hood: '<b>astro build</b> spec found robots noindex in dist/menu/index.html on a live page. <b>Exit 1.</b>' },
+  photo: { tag: 'content', title: 'Hero photo swap', chip: 'perf 0.91', gate: 6,
+    plain: '<b>Caught:</b> performance 0.91. The floor is 0.95.',
+    hood: '<b>lhci</b> assertion failed: categories:performance 0.91 &lt; 0.95 on /. <b>Exit 1.</b>' },
+  bot: { tag: 'feat', title: 'Add a bot check', chip: 'placeholder key', gate: 2,
+    plain: '<b>Caught:</b> a placeholder bot check on a real site.',
+    hood: '<b>astro build</b> spec found a placeholder bot-check key in dist/contact/index.html. <b>Exit 1.</b>' },
+};
+const TOKENS = [
+  ['key', 'Leak a key'], ['spanish', 'Skip a translation'], ['noindex', 'Hide from Google'],
+  ['photo', 'Ship a heavy photo'], ['bot', 'Leave a placeholder'],
+];
+const PLAN_ORDER = ['spanish', 'photo', 'noindex', 'bot', 'key'];
+
+/* ---------- geometry ---------- */
+const YT = 310, GATE_HALF = 60, GAP = 132, SPAWN_X = -30;
+let Wt = 1440, gx = [], liveX = 0, V = 140, narrow = false;
+const gates = [];
+
+function layout() {
+  const vw = document.documentElement.clientWidth;
+  narrow = vw <= 900;
+  Wt = Math.max(vw, 1300);
+  track.style.width = Wt + 'px';
+  liveX = Wt - 86;
+  const gap = (liveX - 130 - 112) / 6;
+  gx = Array.from({ length: 7 }, (_, i) => 112 + i * gap);
+  V = Wt * 0.097;
+  gates.forEach((g, i) => {
+    for (const el of [g.back, g.front, g.lab]) el.style.left = gx[i] + 'px';
+  });
+  const live = $('#live'); live.style.left = liveX + 'px';
+  sizeCanvas();
+}
+
+function buildGates() {
+  GATES.forEach((d, i) => {
+    const back = document.createElement('div'); back.className = 'gb';
+    const front = document.createElement('div'); front.className = 'gf';
+    front.innerHTML = '<div class="cap"></div><div class="pl l"></div><div class="pl r"></div><div class="bw"><div class="blade"></div></div><div class="pb"></div><div class="lt"></div>';
+    const lab = document.createElement('div'); lab.className = 'lab';
+    lab.innerHTML = `<span class="ln">0${i + 1}</span><span class="lp plain">${d.plain}</span><span class="lh hood">${d.hood}</span>`;
+    track.appendChild(back); track.appendChild(front); track.appendChild(lab);
+    gates.push({ back, front, lab, blade: front.querySelector('.blade'), flashT: 0, failT: 0 });
+  });
+}
+
+/* ---------- canvas fx ---------- */
+const cv = $('#fx'), cx = cv.getContext('2d');
+let DPR = 1, VW = 0, VH = 0;
+const motes = [];
+let sparks = [];
+function sizeCanvas() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  VW = window.innerWidth; VH = window.innerHeight;
+  cv.width = VW * DPR; cv.height = VH * DPR;
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+function seedMotes() {
+  motes.length = 0;
+  for (let i = 0; i < 70; i++) motes.push({
+    x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: .6 + Math.random() * 1.6,
+    vy: -(4 + Math.random() * 10), vx: (Math.random() - .5) * 6, a: Math.random() * 6.28,
+    c: Math.random() < .6 ? '191,148,104' : '163,189,143' });
+}
+function burst(x, y, n, rgb, speed = 220, grav = 380, dirX = 0) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = speed * (.25 + Math.random());
+    sparks.push({ x, y, vx: Math.cos(a) * s + dirX * speed * .6, vy: Math.sin(a) * s - speed * .2, life: 0, max: .5 + Math.random() * .7, r: 1 + Math.random() * 2.2, rgb, g: grav });
+  }
+}
+function drawFx(dt) {
+  cx.clearRect(0, 0, VW, VH);
+  cx.globalCompositeOperation = 'lighter';
+  for (const m of motes) {
+    m.x += m.vx * dt; m.y += m.vy * dt; m.a += dt * 1.2;
+    if (m.y < -5) { m.y = VH + 5; m.x = Math.random() * VW; }
+    if (m.x < -5) m.x = VW + 5; if (m.x > VW + 5) m.x = -5;
+    cx.fillStyle = `rgba(${m.c},${(.14 + .16 * Math.sin(m.a)).toFixed(3)})`;
+    cx.beginPath(); cx.arc(m.x, m.y, m.r, 0, 6.283); cx.fill();
+  }
+  sparks = sparks.filter(p => (p.life += dt) < p.max);
+  for (const p of sparks) {
+    p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .985;
+    const k = 1 - p.life / p.max;
+    cx.fillStyle = `rgba(${p.rgb},${(k * .95).toFixed(3)})`;
+    cx.beginPath(); cx.arc(p.x, p.y, p.r * (.4 + k), 0, 6.283); cx.fill();
+  }
+  cx.globalCompositeOperation = 'source-over';
+}
+function pagePt(lx, ly) {
+  const r = track.getBoundingClientRect();
+  return [r.left + lx, r.top + ly];
+}
+
+/* ---------- state ---------- */
+let sim = 0, freezeUntil = 0, epoch = 0, cards = [], timers = new Set();
+let cleanAt = 0, planIdx = 0, plannedArrival = 0, plan = null, userQ = [];
+let tried = 0, live = 0, cleanN = 0, nid = 0;
+const later = (fn, ms) => { const e = epoch; const id = setTimeout(() => { timers.delete(id); if (e === epoch) fn(); }, ms); timers.add(id); return id; };
+const frozen = () => performance.now() < freezeUntil;
+const blockX = (gi, w = 108) => gx[gi] - GATE_HALF - w / 2 - 6;
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+function setTried(n) { tried = n; $('#tried').textContent = n; }
+
+/* ---------- cards ---------- */
+const CRACK = 'M46 0 L41 17 L49 30 L40 47 L47 62 L38 80 L43 100 M49 30 L60 36 M40 47 L28 53 M47 62 L58 70';
+function cardHTML(def) {
+  return `<div class="card ${def.bad ? 'bad' : ''}${def.chip && def.chip.length > 16 ? ' wide' : ''}"><div class="c-tag">${def.tag}</div><div class="c-title">${def.title}</div>` +
+    (def.chip ? `<div class="c-chip">${def.chip}</div>` : '') +
+    `<div class="c-pips">${'<i></i>'.repeat(7)}</div>` +
+    `<svg class="crack" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${CRACK}"/></svg></div>`;
+}
+function spawn(def, x = SPAWN_X, bad = null) {
+  const o = document.createElement('div'); o.className = 'co';
+  const cw = document.createElement('div'); cw.className = 'cw'; cw.innerHTML = cardHTML(def);
+  o.appendChild(cw); track.appendChild(o);
+  const c = { id: ++nid, el: o, cw, card: cw.firstChild, pips: [...cw.querySelectorAll('.c-pips i')], x, def, bad: bad, gate: bad ? bad.gate : -1, w: def.chip && def.chip.length > 16 ? 132 : 108,
+    state: 'moving', passed: 0, title: def.title };
+  c.passed = gx.filter(g => g < x).length;
+  c.pips.forEach((p, i) => p.classList.toggle('on', i < c.passed));
+  cards.push(c);
+  place(c);
+  return c;
+}
+function place(c) { c.el.style.transform = `translate3d(${c.x.toFixed(1)}px,${YT}px,0)`; }
+function spawnClean(x) {
+  const [tag, title] = CLEAN[cleanN++ % CLEAN.length];
+  return spawn({ tag, title }, x);
+}
+function spawnBad(key, x) {
+  const b = BAD[key];
+  setTried(tried + 1);
+  return spawn({ tag: b.tag, title: b.title, chip: b.chip, bad: true }, x, { ...b, key });
+}
+
+/* ---------- gate fx ---------- */
+function ripple(x, y, red) {
+  for (const d of [0, 1]) {
+    const r = document.createElement('div'); r.className = 'rip' + (red ? ' red' : '') + (d ? ' d2' : '');
+    r.style.left = x + 'px'; r.style.top = y + 'px';
+    track.appendChild(r); setTimeout(() => r.remove(), 1500);
+  }
+}
+function flashGate(i) {
+  const g = gates[i];
+  g.front.classList.add('flash'); g.back.classList.add('flash');
+  clearTimeout(g.flashT);
+  g.flashT = setTimeout(() => { g.front.classList.remove('flash'); g.back.classList.remove('flash'); }, 650);
+  ripple(gx[i], YT - 10, false);
+}
+function passGate(c, i) {
+  c.passed = i + 1;
+  c.pips.forEach((p, k) => p.classList.toggle('on', k <= i));
+  flashGate(i);
+  const [px, py] = pagePt(gx[i], YT);
+  burst(px, py, 7, '163,189,143', 90, 60);
+  pushLog(true, `${GATES[i].okp}`, GATES[i].ok, c.title);
+}
+
+/* ---------- log ---------- */
+function pushLog(ok, plainTxt, hoodTxt, who) {
+  const d = document.createElement('div'); d.className = 'lg ' + (ok ? 'ok' : 'no');
+  d.innerHTML = `<b>${ok ? '✓' : '✗'}</b><div style="overflow:hidden;text-overflow:ellipsis"><span class="plain">${plainTxt}</span><span class="hood">${hoodTxt}</span></div><em>${who}</em>`;
+  logBox.appendChild(d);
+  while (logBox.children.length > 3) logBox.firstChild.remove();
+}
+
+/* ---------- the catch ---------- */
+function shake() {
+  world.animate([
+    { transform: 'translate(0,0)' }, { transform: 'translate(-7px,4px)' }, { transform: 'translate(6px,-4px)' },
+    { transform: 'translate(-4px,3px)' }, { transform: 'translate(3px,-2px)' }, { transform: 'translate(-1px,1px)' }, { transform: 'translate(0,0)' }
+  ], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+function redFlash(px, py) {
+  const f = $('#redflash');
+  f.style.setProperty('--fx', px + 'px'); f.style.setProperty('--fy', py + 'px');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+function showCallout(c) {
+  const b = c.bad, gi = b.gate;
+  let left = Math.max(12, Math.min(Wt - 412, gx[gi] - 200));
+  if (narrow) {
+    const vw = pipe.clientWidth, S = Math.max(0, Math.min(Wt - vw, c.x - vw / 2 + 40));
+    left = Math.max(S + 8, Math.min(S + vw - 348, gx[gi] - 250));
+  }
+  calloutEl.style.left = left + 'px';
+  calloutEl.style.setProperty('--cx', (gx[gi] - left) + 'px');
+  $('#coTag').textContent = `Gate 0${gi + 1} closed`;
+  $('#coPlain').innerHTML = b.plain;
+  $('#coHood').innerHTML = b.hood;
+  calloutEl.classList.remove('show'); void calloutEl.offsetWidth;
+  calloutEl.classList.add('show');
+}
+function catchCard(c) {
+  const gi = c.bad.gate, g = gates[gi];
+  (window.__bdl.catches = window.__bdl.catches || []).push([Math.round(performance.now()), c.title]);
+  c.state = 'blocked';
+  c.el.classList.add('blocked');
+  c.tw = { from: c.x, to: blockX(gi, c.w), t0: performance.now(), dur: 280 };
+  freezeUntil = performance.now() + 2500;
+  world.classList.add('frozen');
+  // slam
+  g.blade.classList.remove('lift'); g.blade.classList.add('slam');
+  g.front.classList.add('fail'); g.back.classList.add('fail'); g.lab.classList.add('fail');
+  later(() => impact(c, gi), 250);
+  later(() => showCallout(c), 600);
+  later(() => shatter(c), 1900);
+  later(() => { g.blade.classList.remove('slam'); g.blade.classList.add('lift'); }, 2050);
+  later(() => { g.front.classList.remove('fail'); g.back.classList.remove('fail'); g.lab.classList.remove('fail'); world.classList.remove('frozen'); }, 2350);
+  later(() => calloutEl.classList.remove('show'), 2950);
+}
+function impact(c, gi) {
+  const [px, py] = pagePt(gx[gi] - GATE_HALF + 8, YT);
+  shake(); redFlash(px, py);
+  burst(px, py, 46, '255,120,100', 420, 520, -1);
+  burst(px, py, 20, '191,148,104', 300, 520, -1);
+  ripple(gx[gi], YT - 10, true);
+  c.card.classList.add('cracked');
+  c.card.animate([
+    { transform: 'translate(0,0) rotate(0deg)' },
+    { transform: 'translate(-46px,-5px) rotate(-8deg)', offset: .25 },
+    { transform: 'translate(-30px,2px) rotate(-3deg)', offset: .6 },
+    { transform: 'translate(-34px,0) rotate(-4deg)' }
+  ], { duration: 720, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+  pushLog(false, c.bad.plain.replace(/<\/?b>/g, ''), c.bad.hood.replace(/<\/?b>/g, '').replace('&lt;', '<'), c.title);
+}
+function shatter(c) {
+  if (c.state === 'dead') return;
+  const base = 'translate(-34px,0) rotate(-4deg)';
+  const mk = (clip, to) => {
+    const s = document.createElement('div'); s.className = 'cw shard';
+    s.innerHTML = cardHTML(c.def); s.firstChild.classList.add('cracked');
+    s.firstChild.style.clipPath = clip; s.firstChild.style.transform = base;
+    s.firstChild.style.transition = 'none';
+    c.el.appendChild(s);
+    s.firstChild.animate([{ transform: base, opacity: 1 }, { transform: to, opacity: 0 }], { duration: 950, easing: 'cubic-bezier(.5,0,1,.6)', fill: 'forwards' });
+  };
+  mk('polygon(0 0,46% 0,41% 17%,49% 30%,40% 47%,47% 62%,38% 80%,43% 100%,0 100%)', 'translate(-80px,120px) rotate(-26deg)');
+  mk('polygon(46% 0,100% 0,100% 100%,43% 100%,38% 80%,47% 62%,40% 47%,49% 30%,41% 17%)', 'translate(14px,150px) rotate(22deg)');
+  c.cw.classList.add('hidden');
+  c.state = 'dead';
+  const [px, py] = pagePt(c.x - 34, YT);
+  burst(px, py, 26, '255,120,100', 200, 700);
+  later(() => { c.el.remove(); cards = cards.filter(k => k !== c); }, 1100);
+}
+
+/* ---------- simulation ---------- */
+function nextPlan() {
+  const key = PLAN_ORDER[planIdx++ % PLAN_ORDER.length];
+  plannedArrival += 3.8;
+  const travel = (blockX(BAD[key].gate, key === 'key' ? 132 : 108) - SPAWN_X) / (V * 0.92);
+  plan = { key, at: plannedArrival - travel };
+}
+function leaderGap() {
+  let m = Infinity;
+  for (const c of cards) if (c.state === 'moving' || c.state === 'blocked') m = Math.min(m, c.x);
+  return m;
+}
+function step(dt) {
+  const now = performance.now();
+  const live2 = cards.filter(c => c.state !== 'dead');
+  live2.sort((a, b) => b.x - a.x);
+  for (const c of live2) {
+    if (c.state === 'blocked') {
+      if (c.tw) {
+        const t = Math.min(1, (now - c.tw.t0) / c.tw.dur);
+        c.x = c.tw.from + (c.tw.to - c.tw.from) * t * t;
+        if (t >= 1) c.tw = null;
+        place(c);
+      }
+      continue;
+    }
+    if (c.state === 'exit') {
+      c.t += dt / .6;
+      const e = 1 - Math.pow(1 - Math.min(1, c.t), 3);
+      c.x = c.x0 + (liveX - c.x0) * e;
+      c.card.style.transform = `scale(${(1 - .7 * e).toFixed(3)})`;
+      c.card.style.opacity = (1 - e).toFixed(3);
+      place(c);
+      if (c.t >= 1) {
+        c.state = 'dead'; c.el.remove(); live++; cleanShip();
+      }
+      continue;
+    }
+    let d = 1e9;
+    for (const x of gx) d = Math.min(d, Math.abs(c.x - x));
+    const f = .74 + .26 * smooth(d / 80);
+    let nx = c.x + V * f * dt;
+    for (const o of live2) { if (o !== c && o.x > c.x) { nx = Math.min(nx, o.x - ((c.w + o.w) / 2 + 22)); } }
+    nx = Math.max(nx, c.x);
+    if (c.bad) {
+      const ax = blockX(c.gate, c.w) - 40, g0 = gx[c.gate];
+      const busy = live2.some(o => o !== c && o.state !== 'blocked' && o.x > c.x && o.x < g0 + GATE_HALF + o.w / 2 + 12);
+      if (busy && nx >= ax) nx = Math.max(c.x, Math.min(nx, ax - 1));
+    }
+    for (let i = 0; i < 7; i++) if (c.x < gx[i] && nx >= gx[i]) passGate(c, i);
+    if (c.bad && c.x < blockX(c.gate, c.w) - 40 && nx >= blockX(c.gate, c.w) - 40) {
+      c.x = nx; place(c); catchCard(c); continue;
+    }
+    c.x = nx;
+    if (c.x >= liveX - 56) { c.state = 'exit'; c.t = 0; c.x0 = c.x; }
+    place(c);
+  }
+  cards = cards.filter(c => c.state !== 'dead' || c.el.isConnected);
+}
+function cleanShip() {
+  $('#liveCnt').textContent = live + (live === 1 ? ' change shipped' : ' changes shipped');
+  const L = $('#live'); L.classList.remove('pulse'); void L.offsetWidth; L.classList.add('pulse');
+  ripple(liveX, YT - 10, false);
+  const [px, py] = pagePt(liveX, YT);
+  burst(px, py, 16, '163,189,143', 160, 40);
+}
+function spawning(dt) {
+  const free = leaderGap() > SPAWN_X + GAP;
+  if (userQ.length && free) {
+    const k = userQ.shift(); spawnBad(k, SPAWN_X); return;
+  }
+  if (frozen() || !free) return;
+  if (plan && sim >= plan.at) { spawnBad(plan.key, SPAWN_X); nextPlan(); return; }
+  if (sim >= cleanAt) {
+    cleanAt = sim + 1.05 + Math.random() * .5;
+    if (!plan || plan.at - sim > .9) spawnClean(SPAWN_X);
+  }
+}
+
+/* ---------- seed / reset ---------- */
+function seed() {
+  const hb = blockX(4, 132);
+  const hero = spawnBad('key', hb - 300);
+  const pre = [[hb - 300 + 330, 'New brunch menu', 'content'], [hb - 300 + 520, 'Update opening hours', 'content'],
+               [hb - 300 - 345, 'Add Spanish FAQ', 'i18n']];
+  for (const [x, title, tag] of pre) spawn({ tag, title }, x);
+  spawnBad('spanish', hb - 300 - 175);
+  setTried(2);
+  sim = 0; cleanAt = 1.0; plannedArrival = 5.6; planIdx = 1; nextPlan();
+  // moments of "just passed" at t=0
+  gates[1].front.classList.add('flash'); gates[1].back.classList.add('flash');
+  gates[2].front.classList.add('flash'); gates[2].back.classList.add('flash');
+  setTimeout(() => gates.forEach(g => { g.front.classList.remove('flash'); g.back.classList.remove('flash'); }), 500);
+  ripple(gx[1], YT - 10, false);
+  pushLog(true, GATES[1].okp, GATES[1].ok, 'Fix booking link');
+  pushLog(true, GATES[2].okp, GATES[2].ok, 'New brunch menu');
+  pushLog(true, GATES[3].okp, GATES[3].ok, 'Update opening hours');
+  pushLog(true, GATES[4].okp, GATES[4].ok, 'Update opening hours');
+}
+function reset() {
+  epoch++; timers.forEach(clearTimeout); timers.clear();
+  cards.forEach(c => c.el.remove()); cards = [];
+  track.querySelectorAll('.rip').forEach(r => r.remove());
+  gates.forEach(g => { for (const e of [g.front, g.back, g.lab]) e.classList.remove('fail', 'flash'); g.blade.classList.remove('slam', 'lift'); });
+  calloutEl.classList.remove('show'); world.classList.remove('frozen');
+  freezeUntil = 0; sparks = []; userQ = []; live = 0; cleanN = 0;
+  $('#liveCnt').textContent = '0 changes shipped';
+  logBox.innerHTML = '';
+  seed();
+}
+
+/* ---------- tray + controls ---------- */
+function buildTray() {
+  const box = $('#tokens');
+  TOKENS.forEach(([k, label]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tok';
+    b.innerHTML = `<svg><use href="#bug"/></svg><span>${label}</span>`;
+    b.addEventListener('click', () => {
+      if (userQ.length < 6) userQ.push(k);
+      b.classList.remove('sent'); void b.offsetWidth; b.classList.add('sent');
+    });
+    box.appendChild(b);
+  });
+}
+function setMode(m) {
+  document.body.dataset.mode = m;
+  $('#mPlain').setAttribute('aria-pressed', m === 'plain');
+  $('#mHood').setAttribute('aria-pressed', m === 'hood');
+}
+$('#mPlain').addEventListener('click', () => setMode('plain'));
+$('#mHood').addEventListener('click', () => setMode('hood'));
+$('#replay').addEventListener('click', reset);
+window.addEventListener('resize', () => { layout(); cards.forEach(place); });
+const qs = new URLSearchParams(location.search);
+if (qs.get('mode') === 'hood') setMode('hood');
+
+/* ---------- camera (narrow screens scroll to follow the action) ---------- */
+function follow() {
+  if (!narrow) return;
+  let f = cards.find(c => c.bad && (c.state === 'blocked')) || cards.find(c => c.bad && c.state === 'moving');
+  if (!f) { f = cards.filter(c => c.state === 'moving').sort((a, b) => b.x - a.x)[0]; }
+  if (!f) return;
+  const target = Math.max(0, Math.min(Wt - pipe.clientWidth, f.x - pipe.clientWidth / 2 + 40));
+  pipe.scrollLeft += (target - pipe.scrollLeft) * 0.07;
+}
+
+/* ---------- main loop ---------- */
+let last = performance.now();
+function frame(ts) {
+  const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+  if (!frozen()) { sim += dt; }
+  spawning(dt);
+  step(frozen() ? 0 : dt);
+  follow();
+  drawFx(dt);
+  requestAnimationFrame(frame);
+}
+
+window.__bdl = { reset, setMode, catches: [] };
+buildGates(); buildTray(); seedMotes(); layout(); seed();
+requestAnimationFrame(t => { last = t; frame(t); });
+
+})();
+</script>
+</body>
+</html>

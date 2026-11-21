@@ -9,6 +9,7 @@
 //
 // Usage:
 //   node scripts/lighthouse/run.mjs [baseUrl] [outDir]
+//   LH_PAGES=/lab/bdl-013/ node scripts/lighthouse/run.mjs http://127.0.0.1:4477 scripts/themes/.out/lh
 //   default baseUrl https://birchdesignlab.com, outDir docs/lighthouse/<date>
 //
 // Runs `npx lighthouse` (fetched on first use) against local Chrome, headless
@@ -26,7 +27,8 @@ import { join } from 'node:path';
 const base = (process.argv[2] ?? 'https://birchdesignlab.com').replace(/\/$/, '');
 const day = new Date().toISOString().slice(0, 10);
 const outDir = process.argv[3] ?? join('docs', 'lighthouse', day);
-const PAGES = ['/', '/services/', '/about/', '/contact/', '/contact/sent/'];
+// LH_PAGES=/lab/bdl-013/,/lab/ runs other pages (a Lab piece before its PR).
+const PAGES = process.env.LH_PAGES ? process.env.LH_PAGES.split(',') : ['/', '/services/', '/about/', '/contact/', '/contact/sent/'];
 const RUNS = 3;
 const CATS = ['performance', 'accessibility', 'best-practices', 'seo'];
 

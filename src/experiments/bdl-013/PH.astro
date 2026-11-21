@@ -1,0 +1,13 @@
+---
+/**
+ * One string in both voices: a Plain span and a Hood span, one of which the
+ * stage hides (.ds:not(.hood) .h, .ds.hood .p). `wbr` lets a long path in the
+ * Hood voice break after a slash, the way the mockup's <wbr> did.
+ */
+import type { PH } from './data';
+interface Props { t: PH; wbr?: boolean }
+const { t, wbr = false } = Astro.props;
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const hood = wbr ? esc(t.h).replace(/\/(?!$)/g, '/<wbr>') : '';
+---
+<span class="p">{t.p}</span>{wbr ? <span class="h" set:html={hood} /> : <span class="h">{t.h}</span>}
