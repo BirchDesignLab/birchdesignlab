@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six layers under every page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+:root{
+  --field:#1c1a17; --raised:#272319; --pine:#22322a; --ink:#f4f0e6; --muted:#a89f8f;
+  --moss:#a3bd8f; --fern:#6f9678; --caramel:#bf9468;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --cmp:0;
+}
+*{box-sizing:border-box}
+html{background:var(--field)}
+body{margin:0;background:var(--field);color:var(--ink);font-family:'Spectral',Georgia,serif;min-height:300vh;overflow-x:hidden}
+#fix{position:fixed;inset:0;overflow:hidden;background:
+  radial-gradient(ellipse 55% 70% at 30% 56%, rgba(34,50,42,.95) 0%, rgba(34,50,42,0) 72%),
+  radial-gradient(ellipse 40% 50% at 85% 10%, rgba(191,148,104,.07) 0%, rgba(191,148,104,0) 70%),
+  var(--field)}
+#fix::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(244,240,230,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(244,240,230,.028) 1px,transparent 1px);
+  background-size:72px 72px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 35% 55%,#000 20%,transparent 85%);mask-image:radial-gradient(ellipse 80% 80% at 35% 55%,#000 20%,transparent 85%)}
+#fix::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+#motes{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#design{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
+
+/* header */
+.head{position:absolute;left:64px;top:50px;width:760px;z-index:6;pointer-events:none}
+.eyebrow{font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:16px;opacity:0;transform:translateY(6px);animation:rise 1.2s var(--ease) .1s forwards}
+.head h1{margin:0;font:400 54px/1.04 'Marcellus',Georgia,serif;letter-spacing:.005em;color:var(--ink);opacity:0;transform:translateY(14px);animation:rise 1.4s var(--ease) .2s forwards}
+.head p{margin:14px 0 0;font:italic 400 21px/1.3 'Spectral',Georgia,serif;color:var(--muted);opacity:0;transform:translateY(10px);animation:rise 1.4s var(--ease) .5s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.ctrl{position:absolute;right:64px;top:46px;display:flex;gap:14px;align-items:center;z-index:7;opacity:0;animation:rise 1.2s var(--ease) .8s forwards}
+.ctrl button{font:inherit;cursor:pointer}
+#replay{font:500 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--ink);background:transparent;border:1px solid rgba(244,240,230,.22);border-radius:999px;padding:9px 16px;transition:border-color .3s,color .3s,background .3s}
+#replay:hover{border-color:var(--moss);color:var(--moss);background:rgba(163,189,143,.08)}
+.sw{position:relative;display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(244,240,230,.22);border-radius:999px;padding:3px;background:rgba(28,26,23,.5)}
+.sw button{position:relative;z-index:1;border:0;background:none;color:var(--muted);font:500 12px 'IBM Plex Mono',monospace;letter-spacing:.04em;width:128px;padding:7px 0;border-radius:999px;transition:color .35s}
+.sw button.on{color:var(--field)}
+.sw .thumb{position:absolute;left:3px;top:3px;bottom:3px;width:calc(50% - 3px);border-radius:999px;background:var(--moss);transition:transform .55s var(--ease)}
+body.hood .sw .thumb{transform:translateX(100%)}
+
+/* scene */
+#scene{position:absolute;inset:0;perspective:2400px;z-index:2}
+#stack{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.floor{position:absolute;left:-400px;top:-400px;width:800px;height:800px;border-radius:50%;transform-style:flat;
+  background:radial-gradient(circle,rgba(0,0,0,.42) 0,rgba(0,0,0,.18) 38%,transparent 62%);pointer-events:none}
+.floor i{position:absolute;border-radius:50%;border:1px dashed rgba(163,189,143,.2)}
+.floor i:nth-child(1){inset:60px}.floor i:nth-child(2){inset:150px;border-style:solid;border-color:rgba(244,240,230,.08)}
+.floor b{position:absolute;left:50%;top:40px;bottom:40px;width:1px;background:rgba(163,189,143,.12)}
+.floor b+b{left:40px;right:40px;top:50%;bottom:auto;width:auto;height:1px}
+.rod{position:absolute;left:0;top:0;width:0;height:100px;border-left:1px dashed rgba(163,189,143,.35);transform-origin:0 0;pointer-events:none}
+.pk{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,#fff 0,var(--moss) 45%,rgba(163,189,143,0) 72%);box-shadow:0 0 14px 4px rgba(163,189,143,.55)}
+.pk.up{width:10px;height:7px;left:-5px;top:-3.5px;border-radius:2px;background:var(--ink);box-shadow:0 0 14px 4px rgba(191,148,104,.6)}
+
+.plane{position:absolute;left:-240px;top:-150px;width:480px;height:300px;border-radius:6px;overflow:hidden;
+  --glow:0;
+  border:1px solid rgba(163,189,143,calc(.32 + var(--glow)*.6));
+  background:linear-gradient(145deg,rgba(30,44,37,.88),rgba(36,32,23,.8));
+  box-shadow:inset 0 0 46px rgba(163,189,143,calc(.05 + var(--glow)*.22)),0 0 calc(var(--glow)*46px) rgba(163,189,143,calc(var(--glow)*.6));
+  cursor:default}
+.plane::before{content:"";position:absolute;inset:7px;border:1px solid rgba(244,240,230,.07);border-radius:3px;pointer-events:none;z-index:4;opacity:calc(1 - var(--cmp))}
+.plane .grid{position:absolute;inset:0;pointer-events:none;z-index:3;opacity:calc(1 - var(--cmp));
+  background-image:linear-gradient(rgba(163,189,143,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(163,189,143,.09) 1px,transparent 1px);background-size:24px 24px}
+.plane .sheen{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:calc(1 - var(--cmp));
+  background:linear-gradient(105deg,transparent 38%,rgba(244,240,230,.13) 50%,transparent 62%);background-size:260% 100%;background-position:130% 0;animation:sheen 9s linear infinite}
+@keyframes sheen{0%{background-position:130% 0}55%,100%{background-position:-60% 0}}
+.plane .anc{position:absolute;right:0;bottom:0;width:1px;height:1px}
+.ph{position:absolute;left:0;top:0;right:0;bottom:0}
+.hood-only{opacity:0;transition:opacity .6s var(--ease);pointer-events:none}
+body.hood:not(.cmpd) .hood-only{opacity:1}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* 1 page */
+.p1{background:#f7f3ea}
+.mini{position:absolute;inset:0;background:#f7f3ea}
+.nav{position:absolute;left:0;right:0;top:0;height:36px;background:#fff;border-bottom:1px solid #e6dfd0;display:flex;align-items:center;padding:0 16px;white-space:nowrap}
+.nav b{font:400 13px 'Marcellus',Georgia,serif;color:#1f2f27;margin-right:auto;letter-spacing:.01em}
+.nav span{font:400 8.6px 'Spectral',serif;color:#4a463d;margin-left:9px}
+.nav em{font:500 8px 'IBM Plex Mono',monospace;font-style:normal;color:#1f2f27;border:1px solid #cfc7b4;border-radius:9px;padding:2px 6px;margin-left:12px}
+.hero{position:absolute;left:0;right:0;top:36px;bottom:0;background:linear-gradient(160deg,#97b08a 0%,#c8d9bd 52%,#edf1e2 100%);padding:32px 28px}
+.hero h4{margin:0;font:400 31px/1.07 'Marcellus',Georgia,serif;color:#1d2d25;width:255px}
+.hero p{margin:12px 0 0;font:400 11.5px/1.4 'Spectral',serif;color:#33443a;width:230px}
+.hero .btn{display:inline-block;margin-top:15px;background:#b8532f;color:#fff;font:500 11px 'Spectral',serif;padding:8px 16px;border-radius:3px;letter-spacing:.02em;box-shadow:0 2px 0 #8e3d20}
+.plate{position:absolute;right:34px;top:48px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#c97a3f 0 22%,#e3b57a 23% 38%,#f4efe2 39% 62%,#fff 63% 100%);box-shadow:0 10px 24px rgba(31,47,39,.25)}
+.plate::before{content:"";position:absolute;inset:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e7a86a 0 8%,transparent 9%),radial-gradient(circle at 62% 40%,#9bb36f 0 7%,transparent 8%),radial-gradient(circle at 50% 66%,#b8532f 0 9%,transparent 10%),radial-gradient(circle at 70% 66%,#e7a86a 0 6%,transparent 7%),#c97a3f}
+.sprig{position:absolute;right:20px;bottom:22px;width:90px;height:34px;background:radial-gradient(ellipse 14px 6px at 14px 18px,#6f9678 98%,transparent),radial-gradient(ellipse 14px 6px at 36px 10px,#5c8566 98%,transparent),radial-gradient(ellipse 14px 6px at 58px 18px,#6f9678 98%,transparent),radial-gradient(ellipse 14px 6px at 80px 10px,#5c8566 98%,transparent);opacity:.7}
+.hb{position:absolute;border:1px dashed rgba(28,26,23,.7);pointer-events:none}
+.hb span{position:absolute;left:-1px;top:-1px;font:500 7.5px/1 'IBM Plex Mono',monospace;background:rgba(28,26,23,.88);color:var(--moss);padding:2px 4px}
+
+/* 2 words */
+.lrow{position:absolute;left:24px;right:24px;height:74px;border:1px solid rgba(244,240,230,.12);background:rgba(244,240,230,.035);border-radius:4px;display:flex;align-items:center;padding:0 14px;gap:14px}
+.chip{font:500 10px 'IBM Plex Mono',monospace;color:var(--moss);border:1px solid rgba(163,189,143,.55);border-radius:3px;padding:4px 7px;letter-spacing:.06em;flex:none}
+.lrow .tx{flex:1;min-width:0}
+.lrow .tx b{display:block;font:400 15px/1.2 'Spectral',serif;color:var(--ink);white-space:nowrap}
+.lrow .tx s{display:block;height:4px;margin-top:8px;border-radius:2px;background:rgba(244,240,230,.14);text-decoration:none}
+.lrow .tx s+s{width:60%;margin-top:5px;background:rgba(244,240,230,.09)}
+.stamp{flex:none;font:500 8.5px 'IBM Plex Mono',monospace;color:var(--moss);border:1px solid rgba(163,189,143,.6);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;transform:rotate(-12deg)}
+.stamp.hold{color:var(--caramel);border-color:rgba(191,148,104,.8);border-style:dashed}
+.lrow .meta{position:absolute;right:62px;top:7px;font:400 8px 'IBM Plex Mono',monospace;color:var(--muted)}
+.lrow .meta2{position:absolute;left:14px;bottom:5px;font:400 8px 'IBM Plex Mono',monospace;color:var(--fern)}
+
+/* 3 modules */
+.tile{position:absolute;top:50px;width:134px;height:162px;border:1px solid rgba(163,189,143,.4);border-radius:5px;background:linear-gradient(180deg,rgba(163,189,143,.12),rgba(163,189,143,.03));display:flex;flex-direction:column;align-items:center;padding-top:20px}
+.tile svg{width:46px;height:46px;stroke:var(--moss);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tile b{font:400 18px 'Marcellus',serif;margin-top:12px;color:var(--ink)}
+.tog{margin-top:14px;width:38px;height:18px;border-radius:9px;background:var(--moss);position:relative}
+.tog::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--field)}
+.tog.off{background:rgba(244,240,230,.14)}
+.tog.off::after{right:auto;left:2px;background:var(--muted)}
+.tile .kv{position:absolute;bottom:9px;font:400 8.5px 'IBM Plex Mono',monospace;color:var(--caramel)}
+.ghosts{position:absolute;left:27px;right:27px;top:232px;height:40px;border:1px dashed rgba(244,240,230,.22);border-radius:4px;display:flex;align-items:center;gap:22px;padding:0 14px;color:var(--muted);font:400 11px 'Spectral',serif}
+.ghosts .tog{margin:0 0 0 6px;transform:scale(.8)}
+.ghosts span{display:flex;align-items:center}
+
+/* 4 security */
+.sec-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(163,189,143,.22) 1px,transparent 1.2px);background-size:16px 16px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000,transparent);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000,transparent)}
+.shield{position:absolute;left:170px;top:36px;width:140px;height:228px}
+.hl{position:absolute;font:400 9px/1.55 'IBM Plex Mono',monospace;color:var(--moss)}
+.hl i{font-style:normal;color:var(--muted)}
+
+/* 5 engine */
+.rchip{position:absolute;left:262px;font:500 11px 'IBM Plex Mono',monospace;color:var(--ink);border:1px solid rgba(163,189,143,.5);background:rgba(163,189,143,.08);border-radius:3px;padding:6px 10px}
+.rchip.c{border-color:rgba(191,148,104,.7);color:var(--caramel);background:rgba(191,148,104,.07)}
+
+.deco{position:absolute;pointer-events:none}
+
+/* labels + leaders */
+#leaders{position:fixed;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;overflow:visible}
+#leaders path{fill:none;stroke:rgba(163,189,143,.6);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+#leaders circle.ar{fill:rgba(28,26,23,.8);stroke:var(--moss);stroke-width:1.2}
+#leaders .on path{stroke:var(--moss);stroke-width:1.6}
+.labels{position:absolute;left:905px;top:168px;width:480px;z-index:6}
+.lab{position:relative;height:104px;padding-left:46px;opacity:0;transition:filter .4s;cursor:default}
+.lab .dot{position:absolute;left:0;top:8px;width:9px;height:9px;border-radius:50%;border:1.3px solid var(--moss);background:var(--field);transition:background .3s,box-shadow .3s}
+.lab:hover .dot,.lab.on .dot{background:var(--moss);box-shadow:0 0 12px var(--moss)}
+.lab .num{position:absolute;left:20px;top:7px;font:500 11px 'IBM Plex Mono',monospace;color:var(--moss);letter-spacing:.08em}
+.lab .tt{font:400 23px/1.15 'Marcellus',Georgia,serif;color:var(--ink);transition:opacity .22s,transform .22s,color .3s;padding-left:0}
+.lab .ds{margin-top:6px;font:400 15.5px/1.38 'Spectral',serif;color:var(--muted);max-width:420px;transition:opacity .22s,transform .22s,color .3s}
+.lab.on .tt{color:var(--moss)}
+.lab.on .ds{color:#cfc8b8}
+body.hood .lab .tt{font:500 14.5px/1.5 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+body.hood .lab .ds{font:400 12px/1.5 'IBM Plex Mono',monospace;color:#b9ad95;letter-spacing:-.01em}
+.lab.swap .tt,.lab.swap .ds{opacity:0;transform:translateY(5px)}
+
+.hint{position:absolute;left:64px;bottom:34px;font:400 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(168,159,143,.7);z-index:6;opacity:0;animation:rise 1.2s var(--ease) 5s forwards;transition:filter .5s}
+#caption{position:absolute;left:0;right:0;top:716px;text-align:center;z-index:6;opacity:0;pointer-events:none}
+#caption b{display:block;font:400 34px/1.1 'Marcellus',Georgia,serif;color:var(--ink)}
+#caption span{display:block;margin-top:10px;font:italic 400 17px 'Spectral',serif;color:var(--muted)}
+
+/* mobile */
+body.mobile #design{width:390px;height:844px}
+body.mobile .head{left:22px;top:28px;width:346px}
+body.mobile .eyebrow{font-size:10px;margin-bottom:10px}
+body.mobile .head h1{font-size:31px}
+body.mobile .head p{font-size:16px;margin-top:8px}
+body.mobile .ctrl{left:22px;right:22px;top:158px;gap:8px;justify-content:space-between}
+body.mobile #replay{padding:8px 12px;font-size:11px}
+body.mobile .sw button{width:104px;font-size:11px}
+body.mobile #leaders{display:none}
+body.mobile .labels{left:26px;top:612px;width:338px}
+body.mobile .lab{height:36px;padding-left:40px}
+body.mobile .lab .ds{display:none}
+body.mobile .lab .tt{font-size:17px}
+body.mobile.hood .lab .tt{font-size:11.5px;padding-top:3px}
+body.mobile .lab .dot{top:7px}
+body.mobile .lab .num{left:16px;top:6px}
+body.mobile .hint{display:none}
+body.mobile #caption{top:660px}
+body.mobile #caption b{font-size:26px}
+</style>
+</head>
+<body>
+<div id="fix">
+  <canvas id="motes"></canvas>
+  <div id="design">
+    <div class="head">
+      <div class="eyebrow">Anatomy of a site</div>
+      <h1>Six layers under every page.</h1>
+      <p>Most people only ever see the top one.</p>
+    </div>
+    <div class="ctrl">
+      <button id="replay" type="button" aria-label="Replay the intro">&#8635; Replay</button>
+      <div class="sw" role="group" aria-label="Label style">
+        <i class="thumb"></i>
+        <button type="button" data-m="plain" class="on" aria-pressed="true">Plain English</button>
+        <button type="button" data-m="hood" aria-pressed="false">Under the hood</button>
+      </div>
+    </div>
+
+    <div id="scene">
+      <div id="stack">
+        <div class="floor" id="floor"><i></i><i></i><b></b><b></b></div>
+
+        <!-- 6 served worldwide (bottom) listed first so DOM order matches depth roughly; z comes from JS -->
+        <div class="plane" data-i="5"><div class="grid"></div>
+          <svg class="ph" viewBox="0 0 480 300" aria-hidden="true">
+            <defs>
+              <pattern id="gdots" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.1" fill="#a3bd8f"/></pattern>
+              <clipPath id="gc"><circle cx="240" cy="150" r="116"/></clipPath>
+              <mask id="land"><g fill="#fff">
+                <ellipse cx="190" cy="108" rx="34" ry="26" transform="rotate(-20 190 108)"/>
+                <ellipse cx="206" cy="182" rx="15" ry="32" transform="rotate(18 206 182)"/>
+                <ellipse cx="262" cy="112" rx="22" ry="17"/>
+                <ellipse cx="272" cy="170" rx="19" ry="31" transform="rotate(-8 272 170)"/>
+                <ellipse cx="318" cy="112" rx="40" ry="22" transform="rotate(8 318 112)"/>
+                <ellipse cx="338" cy="196" rx="17" ry="11"/>
+              </g></mask>
+              <radialGradient id="gsh" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#a3bd8f" stop-opacity=".28"/><stop offset="1" stop-color="#22322a" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="240" cy="150" r="116" fill="url(#gsh)"/>
+            <g clip-path="url(#gc)">
+              <rect width="480" height="300" fill="url(#gdots)" opacity=".26"/>
+              <rect width="480" height="300" fill="url(#gdots)" mask="url(#land)" opacity=".95"/>
+              <g stroke="#a3bd8f" stroke-opacity=".22" fill="none" stroke-width=".8">
+                <ellipse cx="240" cy="150" rx="40" ry="116"/><ellipse cx="240" cy="150" rx="82" ry="116"/>
+                <line x1="124" y1="150" x2="356" y2="150"/><line x1="124" y1="108" x2="356" y2="108"/><line x1="124" y1="192" x2="356" y2="192"/><line x1="124" y1="70" x2="356" y2="70"/><line x1="124" y1="230" x2="356" y2="230"/>
+              </g>
+            </g>
+            <circle cx="240" cy="150" r="116" fill="none" stroke="#a3bd8f" stroke-opacity=".6"/>
+            <circle cx="240" cy="150" r="126" fill="none" stroke="#f4f0e6" stroke-opacity=".12" stroke-dasharray="2 5"/>
+            <g id="pts" fill="#f4f0e6">
+              <g transform="translate(192 104)"><circle r="2.2"/><circle r="2" fill="none" stroke="#a3bd8f"><animate attributeName="r" values="2;15" dur="3.2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" repeatCount="indefinite"/></circle></g>
+              <g transform="translate(262 112)"><circle r="2.2"/><circle r="2" fill="none" stroke="#a3bd8f"><animate attributeName="r" values="2;15" dur="3.2s" begin="-1.1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" begin="-1.1s" repeatCount="indefinite"/></circle></g>
+              <g transform="translate(316 118)"><circle r="2.2"/><circle r="2" fill="none" stroke="#a3bd8f"><animate attributeName="r" values="2;15" dur="3.2s" begin="-2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" begin="-2.2s" repeatCount="indefinite"/></circle></g>
+              <g transform="translate(206 188)"><circle r="2.2"/><circle r="2" fill="none" stroke="#bf9468"><animate attributeName="r" values="2;15" dur="3.2s" begin="-.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" begin="-.6s" repeatCount="indefinite"/></circle></g>
+              <g transform="translate(274 174)"><circle r="2.2"/><circle r="2" fill="none" stroke="#bf9468"><animate attributeName="r" values="2;15" dur="3.2s" begin="-1.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" begin="-1.7s" repeatCount="indefinite"/></circle></g>
+              <g transform="translate(338 196)"><circle r="2.2"/><circle r="2" fill="none" stroke="#a3bd8f"><animate attributeName="r" values="2;15" dur="3.2s" begin="-2.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="3.2s" begin="-2.7s" repeatCount="indefinite"/></circle></g>
+            </g>
+          </svg>
+          <div class="hood-only mono" style="position:absolute;left:24px;bottom:20px;font-size:9px;color:var(--moss);line-height:1.6">edge: static assets<br><span style="color:var(--muted)">cache: public, immutable</span></div>
+          <div class="hood-only mono" style="position:absolute;right:24px;top:22px;font-size:9px;color:var(--caramel);text-align:right;line-height:1.6">nodes: worldwide<br><span style="color:var(--muted)">origin: none needed</span></div>
+          <div class="sheen" style="animation-delay:-1s"></div><i class="anc"></i>
+        </div>
+
+        <!-- 5 engine -->
+        <div class="plane" data-i="4"><div class="grid"></div>
+          <svg class="ph" viewBox="0 0 480 300" aria-hidden="true">
+            <g fill="none" stroke="#a3bd8f" stroke-opacity=".5" stroke-width="1">
+              <path d="M150 150 H206 V72 H262"/><path d="M150 150 H262"/><path d="M150 150 H206 V196 H262"/>
+              <path class="hood-only" style="stroke:#bf9468" d="M150 150 H196 V236 H262"/>
+              <path class="hood-only" style="stroke:#bf9468" d="M150 150 H186 V272 H262"/>
+            </g>
+            <g transform="translate(96 150)">
+              <polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31" fill="rgba(163,189,143,.1)" stroke="#a3bd8f" stroke-width="1.6"/>
+              <polygon points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20" fill="none" stroke="#a3bd8f" stroke-opacity=".5" stroke-dasharray="3 4"/>
+              <path d="M6 -26 L-14 4 H-1 L-6 26 L14 -4 H1 Z" fill="#a3bd8f"/>
+            </g>
+          </svg>
+          <span class="rchip" style="top:57px">/api/contact</span>
+          <span class="rchip" style="top:135px">/api/checkout</span>
+          <span class="rchip" style="top:181px">/order</span>
+          <span class="rchip c hood-only" style="top:220px">Durable Object OrderBoard</span>
+          <span class="rchip c hood-only" style="top:258px">Turnstile</span>
+          <div class="sheen" style="animation-delay:-2.5s"></div><i class="anc"></i>
+        </div>
+
+        <!-- 4 security -->
+        <div class="plane" data-i="3"><div class="grid"></div>
+          <div class="sec-bg"></div>
+          <svg class="shield" viewBox="0 0 140 228" aria-hidden="true">
+            <defs><linearGradient id="shg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a3bd8f" stop-opacity=".32"/><stop offset="1" stop-color="#6f9678" stop-opacity=".08"/></linearGradient></defs>
+            <path d="M70 14 L124 36 V102 C124 144 102 178 70 200 C38 178 16 144 16 102 V36 Z" fill="url(#shg)" stroke="#a3bd8f" stroke-width="1.8"/>
+            <path d="M70 30 L110 46 V102 C110 136 94 164 70 184 C46 164 30 136 30 102 V46 Z" fill="none" stroke="#a3bd8f" stroke-opacity=".45" stroke-dasharray="3 4"/>
+            <rect x="50" y="88" width="40" height="34" rx="4" fill="#1c1a17" stroke="#f4f0e6" stroke-width="1.6"/>
+            <path d="M57 88 V76 a13 13 0 0 1 26 0 V88" fill="none" stroke="#f4f0e6" stroke-width="1.8"/>
+            <circle cx="70" cy="103" r="4" fill="#a3bd8f"/><rect x="68.5" y="105" width="3" height="9" fill="#a3bd8f"/>
+          </svg>
+          <div class="hl hood-only" style="left:22px;top:62px">content-security-policy<br>strict-transport-security<br>x-content-type-options<br>referrer-policy<br>permissions-policy</div>
+          <div class="hl hood-only" style="right:20px;top:150px;text-align:right"><i>script-src</i> 'sha256-Qm9r…'<br><i>script-src</i> 'sha256-t4Xk…'<br><i>frame-ancestors</i> 'none'</div>
+          <div class="sheen" style="animation-delay:-4s"></div><i class="anc"></i>
+        </div>
+
+        <!-- 3 modules -->
+        <div class="plane" data-i="2"><div class="grid"></div>
+          <div class="hl hood-only" style="left:27px;top:22px;color:var(--muted)">// modules</div>
+          <div class="tile" style="left:27px">
+            <svg viewBox="0 0 48 48"><path d="M10 10h28v28H10z"/><path d="M16 18h16M16 24h16M16 30h10"/></svg><b>Menu</b><span class="tog"></span><span class="kv hood-only">menu: on</span></div>
+          <div class="tile" style="left:173px">
+            <svg viewBox="0 0 48 48"><path d="M12 16h24l-2 22H14z"/><path d="M18 20v-4a6 6 0 0 1 12 0v4"/></svg><b>Ordering</b><span class="tog"></span><span class="kv hood-only">ordering: on</span></div>
+          <div class="tile" style="left:319px">
+            <svg viewBox="0 0 48 48"><rect x="9" y="12" width="30" height="26" rx="2"/><path d="M9 20h30M17 8v8M31 8v8"/><path d="M17 28l4 4 9-9"/></svg><b>Booking</b><span class="tog"></span><span class="kv hood-only">booking: on</span></div>
+          <div class="ghosts"><span>Events <i class="tog off"></i></span><span>Shop <i class="tog off"></i></span><span class="hood-only mono" style="margin-left:auto;font-size:9px;color:var(--caramel)">off = never built</span></div>
+          <div class="sheen" style="animation-delay:-5.5s"></div><i class="anc"></i>
+        </div>
+
+        <!-- 2 words -->
+        <div class="plane" data-i="1"><div class="grid"></div>
+          <div class="lrow" style="top:26px"><span class="chip">EN</span><div class="tx"><b>Coastal comfort food, done right</b><s></s><s></s></div><span class="stamp">OK</span>
+            <span class="meta hood-only">/en/ · hreflang="en"</span></div>
+          <div class="lrow" style="top:114px"><span class="chip">ES</span><div class="tx"><b>Comida casera de la costa, bien hecha</b><s></s><s></s></div><span class="stamp">OK</span>
+            <span class="meta hood-only">/es/ · hreflang="es"</span></div>
+          <div class="lrow" style="top:202px"><span class="chip">VI</span><div class="tx"><b>Món ăn gia đình ven biển, làm cho đúng</b><s></s><s></s></div><span class="stamp hold">hold</span>
+            <span class="meta hood-only">/vi/ · unreviewed: blocked</span></div>
+          <div class="sheen" style="animation-delay:-7s"></div><i class="anc"></i>
+        </div>
+
+        <!-- 1 the page (top) -->
+        <div class="plane p1" data-i="0">
+          <div class="mini">
+            <div class="nav"><b>Demo Bayou Kitchen</b><span>Home</span><span>Gallery</span><span>Menu</span><span>Order Online</span><span>Book Now</span><span>Contact</span><em>EN | ES</em></div>
+            <div class="hero">
+              <h4>Coastal comfort food, done right</h4>
+              <p>Family recipes, local seafood and a table with your name on it.</p>
+              <span class="btn">See What's Cooking</span>
+              <div class="plate"></div><div class="sprig"></div>
+            </div>
+          </div>
+          <div class="ph hood-only">
+            <div class="hb" style="left:0;top:0;right:0;height:36px"><span>&lt;nav&gt;</span></div>
+            <div class="hb" style="left:24px;top:64px;width:268px;height:102px"><span>&lt;h1&gt;</span></div>
+            <div class="hb" style="left:24px;top:218px;width:136px;height:34px"><span>&lt;a.btn&gt;</span></div>
+            <div class="hb" style="left:300px;top:78px;width:154px;height:154px;border-radius:50%"><span>&lt;img&gt;</span></div>
+            <div class="hb" style="left:0;right:0;top:36px;bottom:0;border-color:var(--pine)"><span style="left:auto;right:-1px;top:auto;bottom:-1px">&lt;section.hero&gt;</span></div>
+          </div>
+          <div class="grid"></div>
+          <div class="sheen" style="animation-delay:0s"></div><i class="anc"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="labels" id="labels"></div>
+    <div class="hint">Move to tilt &middot; hover a layer</div>
+    <div id="caption"><b>This is all a visitor sees.</b><span>Everything else holds it up.</span></div>
+  </div>
+  <svg id="leaders" aria-hidden="true"></svg>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function bez(x1, y1, x2, y2) {
+    return x => {
+      if (x <= 0) return 0; if (x >= 1) return 1;
+      let t = x;
+      for (let i = 0; i < 10; i++) {
+        const c = 3*x1*t*(1-t)*(1-t) + 3*x2*t*t*(1-t) + t*t*t - x;
+        const d = 3*x1*(1-t)*(1-t) + 6*(x2-x1)*t*(1-t) + 3*(1-x2)*t*t;
+        if (Math.abs(c) < 1e-5) break;
+        t -= c / (d || 1e-4);
+      }
+      t = clamp(t);
+      return 3*y1*t*(1-t)*(1-t) + 3*y2*t*t*(1-t) + t*t*t;
+    };
+  }
+  const easeOut = bez(0.22, 1, 0.36, 1);
+  const easeIO = bez(0.65, 0, 0.35, 1);
+
+  const COPY = [
+    { plain: ['The page', 'What a visitor sees: the finished homepage, ready to read.'],
+      hood:  ['Static HTML', 'Astro static HTML · 18 pages'] },
+    { plain: ['Words, in more than one language', 'Every page reads in each language, and nothing goes live until a person has checked it.'],
+      hood:  ['Locale routing', 'per-locale routes · hreflang · review stamps block unreviewed strings'] },
+    { plain: ['What the business does', 'Menu, ordering and booking switch on only for the clients who need them.'],
+      hood:  ['Modules', 'modules: menu · ordering · booking. Off means never built'] },
+    { plain: ['Security built in', 'Locked-down defaults protect every visitor before they click anything.'],
+      hood:  ['Headers', '_headers · strict CSP with sha256 script hashes · 2-year HSTS'] },
+    { plain: ['The engine', 'A small program that handles forms, orders and bot checks.'],
+      hood:  ['Runtime', 'Cloudflare Worker · routes · Durable Object OrderBoard · Turnstile'] },
+    { plain: ['Served worldwide', 'Copies of the site sit near visitors all over the globe.'],
+      hood:  ['Edge', 'Cloudflare edge · static assets'] }
+  ];
+
+  const body = document.body, design = $('#design'), scene = $('#scene'), stack = $('#stack');
+  const labelsEl = $('#labels'), leaders = $('#leaders'), caption = $('#caption'), floor = $('#floor');
+
+  // labels
+  const labs = COPY.map((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'lab';
+    el.innerHTML = '<i class="dot"></i><span class="num">0' + (i + 1) + '</span><div class="tt"></div><div class="ds"></div>';
+    labelsEl.appendChild(el);
+    return { el, dot: $('.dot', el), tt: $('.tt', el), ds: $('.ds', el) };
+  });
+  let mode = 'plain';
+  function fillLabel(i) { const c = COPY[i][mode]; labs[i].tt.textContent = c[0]; labs[i].ds.textContent = c[1]; }
+  COPY.forEach((_, i) => fillLabel(i));
+  function setMode(m) {
+    if (m === mode) return;
+    mode = m;
+    body.classList.toggle('hood', m === 'hood');
+    $$('.sw button').forEach(b => { const on = b.dataset.m === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    labs.forEach((l, i) => {
+      l.el.classList.add('swap');
+      setTimeout(() => { fillLabel(i); l.el.classList.remove('swap'); }, 230 + i * 45);
+    });
+  }
+  $$('.sw button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+
+  // planes
+  const PW = 480, PH = 300, GAP = 98;
+  const planes = $$('.plane').sort((a, b) => a.dataset.i - b.dataset.i).map((el, i) => ({
+    el, i, anc: $('.anc', el), start: 0.15 + (5 - i) * 0.5, dur: 1.25, h: 0, pulse: 0, glow: -1, op: -1
+  }));
+  let hov = -1;
+  planes.forEach((p, i) => {
+    p.el.addEventListener('pointerenter', () => { hov = i; });
+    p.el.addEventListener('pointerleave', () => { if (hov === i) hov = -1; });
+    labs[i].el.addEventListener('pointerenter', () => { hov = i; });
+    labs[i].el.addEventListener('pointerleave', () => { if (hov === i) hov = -1; });
+  });
+
+  // leaders
+  const NS = 'http://www.w3.org/2000/svg';
+  const lines = planes.map((p, i) => {
+    const g = document.createElementNS(NS, 'g');
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('pathLength', '1');
+    path.style.strokeDasharray = '1';
+    const ring = document.createElementNS(NS, 'circle');
+    ring.setAttribute('r', '4'); ring.setAttribute('class', 'ar');
+    g.appendChild(path); g.appendChild(ring); leaders.appendChild(g);
+    return { g, path, ring };
+  });
+
+  // rods + packets
+  const rodPos = [[-PW/2 - 12, PH/2 + 12], [-PW/2 - 12, -PH/2 - 12], [PW/2 + 12, PH/2 + 12], [PW/2 + 12, -PH/2 - 12]];
+  const rods = rodPos.map(([x, y]) => { const r = document.createElement('div'); r.className = 'rod'; stack.appendChild(r); return { el: r, x, y }; });
+  const streams = [
+    { kind: 'down', x: rodPos[0][0], y: rodPos[0][1], n: 3, per: 8, els: [] },
+    { kind: 'up', x: rodPos[1][0], y: rodPos[1][1], n: 3, per: 8, els: [] }
+  ];
+  streams.forEach(s => { for (let k = 0; k < s.n; k++) { const e = document.createElement('div'); e.className = 'pk' + (s.kind === 'up' ? ' up' : ''); stack.appendChild(e); s.els.push(e); } });
+
+  // state
+  let ts = 0, T0 = performance.now() / 1000, mobile = false;
+  let px = 0, py = 0, tx = 0, ty = 0, lastTs = null;
+  let cmp = 0;
+  const tw = { from: 0, to: 0, start: 0, dur: 0.001, fn: easeIO };
+  let state = 'exploded', nextAt = 12, scrolled = false;
+  const COMP_DUR = 1.8, HOLD = 3.0, EXP_DUR = 2.0, IDLE = 8;
+  function tween(to, dur, fn) { tw.from = cmp; tw.to = to; tw.start = ts; tw.dur = dur; tw.fn = fn; }
+
+  function timeline(t) {
+    if (scrolled) { if (state !== 'scrolled') { state = 'scrolled'; tween(1, COMP_DUR, easeIO); } return; }
+    if (state === 'scrolled') { state = 'compressed'; nextAt = t + 0.4; }
+    if (t < nextAt) return;
+    if (state === 'exploded') { tween(1, COMP_DUR, easeIO); state = 'compressed'; nextAt = t + COMP_DUR + HOLD; }
+    else if (state === 'compressed') { tween(0, EXP_DUR, easeOut); state = 'exploded'; nextAt = t + EXP_DUR + IDLE; }
+  }
+  window.addEventListener('scroll', () => { scrolled = scrollY > 60; }, { passive: true });
+  $('#replay').addEventListener('click', () => {
+    T0 = performance.now() / 1000; state = 'exploded'; nextAt = 12;
+    cmp = 0; tw.from = tw.to = 0; tw.start = ts; tw.dur = 0.001;
+    planes.forEach(p => { p.h = 0; p.glow = -1; });
+  });
+  window.addEventListener('pointermove', e => { tx = (e.clientX / innerWidth - 0.5) * 2; ty = (e.clientY / innerHeight - 0.5) * 2; });
+
+  // fit
+  let vs = 1;
+  function fit() {
+    const vw = innerWidth, vh = innerHeight;
+    mobile = vw < 820; body.classList.toggle('mobile', mobile);
+    const DW = mobile ? 390 : 1440, DH = mobile ? 844 : 900;
+    vs = Math.min(vw / DW, vh / DH);
+    design.style.transform = 'translate(' + ((vw - DW * vs) / 2) + 'px,' + ((vh - DH * vs) / 2) + 'px) scale(' + vs + ')';
+    mc.width = vw; mc.height = vh;
+  }
+
+  // motes
+  const mc = $('#motes'), mx = mc.getContext('2d');
+  const motes = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.4, v: 0.004 + Math.random() * 0.012, a: 0.1 + Math.random() * 0.3, c: Math.random() < 0.8 ? '163,189,143' : '191,148,104', ph: Math.random() * 6 }));
+  function drawMotes(dt) {
+    mx.clearRect(0, 0, mc.width, mc.height);
+    for (const m of motes) {
+      m.y -= m.v * dt; if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
+      const x = (m.x + Math.sin(ts * 0.2 + m.ph) * 0.01) * mc.width, y = m.y * mc.height;
+      mx.fillStyle = 'rgba(' + m.c + ',' + (m.a * (0.6 + 0.4 * Math.sin(ts + m.ph))) + ')';
+      mx.beginPath(); mx.arc(x, y, m.r, 0, 6.283); mx.fill();
+    }
+  }
+
+  fit(); addEventListener('resize', fit);
+
+  function frame(now) {
+    ts = now / 1000;
+    const dt = lastTs === null ? 0.016 : Math.min(0.1, ts - lastTs); lastTs = ts;
+    const t = ts - T0;
+    timeline(t);
+    cmp = tw.from + (tw.to - tw.from) * tw.fn(clamp((ts - tw.start) / tw.dur));
+    px += (tx - px) * Math.min(1, dt * 3); py += (ty - py) * Math.min(1, dt * 3);
+
+    const introE = easeOut(clamp(t / 5.6));
+    const rx = lerp(60 + (1 - introE) * 14 + Math.sin(ts * 0.5) * 1.4 - py * 3.2, 0, cmp);
+    const rz = lerp(-35 - (1 - introE) * 42 + Math.sin(ts * 0.33) * 4 + px * 5, 0, cmp);
+    const sc0 = (mobile ? 0.6 : 0.95) * (0.88 + 0.12 * introE);
+    const sc = lerp(sc0, mobile ? 0.74 : 1.5, cmp);
+    const cx = lerp(mobile ? 195 : 430, mobile ? 195 : 720, cmp);
+    const cy = lerp(mobile ? 396 : 508, mobile ? 396 : 440, cmp) + Math.sin(ts * 0.8) * 7 * (1 - cmp);
+    scene.style.perspectiveOrigin = cx + 'px ' + cy + 'px';
+    stack.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0) scale(' + sc + ') rotateX(' + rx + 'deg) rotateZ(' + rz + 'deg)';
+    design.style.setProperty('--cmp', cmp.toFixed(3));
+    body.classList.toggle('cmpd', cmp > 0.04);
+
+    const gap = lerp(GAP, 1.2, cmp);
+    const zs = planes.map(p => (2.5 - p.i) * gap);
+
+    // pulses from packets, reset
+    const pulseT = [0, 0, 0, 0, 0, 0];
+    const pOn = clamp((t - 4) / 1.2) * (1 - clamp(cmp * 3));
+    streams.forEach(s => s.els.forEach((el, k) => {
+      const u = ((ts / s.per + k / s.n + (s.kind === 'up' ? 0.5 / s.n : 0)) % 1);
+      const seg = Math.min(4, Math.floor(u * 5)), l = u * 5 - seg, f = easeIO(l);
+      const a = s.kind === 'down' ? seg : 5 - seg, b = s.kind === 'down' ? seg + 1 : 4 - seg;
+      const z = lerp(zs[a], zs[b], f);
+      if (l < 0.16) pulseT[a] = Math.max(pulseT[a], 1 - l / 0.16);
+      if (l > 0.84) pulseT[b] = Math.max(pulseT[b], 1 - (1 - l) / 0.16);
+      el.style.transform = 'translate3d(' + s.x + 'px,' + s.y + 'px,' + z + 'px) rotateZ(' + (-rz) + 'deg) rotateX(' + (-rx) + 'deg)';
+      el.style.opacity = pOn.toFixed(3);
+    }));
+    const rodH = (5 * gap + 70) / 100, rodTop = 2.5 * gap + 35;
+    const rodOp = clamp((t - 0.8) / 1.4) * (1 - clamp(cmp * 2.5));
+    rods.forEach(r => { r.el.style.transform = 'translate3d(' + r.x + 'px,' + r.y + 'px,' + rodTop + 'px) rotateX(-90deg) scaleY(' + rodH + ')'; r.el.style.opacity = rodOp.toFixed(3); });
+    floor.style.transform = 'translateZ(' + (-2.5 * gap - 70) + 'px)';
+    floor.style.opacity = (clamp((t - 0.2) / 1.5) * (1 - cmp)).toFixed(3);
+
+    // planes
+    const hovOn = cmp < 0.3 ? hov : -1;
+    let hovAmt = 0;
+    planes.forEach((p, i) => { p.h += ((hovOn === i ? 1 : 0) - p.h) * Math.min(1, dt * 6); hovAmt = Math.max(hovAmt, p.h); });
+    planes.forEach((p, i) => {
+      const e = easeOut(clamp((t - p.start) / p.dur));
+      const lock = p.start + p.dur * 0.82;
+      const flash = t > lock ? Math.exp(-(t - lock) * 1.5) : 0;
+      p.pulse += (pulseT[i] - p.pulse) * Math.min(1, dt * 10);
+      const z = zs[i] - (1 - e) * 300 + p.h * 46;
+      const op = clamp(e * 2.4) * (1 - 0.62 * hovAmt * (1 - p.h));
+      const glow = clamp(Math.max(flash, p.h * 0.85, p.pulse * 0.55)) * (1 - cmp * 0.7);
+      p.el.style.transform = 'translate3d(0,0,' + z.toFixed(2) + 'px)';
+      if (Math.abs(op - p.op) > 0.004) { p.el.style.opacity = op.toFixed(3); p.op = op; }
+      if (Math.abs(glow - p.glow) > 0.01) { p.el.style.setProperty('--glow', glow.toFixed(3)); p.glow = glow; }
+    });
+
+    // leaders and labels
+    const cf = 1 - clamp(cmp * 1.6);
+    const pts = planes.map(p => { const r = p.anc.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+    planes.forEach((p, i) => {
+      const tLine = p.start + p.dur * 0.7;
+      const lp = easeOut(clamp((t - tLine) / 1.0)) * cf;
+      const lShow = easeOut(clamp((t - tLine - 0.5) / 0.9)) * (1 - clamp(cmp * 2.4));
+      const l = labs[i], ln = lines[i];
+      const on = (hovOn === i);
+      l.el.style.opacity = (lShow * (1 - 0.55 * hovAmt * (on ? 0 : 1))).toFixed(3);
+      l.el.style.transform = 'translateX(' + ((1 - lShow) * 18).toFixed(2) + 'px)';
+      l.el.classList.toggle('on', on);
+      if (!mobile) {
+        const dr = l.dot.getBoundingClientRect();
+        const lx = dr.left, ly = dr.top + dr.height / 2, [ax, ay] = pts[i];
+        const ex = Math.max(ax + 24, lx - 64 * vs);
+        ln.path.setAttribute('d', 'M' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ' L' + ex.toFixed(1) + ' ' + ly.toFixed(1) + ' L' + lx.toFixed(1) + ' ' + ly.toFixed(1));
+        ln.path.style.strokeDashoffset = (1 - lp).toFixed(4);
+        ln.ring.setAttribute('cx', ax.toFixed(1)); ln.ring.setAttribute('cy', ay.toFixed(1));
+        ln.ring.style.opacity = (clamp(lp * 6) * cf).toFixed(2);
+        ln.g.style.opacity = (1 - 0.6 * hovAmt * (on ? 0 : 1)).toFixed(2);
+        ln.g.classList.toggle('on', on);
+      }
+    });
+
+    // caption + hint
+    caption.style.opacity = clamp((cmp - 0.72) / 0.28).toFixed(3);
+    caption.style.transform = 'translateY(' + ((1 - clamp((cmp - 0.72) / 0.28)) * 12).toFixed(1) + 'px)';
+    drawMotes(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

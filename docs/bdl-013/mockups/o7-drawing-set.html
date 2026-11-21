@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bdlBase drawing set</title>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('scheme');var d=q?q==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-scheme',d?'dark':'light');})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* BDL-013 round 6, pick 2: The Drawing Set, Datasheet as Hood (o7).
+   One engineering drawing sheet. Ink on cream (Day), cyanotype inversion (Night).
+   Left: the exact client.json lines. Right: the layers of one generated site.
+   Leaders tie each line to the layer it causes. Three detail bubbles open as
+   their own sheets. Plain = everyday words; Under the hood = datasheet columns.
+   Facts: docs/bdl-013/briefs/round6/judge-picks.md (Facts), bdlBase 1f9afc7. */
+:root{
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --field:#f5f1e8;--ink:#1f1b15;--muted:#5a5244;--lead:#2b4a37;--warm:#a8743f;
+  --slab:#e8e8dc;--tile:#efe9dc;--mark:#1f1b15;--accent:#2b4a37;--accent-strong:#4a3a2c;
+  --line:color-mix(in srgb,var(--ink) 30%,transparent);
+  --faint:color-mix(in srgb,var(--ink) 15%,transparent);
+}
+:root[data-scheme="dark"]{
+  --field:#0d2744;--ink:#e8f2fc;--muted:#9fbbd6;--lead:#8fd3ff;--warm:#ffd08a;
+  --slab:#143357;--tile:#12304f;--mark:#e8f2fc;--accent:#8fd3ff;--accent-strong:#e0b27a;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{margin:0;height:100%;background:var(--field);overflow:hidden}
+body{color:var(--ink);font-family:'Spectral',Georgia,serif;font-size:16px;font-variant-numeric:lining-nums;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0;text-align:left}
+button:focus-visible{outline:2px solid var(--lead);outline-offset:3px}
+.mono,.code{font-family:'IBM Plex Mono',monospace}
+body:not(.hood) .h{display:none!important}
+body.hood .p{display:none!important}
+.mar{font-family:'Marcellus',Georgia,serif;font-weight:400}
+
+#stage{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;overflow:hidden;background:var(--field);animation:ink .9s var(--ease) both}
+body.og #stage{width:1200px;height:627px}
+@keyframes ink{from{opacity:.18}to{opacity:1}}
+
+/* frame and zone grid */
+.frame{position:absolute;inset:14px;border:2px solid var(--ink);pointer-events:none}
+.frame::before{content:"";position:absolute;inset:24px;border:1px solid var(--ink)}
+.zone{position:absolute;font:400 11px 'IBM Plex Mono',monospace;color:var(--muted);width:20px;text-align:center}
+.tick{position:absolute;background:var(--ink);opacity:.6}
+
+/* top bar */
+#eyebrow{position:absolute;left:64px;top:50px;font:500 16px 'Spectral',serif;font-variant:small-caps;letter-spacing:.16em;color:var(--lead)}
+#ctrl{position:absolute;right:64px;top:44px;display:flex;gap:10px;z-index:3}
+.seg{display:flex;border:1.5px solid var(--ink)}
+.seg button{font:500 14px 'IBM Plex Mono',monospace;padding:9px 14px;color:var(--muted)}
+.seg button.on{background:var(--tile);color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+#back{position:absolute;left:64px;top:44px;z-index:3;border:1.5px solid var(--ink);padding:9px 16px;font:500 15px 'IBM Plex Mono',monospace;display:none!important;background:var(--field)}
+.mainsheet{display:block}
+body:not([data-detail="0"]) .mainsheet{display:none}
+
+/* balloon */
+.bal{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1.5px solid var(--lead);border-radius:50%!important;font:500 16px/1 'Spectral',serif;color:var(--ink);background:var(--field);flex:none}
+.bal.dash{border-style:dashed}
+
+/* ---- main elevation grid ---- */
+#elev{position:absolute;left:64px;top:86px;display:grid;
+  grid-template-columns:356px 168px 430px 58px 300px;
+  grid-template-rows:40px 28px repeat(9,50px)}
+.eh{align-self:center;font:400 19px/1.1 'Marcellus',serif;white-space:nowrap}
+.eh small{display:block;font:400 16px 'Spectral',serif;color:var(--muted)}
+body.hood .eh{font:500 14px 'IBM Plex Mono',monospace}
+
+/* file lines */
+.fl{grid-column:1;display:flex;align-items:center;gap:6px;font:400 14px/1 'IBM Plex Mono',monospace;white-space:pre;position:relative;color:var(--muted)}
+.fl .bn{width:26px;flex:none;display:flex;justify-content:center}
+.fl .tk{padding:6px 7px;outline:1.5px solid var(--lead);background:color-mix(in srgb,var(--lead) 11%,transparent);color:var(--ink)}
+.fl.ghost .tk{outline-style:dashed;background:none;color:var(--muted)}
+.fl::after{content:"";flex:1;min-width:0;border-top:1.5px dotted var(--lead);margin-left:2px}
+.fl.nolead::after{display:none}
+.fl.br{padding-left:32px}
+
+.bracket{grid-column:1;grid-row:3/12;margin:0 0 0 -16px;width:10px;border:1.5px solid var(--lead);border-right:0;pointer-events:none;align-self:stretch;margin-top:12px;margin-bottom:25px}
+
+/* leaders */
+.ld{grid-column:2;position:relative}
+.ld::before{content:"";position:absolute;left:0;right:11px;top:50%;margin-top:-1px;border-top:2px solid var(--lead)}
+.ld::after{content:"";position:absolute;right:0;top:50%;margin-top:-6px;border:6px solid transparent;border-left:12px solid var(--lead);border-right:0}
+.ld i{position:absolute;left:-5px;top:50%;width:10px;height:10px;margin-top:-5px;background:var(--lead);border-radius:50%!important}
+.ld.dash::before{border-top-style:dashed}
+.ld.dash i{background:var(--field);border:2px solid var(--lead)}
+.ld .lb{position:absolute;left:12px;right:16px;bottom:calc(50% + 5px);text-align:center;font:italic 400 16px/1.1 'Spectral',serif;color:var(--ink);white-space:nowrap}
+body.hood .ld .lb{font:400 13px/1.1 'IBM Plex Mono',monospace;font-style:normal}
+
+/* slabs */
+.sl{grid-column:3;display:grid;grid-template-columns:52px 132px 1fr;align-items:center;border:2px solid var(--ink);border-top:0;background:var(--slab);position:relative;min-width:0}
+.sl.first{border-top:2px solid var(--ink)}
+.sl .tab{align-self:stretch;display:flex;align-items:center;justify-content:center;border-right:1.5px solid var(--ink);background:repeating-linear-gradient(135deg,var(--faint) 0 2px,transparent 2px 7px)}
+.sl .nm{font:400 21px/1 'Marcellus',serif;padding-left:12px}
+.sl .tx{font:400 16px/1.2 'Spectral',serif;padding:0 10px 0 0;min-width:0}
+body.hood .sl .tx{font:400 13px/1.25 'IBM Plex Mono',monospace}
+.sl.sub{grid-template-columns:52px 1fr}
+.sl.sub .tab{border-right:1.5px solid var(--ink)}
+.sl.sub .sb{padding:0 10px 0 14px;min-width:0}
+.sl.sub .sb b{display:block;font:400 18px/1.15 'Marcellus',serif}
+.sl.sub .sb>span{display:block;font:400 16px/1.2 'Spectral',serif;color:var(--muted)}
+.sl.sub .sb b span{font:inherit;color:inherit}
+body.hood .sl.sub .sb b{font:500 14px/1.2 'IBM Plex Mono',monospace}
+body.hood .sl.sub .sb>span{font:400 13px/1.2 'IBM Plex Mono',monospace}
+.sl.sub:not(.first):not(.lead3){border-top:0}
+.sl.sub.dv{border-top:0}
+.sl.note{background:var(--tile)}
+.sl.ghostsl{border:2px dashed var(--ink);background:color-mix(in srgb,var(--field) 55%,var(--slab))}
+.sl.ghostsl .nm{color:var(--muted)}
+.sl.note .sb{color:var(--muted)}
+.sl.note .sb span{font-style:italic}
+.row.hl.sl{background:color-mix(in srgb,var(--lead) 22%,var(--slab))}
+.row.hl .tk{background:color-mix(in srgb,var(--lead) 26%,transparent)}
+.row.hl.ld::before{border-top-width:3px;margin-top:-1.5px}
+body.hovering .row:not(.hl){opacity:.5}
+.row{transition:opacity .3s var(--ease),background .3s var(--ease)}
+
+/* bubble cards and forks */
+.bub{grid-column:5;display:flex;gap:12px;align-items:center;border:1.5px solid var(--ink);padding:10px 14px;opacity:.8;transition:opacity .3s var(--ease),background .3s,transform .3s var(--ease),box-shadow .3s;margin:3px 0;background:none;position:relative;cursor:pointer}
+.bub:hover,.bub:focus-visible{opacity:1;background:var(--tile);border-color:var(--ink);box-shadow:inset 0 0 0 .5px var(--ink),0 3px 0 var(--ink);transform:translateY(-2px)}
+.bub .bal{width:36px;height:36px;font-size:20px;border-color:var(--ink);margin:0}
+.bub b{display:block;font:400 20px/1.1 'Marcellus',serif}
+.bub b span{font:inherit}
+.bub .bt>span{display:block;margin-top:3px;font:400 16px/1.2 'Spectral',serif;color:var(--muted)}
+body.hood .bub b{font:500 14px/1.2 'IBM Plex Mono',monospace}
+body.hood .bub .bt>span{font:400 13px/1.2 'IBM Plex Mono',monospace}
+.fork{grid-column:4;overflow:visible;opacity:.55}
+.fork path{fill:none;stroke:var(--lead);stroke-width:1.5}
+.fork polygon{fill:var(--lead)}
+.hook{display:none}
+.hint,.wf{display:none}
+.legend{grid-column:5;align-self:center}
+.legend div{display:flex;align-items:center;gap:10px;font:400 16px/1.2 'Spectral',serif;color:var(--muted);margin-top:8px}
+body.hood .legend div{font:400 13px 'IBM Plex Mono',monospace}
+body.og .legend{display:none}
+
+/* title block and notes */
+#tb{position:absolute;left:700px;top:610px;width:676px;height:184px;border:2px solid var(--ink);display:grid;grid-template-columns:190px 1fr 150px;grid-template-rows:76px 1fr 30px;background:var(--field)}
+#tb>div{border:1px solid var(--ink);padding:8px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+#tb .name{font:400 44px/1 'Marcellus',serif}
+#tb .ttl{font:400 30px/1.08 'Marcellus',serif}
+#tb .sheet{font:500 16px/1.2 'IBM Plex Mono',monospace;padding:8px;white-space:nowrap}
+#tb .sent{grid-column:1/-1;font:400 16px/1.3 'Spectral',serif;justify-content:center;padding:4px 12px}
+body.hood #tb .sent{font:400 13px/1.45 'IBM Plex Mono',monospace}
+#tb .cell{font:400 16px/1.1 'Spectral',serif;color:var(--muted);flex-direction:row;align-items:center;justify-content:flex-start;white-space:nowrap}
+#tb .cell b{font-weight:500;color:var(--ink);margin-right:6px}
+#tb .c1{grid-column:1/3}#tb .c2{grid-column:3}
+#nt{position:absolute;left:64px;top:622px;width:616px;height:80px;padding:0}
+#nt ol{margin:0;padding:0;list-style:none;font:400 16px/1.3 'Spectral',serif;color:var(--muted)}
+#nt li{display:flex;gap:10px;margin-top:4px}
+#nt li i{font:500 16px/1.3 'IBM Plex Mono',monospace;font-style:normal;color:var(--lead);width:22px;flex:none}
+body.hood #nt ol{font:400 13px/1.4 'IBM Plex Mono',monospace}
+
+/* ---- SHARED "TRY IT" PATTERN: filled action, cue, progress strip ---- */
+.go{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:12px 18px;background:var(--mark);color:var(--field);font:500 15px/1.2 'IBM Plex Mono',monospace;border:2px solid var(--mark);text-align:left;transition:background .25s var(--ease),border-color .25s var(--ease)}
+.go:hover,.go:focus-visible{background:var(--accent);border-color:var(--accent)}
+.go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.go.alt{background:var(--field);color:var(--ink);border-color:var(--ink)}
+.go.alt:hover,.go.alt:focus-visible{background:var(--tile);border-color:var(--ink)}
+#nav{position:absolute;inset:0;z-index:2;pointer-events:none}
+#nav>*{pointer-events:auto}
+.strip{position:absolute;left:64px;top:804px;width:616px;display:flex;align-items:stretch;border:1.5px solid var(--ink);height:52px}
+.mk{display:flex;align-items:center;gap:7px;padding:0 12px;font:400 16px/1 'Spectral',serif;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;text-align:left}
+.mk .mi{font:500 15px/1 'IBM Plex Mono',monospace}
+.mk:hover{color:var(--ink)}
+.mk[aria-current="step"]{color:var(--ink);font-weight:500;background:var(--tile);border-bottom-color:var(--ink)}
+.sep{align-self:center;color:var(--muted);font-size:16px}
+.acts{position:absolute;left:700px;top:804px;width:676px;display:flex;align-items:center;gap:12px;min-height:52px}
+.acts .go{font-size:17px;min-height:52px;padding:14px 24px}
+.cue{display:flex;align-items:center;gap:8px;font:500 15px/1 'Spectral',serif;font-variant:small-caps;letter-spacing:.12em;color:var(--accent-strong);white-space:nowrap}
+.cue svg{display:block}
+.cue .av{display:none}
+.go .short{display:none}
+body.used .cue,body:not([data-detail="0"]) .cue{display:none}
+#nav [hidden]{display:none!important}
+.bub .open{position:absolute;right:10px;bottom:9px;background:var(--ink);color:var(--field);font:500 15px/1 'IBM Plex Mono',monospace;padding:7px 10px;transition:background .25s}
+.bub:hover .open,.bub:focus-visible .open{background:var(--lead);color:var(--field)}
+body.og #nav{display:none}
+
+/* ---- detail sheets ---- */
+.detail{position:absolute;left:64px;top:96px;width:1312px;height:504px;display:none;animation:ink .6s var(--ease) both}
+body[data-detail="1"] #d1,body[data-detail="2"] #d2,body[data-detail="3"] #d3{display:block}
+.dhead{display:flex;align-items:center;gap:16px;height:52px;border-bottom:2px solid var(--ink);margin-bottom:14px}
+.dhead h2{margin:0;font:400 32px/1 'Marcellus',serif;white-space:nowrap}
+body.hood .dhead h2{font:500 22px/1 'IBM Plex Mono',monospace}
+.dhead p{margin:0 0 0 12px;font:400 17px/1.25 'Spectral',serif;color:var(--muted)}
+body.hood .dhead p{font:400 13px/1.35 'IBM Plex Mono',monospace}
+.dhead .bal{width:38px;height:38px;font-size:22px;border-color:var(--ink);margin:0}
+
+/* detail 1 */
+.d1 .cols{display:grid;grid-template-columns:500px 500px 1fr;gap:34px;height:438px}
+.tree{position:relative;--rw:26px;--hdr:62px}
+.tree .th{height:var(--hdr);border-bottom:1.5px solid var(--ink);margin-bottom:6px;padding-bottom:6px}
+.tree .th b{display:block;font:400 24px/1.1 'Marcellus',serif}
+.tree .th b span{font:inherit}
+.tree .th>span{display:block;font:400 16px/1.25 'Spectral',serif;color:var(--muted)}
+body.hood .tree .th b{font:500 17px 'IBM Plex Mono',monospace}
+body.hood .tree .th>span{font:400 13px 'IBM Plex Mono',monospace}
+.tr{height:var(--rw);display:flex;align-items:center;font:400 14px 'IBM Plex Mono',monospace;white-space:pre;width:330px;padding-left:8px;margin:0}
+.tr.l1{padding-left:28px}.tr.l2{padding-left:48px}
+.tr.on{border-left:3px solid var(--lead);background:color-mix(in srgb,var(--lead) 8%,transparent)}
+.tr.gone{outline:1px dashed var(--ghostc,var(--muted));outline-offset:-3px;color:var(--muted);opacity:.7}
+.dim{position:absolute;left:350px;top:calc(var(--hdr) + 6px + var(--a)*var(--rw) + 3px);height:calc((var(--b) - var(--a) + 1)*var(--rw) - 6px);width:22px;
+  background:linear-gradient(var(--lead),var(--lead)) center/1.5px 100% no-repeat,linear-gradient(var(--lead),var(--lead)) top/22px 1.5px no-repeat,linear-gradient(var(--lead),var(--lead)) bottom/22px 1.5px no-repeat}
+.dim::before,.dim::after{content:"";position:absolute;left:50%;margin-left:-5px;border:5px solid transparent}
+.dim::before{top:1px;border-bottom:10px solid var(--lead);border-top:0}
+.dim::after{bottom:1px;border-top:10px solid var(--lead);border-bottom:0}
+.dim .dl{position:absolute;left:32px;top:50%;transform:translateY(-50%);width:118px;font:italic 400 17px/1.15 'Spectral',serif;color:var(--ink)}
+body.hood .dim .dl{font:400 13px/1.3 'IBM Plex Mono',monospace;font-style:normal}
+.zero{border:2px solid var(--ink);padding:16px 16px 14px;align-self:start;background:var(--tile)}
+.zero .n{font:500 120px/.95 'IBM Plex Mono',monospace;color:var(--lead)}
+.zero b{display:block;margin-top:6px;font:400 22px/1.1 'Marcellus',serif}
+.zero p{margin:10px 0 0;font:400 16px/1.3 'Spectral',serif;color:var(--muted)}
+body.hood .zero b{font:500 15px/1.3 'IBM Plex Mono',monospace}
+body.hood .zero p{font:400 12.5px/1.4 'IBM Plex Mono',monospace}
+
+/* detail 2 */
+.d2 .cols{display:grid;grid-template-columns:330px 1fr;gap:40px;height:438px}
+.d2 svg{width:auto;height:430px;display:block;overflow:visible}
+.d2 svg text{fill:var(--ink)}
+.bom{border:2px solid var(--ink);align-self:start}
+.bom .bh,.bom .br{display:grid;grid-template-columns:50px 270px 1fr;align-items:center;border-top:1.5px solid var(--ink);min-height:62px}
+.bom .bh{border-top:0;min-height:38px;background:var(--tile);font:500 16px 'IBM Plex Mono',monospace;color:var(--muted)}
+.bom .bh>span,.bom .br>*{padding:6px 12px}
+.bom .br b{font:400 20px/1.15 'Marcellus',serif}
+.bom .br .w{font:400 16px/1.25 'Spectral',serif}
+.bom .br .bal{margin:0 0 0 11px;padding:0}
+.bom .rt{font:400 15px/1.5 'IBM Plex Mono',monospace;display:block;white-space:pre-wrap}
+body.hood .bom .br b{font:500 14px/1.3 'IBM Plex Mono',monospace}
+body.hood .bom .br .w{font:400 13px/1.45 'IBM Plex Mono',monospace}
+.more{font-style:italic;color:var(--muted)}
+
+/* detail 3 */
+.d3 .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;height:438px}
+.d3 h3{margin:0 0 8px;font:400 22px/1.1 'Marcellus',serif;padding-bottom:6px;border-bottom:1.5px solid var(--ink)}
+.d3 h3 small{display:block;margin-top:3px;font:400 16px 'Spectral',serif;color:var(--muted)}
+body.hood .d3 h3{font:500 15px 'IBM Plex Mono',monospace}
+body.hood .d3 h3 small{font:400 12.5px 'IBM Plex Mono',monospace}
+.rate{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--faint)}
+.rate .bal{margin-top:2px}
+.rate b{display:block;font:400 20px/1.2 'Marcellus',serif}
+.rate b span{font:inherit;color:inherit;margin:0}
+.rate>div>span{display:block;font:400 17px/1.3 'Spectral',serif;color:var(--muted);margin-top:3px}
+body.hood .rate b{font:500 13.5px/1.3 'IBM Plex Mono',monospace}
+body.hood .rate>div>span{font:400 12.5px/1.4 'IBM Plex Mono',monospace}
+.gate{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--faint);font:400 18px/1.2 'Spectral',serif}
+.gate i{font:400 13px 'IBM Plex Mono',monospace;font-style:normal;color:var(--muted);white-space:nowrap}
+body.hood .gate{font:500 13.5px 'IBM Plex Mono',monospace}
+.gate.last{border-bottom:2px solid var(--ink);font-weight:500}
+.lh{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:10px;border:1.5px solid var(--ink)}
+.lh div{padding:10px 10px;border:.5px solid var(--ink);font:400 16px/1.2 'Spectral',serif;display:flex;justify-content:space-between;gap:8px}
+.lh div b{font:500 17px 'IBM Plex Mono',monospace}
+body.hood .lh div{font:400 12.5px 'IBM Plex Mono',monospace}
+body.hood .lh div b{font:500 13px 'IBM Plex Mono',monospace}
+.pay{margin:9px 0 0;font:italic 400 16px/1.3 'Spectral',serif;color:var(--muted)}
+body.hood .pay{font:400 12.5px/1.4 'IBM Plex Mono',monospace;font-style:normal}
+.rev{border:2px solid var(--ink)}
+.rev .rh,.rev .rr{display:grid;grid-template-columns:104px 1fr;border-top:1.5px solid var(--ink)}
+.rev .rh{border-top:0;background:var(--tile);font:500 16px 'IBM Plex Mono',monospace;color:var(--muted)}
+.rev .rh>span{padding:6px 10px}
+.rev .rr>b{font:400 20px/1.15 'Marcellus',serif;padding:12px 10px;border-right:1.5px solid var(--ink);display:block}
+.rev .rr>div{padding:12px 11px;font:400 17px/1.3 'Spectral',serif}
+body.hood .rev .rr>b{font:500 13px/1.3 'IBM Plex Mono',monospace}
+body.hood .rev .rr>div{font:400 12px/1.45 'IBM Plex Mono',monospace}
+.rev .rr.nv{background:repeating-linear-gradient(135deg,var(--faint) 0 2px,transparent 2px 9px)}
+.rev .rr.nv>div,.rev .rr.nv>b{background:var(--field)}
+.rev .rr.nv>b{border-right:1.5px solid var(--ink)}
+.rev-note{margin:9px 0 0;font:italic 400 16px/1.3 'Spectral',serif;color:var(--muted)}
+body.hood .rev-note{font:400 12.5px/1.4 'IBM Plex Mono',monospace;font-style:normal}
+
+/* ---------- OG frame ---------- */
+body.og #ctrl,body.og #eyebrow,body.og #nt,body.og .bub,body.og .fork,body.og .eh,body.og .tr,body.og .sl .tx,body.og .sl.sub .sb>span,body.og .sl.note,body.og .brace,body.og .zone,body.og .tick,body.og .ld .lb{display:none!important}
+body.og .frame{inset:12px}
+body.og .frame::before{inset:20px}
+body.og #elev{left:530px;top:113px;grid-template-columns:372px 40px 208px;grid-template-rows:0 0 repeat(5,50px) 0 repeat(3,50px)}
+body.og .eh{display:none}
+body.og .fl{font-size:15px}
+body.og .ld::before{border-top-width:3px;margin-top:-1.5px}
+body.og .ld::after{margin-top:-7px;border-width:7px 0 7px 14px;border-color:transparent transparent transparent var(--lead)}
+body.og .sl{grid-template-columns:50px 1fr}
+body.og .sl .tab{grid-column:1}
+body.og .sl .nm{grid-column:2;font-size:26px}
+body.og .sl.sub .sb{padding-left:10px}body.og .sl.sub .sb b{font-size:18px;white-space:nowrap}
+body.og .sl.ghostsl{border:2px dashed var(--ink)}
+body.og .bracket{grid-row:3/12;margin-bottom:25px}
+body.og #tb{left:56px;top:56px;width:450px;height:515px;grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto auto;border-width:3px}
+body.og #tb .name{font-size:84px;padding:26px 24px 8px;border:0;border-bottom:1.5px solid var(--ink)}
+body.og #tb .ttl{font-size:44px;padding:20px 24px;border:0;line-height:1.08}
+body.og #tb .sent{font-size:22px;padding:0 24px;border:0;grid-column:1;justify-content:flex-start;color:var(--muted)}
+body.og #tb .sheet{font-size:19px;padding:14px 24px;border:0;border-top:1.5px solid var(--ink);grid-row:4}
+body.og #tb .cell{border:0;border-top:1.5px solid var(--ink);padding:12px 24px;font-size:18px;grid-column:1;grid-row:5}
+body.og #tb .c2,body.og #tb .c3{display:none}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  html,body{height:auto;overflow:auto}
+  #stage{position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;transform:none!important;margin:8px;padding:14px 10px 22px;border:2px solid var(--ink);box-shadow:inset 0 0 0 5px var(--field),inset 0 0 0 6.5px var(--ink);overflow:visible}
+  .frame,.zone,.tick{display:none}
+  #eyebrow{position:static;padding:6px 6px 8px;font-size:16px;display:block}
+  #ctrl{position:static;display:flex;flex-wrap:nowrap;gap:6px;padding:0 0 14px}
+  .seg button{font-size:14px;padding:12px 9px;min-height:44px}
+  #back{position:sticky;top:0;left:0;display:none;width:100%;min-height:48px;font-size:16px;margin:0 0 10px;padding:12px 16px;z-index:5}
+  body:not([data-detail="0"]) #back{display:block}
+  #tb{position:relative;left:auto;top:auto;width:auto;height:auto;margin:0 6px 20px;grid-template-columns:1fr 152px;grid-template-rows:auto auto auto auto}
+  #tb .name{font-size:46px;padding:10px 12px}
+  #tb .sheet{white-space:nowrap;font-size:17px;grid-column:2;grid-row:1}
+  #tb .ttl{grid-column:1/-1;font-size:32px;padding:12px}
+  #tb .sent{font-size:17px;padding:10px 12px;line-height:1.4}
+  body.hood #tb .sent{font-size:14px}
+  #tb .cell{font-size:16px;white-space:normal;padding:8px 12px;flex-wrap:wrap}
+  #tb .c1{grid-column:1/-1}#tb .c2{grid-column:1/-1}
+  #elev{position:relative;left:auto;top:auto;margin:0;grid-template-columns:1fr;grid-template-rows:none}
+  #elev>*{grid-row:auto!important;grid-column:1!important}
+  .eh{font-size:18px;white-space:normal;align-self:end;padding-bottom:4px;line-height:1.15}
+  .eh small{display:none}
+  .eh.ec,.eh.ed,.bracket,.brace{display:none}
+  body.hood .eh{font-size:14px}
+  .hint{display:block;font:400 16px/1.3 'Spectral',serif;color:var(--muted);margin-bottom:6px}
+  body.hood .hint{font:400 13px/1.4 'IBM Plex Mono',monospace}
+  .fl{font-size:14px;gap:4px;min-height:36px;white-space:pre-wrap;align-items:center;margin-top:20px}
+  .fl .bn{width:22px;flex:none}
+  .fl .bal{width:22px;height:22px;font-size:14px}
+  .fl .tk{padding:4px 6px;line-height:1.35;min-width:0}
+  .fl::after{display:none}
+  .fl .dk{display:none}.fl .wf{display:inline}
+  .ld{min-height:50px;margin-left:34px;margin-top:0}
+  .ld::before{left:0;right:auto;top:0;bottom:11px;margin:0;border-top:0;border-left:2px solid var(--lead)}
+  .ld.dash::before{border-left-style:dashed;border-top:0}
+  .ld::after{left:-5px;right:auto;top:auto;bottom:0;margin:0;border-style:solid;border-width:12px 6px 0 6px;border-color:var(--lead) transparent transparent transparent}
+  .ld i{left:-4px;top:-5px;margin:0}
+  .ld .lb{display:block;left:18px;right:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:left;font-size:16px;white-space:normal}
+  body.hood .ld .lb{font-size:14px}
+  .sl,.sl.first{grid-template-columns:38px 1fr;min-height:54px;align-items:stretch;border-top:2px solid var(--ink)}
+  .sl.sub,.sl.first3{margin-top:0}
+  .sl .tab{grid-row:1/3}
+  .sl .nm{grid-column:2;grid-row:1;padding:8px 8px 0 10px;font-size:20px}
+  .sl .tx{grid-column:2;grid-row:2;padding:2px 8px 8px 10px}
+  .sl.sub{grid-template-columns:38px 1fr}
+  .sl.sub .sb{padding:8px 8px 8px 10px}
+  .sl.sub .sb b{font-size:18px}
+  .sl.note{margin-top:14px}
+  body.hood .sl .tx,body.hood .sl.sub .sb>span{font-size:13px}
+  .bal{width:26px;height:26px}
+  .fork,.legend{display:none}
+  .bub{grid-column:1/-1;grid-row:auto!important;margin:10px 0 0;opacity:.8;padding:12px 14px;min-height:64px}
+  .bub.b1{margin-top:22px}
+  .bub b{font-size:21px}
+  body.hood .bub b{font-size:14px}
+  #nt{position:relative;left:auto;top:auto;width:auto;height:auto;margin:22px 6px 0;padding:0}
+  #nt ol{font-size:16px}
+  body.hood #nt ol{font-size:13px}
+  #stage{margin-bottom:140px!important}
+  #back{display:none!important}
+  #nav{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:auto;padding:8px 10px 10px;background:var(--field);border-top:2px solid var(--ink);z-index:9}
+  .strip{border:0;gap:6px;height:44px;align-items:stretch}
+  .mk{border:1.5px solid var(--ink);min-width:44px;justify-content:center;padding:0 10px;color:var(--ink)}
+  .mk[aria-current="step"]{background:var(--tile);color:var(--ink);border-bottom:3px solid var(--ink)}
+  .mk .ml,.sep{display:none}
+  .acts{margin-top:8px;gap:8px}
+  .acts .go{flex:1;justify-content:center;min-height:48px}
+  .acts .go{font-size:15px;padding:12px 14px}
+  .acts .go.alt{flex:0 0 30%}
+  .go .long{display:none}.go .short{display:inline}
+  .strip{position:static;width:auto}
+  .acts{position:static;width:auto}
+  #nav{pointer-events:auto}
+  #nav .cue{position:absolute;right:12px;top:6px;flex-direction:column;gap:3px;align-items:center}
+  #nav .cue .ah{display:none}#nav .cue .av{display:block}
+  .d2 svg{height:auto!important}
+  /* detail sheets */
+  .detail{position:relative;left:auto;top:auto;width:auto;height:auto;padding:0 4px}
+  .dhead{height:auto;flex-wrap:wrap;gap:8px 12px;padding-bottom:10px}
+  .dhead h2{font-size:28px;white-space:normal}
+  .dhead p{margin:0;width:100%;font-size:16px}
+  .dhead .bal{width:34px;height:34px}
+  .d1 .cols,.d2 .cols,.d3 .cols{display:flex;flex-direction:column;height:auto;gap:24px}
+  .tree{width:100%;--hdr:68px}
+  .tr{width:calc(100% - 40px);font-size:14px;padding-right:4px}
+  .tree .th{height:var(--hdr)}
+  .tree.nodim .tr{width:100%}
+  .dim{left:auto;right:6px;width:20px}
+  .dim .dl{display:block;left:auto;right:26px;width:112px;text-align:right;font-size:16px;line-height:1.15;background:var(--field);padding:2px 0 2px 4px}
+  body.hood .dim .dl{font-size:12.5px}
+  body:not([data-detail="0"]) #tb{display:none}
+  .h,.sent,.w,.tx,.sb,.bt,.lb,.th{overflow-wrap:anywhere}
+  .zero .n{font-size:110px}
+  .d2 svg{width:100%}
+  .bom .bh,.bom .br{grid-template-columns:44px 1fr;min-height:0}
+  .bom .bh span:nth-child(3){display:none}
+  .bom .br .w{grid-column:2;padding-top:0}
+  .bom .br .bal{margin-left:8px}
+  .rev .rh,.rev .rr{grid-template-columns:96px 1fr}
+  .lh{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body data-detail="0">
+<div id="stage">
+  <div class="frame" aria-hidden="true"></div>
+  <div id="eyebrow">Birch Design Lab &middot; BDL-013</div>
+  <div id="ctrl">
+    <div class="seg" id="mode"><button type="button" data-v="plain" class="on">Plain</button><button type="button" data-v="hood">Under the hood</button></div>
+    <div class="seg" id="scheme"><button type="button" data-v="light">Day</button><button type="button" data-v="dark">Night</button></div>
+  </div>
+  <button id="back" type="button">&larr; Back to sheet 1</button>
+
+  <!-- progress strip + primary action (shared "Try it" pattern) -->
+  <nav id="nav" aria-label="Sheet sequence">
+    <div class="strip">
+      <button class="mk" type="button" data-go="0" aria-label="Sheet 1"><span class="mi">Sheet</span></button><span class="sep" aria-hidden="true">&middot;</span>
+      <button class="mk" type="button" data-go="1" aria-label="Detail 1: Off is gone"><span class="mi">1</span><span class="ml">Off is gone</span></button><span class="sep" aria-hidden="true">&middot;</span>
+      <button class="mk" type="button" data-go="2" aria-label="Detail 2: What ordering needs"><span class="mi">2</span><span class="ml">What ordering needs</span></button><span class="sep" aria-hidden="true">&middot;</span>
+      <button class="mk" type="button" data-go="3" aria-label="Detail 3: Rules and upgrades"><span class="mi">3</span><span class="ml">Rules and upgrades</span></button>
+    </div>
+    <div class="acts">
+      <button class="go alt" id="prev" type="button" hidden>&larr; <span class="long">Back to sheet</span><span class="short">Sheet</span></button>
+      <span class="cue" id="cue"><span>Try it</span>
+        <svg class="ah" width="46" height="14" viewBox="0 0 46 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 7H43"/><path d="M37 2l7 5-7 5"/></svg>
+        <svg class="av" width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M24 1L4 19"/><path d="M4 11v8h8"/></svg></span>
+      <button class="go" id="next" type="button">Next: Off is gone &rarr;</button>
+    </div>
+  </nav>
+
+  <!-- title block: first read. Plain title stands alone. -->
+  <div id="tb">
+    <div class="name" id="tbName">bdlBase</div>
+    <div class="ttl" id="tbTitle">One page of facts. <br>A whole website.</div>
+    <div class="sheet" id="tbSheet">Sheet 1 of 1</div>
+    <div class="sent"><span id="tbP" class="p">bdlBase is the web framework we built. Describe a business in one file and it builds the whole website, tests included. Follow the arrows, then open the three details.</span><span id="tbH" class="h">Astro on Cloudflare Workers. client.json in, a standalone repo out: modules, languages, consent and CI generated per site. Follow the leaders, then open details 1 to 3.</span></div>
+    <div class="cell c1"><b>Subject</b> Harbor Table, a demo restaurant</div>
+    <div class="cell c2"><b>Source</b> client.json</div>
+  </div>
+
+  <!-- ================= SHEET 1 ================= -->
+  <div class="mainsheet">
+  <div id="elev">
+    <div class="eh" style="grid-column:1;grid-row:1"><span class="p">One file describes the business</span><span class="h">client.json</span></div>
+    <div class="eh ec" style="grid-column:3;grid-row:1"><span class="p">The website that comes out</span><span class="h">generated site, by layer</span></div>
+    <div class="eh ed" style="grid-column:5;grid-row:1"><span class="p">Details</span><span class="h">Details</span></div>
+
+    <div class="hint" style="grid-row:1"><span class="p">Each line of the file causes the layer under it.</span><span class="h">Each key below generates the part under it.</span></div>
+    <div class="bracket" aria-hidden="true"></div>
+
+    <div class="fl nolead br brace" style="grid-row:2">{</div>
+
+    <!-- 1 Facts -->
+    <div class="fl row" data-r="1" style="grid-row:3"><span class="bn"><span class="bal">1</span></span><span class="tk code">"businessName": "Demo Harbor Table",</span></div>
+    <div class="ld row" data-r="1" style="grid-row:3"><i></i><span class="lb"><span class="p">shown on every page</span><span class="h">&rarr; site.config.ts</span></span></div>
+    <div class="sl first row" data-r="1" style="grid-row:3"><span class="tab"><span class="bal">1</span></span><span class="nm">Facts</span><span class="tx"><span class="p">Name, address, phone</span><span class="h">site.config.ts, generated</span></span></div>
+
+    <!-- 2 Pages -->
+    <div class="fl row" data-r="2" style="grid-row:4"><span class="bn"><span class="bal">2</span></span><span class="tk code">"modules": {</span></div>
+    <div class="ld row" data-r="2" style="grid-row:4"><i></i><span class="lb"><span class="p">adds feature pages</span><span class="h">&rarr; module registry</span></span></div>
+    <div class="sl row" data-r="2" style="grid-row:4"><span class="tab"><span class="bal">2</span></span><span class="nm">Pages</span><span class="tx"><span class="p">Home, About, Services, legal, plus a page per feature</span><span class="h">src/pages + modules/*/pages</span></span></div>
+
+    <!-- 3 Features: three leaders -->
+    <div class="fl row br" data-r="3a" style="grid-row:5"><span class="tk code">  "menu": true,</span></div>
+    <div class="ld row" data-r="3a" style="grid-row:5"><i></i><span class="lb"><span class="p">on: Menu page added</span><span class="h">&rarr; modules/menu</span></span></div>
+    <div class="sl sub row first3" data-r="3a" style="grid-row:5"><span class="tab"><span class="bal">3</span></span><span class="sb"><b><span class="p">Features &middot; Menu</span><span class="h">modules.menu</span></b><span><span class="p">Dishes and prices, one page</span><span class="h">src/<wbr>modules/<wbr>menu/</span></span></span></div>
+
+    <div class="fl row br" data-r="3b" style="grid-row:6"><span class="tk code">  "ordering": true,</span></div>
+    <div class="ld row" data-r="3b" style="grid-row:6"><i></i><span class="lb"><span class="p">on: Order page added</span><span class="h">&rarr; modules/ordering</span></span></div>
+    <div class="sl sub row" data-r="3b" style="grid-row:6"><span class="tab"></span><span class="sb"><b><span class="p">Online ordering</span><span class="h">modules.ordering</span></b><span><span class="p">Order and pay on the site</span><span class="h">src/<wbr>modules/<wbr>ordering/</span></span></span></div>
+
+    <div class="fl row br" data-r="3c" style="grid-row:7"><span class="tk code">  "booking": true</span></div>
+    <div class="ld row" data-r="3c" style="grid-row:7"><i></i><span class="lb"><span class="p">on: Book page added</span><span class="h">&rarr; modules/booking</span></span></div>
+    <div class="sl sub row" data-r="3c" style="grid-row:7"><span class="tab"></span><span class="sb"><b><span class="p">Booking</span><span class="h">modules.booking</span></b><span><span class="p">Reservations, one page</span><span class="h">src/<wbr>modules/<wbr>booking/</span></span></span></div>
+
+    <div class="fl nolead br brace" style="grid-row:8">},</div>
+    <div class="sl sub note" style="grid-row:8"><span class="tab"></span><span class="sb"><b><span class="p">Switch one off</span><span class="h">modules.x = false</span></b><span><span class="p">and its files are never written.</span><span class="h">absent from the repo, not hidden</span></span></span></div>
+
+    <!-- 4 Languages (ghost: optional key not set in this file) -->
+    <div class="fl row ghost" data-r="4" style="grid-row:9"><span class="bn"><span class="bal dash">4</span></span><span class="tk code">"i18n": { &hellip; }</span></div>
+    <div class="ld dash row" data-r="4" style="grid-row:9"><i></i><span class="lb"><span class="p">optional line, not set</span><span class="h">&rarr; i18n.locales</span></span></div>
+    <div class="sl ghostsl row" data-r="4" style="grid-row:9"><span class="tab"><span class="bal">4</span></span><span class="nm">Languages</span><span class="tx"><span class="p">Add a language and it goes live only once reviewed.</span><span class="h">coverage.ts refuses unreviewed</span></span></div>
+
+    <!-- 5 Consent -->
+    <div class="fl row" data-r="5" style="grid-row:10"><span class="bn"><span class="bal">5</span></span><span class="tk code">"consent": "opt-out",</span></div>
+    <div class="ld row" data-r="5" style="grid-row:10"><i></i><span class="lb"><span class="p">sets the tracking rule</span><span class="h">&rarr; consent.ts</span></span></div>
+    <div class="sl row" data-r="5" style="grid-row:10"><span class="tab"><span class="bal">5</span></span><span class="nm">Consent</span><span class="tx"><span class="p">One rule for tracking choices</span><span class="h">analytics/<wbr>consent.ts</span></span></div>
+
+    <!-- 6 Checks: the whole file -->
+    <div class="fl row br pm" data-r="6" style="grid-row:11"><span class="bn" style="margin-left:-32px"><span class="bal">6</span></span><span class="tk code"><span class="dk">}</span><span class="wf">{ &hellip; } the whole file</span></span></div>
+    <div class="ld row" data-r="6" style="grid-row:11"><i></i><span class="lb"><span class="p">sets the launch checks</span><span class="h">&rarr; deploy.yml</span></span></div>
+    <div class="sl row" data-r="6" style="grid-row:11"><span class="tab"><span class="bal">6</span></span><span class="nm">Checks</span><span class="tx"><span class="p">Tests that must pass to launch</span><span class="h">deploy needs 9 jobs</span></span></div>
+
+    <!-- forks to detail bubbles -->
+    <div class="legend" style="grid-row:3/5"><div><svg width="46" height="12" aria-hidden="true"><path d="M0 6H40" stroke="var(--lead)" stroke-width="2" fill="none"/><polygon points="46,6 38,1.5 38,10.5" fill="var(--lead)"/></svg><span class="p">A line in the file</span><span class="h">key present in file</span></div><div><svg width="46" height="12" aria-hidden="true"><path d="M0 6H40" stroke="var(--lead)" stroke-width="2" stroke-dasharray="5 4" fill="none"/><polygon points="46,6 38,1.5 38,10.5" fill="var(--lead)"/></svg><span class="p">An optional line, not set</span><span class="h">optional key, absent</span></div></div>
+    <svg class="fork" aria-hidden="true" style="grid-row:5/9;width:58px;height:200px" viewBox="0 0 58 200">
+      <path d="M0 75H24V50H52M24 75V150H52"/><polygon points="58,50 49,45 49,55"/><polygon points="58,150 49,145 49,155"/>
+    </svg>
+    <svg class="fork" aria-hidden="true" style="grid-row:10/12;width:58px;height:100px" viewBox="0 0 58 100">
+      <path d="M0 75H24V50H52"/><polygon points="58,50 49,45 49,55"/>
+    </svg>
+    <button class="bub b1" data-detail="1" style="grid-row:5/7" type="button"><span class="bal">1</span><span class="bt"><b><span class="p">Off is gone</span><span class="h">Detail 1: grep = 0</span></b><span><span class="p">Salon vs restaurant</span><span class="h">tree diff</span></span></span><span class="open">Open &rarr;</span></button>
+    <button class="bub b2" data-detail="2" style="grid-row:7/9" type="button"><span class="bal">2</span><span class="bt"><b><span class="p">What ordering needs and brings</span><span class="h">Detail 2: manifest</span></b><span><span class="p">A bill of materials</span><span class="h">module.manifest.ts</span></span></span><span class="open">Open &rarr;</span></button>
+    <button class="bub b3" data-detail="3" style="grid-row:10/12" type="button"><span class="bal">3</span><span class="bt"><b><span class="p">Rules and upgrades</span><span class="h">Detail 3: gates + lanes</span></b><span><span class="p">What stops a build</span><span class="h">ratings, CI, lanes</span></span></span><span class="open">Open &rarr;</span></button>
+  </div>
+
+  <div id="nt">
+    <ol class="p">
+      <li><i>1.</i><span>Follow the arrows: each line in the file causes the layer it points to.</span></li>
+      <li><i>2.</i><span>Harbor Table is a demo restaurant. The file is an excerpt.</span></li>
+    </ol>
+    <ol class="h">
+      <li><i>1.</i><span>Leaders run from client.json lines to the parts generated from them.</span></li>
+      <li><i>2.</i><span>restaurant.client.json excerpt; modules reformatted; i18n optional, absent.</span></li>
+    </ol>
+  </div>
+  </div>
+
+  <!-- ================= DETAIL 1: Off is gone ================= -->
+  <section class="detail d1" id="d1" aria-label="Detail 1, Off is gone">
+    <div class="dhead"><span class="bal">1</span><h2><span class="p">Off is gone</span><span class="h">Detail 1: absence</span></h2>
+      <p class="p">Same framework, two businesses. A feature that is off is not hidden. It is never written.</p>
+      <p class="h">module-absence.spec.ts: generate(salon) and generate(restaurant), then grep every shipped text file.</p></div>
+    <div class="cols">
+      <figure class="tree nodim" style="margin:0">
+        <div class="th"><b><span class="p">Harbor Table &middot; restaurant</span><span class="h">restaurant.client.json</span></b><span><span class="p">Menu, ordering and booking on.</span><span class="h">modules: menu, ordering, booking = true</span></span></div>
+        <div class="tr code">src/modules/</div>
+        <div class="tr l1 code">booking/</div>
+        <div class="tr l1 code">menu/</div>
+        <div class="tr l1 on code">ordering/</div>
+        <div class="tr l2 on code">durable-objects/order-board.ts</div>
+        <div class="tr l2 on code">lib/</div>
+        <div class="tr l2 on code">pages/</div>
+        <div class="tr l2 on code">module.manifest.ts</div>
+        <div class="tr on code">test/modules/ordering/</div>
+        <div class="tr on code">e2e-security/modules/ordering/</div>
+        <div class="tr code">wrangler.jsonc</div>
+        <div class="tr l1 on code">ORDER_BOARD binding</div>
+        <div class="tr code">.dev.vars.example</div>
+        <div class="tr l1 on code">STRIPE_ keys</div>
+      </figure>
+      <figure class="tree" style="margin:0">
+        <div class="th"><b><span class="p">Magnolia &amp; Mane &middot; salon</span><span class="h">salon.client.json</span></b><span><span class="p">Menu off, ordering off, booking on.</span><span class="h">modules: menu, ordering = false; booking = true</span></span></div>
+        <div class="tr code">src/modules/</div>
+        <div class="tr l1 code">booking/</div>
+        <div class="tr l1 gone code">menu/</div>
+        <div class="tr l1 gone code">ordering/</div>
+        <div class="tr l2 gone code">durable-objects/order-board.ts</div>
+        <div class="tr l2 gone code">lib/</div>
+        <div class="tr l2 gone code">pages/</div>
+        <div class="tr l2 gone code">module.manifest.ts</div>
+        <div class="tr gone code">test/modules/ordering/</div>
+        <div class="tr gone code">e2e-security/modules/ordering/</div>
+        <div class="tr code">wrangler.jsonc</div>
+        <div class="tr l1 gone code">ORDER_BOARD binding</div>
+        <div class="tr code">.dev.vars.example</div>
+        <div class="tr l1 gone code">STRIPE_ keys</div>
+        <div class="dim" style="--a:2;--b:2"><span class="dl"><span class="p">menu: off</span><span class="h">menu: false</span></span></div>
+        <div class="dim" style="--a:3;--b:9"><span class="dl"><span class="p">ordering: not in this site</span><span class="h">ordering: false. Not generated.</span></span></div>
+        <div class="dim" style="--a:11;--b:11"><span class="dl"><span class="p">no order storage</span><span class="h">no ORDER_BOARD</span></span></div>
+        <div class="dim" style="--a:13;--b:13"><span class="dl"><span class="p">no payment keys</span><span class="h">no STRIPE_*</span></span></div>
+      </figure>
+      <div class="zero">
+        <div class="n">0</div>
+        <b><span class="p">files point to the ordering folder</span><span class="h">files match modules/ordering</span></b>
+        <p><span class="p">A test builds the salon and searches every file in it for the ordering folder path. It finds none. Harbor Table is the control: it must still have everything.</span><span class="h">/modules[\\/]ordering\b/ over src, test, e2e, e2e-security, scripts and root config. Expected: []. Restaurant fixture is the positive control.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DETAIL 2: ordering parts list ================= -->
+  <section class="detail d2" id="d2" aria-label="Detail 2, Ordering parts list">
+    <div class="dhead"><span class="bal">2</span><h2><span class="p">What ordering is made of</span><span class="h">Detail 2: module.manifest.ts</span></h2>
+      <p class="p">One manifest per feature, like a parts list. Turn the feature on and everything below is added.</p>
+      <p class="h">src/modules/ordering/module.manifest.ts feeds the generated module registry.</p></div>
+    <div class="cols">
+      <svg viewBox="0 0 360 470" role="img" aria-label="Ordering module with its needs and attachments">
+        <g fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink)">
+          <rect x="70" y="8" width="220" height="56" fill="var(--tile)"/>
+          <rect x="20" y="134" width="320" height="218" fill="var(--slab)"/>
+          <rect x="26" y="140" width="308" height="206" stroke-width="1"/>
+          <rect x="20" y="394" width="150" height="64" fill="var(--tile)"/>
+          <rect x="190" y="394" width="150" height="64" fill="var(--tile)"/>
+          <rect x="244" y="150" width="76" height="34" stroke-width="1.5"/>
+        </g>
+        <g fill="none" stroke="var(--lead)" stroke-width="2">
+          <path d="M180 134V70"/><path d="M180 70l-6 10M180 70l6 10" />
+          <path d="M95 352V394"/><path d="M265 352V394"/>
+          
+        </g>
+        <g>
+          <circle cx="180" cy="102" r="14" fill="var(--field)" stroke="var(--lead)" stroke-width="1.5"/>
+          
+        </g>
+        <g font-family="Marcellus,serif" text-anchor="middle" fill="currentColor" style="color:var(--ink)">
+          <text x="180" y="43" font-size="26">Menu</text>
+          <text x="44" y="178" font-size="30" text-anchor="start">Ordering</text>
+          <text class="p" x="95" y="432" font-size="18" font-family="Spectral,serif">Server code</text>
+          <text class="p" x="265" y="432" font-size="18" font-family="Spectral,serif">Live storage</text>
+          <text class="h" x="95" y="432" font-size="14" font-family="IBM Plex Mono,monospace">workerExports</text>
+          <text class="h" x="265" y="432" font-size="14" font-family="IBM Plex Mono,monospace">DO binding</text>
+        </g>
+        <g font-family="Marcellus,serif" text-anchor="middle" font-size="18">
+          <text x="180" y="107" fill="currentColor" style="color:var(--ink)">3</text>
+        </g>
+        <g font-family="IBM Plex Mono,monospace" font-size="15" fill="currentColor" style="color:var(--ink)">
+          <text x="44" y="216">/order</text>
+          <text x="44" y="242">/order/success</text>
+          <text x="44" y="268">/order/cancelled</text>
+          <text x="44" y="294">/api/checkout</text>
+          <text x="44" y="320">/api/checkout/webhook</text>
+          <text x="44" y="340" fill-opacity=".6">+ 4 more</text>
+          <text x="95" y="452" text-anchor="middle" font-size="14">OrderBoard</text>
+          <text x="265" y="452" text-anchor="middle" font-size="14">ORDER_BOARD</text>
+          <text x="282" y="172" text-anchor="middle" font-size="15">Order</text>
+        </g>
+        <g font-family="Spectral,serif" font-size="18" fill="currentColor" style="color:var(--muted)">
+          <text class="p" x="214" y="104" text-anchor="start">needs</text>
+          <text class="h" x="214" y="104" text-anchor="start" font-family="IBM Plex Mono,monospace" font-size="13">requires</text>
+        </g>
+        <g font-family="Marcellus,serif" font-size="18" text-anchor="middle">
+          <circle cx="26" cy="190" r="14" fill="var(--field)" stroke="var(--lead)" stroke-width="1.5"/><text x="26" y="196" fill="currentColor" style="color:var(--ink)">1</text>
+          <circle cx="228" cy="167" r="14" fill="var(--field)" stroke="var(--lead)" stroke-width="1.5"/><text x="228" y="173" fill="currentColor" style="color:var(--ink)">2</text>
+          <circle cx="95" cy="373" r="14" fill="var(--field)" stroke="var(--lead)" stroke-width="1.5"/><text x="95" y="379" fill="currentColor" style="color:var(--ink)">4</text>
+          <circle cx="265" cy="373" r="14" fill="var(--field)" stroke="var(--lead)" stroke-width="1.5"/><text x="265" y="379" fill="currentColor" style="color:var(--ink)">5</text>
+        </g>
+      </svg>
+      <div class="bom">
+        <div class="bh"><span>#</span><span><span class="p">PART</span><span class="h">FIELD</span></span><span><span class="p">WHAT IT IS</span><span class="h">VALUE</span></span></div>
+        <div class="br"><span class="bal">1</span><b><span class="p">9 pages and endpoints</span><span class="h">routes[9]</span></b>
+          <div class="w"><span class="p">/order, /order/success, /order/cancelled, /api/checkout, /api/checkout/webhook <span class="more">+ 4 more</span></span><span class="h">/order (localized) &middot; /order/success &middot; /order/cancelled &middot; /api/checkout &middot; /api/checkout/webhook &middot; +4 more</span></div></div>
+        <div class="br"><span class="bal">2</span><b><span class="p">A menu link</span><span class="h">navLink</span></b>
+          <div class="w"><span class="p">&ldquo;Order&rdquo; joins the site's navigation, pointing at /order.</span><span class="h">{ labelKey: 'module.ordering.nav', href: '/order', order: 20 }</span></div></div>
+        <div class="br"><span class="bal">3</span><b><span class="p">Needs: Menu</span><span class="h">requires</span></b>
+          <div class="w"><span class="p">Ordering will not build while Menu is off.</span><span class="h">['menu']. validateModuleDependencies() throws at build.</span></div></div>
+        <div class="br"><span class="bal">4</span><b><span class="p">Server code</span><span class="h">workerExports</span></b>
+          <div class="w"><span class="p">OrderBoard, code that runs on Cloudflare's servers.</span><span class="h">[{ name: 'OrderBoard', from: './durable-objects/order-board' }]</span></div></div>
+        <div class="br"><span class="bal">5</span><b><span class="p">Live storage</span><span class="h">durableObjects</span></b>
+          <div class="w"><span class="p">ORDER_BOARD, a small store that holds incoming orders.</span><span class="h">[{ binding: 'ORDER_BOARD', className: 'OrderBoard' }]</span></div></div>
+        <div class="br"><span class="bal">&middot;</span><b><span class="p">Its own wording</span><span class="h">uiStrings</span></b>
+          <div class="w"><span class="p">Every label it shows, ready to translate.</span><span class="h">orderingStrings</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DETAIL 3: notes + revision ================= -->
+  <section class="detail d3" id="d3" aria-label="Detail 3, Rules and upgrades">
+    <div class="dhead"><span class="bal">3</span><h2><span class="p">Rules and upgrades</span><span class="h">Detail 3: ratings, gates, lanes</span></h2>
+      <p class="p">General notes for every site, and how a finished site takes a fix.</p>
+      <p class="h">modules.ts &middot; coverage.ts &middot; astro.config.mjs &middot; ci-templates.mjs &middot; sync-from-base.mjs</p></div>
+    <div class="cols">
+      <div>
+        <h3><span class="p">Absolute ratings<small>The build refuses these.</small></span><span class="h">Absolute ratings<small>build or deploy fails</small></span></h3>
+        <div class="rate"><span class="bal">A</span><div><b><span class="p">Ordering on, Menu off</span><span class="h">ordering without menu</span></b><span><span class="p">The build stops and names the switch to flip.</span><span class="h">src/lib/modules.ts validateModuleDependencies()</span></span></div></div>
+        <div class="rate"><span class="bal">B</span><div><b><span class="p">A language nobody reviewed</span><span class="h">unreviewed locale</span></b><span><span class="p">A production build refuses it. Demo sites are exempt.</span><span class="h">src/lib/i18n/coverage.ts: 'refuse'. isDemo bypasses.</span></span></div></div>
+        <div class="rate"><span class="bal">C</span><div><b><span class="p">Placeholder settings</span><span class="h">placeholder config</span></b><span><span class="p">For example a booking link nobody filled in.</span><span class="h">astro.config.mjs guard. allowPlaceholderDemoConfig bypasses.</span></span></div></div>
+        <div class="rate"><span class="bal">D</span><div><b><span class="p">Secrets in the built site</span><span class="h">secrets in dist/</span></b><span><span class="p">The secrets scan fails the deploy.</span><span class="h">scrub job: check-no-secrets-in-build.mjs</span></span></div></div>
+      </div>
+      <div>
+        <h3><span class="p">Every site must pass<small>Deploy waits for all of these.</small></span><span class="h">deploy needs<small>every job above deploy</small></span></h3>
+        <div class="gate"><span><span class="p">Lint</span><span class="h">lint</span></span></div>
+        <div class="gate"><span><span class="p">Unit tests</span><span class="h">unit_test</span></span></div>
+        <div class="gate"><span><span class="p">Build</span><span class="h">build</span></span></div>
+        <div class="gate"><span><span class="p">Secrets scan</span><span class="h">scrub</span></span></div>
+        <div class="gate"><span><span class="p">Dependency audit</span><span class="h">audit</span></span></div>
+        <div class="gate"><span><span class="p">Browser tests, plus proof they ran</span><span class="h">e2e: assert-suite-ran, check:links</span></span></div>
+        <div class="gate last"><span><span class="p">Lighthouse</span><span class="h">lhci</span></span></div>
+        <div class="lh">
+          <div><span class="p">Performance</span><span class="h">performance</span><b>0.95</b></div>
+          <div><span class="p">Accessibility</span><span class="h">accessibility</span><b>0.95</b></div>
+          <div><span class="p">Best practices</span><span class="h">best-practices</span><b>0.95</b></div>
+          <div><span class="p">SEO</span><span class="h">seo</span><b>1.0</b></div>
+        </div>
+        <p class="pay"><span class="p">Sites with ordering also run a payments test in test mode.</span><span class="h">Deploy also needs detect_changes and cloudflare_ready. lighthouserc.cjs L90-93, level 'error'. Ordering sites add stripe-e2e.mjs.</span></p>
+      </div>
+      <div>
+        <h3><span class="p">Revision table<small>For sites that are upgradable.</small></span><span class="h">Revision table<small>sync-from-base.mjs</small></span></h3>
+        <div class="rev">
+          <div class="rh"><span>LANE</span><span>WHAT HAPPENS</span></div>
+          <div class="rr"><b><span class="p">Patched</span><span class="h">patched</span></b><div><span class="p">Framework code. A fix arrives as a patch, one file at a time.</span><span class="h">git apply --3way, per file</span></div></div>
+          <div class="rr"><b><span class="p">Merged</span><span class="h">merged</span></b><div><span class="p">Seven generated files, merged with the site's own edits. package.json is merged key by key.</span><span class="h">git merge-file: deploy.yml, LAUNCH.md, RUNBOOK.md, README.md, wrangler.jsonc, test/support/wrangler.jsonc, .dev.vars.example. package.json key by key.</span></div></div>
+          <div class="rr nv"><b><span class="p">Never touched</span><span class="h">never touched</span></b><div><span class="p">The business's content, look and settings.</span><span class="h">src/content, src/styles/theme.css, src/lib/site.config.ts</span></div></div>
+        </div>
+        <p class="rev-note"><span class="p">An upgrade never edits a business's words.</span><span class="h">SYNC_EXTRA_EXCLUDES keeps these out of every diff.</span></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var Q=new URLSearchParams(location.search), B=document.body, R=document.documentElement, stage=document.getElementById('stage');
+  var OG=Q.get('og')==='1'; if(OG) B.classList.add('og');
+  var phoneMQ=window.matchMedia('(max-width:760px)');
+  var TB={
+    0:{t:'One page of facts. <br>A whole website.',s:'Sheet 1 of 1',p:'bdlBase is the web framework we built. Describe a business in one file and it builds the whole website, tests included. Follow the arrows, then open the three details.',h:'Astro on Cloudflare Workers. client.json in, a standalone repo out: modules, languages, consent and CI generated per site. Follow the leaders, then open details 1 to 3.'},
+    1:{t:'Off is gone',s:'Detail 1 of 3',p:'A feature that is off is not hidden from the site. Its files are never written. The test searches for the ordering folder path, not for the word.',h:'Absence is tested on the repo, not only on dist/. Menu is off on the salon too, so modules/menu is gone as well.'},
+    2:{t:'Ordering <br>parts list',s:'Detail 2 of 3',p:'Everything Ordering brings with it, and what it needs first.',h:'src/modules/ordering/module.manifest.ts. 9 routes in total; the 5 customer-facing ones are listed.'},
+    3:{t:'Rules and <br>upgrades',s:'Detail 3 of 3',p:'What stops a build, what every site must pass, and how a finished site takes a fix.',h:'Ratings: modules.ts, coverage.ts, astro.config.mjs. Gates: ci-templates.mjs L439. Lanes: sync-from-base.mjs.'}
+  };
+  function setScheme(s){R.setAttribute('data-scheme',s);mark();}
+  function mark(){
+    document.querySelectorAll('#scheme button').forEach(function(b){b.classList.toggle('on',b.dataset.v===R.getAttribute('data-scheme'));});
+    document.querySelectorAll('#mode button').forEach(function(b){b.classList.toggle('on',(b.dataset.v==='hood')===B.classList.contains('hood'));});
+  }
+  var NAMES=['Sheet','Off is gone','What ordering needs','Rules and upgrades'], used=false, cur=0;
+  function updateNav(n){
+    cur=n;
+    document.querySelectorAll('#nav .mk').forEach(function(m){if(+m.dataset.go===n)m.setAttribute('aria-current','step');else m.removeAttribute('aria-current');});
+    var nx=document.getElementById('next'),pv=document.getElementById('prev');
+    if(n<3){nx.hidden=false;nx.textContent='Next: '+NAMES[n+1]+' \u2192';}else nx.hidden=true;
+    pv.hidden=(n===0);
+    pv.className='go'+(n===3?'':' alt');
+  }
+  function go(n,push){if(n<0||n>3)return;if(n>0)used=true;B.classList.toggle('used',used);setDetail(n,push);}
+  function setDetail(n,push){
+    B.setAttribute('data-detail',String(n));updateNav(n);
+    var t=TB[n];
+    document.getElementById('tbTitle').innerHTML=t.t;
+    document.getElementById('tbSheet').textContent=t.s;
+    document.getElementById('tbP').textContent=t.p;
+    document.getElementById('tbH').textContent=t.h;
+    window.scrollTo(0,0);
+    if(push) try{history.pushState({d:n},'',n?'#detail-'+n:location.pathname+location.search);}catch(e){}
+  }
+  document.getElementById('mode').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;B.classList.toggle('hood',b.dataset.v==='hood');mark();});
+  document.getElementById('scheme').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;setScheme(b.dataset.v);});
+  document.getElementById('back').addEventListener('click',function(){go(0,true);});
+  document.getElementById('next').addEventListener('click',function(){go(cur+1,true);});
+  document.getElementById('prev').addEventListener('click',function(){go(0,true);});
+  document.querySelectorAll('#nav .mk').forEach(function(m){m.addEventListener('click',function(){go(+m.dataset.go,true);});});
+  document.querySelectorAll('button[data-detail]').forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.detail,true);});});
+  document.addEventListener('keydown',function(e){
+    if(e.altKey||e.metaKey||e.ctrlKey)return;
+    if(e.key==='Escape'&&cur!==0)go(0,true);
+    else if(e.key==='ArrowRight'&&cur<3)go(cur+1,true);
+    else if(e.key==='ArrowLeft'&&cur>0)go(cur-1,true);
+  });
+  window.addEventListener('popstate',function(e){setDetail((e.state&&e.state.d)||0,false);});
+
+  // leader hover emphasis
+  var hov=null;
+  document.getElementById('elev').addEventListener('mouseover',function(e){
+    var r=e.target.closest('.row'); if(!r){clear();return;}
+    var id=r.dataset.r; if(hov===id)return; clear(); hov=id; B.classList.add('hovering');
+    document.querySelectorAll('.row[data-r="'+id+'"]').forEach(function(x){x.classList.add('hl');});
+  });
+  document.getElementById('elev').addEventListener('mouseleave',clear);
+  function clear(){hov=null;B.classList.remove('hovering');document.querySelectorAll('.row.hl').forEach(function(x){x.classList.remove('hl');});}
+
+  // zone grid
+  function zones(){
+    document.querySelectorAll('.zone,.tick').forEach(function(n){n.remove();});
+    var W=stage.offsetWidth,H=stage.offsetHeight,o=OG?12:14,i=OG?32:38; // outer inset, inner border offset
+    var nx=8,ny=OG?4:6,x0=i,x1=W-i,y0=i,y1=H-i;
+    function add(c,s){var d=document.createElement('div');d.className=c;d.setAttribute('aria-hidden','true');Object.keys(s).forEach(function(k){d.style[k]=s[k];});stage.appendChild(d);return d;}
+    for(var a=0;a<nx;a++){
+      var cx=x0+(x1-x0)*(a+.5)/nx;
+      [o+(i-o)/2-8,H-o-(i-o)/2-8].forEach(function(ty){var z=add('zone',{left:(cx-10)+'px',top:ty+'px'});z.textContent=a+1;});
+      if(a>0){var bx=x0+(x1-x0)*a/nx;[o,H-i].forEach(function(ty){add('tick',{left:bx+'px',top:ty+'px',width:'1px',height:(i-o)+'px'});});}
+    }
+    for(var b=0;b<ny;b++){
+      var cy=y0+(y1-y0)*(b+.5)/ny;
+      [o+(i-o)/2-10,W-o-(i-o)/2-10].forEach(function(tx){var z=add('zone',{left:tx+'px',top:(cy-8)+'px'});z.textContent=String.fromCharCode(65+b);});
+      if(b>0){var by=y0+(y1-y0)*b/ny;[o,W-i].forEach(function(tx){add('tick',{top:by+'px',left:tx+'px',height:'1px',width:(i-o)+'px'});});}
+    }
+  }
+  function fit(){
+    if(phoneMQ.matches){stage.style.transform='';stage.style.left='';stage.style.top='';return;}
+    var W=OG?1200:1440,H=OG?627:900,s=Math.min(window.innerWidth/W,window.innerHeight/H);
+    stage.style.transformOrigin='0 0';
+    stage.style.transform='scale('+s+')';
+    stage.style.left=((window.innerWidth-W*s)/2)+'px';
+    stage.style.top=((window.innerHeight-H*s)/2)+'px';
+  }
+  window.addEventListener('resize',fit);
+  if(phoneMQ.addEventListener)phoneMQ.addEventListener('change',fit);
+
+  // initial state from URL
+  if(Q.get('hood')==='1')B.classList.add('hood');
+  var d0=parseInt(Q.get('detail')||(location.hash.match(/detail-(\d)/)||[])[1]||'0',10)||0;
+  setDetail(d0>=1&&d0<=3?d0:0,false);
+  mark();zones();fit();
+})();
+</script>
+</body>
+</html>
