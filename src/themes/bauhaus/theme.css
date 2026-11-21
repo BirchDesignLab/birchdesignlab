@@ -499,6 +499,27 @@
     filter: drop-shadow(4px 4px 0 var(--mark));
   }
 }
+/* The inert toys answer a press too, so they say so (Stage 6 w4 task 28, the
+   signifier rule). The numerals: the pointer cursor over the drawn digits, and
+   on a real hover pointer the same lift over a hard 4px block of ink the other
+   toys have. The footer's red square lies under the footer's grid, so a script
+   (parts/toys.ts initCornerSpin) finds the pointer over it and sets data-hot
+   on the svg and data-corner-hot on the footer: the cursor is on the footer
+   (links keep theirs) and the lift is the corner's own, gated like the rest. */
+[data-theme='bauhaus'] .num { cursor: pointer; }
+[data-theme='bauhaus'] .num .nm { transition: translate 120ms var(--ease-snap); }
+[data-theme='bauhaus'] .site-footer[data-corner-hot] { cursor: pointer; }
+[data-theme='bauhaus'] .site-footer .corner [data-spin] { transition: translate 120ms var(--ease-snap); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] .num:hover .nm {
+    translate: -4px -4px;
+    filter: drop-shadow(4px 4px 0 currentColor);
+  }
+  [data-theme='bauhaus'] .corner[data-hot] [data-spin] {
+    translate: -4px -4px;
+    filter: drop-shadow(4px 4px 0 var(--on-poster));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   [data-theme='bauhaus'] .asm { animation: none; }
   [data-theme='bauhaus'] .btn,

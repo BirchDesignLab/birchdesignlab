@@ -49,7 +49,10 @@ const { lines } = Astro.props;
   }
   summary::-webkit-details-marker { display: none; }
   /* Hover wash plus a brightening label so the strip reads as a control. */
-  summary:hover { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  @media (hover: hover) and (pointer: fine) {
+    summary:hover { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  }
+  summary:active { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   /* Disclosure caret at the far edge, dropdown convention: chevron down means
      "expand", flipping up when open. The one element that says this opens. */
   .caret {

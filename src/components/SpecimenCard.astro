@@ -49,7 +49,10 @@ const Heading = level;
     border-top: 1px solid var(--line-accent);
     transition: background-color var(--dur-1) var(--ease-weighted);
   }
-  .card:hover { background: var(--green-surface); }
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover { background: var(--green-surface); }
+  }
+  .card:active { background: var(--green-surface); }
 
   /* Status line. The designation is CLASSIFICATION and stays accent on every
      row, forthcoming included; only the marker beside it carries state. */
@@ -81,7 +84,9 @@ const Heading = level;
 
   .card h2, .card h3 { margin-top: var(--space-1); }
   h2 a, h3 a { color: var(--mark); text-decoration: none; }
-  h2 a:hover, h3 a:hover { color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    h2 a:hover, h3 a:hover { color: var(--accent); }
+  }
   .summary { color: var(--mark-muted); max-width: 52ch; margin-top: var(--space-2); }
   .meta {
     display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;

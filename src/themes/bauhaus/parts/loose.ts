@@ -27,18 +27,16 @@
  *     8px, and a vertical swipe that starts on a shape scrolls.
  */
 
+import { scheduleBeat, spendBeat } from './beat';
+
 const FALL_MS = 360;
 const KEY_STEP = 24;
 const SNAP = 'cubic-bezier(0.7, 0, 0.2, 1)';
-const BEAT_WAIT_MS = 500;
 const BEAT_PX = 12;
 const BEAT_MS = 440;
 const LIFT_PX = 4;
 const HOLD_MS = 200;
 const SLOP_PX = 8;
-
-/** Pages whose pick-me beat has played this visit. Module memory only: a full reload is a new visit. */
-const beatPlayed = new Set<string>();
 
 function pixelsToUnits(svg: SVGSVGElement, clientX: number, clientY: number): { x: number; y: number } | null {
   const m = svg.getScreenCTM();
@@ -102,7 +100,9 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
   const shadows = new Map<SVGElement, SVGElement>();
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
   let beat: Animation | null = null;
-  let beatTimer = 0;
+  /** Stops the pick-me beat's wait; a no-op until it is scheduled below. */
+  let stopBeat: () => void = () => {};
+  const page = root.getAttribute('data-beat');
 
   function carry(el: SVGElement, x: number, y: number): void {
     window.clearTimeout(timers.get(el));
@@ -149,9 +149,15 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
   }
 
   function cancelBeat(): void {
-    window.clearTimeout(beatTimer);
     beat?.cancel();
     beat = null;
+  }
+
+  /** The visitor has taken a shape (pointer, hover or key): the pick-me is spent for this visit. */
+  function engage(): void {
+    if (page) spendBeat(`loose:${page}`);
+    stopBeat();
+    cancelBeat();
   }
 
   /** Building, not counting the pick-me beat. */
@@ -167,7 +173,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
     const pickUp = (g: Grab): void => {
       window.clearTimeout(g.hold);
       g.held = true;
-      cancelBeat();
+      engage();
       try { el.setPointerCapture(g.id); } catch { /* not capturable */ }
       // A mouse press lifts the shape 4px; a finger does not.
       const u = g.touch ? 0 : LIFT_PX * unitsPerPixel(root);
@@ -178,7 +184,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
       'pointerenter',
       (e) => {
         if (e.pointerType !== 'mouse' || !fine.matches || el.hasAttribute('data-held') || building(el)) return;
-        cancelBeat();
+        engage();
         setLift(el, true);
       },
       opts,
@@ -191,7 +197,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
         if (grab || (e.pointerType === 'mouse' && e.button !== 0) || building(el)) return;
         const at = pixelsToUnits(root, e.clientX, e.clientY);
         if (!at) return;
-        cancelBeat();
+        engage();
         const touch = e.pointerType === 'touch';
         const g: Grab = { id: e.pointerId, sx: at.x, sy: at.y, touch, held: false, px: e.clientX, py: e.clientY, hold: 0 };
         grab = g;
@@ -262,7 +268,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
         if (move) {
           if (building(el)) return;
           e.preventDefault();
-          cancelBeat();
+          engage();
           setLift(el, false);
           if (!el.hasAttribute('data-held')) { kx = 0; ky = 0; }
           kx += move[0];
@@ -280,16 +286,14 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
 
   /* ---------- the one-time "pick me" beat ---------- */
 
-  const page = root.getAttribute('data-beat');
+  // On the touch beat's common conditions (beat.ts): the shape is at least 60% on screen, the page has
+  // been still 400 ms, no form field has focus, and the build has landed. Once per page visit.
   const star = root.querySelector<SVGElement>('[data-pick-me]');
-  if (page && star && !beatPlayed.has(page)) {
-    let building: Animation[] = [];
-    try { building = root.getAnimations({ subtree: true }); } catch { /* none to wait for */ }
-    void Promise.allSettled(building.map((a) => a.finished)).then(() => {
-      if (abort.signal.aborted) return;
-      beatTimer = window.setTimeout(() => {
-        if (abort.signal.aborted || document.hidden || root.querySelector('[data-held], [data-lift]')) return;
-        beatPlayed.add(page);
+  if (page && star) {
+    stopBeat = scheduleBeat(
+      `loose:${page}`,
+      [star],
+      () => {
         const lift = BEAT_PX * unitsPerPixel(root);
         beat = star.animate(
           [
@@ -299,11 +303,14 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
           ],
           { duration: BEAT_MS },
         );
-      }, BEAT_WAIT_MS);
-    });
+      },
+      abort.signal,
+      () => !stillBuilding(root) && !root.querySelector('[data-held], [data-lift]'),
+    );
   }
 
   return () => {
+    stopBeat();
     abort.abort();
     cancelBeat();
     for (const t of timers.values()) window.clearTimeout(t);

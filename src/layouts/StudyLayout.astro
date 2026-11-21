@@ -35,6 +35,9 @@ const { title, description, designation, noindex = false } = Astro.props;
     padding: var(--space-1) var(--space-3); border-radius: 999px;
     backdrop-filter: blur(6px);
   }
-  .hatch:hover { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    .hatch:hover { color: var(--mark); }
+  }
+  .hatch:active { color: var(--mark); }
   .hatch-id { color: var(--accent); }
 </style>

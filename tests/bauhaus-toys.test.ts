@@ -61,7 +61,8 @@ describe('bauhaus toys: the school\'s motion', () => {
   it('the B comes apart on straight lines and rebuilds in the stepped order; a tap while apart rebuilds at once', () => {
     expect(toys).toMatch(/B_OFFSETS[^=]*=\s*\[/);
     expect(toys).toContain('B_STEP_MS');
-    expect(toys).toMatch(/i \* B_STEP_MS/);
+    expect(toys).toMatch(/i \* step/);
+    expect(toys).toMatch(/step = B_STEP_MS/);
     expect(toys).toMatch(/if \(state === 'apart'\) rebuild\(\);\s*else breakApart\(\)/);
     expect(about).toMatch(/\.letter-b svg:global\(\.is-apart\) \{ overflow: visible; \}/);
   });
@@ -96,7 +97,10 @@ describe('bauhaus toys: touch, lifecycle, hover', () => {
     expect(home).toMatch(/onMount\(\(\) => initNumerals\(document\.querySelector\('section\.doors'\)\)\)/);
     expect(services).toMatch(/onMount\(\(\) => initNumerals\(document\.querySelector\('section\.process'\)\)\)/);
     // The guard: a page's numeral mount must not run on the other page's body after a swap.
-    expect(toys).toMatch(/if \(!page \|\| !root\.querySelector\('\.num'\)\) return;/);
+    expect(toys).toMatch(/if \(!page \|\| !root \|\| !root\.querySelector\('\.num'\)\) return;/);
+    // 20/C1: bauhaus only, and heard on this page's main, not the whole document.
+    expect(toys).toMatch(/getAttribute\('data-theme'\) !== 'bauhaus'\) return;/);
+    expect(toys).toMatch(/root: Element \| null = document\.querySelector\('main'\)/);
     expect(about).toMatch(/onMount\(\(\) => initLetterB\(/);
     expect(footer).toMatch(/onMount\(\(\) => initCornerSpin\(/);
   });

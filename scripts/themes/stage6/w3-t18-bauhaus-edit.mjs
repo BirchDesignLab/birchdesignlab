@@ -2,6 +2,11 @@
 // One-off source edit, kept for the record. Run once from the repo root:
 //   node scripts/themes/stage6/w3-t18-bauhaus-edit.mjs
 // Preserves the file's line endings; every replacement must match exactly once.
+// NOTE (w4 task 28, 18/C3): this script is the record of the edit as first made. A later
+// hand edit to parts/loose.ts is NOT in it: stillBuilding() also skips a CSSTransition
+// (`!(typeof CSSTransition !== 'undefined' && a instanceof CSSTransition) &&`), so the 120 ms
+// hover lift or the settle does not read as the build and a press just after the pointer
+// arrives still picks the shape up. The file on disk is the truth; do not re-run this script.
 import { readFileSync, writeFileSync } from 'node:fs';
 
 function edit(path, pairs) {

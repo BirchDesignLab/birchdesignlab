@@ -66,9 +66,12 @@ export function releaseVelocity(samples: Sample[], now: number): [number, number
     FEEL, which stays the proof's verbatim feel. */
 export const TAP_SLOP_PX = 6;
 
-/** True when a press at (x0, y0) released at (x1, y1) is a tap, not a throw. */
-export function isTap(x0: number, y0: number, x1: number, y1: number): boolean {
-  return Math.hypot(x1 - x0, y1 - y0) <= TAP_SLOP_PX;
+/** True when a press at (x0, y0) released at (x1, y1) is a tap, not a throw.
+    `farthest` is the largest distance from the press at any moment of the
+    hold (w4 task 28, 18/C2): a flick out and back through the start ends
+    near the press but is a throw, so the release point alone cannot say. */
+export function isTap(x0: number, y0: number, x1: number, y1: number, farthest = 0): boolean {
+  return Math.max(Math.hypot(x1 - x0, y1 - y0), farthest) <= TAP_SLOP_PX;
 }
 
 /** Cap a release velocity at FEEL.maxThrow, keeping its direction. */

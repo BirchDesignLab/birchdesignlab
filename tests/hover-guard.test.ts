@@ -15,22 +15,23 @@ import { join, relative, sep } from 'node:path';
  * Checks the SOURCES (not dist/), so it needs no build and names the file a
  * fix belongs in; the reasoning and the mutation check are recorded in
  * docs/superpowers/specs/theme-schools-research/tier3-stage6/hover-guard.md.
- * Scope is src/themes/** plus the shared CSS quiet actually loads (EXTRA):
- * quiet's CSS is the root site's own src/styles/base.css, and it mounts
- * ThemeToggle and BarkCredit. Since w3 task 18 those are gated at the source,
- * so there is no touch-only allowance and no exception left.
+ * Scope is src/themes/** plus base.css and, since w4 task 28 (critique A3), every
+ * .css / .astro / .svelte under src/components, src/layouts, src/pages and
+ * src/experiments: the root site is the quiet school and the Lab's pages are
+ * live business pages. There is no touch-only allowance and no exception left.
  */
 
 const SRC = join(__dirname, '..', 'src');
 const ROOT = join(SRC, 'themes');
 const SWITCHER = join(ROOT, 'portal', 'switcher.ts');
 
-/** Shared files outside src/themes that the quiet school ships. */
-const EXTRA = [
-  join(SRC, 'styles', 'base.css'),
-  join(SRC, 'components', 'ThemeToggle.astro'),
-  join(SRC, 'components', 'BarkCredit.astro'),
-];
+/**
+ * Shared CSS outside src/themes that quiet ships (base.css), plus, since
+ * w4 task 28, every business-site folder: the root site IS the quiet school,
+ * and the Lab pages and experiments are live pages a phone visits.
+ */
+const EXTRA_FILES = [join(SRC, 'styles', 'base.css')];
+const EXTRA_DIRS = ['components', 'layouts', 'pages', 'experiments'].map((d) => join(SRC, d));
 
 /**
  * Named exceptions only: `file::selector` -> reason. Empty since w3 task 18.
@@ -39,7 +40,7 @@ const EXTRA = [
 const ALLOW: Record<string, string> = {};
 
 /** Fewest gated :hover rules the whole scan may find (canary against a silently shrunk scope). */
-const GATED_FLOOR = 60;
+const GATED_FLOOR = 105;
 /** Fewest :hover rules the switcher's shadow-root STYLE may yield. */
 const SWITCHER_FLOOR = 3;
 
@@ -47,7 +48,7 @@ function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.(css|astro)$/.test(name) || p === SWITCHER) out.push(p);
+    else if (/\.(css|astro|svelte)$/.test(name) || p === SWITCHER) out.push(p);
   }
   return out;
 }
@@ -205,11 +206,13 @@ function gatedHoverCount(css: string): number {
 }
 
 describe('hover guard', () => {
-  const files = [...walk(ROOT), ...EXTRA];
+  const files = [...new Set([...walk(ROOT), ...EXTRA_FILES, ...EXTRA_DIRS.flatMap((d) => walk(d))])];
   const sources: [string, string][] = files.flatMap((f) => cssBlocks(f).map((css) => [f, css] as [string, string]));
 
   it('finds the school sources', () => {
-    expect(files.length).toBeGreaterThan(20);
+    expect(files.length).toBeGreaterThan(60);
+    for (const d of EXTRA_DIRS) expect(files.some((f) => f.startsWith(d)), d).toBe(true);
+    expect(files.some((f) => f.endsWith('.svelte'))).toBe(true);
     expect(files).toContain(SWITCHER);
   });
 
@@ -253,6 +256,10 @@ describe('hover guard', () => {
     // No touch-only allowance any more: a (hover: none) hover is ungated like any other.
     bad('@media (hover: none){.a:hover{color:red}}');
     bad('.b{background:url("data:image/svg+xml;utf8,<svg/>")}.a:hover{color:red}');
+    // A svelte component's <style> block (w4 task 28), with its :global().
+    const sv = join(SRC, 'experiments', 'x', 'X.svelte');
+    expect(cssBlocks(sv, '<script>let a=1;</script><div/><style>.a:hover{color:red}</style>').flatMap((c) => violations(sv, c, {}))).toHaveLength(1);
+    expect(cssBlocks(sv, '<div/><style>@media (hover: hover) and (pointer: fine){.a :global(b:hover){color:red}}</style>').flatMap((c) => violations(sv, c, {}))).toHaveLength(0);
   });
 
   it('the stale-entry check flags an exception whose rule is now gated', () => {

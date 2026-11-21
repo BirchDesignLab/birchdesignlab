@@ -4,17 +4,22 @@
 rule a school ships sits inside a media query that only a mouse or trackpad
 matches, so a tap on a phone never leaves a stuck hover colour, and focus is
 never gated with it. Written in wave 2 (task 17), tightened in wave 3
-(task 18) once the shared business-site CSS was gated at the source.
+(task 18) once the shared business-site CSS was gated at the source. Widened in
+wave 4 (task 28) to the business Lab's components, layouts, pages and
+experiments.
 
 ## What it checks
 
 - **Scope.** Every `.css` file and every `<style>` block of every `.astro`
-  file under `src/themes/`, the portal switcher's shadow-root stylesheet
-  (the `STYLE` template literal in `src/themes/portal/switcher.ts`, found by
-  its name so a stray backtick elsewhere in the file cannot shift it), and
-  the three shared files the quiet school ships from the root site:
-  `src/styles/base.css`, `src/components/ThemeToggle.astro` and
-  `src/components/BarkCredit.astro`.
+  and `.svelte` file under `src/themes/`, the portal switcher's shadow-root
+  stylesheet (the `STYLE` template literal in
+  `src/themes/portal/switcher.ts`, found by its name so a stray backtick
+  elsewhere in the file cannot shift it), `src/styles/base.css`, and, since
+  w4 task 28 (critique A3), every `.css`, `.astro` and `.svelte` file under
+  `src/components`, `src/layouts`, `src/pages` and `src/experiments`. The root
+  site is the quiet school and the Lab's pages and experiments are live
+  business pages a phone visits, so a stuck hover there was the same bug.
+  The self-test asserts the scan reaches each folder and a `.svelte` file.
 - **The gate.** A rule whose selector list has a `:hover` passes only when
   some `@media` in its chain is a mouse gate: every top-level comma branch
   carries both `(hover: hover)` and `(pointer: fine)`, no branch starts with
@@ -36,7 +41,9 @@ never gated with it. Written in wave 2 (task 17), tightened in wave 3
   violations before exceptions, so a fixed rule cannot leave its exception
   behind.
 - **Canaries.** The switcher scan must yield at least 3 hover rules, and the
-  whole scan must find more than 60 gated hover rules (75 at task 18). A
+  whole scan must find more than 105 gated hover rules (the floor was 60 when
+  the scan found 75, at task 18; it finds 110 now that the business folders
+  are in, task 28). A
   scope that silently shrinks (a moved file, a parser that stops seeing a
   block) fails here instead of passing with nothing checked.
 
@@ -67,7 +74,17 @@ Run on the task 18 working tree, then reverted:
    `"ungated :hover: components/ThemeToggle.astro::button:hover"`
    (1 failed, 7 passed). Reverted: 8 passed.
 
+## The mutation check (task 28)
+
+On the task 28 working tree, then reverted: an ungated
+`.mutant:hover { color: red; }` appended to the `<style>` block of
+`src/experiments/bdl-006/Regulator.svelte`. `npx vitest run
+tests/hover-guard.test.ts` failed one test with
+`"ungated :hover: experiments/bdl-006/Regulator.svelte::.mutant:hover"`
+(1 failed, 7 passed), so a svelte block in `src/experiments` is read. Reverted:
+8 passed.
+
 The scanner's own failure modes (the comma branch, `not`, `or`,
-`(hover: none)`, focus in the list, a quoted brace) and the stale-entry and
+`(hover: none)`, focus in the list, a quoted data URL ahead of the rule) and the stale-entry and
 switcher-literal checks are self-tests inside the file, so they run on every
 gate.

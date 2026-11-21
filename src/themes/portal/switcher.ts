@@ -41,7 +41,7 @@ import { drawOnIntent, SWITCHER_INFO, warmPages } from './runtime';
  * school count, so it survives tranche 2. Visitor-facing, so no em dashes.
  */
 const FIRST_LOAD_PROMPT =
-  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there.";
+  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there. Tap around, too: every school hides a few things that answer back.";
 
 /** sessionStorage key, set to 'dismissed' once the visitor has tapped the prompt or the switcher. */
 const PROMPT_KEY = 'bdl-portal-prompt';

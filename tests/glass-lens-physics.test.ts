@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   FEEL,
   Lag2,
@@ -480,5 +481,19 @@ describe('isTap (Stage 6 w3 task 18, T9 C3)', () => {
     expect(isTap(0, 0, 6, 0)).toBe(true);
     expect(isTap(0, 0, 5, 5)).toBe(false); // 7.07px
     expect(isTap(0, 0, 30, 0)).toBe(false);
+  });
+  it('a flick out and back through the start is a throw: the farthest point of the hold counts (w4 task 28, 18/C2)', () => {
+    // Ends 2px from the press, but travelled 40px away on the way: not a tap.
+    expect(isTap(100, 100, 102, 100, 40)).toBe(false);
+    expect(isTap(100, 100, 102, 100, 6)).toBe(true);
+    expect(isTap(100, 100, 102, 100, 6.5)).toBe(false);
+    // Omitted, it is the old release-point test.
+    expect(isTap(100, 100, 102, 100)).toBe(true);
+  });
+  it('the lens tracks the farthest distance on every move and resets it on a press', () => {
+    const lens = readFileSync('src/themes/glassmorphism/lens/lens.ts', 'utf8').replace(/\r\n/g, '\n');
+    expect(lens).toMatch(/s\.far = 0;/);
+    expect(lens).toMatch(/s\.far = Math\.max\(s\.far, Math\.hypot\(x - s\.press\[0\], y - s\.press\[1\]\)\);/);
+    expect(lens).toMatch(/isTap\(s\.press\[0\], s\.press\[1\], s\.x, s\.y, s\.far\)/);
   });
 });

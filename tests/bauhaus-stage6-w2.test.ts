@@ -76,10 +76,11 @@ describe('bauhaus findable shapes', () => {
       expect(src).toMatch(/<rect class="asm loose" data-loose data-pick-me[^>]*Red square/);
     }
   });
-  it('the beat is 12px, waits 500ms after the last shape, plays once per page per visit, in memory', () => {
+  it('the beat is 12px, plays once per page per visit on the common touch conditions (task 28), in memory', () => {
     expect(loose).toContain('BEAT_PX = 12');
-    expect(loose).toContain('BEAT_WAIT_MS = 500');
-    expect(loose).toContain('beatPlayed');
+    // No fixed delay after the build any more: beat.ts holds the conditions (visible, still, no focus).
+    expect(loose).not.toContain('BEAT_WAIT_MS');
+    expect(loose).toMatch(/scheduleBeat\(\s*`loose:\$\{page\}`/);
     expect(loose).not.toMatch(/localStorage|sessionStorage/);
   });
   it('lifts 4px over an ink block for a mouse only, fenced to a real hover pointer', () => {

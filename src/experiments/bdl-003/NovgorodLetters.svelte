@@ -55,9 +55,14 @@
     border-radius: 45% 55% 52% 48% / 58% 44% 56% 42%; /* torn bark silhouette */
     transition: transform var(--dur-1) var(--ease-weighted);
   }
-  .fragment:hover .frag-shape { transform: translateY(-4px); }
+  @media (hover: hover) and (pointer: fine) {
+    .fragment:hover .frag-shape { transform: translateY(-4px); }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .frag-shape, .fragment:hover .frag-shape { transition: none; transform: none; }
+    .frag-shape { transition: none; transform: none; }
+    @media (hover: hover) and (pointer: fine) {
+      .fragment:hover .frag-shape { transition: none; transform: none; }
+    }
   }
   .plate { color: var(--mark-muted); font-size: var(--text-sm); }
   .state { color: var(--accent); font-size: var(--text-sm); }
@@ -69,5 +74,8 @@
     padding: var(--space-1) var(--space-3); cursor: pointer;
     font-family: var(--font-body); font-size: var(--text-sm);
   }
-  .back:hover { background: var(--accent); color: var(--field); }
+  @media (hover: hover) and (pointer: fine) {
+    .back:hover { background: var(--accent); color: var(--field); }
+  }
+  .back:active { background: var(--accent); color: var(--field); }
 </style>

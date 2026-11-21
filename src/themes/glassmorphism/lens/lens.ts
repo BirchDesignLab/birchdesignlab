@@ -499,6 +499,8 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     grab: [0, 0] as [number, number],
     /** Where the lens was when the current press began (the tap check). */
     press: [0, 0] as [number, number],
+    /** The largest distance from the press the lens reached during this hold (isTap). */
+    far: 0,
     samples: [] as Sample[],
     ex: new Lag2(FEEL.stretchTau), ey: new Lag2(FEEL.stretchTau),
     lift: new Lag2(FEEL.liftTau), tint: new Lag2(FEEL.tintTau, opts.initialTint === 'tinted' ? 1 : 0),
@@ -697,6 +699,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     s.vy = 0;
     s.grab = [ev.clientX - s.x, ev.clientY - s.y];
     s.press = [s.x, s.y];
+    s.far = 0;
     s.samples = [{ t: ev.timeStamp, x: s.x, y: s.y }];
     beginSelectionGuard();
     invalidate();
@@ -709,6 +712,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
       const [x, y] = clampToBounds(e.clientX - s.grab[0], e.clientY - s.grab[1], bounds);
       s.x = x;
       s.y = y;
+      s.far = Math.max(s.far, Math.hypot(x - s.press[0], y - s.press[1]));
       s.samples.push({ t: e.timeStamp, x, y });
     }
     const now = ev.timeStamp;
@@ -725,7 +729,8 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     // A tap (T9 C3): a few px of finger jitter is not a throw. No glide, and
     // the lens goes back to where it was pressed, so a tap on the approved
     // half-covered corner start leaves it there (checkRest's corner margin).
-    if (isTap(s.press[0], s.press[1], s.x, s.y)) {
+    // A flick back through the start keeps its throw: the farthest the lens got counts, not just where it ended.
+    if (isTap(s.press[0], s.press[1], s.x, s.y, s.far)) {
       s.vx = 0;
       s.vy = 0;
       [s.x, s.y] = s.press;

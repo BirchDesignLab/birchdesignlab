@@ -43,7 +43,10 @@ const { designation, title, tech } = Astro.props;
   summary::-webkit-details-marker { display: none; }
   /* A hover wash plus a brightening label so the whole strip reads as a
      control, not a caption. */
-  summary:hover { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  @media (hover: hover) and (pointer: fine) {
+    summary:hover { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  }
+  summary:active { color: var(--mark); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .id { color: var(--accent); }
   /* Disclosure caret, pushed to the far edge: the one element that says the
      strip opens. The familiar dropdown convention rather than physical

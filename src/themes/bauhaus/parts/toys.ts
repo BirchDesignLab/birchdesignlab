@@ -27,8 +27,17 @@
  * within 8px (a swipe ends in pointercancel, a button's click never fires).
  */
 
+import { scheduleBeat, spendBeat } from './beat';
+
 const SNAP = 'cubic-bezier(0.7, 0, 0.2, 1)';
 const SLOP_PX = 8;
+
+/**
+ * The touch beats are for a finger: a mouse has the cursor and the hover, and
+ * says "touch me" in its own way. (The hero's pick-me, in loose.ts, predates
+ * this and stays for every pointer.)
+ */
+const mouseHere = (): boolean => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /* ---------- shared ---------- */
 
@@ -127,21 +136,24 @@ export function initSeesaw(btn: HTMLElement | null): (() => void) | void {
   let anims: Animation[] = [];
   /** The end the last tip went to; the first key press tips left, toward the circle. */
   let last: 'left' | 'right' = 'right';
+  /** True when that last tip came from a pointer: the next key press tips the same end, then the keys alternate (20/C2). */
+  let lastFromPointer = false;
 
   /** Keyframes from (time, value) stops; every segment eases on the snap curve, so a stop is a hard stop. */
   function frames(prop: 'rotate' | 'translate', stops: Array<[number, string]>, total: number): Keyframe[] {
     return stops.map(([ms, value], i) => ({ [prop]: value, offset: ms / total, easing: i < stops.length - 1 ? SNAP : 'linear' }));
   }
 
-  function tip(side: 'left' | 'right'): void {
-    const from = { beam: current(beam!, 'rotate'), left: current(seats.left!, 'translate'), right: current(seats.right!, 'translate') };
+  /** `k` scales the tip (the touch beat is a half-size tip that does not count as the last one). */
+  function tip(side: 'left' | 'right', k = 1): void {
+    const from ={ beam: current(beam!, 'rotate'), left: current(seats.left!, 'translate'), right: current(seats.right!, 'translate') };
     for (const a of anims) a.cancel();
     // Left tips the beam counterclockwise (negative), right clockwise. The shape on the high end
     // slides down the beam to the low end, in the beam's own frame, so it is a plain translate.
-    const deg = side === 'left' ? -TIP_DEG : TIP_DEG;
+    const deg = (side === 'left' ? -TIP_DEG : TIP_DEG) * k;
     const slider = side === 'left' ? 'right' : 'left';
     const other = slider === 'right' ? 'left' : 'right';
-    const target = slider === 'right' ? -SLIDE : SLIDE;
+    const target = (slider === 'right' ? -SLIDE : SLIDE) * k;
     // Re-aimed mid-motion: the shape that was sliding the other way goes home first, so two never pass through each other.
     const displaced = Math.abs(parseFloat(from[other])) > 1;
     const at = displaced ? SLIDE_AT_REAIM_MS : SLIDE_AT_MS;
@@ -160,7 +172,6 @@ export function initSeesaw(btn: HTMLElement | null): (() => void) | void {
       // The other shape stays on its end of the beam; if a re-aim found it away from home it returns.
       seats[other]!.animate(frames('translate', [[0, from[other]], [SLIDE_MS, '0px 0px'], [total, '0px 0px']], total), opts),
     ];
-    last = side;
   }
 
   btn.addEventListener(
@@ -169,18 +180,29 @@ export function initSeesaw(btn: HTMLElement | null): (() => void) | void {
       if (building(svg)) return;
       let side: 'left' | 'right';
       if (e.detail === 0) {
-        // A key (or assistive technology): there is no point, so the ends alternate.
-        side = last === 'left' ? 'right' : 'left';
+        // A key (or assistive technology): there is no point. Right after a pointer tip it tips that
+        // same end (the pointer chose it); from then on the ends alternate.
+        side = lastFromPointer ? last : last === 'left' ? 'right' : 'left';
+        lastFromPointer = false;
       } else {
         const r = svg.getBoundingClientRect();
         side = e.clientX < r.left + r.width / 2 ? 'left' : 'right';
+        lastFromPointer = true;
       }
+      last = side;
       tip(side);
     },
     { signal: abort.signal },
   );
 
+  // The touch beat: a half-size tip toward the right end (the square slides to the circle), then level.
+  // It leaves `last` alone, so the first key press still tips left.
+  const stopBeat = mouseHere()
+    ? () => {}
+    : scheduleBeat('see-saw', [btn], () => tip('right', 0.5), abort.signal, () => !building(svg) && anims.every((a) => a.playState !== 'running'));
+
   return () => {
+    stopBeat();
     abort.abort();
     for (const a of anims) a.cancel();
     anims = [];
@@ -219,25 +241,31 @@ export function initLetterB(btn: HTMLElement | null): (() => void) | void {
     for (const el of pieces) { el.style.transition = ''; el.style.translate = ''; }
   }
 
-  function rebuild(): void {
+  function rebuild(inMs = B_IN_MS, step = B_STEP_MS): void {
     window.clearTimeout(timer);
     state = 'in';
     pieces.forEach((el, i) => {
-      el.style.transition = `translate ${B_IN_MS}ms ${SNAP} ${i * B_STEP_MS}ms`;
+      el.style.transition = `translate ${inMs}ms ${SNAP} ${i * step}ms`;
       el.style.translate = '0px 0px';
     });
-    timer = window.setTimeout(reset, B_IN_MS + (pieces.length - 1) * B_STEP_MS + 60);
+    timer = window.setTimeout(reset, inMs + (pieces.length - 1) * step + 60);
   }
 
-  function breakApart(): void {
+  /** `k` scales how far the pieces go and every duration with it: the touch beat is a quarter-size breath. */
+  function breakApart(k = 1): void {
     window.clearTimeout(timer);
     state = 'apart';
     svg!.classList.add('is-apart');
+    const outMs = B_OUT_MS * Math.max(k, 0.6);
     pieces.forEach((el, i) => {
-      el.style.transition = `translate ${B_OUT_MS}ms ${SNAP}`;
-      el.style.translate = `${B_OFFSETS[i][0]}px ${B_OFFSETS[i][1]}px`;
+      el.style.transition = `translate ${outMs}ms ${SNAP}`;
+      el.style.translate = `${B_OFFSETS[i][0] * k}px ${B_OFFSETS[i][1] * k}px`;
     });
-    timer = window.setTimeout(rebuild, B_OUT_MS + B_HOLD_MS);
+    // A tap during the beat (state 'apart') rebuilds at full pace, like any other tap.
+    timer = window.setTimeout(
+      k === 1 ? () => rebuild() : () => rebuild(B_IN_MS * 0.6, B_STEP_MS * 0.6),
+      outMs + (k === 1 ? B_HOLD_MS : 160),
+    );
   }
 
   btn.addEventListener(
@@ -251,7 +279,13 @@ export function initLetterB(btn: HTMLElement | null): (() => void) | void {
     { signal: abort.signal },
   );
 
+  // The touch beat: the pieces step out a quarter of the way, hold, and come home in the stepped order.
+  const stopBeat = mouseHere()
+    ? () => {}
+    : scheduleBeat('letter-b', [btn], () => breakApart(0.25), abort.signal, () => !building(svg) && state === 'rest');
+
   return () => {
+    stopBeat();
     abort.abort();
     reset();
   };
@@ -262,6 +296,9 @@ export function initLetterB(btn: HTMLElement | null): (() => void) | void {
 const CORNER_MS = 320;
 /** The red square inside the corner's 240 x 150 viewBox. */
 const SQUARE = { x0: 30, x1: 140, y0: 0, y1: 110, w: 240 };
+/** The touch beat: the square steps this far round and straight back. */
+const CORNER_BEAT_DEG = 18;
+const CORNER_BEAT_MS = 180;
 
 export function initCornerSpin(footer: HTMLElement | null): (() => void) | void {
   const corner = footer?.querySelector<SVGSVGElement>('svg.corner');
@@ -269,6 +306,7 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
   if (!footer || !corner || !square) return;
   const abort = new AbortController();
   let turns = 0;
+  let beatTimer = 0;
 
   // On the square's geometry, not the element: the footer's grid lies over the corner.
   // A link or button on top of it keeps its own tap.
@@ -281,11 +319,23 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
     const y = (e.clientY - r.top) / k;
     return x >= SQUARE.x0 && x <= SQUARE.x1 && y >= SQUARE.y0 && y <= SQUARE.y1;
   };
+
+  // The mouse's half of the signifier: the pointer cursor over the square only (the footer carries
+  // the attribute because the grid lies over the svg), and the lift in the theme's gated rule.
+  const setHot = (on: boolean): void => {
+    footer.toggleAttribute('data-corner-hot', on);
+    corner.toggleAttribute('data-hot', on);
+  };
+  const opts = { signal: abort.signal };
+  footer.addEventListener('pointermove', (e) => setHot(e.pointerType === 'mouse' && mouseHere() && hit(e)), opts);
+  footer.addEventListener('pointerleave', () => setHot(false), opts);
+
   onTap(
     footer,
     hit,
     () => {
       if (building(corner)) return;
+      window.clearTimeout(beatTimer);
       turns += 1;
       square.style.transition = `rotate ${CORNER_MS}ms ${SNAP}`;
       square.style.rotate = `${turns * 90}deg`;
@@ -293,8 +343,34 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
     abort.signal,
   );
 
+  // The touch beat: a short step round, a hard stop, and back.
+  const stopBeat = mouseHere()
+    ? () => {}
+    : scheduleBeat(
+        'footer-corner',
+        [corner],
+        () => {
+          const home = `${turns * 90}deg`;
+          square.style.transition = `rotate ${CORNER_BEAT_MS}ms ${SNAP}`;
+          square.style.rotate = `${turns * 90 + CORNER_BEAT_DEG}deg`;
+          beatTimer = window.setTimeout(() => {
+            square.style.rotate = home;
+            beatTimer = window.setTimeout(() => {
+              if (turns === 0) { square.style.transition = ''; square.style.rotate = ''; }
+            }, CORNER_BEAT_MS + 60);
+          }, CORNER_BEAT_MS + 140);
+        },
+        abort.signal,
+        () => !building(corner),
+      );
+  // A press on the square spends the beat (the svg is under the grid, so it never hears the press itself).
+  footer.addEventListener('pointerdown', (e) => { if (hit(e)) { spendBeat('footer-corner'); stopBeat(); } }, { ...opts, capture: true });
+
   return () => {
+    stopBeat();
+    window.clearTimeout(beatTimer);
     abort.abort();
+    setHot(false);
     square.style.transition = '';
     square.style.rotate = '';
   };
@@ -302,33 +378,61 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
 
 /* ---------- the constructed numerals (B3 d) ---------- */
 
+/** Knocks a numeral's parts out and builds it again, in the stepped order it first came in with. False when there is nothing to knock (parked below the fold, or not built). */
+function knock(num: Element): boolean {
+  let parts: Animation[] = [];
+  try {
+    parts = num.getAnimations({ subtree: true }).filter((a) => typeof CSSAnimation !== 'undefined' && a instanceof CSSAnimation);
+  } catch { /* none */ }
+  // Parked below the fold (not yet revealed): it has not been built, so there is nothing to knock out.
+  if (parts.length === 0 || parts.some((a) => a.playState === 'paused')) return false;
+  // Back to the first frame, delays and all: every part is out at once, then they build in the stepped order.
+  for (const a of parts) {
+    a.currentTime = 0;
+    a.play();
+  }
+  return true;
+}
+
+/** True once a numeral's own build has finished (the beat waits for it). */
+function built(num: Element): boolean {
+  try {
+    const parts = num.getAnimations({ subtree: true }).filter((a) => typeof CSSAnimation !== 'undefined' && a instanceof CSSAnimation);
+    return parts.length > 0 && parts.every((a) => a.playState === 'finished');
+  } catch {
+    return false;
+  }
+}
+
 /**
  * `page` is a landmark only this page has (Home's doors, Services' process).
- * Both pages mount this on the whole document, and the router runs each page's
- * astro:page-load handler on the other page's body too, so without the guard a
- * swap mounts a second instance. The taps are heard on the document; the guard
- * only decides whether this page's mount belongs to the body that is showing.
+ * Both pages mount this, and the router runs each page's astro:page-load
+ * handler on the other page's body too, so without the guards a swap mounts a
+ * second instance: this one acts only while the theme is bauhaus (20/C1), and
+ * hears taps on its own page's `main`, not on the whole document.
  */
-export function initNumerals(page: Element | null, root: Document | Element = document): (() => void) | void {
-  if (!page || !root.querySelector('.num')) return;
+export function initNumerals(page: Element | null, root: Element | null = document.querySelector('main')): (() => void) | void {
+  if (document.documentElement.getAttribute('data-theme') !== 'bauhaus') return;
+  if (!page || !root || !root.querySelector('.num')) return;
   const abort = new AbortController();
   onTap(
     root,
     (e) => (e.target instanceof Element ? e.target.closest('.num') : null),
-    (_e, num) => {
-      let parts: Animation[] = [];
-      try {
-        parts = (num as Element).getAnimations({ subtree: true }).filter((a) => typeof CSSAnimation !== 'undefined' && a instanceof CSSAnimation);
-      } catch { /* none */ }
-      // Parked below the fold (not yet revealed): it has not been built, so there is nothing to knock out.
-      if (parts.length === 0 || parts.some((a) => a.playState === 'paused')) return;
-      // Back to the first frame, delays and all: every part is out at once, then they build in the stepped order.
-      for (const a of parts) {
-        a.currentTime = 0;
-        a.play();
-      }
-    },
+    (_e, num) => { knock(num as Element); },
     abort.signal,
   );
-  return () => abort.abort();
+  // The touch beat: the first numeral in view builds itself again, once.
+  const stopBeat = mouseHere()
+    ? () => {}
+    : scheduleBeat(
+        `numerals:${page.className || 'page'}`,
+        [...root.querySelectorAll('.num')],
+        (num) => { knock(num); },
+        abort.signal,
+        built,
+      );
+  return () => {
+    stopBeat();
+    abort.abort();
+  };
 }
