@@ -199,3 +199,11 @@ beside stop 1, the arrival and page strips, the boundary sheets):
 
 ## Answers (founder)
 
+Founder, 11-21-26: **took every critic verdict** in `stop4-critique.md`
+(A1, A3, B1 to B7, C1 to C5), which settles calls 1 to 5. Call 6 follows
+from it: the closing wave builds those verdicts and wave 3's 34 deferred
+minors, then the close (merge main, stage gates, stage report, PR). The
+welcome-prompt sentence (A1 point 3) goes in only in the words the founder
+picks. The About copy ("one man", "taught him") is noted for the copy pass.
+Welcome-prompt sentence, founder's pick: "Tap around, too: every school
+hides a few things that answer back."
