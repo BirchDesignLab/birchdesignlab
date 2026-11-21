@@ -182,3 +182,32 @@ miss in the film, the other 47 strips are whole).
   are present (they read faint only at sheet scale).
 - **Cottagecore:** the dark hoop on the lighter board with deeper threads is
   a clear improvement.
+
+## Answers (founder, 11-21-26)
+
+1. **Business site hovers: fixed at the source in wave 3's fix task** (gate
+   the rules in `base.css`, the theme toggle and the bark credit; delete the
+   Portal's touch-only undo).
+2. **Taste calls:** the founder asked for an adversarial critique first
+   (`stop3-critique.md`, three read-only critics, Opus) and took **every
+   critic verdict**:
+   - Cottagecore phone seeds: on phones only, a smaller seed may seat in
+     the header cloth beside the wordmark and under the nav, 1 or 2 seeds,
+     still under the paper; nothing over the sheet.
+   - Cottagecore tablet Home (641 to 820): the subline starts beside the
+     sheet under the lead as a float wrap and runs full width below; check
+     641 for single-word lines.
+   - Grandmillennial Home frame: 384px from about 873 up at every width,
+     desktop included; check plate clearance at 1101 and 1180.
+   - Grandmillennial ribbon picots: keep; fix the lone "A" at 390.
+   - Vaporwave Services drum: re-render the same Venus in pink marble on a
+     white drum, turned the other way, through the existing pipeline.
+   - Vaporwave phone kiosk props: Venus about 60px tall, sphere about 44px
+     across, bases on the stand's foot line, clearance on the plaque and
+     button re-checked.
+   - Bauhaus hover: keep as built; fix the pick-me beat's dead zone.
+   - Swiss About foot rule and both hairlines: keep.
+3. **New visible words approved:** "My Computer", "Recycle Bin",
+   "readme.txt", "birch.exe", "0 object(s)"; "PAUSE", "FF", "REW".
+4. **Wave 3 as planned:** two fix tasks, then every interactable, cheap
+   ones first, the big three last, stop 4 at the end.
