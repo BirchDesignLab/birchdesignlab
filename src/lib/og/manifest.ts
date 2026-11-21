@@ -33,10 +33,18 @@ export const OG_LAB_CARDS: { name: string; title: string }[] = [
  * generator copies it into public/og/ under `name` at prebuild. Everything
  * else in the Lab keeps the two shared cards above.
  */
-export const OG_LAB_CUSTOM: { designation: string; name: string; src: string }[] = [
+export const OG_LAB_CUSTOM: { designation: string; name: string; src: string; alt?: string }[] = [
   // scripts/og/capture-bdl-012.mjs
   { designation: 'BDL-012', name: 'bdl-012', src: 'src/experiments/bdl-012/og.png' },
+  // scripts/og/capture-bdl-013.mjs
+  { designation: 'BDL-013', name: 'bdl-013', src: 'src/experiments/bdl-013/og.png',
+    alt: 'Engineering sheet: lines of a client.json file tied by arrows to the website layers they build.' },
 ];
+
+/** The card's alt text: a custom card that describes its picture, else the page title. */
+export function ogAltFor(name: string | undefined, title: string): string {
+  return OG_LAB_CUSTOM.find((c) => c.name === name)?.alt ?? title;
+}
 
 /** The card for one Lab entry: its own if it has one, else the shared card. */
 export function ogImageForLab(designation: string, shared: string): string {

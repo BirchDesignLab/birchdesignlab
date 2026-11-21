@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bdlBase, our web framework</title>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search).get('scheme');
+  var d=q?q==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  var h=document.documentElement;
+  h.setAttribute('data-scheme',d?'dark':'light');
+  h.className=new URLSearchParams(location.search).get('og')?'og':(Math.min(innerWidth,screen.width)<=720?'m':'d');
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* BDL-013 round 6, o5b: the revised o5. Judge picks: docs/bdl-013/briefs/round6/
+   judge-picks.md ("Revised o5"). Same five chapters, visitor-advanced, Plain /
+   Under the hood, Day / Night. Desktop keeps the 1440x900 stage (html.d);
+   phone (html.m, 720px and under) reflows to a vertical page.
+   Real numbers: scripts/lab/count-o5b-sites.mjs. */
+:root{
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --field:#f5f1e8;--raised:#e9e1d2;--green-field:#2b4a37;--green-raised:#365a44;--on-green:#f5f1e8;
+  --mark:#1f1b15;--muted:#5a5244;--accent:#2b4a37;--accent-strong:#4a3a2c;--ok:#2f6644;--warm:#a8743f;
+  --line:color-mix(in srgb,var(--mark) 22%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 40%,transparent);
+  --code-bg:#1f1b15;--code-fg:#efe8da;--code-dim:#a89f8f;--code-key:#a3bd8f;--code-str:#d9b48a;
+}
+:root[data-scheme="dark"]{
+  --field:#1c1a17;--raised:#272319;--green-field:#22322a;--green-raised:#2d4236;--on-green:#f4f0e6;
+  --mark:#f4f0e6;--muted:#a89f8f;--accent:#a3bd8f;--accent-strong:#bf9468;--ok:#a3bd8f;--warm:#d9a86f;
+  --line:color-mix(in srgb,var(--mark) 18%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 34%,transparent);
+  --code-bg:#121110;--code-fg:#efe8da;--code-dim:#857c6d;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{margin:0;background:var(--field)}
+body{color:var(--mark);font-family:'Spectral',Georgia,serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+.mono{font-family:'IBM Plex Mono',monospace}
+body:not(.hood) .h{display:none!important}
+body.hood .p{display:none!important}
+html.d .m-only,html.m .d-only{display:none!important}
+.up{font-weight:500}
+
+/* ---------- shared controls ---------- */
+.seg{display:flex;border:1px solid var(--line)}
+.seg button,.cbtn{border:0;background:none;font:500 13px 'IBM Plex Mono',monospace;padding:10px 14px;color:var(--muted)}
+.seg button.on{background:var(--raised);color:var(--mark);box-shadow:inset 0 -2px 0 var(--mark)}
+.cbtn{border:1px solid var(--line);color:var(--mark)}
+.cbtn.on{background:var(--raised);color:var(--mark);box-shadow:inset 0 -2px 0 var(--mark)}
+.act{border:2px solid var(--mark);background:var(--mark);color:var(--field);font:500 16px 'IBM Plex Mono',monospace;padding:14px 20px}
+.act:disabled{opacity:.35;cursor:default}
+.act.alt{background:none;color:var(--mark)}
+/* the shared "Try it" pattern: filled primary button + a static cue that points at it */
+.try-btn{background:var(--accent);color:var(--field);border:0;font:500 15px 'IBM Plex Mono',monospace;padding:12px 18px;min-height:44px;text-align:left;cursor:pointer;transition:background .2s var(--ease)}
+.try-btn:hover,.try-btn:focus-visible{background:var(--mark)}
+.try-btn:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+.try-btn:disabled{opacity:.45;cursor:default}
+.cue{display:flex;font:500 15px 'Spectral',serif;font-variant:small-caps;letter-spacing:.12em;color:var(--accent-strong)}
+.cue svg{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ch.used .cue{display:none}
+.tryblock{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.tryblock .cue{flex-direction:column;align-items:flex-start;gap:0}
+.fixnote{font:400 17px/1.4 'Spectral',serif;min-height:24px}
+.ch5 .tryblock .fixnote{display:none}
+
+/* ---------- desktop stage ---------- */
+html.d,html.d body{height:100%;overflow:hidden}
+html.d #stage{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;overflow:hidden;background:var(--field)}
+html.d[data-scheme="dark"] #stage{background:radial-gradient(ellipse 55% 60% at 50% 55%,color-mix(in srgb,var(--green-field) 80%,transparent) 0%,transparent 72%),var(--field)}
+html.d #eyebrow{position:absolute;left:64px;top:36px}
+html.d #head{position:absolute;left:64px;top:72px;width:1000px}
+html.d #ctrl{position:absolute;right:64px;top:28px;display:flex;gap:10px}
+html.d #nav{position:absolute;left:0;right:0;top:826px;display:flex;justify-content:center;gap:10px}
+html.d .ch{position:absolute;left:0;top:240px;width:1440px;height:570px;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .9s var(--ease),transform 1s var(--ease)}
+html.d .ch.on{opacity:1;transform:none;pointer-events:auto}
+html.d .ch svg.wires{position:absolute;left:0;top:0;width:1440px;height:570px;overflow:visible;pointer-events:none}
+
+#eyebrow{font:500 14px 'Spectral',serif;font-variant:small-caps;letter-spacing:.16em;color:var(--accent-strong)}
+#head{transition:opacity .5s var(--ease)}
+#head.fade{opacity:0;transition:opacity .2s}
+#h1{margin:0;font:400 52px/1.05 'Marcellus',Georgia,serif}
+#sub{margin:12px 0 0;font:400 22px/1.35 'Spectral',serif;color:var(--muted);max-width:940px}
+body.hood #sub{font:400 15px/1.55 'IBM Plex Mono',monospace;color:var(--mark)}
+#nav button{border:1px solid var(--line);background:none;font:500 14px 'IBM Plex Mono',monospace;height:46px;min-width:46px;padding:0 16px;color:var(--mark)}
+#nav button.mk.on{background:var(--raised);color:var(--mark);box-shadow:inset 0 -2px 0 var(--mark)}
+#nav button:disabled{opacity:.3;cursor:default}
+#nav #next{background:var(--mark);color:var(--field)}
+
+/* ---------- 1200x627 poster (?og=1) ---------- */
+#og{display:none}
+html.og,html.og body{width:1200px;height:627px;overflow:hidden}
+html.og #stage{display:none}
+html.og #og{display:block;position:relative;width:1200px;height:627px;overflow:hidden;background:var(--field)}
+html.og[data-scheme="dark"] #og{background:radial-gradient(ellipse 55% 60% at 70% 55%,color-mix(in srgb,var(--green-field) 80%,transparent) 0%,transparent 72%),var(--field)}
+#og .oe{position:absolute;left:56px;top:44px;font:500 18px 'Spectral',serif;font-variant:small-caps;letter-spacing:.16em;color:var(--accent-strong)}
+#og h2{position:absolute;left:56px;top:96px;width:600px;margin:0;font:400 80px/1.04 'Marcellus',Georgia,serif}
+#og .os{position:absolute;left:56px;top:420px;width:560px;font:400 26px/1.35 'Spectral',serif;color:var(--muted)}
+#og .ow{position:absolute;left:56px;bottom:40px;font:400 44px/1 'Marcellus',serif;color:var(--accent)}
+#og .oc{position:absolute;left:700px;top:56px;width:444px;height:515px;border:3px solid var(--mark);background:var(--field);padding:30px 34px}
+#og .oc .q{font:400 26px/1.3 'Spectral',serif}
+#og .oc .zero{position:absolute;left:0;right:0;top:92px;text-align:center;color:var(--ok);font:400 330px/1 'Spectral',serif;font-variant-numeric:lining-nums}
+#og .oc .fl{position:absolute;left:0;right:0;bottom:56px;text-align:center;font:400 30px 'Spectral',serif}
+#og .oc .gr{position:absolute;left:0;right:0;bottom:22px;text-align:center;font:400 16px 'IBM Plex Mono',monospace;color:var(--muted)}
+
+/* ---------- phone page ---------- */
+html.m body{overflow-x:hidden}
+html.m #stage{position:relative;width:100%;padding:18px 16px 96px}
+html.m #ctrl{display:flex;flex-wrap:nowrap;gap:6px;margin:12px 0 18px}
+html.m #ctrl .seg button,html.m #ctrl .cbtn{padding:14px 8px;min-height:44px;font-size:12px;white-space:nowrap}
+html.m #h1{font-size:33px;line-height:1.08}
+html.m #sub{font:400 18px/1.45 'Spectral',serif;margin-top:10px}
+html.m body.hood #sub{font:400 13px/1.55 'IBM Plex Mono',monospace}
+html.m #head{min-height:120px}
+html.m .ch{display:none;margin-top:22px}
+html.m .ch.on{display:block;animation:chin .9s var(--ease)}
+@keyframes chin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+html.m #nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;justify-content:center;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:var(--field);border-top:1px solid var(--line);z-index:20}
+html.m #nav button{border:1px solid var(--line);background:none;font:500 14px 'IBM Plex Mono',monospace;height:46px;min-width:40px;padding:0 10px;color:var(--mark)}
+html.m #nav button.mk.on{background:var(--raised);color:var(--mark);box-shadow:inset 0 -2px 0 var(--mark)}
+html.m #nav button:disabled{opacity:.3}
+html.m #nav #next{background:var(--mark);color:var(--field)}
+html.m #nav button{white-space:nowrap}
+html.m #nav .bt{display:none}
+html.m #nav button.mk{min-width:36px;padding:0 6px}
+html.m #nav #next{padding:0 10px;font-size:13px}
+html.m #back{min-width:44px;padding:0 8px}
+
+.lab{font:500 16px 'Spectral',serif;font-variant:small-caps;letter-spacing:.12em;color:var(--muted)}
+body.hood .lab.h{font:400 14px 'IBM Plex Mono',monospace;font-variant:normal;letter-spacing:0}
+.wire{fill:none;stroke:var(--accent-strong);stroke-width:2}
+.wire.off{stroke:var(--warm);stroke-dasharray:7 6}
+.cap{font:400 18px/1.4 'Spectral',serif;color:var(--muted)}
+.foot{font:400 14px/1.5 'IBM Plex Mono',monospace;color:var(--muted)}
+html.m .foot{font-size:13px}
+
+/* ================= ch1 ================= */
+.ch1 .spec{border:1px solid var(--line);background:var(--raised);padding:18px 22px}
+.spec b{display:block;font:400 28px/1.1 'Marcellus',serif}
+.spec .kind{font:400 17px 'Spectral',serif;color:var(--muted);margin:4px 0 12px}
+.spec .row{display:flex;justify-content:space-between;font:400 18px/1.75 'Spectral',serif;border-top:1px solid var(--line)}
+.spec .row i{font-style:normal;font-weight:500;color:var(--ok)}
+.spec .row i.off{color:var(--warm);font-weight:500}
+.spec .row.offr{box-shadow:inset 3px 0 0 var(--warm);padding-left:10px;margin-left:-10px;margin-right:-8px;padding-right:8px}
+.spec pre{margin:0;font:400 13px/1.5 'IBM Plex Mono',monospace;color:var(--mark)}
+.spec pre .k{color:var(--accent)}
+.fw{background:var(--green-field);color:var(--on-green);padding:24px 24px}
+:root[data-scheme="dark"] .fw{box-shadow:0 0 60px color-mix(in srgb,var(--accent) 22%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.fw .nm{font:400 48px/1 'Marcellus',serif}
+.fw .tg{font:400 19px 'Spectral',serif;opacity:.82;margin:8px 0 18px}
+.fw .tg.h{font:400 13px/1.5 'IBM Plex Mono',monospace}
+.fw .ly{height:48px;margin-top:8px;background:var(--green-raised);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font:400 19px 'Spectral',serif}
+.fw .ly span{font:400 12px 'IBM Plex Mono',monospace;opacity:.8}
+body.hood .fw .ly{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;font-size:17px;line-height:1.2}
+.out{margin:0;position:relative;overflow:hidden;background:#f5f1e8;border:1px solid rgba(31,27,21,.35)}
+:root[data-scheme="dark"] .out{box-shadow:0 0 40px rgba(244,240,230,.12)}
+.out .shot{position:relative;overflow:hidden;height:var(--h)}
+.out img{display:block;position:absolute;top:0;max-width:none;width:calc(1150px*var(--k));left:calc(var(--x0)*var(--k)*-1)}
+.out .nmtag{position:absolute;right:0;bottom:0;background:#f5f1e8;color:#1f1b15;font:500 17px 'Spectral',serif;padding:5px 12px;border-top:1px solid rgba(31,27,21,.3);border-left:1px solid rgba(31,27,21,.3)}
+.out .nmtag em{font-style:normal;font:400 12px 'IBM Plex Mono',monospace;color:#5a5244;margin-left:8px}
+.pin{position:absolute;left:calc((var(--cx) - var(--x0))*var(--k));transform:translateX(-50%);white-space:nowrap;font:500 16px 'Spectral',serif;padding:4px 12px;background:#f5f1e8;color:#1f1b15}
+.pin::before{content:"";position:absolute;left:50%;top:-9px;width:0;height:0;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom:9px solid currentColor}
+.pin.on{color:#2f6644;border:2px solid #2f6644}
+.pin.off{color:#8a5a26;border:2px dashed #a8743f}
+.tmpl{border:1px solid var(--line);border-left:6px solid var(--accent-strong);background:var(--raised);padding:12px 24px;font:400 28px/1.25 'Marcellus',serif;display:flex;align-items:center}
+
+html.d .ch1 .lab{position:absolute}
+html.d .ch1 .spec{position:absolute;left:64px;width:280px}
+html.d .ch1 svg.wires{z-index:4}
+html.d .ch1 .spec.a{top:28px;height:220px}
+html.d .ch1 .spec.b{top:262px;height:207px}
+html.d .ch1 .fw{position:absolute;left:380px;top:28px;width:270px;height:441px}
+html.d .ch1 .out{position:absolute;left:760px;width:618px;--k:.55;--x0:26px}
+html.d .ch1 .out.a{top:28px;--h:221px;--cx:868px}
+html.d .ch1 .out.b{top:262px;--h:204px;--cx:880px}
+html.d .ch1 .pin{top:36px}
+html.d .ch1 .tmpl{position:absolute;left:64px;top:506px;width:1314px;height:60px}
+html.d .ch1 .spec .row{line-height:1.6;font-size:17px}
+html.d .ch1 .fw .ly{height:46px}
+
+html.m .ch1 .spec{margin-bottom:0}
+html.m .ch1 .grp{margin-top:22px}
+html.m .ch1>.lab{display:none}
+html.m .ch1 .out{--k:.66;--x0:580px;--h:76px;margin-top:0}
+html.m .ch1 .out.a{--cx:868px}
+html.m .ch1 .out.b{--cx:880px}
+html.m .ch1 .pin{top:44px}
+html.m .ch1 .nmtag{display:none}
+html.m .ch1 .conn{height:46px;margin-left:30px;border-left:2px dashed var(--warm);position:relative}
+html.m .ch1 .conn span{position:absolute;left:12px;top:12px;font:500 16px 'Spectral',serif;color:var(--warm)}
+html.m .ch1 .conn.on{border-left:2px solid var(--ok)}
+html.m .ch1 .conn.on span{color:var(--ok)}
+html.m .ch1 .arr{margin:10px 0;font:500 16px 'IBM Plex Mono',monospace;color:var(--muted);text-align:center}
+html.m .ch1 .tmpl{margin-top:22px;font-size:24px;padding:16px 18px}
+html.m .ch1 .lab{margin:0 0 8px}
+html.m .ch1 .fw{margin-bottom:6px}
+html.m .ch1 .sitelab{margin:0 0 6px}
+
+/* ================= ch2 ================= */
+.strip{display:flex;align-items:center}
+.mock{background:#f5f1e8;color:#1f1b15;border:1px solid rgba(31,27,21,.35);height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;overflow:hidden}
+:root[data-scheme="dark"] .mock{box-shadow:0 0 40px rgba(244,240,230,.12)}
+.mock b{font:400 18px 'Marcellus',serif;color:#2b4a37;white-space:nowrap}
+.mock span{display:flex;font:400 14px 'Spectral',serif;color:#4a463d;white-space:nowrap}
+.mock span u{text-decoration:none;display:block;max-width:140px;overflow:hidden;margin-left:15px;transition:max-width .9s var(--ease),opacity .7s var(--ease),margin .9s var(--ease)}
+.mock span u.gone{max-width:0;opacity:0;margin-left:0}
+.cnt b{display:block;font:400 44px/1 'Spectral',serif;font-variant-numeric:lining-nums tabular-nums}
+.cnt span{font:400 16px/1.3 'Spectral',serif;color:var(--muted)}
+.cnt .sub b{font-size:20px;display:inline;font-variant-numeric:lining-nums tabular-nums}
+.mod{border:1px solid var(--line);background:var(--raised);padding:20px 22px;position:relative;transition:opacity .9s var(--ease),border-color .9s var(--ease)}
+.mod b{display:block;font:400 28px/1.1 'Marcellus',serif}
+.mod p{margin:10px 0 0;font:400 17px/1.4 'Spectral',serif;color:var(--muted)}
+.mod ul{margin:10px 0 0;padding:0;list-style:none;font:400 16px/1.45 'Spectral',serif}
+.mod li{border-top:1px solid var(--line);padding:4px 0}
+.mod li::before{content:"+ ";color:var(--ok);font-weight:500}
+.mod .chip{display:block;margin-top:12px;font:500 13px 'IBM Plex Mono',monospace;color:var(--ok)}
+.mod.next{background:none;border:2px dashed var(--ghost)}
+.mod.next b,.mod.next p{color:var(--muted)}
+.mod.next .chip{color:var(--muted)}
+.mod.ord.off{border:1px dashed var(--ghost);background:none}
+.mod.ord.off b,.mod.ord.off p,.mod.ord.off ul{opacity:.4}
+.mod.ord.off li{text-decoration:line-through}
+.mod.ord.off .chip{color:var(--warm)}
+.core{background:var(--green-field);color:var(--on-green);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.core b{font:400 30px 'Marcellus',serif}
+.core span{font:400 18px 'Spectral',serif;opacity:.85}
+.code{background:var(--code-bg);color:var(--code-fg);font:400 15px/24px 'IBM Plex Mono',monospace;padding:22px 26px;white-space:pre;border:1px solid var(--line);overflow:hidden}
+.code .k{color:var(--code-key)}.code .s{color:var(--code-str)}.code .d{color:var(--code-dim)}
+.code .hl{background:color-mix(in srgb,var(--code-key) 16%,transparent);display:inline-block;margin:0 -8px;padding:0 8px}
+.tgt{border:1px solid var(--line);background:var(--raised);padding:8px 18px;transition:opacity .9s var(--ease)}
+.tgt b{display:block;font:400 19px 'Marcellus',serif}
+.tgt span{font:400 13px 'IBM Plex Mono',monospace;color:var(--muted)}
+.ch2.off .tgt.ordt{opacity:.4;border-style:dashed}
+.ch2.off .tgt.ordt b{text-decoration:line-through}
+
+html.d .ch2 .tog{position:absolute;left:64px;top:0;width:262px}
+html.d .ch2 .mock{position:absolute;left:330px;top:14px;width:640px}
+html.d .ch2 .cnt{position:absolute;left:990px;top:0;width:386px}
+html.d .ch2 .cnt .sub{margin-top:2px}
+html.d .ch2 .mod{position:absolute;top:96px;width:310px;height:314px}
+html.d .ch2 .mod::after{content:"";position:absolute;left:125px;bottom:-31px;width:60px;height:30px;background:inherit;border:inherit;border-top:0}
+html.d .ch2 .mod.ord.off::after{opacity:.5}
+html.d .ch2 .core{position:absolute;left:64px;top:441px;width:1312px;height:70px}
+html.d .ch2 .cap{position:absolute;left:64px;top:526px;width:1312px;text-align:center}
+html.d .ch2 .code{position:absolute;left:64px;top:96px;width:640px;height:404px}
+html.d .ch2 .tgt{position:absolute;left:860px;width:516px;height:56px}
+html.d .ch2 .foot{position:absolute;left:64px;top:520px;width:1312px}
+
+html.m .tryblock{align-items:stretch;margin-bottom:16px}
+html.m .tryblock .try-btn{min-height:48px;width:100%}
+html.m .ch2 .mock{margin:0 0 16px;padding:0 6px;height:46px}
+html.m .ch2 .mock{justify-content:center}
+html.m .ch2 .mock b{display:none}
+html.m .ch2 .mock span u:first-child{margin-left:0}
+html.m .ch2 .mock span u{margin-left:7px;font-size:12px}
+html.m .ch2 .cnt{display:flex;gap:22px;align-items:flex-end;margin-bottom:20px}
+html.m .ch2 .cnt .sub{padding-bottom:4px}
+html.m .ch2 .mod{margin-bottom:12px;left:auto!important}
+html.m .ch2 .core{padding:16px 18px;flex-direction:column;align-items:flex-start;gap:4px}
+html.m .ch2 .cap{margin-top:14px}
+html.m .ch2 .code{font-size:12px;line-height:20px;padding:16px 14px;overflow-x:auto;margin-bottom:12px}
+html.m .ch2 .tgt{margin-bottom:8px}
+html.m .ch2 .foot{margin-top:12px}
+
+/* ================= ch3 ================= */
+.col .hd b{font:400 30px 'Marcellus',serif}
+.col .hd span{display:block;font:400 17px 'Spectral',serif;color:var(--muted);margin-top:2px}
+.rw{position:relative;height:36px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--raised);border-left:4px solid var(--accent);font:400 19px 'Spectral',serif;transition:background .9s var(--ease),border-color .9s var(--ease),color .9s var(--ease)}
+.rw .h{font:400 14px 'IBM Plex Mono',monospace}
+.rw em{font-style:italic;font-size:16px;color:var(--muted);opacity:0;transition:opacity .9s var(--ease)}
+.rw .nm{transition:opacity .6s var(--ease)}
+.ch3.run .gone{background:none;border-left:4px solid transparent;outline:1px dashed var(--ghost);outline-offset:-1px}
+.ch3.run .gone .nm{opacity:.38;text-decoration:line-through;text-decoration-thickness:1px}
+.ch3.run .gone em{opacity:1}
+.band{border:1px solid var(--line);background:var(--raised);border-left:4px solid var(--accent);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:400 19px 'Spectral',serif}
+.band .h{font:400 14px 'IBM Plex Mono',monospace}
+.band small{font:400 16px 'Spectral',serif;color:var(--muted)}
+.band small.h{font:400 13px 'IBM Plex Mono',monospace}
+.search{border:2px solid var(--mark);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:var(--field)}
+.search .q{font:400 20px/1.35 'Spectral',serif;max-width:250px}
+.search .q.h{font:400 15px/1.5 'IBM Plex Mono',monospace}
+.search .zero{text-align:right;color:var(--ok);font:400 160px/.85 'Spectral',serif;font-variant-numeric:lining-nums}
+.search .zero small{display:block;font:400 20px 'Spectral',serif;color:var(--mark);margin-top:-4px}
+.keep{font:400 18px/1.4 'Spectral',serif;color:var(--muted)}
+.keep b{font:400 44px/1 'Spectral',serif;font-variant-numeric:lining-nums;color:var(--mark);display:block;margin-bottom:4px}
+
+html.d .ch3 .col{position:absolute;top:0;width:520px}
+html.d .ch3 .band{position:absolute;left:150px;top:72px;width:1140px;height:46px}
+html.d .ch3 .rowsA{margin-top:68px}
+html.d .ch3 .search{position:absolute;left:770px;top:372px;width:520px;height:178px}
+html.d .ch3 .keep{position:absolute;left:150px;top:392px;width:520px}
+html.d .ch3 .foot.keepf{position:absolute;left:150px;top:470px;width:520px}
+
+html.m .ch3 .col{margin-bottom:6px}
+html.m .ch3 .col+.col{margin-top:22px}
+html.m .ch3 .band{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:12px 16px;margin:0 0 22px}
+html.m .ch3 .search{flex-direction:column;align-items:flex-start;padding:16px 18px;margin-top:20px}
+html.m .ch3 .search .q{max-width:none}
+html.m .ch3 .search .zero{font-size:132px;text-align:left}
+html.m .ch3 .keep{margin-top:20px}
+html.m .rw{height:auto;min-height:38px;padding:6px 12px;flex-wrap:wrap;gap:2px 10px;font-size:17px}
+html.m .rw .h{font-size:12px}
+html.m .rw em{font-size:16px}
+
+/* ================= ch4 ================= */
+.gate{border:1px dashed var(--ghost);background:none;padding:16px 16px 0 62px;position:relative;transition:background .6s var(--ease),border-color .6s var(--ease)}
+.gate::before{content:"";position:absolute;left:16px;top:16px;width:30px;height:30px;border:2px solid var(--ghost);color:var(--field);font:500 18px/26px 'IBM Plex Mono',monospace;text-align:center;transition:background .5s var(--ease),border-color .5s}
+.gate b{display:block;font:400 22px/1.15 'Marcellus',serif;color:var(--muted);transition:color .5s}
+.gate span{display:block;margin-top:6px;font:400 17px/1.3 'Spectral',serif;color:var(--muted)}
+.gate span.h{font:400 13px/1.4 'IBM Plex Mono',monospace}
+html.m .gate{position:relative!important;left:auto!important;top:auto!important}
+.gate .pay{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:16px}
+.gate .pay.h{font-size:13px}
+.gate.run{border-style:solid;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.gate.run::before{border-color:var(--accent)}
+.gate.lit{background:var(--raised);border:1px solid var(--line);box-shadow:none}
+.gate.lit::before{content:"\2713";background:var(--ok);border-color:var(--ok)}
+.gate.lit b{color:var(--mark)}
+.dep{display:flex;align-items:center;gap:18px;border:2px dashed var(--ghost);padding:0 26px;transition:background .9s var(--ease),border-color .9s var(--ease),color .9s var(--ease)}
+.dep i{width:22px;height:22px;border-radius:50%!important;background:#3a352d;border:2px solid var(--ghost);flex:none;transition:background .9s var(--ease),box-shadow .9s var(--ease)}
+.dep b{font:400 28px 'Marcellus',serif;color:var(--muted);transition:color .9s}
+.dep .dt{margin-left:auto;text-align:right;max-width:820px}
+.dep .dt span{display:block;font:400 18px 'Spectral',serif;color:var(--muted)}
+.dep .dt .l2{font-size:16px;margin-top:2px}
+.dep .dt .l2.h{font:400 13px/1.45 'IBM Plex Mono',monospace}
+.dep.lit .dt span{color:var(--on-green)}
+.runp .try-btn{visibility:hidden;padding:12px 14px}
+.runp.done .try-btn{visibility:visible}
+.dep.lit{background:var(--green-field);border:2px solid var(--green-field)}
+.dep.lit i{background:#9fd68f;border-color:#9fd68f;box-shadow:0 0 18px #9fd68f}
+.dep.lit b{color:var(--on-green)}
+.runp{border:1px solid var(--line);background:var(--raised);padding:18px 22px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.runp .n b{display:block;font:400 28px/1.15 'Spectral',serif;font-variant-numeric:lining-nums}
+.runp .n small{display:block;margin-top:4px;font:400 18px 'Spectral',serif;color:var(--muted)}
+.twist{border:2px solid var(--mark);padding:18px 26px;display:flex;flex-direction:column;justify-content:center}
+.twist b{font:400 30px/1.2 'Marcellus',serif}
+.twist span{margin-top:8px;font:400 18px/1.4 'Spectral',serif;color:var(--muted)}
+.twist span.h{font:400 14px/1.5 'IBM Plex Mono',monospace;color:var(--mark)}
+html.d .ch4 .gate{position:absolute;width:316px;height:150px}
+html.d .ch4 .dep{position:absolute;left:64px;top:330px;width:1312px;height:84px}
+html.d .ch4 .runp{position:absolute;left:1060px;top:164px;width:316px;height:150px}
+html.d .ch4 .twist{position:absolute;left:64px;top:430px;width:1312px;height:128px}
+html.m .ch4 .runp{position:sticky;bottom:72px;z-index:5;margin:6px 0 14px;padding:10px 12px;flex-direction:row;align-items:center;justify-content:space-between;background:var(--field);border:1px solid var(--mark)}
+html.m .ch4 .runp .n b{font-size:22px}
+html.m .ch4 .runp .n small{font-size:17px;margin-top:2px}
+html.m .ch4 .runp:not(.done) .try-btn{display:none}
+html.m .ch4 .runp .try-btn{padding:12px 10px;min-height:48px;width:auto}
+html.m .ch4 .gate{margin-bottom:10px;padding-bottom:14px}
+html.m .ch4 .dep{height:auto;padding:14px 16px;margin:6px 0 14px;gap:14px;align-items:flex-start}
+html.m .ch4 .dep i{margin-top:6px}
+html.m .ch4 .dep .dt{text-align:left;margin-left:0}
+html.m .ch4 .dep .dt .l1{font-weight:500;color:var(--mark)}
+html.m .ch4 .dep.lit .dt .l1{color:var(--on-green)}
+html.m .ch4 .twist{padding:16px 18px}
+html.m .ch4 .twist b{font-size:26px}
+
+/* ================= ch5 ================= */
+.fw5{background:var(--green-field);color:var(--on-green);padding:24px}
+.fw5 .nm{font:400 40px/1 'Marcellus',serif}
+.fw5 .tg{font:400 18px 'Spectral',serif;opacity:.85;margin-top:8px}
+.fw5 .tg.h{font:400 13px 'IBM Plex Mono',monospace}
+.sn{font:400 26px 'Marcellus',serif}
+.sn.next{color:var(--muted)}
+.sn small{display:block;font:400 16px 'Spectral',serif;color:var(--muted)}
+.lane{font:500 16px 'Spectral',serif;font-variant:small-caps;letter-spacing:.1em;color:var(--muted)}
+body.hood .lane{font:400 14px 'IBM Plex Mono',monospace;font-variant:normal;letter-spacing:0}
+.cell{border:1px solid var(--line);background:var(--raised);padding:0 18px;display:flex;align-items:center;gap:12px;font:400 19px 'Spectral',serif;transition:box-shadow .6s var(--ease),border-color .6s var(--ease)}
+.cell .d{display:none}
+.cell .w{color:var(--muted)}
+.ch5.s1 .cell.l1 .d,.ch5.s2 .cell.l2 .d{display:inline}
+.ch5.s1 .cell.l1 .w,.ch5.s2 .cell.l2 .w{display:none}
+.cell .ck{width:26px;height:26px;flex:none;background:var(--ok);color:var(--field);font:500 16px/26px 'IBM Plex Mono',monospace;text-align:center;opacity:0;transition:opacity .6s var(--ease)}
+.ch5.s1 .cell.l1:not(.nx),.ch5.s2 .cell.l2:not(.nx){border-color:var(--warm);box-shadow:inset 4px 0 0 var(--warm)}
+.ch5.s1 .cell.l1:not(.nx) .ck,.ch5.s2 .cell.l2:not(.nx) .ck{opacity:1}
+.cell.own{background:none;border:2px solid var(--mark);flex-direction:column;align-items:flex-start;justify-content:center;gap:8px}
+.cell.own q{font:400 21px/1.2 'Marcellus',serif;quotes:"\201C" "\201D"}
+.cell.own .sw{display:flex;gap:6px;align-items:center;font:400 16px 'Spectral',serif;color:var(--muted)}
+.cell.nx{background:var(--field);border:1px dashed var(--ghost);color:var(--muted)}
+.cell.own.nx{border:2px dashed var(--ghost)}
+.flow{fill:none;stroke:var(--warm);stroke-width:2;stroke-dasharray:6 6;opacity:.4;transition:opacity .6s}
+.ch5.s1 .flow.f1,.ch5.s2 .flow.f2{opacity:1;stroke-dasharray:none}
+.stop{stroke:var(--mark);stroke-width:3}
+.stopl{font:500 16px 'Spectral',serif;color:var(--muted);opacity:0;transition:opacity .6s var(--ease)}
+.ch5.s3 .stopl{opacity:1}
+.ch5.s3 .cell.own:not(.nx){border-color:var(--ok)}
+.dchip{position:absolute;opacity:0;background:var(--warm);color:#1f1b15;font:500 16px 'IBM Plex Mono',monospace;padding:6px 10px;white-space:nowrap;z-index:3;transition:left var(--dur,1s) var(--ease),opacity .4s}
+.dchip.show{opacity:1}
+.links{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.links .lead{font:400 18px 'Spectral',serif;color:var(--muted)}
+.links a{display:inline-block;border:2px solid var(--mark);padding:12px 18px;font:500 17px 'Spectral',serif;text-decoration:none}
+.links a:hover{background:var(--mark);color:var(--field)}
+.links a small{font:400 12px 'IBM Plex Mono',monospace;margin-left:8px;opacity:.75}
+
+html.d .ch5 .fw5{position:absolute;left:64px;top:70px;width:250px;height:320px}
+html.d .ch5 .tryblock{position:absolute;left:64px;top:424px}
+html.d .ch5 .sn,html.d .ch5 .lane,html.d .ch5 .cell{position:absolute}
+html.d .ch5 .cell{width:290px}
+html.d .ch5 .lane{left:420px}
+html.d .ch5 .cap{position:absolute;left:340px;top:438px;width:1036px}
+html.d .ch5 .foot{position:absolute;left:340px;top:440px;width:1036px}
+html.d .ch5 .links{position:absolute;left:340px;top:490px;width:1036px}
+html.d .ch5 .stopl{position:absolute;left:322px;top:394px;width:96px;text-align:left}
+
+html.m .ch5 .fw5{margin-bottom:16px}
+html.m .ch5 .tryblock .fixnote{display:block;margin-top:6px}
+
+html.m .ch5 .sitec{border:1px solid var(--line);background:var(--raised);padding:14px 14px 12px;margin-bottom:12px}
+html.m .ch5 .sitec.nx{border:1px dashed var(--ghost);background:none}
+html.m .ch5 .sitec .sn{margin-bottom:8px}
+html.m .ch5 .mrow{border-top:1px solid var(--line);padding:9px 0;display:flex;flex-direction:column;gap:2px}
+html.m .ch5 .mrow .lane{font-size:16px}
+html.m .ch5 .mrow .cell{background:none;border:0;padding:0;font-size:18px;min-height:30px;box-shadow:none!important}
+html.m .ch5 .mrow .cell.own{flex-direction:column;align-items:flex-start;border:0;gap:6px}
+html.m .ch5 .cap{margin:6px 0 14px}
+html.m .ch5 .links{margin-top:6px}
+html.m .ch5 .links a{width:100%}
+html.m .ch5 .bnc{font:400 16px 'Spectral',serif;color:var(--muted);display:none}
+html.m .ch5.s3 .bnc{display:block}
+</style>
+</head>
+<body>
+<div id="og" aria-label="Poster">
+  <div class="oe">Birch Design Lab</div>
+  <h2>We built our own web framework.</h2>
+  <div class="os">Give it the facts about a business and it builds the whole site, ready to launch.</div>
+  <div class="ow">bdlBase</div>
+  <div class="oc"><div class="q">Search the salon for the ordering module</div><div class="zero">0</div><div class="fl">files</div><div class="gr">grep -r "modules/ordering"</div></div>
+</div>
+<div id="stage">
+  <div id="eyebrow">Birch Design Lab &middot; BDL-013</div>
+  <div id="ctrl">
+    <button class="cbtn" id="play" type="button" aria-pressed="false">Play</button>
+    <div class="seg" id="mode"><button type="button" data-v="plain" class="on">Plain</button><button type="button" data-v="hood">Under the hood</button></div>
+    <div class="seg" id="scheme"><button type="button" data-v="light">Day</button><button type="button" data-v="dark">Night</button></div>
+  </div>
+  <div id="head"><h1 id="h1"></h1><p id="sub"></p></div>
+
+  <!-- 1: what it is -->
+  <section class="ch ch1" data-ch="1">
+    <svg class="wires d-only" viewBox="0 0 1440 570">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent-strong)"/></marker></defs>
+      <path class="wire" d="M344 138C362 138 362 180 378 200" marker-end="url(#ar)"/>
+      <path class="wire" d="M344 330C362 330 362 290 378 270"/>
+      <path class="wire" d="M650 238C700 238 710 138 758 138" marker-end="url(#ar)"/>
+      <path class="wire" d="M650 238C700 238 710 364 758 364" marker-end="url(#ar)"/>
+      <path class="wire off" d="M344 395H362V482H1231V336"/>
+    </svg>
+    <div class="lab p" style="left:64px;top:0">The facts</div>
+    <div class="lab h" style="left:64px;top:0">client.json</div>
+    <div class="lab p" style="left:760px;top:0">Two live demo sites</div>
+    <div class="lab h" style="left:760px;top:0">own repo &middot; own tests &middot; own deploy</div>
+
+    <div class="fw">
+      <div class="nm">bdlBase</div>
+      <div class="tg p">our web framework</div>
+      <div class="tg h">the generator, modules, gates, upgrades</div>
+      <div class="ly">Pages &amp; layout<span class="h">src/pages</span></div>
+      <div class="ly">Plug-in features<span class="h">src/modules/*</span></div>
+      <div class="ly">Languages<span class="h">three languages</span></div>
+      <div class="ly">Privacy &amp; consent<span class="h">consent.ts</span></div>
+      <div class="ly">Checks before launch<span class="h">7 checks, then deploy</span></div>
+    </div>
+
+    <div class="grp ga">
+      <div class="spec a">
+        <div class="p"><b>Bayou Kitchen</b><div class="kind">Restaurant</div>
+          <div class="row">Menu<i>on</i></div><div class="row">Online ordering<i>on</i></div><div class="row">Booking<i>on</i></div></div>
+        <pre class="h">{
+  <span class="k">"category"</span>: "Restaurant",
+  <span class="k">"modules"</span>: {
+    "menu": true,
+    "ordering": true,
+    "booking": true
+  }
+}</pre>
+      </div>
+      <div class="arr m-only">builds</div>
+      <figure class="out a"><div class="shot"><img src="assets/bayou-hero.png" alt="The live Bayou Kitchen demo site: header with Home, Gallery, Menu, Order Online, Book Now and Contact, and the headline Coastal comfort food, done right."><span class="pin on">Order link</span></div><span class="nmtag">Bayou Kitchen<em class="h">live demo</em></span></figure>
+    </div>
+
+    <div class="grp gb">
+      <div class="spec b">
+        <div class="p"><b>Magnolia &amp; Mane</b><div class="kind">Beauty salon</div>
+          <div class="row offr">Menu<i class="off">off</i></div><div class="row offr">Online ordering<i class="off">off</i></div><div class="row">Booking<i>on</i></div></div>
+        <pre class="h">{
+  <span class="k">"category"</span>: "Beauty Salon",
+  <span class="k">"modules"</span>: {
+    <span style="color:var(--warm)">"menu": false,
+    "ordering": false,</span>
+    "booking": true
+  }
+}</pre>
+      </div>
+      <div class="conn m-only"><span>Ordering off, so no Order link</span></div>
+      <figure class="out b"><div class="shot"><img src="assets/magnolia-hero.png" alt="The live Magnolia and Mane demo site: header with Home, Gallery, Book Now and Contact, no Order link, and the headline Your chair is ready."><span class="pin off">no Order link</span></div><span class="nmtag">Magnolia &amp; Mane<em class="h">live demo</em></span></figure>
+    </div>
+    <div class="tmpl">Templates get copied and drift. Ours generates a standalone site and can still upgrade it.</div>
+  </section>
+
+  <!-- 2: plug-ins -->
+  <section class="ch ch2" data-ch="2">
+    <div class="strip-wrap">
+      <div class="tryblock tog"><div class="cue"><span>Try it</span><svg class="av" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1V13M3 9L8 14.5L13 9"/></svg></div><button class="try-btn" id="ordBtn" type="button">Switch ordering off &rarr;</button></div>
+      <div class="mock"><b>Demo Bayou Kitchen</b><span><u>Home</u><u>Gallery</u><u>Menu</u><u id="navOrder">Order Online</u><u>Book Now</u><u>Contact</u></span></div>
+      <div class="cnt"><div><b id="fcount">316</b><span>files in this site's repo</span></div><div class="sub"><span><b id="rcount">9</b> ordering pages and endpoints</span></div></div>
+    </div>
+    <div class="p">
+      <div class="mod" style="left:64px"><b>Menu</b><p>Prices by size and market, kept in one place.</p>
+        <ul><li>A Menu page</li><li>A Menu link in the nav</li><li>Its words, in every language the site speaks</li></ul><span class="chip">built</span></div>
+      <div class="mod ord" id="ordCard" style="left:398px"><b>Online ordering</b><p>Pay online. The card is held until the kitchen accepts.</p>
+        <ul><li>Order and checkout pages</li><li>An Order Online link in the nav</li><li>A live order board for the kitchen</li><li>Its words, in every language the site speaks</li></ul><span class="chip" id="ordChip">built</span></div>
+      <div class="mod" style="left:732px"><b>Booking</b><p>Appointments through the provider the business already uses.</p>
+        <ul><li>A Book page</li><li>A Book Now link in the nav</li><li>Its words, in every language the site speaks</li></ul><span class="chip">built</span></div>
+      <div class="mod next" style="left:1066px"><b>Next feature</b><p>Same socket, whatever a client needs next.</p><span class="chip">open socket</span></div>
+      <div class="core"><b>bdlBase core</b><span>pages &middot; languages &middot; privacy &middot; checks</span></div>
+      <div class="cap">Each plug-in brings its own pages, its words in every language the site speaks, and its back-end pieces. Switch one off and all of it leaves.</div>
+    </div>
+    <div class="h">
+      <svg class="wires d-only" viewBox="0 0 1440 570">
+        <path class="wire" d="M704 172C790 172 780 118 860 118"/>
+        <path class="wire" d="M704 196C790 196 780 186 860 186"/>
+        <path class="wire" d="M704 220C790 220 780 254 860 254"/>
+        <path class="wire" d="M704 244C790 244 780 322 860 322"/>
+        <path class="wire" d="M704 364C790 364 780 390 860 390"/>
+        <path class="wire" d="M704 412C790 412 780 458 860 458"/>
+      </svg>
+      <div class="code"><span class="d">// src/modules/ordering/module.manifest.ts</span>
+<span class="k">const</span> manifest: ModuleManifest = {
+  <span class="hl">navLink: { href: <span class="s">'/order'</span>, order: 20 },</span>
+  <span class="hl">uiStrings: orderingStrings,</span>
+  <span class="hl">requires: [<span class="s">'menu'</span>],</span>
+  <span class="hl">routes: [</span>
+    { pattern: <span class="s">'/order'</span>, … },
+    { pattern: <span class="s">'/api/checkout'</span>, … },
+    <span class="d">// …and more</span>
+  ],
+  <span class="hl">workerExports: [{ name: <span class="s">'OrderBoard'</span> }],</span>
+  wranglerContributions: {
+    <span class="hl">durableObjects: [{ binding: <span class="s">'ORDER_BOARD'</span> }]</span>
+  },
+};</div>
+      <div class="tgt ordt" style="top:90px"><b>Nav bar gets an Order link</b><span>navLink, order 20</span></div>
+      <div class="tgt ordt" style="top:158px"><b>Its words, in every language the site speaks</b><span>uiStrings</span></div>
+      <div class="tgt ordt" style="top:226px"><b>Won't build without the menu</b><span>requires: ['menu']</span></div>
+      <div class="tgt ordt" style="top:294px"><b>Nine pages and endpoints</b><span>/order, /api/checkout + more</span></div>
+      <div class="tgt ordt" style="top:362px"><b>Worker exports the order board</b><span>worker-exports.generated.ts</span></div>
+      <div class="tgt ordt" style="top:430px"><b>Cloud storage for live orders</b><span>wrangler.jsonc: Durable Object ORDER_BOARD</span></div>
+      <div class="foot">gen:modules derives the registry, Worker exports and entry from these files. CI regenerates them and fails on any diff.</div>
+    </div>
+  </section>
+
+  <!-- 3: off means gone -->
+  <section class="ch ch3" data-ch="3">
+    <div class="band"><span><span class="p">In both: Pages &amp; layout &middot; Languages &middot; Privacy &amp; consent &middot; Booking</span><span class="h">in both: src/pages &middot; src/i18n &middot; src/lib/analytics &middot; src/modules/booking</span></span></div>
+    <div class="col" style="left:150px">
+      <div class="hd"><b>Bayou Kitchen</b><span>restaurant &middot; ordering on &middot; 316 files</span></div>
+      <div class="rowsA" id="treeR"></div>
+    </div>
+    <div class="col" style="left:770px">
+      <div class="hd"><b>Magnolia &amp; Mane</b><span>salon &middot; ordering off &middot; 254 files</span></div>
+      <div class="rowsA" id="treeS"></div>
+    </div>
+    <div class="keep"><b>44 of 316</b><span class="p">The restaurant keeps everything it uses. 44 of its 316 files, code and tests, exist for ordering.</span></div>
+    <div class="foot h keepf">positive control: the restaurant must still carry all of it. Files counted in the generated repo (git ls-files).</div>
+    <div class="search"><div><div class="q p">Search the salon for the ordering module</div><div class="q h">grep -r "modules/ordering" salon/</div></div><div class="zero">0<small>files</small></div></div>
+  </section>
+
+  <!-- 4: gates -->
+  <section class="ch ch4" data-ch="4">
+    <div id="gates"></div>
+    <div class="runp"><div class="n"><b id="gstat" aria-live="polite">Starting the checks</b><small><span id="gcount">0</span> passed</small></div><button class="try-btn" id="runAgain" type="button">Run the checks again &rarr;</button></div>
+    <div class="dep" id="dep"><i></i><b>Deploy</b><div class="dt"><span class="l1" id="depSub">Waits for all seven checks</span><span class="l2 p">Cloudflare must be set up. The production build itself refuses placeholder settings and unreviewed translations.</span><span class="l2 h">deploy needs: all jobs + cloudflare_ready. DEPLOY_TARGET=production: the build refuses placeholders and unreviewed languages.</span></div></div>
+    <div class="twist"><b>A test run that tested nothing counts as a fail.</b>
+      <span class="p">A browser suite that quietly skipped everything can't pass for green.</span>
+      <span class="h">assert-suite-ran.mjs reads each Playwright report and fails unless every required spec ran at least one test to completion.</span></div>
+  </section>
+
+  <!-- 5: upgrades -->
+  <section class="ch ch5" data-ch="5">
+    <svg class="wires d-only" viewBox="0 0 1440 570" id="flows"></svg>
+    <div class="tryblock"><div class="cue"><span>Try it</span><svg class="av" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1V13M3 9L8 14.5L13 9"/></svg></div><button class="try-btn" id="sendFix" type="button">Send a fix &rarr;</button><div class="fixnote" id="fixNote" aria-live="polite"></div></div>
+    <div class="fw5"><div class="nm">bdlBase</div><div class="tg p">gets better</div><div class="tg h">HEAD</div></div>
+    <div id="grid5"></div>
+    <div class="cap p">Tested on every change: build a site on the old version, then upgrade it.</div>
+    <div class="foot h">sync_from_base_check: generate a client at the PR's base commit, sync it to head. Every PR.</div>
+    <div class="links"><span class="lead">See them live</span>
+      <a href="https://demo-bayou-kitchen.birchdesignlab.workers.dev" target="_blank" rel="noopener">Bayou Kitchen<small>demo</small></a>
+      <a href="https://demo-magnolia-mane-salon.birchdesignlab.workers.dev" target="_blank" rel="noopener">Magnolia &amp; Mane<small>demo</small></a></div>
+  </section>
+
+  <nav id="nav"><button id="back" type="button" aria-label="Back">&larr;<span class="bt"> Back</span></button></nav>
+</div>
+<script>
+const COPY = {
+  1:{h:"We built our own web framework.",
+     p:"It's called bdlBase. Give it the facts about a business and it builds the whole site, ready to launch. Press Next to see how features plug in.",
+     u:"Built on Astro. Ours: the generator, the module system, the build-time gates and the upgrade path. Press Next to see how features plug in."},
+  2:{h:"Features are plug-ins.",
+     p:"A menu, online ordering, booking: each one plugs in through a single socket. The framework wires up the rest. Switch ordering off and watch the site lose it.",
+     u:"One module.manifest.ts per feature declares its routes, nav, strings, dependencies, Worker exports and bindings. Everything downstream is generated from it. Switch ordering off and watch the targets go dead."},
+  3:{h:"Off means gone.",
+     p:"A feature that's switched off isn't hidden. It isn't in the site at all. Watch what the salon loses.",
+     u:"Modules are included at build time. A site without one has no folder, specs, binding or config block for it. test/build/module-absence.spec.ts greps every shipped file: none points at modules/ordering, not even a comment. Watch the salon column."},
+  4:{h:"Every client site has to pass.",
+     p:"Each client site runs these checks before it can go live. Watch each check run. Deploy waits for all seven.",
+     u:"Watch each check run. Each generated site gets its own CI. The jobs run side by side, and deploy needs: all of them. A skipped audit or lhci is accepted; a skipped e2e only on a content-only commit."},
+  5:{h:"Upgrades never touch a client's words.",
+     p:"When the framework gets better, the sites built on it can take the upgrade. A business's words and settings are never touched. Send a fix and watch where it lands.",
+     u:"sync-from-base moves a client repo from its recorded framework commit to head, in three lanes. Send a fix and watch where it lands."}
+};
+const COUNTS = {bayou:316, salon:254, bayouNoOrder:272, routes:9};
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ---- ch3 ---- */
+const ROWS = [
+  ["Menu","src/modules/menu/"],
+  ["Online ordering","src/modules/ordering/"],
+  ["Kitchen order board","ordering/durable-objects/order-board.ts"],
+  ["Order board storage","wrangler.jsonc: ORDER_BOARD"],
+  ["Menu and ordering tests","test/modules/{menu,ordering}/"]
+];
+const row = (r, salon) => `<div class="rw${salon ? ' gone' : ''}"><span class="nm"><span class="p">${esc(r[0])}</span><span class="h">${esc(r[1])}</span></span>${salon ? '<em><span class="p">not in this site</span><span class="h">absent</span></em>' : ''}</div>`;
+document.getElementById('treeR').innerHTML = ROWS.map(r => row(r, false)).join('');
+document.getElementById('treeS').innerHTML = ROWS.map(r => row(r, true)).join('');
+
+/* ---- ch4 ---- */
+const GATES = [
+  ["Style and types","Code style, types and text contrast","lint: eslint · astro check · check:contrast"],
+  ["Unit tests","The site's own tests pass","unit_test: pnpm test"],
+  ["The site builds","The whole site builds without errors","build: astro build"],
+  ["No secrets","No secret keys in what ships","scrub: check-no-secrets-in-build"],
+  ["Dependencies","Audited for known issues","audit: pnpm audit:deps"],
+  ["Real browser","A browser clicks through every page and link","e2e: Playwright · security · check:links",["Payments: sites with ordering","stripe-e2e.mjs: a retried payment can't charge twice"]],
+  ["Speed and quality","Lighthouse 95+ on speed, accessibility and best practices. SEO 100.","lhci: 0.95 / SEO 1.0"]
+];
+document.getElementById('gates').innerHTML = GATES.map((g, i) => {
+  const pay = g[3] ? `<span class="pay p">${esc(g[3][0])}</span><span class="pay h">${esc(g[3][1])}</span>` : '';
+  return `<div class="gate" data-i="${i}" style="left:${64 + (i % 4) * 332}px;top:${Math.floor(i / 4) * 164}px"><b>${esc(g[0])}</b><span class="p">${esc(g[1])}</span><span class="h">${esc(g[2])}</span>${pay}</div>`;
+}).join('');
+
+/* ---- ch5 ---- */
+const SX = [420, 740, 1060];
+const SITES = [
+  ["Bayou Kitchen", "Coastal comfort food, done right", "#5f7268", "#b8502f"],
+  ["Magnolia & Mane", "Your chair is ready", "#5f7268", "#b8502f"],
+  ["The next site", "", "", ""]
+];
+const LANES = [
+  {y: 70, h: 70, p: "Framework parts: take the fix", u: "framework files: patched one at a time, git apply --3way"},
+  {y: 186, h: 70, p: "Setup files: merged, your edits kept", u: "7 rendered files: git merge-file. package.json: merged key by key"},
+  {y: 302, h: 110, p: "Words and settings: never touched", u: "src/content · theme.css · site.config.ts: excluded from every sync"}
+];
+function cellHtml(li, s, i, style) {
+  const nx = i === 2 ? ' nx' : '';
+  if (li < 2) return `<div class="cell l${li + 1} ${'up'}${nx}" ${style}>${nx ? '' : '<span class="ck">✓</span>'}${nx ? '' : `<span class="p w">Waiting</span><span class="p d">${li ? 'Merged' : 'Updated'}</span><span class="h w mono" style="font-size:14px">waiting</span><span class="h d mono" style="font-size:14px">${li ? 'merge-file, clean' : 'patch applied'}</span>`}</div>`;
+  return `<div class="cell own l3${nx}" ${style}>${s[1] ? `<q>${esc(s[1])}</q><span class="sw">its own words</span>` : '<span>&nbsp;</span>'}</div>`;
+}
+function build5(mobile) {
+  let g = '';
+  if (!mobile) {
+    SITES.forEach((s, i) => { g += `<div class="sn${i === 2 ? ' next' : ''}" style="left:${SX[i]}px;top:0">${esc(s[0])}${i === 2 ? '<small>not built yet</small>' : ''}</div>`; });
+    LANES.forEach((l, li) => {
+      g += `<div class="lane" style="top:${l.y - 26}px"><span class="p">${esc(l.p)}</span><span class="h">${esc(l.u)}</span></div>`;
+      SITES.forEach((s, i) => { g += cellHtml(li, s, i, `style="left:${SX[i]}px;top:${l.y}px;height:${l.h}px"`); });
+    });
+    g += '<div class="stopl">stops here</div>';
+    ['0','1','2'].forEach((n, k) => { g += `<div class="dchip" id="dc${k}" style="left:226px;top:${[88, 204, 340][k]}px">+ fix</div>`; });
+    document.getElementById('flows').innerHTML =
+      '<path class="flow f1" d="M314 105L1030 105"/><path class="flow f2" d="M314 221L1030 221"/>' +
+      '<path class="flow" d="M314 357L384 357"/><path class="stop" d="M386 333L386 381"/>';
+  } else {
+    SITES.forEach((s, i) => {
+      g += `<div class="sitec${i === 2 ? ' nx' : ''}"><div class="sn${i === 2 ? ' next' : ''}">${esc(s[0])}${i === 2 ? '<small>not built yet</small>' : ''}</div>`;
+      LANES.forEach((l, li) => {
+        g += `<div class="mrow"><div class="lane"><span class="p">${esc(l.p)}</span><span class="h">${esc(l.u)}</span></div>${i === 2 ? '' : cellHtml(li, s, i, '')}</div>`;
+      });
+      if (i < 2) g += '<div class="bnc">The fix bounced off the content lane.</div>';
+      g += '</div>';
+    });
+    document.getElementById('flows').innerHTML = '';
+  }
+  document.getElementById('grid5').innerHTML = g;
+}
+
+/* ---- state ---- */
+const N = 5;
+const q = new URLSearchParams(location.search);
+const root = document.documentElement;
+let ch = Math.min(N, Math.max(1, +q.get('ch') || 1));
+let playing = null;
+const isM = () => root.classList.contains('m');
+const nav = document.getElementById('nav');
+for (let i = 1; i <= N; i++) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'mk'; b.textContent = i; b.dataset.i = i;
+  b.setAttribute('aria-label', 'Chapter ' + i);
+  b.onclick = () => { stop(); go(i); };
+  nav.appendChild(b);
+}
+const nx = document.createElement('button');
+nx.id = 'next'; nx.type = 'button'; nx.innerHTML = 'Next &rarr;';
+nav.appendChild(nx);
+document.getElementById('back').onclick = () => { stop(); go(ch - 1); };
+nx.onclick = () => { stop(); go(ch === N ? 1 : ch + 1); };
+
+function text() {
+  const c = COPY[ch], hood = document.body.classList.contains('hood');
+  document.getElementById('h1').textContent = c.h;
+  document.getElementById('sub').textContent = hood ? c.u : c.p;
+}
+
+/* ch2 flip */
+const s2 = document.querySelector('.ch2');
+let cTween = null;
+function tweenCount(el, to, ms) {
+  cancelAnimationFrame(cTween);
+  const from = +el.textContent, t0 = performance.now();
+  (function st(t) {
+    const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(from + (to - from) * e);
+    if (k < 1) cTween = requestAnimationFrame(st);
+  })(t0);
+}
+let ordOn = true;
+function setOrdering(on, instant) {
+  s2.classList.toggle('off', !on);
+  document.getElementById('ordCard').classList.toggle('off', !on);
+  document.getElementById('ordChip').textContent = on ? 'built' : 'off: not in this site';
+  document.getElementById('navOrder').classList.toggle('gone', !on);
+  ordOn = on;
+  document.getElementById('ordBtn').innerHTML = on ? 'Switch ordering off &rarr;' : 'Switch it back on &rarr;';
+  const f = document.getElementById('fcount'), r = document.getElementById('rcount');
+  const ft = on ? COUNTS.bayou : COUNTS.bayouNoOrder, rt = on ? COUNTS.routes : 0;
+  if (instant) { f.textContent = ft; r.textContent = rt; }
+  else { tweenCount(f, ft, 1000); setTimeout(() => { r.textContent = rt; }, 300); }
+}
+document.getElementById('ordBtn').onclick = () => { stop(); s2.classList.add('used'); setOrdering(!ordOn); };
+
+/* ch4: the checks run on their own when the chapter opens, one every 1.1 s,
+   and deploy lights after the last one settles. Nothing here is skippable. */
+const gates = [...document.querySelectorAll('.gate')];
+const runp = document.querySelector('.runp'), depEl = document.getElementById('dep');
+let gl = 0, g4 = [];
+function setGates(n) {
+  gl = n;
+  gates.forEach((g, i) => g.classList.toggle('lit', i < n));
+  document.getElementById('gcount').textContent = n;
+  document.getElementById('depSub').textContent = n >= gates.length ? 'All seven passed.' : (n ? `Waits for ${gates.length - n} more` : 'Waits for all seven checks');
+}
+function setDeploy(on) {
+  depEl.classList.toggle('lit', on);
+  if (on) document.getElementById('depSub').textContent = 'All seven passed. It goes live.';
+}
+function stopRun() { g4.forEach(clearTimeout); g4 = []; gates.forEach(g => g.classList.remove('run')); }
+// the visitor taking over the scroll ends the phone auto-follow for this run
+let follow = true;
+['touchstart', 'wheel', 'pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { follow = false; }, {passive: true}));
+function startRun() {
+  stopRun();
+  follow = true;
+  setGates(0); setDeploy(false); runp.classList.remove('done');
+  const stat = document.getElementById('gstat');
+  stat.textContent = 'Starting the checks';
+  // check k: highlighted at t0 + (k-1) * 1.1 s, passes 0.7 s later
+  const T = 1100, t0 = 800, P = 700;
+  gates.forEach((g, i) => {
+    g4.push(setTimeout(() => {
+      g.classList.add('run');
+      stat.textContent = `Running check ${i + 1} of ${gates.length}`;
+      if (isM() && follow) g.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }, t0 + i * T));
+    g4.push(setTimeout(() => {
+      g.classList.remove('run');
+      setGates(i + 1);
+      stat.textContent = i + 1 >= gates.length ? `${gates.length} of ${gates.length} passed` : `Check ${i + 1} passed`;
+    }, t0 + i * T + P));
+  });
+  const end = t0 + (gates.length - 1) * T + P;
+  g4.push(setTimeout(() => setDeploy(true), end + 400));
+  g4.push(setTimeout(() => runp.classList.add('done'), end + 1600));
+}
+document.getElementById('runAgain').onclick = () => { stop(); startRun(); };
+
+/* ch5 send */
+const s5 = document.querySelector('.ch5');
+let t5 = [];
+function resetFix() {
+  t5.forEach(clearTimeout); t5 = [];
+  s5.classList.remove('s1', 's2', 's3');
+  document.querySelectorAll('.dchip').forEach((c, k) => { c.classList.remove('show'); c.style.transition = 'none'; c.style.left = '226px'; c.offsetWidth; c.style.transition = ''; });
+  document.getElementById('sendFix').disabled = false;
+  document.getElementById('sendFix').innerHTML = 'Send a fix &rarr;';
+  document.getElementById('fixNote').textContent = '';
+}
+function sendFix(instant) {
+  resetFix();
+  const btn = document.getElementById('sendFix');
+  btn.disabled = true;
+  const chips = [...document.querySelectorAll('.dchip')];
+  const at = (ms, f) => t5.push(setTimeout(f, ms));
+  const mob = isM();
+  if (instant) { s5.classList.add('s1', 's2', 's3'); btn.innerHTML = 'Sent'; return; }
+  at(0, () => { document.getElementById('fixNote').textContent = 'Sending the fix to both sites.'; });
+  const fly = (k, to, dur) => { const c = chips[k]; if (!c) return; c.style.setProperty('--dur', dur + 'ms'); c.classList.add('show'); requestAnimationFrame(() => requestAnimationFrame(() => { c.style.left = to + 'px'; })); };
+  at(0, () => fly(0, 900, 1000)); at(900, () => s5.classList.add('s1')); at(1150, () => chips[0] && chips[0].classList.remove('show'));
+  at(1100, () => fly(1, 900, 1000)); at(2000, () => s5.classList.add('s2')); at(2250, () => chips[1] && chips[1].classList.remove('show'));
+  at(2200, () => { document.getElementById('fixNote').textContent = 'Landing in framework parts, then setup files.'; });
+  at(2250, () => fly(2, 276, 700)); at(2900, () => { if (chips[2]) { chips[2].style.setProperty('--dur', '500ms'); chips[2].style.left = '200px'; } s5.classList.add('s3'); document.getElementById('fixNote').textContent = 'Framework parts updated, setup files rebuilt. The words lane bounced the fix: never touched.'; });
+  at(3500, () => chips[2] && chips[2].classList.remove('show'));
+  at(3600, () => { btn.disabled = false; btn.innerHTML = 'Send it again &rarr;'; });
+}
+document.getElementById('sendFix').onclick = () => { stop(); s5.classList.add('used'); sendFix(); };
+
+let timers = [];
+function enter(n) {
+  timers.forEach(clearTimeout); timers = [];
+  const s3 = document.querySelector('.ch3');
+  s3.classList.remove('run');
+  if (n === 3) timers.push(setTimeout(() => s3.classList.add('run'), 900));
+  if (n === 4) startRun(); else stopRun();
+}
+function go(n, instant) {
+  n = Math.min(N, Math.max(1, n));
+  const changed = n !== ch;
+  ch = n;
+  document.querySelectorAll('.ch').forEach(s => s.classList.toggle('on', +s.dataset.ch === ch));
+  document.querySelectorAll('#nav .mk').forEach(b => { const on = +b.dataset.i === ch; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+  document.getElementById('back').disabled = ch === 1;
+  nx.innerHTML = ch === N ? 'Start over &rarr;' : 'Next &rarr;';
+  const head = document.getElementById('head');
+  if (changed && !instant) { head.classList.add('fade'); setTimeout(() => { text(); head.classList.remove('fade'); }, 220); }
+  else text();
+  enter(ch);
+  if (changed && isM()) window.scrollTo({top: 0, behavior: 'instant'});
+}
+
+/* Play: a scripted pass at reading pace, about 12 s a chapter. It does the
+   visitor's clicks (ch2, ch5, after about 4 s) and lets ch4 run itself. Any
+   click or key stops it. */
+function stop() { if (playing) { playing.forEach(clearTimeout); playing = null; const pb = document.getElementById('play'); pb.classList.remove('on'); pb.textContent = 'Play'; pb.setAttribute('aria-pressed', 'false'); } }
+document.getElementById('play').onclick = () => {
+  if (playing) return stop();
+  const pb = document.getElementById('play');
+  pb.classList.add('on'); pb.textContent = 'Stop'; pb.setAttribute('aria-pressed', 'true');
+  playing = [];
+  const at = (ms, f) => playing.push(setTimeout(f, ms));
+  setOrdering(true, true); resetFix(); s2.classList.remove('used'); s5.classList.remove('used');
+  go(1);
+  at(12000, () => go(2));
+  at(16000, () => { s2.classList.add('used'); setOrdering(false); });
+  at(24000, () => go(3));
+  at(36000, () => go(4));
+  // run: 0.8 s lead + 7 x 1.1 s + 1.6 s settle = 10.1 s, then hold about 5 s
+  at(51000, () => go(5));
+  at(55000, () => { s5.classList.add('used'); sendFix(); });
+  at(67000, stop);
+};
+document.addEventListener('keydown', e => {
+  if (e.altKey || e.metaKey || e.ctrlKey || (document.activeElement && document.activeElement.closest && document.activeElement.closest('.seg'))) return;
+  if (e.key === 'ArrowRight') { stop(); go(ch + 1); }
+  if (e.key === 'ArrowLeft') { stop(); go(ch - 1); }
+});
+function setMode(v) {
+  document.body.classList.toggle('hood', v === 'hood');
+  document.querySelectorAll('#mode button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', String(b.dataset.v === v)); });
+  text();
+}
+function setScheme(v) {
+  root.setAttribute('data-scheme', v);
+  document.querySelectorAll('#scheme button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', String(b.dataset.v === v)); });
+}
+document.querySelectorAll('#mode button').forEach(b => b.onclick = () => { stop(); setMode(b.dataset.v); });
+document.querySelectorAll('#scheme button').forEach(b => b.onclick = () => { stop(); setScheme(b.dataset.v); });
+setScheme(root.getAttribute('data-scheme'));
+setMode(q.get('hood') === '1' ? 'hood' : 'plain');
+
+/* layout: desktop keeps the 1440x900 stage scaled to the window; phone is a page */
+let lastMobile = null;
+function fit() {
+  if (root.classList.contains('og')) return;
+  const m = Math.min(innerWidth, screen.width) <= 720;
+  root.className = m ? 'm' : 'd';
+  const st = document.getElementById('stage');
+  if (m) { st.style.transform = ''; st.style.left = ''; st.style.top = ''; }
+  else {
+    const s = Math.min(innerWidth / 1440, innerHeight / 900);
+    st.style.transform = `scale(${s})`;
+    st.style.left = (innerWidth - 1440 * s) / 2 + 'px';
+    st.style.top = (innerHeight - 900 * s) / 2 + 'px';
+  }
+  if (m !== lastMobile) { lastMobile = m; build5(m); resetFix(); }
+}
+addEventListener('resize', fit); fit();
+go(ch, true);
+</script>
+</body>
+</html>

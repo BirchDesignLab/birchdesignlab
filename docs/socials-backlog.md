@@ -155,6 +155,15 @@ and the output is wrong.
 
 ## Open work
 
+### BDL-013 The Drawing Set: 4:5 takes — PARKED
+
+Founder 11-20-26: the page and OG card ship first; the social takes wait for
+social to resume. Candidates: PT stills of sheet 1 and Detail 1 (Off is
+gone) in Day and Night, plus Detail 3 in Hood. The piece is still by design
+(no motion), so stills or a slow click-through carousel, not a loop. Deep
+links `?detail=N&hood=1&scheme=dark` reach every state. Plan:
+`docs/bdl-013/lab-page-plan.md`.
+
 ### VT is only supersampled 1.125x, not 2x — FIX FIRST
 
 `CAPTURE` in `render/framing.mjs` normalises the **long edge** to 1440 CSS,

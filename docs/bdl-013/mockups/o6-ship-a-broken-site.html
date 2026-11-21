@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try to ship a broken site</title>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('scheme');var d=q?q==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-scheme',d?'dark':'light');if(new URLSearchParams(location.search).get('og')==='1')document.documentElement.setAttribute('data-og','1');})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* BDL-013 round 6, pick 1: Try to ship a broken site.
+   Spec: docs/bdl-013/briefs/round6/judge-picks.md. One door, six locks, the
+   checks run in parallel and deploy needs all of them. Pick a flaw, press
+   Ship, and the lock that catches it stays red. Nothing moves on its own
+   clock: the page waits for the visitor.
+   URL params for deterministic shots: ?flaw=secret|booking|contrast|spanish|tests|links
+   &ship=1 &hood=1 &scheme=dark  (ship=1 lands the end state with no motion). */
+:root{
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --field:#f5f1e8;--raised:#e9e1d2;--green-field:#2b4a37;--on-green:#f5f1e8;
+  --mark:#1f1b15;--muted:#5a5244;--accent:#2b4a37;--accent-strong:#4a3a2c;--ok:#2f6644;--warm:#a8743f;
+  --bad:#a8352a;
+  --line:color-mix(in srgb,var(--mark) 22%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 40%,transparent);
+  --leaf:#171b18;--leaf-line:#2f3831;
+  --code-bg:#1f1b15;--code-fg:#efe8da;--code-dim:#a89f8f;--code-key:#a3bd8f;--code-str:#d9b48a;
+}
+:root[data-scheme="dark"]{
+  --field:#1c1a17;--raised:#272319;--green-field:#22322a;--on-green:#f4f0e6;
+  --mark:#f4f0e6;--muted:#a89f8f;--accent:#a3bd8f;--accent-strong:#bf9468;--ok:#a3bd8f;--warm:#d9a86f;
+  --bad:#e58a78;
+  --line:color-mix(in srgb,var(--mark) 18%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 34%,transparent);
+  --leaf:#0d110e;--leaf-line:#2a342d;
+  --code-bg:#121110;--code-fg:#efe8da;--code-dim:#857c6d;
+}
+*{box-sizing:border-box;border-radius:0}
+html{background:var(--field)}
+body{margin:0;min-height:100vh;color:var(--mark);font-family:'Spectral',Georgia,serif;-webkit-font-smoothing:antialiased;background:var(--field)}
+:root[data-scheme="dark"] body{background:radial-gradient(ellipse 60% 55% at 72% 62%,color-mix(in srgb,var(--green-field) 85%,transparent) 0%,transparent 72%),var(--field)}
+button{font:inherit;color:inherit;cursor:pointer}
+.noanim *{transition:none!important;animation:none!important}
+.mono{font-family:'IBM Plex Mono',monospace}
+body:not(.hood) .h{display:none!important}
+body.hood .p{display:none!important}
+
+.app{max-width:1440px;margin:0 auto;padding:26px 64px 22px;min-height:100vh;display:flex;flex-direction:column}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+#eyebrow{font:500 14px 'Spectral',serif;font-variant:small-caps;letter-spacing:.16em;color:var(--accent-strong)}
+#ctrl{display:flex;gap:10px}
+.seg{display:flex;border:1px solid var(--line)}
+.seg button{border:0;background:none;font:500 13px 'IBM Plex Mono',monospace;padding:10px 14px;color:var(--muted)}
+.seg button.on{background:var(--mark);color:var(--field)}
+.seg button:focus-visible,.card:focus-visible,.go:focus-visible,.demo:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+
+/* headline */
+.head{margin-top:12px;min-height:84px}
+h1{margin:0;font:400 52px/1.05 'Marcellus',Georgia,serif}
+#sub{margin:10px 0 0;font:400 22px/1.35 'Spectral',serif;color:var(--muted);max-width:1040px}
+body.hood #sub{font:400 14px/1.55 'IBM Plex Mono',monospace;color:var(--mark);max-width:1000px}
+
+/* board */
+.board{display:grid;grid-template-columns:300px minmax(0,1fr) 440px;column-gap:48px;margin-top:18px;align-items:start}
+.lab{font:500 16px/34px 'Spectral',serif;font-variant:small-caps;letter-spacing:.12em;color:var(--muted);margin:0;height:40px}
+body.hood .lab.h{font:400 13px 'IBM Plex Mono',monospace;font-variant:normal;letter-spacing:0}
+
+/* tray */
+.cards{display:block}
+.card{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--raised);padding:12px 16px;margin-top:8px;position:relative;transition:box-shadow .4s var(--ease),background .4s var(--ease),opacity .4s var(--ease)}
+.card b{display:block;font:400 20px/1.2 'Marcellus',serif;font-weight:400}
+.card .s{display:block;font:400 16px/1.35 'Spectral',serif;color:var(--muted);margin-top:2px}
+.card .s.h{font:400 12.5px/1.5 'IBM Plex Mono',monospace;color:var(--muted)}
+.cards .card:first-child{margin-top:0}
+.board.done .ahint{visibility:hidden}
+.card:hover{background:color-mix(in srgb,var(--raised) 70%,var(--field))}
+.card[aria-pressed="true"]{background:var(--field);box-shadow:inset 0 0 0 2px var(--mark)}
+.card.caught[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--mark),inset 6px 0 0 var(--bad)}
+.board.done .card[aria-pressed="false"]{opacity:.55}
+.tnote{margin:14px 0 0;font:400 16px/1.45 'Spectral',serif;color:var(--muted)}
+.tnote.h{font:400 12.5px/1.55 'IBM Plex Mono',monospace}
+
+/* middle: site card + result + actions + aux */
+.mid{display:flex;flex-direction:column;gap:12px;min-width:0;padding-top:40px}
+.slot{position:relative}
+.site{--sm:#5a5244;position:relative;z-index:6;container-type:inline-size;width:100%;aspect-ratio:10/7.5;background:#f5f1e8;color:#1f1b15;border:1px solid rgba(31,27,21,.35);overflow:hidden;transform-origin:0 0;display:flex;flex-direction:column;box-shadow:0 18px 40px -22px rgba(0,0,0,.45)}
+:root[data-scheme="dark"] .site{box-shadow:0 0 44px rgba(244,240,230,.12)}
+.site[data-flaw="contrast"]{--sm:#b9b2a3}
+.site{transition:filter .7s var(--ease)}
+.site.caught,:root[data-scheme="dark"] .site.caught{filter:brightness(.56) saturate(.8);box-shadow:none}
+.site *{transition:color .5s var(--ease)}
+.s-nav{flex:none;height:9.4cqw;display:flex;align-items:center;justify-content:space-between;padding:0 3.2cqw;background:#fff;border-bottom:1px solid #e6dfd0}
+.s-nav b{font:400 4.2cqw 'Marcellus',serif;color:#2b4a37}
+.s-links{display:flex;align-items:center;gap:3.2cqw;font:400 3cqw 'Spectral',serif;color:var(--sm)}
+.s-links u{text-decoration:none}
+.site[data-flaw="spanish"] .s-es{display:inline-block}
+.s-es{display:none;font:500 2.6cqw 'IBM Plex Mono',monospace;color:#6a4a1c;background:#f1e2c4;padding:.5cqw 1.4cqw;font-style:normal}
+.s-hero{flex:none;padding:3cqw 3.6cqw 2.8cqw;background:linear-gradient(135deg,#9fba92 0%,#c7d8bb 45%,#eef3e6 100%)}
+.s-hero h4{margin:0;font:400 6.2cqw/1.08 'Marcellus',serif;max-width:76cqw}
+.s-hero .tag{margin:1.4cqw 0 0;font:400 3.2cqw/1.3 'Spectral',serif;color:var(--sm)}
+.s-hero .tag.es{display:none;font-style:italic}
+.site[data-flaw="spanish"] .tag.es{display:block}
+.s-ctas{display:flex;gap:2.2cqw;margin-top:2.2cqw}
+.s-ctas span{font:500 3.1cqw 'Spectral',serif;padding:1.6cqw 3.4cqw;background:#2b4a37;color:#f5f1e8}
+.s-ctas span.alt{background:transparent;color:#2b4a37;box-shadow:inset 0 0 0 1px #2b4a37}
+.s-status{display:none;margin-top:1.8cqw;font:400 2.6cqw 'IBM Plex Mono',monospace;color:#3c3a33}
+.site[data-flaw="booking"] .s-status{display:block}
+.s-tiles{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:2.4cqw;padding:2.4cqw 3.2cqw 0}
+.s-tiles div{display:flex;flex-direction:column;gap:1.2cqw}
+.s-tiles u{display:block;flex:1;background:#e9e1d2}
+.s-tiles span{font:400 2.7cqw 'Spectral',serif;color:var(--sm)}
+.s-foot{flex:none;padding:2cqw 3.2cqw;margin-top:2cqw;border-top:1px solid #e6dfd0;font:400 2.6cqw/1.45 'Spectral',serif;color:var(--sm);position:relative}
+.s-foot .row{display:flex;justify-content:space-between;gap:2cqw}
+.s-key{display:none;margin-top:.8cqw;font:500 2.5cqw 'IBM Plex Mono',monospace;color:#3c3a33;background:#ece4d2;padding:.6cqw 1.2cqw;white-space:nowrap;overflow:hidden}
+.site[data-flaw="secret"] .s-key{display:block}
+.s-404{display:none;margin-left:1cqw;font:500 2.3cqw 'IBM Plex Mono',monospace;background:#a8352a;color:#fff;padding:.2cqw 1cqw}
+.site[data-flaw="links"] .s-404{display:inline-block}
+.s-ci{display:none;font:500 2.4cqw 'IBM Plex Mono',monospace;color:#6a4a1c;background:#f1e2c4;padding:.4cqw 1.4cqw;align-self:flex-start}
+.site[data-flaw="tests"] .s-ci{display:inline-block}
+.site[data-flaw="links"] .s-foot a{text-decoration:underline dotted;text-decoration-thickness:.3cqw}
+/* caught: ring the offending element */
+.site.caught [data-hit]{outline:.9cqw solid #ff6a58;outline-offset:.6cqw}
+.site:not(.caught) [data-hit]{outline:0}
+
+/* result (verdict) sits where the site stood, on desktop */
+.result{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s var(--ease),visibility 0s linear .6s;padding-right:8px}
+.result.on{opacity:1;visibility:visible;transition:opacity .7s var(--ease)}
+.rvw::before{content:"";display:block;width:64px;height:6px;background:var(--bad);margin-bottom:22px}
+.result.ok .rvw::before{background:var(--ok)}
+.rv{margin:0;font:400 38px/1.14 'Marcellus',serif;font-weight:400}
+.re{margin:20px 0 0;font:400 21px/1.4 'Spectral',serif;color:var(--muted)}
+.rl{display:flex;margin-top:16px;flex-direction:column;gap:8px}
+.result:not(.ok) .rend{display:none}
+.rv2{display:none}
+.hole{display:none}
+.demo{display:block;font:500 18px/1.3 'Spectral',serif;color:var(--mark);text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;padding:6px 0;width:max-content;max-width:100%}
+.demo small{font:400 16px 'Spectral',serif;color:var(--muted);margin-left:6px}
+
+.actions{display:flex;align-items:center;gap:18px}
+.go{flex:none;min-width:176px;height:56px;border:0;background:var(--mark);color:var(--field);font:500 20px 'Spectral',serif;padding:0 28px;letter-spacing:.01em}
+.go:disabled{opacity:.45;cursor:default}
+.ahint{margin:0;font:400 16px/1.4 'Spectral',serif;color:var(--muted)}
+.ahint.h{font:400 12.5px/1.5 'IBM Plex Mono',monospace}
+
+.aux{min-height:150px}
+.note{margin:0;font:400 17px/1.5 'Spectral',serif;color:var(--muted)}
+.term{background:var(--code-bg);color:var(--code-fg);border:1px solid var(--line);padding:8px 14px 8px}
+.tcap{font:400 11px 'IBM Plex Mono',monospace;color:var(--code-dim);letter-spacing:.02em}
+.term pre{margin:6px 0 0;font:400 12px/17px 'IBM Plex Mono',monospace;white-space:pre-wrap;overflow-wrap:anywhere;min-height:100px}
+.term pre .bad{color:#f0a090}.term pre .ok{color:var(--code-key)}.term pre .d{color:var(--code-dim)}
+.tfoot{margin-top:6px;border-top:1px solid #3a352c;padding-top:6px;font:400 11px/1.45 'IBM Plex Mono',monospace;color:var(--code-dim)}
+
+/* door column */
+.doorcol{display:flex;flex-direction:column;min-width:0}
+.sign{display:flex;align-items:baseline;justify-content:space-between;gap:12px;height:40px;padding:0 2px}
+.sign .nm{display:flex;align-items:center;gap:12px;font:400 34px/1 'Marcellus',serif;color:var(--muted);transition:color .8s var(--ease)}
+.sign .lamp{width:14px;height:14px;background:var(--ghost);transition:background .8s var(--ease),box-shadow .8s var(--ease)}
+.sign .sd{font:400 16px 'Spectral',serif;color:var(--muted);text-align:right}
+.sign .sd.h{font:400 12.5px 'IBM Plex Mono',monospace}
+.doorcol.open .sign .nm{color:var(--ok)}
+.doorcol.open .sign .lamp{background:var(--ok);box-shadow:0 0 18px var(--ok)}
+
+.door{position:relative;height:600px;background:var(--raised);border:1px solid var(--line);padding:10px}
+:root[data-scheme="dark"] .door{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),0 0 60px color-mix(in srgb,var(--accent) 12%,transparent)}
+.frame{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden}
+.interior{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 38%,#fff6dc 0%,#f0dfb0 55%,#d3bc84 100%);opacity:0;transition:opacity 1s var(--ease)}
+.door.open .interior{opacity:1}
+.leaf{position:absolute;inset:0;background:var(--leaf);box-shadow:inset 0 0 0 1px var(--leaf-line);transform-origin:0 50%;transition:transform 1.2s var(--ease);will-change:transform}
+.leaf::before{content:"";position:absolute;left:14px;right:14px;bottom:14px;height:250px;box-shadow:inset 0 0 0 1px var(--leaf-line)}
+.door.open .leaf{transform:perspective(1500px) rotateY(-78deg)}
+.plates{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.lock{display:flex;align-items:center;gap:10px;min-height:84px;padding:10px 12px;background:#262d27;border:1px solid #3a443c;color:#efe8da;transition:background .45s var(--ease),border-color .45s var(--ease),box-shadow .45s var(--ease)}
+.lock svg{flex:none;width:34px;height:34px;color:#a39d8d;transition:color .45s var(--ease)}
+.lock .sh{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:square;transform-box:view-box;transform-origin:10px 16px;transition:transform .45s var(--ease)}
+.lock .bd{fill:currentColor}
+.lock .mk{fill:none;stroke:#262d27;stroke-width:2.4;display:none}
+.lk{min-width:0}
+.lk .lp{display:block;font:400 16px/1.25 'Spectral',serif}
+.lk .lh{display:block;font:500 13px/1.3 'IBM Plex Mono',monospace}
+.lk .lh i{display:block;font:400 11px/1.35 'IBM Plex Mono',monospace;color:#a39d8d;font-style:normal;overflow-wrap:anywhere}
+.lock[data-s="ok"]{background:#2c4636;border-color:#7fa58a}
+.lock[data-s="ok"] svg{color:#a9d3ab}
+.lock[data-s="ok"] .sh{transform:translate(0,-2px) rotate(-26deg)}
+.lock[data-s="ok"] .mk.ck{display:block;stroke:#2c4636}
+.lock[data-s="ok"] .lh i{color:#b6cdb6}
+.lock[data-s="skip"]{background:#222823;border:1px dashed #5d675f;color:#b3ad9d}
+.lock[data-s="skip"] svg{color:#858072}
+.lock[data-s="skip"] .sh{transform:translate(0,-2px) rotate(-26deg)}
+.lk .sk{display:none;margin-top:3px;font:400 16px/1.2 'Spectral',serif;font-style:italic;color:#a39d8d}
+.lk .sk.h{font:400 11px/1.35 'IBM Plex Mono',monospace;font-style:normal}
+.lock[data-s="skip"] .sk{display:block}
+.pcap{grid-column:1/-1;padding:6px 2px 0;font:italic 400 16px/1.3 'Spectral',serif;color:#a39d8d}
+.pcap.h{font:400 12px/1.3 'IBM Plex Mono',monospace;font-style:normal}
+.door.open .pcap{color:#3b3426}
+.lock[data-s="bad"]{background:#b3382c;border-color:#f0b4aa;box-shadow:0 0 0 3px color-mix(in srgb,#b3382c 38%,transparent);color:#fff6ee}
+.lock[data-s="bad"] svg{color:#fff6ee}
+.lock[data-s="bad"] .mk.xx{display:block;stroke:#b3382c}
+.lock[data-s="bad"] .lh i{color:#ffd9d2}
+.dock{position:relative;z-index:1;flex:1;margin:0 14px 14px;min-height:0;display:flex;align-items:center;justify-content:center;transition:opacity .8s var(--ease)}
+.dg .site{position:absolute;left:0;top:0;margin:0;aspect-ratio:auto}
+.dg{position:relative;height:100%;max-width:100%;aspect-ratio:10/7.5;border:1px dashed color-mix(in srgb,#efe8da 38%,transparent);display:flex;align-items:flex-end;transition:border-color .6s var(--ease)}
+.dg span{font:italic 400 16px 'Spectral',serif;color:#a39d8d;padding:8px 10px;transition:opacity .4s var(--ease)}
+.door.docked .dg{border-color:transparent}
+.door.docked .dg span{opacity:0}
+
+
+/* phone and narrow: tray, site, door stacked */
+@media (max-width:899px){
+  .app{padding:16px 16px 100px}
+  .top{flex-direction:column;align-items:flex-start;gap:10px}
+  #ctrl{width:100%;justify-content:space-between;gap:8px}
+  .seg button{padding:11px 10px}
+  .head{margin-top:14px;min-height:0}
+  h1{font-size:36px;line-height:1.05}
+  #sub{font-size:17px;margin-top:8px}
+  body.hood #sub{font-size:12.5px}
+  .board{display:flex;flex-direction:column;margin-top:16px;gap:0}
+  .mid,.slot,.doorcol{display:contents}
+  .tray{order:1}
+  .site{order:2;margin-top:18px}
+  .sign{order:3;margin-top:28px;height:48px}
+  .result{display:contents;opacity:1;visibility:visible}
+  .board{position:relative}
+  .hole{display:block;order:2;margin-top:18px;transition:height 1s var(--ease),margin-top 1s var(--ease)}
+  .rv2{display:block;margin:0 0 4px;font:400 28px/1.14 'Marcellus',serif;font-weight:400}
+  .rv2::before{content:"";display:block;width:64px;height:6px;background:var(--ok);margin-bottom:14px}
+  .rvw{order:4;min-height:116px;padding:4px 0 10px}
+  .result:not(.on) .rvw::before{display:none}
+  .result:not(.on) .rv{font:400 17px/1.4 'Spectral',serif;color:var(--muted)}
+  .result.on .rvw{animation:fadein .6s var(--ease)}
+  .rend{order:7;margin-top:18px}
+  .door{order:5;height:auto;padding:8px}
+  .aux{order:6;margin-top:18px;min-height:0}
+  .cards{display:flex;flex-wrap:wrap;gap:8px}
+  .card{width:auto;margin:0;padding:0 14px;min-height:46px;display:flex;align-items:center}
+  .card b{font-size:17px}
+  .card .s,.card .s.h{display:none}
+  .tnote{display:none}
+  .actions{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--field);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:0;order:9}
+  .go{width:100%;min-width:0;height:54px}
+  .ahint{display:none}
+  .result.on .rv{font-size:28px}
+  .re{font-size:18px;margin-top:14px}
+  .rvw::before{margin-bottom:14px}
+  .frame{min-height:0}
+  .plates{grid-template-columns:1fr;gap:5px;padding:8px}
+  .lock{min-height:46px;padding:5px 12px}
+  .lk .lp{font-size:16px;line-height:1.2}
+  .pcap{padding:4px 2px 0}
+  .dock{flex:none;height:176px;margin:0 8px 8px}
+  .note{font-size:16px}
+  .term pre{min-height:0}
+  body.hood .lock{min-height:50px}
+}
+
+/* OG frame: ?og=1 at 1200x627. Headline, the held verdict, the dark door. */
+html[data-og] body{overflow:hidden}
+html[data-og] .app{display:grid;grid-template-columns:490px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:44px;align-items:start;max-width:none;height:100vh;min-height:0;padding:30px 48px}
+html[data-og] .top{grid-column:1;grid-row:1;margin-top:84px}
+html[data-og] #ctrl,html[data-og] #sub,html[data-og] .tray,html[data-og] .actions,html[data-og] .aux{display:none}
+html[data-og] .head{grid-column:1;grid-row:2;min-height:0;margin-top:12px}
+html[data-og] h1{font-size:58px}
+html[data-og] .board,html[data-og] .mid{display:contents}
+html[data-og] .slot{grid-column:1;grid-row:3;height:210px;margin-top:20px}
+html[data-og] .doorcol{grid-column:2;grid-row:1/4;align-self:center}
+html[data-og] .door{height:520px}
+html[data-og] .lock{min-height:68px}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div id="eyebrow">Birch Design Lab &middot; BDL-013</div>
+    <div id="ctrl">
+      <div class="seg" id="mode"><button type="button" data-v="plain" class="on">Plain</button><button type="button" data-v="hood">Under the hood</button></div>
+      <div class="seg" id="scheme"><button type="button" data-v="light">Day</button><button type="button" data-v="dark">Night</button></div>
+    </div>
+  </div>
+  <div class="head">
+    <h1>Try to ship a broken site.</h1>
+    <p id="sub"></p>
+  </div>
+
+  <main class="board" id="board">
+    <section class="tray" aria-labelledby="trayh">
+      <h2 class="lab p" id="trayh">Pick a flaw</h2>
+      <h2 class="lab h">flaws, each one a real gate</h2>
+      <div class="cards" id="cards" role="group" aria-label="Flaws to ship"></div>
+      <p class="tnote p">Six of the checks every site gets.</p>
+      <p class="tnote h">Six of the CI checks, generated per site.</p>
+    </section>
+
+    <div class="mid">
+      <div class="slot">
+        <article class="site" id="site" data-flaw="" aria-label="Harbor Table, a demo restaurant site">
+          <div class="s-nav"><b>Harbor Table</b>
+            <span class="s-links"><u>Menu</u><u>Order</u><u>Book</u><i class="s-es" data-f="spanish">EN | ES draft</i></span></div>
+          <div class="s-hero">
+            <h4>Coastal plates, cooked to order</h4>
+            <p class="tag">Fresh fish, a short menu, a long table.</p>
+            <p class="tag es" data-f="spanish">Platos de la costa, hechos al momento.</p>
+            <div class="s-ctas"><span>Order online</span><span class="alt" data-f="booking" id="bookbtn">Book Now</span></div>
+            <div class="s-status" data-f="booking">links to: [NEEDS-CLIENT-REVIEW]</div>
+          </div>
+          <div class="s-tiles"><div><u></u><span>Oysters</span></div><div><u></u><span>Gumbo</span></div><div><u></u><span>Pie</span></div></div>
+          <div class="s-foot">
+            <div class="row"><span>42 Harbor Walk &middot; Menu &middot; Order &middot; Book &middot; <a data-f="links">Catering</a><span class="s-404" data-f="links">404</span></span></div>
+            <div class="s-key" data-f="secret">STRIPE_SECRET_KEY = sk_test_51QxTz8KpV2mNa0&hellip;</div>
+            <div class="s-ci" data-f="tests">Browser tests: skipped</div>
+          </div>
+        </article>
+        <div class="result" id="result" aria-live="polite">
+          <div class="rvw"><p class="rv" id="rv"></p></div>
+          <div class="rend">
+            <p class="rv2">Every lock opened. Shipped.</p>
+            <p class="re" id="re"></p>
+            <div class="rl" id="rl">
+              <a class="demo" href="https://demo-magnolia-mane-salon.birchdesignlab.workers.dev" target="_blank" rel="noopener">Magnolia &amp; Mane<small>a live demo, a salon</small></a>
+              <a class="demo" href="https://demo-bayou-kitchen.birchdesignlab.workers.dev" target="_blank" rel="noopener">Bayou Kitchen<small>a live demo, a restaurant</small></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="go" id="go" type="button">Ship it clean</button>
+        <p class="ahint p" id="ahint"></p>
+        <p class="ahint h" id="ahintH"></p>
+      </div>
+      <div class="aux">
+        <p class="note p">The checks run side by side, and the final build refuses on its own. The site goes live only if every lock opens.</p>
+        <div class="term h"><div class="tcap">bdlBase output, redrawn and shortened</div><pre id="term"></pre>
+          <div class="tfoot"># CI is generated with each site. deploy needs every job, then its production build refuses placeholders and unreviewed languages.</div></div>
+      </div>
+    </div>
+
+    <div class="doorcol" id="doorcol">
+      <div class="sign"><div class="nm"><span class="lamp"></span>Live</div><div class="sd p">the public website</div><div class="sd h">deploy &middot; needs: every job</div></div>
+      <div class="door" id="door">
+        <div class="frame">
+          <div class="interior"></div>
+          <div class="leaf"></div>
+          <div class="plates" id="plates"></div>
+          <div class="dock"><div class="dg" id="dock"><span>Doorway</span></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const FLAWS = {
+  secret:{ t:'A pasted secret key', s:'A payment key left in the page.', h:'sk_test_... left in dist/',
+    v:'Secret key found in the built site. Not shipped.',
+    term:'<span class="d">$ node scripts/check-no-secrets-in-build.mjs</span>\ncheck-no-secrets-in-build: possible secret(s) found in build output:\n\n  - dist/client/index.html: possible Stripe test secret key (sk_test_51Qx...)\n\n<span class="bad">exit 1</span> <span class="d">&middot; job scrub failed &middot; deploy does not run</span>' },
+  booking:{ t:'Book Now goes nowhere', s:'The link was never filled in.', h:'calLink: "[NEEDS-CLIENT-REVIEW]..."',
+    v:'The Book Now button still points at a placeholder. Not shipped.',
+    term:'<span class="d">$ pnpm run build:prod</span>\nRefusing to build: DEPLOY_TARGET is "production" but this config still has placeholder demo content:\n  - booking.calcom.calLink is still unfilled starter content: "[NEEDS-CLIENT-REVIEW] replace before launch"\n\n<span class="bad">exit 1</span> <span class="d">&middot; the production build refused</span>' },
+  contrast:{ t:'Faint text', s:'Pale grey words, hard to read.', h:'--color-text-muted: #b9b2a3',
+    v:'Some text is too faint to read comfortably. Not shipped.',
+    term:'<span class="d">$ node scripts/check-contrast.mjs</span>\n<span class="bad">FAIL</span>  1.87:1  (needs 4.5)  text-muted on bg  #b9b2a3 on #f5f1e8\n\ncheck-contrast: 1 pairing(s) below the WCAG AA threshold.\n\n<span class="bad">exit 1</span> <span class="d">&middot; job lint failed &middot; deploy does not run</span>' },
+  spanish:{ t:'Unreviewed Spanish', s:'Translated, never checked.', h:'es: no native-speaker sign-off',
+    v:'Spanish pages no native speaker has reviewed. Not shipped.',
+    term:'<span class="d">$ pnpm run build:prod</span>\nRefusing to build: DEPLOY_TARGET is "production" but content entries are untranslated, incomplete, or not yet reviewed by a native speaker:\n  es: unreviewed (no native-speaker sign-off recorded)\n\n<span class="bad">exit 1</span> <span class="d">&middot; the production build refused</span>' },
+  tests:{ t:'Tests that never ran', s:'Nothing clicked through it.', h:'e2e.json: no tests ran',
+    v:'The browser tests never ran, so nothing was checked. Not shipped.',
+    term:'<span class="d">$ node scripts/assert-suite-ran.mjs</span>\nassert-suite-ran: e2e.json: no tests ran\nassert-suite-ran: 1 problem(s); a suite that did not run is not a suite that passed\n<span class="d"># check-links never ran: the e2e job stopped here</span>\n\n<span class="bad">exit 1</span> <span class="d">&middot; job e2e failed &middot; deploy does not run</span>' },
+  links:{ t:'A broken link', s:'A footer link that leads nowhere.', h:'[404] /menu/catering',
+    v:'A link on the site goes nowhere. Not shipped.',
+    term:'<span class="d">$ node scripts/check-links.mjs</span>\n  [404] http://localhost:4325/menu/catering\n        (linked from http://localhost:4325/)\ncheck-links: 1 broken link(s) found.\n\n<span class="bad">exit 1</span> <span class="d">&middot; job e2e failed &middot; deploy does not run</span>' }
+};
+const CLEAN_TERM = `<span class="ok">scrub</span>       secrets scan: clean
+<span class="ok">lint</span>        contrast: every pairing passes
+<span class="ok">e2e</span>         browser suites ran, links: clean
+<span class="ok">build:prod</span>  placeholders, translations: ok
+
+<span class="ok">deploy</span>      needs: all green. Running.`;
+const IDLE_TERM = '<span class="d"># pick a flaw, then ship it\n# the jobs run side by side\n# deploy needs every one, then builds for production</span>';
+// grp 'job': a parallel CI job. grp 'build': refused by the production build inside deploy.
+const LOCKS = [
+  {id:'secret',   grp:'job',   p:'Checks for leaked secret keys',        job:'scrub',                path:'check-no-secrets-in-build.mjs'},
+  {id:'contrast', grp:'job',   p:'Checks text is easy to read',          job:'lint',                 path:'check-contrast.mjs'},
+  {id:'tests',    grp:'job',   p:'Checks the browser tests really ran',  job:'e2e',                  path:'assert-suite-ran.mjs'},
+  {id:'links',    grp:'job',   p:'Checks every link works',     job:'e2e',                  path:'check-links.mjs', skipNote:'skipped: e2e stopped'},
+  {id:'booking',  grp:'build', p:'Checks for leftover placeholders',     job:'deploy · build:prod',  path:'astro.config.mjs'},
+  {id:'spanish',  grp:'build', p:'Checks translations were reviewed',    job:'deploy · build:prod',  path:'i18n/coverage.ts'}
+];
+const SKIP = {tests:'links'}; // a failed assert-suite-ran stops the e2e job before check:links runs
+const HIT = {secret:'.s-key', booking:'#bookbtn', contrast:'.s-hero .tag:not(.es)', spanish:'.s-es', tests:'.s-ci', links:'.s-foot a'};
+const SVG = '<svg viewBox="0 0 34 34" aria-hidden="true"><path class="sh" d="M10 16V11a7 7 0 0 1 14 0v5"/><rect class="bd" x="6" y="15" width="22" height="15"/><path class="mk ck" d="M12 22.5l3.6 3.4 6.4-7"/><path class="mk xx" d="M13 19.5l8 8M21 19.5l-8 8"/></svg>';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const site = $('#site'), door = $('#door'), doorcol = $('#doorcol'), board = $('#board'), go = $('#go'), result = $('#result'), dock = $('#dock');
+const q = new URLSearchParams(location.search);
+const mobile = () => matchMedia('(max-width:899px)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+let flaw = null, phase = 'idle', finalXf = '';
+
+// cards + locks
+$('#cards').innerHTML = Object.entries(FLAWS).map(([k, f]) =>
+  `<button class="card" type="button" data-k="${k}" aria-pressed="false"><b>${f.t}</b><span class="s p">${f.s}</span><span class="s h">${f.h}</span></button>`).join('');
+const lockHtml = l =>
+  `<div class="lock" data-id="${l.id}" data-s="idle">${SVG}<div class="lk"><span class="lp p">${l.p}</span><span class="lh h">${l.job}<i>${l.path}</i></span><span class="sk p">Never got to run</span><span class="sk h">${l.skipNote || ''}</span></div></div>`;
+$('#plates').innerHTML = LOCKS.filter(l => l.grp === 'job').map(lockHtml).join('')
+  + '<div class="pcap p">Then the final build refuses on its own:</div><div class="pcap h">deploy runs its own production build:</div>'
+  + LOCKS.filter(l => l.grp === 'build').map(lockHtml).join('');
+$$('.card').forEach(c => c.onclick = () => pick(c.dataset.k));
+
+function hints() {
+  const f = flaw && FLAWS[flaw];
+  $('#ahint').textContent = f ? `Picked: ${f.t}.` : 'No flaw picked, so this one is clean.';
+  $('#ahintH').textContent = f ? `flaw: ${flaw}` : 'no flaw: all six pass';
+  go.textContent = phase === 'done' ? 'Try another' : (flaw ? 'Ship it' : 'Ship it clean');
+  if (phase !== 'done') $('#rv').textContent = f ? `Ready to ship with: ${f.t}.` : 'No flaw picked, so this one ships clean.';
+}
+function setFlaw(k) {
+  flaw = k;
+  site.dataset.flaw = k || '';
+  $$('.card').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.k === k)));
+  hints();
+}
+function pick(k) {
+  if (phase === 'shipping') return;
+  if (phase === 'done') { reset().then(() => {}); setFlaw(k); return; }
+  setFlaw(flaw === k ? null : k);
+}
+function text() {
+  const hood = document.body.classList.contains('hood');
+  $('#sub').textContent = hood
+    ? 'Each site\'s CI is generated by bdlBase. Pick a flaw, ship it, watch the gate that refuses it.'
+    : 'A demo restaurant built on bdlBase, our web framework. Pick a mistake, then press Ship.';
+}
+function term() {
+  $('#term').innerHTML = phase === 'done' ? (flaw ? FLAWS[flaw].term : CLEAN_TERM) : IDLE_TERM;
+}
+function dockXf() {
+  const prev = site.style.transform;
+  site.style.transform = 'none';
+  const a = site.getBoundingClientRect(), d = dock.getBoundingClientRect();
+  site.style.transform = prev;
+  const s = Math.min(d.width / a.width, d.height / a.height);
+  const dx = d.left + (d.width - a.width * s) / 2 - a.left;
+  const dy = d.top + (d.height - a.height * s) / 2 - a.top;
+  return `translate(${dx}px,${dy}px) scale(${s})`;
+}
+function scrollToDoor(instant) {
+  const t = $('.sign').getBoundingClientRect().top + scrollY - 12;
+  scrollTo({ top: t, behavior: instant ? 'auto' : 'smooth' });
+}
+function scrollToEnd(instant) {
+  const bar = $('.actions').getBoundingClientRect().height;
+  const b = $('.rend').getBoundingClientRect().bottom + scrollY;
+  scrollTo({ top: Math.max(0, b - (innerHeight - bar) + 20), behavior: instant ? 'auto' : 'smooth' });
+}
+// phone: the site leaves its place under the chips (the gap closes) and lands inside the doorway
+function mobileFit() {
+  const wn = board.clientWidth;
+  site.style.width = wn + 'px';
+  site.style.transform = '';
+  // use the card's real height: it can run a little past its aspect ratio
+  const s = Math.min(dock.clientWidth / wn, dock.clientHeight / site.offsetHeight);
+  const tx = (dock.clientWidth - wn * s) / 2, ty = (dock.clientHeight - site.offsetHeight * s) / 2;
+  const t = `translate(${tx}px,${ty}px) scale(${s})`;
+  site.style.transform = t;
+  return { t, tx, ty, s };
+}
+async function shipMobile(instant) {
+  const F = site.getBoundingClientRect();
+  const hole = document.createElement('div');
+  hole.className = 'hole';
+  hole.style.height = F.height + 'px';
+  const slot = $('.slot');
+  slot.insertBefore(hole, site);
+  dock.appendChild(site);
+  const fit = mobileFit();
+  const D = dock.getBoundingClientRect();
+  const dx = F.left - D.left, dy = F.top - D.top;
+  const closeBy = F.height + 18;
+  const target = $('.sign').getBoundingClientRect().top + scrollY - closeBy - 12;
+  hole.getBoundingClientRect();
+  hole.style.height = '0px'; hole.style.marginTop = '0px';
+  if (instant) {
+    hole.remove();
+    scrollToDoor(true);
+    return;
+  }
+  scrollTo({ top: target, behavior: 'smooth' });
+  const a = site.animate([{ transform: `translate(${dx}px,${dy}px) scale(1)` }, { transform: fit.t }], { duration: 1000, easing: 'cubic-bezier(0.22,1,0.36,1)' });
+  await a.finished;
+  hole.remove();
+  site.style.transform = fit.t;
+  scrollToDoor(false);
+}
+// after a layout change while shipped (window, mode), put the site back on the doorway
+function refit() {
+  if (phase !== 'done') return;
+  if (site.parentNode === dock) mobileFit();
+  else { site.style.transform = ''; finalXf = dockXf(); site.style.transform = finalXf; }
+}
+function showResult() {
+  const ok = !flaw;
+  $('#rv').textContent = ok ? 'Every lock opened. Shipped.' : FLAWS[flaw].v;
+  $('#re').textContent = 'Not every site is this careful. Every site we build gets these checks.';
+  result.classList.toggle('ok', ok);
+  result.classList.add('on');
+}
+async function ship(instant) {
+  if (phase !== 'idle') return;
+  phase = 'shipping'; go.disabled = true;
+  door.classList.add('docked');
+  if (mobile()) await shipMobile(instant);
+  else {
+    finalXf = dockXf();
+    if (instant) site.style.transform = finalXf;
+    else {
+      const a = site.animate([{ transform: 'none' }, { transform: finalXf }], { duration: 1000, easing: 'cubic-bezier(0.22,1,0.36,1)' });
+      await a.finished;
+      site.style.transform = finalXf;
+    }
+  }
+  // every lock resolves in the same frame: the checks run side by side, not in a line
+  $$('.lock').forEach(l => {
+    const skipped = flaw && SKIP[flaw] === l.dataset.id;
+    l.dataset.s = l.dataset.id === flaw ? 'bad' : (skipped ? 'skip' : 'ok');
+  });
+  if (flaw) {
+    const el = $(HIT[flaw]);
+    if (el) el.setAttribute('data-hit', '');
+    site.classList.add('caught');
+    $$('.card').forEach(c => c.classList.toggle('caught', c.dataset.k === flaw));
+    if (!instant) await wait(500);
+  } else {
+    if (!instant) await wait(650);
+    door.classList.add('open'); doorcol.classList.add('open');
+    if (!instant) await wait(800);
+  }
+  phase = 'done'; go.disabled = false;
+  showResult(); term(); hints();
+  $('#board').classList.add('done');
+  // phone: the clean end line and demo links sit under the door, so bring them up
+  if (!flaw && mobile()) scrollToEnd(instant);
+}
+async function reset(instant) {
+  if (phase !== 'done') return;
+  phase = 'shipping'; go.disabled = true;
+  result.classList.remove('on');
+  $$('.lock').forEach(l => l.dataset.s = 'idle');
+  $$('[data-hit]').forEach(e => e.removeAttribute('data-hit'));
+  site.classList.remove('caught');
+  $$('.card').forEach(c => c.classList.remove('caught'));
+  door.classList.remove('open', 'docked'); doorcol.classList.remove('open');
+  board.classList.remove('done');
+  if (site.parentNode === dock) {
+    // phone: the site goes back to its place under the chips, and the page follows
+    site.style.transform = ''; site.style.width = '';
+    $('.slot').insertBefore(site, $('.slot').firstChild);
+    scrollTo({ top: 0, behavior: instant ? 'auto' : 'smooth' });
+    if (!instant) await site.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, easing: 'ease-out' }).finished;
+  } else {
+    if (!instant) {
+      const a = site.animate([{ transform: finalXf }, { transform: 'none' }], { duration: 1000, easing: 'cubic-bezier(0.22,1,0.36,1)' });
+      await a.finished;
+    }
+    site.style.transform = '';
+  }
+  setFlaw(null);
+  phase = 'idle'; go.disabled = false;
+  term(); hints();
+}
+go.onclick = () => (phase === 'done' ? reset() : ship());
+
+function setMode(v) {
+  document.body.classList.toggle('hood', v === 'hood');
+  $$('#mode button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  text();
+  refit();
+}
+function setScheme(v) {
+  document.documentElement.setAttribute('data-scheme', v);
+  $$('#scheme button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+$$('#mode button').forEach(b => b.onclick = () => setMode(b.dataset.v));
+$$('#scheme button').forEach(b => b.onclick = () => setScheme(b.dataset.v));
+
+// the docked site follows the doorway if the window changes
+addEventListener('resize', refit);
+
+// init
+document.documentElement.classList.add('noanim');
+setScheme(document.documentElement.getAttribute('data-scheme'));
+setMode(q.get('hood') === '1' ? 'hood' : 'plain');
+const f0 = q.get('flaw');
+setFlaw(FLAWS[f0] ? f0 : null);
+term();
+const start = async () => {
+  if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+  if (q.get('ship') === '1') await ship(true);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.documentElement.classList.remove('noanim');
+    document.documentElement.dataset.ready = '1';
+  }));
+};
+start();
+</script>
+</body>
+</html>
