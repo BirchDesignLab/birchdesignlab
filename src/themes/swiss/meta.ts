@@ -41,6 +41,8 @@ export const meta: ThemeMeta = {
     { fg: '--grey-on-white', bg: ['--white-field'], min: 4.5, note: 'secondary type on the white field' },
     { fg: '--white-field', bg: ['--black'], min: 4.5, note: 'the black button on the white field, its label' },
     { fg: '--red-field', bg: ['--black'], min: 3, note: 'the Sent full stop (large type) on the black page' },
+    { fg: '--red-field', bg: ['--white-field'], min: 4.5, note: 'type on the red field while it is pressed (white, red type); its link press block and button too' },
+    { fg: '--paper-fixed', bg: ['--black'], min: 3, note: 'focus ring on the white sheet while it is pressed (black, paper ring)' },
     { fg: '--mark', bg: ['--field'], min: 3, note: 'focus ring on paper' },
     { fg: '--on-red', bg: ['--black'], min: 3, note: 'focus ring on the black sheet' },
     { fg: '--on-red', bg: ['--red-field'], min: 3, note: 'focus ring on the red field' },

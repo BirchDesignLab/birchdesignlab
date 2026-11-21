@@ -46,6 +46,16 @@ const { copy, theme } = Astro.props;
   </div>
 </section>
 
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initNumeralHold } from '../toys';
+
+  // Hold a numeral and its weight travels 100 to 900 (toys.ts, wave 3 task 21, P2).
+  // The landmark is Services' own process list: the router runs every loaded
+  // page's mount on each body, and only this page's body has it.
+  onMount(() => initNumeralHold(document.querySelector('section.process')));
+</script>
+
 <style>
   .hero {
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
@@ -145,6 +155,16 @@ const { copy, theme } = Astro.props;
      (measured from pixels: 1 is 0.100em, 2 0.053, 3 0.045, 4 0.031 at width
      100), so each steps left by its own, and the ink starts on the column
      line the way the title's does. */
+  /* Hold a numeral (toys.ts): once the script has it, the digit is a thing to
+     press, on a mouse a different pointer, and a long press on a phone is not
+     a text selection or a menu. The weight is the script's, inline. */
+  .num[data-live] {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
   .step:nth-child(1) .num { margin-inline-start: -0.1em; --sw-flat: 0.0108em; }
   .step:nth-child(2) .num { margin-inline-start: -0.053em; }
   .step:nth-child(3) .num { margin-inline-start: -0.045em; }

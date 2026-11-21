@@ -51,9 +51,22 @@ const [founderLead, ...founderRest] = copy.founder.body;
     <a class="sw-btn cta" href={hrefFor('contact', theme)}>{copy.cta}</a>
   </div>
 </section>
+{/* The photograph's pressed state: the field turns white, and the trunk's
+    pixels (paper over the field, alpha the tone) turn the field's red, so the
+    duotone is the same picture in the inverse. Never seen but while pressed. */}
+<svg class="flip-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="sw-flip-red" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0 0 0 0 0.8549  0 0 0 0 0  0 0 0 0 0.0863  0 0 0 1 0" />
+  </filter>
+</svg>
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
+  import { initAboutSweep } from '../toys';
+
+  /* The spine widens with the founder section's scroll and the title stack
+     narrows as it scrolls away (toys.ts, Stage 6 wave 3 task 21, P2). */
+  onMount(() => initAboutSweep());
 
   /* The rotated word runs the height of the founder section, and that height
      is set by the text, which reflows. Measure it and write it to --sw-sec-h;
@@ -96,6 +109,17 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .title .ln:nth-child(1) { margin-inline-start: -0.0068em; }
   .title .ln:nth-child(2) { margin-inline-start: -0.0211em; }
   .title .ln:nth-child(3) { margin-inline-start: 0.0022em; }
+  /* The stack's width axis (the sweep under 1024, toys.ts): each line is at the
+     title's own cut, --sw-s, until the script sets --sw-d, and steps right by
+     the bearing it gives up as it narrows (0.000675em a width unit, the
+     dial's figure) so the ink stays on the column line. A translate, so
+     nothing reflows. */
+  .title .ln {
+    --sw-d: var(--sw-s);
+    font-stretch: calc(var(--sw-d) * 1%);
+    translate: calc(-1em * 0.000675 * (var(--sw-d) - var(--sw-s))) 0;
+  }
+  .flip-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
   /* Phones: the title is cut condensed to fill the measure (cqw is the hero
      row's own width, the frame), and the bearings are the condensed cut's. */
   @media (max-width: 639.98px) {
@@ -246,6 +270,9 @@ const [founderLead, ...founderRest] = copy.founder.body;
     pointer-events: none;
   }
   .manifesto :global(.field-img img) { width: 100%; height: auto; max-width: none; }
+  /* Pressed (theme.css, P6): the field is white, the trunk red (the filter in
+     the markup below sets every pixel to the field's red and keeps its alpha). */
+  .manifesto[data-sw-flip] :global(.field-img img) { filter: url(#sw-flip-red); }
   .manifesto-text { max-width: 20em; }
   @media (min-width: 640px) {
     .manifesto { --fld-w: min(100vw, 820px); }

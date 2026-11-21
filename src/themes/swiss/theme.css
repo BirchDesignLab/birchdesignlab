@@ -418,6 +418,82 @@
   [data-theme='swiss'] .sw-btn:hover { background: var(--btn-bg-alt); color: var(--btn-fg-alt); text-decoration: none; }
 }
 
+/* ---- Pressed fields (Stage 6 wave 3 task 21, P6) -------------------- */
+
+/* A field turns to its inverse for as long as it is pressed (toys.ts sets
+   data-sw-flip on the press and takes it off on release; nothing animates,
+   it is one step each way): the red field is white with red type, the black
+   sheet white with black type, and the white sheet (the dark lab band) black
+   with paper type. Every state token is restated for the inverse, so a
+   link's press block, a button and a focus ring inside it still read: the
+   pairs are the ones meta.ts already holds, plus red type on white. */
+[data-theme='swiss'] .sw-red[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--red-field);
+  --mark-muted: var(--red-field);
+  --ring: var(--red-field);
+  --press-bg: var(--red-field);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--red-field);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--red-field);
+}
+[data-theme='swiss'] .sw-red.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+[data-theme='swiss'] .sw-black[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--black);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+}
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+/* The black sheet of the light scheme (Home's lab band): white with black type,
+   as the dark scheme's band is at rest. --ground is the band's own label
+   ground (Home.astro). */
+[data-theme='swiss']:not([data-scheme='dark']) .sw-sheet[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--black);
+  --ground: var(--white-field);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--black);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--black);
+}
+[data-theme='swiss']:not([data-scheme='dark']) .sw-sheet.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+/* The white sheet of the dark scheme: black with paper type. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] {
+  background: var(--black);
+  color: var(--paper-fixed);
+  --ground: var(--black);
+  --field: var(--black);
+  --mark: var(--paper-fixed);
+  --mark-muted: var(--grey-on-black);
+  --ring: var(--paper-fixed);
+  --press-bg: var(--paper-fixed);
+  --press-fg: var(--black);
+  --btn-bg: var(--paper-fixed);
+  --btn-fg: var(--black);
+  --btn-bg-alt: var(--black);
+  --btn-fg-alt: var(--paper-fixed);
+}
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white.sw-bleed[data-sw-flip] { --bleed-fill: var(--black); }
+/* Its buttons' keylines: the white sheet's were black, the black one's are paper. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:active,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--paper-fixed); }
+
 /* ---- Arrival ------------------------------------------------------- */
 
 /* A paste-up in column panels, on one 640ms clock, so the two sheets'
