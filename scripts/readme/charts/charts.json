@@ -2,6 +2,50 @@
   "charts": [
     {
       "n": 1,
+      "name": "lab-specimens",
+      "built": true,
+      "kind": "mermaid",
+      "title": "The Lab: specimens",
+      "caption": "The Lab: specimens",
+      "alt": "How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card.",
+      "focus": [
+        "DET"
+      ],
+      "nodeStyle": "specimen",
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 30,
+        "rankSpacing": 56,
+        "padding": 14,
+        "wrap": 230,
+        "phone": {
+          "wrap": 280,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 13.5,
+          "padding": 12
+        }
+      },
+      "phone": true
+    },
+    {
+      "n": 2,
+      "name": "portal-schools",
+      "built": true,
+      "kind": "showpiece",
+      "title": "The Portal: design schools",
+      "caption": "The Portal: seven design schools",
+      "alt": "The seven design schools of the Portal side by side, each shown in its own real colors and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards.",
+      "phone": true,
+      "data": "scripts/readme/charts/data/portal.json"
+    },
+    {
+      "n": 3,
       "name": "served",
       "built": true,
       "kind": "mermaid",
@@ -35,7 +79,7 @@
       "phone": true
     },
     {
-      "n": 2,
+      "n": 4,
       "name": "repo-map",
       "built": true,
       "kind": "mermaid",
@@ -65,50 +109,6 @@
         }
       },
       "phone": true
-    },
-    {
-      "n": 3,
-      "name": "lab-specimens",
-      "built": true,
-      "kind": "mermaid",
-      "title": "The Lab: specimens",
-      "caption": "The Lab: specimens",
-      "alt": "How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card.",
-      "focus": [
-        "DET"
-      ],
-      "nodeStyle": "specimen",
-      "render": {
-        "direction": "TB",
-        "fontSize": 16,
-        "headSize": 18,
-        "edgeSize": 15,
-        "clusterSize": 14,
-        "nodeSpacing": 30,
-        "rankSpacing": 56,
-        "padding": 14,
-        "wrap": 230,
-        "phone": {
-          "wrap": 280,
-          "fontSize": 15.5,
-          "headSize": 17.5,
-          "edgeSize": 15,
-          "clusterSize": 13.5,
-          "padding": 12
-        }
-      },
-      "phone": true
-    },
-    {
-      "n": 4,
-      "name": "portal-schools",
-      "built": true,
-      "kind": "showpiece",
-      "title": "The Portal: design schools",
-      "caption": "The Portal: design schools",
-      "alt": "The seven design schools of the Portal side by side, each shown in its own real colours and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards.",
-      "phone": true,
-      "data": "scripts/readme/charts/data/portal.json"
     },
     {
       "n": 5,
@@ -149,8 +149,8 @@
       "name": "harness",
       "built": true,
       "kind": "mermaid",
-      "title": "The Claude Code harness",
-      "caption": "The Claude Code harness",
+      "title": "One task through bdl-task",
+      "caption": "One task through bdl-task",
       "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku agent confirms from git which commit was built, and an Opus critic, a Sonnet verifier and a Sonnet gate review it in parallel, then each finding goes to a fixer, to us for a style or scope decision, to a log of minor issues, to a set-aside pile for us to rule on, or the task completes.",
       "focus": [],
       "render": {

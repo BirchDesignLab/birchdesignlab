@@ -19,14 +19,14 @@
   {
    "date": "2026-11-21",
    "role": "today",
-   "label": "Today"
+   "label": "Latest"
   }
  ],
  "events": [
   {
    "date": "2026-07-15",
    "items": [
-    "Founding record and website spec",
+    "Birch Design Lab named, site planned",
     "Initial commit"
    ]
   },
@@ -54,7 +54,7 @@
   {
    "date": "2026-08-08",
    "items": [
-    "Brand assets, lockups, sponsor card"
+    "First brand marks"
    ]
   },
   {
@@ -72,7 +72,7 @@
   {
    "date": "2026-08-23",
    "items": [
-    "Contact bark and trust pass"
+    "Contact page redesign"
    ]
   },
   {
@@ -135,7 +135,7 @@
    "items": [
     "CI runs the verify gate on every PR",
     "Contact safety net (PR 111)",
-    "Genre studies recatalogued as experiments (PR 112)",
+    "Genre studies recataloged as experiments (PR 112)",
     "Stage 5 merged (PR 117)"
    ]
   },

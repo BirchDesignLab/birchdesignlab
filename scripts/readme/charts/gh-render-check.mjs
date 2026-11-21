@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const [branch = 'main', ...files] = process.argv.slice(2);
-const list = files.length ? files : ['4-portal-schools.dark.svg', '1-served.light.svg', '7-timeline.dark.svg'];
+const list = files.length ? files : ['2-portal-schools.dark.svg', '3-served.light.svg', '7-timeline.dark.svg'];
 const out = resolve('scripts/readme/.out/charts/gh');
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();

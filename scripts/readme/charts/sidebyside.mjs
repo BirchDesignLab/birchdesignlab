@@ -17,7 +17,7 @@ const out = resolve(REPO, 'scripts/readme/.out');
 const ROW_Y = [102, 370, 656];
 const ids = ['quiet', 'swiss', 'bauhaus', 'glassmorphism', 'vaporwave', 'grandmillennial', 'cottagecore'];
 // panel positions in the 830 desktop still (20px page padding): 3 columns of 243 + 14, rows from the layout
-const still = readFileSync(resolve(out, `charts/stills/4-portal-schools.${scheme}.830.png`)).toString('base64');
+const still = readFileSync(resolve(out, `charts/stills/2-portal-schools.${scheme}.830.png`)).toString('base64');
 const home = (id) => readFileSync(resolve(out, `critic2/home-${id}-${scheme}.png`)).toString('base64');
 const browser = await chromium.launch();
 try {

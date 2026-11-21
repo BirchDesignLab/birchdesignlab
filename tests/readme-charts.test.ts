@@ -146,7 +146,7 @@ describe('README charts', () => {
   describe('showpiece agreement checks catch a wording edit', () => {
     it('timeline: a changed event fails', () => {
       const json = JSON.parse(readFileSync(resolve(REPO, 'scripts/readme/charts/data/timeline.json'), 'utf8'));
-      const mermaid = fences[6];
+      const mermaid = fences[charts.find((c) => c.name === 'timeline')!.n - 1];
       expect(timelineAgreement(json, mermaid)).toEqual([]);
       expect(timelineAgreement(json, mermaid.replace('Initial commit', 'First commit')).length).toBeGreaterThan(0);
       const edited = structuredClone(json);
@@ -155,7 +155,7 @@ describe('README charts', () => {
     });
     it('portal: a changed node fails', () => {
       const json = JSON.parse(readFileSync(resolve(REPO, 'scripts/readme/charts/data/portal.json'), 'utf8'));
-      const mermaid = fences[3];
+      const mermaid = fences[charts.find((c) => c.name === 'portal-schools')!.n - 1];
       expect(portalAgreement(json, mermaid)).toEqual([]);
       expect(portalAgreement(json, mermaid.replace('every word, as data', 'every word as data')).length).toBeGreaterThan(0);
       const edited = structuredClone(json);

@@ -478,7 +478,7 @@ function harnessCompose(ctx) {
     lx += w + 10;
   }
   // the fixer follows the implementer's seat; the escalated fixer steps one up (.claude/workflows/README.md)
-  const note = ctx.variant === 'phone' ? ['The fixer is the implementer’s seat;', 'the escalated fixer steps one tier up.'] : ['The fixer is the implementer’s seat; the escalated fixer steps one tier up.'];
+  const note = ctx.variant === 'phone' ? ['A fixer uses the implementer’s model; if a problem', 'survives a round, the next fixer is one step up.'] : ['A fixer uses the implementer’s model; if a problem survives a round, the next fixer is one step up.'];
   const noteSize = Math.max(ctx.variant === 'phone' ? 15 : 14, Math.ceil((12.6 / ctx.P.scale) * 10) / 10);
   note.forEach((l, i) => {
     ctx.glyphs.italic += l;
