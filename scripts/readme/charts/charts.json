@@ -151,7 +151,7 @@
       "kind": "mermaid",
       "title": "The Claude Code harness",
       "caption": "The Claude Code harness",
-      "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion.",
+      "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku agent confirms from git which commit was built, and an Opus critic, a Sonnet verifier and a Sonnet gate review it in parallel, then each finding goes to a fixer, to us for a style or scope decision, to a log of minor issues, to a set-aside pile for us to rule on, or the task completes.",
       "focus": [],
       "render": {
         "direction": "TB",
