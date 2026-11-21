@@ -10,6 +10,7 @@ const beat = read('src/themes/bauhaus/parts/beat.ts');
 const toys = read('src/themes/bauhaus/parts/toys.ts');
 const loose = read('src/themes/bauhaus/parts/loose.ts');
 const css = read('src/themes/bauhaus/theme.css');
+const footer = read('src/themes/bauhaus/Footer.astro');
 
 describe('bauhaus touch beat: the common conditions', () => {
   it('60% visible, 400 ms still, no form focus, tab showing, held in memory only', () => {
@@ -64,8 +65,11 @@ describe('bauhaus signifiers for the inert toys (mouse)', () => {
   it('the corner square has its pointer cursor only over the square, and a gated lift', () => {
     expect(css).toMatch(/\.site-footer\[data-corner-hot\] \{ cursor: pointer; \}/);
     expect(toys).toMatch(/footer\.toggleAttribute\('data-corner-hot', on\)/);
-    const at = css.indexOf('.corner[data-hot] [data-spin]');
+    const at = css.indexOf('.corner[data-hot] [data-lift]');
     expect(at).toBeGreaterThan(0);
+    // The lift and ink block ride a group that never turns; on the turning rect they would turn with it.
+    expect(css).not.toMatch(/\[data-hot\] \[data-spin\]/);
+    expect(footer).toMatch(/<g data-lift><rect[^>]*data-spin/);
     expect(css.lastIndexOf('@media (hover: hover) and (pointer: fine)', at)).toBeGreaterThan(css.lastIndexOf('\n}\n', at));
     // Only a mouse on a fine pointer sets it, so a finger never leaves the cursor or the lift behind.
     expect(toys).toMatch(/e\.pointerType === 'mouse' && mouseHere\(\) && hit\(e\)/);

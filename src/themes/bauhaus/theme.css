@@ -509,13 +509,16 @@
 [data-theme='bauhaus'] .num { cursor: pointer; }
 [data-theme='bauhaus'] .num .nm { transition: translate 120ms var(--ease-snap); }
 [data-theme='bauhaus'] .site-footer[data-corner-hot] { cursor: pointer; }
-[data-theme='bauhaus'] .site-footer .corner [data-spin] { transition: translate 120ms var(--ease-snap); }
+/* The lift and its ink block sit on the wrapping group, which never turns: on the
+   rect they would turn with it (each tap adds 90deg), and the block would land on
+   the wrong side of a square that has been tapped. */
+[data-theme='bauhaus'] .site-footer .corner [data-lift] { transition: translate 120ms var(--ease-snap); }
 @media (hover: hover) and (pointer: fine) {
   [data-theme='bauhaus'] .num:hover .nm {
     translate: -4px -4px;
     filter: drop-shadow(4px 4px 0 currentColor);
   }
-  [data-theme='bauhaus'] .corner[data-hot] [data-spin] {
+  [data-theme='bauhaus'] .corner[data-hot] [data-lift] {
     translate: -4px -4px;
     filter: drop-shadow(4px 4px 0 var(--on-poster));
   }
