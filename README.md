@@ -1,6 +1,6 @@
 # Birch Design Lab
 
-The source of [birchdesignlab.com](https://birchdesignlab.com/), the business and portfolio site of Birch Design Lab. We are a custom software and web design studio, founded in July 2026 on the Mississippi Gulf Coast. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The centre of the site is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-012) that make up our portfolio. One of them, the "Portal", rebuilds the whole site in seven design schools.
+The source of [birchdesignlab.com](https://birchdesignlab.com/), the business and portfolio site of Birch Design Lab. We are a custom software and web design studio, founded in July 2026 on the Mississippi Gulf Coast. The site is an Astro static build served from Cloudflare Workers, with a small Worker for the contact form. The centre of the site is the **Lab**: a growing set of numbered experiments and studies (BDL-001 through BDL-013) that make up our portfolio. One of them, the "Portal", rebuilds the whole site in seven design schools.
 
 ![The Birch Design Lab home page changing from one design school to the next through the Portal's view transitions, looping](assets/readme/portal-loop.webp)
 
@@ -220,6 +220,7 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-010 | The Portal | experiment | live | The whole site rebuilt in seven design schools with a page-morphing switcher |
 | BDL-011 | Field Guide to the Schools | study | forthcoming | What each school believes and forbids, and what it took to build it |
 | BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on, and where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
+| BDL-013 | The Drawing Set | experiment | live | bdlBase, the web framework we built, drawn as an engineering sheet: one file describes a business, and an arrow runs from each line to the part of the site it builds |
 
 <picture>
   <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.phone.dark.svg">
@@ -243,7 +244,7 @@ flowchart LR
     SREG["src/studies/registry.ts<br/>study extras"]:::you
     IDX["/lab/ index<br/>one merged wall, newest first"]:::cloud
     DET["/lab/slug/ detail page<br/>specimen plate, wall label, the piece"]:::cloud
-    OG["scripts/og/generate.ts<br/>prebuild: page cards, two shared Lab cards, BDL-012's own"]:::you
+    OG["scripts/og/generate.ts<br/>prebuild: page cards, two shared Lab cards, BDL-012's and BDL-013's own"]:::you
 
     MD --> SCHEMA --> IDX
     SCHEMA --> DET
@@ -254,7 +255,7 @@ flowchart LR
 
 </details>
 
-Share images are not per entry. The generator renders cards for Home, Services, About, Contact and the Lab index, plus one shared card for experiments and one for studies. Only BDL-012 carries its own committed capture (`src/lib/og/manifest.ts`).
+Share images are not per entry. The generator renders cards for Home, Services, About, Contact and the Lab index, plus one shared card for experiments and one for studies. Only BDL-012 and BDL-013 carry their own committed captures (`src/lib/og/manifest.ts`).
 
 Specimen plates, wall labels and accession numbers borrow from museums, so the Lab reads as a collection and not a list of case studies. The home page's "From the lab" strip shows the three highest-numbered live entries (`featuredSpecimens()` in `src/lib/copy.ts`).
 
@@ -466,6 +467,7 @@ timeline
                : Contact safety net (PR 111)
                : Genre studies recatalogued as experiments (PR 112)
                : Stage 5 merged (PR 117)
+    2026-11-21 : BDL-013 The Drawing Set live (PR 119)
 ```
 
 </details>

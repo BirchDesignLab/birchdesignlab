@@ -17,7 +17,7 @@
    "label": "Portal day"
   },
   {
-   "date": "2026-11-17",
+   "date": "2026-11-21",
    "role": "today",
    "label": "Today"
   }
@@ -137,6 +137,12 @@
     "Contact safety net (PR 111)",
     "Genre studies recatalogued as experiments (PR 112)",
     "Stage 5 merged (PR 117)"
+   ]
+  },
+  {
+   "date": "2026-11-21",
+   "items": [
+    "BDL-013 The Drawing Set live (PR 119)"
    ]
   }
  ]
