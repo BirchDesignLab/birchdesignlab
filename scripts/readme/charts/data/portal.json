@@ -1,0 +1,569 @@
+{
+ "copy": "A design lab, not an agency.",
+ "wordmark": [
+  "Birch",
+  "Design Lab"
+ ],
+ "schools": [
+  {
+   "id": "quiet",
+   "name": "Quiet",
+   "css": "src/styles/tokens.css",
+   "baseScheme": "dark",
+   "base": [
+    ":root",
+    ":root, :root[data-scheme='dark']"
+   ],
+   "alt": [
+    ":root[data-scheme='light']"
+   ],
+   "meta": "src/themes/quiet/meta.ts",
+   "corners": "square",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "billboard": "--billboard-color"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.12,
+     "color": "billboard",
+     "size": 34
+    },
+    "wm2": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.12,
+     "color": "billboard",
+     "size": 34
+    },
+    "copy": {
+     "src": "@fontsource/marcellus/files/marcellus-latin-400-normal.woff2",
+     "pins": {},
+     "case": "none",
+     "ls": 0,
+     "color": "mark",
+     "size": 14
+    }
+   }
+  },
+  {
+   "id": "swiss",
+   "name": "Swiss",
+   "css": "src/themes/swiss/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='swiss']"
+   ],
+   "alt": [
+    ":root[data-theme='swiss'][data-scheme='dark']"
+   ],
+   "meta": "src/themes/swiss/meta.ts",
+   "corners": "square",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "red": "--red-field"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": -0.045,
+     "color": "mark",
+     "size": 50,
+     "phoneSize": 55
+    },
+    "wm2": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": -0.045,
+     "color": "mark",
+     "size": 50,
+     "phoneSize": 55
+    },
+    "copy": {
+     "src": "@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2",
+     "pins": {
+      "wght": 600
+     },
+     "case": "none",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 14
+    }
+   }
+  },
+  {
+   "id": "bauhaus",
+   "name": "Bauhaus",
+   "css": "src/themes/bauhaus/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='bauhaus']"
+   ],
+   "alt": [
+    ":root[data-theme='bauhaus'][data-scheme='dark']"
+   ],
+   "meta": "src/themes/bauhaus/meta.ts",
+   "corners": "square",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "red": "--red",
+    "yellow": "--yellow",
+    "blue": "--blue"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 800
+     },
+     "case": "lower",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 42
+    },
+    "wm2": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 800
+     },
+     "case": "lower",
+     "ls": -0.02,
+     "color": "mark",
+     "size": 42
+    },
+    "copy": {
+     "src": "@fontsource-variable/league-spartan/files/league-spartan-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "lower",
+     "ls": -0.01,
+     "color": "mark",
+     "size": 13
+    }
+   }
+  },
+  {
+   "id": "glassmorphism",
+   "name": "Glassmorphism",
+   "css": "src/themes/glassmorphism/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='glassmorphism']"
+   ],
+   "alt": [
+    ":root[data-theme='glassmorphism'][data-scheme='dark']"
+   ],
+   "meta": "src/themes/glassmorphism/meta.ts",
+   "corners": "round",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "raised": "--field-raised",
+    "vibA": "--vibrant-a",
+    "vibB": "--vibrant-b",
+    "violetHi": "--blob-violet-hi",
+    "violet": "--blob-violet",
+    "orangeHi": "--blob-cyan-hi",
+    "orange": "--blob-cyan",
+    "coralHi": "--blob-peach-hi",
+    "coral": "--blob-peach"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 740,
+      "opsz": 32
+     },
+     "case": "none",
+     "ls": -0.022,
+     "color": "mark",
+     "size": 34
+    },
+    "wm2": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 740,
+      "opsz": 32
+     },
+     "case": "none",
+     "ls": -0.022,
+     "color": "vibrant",
+     "size": 34
+    },
+    "copy": {
+     "src": "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2",
+     "pins": {
+      "wght": 650,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.025,
+     "color": "mark",
+     "size": 13
+    }
+   }
+  },
+  {
+   "id": "vaporwave",
+   "name": "Vaporwave",
+   "css": "src/themes/vaporwave/theme.css",
+   "baseScheme": "dark",
+   "base": [
+    ":root[data-theme='vaporwave']"
+   ],
+   "alt": [
+    ":root[data-theme='vaporwave'][data-scheme='light']"
+   ],
+   "meta": "src/themes/vaporwave/meta.ts",
+   "corners": "square",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "accent": "--accent",
+    "skyTop": "--hz-sky-top",
+    "skyMid": "--hz-sky-mid",
+    "horizon": "--hz-horizon",
+    "plain": "--bb-plain",
+    "pink": "--neon-pink",
+    "cyan": "--neon-cyan",
+    "depth": "--bb-depth",
+    "kana": {
+     "light": "--accent",
+     "dark": "--neon-pink"
+    }
+   },
+   "rawTokens": {
+    "chrome": "--bb-chrome"
+   },
+   "spans": {
+    "kicker": {
+     "src": "@fontsource/dela-gothic-one/files/dela-gothic-one-japanese-400-normal.woff2",
+     "pins": {},
+     "case": "none",
+     "ls": 0.4,
+     "color": "kana",
+     "size": 12.5
+    },
+    "wm1": {
+     "src": "@fontsource/dela-gothic-one/files/dela-gothic-one-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.03,
+     "color": "chrome",
+     "size": 50
+    },
+    "wm2": {
+     "src": "@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff2",
+     "pins": {},
+     "case": "upper",
+     "ls": 0.62,
+     "color": "plain",
+     "size": 13
+    },
+    "copy": {
+     "src": "@fontsource-variable/exo-2/files/exo-2-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 400
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "plain",
+     "size": 13
+    }
+   },
+   "kickerText": "バーチ・デザイン・ラボ"
+  },
+  {
+   "id": "grandmillennial",
+   "name": "Grandmillennial",
+   "css": "src/themes/grandmillennial/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='grandmillennial']"
+   ],
+   "alt": [
+    ":root[data-theme='grandmillennial'][data-scheme='dark']"
+   ],
+   "meta": "src/themes/grandmillennial/meta.ts",
+   "corners": "gilt",
+   "align": "center",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "accent": "--accent",
+    "gilt": "--ornament",
+    "giltDeep": "--ornament-deep",
+    "oval": "--oval",
+    "raised": "--field-raised",
+    "stripeA": "--stripe-a",
+    "stripeB": "--stripe-b",
+    "ground": "--c-ground",
+    "rose": "--c-rose",
+    "leaf": "--c-leaf"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+     "pins": {
+      "wght": 600
+     },
+     "case": "none",
+     "ls": -0.01,
+     "color": "mark",
+     "size": 40,
+     "italic": true
+    },
+    "wm2": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 500
+     },
+     "case": "upper",
+     "ls": 0.3,
+     "color": "accent",
+     "size": 12.5
+    },
+    "copy": {
+     "src": "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+     "pins": {
+      "wght": 500
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "mark",
+     "size": 13.5,
+     "italic": true
+    }
+   }
+  },
+  {
+   "id": "cottagecore",
+   "name": "Cottagecore",
+   "css": "src/themes/cottagecore/theme.css",
+   "baseScheme": "light",
+   "base": [
+    ":root[data-theme='cottagecore']"
+   ],
+   "alt": [
+    ":root[data-theme='cottagecore'][data-scheme='dark']"
+   ],
+   "meta": "src/themes/cottagecore/meta.ts",
+   "corners": "paper",
+   "align": "left",
+   "tokens": {
+    "field": "--field",
+    "mark": "--mark",
+    "muted": "--mark-muted",
+    "link": "--link",
+    "hand": "--hand-kicker-ink",
+    "scribble": "--scribble",
+    "sage": "--cc-sage",
+    "ground": "--gingham-ground",
+    "paper": "--paper",
+    "petal": "--cc-petal",
+    "heart": "--cc-heart",
+    "stem": "--cc-stem",
+    "leaf": "--cc-leaf",
+    "tape": "--cc-sage"
+   },
+   "spans": {
+    "wm1": {
+     "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2",
+     "pins": {
+      "wght": 600,
+      "SOFT": 100,
+      "WONK": 1,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.03,
+     "color": "mark",
+     "size": 54
+    },
+    "wm2": {
+     "src": "@fontsource-variable/fraunces/files/fraunces-latin-full-italic.woff2",
+     "pins": {
+      "wght": 380,
+      "SOFT": 100,
+      "WONK": 1,
+      "opsz": "size"
+     },
+     "case": "none",
+     "ls": -0.015,
+     "color": "link",
+     "size": 32,
+     "italic": true
+    },
+    "copy": {
+     "src": "@fontsource-variable/caveat/files/caveat-latin-wght-normal.woff2",
+     "pins": {
+      "wght": 700
+     },
+     "case": "none",
+     "ls": 0,
+     "color": "hand",
+     "size": 21
+    }
+   }
+  }
+ ],
+ "groups": [
+  {
+   "title": "Shared by every school",
+   "nodes": [
+    "PATHS",
+    "REG"
+   ]
+  },
+  {
+   "title": "The Portal",
+   "nodes": [
+    "PL",
+    "RT",
+    "SW"
+   ]
+  },
+  {
+   "title": "src/themes/school/",
+   "cluster": "SCHOOL",
+   "nodes": [
+    "META",
+    "CSS",
+    "HF",
+    "PG",
+    "FX"
+   ]
+  },
+  {
+   "title": "One route, and the guards",
+   "nodes": [
+    "ROUTE",
+    "GUARD"
+   ]
+  }
+ ],
+ "copyNode": "COPY",
+ "nodes": [
+  {
+   "id": "COPY",
+   "lines": [
+    "src/content/copy/",
+    "every word, as data"
+   ]
+  },
+  {
+   "id": "PATHS",
+   "lines": [
+    "src/themes/paths.ts",
+    "hrefFor, isCurrent, SCHOOL_ID"
+   ]
+  },
+  {
+   "id": "REG",
+   "lines": [
+    "src/themes/registry.ts",
+    "globs every meta.ts",
+    "THEMES = schools with an enabled route"
+   ]
+  },
+  {
+   "id": "PL",
+   "lines": [
+    "src/themes/portal/PortalLayout.astro",
+    "owns the head and the switcher"
+   ]
+  },
+  {
+   "id": "RT",
+   "lines": [
+    "src/themes/portal/runtime.ts",
+    "view transitions, draw-ahead, arrival"
+   ]
+  },
+  {
+   "id": "SW",
+   "lines": [
+    "src/themes/portal/switcher.ts"
+   ]
+  },
+  {
+   "id": "SCHOOL",
+   "lines": [
+    "src/themes/school/"
+   ]
+  },
+  {
+   "id": "META",
+   "lines": [
+    "meta.ts"
+   ]
+  },
+  {
+   "id": "CSS",
+   "lines": [
+    "theme.css",
+    "tokens for dark and light"
+   ]
+  },
+  {
+   "id": "HF",
+   "lines": [
+    "Header.astro and Footer.astro"
+   ]
+  },
+  {
+   "id": "PG",
+   "lines": [
+    "pages/ Home About Services Contact Sent"
+   ]
+  },
+  {
+   "id": "FX",
+   "lines": [
+    "fx.ts optional background"
+   ]
+  },
+  {
+   "id": "ROUTE",
+   "lines": [
+    "src/pages/t/school/[...page].astro",
+    "imports only this school"
+   ]
+  },
+  {
+   "id": "GUARD",
+   "lines": [
+    "Guards in tests/ and scripts/themes/",
+    "word parity against quiet, contrast, one wordmark name,",
+    "switcher holds still, blank-frame budget"
+   ]
+  }
+ ]
+}
