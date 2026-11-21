@@ -53,6 +53,16 @@ The contact route is more than a form handler. It runs a safety net so a lead is
 4. A global daily cap of 40 valid submissions per UTC day, kept in a KV namespace (`CONTACT_KV`). It stops a bot that rotates IPs. The cap is soft and fails open, because a real lead matters more than an exact count.
 5. The email send. If it fails, the submission is held in KV for 30 days, the visitor sees a plain "your message is saved" page, and a daily cron (`17 14 * * *`, handled by `scheduled()`) retries every held submission until it sends or expires.
 
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/1-served.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/1-served.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/1-served.dark.svg">
+  <img src="assets/readme/charts/1-served.light.svg" alt="Flow diagram of how birchdesignlab.com is served. Page requests go to Cloudflare Static Assets, which serves the built site or its 404 page, while form and beacon posts go to the Worker, which checks a honeypot, a rate limit, validation and a daily cap before sending email and holds failed sends in KV for a daily cron to retry." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -88,6 +98,8 @@ flowchart LR
     W -->|"one data point, no PII"| AE
 ```
 
+</details>
+
 Before you touch this layer:
 
 - `wrangler.jsonc` sets `run_worker_first` for `/api/*`, so the assets layer cannot swallow a browser form POST with a 405.
@@ -103,6 +115,16 @@ The Worker, the contact route, secrets, `_headers`, analytics consent and the ve
 ---
 
 ## Repository map
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/2-repo-map.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/2-repo-map.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/2-repo-map.dark.svg">
+  <img src="assets/readme/charts/2-repo-map.light.svg" alt="Tree of the repository. The root holds src, worker, tests, scripts, docs, share, assets, social, attic, .claude and public, and src, scripts and docs each branch into their main subfolders." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -140,6 +162,8 @@ flowchart TB
     DOCS --> TSR["superpowers/specs/theme-schools-research/<br/>dossiers, briefs, stage reports, handoffs"]
     DOCS --> ARCH["archive/<br/>dated handoffs, finished plans, superseded specs"]
 ```
+
+</details>
 
 | Path | What lives there | Start with |
 |---|---|---|
@@ -197,6 +221,16 @@ The Lab is one Astro content collection with a `type` discriminator. Experiments
 | BDL-011 | Field Guide to the Schools | study | forthcoming | What each school believes and forbids, and what it took to build it |
 | BDL-012 | The Data Map | experiment | live | One picture of everything a small events business runs on, and where its information lives, travels and shows up. Drawn for a client, then hung in the Lab |
 
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/3-lab-specimens.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/3-lab-specimens.dark.svg">
+  <img src="assets/readme/charts/3-lab-specimens.light.svg" alt="How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     classDef store fill:#f5d76e,stroke:#8a6d00,color:#222
@@ -218,6 +252,8 @@ flowchart LR
     DET -.->|"layout picks the lab-experiment or lab-study card"| OG
 ```
 
+</details>
+
 Share images are not per entry. The generator renders cards for Home, Services, About, Contact and the Lab index, plus one shared card for experiments and one for studies. Only BDL-012 carries its own committed capture (`src/lib/og/manifest.ts`).
 
 Specimen plates, wall labels and accession numbers borrow from museums, so the Lab reads as a collection and not a list of case studies. The home page's "From the lab" strip shows the three highest-numbered live entries (`featuredSpecimens()` in `src/lib/copy.ts`).
@@ -235,8 +271,18 @@ BDL-010 is the biggest piece in the repo. Each **school** is the full business s
 | bauhaus | `/t/bauhaus/` | Stage 4 revision merged (PR #95) |
 | glassmorphism | `/t/glassmorphism/` | Stage 3 revision merged (PR #93) |
 | vaporwave | `/t/vaporwave/` | Stage 3 revision merged (PR #93) |
-| grandmillennial | `/t/grandmillennial/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
-| cottagecore | `/t/cottagecore/` | Tranche 1 build on main; Stage 5 revision on its own branch, not yet merged |
+| grandmillennial | `/t/grandmillennial/` | Stage 5 revision merged (PR #117) |
+| cottagecore | `/t/cottagecore/` | Stage 5 revision merged (PR #117) |
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/4-portal-schools.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/4-portal-schools.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/4-portal-schools.dark.svg">
+  <img src="assets/readme/charts/4-portal-schools.light.svg" alt="The seven design schools of the Portal side by side, each shown in its own real colours and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -275,17 +321,29 @@ flowchart TB
     GUARD -.->|"checks"| SCHOOL
 ```
 
+</details>
+
 How a school is built and judged:
 
 - Start a draft with `node scripts/themes/new-theme.mjs <id> "<Name>"`. While the route file is named `_[...page].astro`, the switcher and the build ignore the school.
 - Decoration is `aria-hidden`. Any visible word that is not in the copy fails **word parity**, which compares every school to quiet word for word.
 - Each school has a **dossier** of primary-source research under [docs/superpowers/specs/theme-schools-research/dossiers](https://github.com/BirchDesignLab/birchdesignlab/tree/main/docs/superpowers/specs/theme-schools-research/dossiers). Revisions are judged against it.
 - The **stage gates** (`scripts/themes/harness/stage-gates.mjs`) run in steps. They time every school's arrival, film the switcher at desktop, mobile and phone sizes in both schemes and check that it holds still in every strip, run an "unname" control that must fail, and film the wordmark morph. They need a GPU Chromium (`BDL_GPU=1`).
-- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03. Stage 5 (grandmillennial and cottagecore) is built and in review on `feat/theme-schools-tier3-stage5`, not yet merged. Its reports and handoff live on that branch. After it come a Stage 6 re-review of the whole set, the transitions phase, then a second tranche of schools; the big copy pass waits until the schools and transitions ship (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
+- The research program ran in tiers: Tier 1 fixes, Tier 2 dossiers and a critique panel, then Tier 3 revisions in stages, one pair of schools per stage. Stage 4 (swiss and bauhaus) merged 2026-10-03 and Stage 5 (grandmillennial and cottagecore) merged 2026-11-17 (PR #117). The stage reports and handoffs live in the stage directories under that research folder. After them come a Stage 6 re-review of the whole set, the transitions phase, then a second tranche of schools; the big copy pass waits until the schools and transitions ship (see [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md)).
 
 ---
 
 ## Build, verify and deploy
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/5-build-deploy.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/5-build-deploy.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/5-build-deploy.dark.svg">
+  <img src="assets/readme/charts/5-build-deploy.light.svg" alt="Pipeline from a feature branch to production. npm run verify runs unit tests, type checks, the build and the built output tests, a pull request then needs a green CI check before merging, and Cloudflare Workers Builds builds and deploys birchdesignlab.com." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart LR
@@ -304,6 +362,8 @@ flowchart LR
     WB --> LIVE["birchdesignlab.com"]:::cloud
 ```
 
+</details>
+
 - `npm run verify` is the gate and must be clean before any PR. It runs `vitest run`, `astro check`, `npm run build` and then `npm run test:dist` (Vitest over the built `dist/`). It is one command on purpose, because the three-part version was easy to skip. The GitHub Action (`.github/workflows/verify.yml`) runs the same command on every pull request. The check is required, so a red run blocks the merge.
 - Workers Builds only builds and deploys. It does not run tests, so CI is where they run before a merge.
 - Merging to main **is** the production deploy. There is no staging environment. The safety net is reversibility: revert the commit, redeploy.
@@ -320,6 +380,16 @@ The repo is built with Claude Code, and we treat its agent fleet as engineering 
 **Model tiering is mandatory.** Every subagent dispatch sets a model and an effort. The table in CLAUDE.md maps work to seats: Haiku for enumeration, Sonnet for implementation and verification, Opus for critique, design and sensitive code. The rule exists because a fleet of unset, untiered agents burned a month of usage in minutes.
 
 **Saved workflows run the visual work.** `bdl-task` takes one brief-sized task on a feature branch and runs it through implement, verify-head, parallel review and up to two fix rounds. `bdl-wave` chains tasks and carries taste calls forward. Their args, roles and stop points are in [.claude/workflows/README.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/.claude/workflows/README.md). A mock harness and a mutant suite under `scripts/workflows/` test the workflows themselves, and `verify-locked.mjs` there runs the gate while holding the render lock.
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/6-harness.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/6-harness.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/6-harness.dark.svg">
+  <img src="assets/readme/charts/6-harness.light.svg" alt="Flow of one workflow task. A brief goes to an implementer, a Haiku seat verifies the head, and an Opus critic, a Sonnet verifier and a Sonnet gate review in parallel, then findings route to a fixer, a studio stop for taste calls, a deferred minors ledger, a parked state, or completion." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -347,6 +417,8 @@ flowchart TB
     SORT -->|"still open after maxRounds"| PARK["parked: controller rules"]:::store
 ```
 
+</details>
+
 **Everything is recorded.** Each stage ends with a report (for example [stage4-report.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/superpowers/specs/theme-schools-research/tier3-stage4/stage4-report.md)). It lists what changed, the calls the studio owes, and what still needs checking on a real iOS device after deploy.
 
 ---
@@ -354,6 +426,16 @@ flowchart TB
 ## Timeline
 
 Dates are local (US Central).
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/readme/charts/7-timeline.phone.dark.svg">
+  <source media="(max-width: 600px)" srcset="assets/readme/charts/7-timeline.phone.light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/charts/7-timeline.dark.svg">
+  <img src="assets/readme/charts/7-timeline.light.svg" alt="Timeline of Birch Design Lab as a birch trunk, from the founding on 2026-07-15 and the first pieces live on 2026-07-16, through the Portal merge on 2026-09-23, to the CI verify gate and the contact safety net on 2026-11-17." width="830">
+</picture>
+
+<details>
+<summary>Chart source (Mermaid)</summary>
 
 ```mermaid
 timeline
@@ -383,17 +465,19 @@ timeline
     2026-11-17 : CI runs the verify gate on every PR
                : Contact safety net (PR 111)
                : Genre studies recatalogued as experiments (PR 112)
+               : Stage 5 merged (PR 117)
 ```
+
+</details>
 
 ---
 
 ## Where it stands and how to help
 
-As of mid November 2026, the last Portal merge is Stage 4 (PR #95, 2026-10-03). Stage 5 is built on `feat/theme-schools-tier3-stage5` and has not merged. [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) and the stage reports are the queue, and the studio sets priorities. The Stage 4 taste calls were answered 2026-10-03 and 10-04. What is left from that stage is tracked in the backlog: two end-of-run layout nitpicks, the stretch interactables that were not built, and the temporary `?bh-assembly=` switch on bauhaus pages.
+As of mid November 2026, the last Portal merge is Stage 5 (PR #117, 2026-11-17), which followed Stage 4 (PR #95, 2026-10-03). [docs/lab-backlog.md](https://github.com/BirchDesignLab/birchdesignlab/blob/main/docs/lab-backlog.md) and the stage reports are the queue, and the studio sets priorities. The Stage 4 taste calls were answered 2026-10-03 and 10-04. What is left from that stage is tracked in the backlog: two end-of-run layout nitpicks, the stretch interactables that were not built, and the temporary `?bh-assembly=` switch on bauhaus pages.
 
 **Next planned work**
 
-- Stage 5: pair C, grandmillennial and cottagecore, through the same dossier-driven revision. It is built and in review.
 - Stage 6: a re-review of all seven schools as a set, plus two interactables Stage 4 left unbuilt.
 - The transitions phase: give every school its own arrival gesture, draw ahead on in-school links and on phones, fix the Back-to-a-scrolled-page wordmark morph, and film in WebKit as well as Chromium.
 - BDL-011 Field Guide to the Schools is `forthcoming`, with a spec written. BDL-003 Novgorod Letters is parked behind a visual rework.
@@ -451,6 +535,8 @@ npm run verify     # tests, astro check, build, dist tests
 Optional: `npx playwright install chromium` for the capture and film scripts under `scripts/themes/`. They expect a GPU renderer, and a software renderer fails the film gate by design.
 
 `scripts/readme/portal-loop.mjs` regenerates the hero loop at the top of this README against a local preview build. Usage is in that file's header comment.
+
+`node scripts/readme/charts/build.mjs` regenerates the chart SVGs under `assets/readme/charts/` from the Mermaid blocks in this README. It needs Playwright's Chromium and Python with `fonttools` and `brotli`. `tests/readme-charts.test.ts` fails when a Mermaid block changes without a rebuild.
 
 ---
 

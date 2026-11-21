@@ -1,0 +1,143 @@
+{
+ "title": "Birch Design Lab, July to November 2026",
+ "picked": [
+  {
+   "date": "2026-07-15",
+   "role": "founding",
+   "label": "Founding"
+  },
+  {
+   "date": "2026-07-16",
+   "role": "launch",
+   "label": "First live"
+  },
+  {
+   "date": "2026-09-23",
+   "role": "portal",
+   "label": "Portal day"
+  },
+  {
+   "date": "2026-11-17",
+   "role": "today",
+   "label": "Today"
+  }
+ ],
+ "events": [
+  {
+   "date": "2026-07-15",
+   "items": [
+    "Founding record and website spec",
+    "Initial commit"
+   ]
+  },
+  {
+   "date": "2026-07-16",
+   "items": [
+    "BDL-001 Bark Engine and BDL-002 Styleguide live",
+    "BDL-003 Novgorod Letters built, then parked as forthcoming",
+    "BDL-004 The Loom built and live"
+   ]
+  },
+  {
+   "date": "2026-07-29",
+   "items": [
+    "Moved from Cloudflare Pages to Workers",
+    "BDL-004 The Loom retired"
+   ]
+  },
+  {
+   "date": "2026-08-03",
+   "items": [
+    "SEO pass, security headers"
+   ]
+  },
+  {
+   "date": "2026-08-08",
+   "items": [
+    "Brand assets, lockups, sponsor card"
+   ]
+  },
+  {
+   "date": "2026-08-18",
+   "items": [
+    "BDL-007 Shining Tree (3D wordmark)"
+   ]
+  },
+  {
+   "date": "2026-08-19",
+   "items": [
+    "Contact form live and free"
+   ]
+  },
+  {
+   "date": "2026-08-23",
+   "items": [
+    "Contact bark and trust pass"
+   ]
+  },
+  {
+   "date": "2026-09-05",
+   "items": [
+    "BDL-008 Magnolia and Mane genre study published"
+   ]
+  },
+  {
+   "date": "2026-09-22",
+   "items": [
+    "Portal foundation, quiet becomes a school"
+   ]
+  },
+  {
+   "date": "2026-09-23",
+   "items": [
+    "Six schools built, BDL-010 The Portal merged (PR 88)",
+    "BDL-009 Bayou Kitchen live"
+   ]
+  },
+  {
+   "date": "2026-09-24",
+   "items": [
+    "Stage 2 defect sweep merged"
+   ]
+  },
+  {
+   "date": "2026-09-27",
+   "items": [
+    "Stage 3 glass and vaporwave merged"
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "items": [
+    "Saved workflows bdl-task and bdl-wave"
+   ]
+  },
+  {
+   "date": "2026-10-03",
+   "items": [
+    "Stage 4 swiss and bauhaus merged (PR 95)"
+   ]
+  },
+  {
+   "date": "2026-10-22",
+   "items": [
+    "Footer social links, Meta Pixel behind consent"
+   ]
+  },
+  {
+   "date": "2026-11-16",
+   "items": [
+    "BDL-012 The Data Map live"
+   ]
+  },
+  {
+   "date": "2026-11-17",
+   "items": [
+    "CI runs the verify gate on every PR",
+    "Contact safety net (PR 111)",
+    "Genre studies recatalogued as experiments (PR 112)",
+    "Stage 5 merged (PR 117)"
+   ]
+  }
+ ]
+}
