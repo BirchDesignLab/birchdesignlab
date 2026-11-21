@@ -110,13 +110,28 @@ the page as built (`?r2=off`), dragging today's lens.
 
 The table is the 11-20-26 re-run (GPU Chromium, ANGLE D3D11, RTX 3070, same
 script, `w1-t7-proof.mjs --trace`), which also writes `busyMsPerSec` into
-`results.json`; the first run (11-19-26) lacked that field. Most of its
-numbers sit within 10% of these; five differ by more (first run, then
-re-run): R2 lens drag 1440 renderer main 86 and 71 (17%) and GPU main 86
-and 75 (13%), R2 lens drag 390 renderer main 54 and 42 (22%), WebGL lens
-drag 390 viz 78 and 67 (14%), and as built scroll 390 viz 128 and 113
-(12%). The 1440 scroll renderer main moved only 5% and 1% (150 and 197
-then, 142 and 199 now).
+`results.json`; the first run (11-19-26) lacked that field. Of the 32 busy
+cells (eight runs, four columns), twelve differ from the first run by more
+than 10%, mostly in the lens drags. Percent is the change over the first-run
+value; first run, then re-run:
+
+- R2 lens drag 1440: renderer main 86 and 71 (17.4%), GPU main 86 and 75
+  (12.8%).
+- WebGL lens drag 1440: renderer main 168 and 150 (10.7%), GPU main 103 and
+  92 (10.7%).
+- R2 lens drag 390: renderer main 54 and 42 (22.2%), viz 86 and 77 (10.5%),
+  GPU main 30 and 26 (13.3%).
+- WebGL lens drag 390: renderer main 148 and 132 (10.8%), viz 78 and 67
+  (14.1%), GPU main 58 and 51 (12.1%).
+- As built scroll 390: viz 128 and 113 (11.7%), GPU main 179 and 161
+  (10.1%).
+
+WebGL lens drag 390 compositor (150 and 135) sits at exactly 10.0%; the
+other 19 cells are under 10%. Every re-run cell is lower than the first run
+except as built scroll 1440 renderer main (197 then, 199 now), so the shift
+is mostly a run-to-run drop, not a change in which build costs more. The
+1440 scroll renderer main moved only 5% and 1% (150 and 197 then, 142 and
+199 now).
 
 | run | size | presented/s | rAF p95 | renderer main | compositor | viz | GPU main |
 |---|---|---|---|---|---|---|---|
