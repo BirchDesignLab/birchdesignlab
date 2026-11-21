@@ -43,6 +43,9 @@ export const meta: ThemeMeta = {
     { fg: '--band-mark', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' summaries" },
     { fg: '--thread', bg: ['--field-raised'], min: 3, note: "the sampler's alphabet thread on its card (non-text, 3:1)" },
     { fg: '--band-accent', bg: ['--band-card'], min: 4.5, note: "Lab band catalogue cards' BDL numbers" },
+    { fg: '--thread-hunter', bg: ['--field-raised'], min: 3, note: "the sampler's hunter thread on its card (non-text, 3:1; Stage 6 w3 task 22)" },
+    { fg: '--thread-gold', bg: ['--field-raised'], min: 3, note: "the sampler's gold thread on its card (non-text, 3:1)" },
+    { fg: '--notecard-ink', bg: ['--notecard'], min: 4.5, note: "the open envelope's notecard monogram" },
   ],
   assets: {
     provenance: 'original-vector',

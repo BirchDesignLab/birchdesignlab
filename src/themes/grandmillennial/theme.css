@@ -76,6 +76,11 @@
   --stitch: #a8394a;
   /* The oxblood thread of the sampler's alphabet band (B1 fix call 2). */
   --thread: #a8394a;
+  /* The other two threads of the sampler's set (Stage 6 w3 task 22: a tap re-stitches a letter oxblood, hunter, gold,
+     round again). Each is a graphic on --field-raised at 3:1 or better (meta.contrast): the hunter is the school's
+     own, the gold the deepest end of its gold (a lighter one fails on cream). */
+  --thread-hunter: #1f4a33;
+  --thread-gold: #a07c2a;
   --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
   /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
   --bark-edge: #cfc6b4;
@@ -84,6 +89,13 @@
   /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12), in a warm paper
      hue (oklch 0.895 0.022 84), not the cool grey the first pass (#dfdcd6, chroma 0.009) read as (B1 fix call 7). */
   --flap: #e3dbcc;
+  /* The open envelope (Stage 6 w3 task 22): its lining, the notecard that slides out, and the card's monogram ink
+     (meta.contrast). The lining is the oxblood the wax and the bow are made of, so the opening reads as a cavity. */
+  --lining: #6e1623;
+  /* the flap's inside, seen when it is folded up: a shade over the outside, as the paper turns from the light */
+  --flap-in: #d6cbb7;
+  --notecard: #fffcf3;
+  --notecard-ink: #7d1f2b;
 
   /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
      Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
@@ -219,9 +231,15 @@
   --stitch: #c9a95c;
   /* The alphabet band's oxblood thread, lifted to a rose so it reads on the dark sampler. */
   --thread: #d4707e;
+  --thread-hunter: #5f9f78;
+  --thread-gold: #c9a95c;
   --bark-edge: #4a4130;
   --catkin: #a68f5c;
   --flap: #0f251b;
+  --lining: #3b0d16;
+  --flap-in: #0b1c14;
+  --notecard: #e6d9b8;
+  --notecard-ink: #6e1a29;
 
   --c-ground: #21392c;
   --c-rose: #a54f5c;
