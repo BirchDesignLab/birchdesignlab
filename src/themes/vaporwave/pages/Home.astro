@@ -620,7 +620,15 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      edge now sits --prop-m * --prop-w beyond the stand edge, so the figure's
      own outer edge is on the stand edge. It replaces the old step-out of up
      to 0.3 of a width on a tablet (the same offset, now at every width). */
+  /* Fix round 2 (task 19, film findings): the outward offset above puts each
+     image's TRANSPARENT outer margin past .kiosk's edge (up to 0.3 of a
+     width, 32px at 390), wider than the page gutter, so the document grew
+     16px past the screen. On a phone that widens the layout viewport (innerWidth
+     376 on a 360 device, 406 on 390), which also aborts the arrival's view
+     transition ("Viewport size changed"). The margin is empty, so clip the
+     kiosk's inline axis: the figures keep their seats, nothing visible is cut. */
   @media (max-width: 900px) {
+    .kiosk { overflow-x: clip; }
     .lab :global(.kiosk-prop) {
       --prop-w: clamp(107px, 27.5vw, 178px);
       --prop-m: 0.295;

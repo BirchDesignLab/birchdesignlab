@@ -38,6 +38,9 @@ describe('the phone kiosk props (V3)', () => {
     expect(block).toContain('right: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));');
     expect(block).not.toContain('max(0px, 50% - 320px)');
   });
+  it('clips the kiosk inline axis so the props transparent margin cannot widen the page (round 2)', () => {
+    expect(block).toMatch(/\.kiosk \{ overflow-x: clip; \}/);
+  });
   it('drops the bases to the stand foot line and keeps the decoration off the pointer', () => {
     expect(block).toContain('bottom: -0.15rem;');
     expect(block).toContain('pointer-events: none;');

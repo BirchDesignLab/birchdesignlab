@@ -21,7 +21,7 @@ for (const width of widths) {
   const { ctx, page } = await open(browser, { path: '/t/vaporwave/', width, scheme, settle: 300 });
   await page.locator('.kiosk-stand').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
-  const r = await page.evaluate((FIG) => {
+  const r = await page.evaluate(({ FIG, devW }) => {
     const R = (el) => { const b = el.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom, w: b.width, h: b.height }; };
     const textRect = (el) => { const g = document.createRange(); g.selectNodeContents(el); return R(g); };
     const fig = (img, f) => {
@@ -43,9 +43,13 @@ for (const width of widths) {
       plaqueText: textRect(document.querySelector('.kiosk-directory')),
       touchText: textRect(document.querySelector('.kiosk-touch span')),
       touch: R(document.querySelector('.kiosk-touch')),
-      hscroll: document.documentElement.scrollWidth > innerWidth,
+      // Compare with the DEVICE width, not innerWidth: an overflowing page
+      // widens the layout viewport on a phone, so scrollWidth > innerWidth
+      // reads false while the page is wider than the screen (fix round 2).
+      hscroll: document.documentElement.scrollWidth > devW || innerWidth > devW,
+      innerW: innerWidth, docSW: document.documentElement.scrollWidth,
     };
-  }, FIG);
+  }, { FIG, devW: width });
   const f1 = (n) => +n.toFixed(1);
   const dims = (f) => f && `${f1(f.r - f.l)}w x ${f1(f.b - f.t)}h`;
   const base = (f) => f && f1(f.b - r.foot.b);
@@ -71,7 +75,7 @@ for (const width of widths) {
     '| plaqueText', `${f1(r.plaqueText.l)}-${f1(r.plaqueText.r)}`, 'h', f1(r.plaque.h),
     '| gap v/plaqueText', gapTo(r.venus, r.plaqueText), 's/plaqueText', gapTo(r.sphere, r.plaqueText),
     '| gap v/touch', gapTo(r.venus, r.touchText), 's/touch', gapTo(r.sphere, r.touchText),
-    '| hscroll', r.hscroll);
+    '| hscroll', r.hscroll, 'innerW', r.innerW, 'docSW', r.docSW);
   await ctx.close();
 }
 await browser.close();
