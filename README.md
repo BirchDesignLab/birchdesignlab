@@ -2,9 +2,9 @@
 
 We are a small studio on the Mississippi Gulf Coast that builds custom software and websites. This repository is the source of [birchdesignlab.com](https://birchdesignlab.com/): our business site, and the Lab where we hang our work.
 
-![The Birch Design Lab home page changing from one design school to the next through the Portal's view transitions, looping](assets/readme/portal-loop.webp)
+![The Birch Design Lab home page changing through the Portal's seven design schools, from quiet to glassmorphism, with the switcher's own view transitions, looping](assets/readme/portal-loop.webp)
 
-*The home page moving between design schools in the Portal, one of the pieces in the Lab.*
+*The home page moving through all seven design schools in the Portal, one of the pieces in the Lab.*
 
 The site is a static Astro build served from Cloudflare, with one small Worker for the contact form and card scans.
 

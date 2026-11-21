@@ -12,6 +12,8 @@
  * The clip starts on the first school's settled frame and ends the moment the
  * last switch has landed back on it, so the WebP loops without a seam.
  *
+ * Filmed in light mode, all seven schools.
+ *
  * Serve a build first (npm run build; npm run preview -- --port 4400).
  * Usage: BDL_GPU=1 node scripts/readme/portal-loop.mjs [--base http://localhost:4400]
  *          [--hold 1.5] [--width 880] [--fps 15] [--quality 80]
@@ -37,9 +39,9 @@ const width = Number(arg('width', '880'));
 const fps = Number(arg('fps', '15'));
 const quality = Number(arg('quality', '80'));
 
-// The five schools revised through Stage 4 (grandmillennial and cottagecore
-// on main are pre-Stage-5 builds). The clip returns to the first at the end.
-const schools = ['quiet', 'swiss', 'bauhaus', 'glassmorphism', 'vaporwave'];
+// All seven schools, in the switcher's order (meta.ts `order`). The clip
+// returns to the first at the end.
+const schools = ['quiet', 'bauhaus', 'swiss', 'vaporwave', 'cottagecore', 'grandmillennial', 'glassmorphism'];
 const VIEWPORT = { width: 1280, height: 800 };
 
 const OUT = join(HERE, '.out');
@@ -54,10 +56,10 @@ const browser = await chromium.launch({
 const context = await browser.newContext({
   viewport: VIEWPORT,
   deviceScaleFactor: 1,
-  colorScheme: 'dark',
+  colorScheme: 'light',
   reducedMotion: 'no-preference',
 });
-await context.addInitScript(() => { try { localStorage.setItem('scheme', 'dark'); } catch {} });
+await context.addInitScript(() => { try { localStorage.setItem('scheme', 'light'); } catch {} });
 await suppressPrompt(context);
 // Zaraz is the site's analytics and its consent modal; a recording never reports a visit.
 await context.route('**/cdn-cgi/zaraz/**', (r) => r.abort());
