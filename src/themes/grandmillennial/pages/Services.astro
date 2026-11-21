@@ -94,9 +94,10 @@ const roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
      bottom padding, so the whole gap from the lede to the first offering (that padding, the band
      and the room's top padding) was 12% tighter, not 30%. The room's top padding here is 60% of
      the shared one, which brings the whole gap to about 70% of what it was (measured by
-     scripts/themes/stage6/w2-t15-measure.mjs services). Higher specificity than theme.css's rule. */
+     scripts/themes/stage6/w2-t15-measure.mjs services). Higher specificity than theme.css's rule.
+     Scaled from theme.css's --wall-room-pad (Stage 6 w3 task 19), not a copy of its clamp. */
   :global([data-theme='grandmillennial']) .gm-wall-room {
-    padding-top: calc(clamp(2.75rem, 6vw, 4.75rem) * 0.6);
+    padding-top: calc(var(--wall-room-pad) * 0.6);
   }
   .intro h1 {
     font-style: italic;

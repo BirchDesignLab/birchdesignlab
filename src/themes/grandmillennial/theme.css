@@ -493,10 +493,14 @@
 }
 [data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--toile { background-image: url('./assets/toile-dark.svg'); }
 
+/* --wall-room-pad is the room's block padding as one custom property (Stage 6 w3 task 19, ledger
+   w2 task 15 C5): Services scales its top from it (calc(var(--wall-room-pad) * 0.6)) instead of
+   repeating the clamp, so the two cannot drift apart. */
 [data-theme='grandmillennial'] .gm-wall-room {
+  --wall-room-pad: clamp(2.75rem, 6vw, 4.75rem);
   width: min(100% - 2 * var(--wall-side), var(--wrap));
   margin-inline: auto;
-  padding-block: clamp(2.75rem, 6vw, 4.75rem);
+  padding-block: var(--wall-room-pad);
 }
 /* Inside the room the cards take the room's width: the wall's own margin is
    the gutter. */

@@ -153,8 +153,8 @@ describe('cottagecore dark About hoop (CC5)', () => {
 describe('cottagecore Home at tablet (CC6)', () => {
   it('slides the sheet right beside the name from 641 to 820 and leaves phones stacked', () => {
     const block = home.slice(home.indexOf('@media (min-width: 641px) and (max-width: 820px)'));
-    expect(block).toMatch(/\.hero-copy \{ display: contents; \}/);
-    expect(block).toMatch(/\.specimen \{ grid-column: 2; grid-row: 1 \/ 4; justify-self: end;/);
-    expect(block).toMatch(/\.subline \{ grid-column: 1 \/ -1; grid-row: 4; \}/);
+    // Task 19 (stop 3 answer 2) turned the grid into a float: the sheet floats right, the copy wraps beside
+    // it (see cottagecore-stage6-t19.test.ts).
+    expect(block).toMatch(/\.specimen \{ float: right; width: min\(38%, 18\.5rem\);/);
   });
 });

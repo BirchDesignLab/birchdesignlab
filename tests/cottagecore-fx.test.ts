@@ -127,9 +127,10 @@ describe('cottagecore floaters', () => {
     expect(fx).not.toMatch(/seatSeed\(seeds\[i\], sy\)\) seeds\[i\]\.cover = 1/);
   });
 
-  it('seats a cramped seed smaller, never under the size floor, and starts every seed unseen', () => {
+  it('seats a cramped seed smaller, never under the size floor except on a phone (task 19), and starts every seed unseen', () => {
     expect(fx).toMatch(/sizeMin: 0\.8/);
-    expect(fx).toMatch(/const sizes = \[s\.base, SEED\.sizeMin \+ \(s\.base - SEED\.sizeMin\) \/ 2, SEED\.sizeMin\]/);
+    // The three sizes every width uses; only a phone appends the smaller ones (cottagecore-stage6-t19.test.ts).
+    expect(fx).toMatch(/const sizes: number\[\] = \[s\.base, SEED\.sizeMin \+ \(s\.base - SEED\.sizeMin\) \/ 2, SEED\.sizeMin\]/);
     const mount = fx.slice(fx.indexOf('const seedDandelions'), fx.indexOf('/* Text, measured line by line'));
     expect(mount).toMatch(/cover: 0,/);
     expect(mount).not.toMatch(/\.cover = 1;\s*return s/);

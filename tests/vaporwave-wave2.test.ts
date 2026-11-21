@@ -42,7 +42,8 @@ describe('V2 home hero palms on a tablet', () => {
 describe('V3 the phone plaza', () => {
   it('seats the kiosk pair in front of the stand corners below 900px instead of hiding it', () => {
     const block = home.slice(home.indexOf('@media (max-width: 900px)'));
-    expect(block).toContain('--prop-w: clamp(64px, 14vw, 96px);');
+    // Task 19 resized the props by their visible figure (vaporwave-stage6-t19).
+    expect(block).toContain('--prop-w: clamp(107px, 27.5vw, 178px);');
     expect(block).not.toMatch(/display: none/);
   });
   it('keeps the lobby planter at 64px on the left with the column on the right below 620px', () => {
@@ -145,7 +146,8 @@ describe('V12 services lobby props', () => {
   it('draws a fountain basin, a Venus on a drum and an escalator rail, aria-hidden, no words', () => {
     expect(lobby).toContain('class="mall-fountain"');
     expect(lobby).toContain('class="mall-rail"');
-    expect(lobby).toContain('venus-kiosk-512');
+    // Task 19: the mall's Venus is her own pink cast, not Home's kiosk still.
+    expect(lobby).toContain('venus-drum-512');
     expect(lobby).toMatch(/class:list=\{\['vw-lobby', `lobby-\$\{variant\}`, className\]\} aria-hidden="true"/);
     // The mall block has no palm, column or skylight in it.
     const mall = lobby.slice(lobby.indexOf("{variant === 'mall' && ("), lobby.indexOf('</div>\n\n<style>'));

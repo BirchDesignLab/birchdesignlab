@@ -119,10 +119,13 @@ const [first, ...rest] = chrome.name.split(' ');
     padding: clamp(3.25rem, 6vw, 4rem) var(--gutter) clamp(3rem, 6vw, 4.5rem);
     overflow: hidden;
   }
-  /* The frame is 22rem from 1101 up and clamp(15rem, 44vw, 22rem) below (Stage 6 w2 task 15,
-     ledger B1 T4 C3): it used to be 28vw here and 44vw up to 24rem below, so it was 384px at 1100,
-     308px at 1101 and 352px by 1257. Now it only ever grows with the width. */
-  .portrait { grid-column: 2; position: relative; width: 22rem; }
+  /* The frame is 24rem (384px) from 1101 up and clamp(15rem, 44vw, 24rem) below, so it reaches
+     384px at about 873 and holds there to every desktop width, never shrinking as the window
+     grows (Stage 6 w3 task 19, stop 3 answer 2). History: w2 task 15 (ledger B1 T4 C3) fixed the
+     step it had at 1101 (28vw above, 44vw up to 24rem below: 384px at 1100, 308px at 1101, 352px
+     by 1257) by making it 22rem above 1101 and clamp(15rem, 44vw, 22rem) below; the founder then
+     asked for the bigger frame, 384px from about 873 up, desktop included. */
+  .portrait { grid-column: 2; position: relative; width: 24rem; }
   /* The porcelain wall (B1 item 10): five plates of mixed size and well,
      hung as two irregular groups, three on the left and two on the right and
      lower, so the symmetry of the portrait is broken once, here. Each group
@@ -422,9 +425,9 @@ const [first, ...rest] = chrome.name.split(' ');
     color: var(--mark);
   }
 
-  /* Tablet: the frame about 44vw, the groups close to it. */
+  /* Tablet: the frame about 44vw (up to its 24rem), the groups close to it. */
   @media (max-width: 1100px) {
-    .portrait { width: clamp(15rem, 44vw, 22rem); }
+    .portrait { width: clamp(15rem, 44vw, 24rem); }
     .plates.right { margin-top: 2.5rem; }
   }
   @media (max-width: 760px) {

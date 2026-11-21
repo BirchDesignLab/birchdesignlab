@@ -147,8 +147,14 @@ if (WHAT === 'tap' || WHAT === 'all') {
     if (!box) { refusals.push({ name, skipped: 'not in view' }); continue; }
     const tx = box.x + box.width / 2, ty = box.y + Math.min(box.height / 2, 30);
     await page.waitForTimeout(900);
-    // stay on the page: a link tap would navigate, so tap beside the link's text but inside no control
-    const target = name === 'link' ? [Math.max(4, box.x - 8), ty] : [tx, ty];
+    // Stage 6 w3 task 19 (w2 task 16 C3): the link refusal taps ON the link, its own centre, not beside it
+    // (box.x - 8 landed outside the link, so the claim was never shown). A tap on a link would navigate
+    // away, so navigation is blocked in the page first: a capture-phase click handler cancels the default
+    // of any click that lands on a nav link. The pointer events still reach the floaters' own listeners,
+    // which is the thing under test (fx.ts refuses a tap whose target is inside a link); litNear is
+    // recorded below as for the other refusals.
+    if (name === 'link') await page.evaluate(() => addEventListener('click', (e) => { if (e.target.closest && e.target.closest('nav a')) e.preventDefault(); }, true));
+    const target = name === 'link' ? [box.x + box.width / 2, box.y + box.height / 2] : [tx, ty];
     await page.touchscreen.tap(target[0], target[1]);
     const seq = await sample(target[0], target[1], 700);
     refusals.push({ name, at: target, litNear: seq.some((s) => s.blobs.some(([x, y]) => Math.hypot(x - target[0], y - target[1]) < 40)) });

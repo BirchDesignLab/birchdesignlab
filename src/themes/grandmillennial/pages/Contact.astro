@@ -53,7 +53,7 @@ const { copy, theme } = Astro.props;
     </div>
   </section>
 
-  <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}{part}</>)}</p>
+  <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}<span class="tp">{part}</span></>)}</p>
 </div>
 </div>
 <div class="gm-wall-band" aria-hidden="true"></div>
@@ -184,6 +184,10 @@ const { copy, theme } = Astro.props;
       radial-gradient(circle at calc(100% - 28px) 50%, var(--gold-light) 0 2px, var(--gold) 2.5px 4px, var(--gold-deep) 4.5px 5.5px, transparent 6px);
   }
   .sep { font-style: normal; color: var(--bow); padding-inline: 0.35rem; }
+  /* Stage 6 w3 task 19 (w2 task 14 C3): each trust part is one unit, so at 390 and 360 the tape
+     breaks at the fleuron and never inside a part ("A" had been left alone at the end of the first
+     line). Words unchanged; the break still falls at the fleuron's spaces. */
+  .trust .tp { white-space: nowrap; }
 
   /* ---------- The envelope ---------- */
   /* Contact's one off-axis move (B1 item 12): the envelope is laid on the desk

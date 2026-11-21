@@ -35,6 +35,22 @@ for (const scheme of ['light', 'dark']) {
     console.log(scheme, w, JSON.stringify(box));
     const clip = { x: Math.max(0, box.x - 90), y: Math.max(0, box.y - 60), width: Math.min(w - Math.max(0, box.x - 90), 240), height: 160 };
     await page.screenshot({ path: join(OUT, `bird-${scheme}-${w}.png`), clip, fullPage: true });
+    // Stage 6 w3 task 19 (w2 task 14 rc1-N1): the docstring promised the shot after a tap and the script took
+    // only the resting one. Tap the visible bird (its hit area's click, as a finger does), wait out the 1150ms
+    // flight and the 260ms settle, and shoot the away point too: the same box measure and crop, `bird-away-*`.
+    await page.evaluate(() => {
+      const wb = [...document.querySelectorAll('.wb')].find((e) => getComputedStyle(e.closest('svg')).display !== 'none');
+      wb.querySelector('.wb-hit').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await page.waitForTimeout(1700);
+    const away = await page.evaluate(() => {
+      const wb = [...document.querySelectorAll('.wb')].find((e) => getComputedStyle(e.closest('svg')).display !== 'none');
+      const b = wb.querySelector('.wb-perch').getBoundingClientRect();
+      return { x: Math.round(b.x), y: Math.round(b.y + scrollY), w: Math.round(b.width), h: Math.round(b.height) };
+    });
+    console.log(scheme, w, 'away', JSON.stringify(away));
+    const awayClip = { x: Math.max(0, away.x - 90), y: Math.max(0, away.y - 60), width: Math.min(w - Math.max(0, away.x - 90), 240), height: 160 };
+    await page.screenshot({ path: join(OUT, `bird-away-${scheme}-${w}.png`), clip: awayClip, fullPage: true });
     await ctx.close();
   }
 }

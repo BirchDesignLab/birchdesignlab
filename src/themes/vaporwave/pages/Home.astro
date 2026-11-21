@@ -549,6 +549,18 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     .hero :global(.palm-r) { right: -18%; height: 58%; }
   }
 
+  /* C5 (Stage 6 wave 3, task 19): the shader raises the phone horizon to 0.36
+     of the canvas height (PHONE_HORIZON in fx.ts, active below the 760px
+     COARSE_BREAKPOINT), so the horizon sits at 64% from the top, not the
+     desktop's 68%. The CSS sky stops follow it below 760px, so the sky that
+     shows before WebGL draws has its horizon where the shader's will: no
+     jump on arrival. */
+  @media (max-width: 759.98px) {
+    .hero {
+      background: linear-gradient(180deg, var(--hz-sky-top) 0, var(--hz-sky-mid) 50%, var(--hz-horizon) 64%, var(--hz-ground) 64.2%, var(--hz-ground));
+    }
+  }
+
   @media (max-width: 760px) {
     .opener { grid-template-columns: 1fr; }
     .subline { max-width: 52ch; }
@@ -586,13 +598,28 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      a third of its width so it overlaps the corner rather than hiding in it.
      The vertical anchor (bottom: 0.4rem and each prop's own translateY) is
      the desktop's, so the bases land on the stand's floor line as before. */
+  /* V3 sizing and seat (Stage 6 wave 3, task 19, stop 3 answer 2): the stills
+     are mostly margin (the sphere ball fills 41% of its image's width, the
+     Venus on her drum 73% of its height), so sizing the IMAGE at 64px made
+     the figures about 26px and 47px at 390, specks. Sized by the visible
+     figure instead: Venus about 60px tall and the ball about 44px across at
+     390 (an image 82px and 107px wide), scaled with the viewport and capped
+     at 100px and 73px for 820 and the tablet band. Each width floor is the
+     360 read. The bottom is dropped from 0.4rem to -0.15rem: with each
+     still's own translateY (the baked-in bottom margin) the figure's base
+     lands on the kiosk's floor line, the foot's front edge, so the props
+     stand in front of the stand, not on the plaque's lower edge. Props are
+     pointer-events: none (decoration over the stand's corners). */
   @media (max-width: 900px) {
     .lab :global(.kiosk-prop) {
-      --prop-w: clamp(64px, 14vw, 96px);
+      --prop-w: clamp(107px, 27.5vw, 178px);
       width: var(--prop-w);
+      bottom: -0.15rem;
+      pointer-events: none;
       left: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
     }
     .lab :global(.kiosk-prop-venus) {
+      --prop-w: clamp(82px, 20.95vw, 136px);
       left: auto;
       right: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
     }

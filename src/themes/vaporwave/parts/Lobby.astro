@@ -11,13 +11,18 @@
     (default, Home's closer) keeps the palm, the column and the skylight.
     'mall' (Services' closer) is its own room: a fountain basin, a Venus on
     her drum and an escalator rail, lit by pools on the floor instead of an
-    overhead skylight. Stills and drawing only, no words. */
+    overhead skylight. Stills and drawing only, no words.
+
+    Stage 6 wave 3, task 19 (stop 3 answer 2): the mall's Venus is a second
+    cast, not Home's kiosk figure again: the same scan in pink marble, turned
+    the other way, on a white drum (venus-drum-512, from
+    scripts/themes/vaporwave/render-venus.mjs --drum). */
 import Palm from './Palm.astro';
 import Still from './Still.astro';
 import columnAvif from '../stills/column-pink-512.avif?url';
 import columnWebp from '../stills/column-pink-512.webp?url';
-import venusAvif from '../stills/venus-kiosk-512.avif?url';
-import venusWebp from '../stills/venus-kiosk-512.webp?url';
+import venusAvif from '../stills/venus-drum-512.avif?url';
+import venusWebp from '../stills/venus-drum-512.webp?url';
 
 interface Props { class?: string; variant?: 'plaza' | 'mall' }
 const { class: className, variant = 'plaza' } = Astro.props;
@@ -61,6 +66,7 @@ const { class: className, variant = 'plaza' } = Astro.props;
         </div>
         <div class="fn-bowl"></div>
         <div class="fn-basin"><div class="fn-water"></div></div>
+        <span class="fn-stem"></span>
       </div>
       <Still class="lobby-venus" avif={venusAvif} webp={venusWebp} size={512} />
     </>
@@ -208,16 +214,37 @@ const { class: className, variant = 'plaza' } = Astro.props;
     border-radius: 0 0 50% 50% / 0 0 100% 100%;
     z-index: 1;
   }
-  .fn-jets { position: absolute; left: 50%; bottom: 46%; width: 0; height: 0; z-index: 0; }
+  /* C4 (Stage 6 wave 3, task 19): the stem. The bowl sat 10 to 15px above the
+     basin's water with nothing under it, so it read as floating. A marble
+     column rises from the middle of the basin (about 21% up the box) to the
+     bowl's underside, with a small collar at its foot. Shares of the box, so
+     it scales with it. */
+  .fn-stem {
+    position: absolute; left: 46.5%; width: 7%; bottom: 21%; height: 13%; z-index: 0;
+    background: linear-gradient(90deg, var(--marble), #ffffff 42%, var(--marble));
+    border-inline: 1.5px solid var(--bevel-lo);
+  }
+  .fn-stem::after {
+    content: ''; position: absolute; left: -45%; right: -45%; bottom: -2px; height: 28%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff, var(--marble));
+    border: 1.5px solid var(--bevel-lo);
+  }
+  /* C4: the jets are shares of the fountain box (its height 36% and 28%, its
+     width 3% and 2.4%), not 96px and 72px: at 820 the box is 144px tall, so
+     the old centre jet (96px) rose past the floor's horizon line; 36% of it
+     (58px) stays under. The box is the jets' containing block (inset: 0);
+     each jet leaves from the bowl's lip, 46% up. */
+  .fn-jets { position: absolute; inset: 0; z-index: 0; }
   .fn-jet {
-    position: absolute; bottom: 0; left: -2.5%; width: 5%;
+    position: absolute; bottom: 46%; left: 50%; translate: -50% 0;
     background: linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 80%, #ffffff), rgba(255, 255, 255, 0.9) 70%, transparent);
     border-radius: 999px 999px 0 0;
     transform-origin: 50% 100%;
   }
-  .fn-jet-c { height: 96px; width: 8px; left: -4px; }
-  .fn-jet-l { height: 72px; width: 6px; left: -3px; rotate: -24deg; }
-  .fn-jet-r { height: 72px; width: 6px; left: -3px; rotate: 24deg; }
+  .fn-jet-c { height: 36%; width: 3%; }
+  .fn-jet-l { height: 28%; width: 2.4%; rotate: -24deg; }
+  .fn-jet-r { height: 28%; width: 2.4%; rotate: 24deg; }
   .lobby-mall :global(.lobby-venus) {
     position: absolute; right: 9%; bottom: 3%; width: clamp(130px, 21vw, 270px); height: auto;
     transform: translateY(10.9%);
@@ -229,12 +256,12 @@ const { class: className, variant = 'plaza' } = Astro.props;
   @media (max-width: 620px) {
     .lobby-planter { width: 64px; }
     :global(.vw-lobby .lobby-column) { width: clamp(90px, 26vw, 130px); }
-    .mall-rail { display: none; }
-    .mall-fountain { left: 7%; width: clamp(120px, 40vw, 170px); }
-    .mall-pool-a { left: 0; width: 60%; }
+    /* C4: the phone mall keeps a smaller escalator rail at the left
+       (clamp(110px, 30vw, 150px)), the fountain toward the centre. */
+    .mall-rail { width: clamp(110px, 30vw, 150px); }
+    .mall-fountain { left: 31%; width: clamp(120px, 40vw, 170px); }
+    .mall-pool-a { left: 18%; width: 56%; }
     .mall-pool-b { width: 44%; }
     .lobby-mall :global(.lobby-venus) { right: 7%; width: clamp(110px, 32vw, 150px); }
-    .fn-jet-c { height: 70px; }
-    .fn-jet-l, .fn-jet-r { height: 52px; }
   }
 </style>

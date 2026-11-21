@@ -74,8 +74,9 @@ describe('grandmillennial Stage 6 wave 2 task 15', () => {
 
   it('the frame width never shrinks as the viewport grows (one width above 1100, a clamp to the same below)', () => {
     const home = read('pages/Home.astro');
-    expect(home).toMatch(/\.portrait \{ grid-column: 2; position: relative; width: 22rem; \}/);
-    expect(home).toMatch(/\.portrait \{ width: clamp\(15rem, 44vw, 22rem\); \}/);
+    // Task 19 (stop 3 answer 2) raised the one width from 22rem to 24rem (384px, reached at about 873).
+    expect(home).toMatch(/\.portrait \{ grid-column: 2; position: relative; width: 24rem; \}/);
+    expect(home).toMatch(/\.portrait \{ width: clamp\(15rem, 44vw, 24rem\); \}/);
     // the plate groups share one aspect (the mat's 4 / 5) at both sizes: no override at 1100
     expect(home).toMatch(/aspect-ratio: 4 \/ 5;\n  \}\n  \.plates\.left/);
     expect(home).not.toMatch(/\.plates \{ aspect-ratio/);
@@ -99,7 +100,9 @@ describe('grandmillennial Stage 6 wave 2 task 15', () => {
 
   it('the Contact envelope starts at the form top, and the Services room trims its top padding', () => {
     expect(read('pages/Contact.astro')).toMatch(/gap: var\(--gap\);[\s\S]*?align-items: start;/);
-    expect(read('pages/Services.astro')).toMatch(/gm-wall-room \{\s*padding-top: calc\(clamp\(2\.75rem, 6vw, 4\.75rem\) \* 0\.6\);/);
+    // Task 19: the shared padding is a custom property (theme.css), Services scales it.
+    expect(read('pages/Services.astro')).toMatch(/gm-wall-room \{\s*padding-top: calc\(var\(--wall-room-pad\) \* 0\.6\);/);
+    expect(read('theme.css')).toMatch(/--wall-room-pad: clamp\(2\.75rem, 6vw, 4\.75rem\);/);
   });
 
   it('the canopy swap picture sizes its fixed layers to its own width, not 100vw', () => {

@@ -36,13 +36,17 @@ export function mountWindowDrag(): (() => void) | void {
     zTop += 1;
     win.style.zIndex = String(zTop);
     if (!bar.classList.contains('inactive')) return;
-    bar.classList.remove('inactive');
-    // The overlap group is the nearest ancestor known to hold a cascade
-    // (Home's door grid, Services' app pair); anything else falls back to
-    // the window's own parent, which still deactivates a sibling window
-    // sharing that parent if one happens to.
-    const group = win.closest('.door-grid, .apps') ?? win.parentElement;
+    // C2 (Stage 6 wave 3, task 19): the overlap group is the nearest ancestor
+    // known to hold a cascade (Home's door grid, Services' app pair). A
+    // window outside one (Contact's mail.txt and screensaver.scr, Services'
+    // setup wizard, About's beorc.txt) keeps its static back-window caption:
+    // it still comes forward by z-index, but waking its caption would leave
+    // two active captions on the page, because the live window beside it has
+    // no group to hand its caption to. Wave 3 task 24 makes activation
+    // page-wide and retires this guard.
+    const group = win.closest('.door-grid, .apps');
     if (!group) return;
+    bar.classList.remove('inactive');
     for (const sibling of group.querySelectorAll<HTMLElement>('.vw-win')) {
       if (sibling === win) continue;
       sibling.querySelector<HTMLElement>('.vw-win-bar')?.classList.add('inactive');

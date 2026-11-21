@@ -48,10 +48,14 @@
  * screen has two or three where the page has room for them. A seed counts as
  * on show by its fan (crown and both tips), so one drifting out from behind a
  * sheet counts. It is kept off text by its drawn shape (a half disc for the
- * fan, a narrow strip for the stalk), not a box around both; a view too
- * cramped for a seed at its own size gets it at a smaller one, never below
- * the smallest size, so a header that is mostly wordmark and nav still has
- * seeds in it. Every seed starts held (not drawn, not moved) and is seated by
+ * fan, a narrow strip for the stalk), not a box around both. A view too
+ * cramped for a seed at its own size gets it at a smaller one, down to
+ * sizeMin; on a phone only, a view with no seat even at sizeMin (About and
+ * Contact, where the body is sheet edge to edge) may seat one or two smaller
+ * seeds (phoneSizes, at most phoneTinyMax at once) in the header cloth beside
+ * the wordmark and under the nav, under the paper like every seed. A view
+ * with no seat at any of those sizes shows no seed. Every seed starts held
+ * (not drawn, not moved) and is seated by
  * the keep loop on a strict seat, where it fades in, and none is seated or
  * shown until the fonts have settled and the text has been measured against
  * them, so the first frame never paints over a line that is about to reflow.
@@ -62,8 +66,9 @@
  * drift, prefers the upwind (left) gutter, spaces seats by counting a seed
  * seated in the last two seconds as there, and lets minShown fall to what
  * fits: a view with no such seat gets fewer seeds, never one wedged into the
- * strip under the header or onto the right edge. There is no looser tier,
- * and no seed is shown that has not been seated (a seed that drifts out of
+ * strip under the header or onto the right edge. There is no looser tier
+ * (the phone's smaller sizes change the seed, never the seat test), and no
+ * seed is shown that has not been seated (a seed that drifts out of
  * view re-enters from an edge and may cross a sheet, as before).
  *
  * Pointer (S3, passive, one listener per event type, no layout reads): a seed
@@ -215,6 +220,15 @@ const SEED = {
       size is seated smaller, never below sizeMin. */
   sizeMin: 0.8,
   sizeMax: 1.25,
+  /** Phones only (Stage 6 w3 task 19, stop 3 answer 2): the cloth of a phone's header is the one
+      patch left beside the wordmark and under the nav on a view whose body is all sheet (About,
+      Contact's first screens), and none fits a seed of sizeMin. Past sizeMin, a seed may take one of
+      these smaller sizes, tried last and in this order, and no more than phoneTinyMax of them show
+      at once (1 or 2 seeds is the aim, not a swarm of specks). The seat rules do not change: the whole
+      drawn seed clear of the viewport edges, every sheet and every line of text by the same margins,
+      and clear for the same seatMinLife of drift, so a seed is never wedged in a sliver (CC3). */
+  phoneSizes: [0.58, 0.42] as const,
+  phoneTinyMax: 2,
   /** Seating: candidates tried per size, and how far along its drift (s, in
       steps of seatStep) a seat must stay clear to be preferred. */
   seatTries: 160,
@@ -652,7 +666,16 @@ export function mountFireflies(): void {
     const seatSeed = (s: Seed, sy: number, t: number): boolean => {
       const vx = SEED.windX * s.drift;
       const vy = SEED.windY * s.drift;
-      const sizes = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
+      const sizes: number[] = [s.base, SEED.sizeMin + (s.base - SEED.sizeMin) / 2, SEED.sizeMin];
+      // Phones only, and last: a smaller seed than sizeMin when no seat fits the others, while fewer
+      // than phoneTinyMax of them are showing (a seed seated in the last two seconds counts).
+      if (width < SEED.phoneWidth) {
+        let tiny = 0;
+        for (const o of seeds) {
+          if (o !== s && !o.held && o.size < SEED.sizeMin && (o.cover > 0.3 || t - o.seatedAt < SEED.seatSettleMs)) tiny++;
+        }
+        if (tiny < SEED.phoneTinyMax) sizes.push(...SEED.phoneSizes);
+      }
       const turn = turnOf(s);
       const angle = angleOf(s);
       for (const size of sizes) {
@@ -865,12 +888,16 @@ export function mountFireflies(): void {
     };
 
     const keepFireflies = (t: number, sy: number, phone: boolean) => {
+      // Phones only (Stage 6 w3 task 19, w2 task 16 C2). A re-seat pulls the mote's
+      // rest in to 0.25 to 2 s, so on a desktop it made the approved Stage 5 scatter
+      // (4 to 8 s rests, a mote under a sheet simply unseen) busier on text-dense
+      // pages. The desktop keeps its motes where they drift, as it did before CC1.
+      if (!phone) return;
       for (const m of fireflies) {
         // A mote a tap has just called is where the finger put it.
         if (m.call || t - m.touched < FIREFLY.callMs + 600) continue;
         if (!fireflyPlaceOk(m, sy, phone)) seatFirefly(m, t, sy, phone);
       }
-      if (!phone) return;
       // A burst showing about every 2 s: when no mote on clear cloth is
       // bursting or about to, the soonest one is called early.
       let live = false;
