@@ -626,9 +626,14 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      16px past the screen. On a phone that widens the layout viewport (innerWidth
      376 on a 360 device, 406 on 390), which also aborts the arrival's view
      transition ("Viewport size changed"). The margin is empty, so clip the
-     kiosk's inline axis: the figures keep their seats, nothing visible is cut. */
+     inline axis of .lab, not .kiosk (controller ruling on reCritic r2-N1):
+     .lab is full width at 900 and below (--wrap is 1180), so its padding box
+     ends at the screen edge. The CRT's 16px drop, the stand's 10px drop and
+     the foot's 12px overhang sit in the --gutter (16px floor) and survive;
+     only the props' transparent margin past the screen is cut. Clipping
+     .kiosk cut all three flush. */
   @media (max-width: 900px) {
-    .kiosk { overflow-x: clip; }
+    .lab { overflow-x: clip; }
     .lab :global(.kiosk-prop) {
       --prop-w: clamp(107px, 27.5vw, 178px);
       --prop-m: 0.295;
