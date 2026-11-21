@@ -1,6 +1,6 @@
 /**
  * Grandmillennial Home: the plates swing (Stage 6 w3 task 26). Brushing a plate with the mouse, or tapping
- * it, sets it swinging from its top rim: one damped swing under 600 ms, the direction from the pointer's
+ * it (touch, pen or a mouse click), sets it swinging from its top rim: one damped swing under 600 ms, the direction from the pointer's
  * travel (a tap swings it away from the tap point), its neighbours in the same group tilting slightly in
  * sympathy a beat later. The plates stay inert (aria-hidden, not focusable); nothing is stored.
  *
@@ -229,17 +229,17 @@ export function initPlates(hero: HTMLElement | null): (() => void) | void {
   };
   const onLeave = () => { over = null; lastX = null; };
 
-  /* touch and pen: a tap swings it away from the tap point; a swipe that starts on a plate is the page's, and cancels the tap */
+  /* a tap (touch, pen or a mouse click) swings it away from the tap point; a swipe that starts on a plate is the page's,
+     and cancels the tap; a mouse press that is dragged or held is no click */
   let tap: { id: number; x: number; y: number; t: number; p: SVGElement } | null = null;
   const onDown = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse') return;
     const p = plateAt(e.target);
     tap = p ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp, p } : null;
   };
   const onUp = (e: PointerEvent) => {
     const t = tap;
     tap = null;
-    if (!t || e.pointerType === 'mouse' || e.pointerId !== t.id) return;
+    if (!t || e.pointerId !== t.id) return;
     if (e.timeStamp - t.t > TAP_MS || Math.hypot(e.clientX - t.x, e.clientY - t.y) > TAP_SLOP) return;
     const r = t.p.getBoundingClientRect();
     swing(t.p, dirFromTap(e.clientX, (r.left + r.right) / 2));

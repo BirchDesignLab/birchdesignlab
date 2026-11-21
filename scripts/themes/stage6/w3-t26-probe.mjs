@@ -81,6 +81,38 @@ for (const scheme of SCHEMES) for (const width of SIZES) {
       await page.mouse.move(5, 5);
       await page.waitForTimeout(700);
     }
+    // a mouse click with the pointer already resting on the plate (its entry brush long settled): away from the click point
+    const idxClick = (await page.evaluate((cls) => [...document.querySelectorAll('.hero .gm-plate')].filter((p) => p.getClientRects().length).findIndex((p) => p.classList.contains(cls.split(' ').pop())), target.cls));
+    for (const [label, off, expect] of [['click right of centre', 0.25, 'clockwise(+)'], ['click left of centre', -0.25, 'anticlockwise(-)']]) {
+      await page.mouse.move(t.cx + off * t.w, t.cy + t.w * 1.3);
+      await page.mouse.move(t.cx + off * t.w, t.cy, { steps: 6 });
+      await page.waitForTimeout(1000); // the entry brush has settled; the pointer rests on the plate
+      await page.evaluate(install);
+      await page.mouse.down(); await page.mouse.up();
+      await page.waitForTimeout(900);
+      const rec = await page.evaluate(() => { window.__rec.on = false; return { frames: window.__rec.frames, mut: window.__rec.mut }; });
+      const s = summarise(rec.frames, idxClick);
+      const got = s.first > 0 ? 'clockwise(+)' : s.first < 0 ? 'anticlockwise(-)' : 'none';
+      console.log(`mouse ${label}: first move ${got} (want ${expect}) ${got === expect ? 'OK' : 'FAIL'} peak ${s.peak} length ${s.settle} ms (${s.frames} frames, max gap ${s.maxGap} ms) | style writes ${rec.mut}`);
+      await page.mouse.move(5, 5);
+      await page.waitForTimeout(700);
+    }
+    // a press dragged across the plate and released on its far side is no click: nothing swings (the drag stays on the plate, so no entry brush muddies it)
+    {
+      await page.mouse.move(t.cx + 0.25 * t.w, t.cy + t.w * 1.3);
+      await page.mouse.move(t.cx + 0.25 * t.w, t.cy, { steps: 6 });
+      await page.waitForTimeout(1000);
+      await page.evaluate(install);
+      await page.mouse.down();
+      await page.mouse.move(t.cx - 0.25 * t.w, t.cy, { steps: 6 });
+      await page.mouse.up();
+      await page.waitForTimeout(900);
+      const rec = await page.evaluate(() => { window.__rec.on = false; return { frames: window.__rec.frames }; });
+      const peak = Math.max(...rec.frames.flatMap((f) => f.a.map(Math.abs)));
+      console.log(`mouse press dragged across the plate: peak of any plate ${peak} (want 0) ${peak === 0 ? 'OK' : 'FAIL'}`);
+      await page.mouse.move(5, 5);
+      await page.waitForTimeout(700);
+    }
   } else {
     for (const [label, off] of [['tap left', -0.25], ['tap right', 0.25]]) {
       await page.evaluate(install);

@@ -6,7 +6,7 @@
  *   ONLY=sheets,films,rapid,swap SIZES=1440,1101,820,390 SCHEMES=light node ...
  *
  * sheets  Home whole-page at 1440, 1101, 820 and 390 in both schemes, plates at rest.
- * films   per size and scheme: mouse sizes (1440, 1101) brush L to R, R to L and a click-in ("tap"); touch sizes
+ * films   per size and scheme: mouse sizes (1440, 1101) brush L to R, R to L and a click right and left of centre with the pointer already resting on the plate; touch sizes
  *         (820, 390) a tap left of centre and a tap right of centre. A strip over 700 ms from the first move of the plate,
  *         cropped to the plate group and the frame beside it.
  * rapid   twenty brushes in about a second across one plate: the largest angle any plate reaches (printed, and a strip).
@@ -93,13 +93,19 @@ if (ONLY.includes('films')) {
         await page.mouse.move(5, 5);
         await page.waitForTimeout(800);
       }
-      // a click-in: the pointer arrives from below and clicks on the right of the plate
-      await page.mouse.move(s.cx + s.w * 0.25, s.cy + s.w * 1.2);
-      await page.waitForTimeout(150);
-      trigs.push(await film(page, width, scheme, 'tap', 'click in on the right of the plate', async () => {
-        await page.mouse.move(s.cx + s.w * 0.25, s.cy, { steps: 5 });
-        await page.mouse.down(); await page.mouse.up();
-      }, s.box));
+      // a real click: the pointer comes in from below, rests on the plate until the entry brush has settled, then clicks
+      // right (and then left) of centre; the film starts after the rest, so its first move is the click's swing
+      for (const [name, off] of [['click-right', 0.25], ['click-left', -0.25]]) {
+        await page.mouse.move(s.cx + off * s.w, s.cy + s.w * 1.2);
+        await page.waitForTimeout(150);
+        await page.mouse.move(s.cx + off * s.w, s.cy, { steps: 5 });
+        await page.waitForTimeout(1000);
+        trigs.push(await film(page, width, scheme, name, `mouse click ${off < 0 ? 'left' : 'right'} of centre, pointer resting on the plate`, async () => {
+          await page.mouse.down(); await page.mouse.up();
+        }, s.box));
+        await page.mouse.move(5, 5);
+        await page.waitForTimeout(800);
+      }
     } else {
       for (const [name, off] of [['tap-left', -0.25], ['tap-right', 0.25]]) {
         trigs.push(await film(page, width, scheme, name, `tap ${off < 0 ? 'left' : 'right'} of centre`, async () => {

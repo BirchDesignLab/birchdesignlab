@@ -167,6 +167,14 @@ describe('the mount (Home and Plate)', () => {
     expect(plates).toContain('for (const a of warmAnims) a.cancel()');
   });
 
+  it('a click with the mouse is a tap too: the press and release handlers do not exclude any pointer type', () => {
+    const down = plates.slice(plates.indexOf('const onDown'), plates.indexOf('const onUp'));
+    const up = plates.slice(plates.indexOf('const onUp'), plates.indexOf('const onCancel'));
+    expect(down).not.toContain("'mouse'");
+    expect(up).not.toContain("'mouse'");
+    expect(up).toContain('dirFromTap(e.clientX');
+  });
+
   it('hits the painted plate only, and leaves touch scrolling to the page', () => {
     expect(plate).toContain('pointer-events: none');
     expect(plate).toContain('.gm-plate use { pointer-events: visiblePainted; }');
