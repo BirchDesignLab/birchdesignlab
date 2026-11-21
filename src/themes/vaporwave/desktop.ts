@@ -210,10 +210,14 @@ export function mountDesktop(): (() => void) | void {
   type Spot = { cx: number; cy: number };
   const spots = new Map<HTMLElement, Spot>();
   const geometry = () => {
-    const first = icons[0];
-    const w = first.offsetWidth || 1;
-    const h = first.offsetHeight || 1;
-    return { w, h, cols: Math.max(1, Math.floor(layer.clientWidth / w)), rows: Math.max(1, Math.floor(layer.clientHeight / h)) };
+    // The real cell pitch, fractional: on a narrow phone the four tracks share
+    // the layer (84.5px each at 360), so a rounded offsetWidth would put the
+    // fourth icon's cell off the grid. The tolerance absorbs layout rounding.
+    const first = icons[0].getBoundingClientRect();
+    const box = layer.getBoundingClientRect();
+    const w = first.width || 1;
+    const h = first.height || 1;
+    return { w, h, cols: Math.max(1, Math.floor(box.width / w + 0.02)), rows: Math.max(1, Math.floor(box.height / h + 0.02)) };
   };
   const natural = (el: HTMLElement) => {
     const { w, h } = geometry();

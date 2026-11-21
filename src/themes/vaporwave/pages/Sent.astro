@@ -206,7 +206,7 @@ const { copy, theme } = Astro.props;
      never painted under it, and one grid cell of padding for the phone's
      icon row. */
   .stage {
-    --cw: 88px; --ch: 96px;
+    --cw: 88px; --ch: 96px; --ltop: clamp(1rem, 4vh, 2.4rem);
     position: relative; overflow-x: clip; isolation: isolate; z-index: 1;
     min-height: clamp(560px, 82vh, 860px);
     display: grid; justify-items: center; align-content: start; gap: 1.5rem;
@@ -221,7 +221,7 @@ const { copy, theme } = Astro.props;
      message window (z-index), so a dropped icon never covers it. */
   .desktop-icons {
     position: absolute; z-index: 1; pointer-events: none;
-    left: clamp(0.5rem, 3vw, 2rem); top: clamp(1rem, 4vh, 2.4rem); right: clamp(0.5rem, 3vw, 2rem); bottom: 1rem;
+    left: clamp(0.5rem, 3vw, 2rem); top: var(--ltop); right: clamp(0.5rem, 3vw, 2rem); bottom: 1rem;
     display: grid; grid-auto-flow: column; grid-template-rows: repeat(auto-fill, var(--ch)); grid-auto-columns: var(--cw);
     justify-content: start; align-content: start;
   }
@@ -303,7 +303,7 @@ const { copy, theme } = Astro.props;
   .stage :global(.win-readme) { --wn: 2; }
   .stage :global(.desk-win) {
     left: calc(50% - 170px + var(--wn) * 26px);
-    top: calc(29rem + var(--wn) * 2.4rem);
+    top: calc(31rem + var(--wn) * 2.4rem);
   }
   @media (min-width: 1280px) {
     .stage :global(.desk-win) {
@@ -346,14 +346,26 @@ const { copy, theme } = Astro.props;
   .scr-fullscreen[hidden] { display: none; }
   .scr-fs-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-  /* A phone: the icons are a row across the top and each window opens the
-     full width of the desktop, below that row. */
-  @media (max-width: 700px) {
+  /* Narrow screens (to 800px): the icons are a row of four across the top,
+     not a column down the left. The column would sit under the centred
+     message window from 701 to about 760px (its labels cut), so the row holds
+     until the column clears it. The four tracks share the layer's width (88px
+     at most, narrower on a 360px phone, where 4 x 88 would not fit and the
+     fourth icon wrapped under the message window), the icon fills its track,
+     and desktop.ts reads the real, fractional track width. Windows keep their
+     tablet cascade, pushed down one icon row. */
+  @media (max-width: 800px) {
     .stage { padding-top: calc(var(--ch) + 1.4rem); }
-    .desktop-icons { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(auto-fill, var(--cw)); grid-auto-rows: var(--ch); bottom: auto; height: var(--ch); }
+    .desktop-icons { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(4, minmax(0, var(--cw))); grid-auto-rows: var(--ch); bottom: auto; height: var(--ch); }
+    .desktop-icon { width: 100%; }
+    .stage :global(.desk-win) { top: calc(29rem + 1.5rem + var(--wn) * 2.4rem); }
+  }
+  /* A phone: each window opens the full width of the desktop, below the icon
+     row (that row's own top plus one cell, so no window covers an icon). */
+  @media (max-width: 700px) {
     .stage :global(.desk-win) {
       left: 0.75rem; right: 0.75rem; width: auto; max-width: none;
-      top: calc(var(--ch) + 1.4rem + var(--wn) * 2.2rem);
+      top: calc(var(--ltop) + var(--ch) + 0.4rem + var(--wn) * 2.2rem);
     }
   }
   @media (max-width: 520px) {

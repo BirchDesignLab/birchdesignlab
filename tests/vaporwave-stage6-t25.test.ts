@@ -57,6 +57,16 @@ describe('the Sent desktop (stop 3 answer 3 words)', () => {
     expect(sent).toContain('position: absolute; z-index: 1; pointer-events: none;');
     expect(sent).toContain('overflow-x: clip;');
   });
+  it('keeps the icon row to four tracks up to 800px, clear of the centred message window (fix round 1)', () => {
+    // 4 x 88 does not fit the 338px layer at 360, and the column from 701px sat under the dialog until about 760.
+    expect(sent).toContain('@media (max-width: 800px)');
+    expect(sent).toContain('grid-template-columns: repeat(4, minmax(0, var(--cw)));');
+    expect(sent).toContain('.desktop-icon { width: 100%; }');
+    expect(sent).not.toContain('repeat(auto-fill, var(--cw))');
+    // desktop.ts reads the real, fractional cell pitch, not the rounded offsetWidth.
+    expect(desktop).toContain('icons[0].getBoundingClientRect()');
+    expect(desktop).not.toContain('first.offsetWidth');
+  });
   it('opens on a double-click, a double tap and Enter; closes on the X and Escape', () => {
     expect(desktop).toContain("on(el, 'dblclick', () => open(el));");
     expect(desktop).toContain('now - lastTap.t < TAP_MS');
