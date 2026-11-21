@@ -481,3 +481,14 @@ const [first, ...rest] = chrome.name.split(' ');
     }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initPlates } from '../parts/plates';
+
+  // The hero's plates swing when brushed or tapped (parts/plates.ts). The landmark is this page's own hero.
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    return initPlates(document.querySelector<HTMLElement>('.hero.gm-trellis'));
+  });
+</script>

@@ -18,5 +18,8 @@ const { class: cls, turn = 0, well = 'peony', lotus = 16 } = Astro.props;
 </svg>
 
 <style>
-  .gm-plate { overflow: visible; filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.22)); }
+  /* The plate swings when brushed or tapped (parts/plates.ts), and only where it is painted: the svg's
+     square box takes no pointer, its <use> rim and well do, so the round plate is the hit area. */
+  .gm-plate { overflow: visible; filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.22)); pointer-events: none; }
+  .gm-plate use { pointer-events: visiblePainted; }
 </style>
