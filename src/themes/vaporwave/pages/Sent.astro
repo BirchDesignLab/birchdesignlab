@@ -92,8 +92,9 @@ const { copy, theme } = Astro.props;
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
 
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
 </script>
 

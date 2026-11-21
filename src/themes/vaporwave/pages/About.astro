@@ -342,6 +342,11 @@ const manifestoSentences = copy.manifesto.split(/(?<=[.!?])\s+/);
   // stages or five WebGL contexts).
   import { onMount } from '../../../lib/lifecycle';
   import type { LiveBustHandle } from '../marble/live-bust';
+  import { mountWindowActivation } from '../windows';
+
+  // Task 24 (V9): pressing or focusing either window gives it the one
+  // active caption. About's windows never dragged, and still do not.
+  onMount(mountWindowActivation);
 
   onMount(() => {
     if (document.documentElement.dataset.theme !== 'vaporwave') return;

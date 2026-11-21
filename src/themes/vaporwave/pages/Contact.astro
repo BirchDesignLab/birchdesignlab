@@ -82,7 +82,7 @@ const { copy, theme } = Astro.props;
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
   import { mountScreensaver } from '../screensaver';
 
   /** E15: pause the CSS floor's infinite animation while it is off-screen
@@ -99,6 +99,7 @@ const { copy, theme } = Astro.props;
     return () => io.disconnect();
   });
 
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
   onMount(mountScreensaver);
 </script>

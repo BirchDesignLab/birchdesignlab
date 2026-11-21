@@ -25,8 +25,15 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   <Palm class="palm palm-l" />
   <Palm class="palm palm-r" flip />
   <div class="vw-scan" aria-hidden="true"></div>
-  <p class="osd osd-l" aria-hidden="true"><span class="play"></span>PLAY</p>
-  <p class="osd osd-r" aria-hidden="true">SP 0:19:85</p>
+  {/* Task 24: the VCR remote (../deck.ts). The OSD is the deck's one real
+      button; its face (the glyph and the approved words PLAY, PAUSE, FF,
+      REW) sits in an aria-hidden span and the button is named "Play" or
+      "Pause" to match. The tracking band shows only while paused. */}
+  <div class="deck-band" aria-hidden="true"><span></span></div>
+  <button type="button" class="osd osd-l deck" aria-label="Play" aria-pressed="false" data-deck>
+    <span class="deck-face" aria-hidden="true"><span class="play"></span><span data-deck-word>PLAY</span></span>
+  </button>
+  <p class="osd osd-r" aria-hidden="true">SP <span data-deck-counter>0:19:85</span></p>
   <div class="hero-title">
     <p class="vw-kana kana" aria-hidden="true">バーチ・デザイン・ラボ</p>
     <h1 class="billboard">
@@ -152,10 +159,13 @@ const doorFiles = ['software.exe', 'web_design.htm'];
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { mountHorizon } from '../fx';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
   import { mountKioskAttract } from '../kiosk';
+  import { mountDeck } from '../deck';
 
   onMount(mountHorizon);
+  onMount(mountDeck);
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
   onMount(mountKioskAttract);
 </script>
@@ -187,6 +197,71 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   .osd-l { left: 1.4rem; display: flex; align-items: center; gap: 0.4em; }
   .osd-r { right: 1.4rem; }
   .play { width: 0; height: 0; border-left: 0.55em solid currentColor; border-block: 0.34em solid transparent; }
+
+  /* ---------- the VCR remote (task 24, ../deck.ts) ----------
+     The OSD's PLAY is a real button. Reset to the OSD's own look; the padding
+     grows its target to 44px and the inset is pulled back by the same amount,
+     so the face sits exactly where today's OSD did. */
+  .deck {
+    appearance: none; background: none; border: 0; margin: 0; font: inherit;
+    font-family: var(--font-mono); font-size: 1.7rem; line-height: 1; letter-spacing: 0.06em;
+    padding: 0.75rem 0.6rem; top: calc(1.1rem - 0.75rem); left: calc(1.4rem - 0.6rem);
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .deck-face { display: flex; align-items: center; gap: 0.4em; }
+  .deck:focus-visible { outline: 2px dotted currentColor; outline-offset: -2px; }
+  @media (hover: hover) and (pointer: fine) {
+    .deck { cursor: pointer; }
+    .deck:hover { text-shadow: 3px 0 0 var(--neon-pink), -3px 0 0 var(--neon-cyan); }
+    :global([data-scheme='light']) .deck:hover { text-shadow: 3px 0 0 #ffffff, -1px 0 0 var(--neon-pink); }
+  }
+  /* The glyph per mode: two bars for PAUSE, a doubled triangle for FF,
+     mirrored for REW. Decoration inside the aria-hidden face. */
+  .play { position: relative; }
+  .hero[data-deck-mode='pause'] .play {
+    width: 0.5em; height: 0.68em; border: 0;
+    border-inline: 0.17em solid currentColor;
+  }
+  .hero[data-deck-mode='ff'] .play, .hero[data-deck-mode='rew'] .play { margin-right: 0.55em; }
+  .hero[data-deck-mode='ff'] .play::after, .hero[data-deck-mode='rew'] .play::after {
+    content: ''; position: absolute; left: 0; top: -0.34em;
+    border-left: 0.55em solid currentColor; border-block: 0.34em solid transparent;
+  }
+  /* The pair spans 0 to 1.1em (border, then ::after); mirror about its middle. */
+  .hero[data-deck-mode='rew'] .play { transform: scaleX(-1); transform-origin: 0.55em 50%; }
+
+  /* The pause's tracking band: a jittering bar of tape noise rolling up the
+     frame, over the picture and the palms, under the OSD and the billboard.
+     Shown only while paused; its loops pause off screen and in a hidden tab
+     (data-deck-off). Transforms only. */
+  .hero { touch-action: pan-y pinch-zoom; --band-ink: #ffffff; }
+  :global([data-scheme='light']) .hero { --band-ink: #3a1a66; }
+  .deck-band {
+    position: absolute; z-index: 2; inset-inline: 0; bottom: 0; height: 8%;
+    display: none; pointer-events: none;
+  }
+  .deck-band span {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, transparent, color-mix(in srgb, var(--band-ink) 26%, transparent) 38%, color-mix(in srgb, var(--band-ink) 12%, transparent) 64%, transparent),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--band-ink) 34%, transparent) 0 3px, transparent 3px 11px, color-mix(in srgb, var(--band-ink) 18%, transparent) 11px 13px, transparent 13px 23px);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+  }
+  .hero[data-deck-mode='pause'] .deck-band { display: block; animation: vw-deck-roll 2.6s linear infinite; }
+  .hero[data-deck-mode='pause'] .deck-band span { animation: vw-deck-jitter 0.36s step-end infinite; }
+  .hero[data-deck-off] .deck-band, .hero[data-deck-off] .deck-band span { animation-play-state: paused; }
+  /* 8% tall, so the frame is 12.5 bands: from just under the foot to just
+     past the top. */
+  @keyframes vw-deck-roll { from { transform: translateY(100%); } to { transform: translateY(-1250%); } }
+  @keyframes vw-deck-jitter {
+    0% { transform: translateX(0) scaleY(1); }
+    20% { transform: translateX(7px) scaleY(0.7); }
+    40% { transform: translateX(-4px) scaleY(1.25); }
+    60% { transform: translateX(3px) scaleY(0.9); }
+    80% { transform: translateX(-6px) scaleY(1.1); }
+  }
 
   .hero-title {
     position: absolute; z-index: 3; left: 0; right: 0; top: clamp(3.5rem, 8vh, 5.5rem);
@@ -571,6 +646,7 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     .osd { font-size: 1.3rem; top: 0.8rem; }
     .osd-l { left: 0.9rem; }
     .osd-r { right: 0.9rem; }
+    .deck { font-size: 1.3rem; top: calc(0.8rem - 0.75rem); left: calc(0.9rem - 0.6rem); }
     .hero-title { top: 16%; }
     .hero :global(.palm) { height: 44%; }
     .hero :global(.palm-l) { left: -18%; }

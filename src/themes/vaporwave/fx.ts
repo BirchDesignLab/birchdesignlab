@@ -16,7 +16,14 @@
  *
  * Colours come from the --hz-* tokens in theme.css, re-read when the scheme
  * flips, so the shader never hardcodes a palette.
+ *
+ * Task 24 (Stage 6 wave 3): the VCR remote (deck.ts) drives the tape clock.
+ * PAUSE freezes the picture (the loop stops, one frame stays drawn); FF and
+ * REW run it at TAPE_RATE with tape noise (a blended second pass, NOISE_FRAG); a return to PLAY carries
+ * the seam's tracking hiccup.
  */
+import { DECK_EVENT, TAPE_RATE, type DeckDetail } from './deck';
+
 const THEME = 'vaporwave';
 const MAX_DPR = 1.5;
 /* E11: a coarse pointer or a narrow (phone-width) viewport draws at a lower
@@ -207,6 +214,33 @@ void main() {
 }
 `;
 
+/**
+ * Task 24: tape noise for the remote's FF and REW, drawn as a second, blended
+ * pass over the finished frame, only while a scan lasts. A branch inside FRAG
+ * would have been flattened by the driver (D3D11 measured PLAY 35% dearer
+ * with the noise code compiled in, unused), so FRAG stays exactly as it was
+ * and PLAY keeps today's frame cost. Snow over the whole frame and a few
+ * bright dropout streaks per frame, 24 tape frames a second.
+ */
+const NOISE_FRAG = `
+precision mediump float;
+uniform vec2 uRes;
+uniform float uTime;
+float hash(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+void main() {
+  vec2 fc = gl_FragCoord.xy;
+  float frameN = floor(uTime * 24.0);
+  float row = floor(fc.y / (3.0 * max(uRes.y / 900.0, 1.0)));
+  float snow = hash(fc + frameN * 17.0);
+  float streak = step(0.985, hash(vec2(row * 0.37, frameN))) * hash(vec2(fc.x * 0.05, frameN));
+  gl_FragColor = vec4(mix(vec3(snow), vec3(0.92), streak), 0.22 + 0.5 * streak);
+}
+`;
+
 const UNIFORM_COLORS = {
   uSkyTop: '--hz-sky-top',
   uSkyMid: '--hz-sky-mid',
@@ -232,6 +266,12 @@ interface Scene {
   draw(time: number): void;
   resize(): void;
   setColors(): void;
+  /** Task 24: tape noise on (FF, REW) or off. */
+  setNoise(on: boolean): void;
+  /** Task 24: the next two draws carry the seam's tracking hiccup. */
+  hiccup(): void;
+  /** Task 24: drop an owed hiccup, so a frozen (paused) frame never holds it. */
+  clearSeam(): void;
 }
 
 /** A program handed to the driver and not yet asked about. */
@@ -323,6 +363,42 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   const uGapDark = u('uGapDark');
   const uSeam = u('uSeam');
 
+  // Task 24: the noise pass's program. Linked now without asking how it went
+  // (the same rule as the main program: a question waits for the link), and
+  // first asked on the first FF or REW, long after the link has finished.
+  let noise: { program: WebGLProgram; uRes: WebGLUniformLocation | null; uTime: WebGLUniformLocation | null } | null = null;
+  let noiseLinking: { program: WebGLProgram; vs: WebGLShader; fs: WebGLShader } | null = null;
+  {
+    const nvs = gl.createShader(gl.VERTEX_SHADER);
+    const nfs = gl.createShader(gl.FRAGMENT_SHADER);
+    const nprog = gl.createProgram();
+    if (nvs && nfs && nprog) {
+      gl.shaderSource(nvs, VERT);
+      gl.compileShader(nvs);
+      gl.shaderSource(nfs, NOISE_FRAG);
+      gl.compileShader(nfs);
+      gl.attachShader(nprog, nvs);
+      gl.attachShader(nprog, nfs);
+      gl.bindAttribLocation(nprog, aPos, 'aPos');
+      gl.linkProgram(nprog);
+      noiseLinking = { program: nprog, vs: nvs, fs: nfs };
+    }
+  }
+  const noiseProgram = () => {
+    if (noise || !noiseLinking) return noise;
+    const { program: nprog, vs: nvs, fs: nfs } = noiseLinking;
+    noiseLinking = null;
+    const ok = gl.getProgramParameter(nprog, gl.LINK_STATUS);
+    gl.deleteShader(nvs);
+    gl.deleteShader(nfs);
+    if (!ok) { gl.deleteProgram(nprog); return null; }
+    noise = { program: nprog, uRes: gl.getUniformLocation(nprog, 'uRes'), uTime: gl.getUniformLocation(nprog, 'uTime') };
+    return noise;
+  };
+  let noiseOn = false;
+  let resW = 1;
+  let resH = 1;
+
   // V11: below the phone breakpoint the scheme's fade and haze (dark: 0.1 and
   // 0.08 of the canvas height, over 80px on a phone hero) are capped, so the
   // floor's grid picks up near the horizon instead of dissolving into haze.
@@ -361,6 +437,8 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
     }
     gl.viewport(0, 0, w, h);
     gl.uniform2f(uRes, w, h);
+    resW = w;
+    resH = h;
     // Portrait screens get a smaller sun and a lower horizon, so the sun
     // never outgrows the width and the billboard keeps the sky.
     const aspect = w / h;
@@ -399,6 +477,7 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
   // does not care how long it waited to be asked again, only that the next
   // two draws are the ones that carry the tear.
   let lastCyclePos = -1;
+  let lastTime = -Infinity;
   let pendingSeam = 0;
   const draw = (time: number) => {
     // Phases wrap here, in double precision, so the shader's floats stay small.
@@ -406,26 +485,49 @@ function finishScene(canvas: HTMLCanvasElement, linking: Linking): Scene | null 
     // F4(b): the scroll and the stripe drift run off the cycle's own clock
     // (time % CYCLE), so both visibly jump back at the seam instead of
     // sailing through it.
-    const cyclePos = time % CYCLE;
+    // Task 24: the remote can run the tape backwards, so the clock can go
+    // below zero; the cycle position stays in [0, CYCLE) either way.
+    const cyclePos = ((time % CYCLE) + CYCLE) % CYCLE;
     gl.uniform1f(uScroll, (cyclePos * 0.55) % 1);
     gl.uniform1f(uStripe, (cyclePos * 0.06) % 1);
     // The seam itself: cyclePos re-zeros every CYCLE seconds. Arm the latch
     // on the wrap (or on the very first draw, if it happens to load already
     // inside the seam window), then drain it: this draw gets OFFSET_1 if two
     // are still owed, OFFSET_2 if one is, zero otherwise.
-    const wrapped = cyclePos < lastCyclePos;
+    // Only a forward wrap is the seam: rewinding wraps the other way (the
+    // position jumps up), and a paused redraw does not move at all.
+    const wrapped = time > lastTime && cyclePos < lastCyclePos;
     if (wrapped || (lastCyclePos < 0 && cyclePos < SEAM_FRAME_2)) pendingSeam = 2;
     let seam = 0;
     if (pendingSeam === 2) { seam = SEAM_OFFSET_1; pendingSeam = 1; }
     else if (pendingSeam === 1) { seam = SEAM_OFFSET_2; pendingSeam = 0; }
+    // Task 24: while the tape scans, the floor loses tracking on about a
+    // third of its frames (the seam's own lateral tear, at random widths).
+    else if (noiseOn && Math.random() < 0.35) seam = (Math.random() - 0.5) * 0.3;
     gl.uniform1f(uSeam, seam);
     lastCyclePos = cyclePos;
+    lastTime = time;
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const pass = noiseOn ? noiseProgram() : null;
+    if (pass) {
+      gl.useProgram(pass.program);
+      gl.uniform2f(pass.uRes, resW, resH);
+      gl.uniform1f(pass.uTime, time % 1000);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.disable(gl.BLEND);
+      // Every other setter here writes the main program's uniforms.
+      gl.useProgram(program);
+    }
   };
+  const setNoise = (on: boolean) => { noiseOn = on; };
+  const hiccup = () => { pendingSeam = 2; };
+  const clearSeam = () => { pendingSeam = 0; gl.uniform1f(uSeam, 0); };
 
   setColors();
   resize();
-  return { draw, resize, setColors };
+  return { draw, resize, setColors, setNoise, hiccup, clearSeam };
 }
 
 /** onMount body for the home hero. */
@@ -455,10 +557,20 @@ export function mountHorizon(): (() => void) | void {
   let lost = false;
   let inView = true;
   let pageVisible = !document.hidden;
-  const started = performance.now();
-  const now = () => (reducedMotion.matches ? STILL_TIME : (performance.now() - started) / 1000);
+  // Task 24, the VCR remote (deck.ts): the picture runs off a tape clock, not
+  // the wall clock. It advances by real elapsed time times the deck's rate:
+  // 1 at PLAY, 0 at PAUSE, TAPE_FF and TAPE_REW while a hold or swipe lasts.
+  let rate = 1;
+  let tape = 0;
+  let lastReal = performance.now();
+  const now = () => {
+    const real = performance.now();
+    tape += ((real - lastReal) / 1000) * rate;
+    lastReal = real;
+    return reducedMotion.matches ? STILL_TIME : tape;
+  };
 
-  const shouldAnimate = () => inView && pageVisible && !reducedMotion.matches && !lost;
+  const shouldAnimate = () => inView && pageVisible && rate !== 0 && !reducedMotion.matches && !lost;
   // E11: throttle to 30fps. rAF still fires every vsync so the loop stays in
   // step with the browser, but a frame under 33ms since the last draw is
   // skipped rather than drawn, halving the GPU cost in the hero's own band
@@ -568,6 +680,21 @@ export function mountHorizon(): (() => void) | void {
 
   reducedMotion.addEventListener('change', sync);
 
+  // Task 24: the deck's mode arrives as an event on the canvas (deck.ts), so
+  // the remote works on the CSS sky alone when WebGL never starts. A mode
+  // change brings the tape clock up to date at the old rate first.
+  const onDeck = (event: Event) => {
+    const { mode, hiccup } = (event as CustomEvent<DeckDetail>).detail;
+    now();
+    rate = TAPE_RATE[mode];
+    if (!scene || lost) return;
+    scene.setNoise(mode === 'ff' || mode === 'rew');
+    if (mode === 'pause') scene.clearSeam();
+    else if (hiccup) scene.hiccup();
+    sync();
+  };
+  canvas.addEventListener(DECK_EVENT, onDeck);
+
   // The swap that tears this hero down. Its outgoing snapshot keeps drawing
   // from the canvas until the transition finishes, so releasing the context
   // at once blanked the hero to grey-white mid-swap (Tier 3 brief E1a). The
@@ -592,6 +719,7 @@ export function mountHorizon(): (() => void) | void {
     schemeWatch.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
     reducedMotion.removeEventListener('change', sync);
+    canvas.removeEventListener(DECK_EVENT, onDeck);
     window.removeEventListener('astro:before-swap', onBeforeSwap, true);
     scene = null;
     // Released as soon as nothing shows it: at once on a real pagehide, or

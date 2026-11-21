@@ -49,12 +49,9 @@ describe('the phone kiosk props (V3)', () => {
 });
 
 describe('inactive captions stay static outside a cascade (C2)', () => {
-  it('bringToFront wakes a caption only inside .door-grid or .apps', () => {
-    expect(windows).toContain("const group = win.closest('.door-grid, .apps');");
-    expect(windows).not.toContain('?? win.parentElement');
-    // The caption is only un-greyed after the group check, never before it.
-    const at = (s: string) => windows.indexOf(s);
-    expect(at("const group = win.closest('.door-grid, .apps');")).toBeLessThan(at("bar.classList.remove('inactive');"));
+  it('was retired by task 24: activation is page-wide (tests/vaporwave-stage6-t24.test.ts)', () => {
+    expect(windows).not.toContain("win.closest('.door-grid, .apps')");
+    expect(windows).toContain('export function mountWindowActivation');
   });
 });
 

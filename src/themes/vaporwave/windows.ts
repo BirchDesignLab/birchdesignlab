@@ -5,11 +5,9 @@
  *
  * Desktop only ((hover: hover) and (pointer: fine)): a window drags by its
  * title bar (pointer capture, clamped inside the viewport, no text selection
- * during the drag, a grab cursor on the bar). A window comes to the front
- * when pressed; pressing an inactive window (the two-stop back-window
- * caption, theme.css `.vw-win-bar.inactive`) makes it the active one and its
- * former sibling in the same overlap group goes inactive, so a cascade
- * always shows exactly one neon bar. Positions are never persisted: this
+ * during the drag, a grab cursor on the bar). Coming to the front and the
+ * active caption are mountWindowActivation's (below, task 24): page-wide,
+ * on a press anywhere on a window or focus inside it. Positions are never persisted: this
  * only ever sets an inline `transform`/`z-index`, so a fresh page (a new
  * `.vw-win` set from the router or a hard load) starts untouched.
  *
@@ -26,32 +24,80 @@
 const THEME = 'vaporwave';
 const DESKTOP = '(hover: hover) and (pointer: fine)';
 
-export function mountWindowDrag(): (() => void) | void {
+/**
+ * Pressing any window activates it (Stage 6 wave 3, task 24; a1-critic V9).
+ * The overlap group is the whole page: a press anywhere on a window (not only
+ * its title bar) brings it to the front and gives it the one active caption;
+ * the window that had it takes the inactive grey caption (theme.css
+ * `.vw-win-bar.inactive`, wave 2's set). Keyboard focus moving inside a
+ * window does the same, so tabbing through the page walks the caption along.
+ * Inert as a toy: no new control, no tab stop; the markup already ships
+ * exactly one active caption per page, and every activation keeps it at one.
+ *
+ * A mouse or pen activates on press. A finger activates on release, and only
+ * when the touch did not turn into a scroll (the browser cancels the pointer
+ * then), so scrolling past a window leaves the captions alone.
+ *
+ * Mounted on every vaporwave page with windows (Home, Services, Contact,
+ * About, Sent), beside mountWindowDrag where that runs. It only ever sets an
+ * inline z-index and the caption class, so a fresh page starts as built.
+ */
+export function mountWindowActivation(): (() => void) | void {
   if (document.documentElement.dataset.theme !== THEME) return;
   const wins = Array.from(document.querySelectorAll<HTMLElement>('.vw-win'));
   if (!wins.length) return;
 
   let zTop = 10;
-  const bringToFront = (win: HTMLElement, bar: HTMLElement) => {
+  let front: HTMLElement | null = null;
+  const activate = (win: HTMLElement) => {
+    if (front === win) return;
+    front = win;
     zTop += 1;
     win.style.zIndex = String(zTop);
-    if (!bar.classList.contains('inactive')) return;
-    // C2 (Stage 6 wave 3, task 19): the overlap group is the nearest ancestor
-    // known to hold a cascade (Home's door grid, Services' app pair). A
-    // window outside one (Contact's mail.txt and screensaver.scr, Services'
-    // setup wizard, About's beorc.txt) keeps its static back-window caption:
-    // it still comes forward by z-index, but waking its caption would leave
-    // two active captions on the page, because the live window beside it has
-    // no group to hand its caption to. Wave 3 task 24 makes activation
-    // page-wide and retires this guard.
-    const group = win.closest('.door-grid, .apps');
-    if (!group) return;
-    bar.classList.remove('inactive');
-    for (const sibling of group.querySelectorAll<HTMLElement>('.vw-win')) {
-      if (sibling === win) continue;
-      sibling.querySelector<HTMLElement>('.vw-win-bar')?.classList.add('inactive');
+    for (const other of wins) {
+      other.querySelector<HTMLElement>(':scope > .vw-win-bar')?.classList.toggle('inactive', other !== win);
     }
   };
+
+  const cleanups: Array<() => void> = [];
+  for (const win of wins) {
+    let touchId = -1;
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') touchId = event.pointerId;
+      else if (event.button === 0) activate(win);
+    };
+    const onUp = (event: PointerEvent) => {
+      if (event.pointerId !== touchId) return;
+      touchId = -1;
+      activate(win);
+    };
+    const onCancel = (event: PointerEvent) => {
+      if (event.pointerId === touchId) touchId = -1;
+    };
+    const onFocus = () => activate(win);
+    // Capture, so the window activates before the title bar's own drag
+    // handler (mountWindowDrag) sees the same press.
+    win.addEventListener('pointerdown', onDown, true);
+    win.addEventListener('pointerup', onUp, true);
+    win.addEventListener('pointercancel', onCancel, true);
+    win.addEventListener('focusin', onFocus);
+    cleanups.push(() => {
+      win.removeEventListener('pointerdown', onDown, true);
+      win.removeEventListener('pointerup', onUp, true);
+      win.removeEventListener('pointercancel', onCancel, true);
+      win.removeEventListener('focusin', onFocus);
+    });
+  }
+
+  return () => {
+    for (const fn of cleanups) fn();
+  };
+}
+
+export function mountWindowDrag(): (() => void) | void {
+  if (document.documentElement.dataset.theme !== THEME) return;
+  const wins = Array.from(document.querySelectorAll<HTMLElement>('.vw-win'));
+  if (!wins.length) return;
 
   const cleanups: Array<() => void> = [];
   const root = document.documentElement;
@@ -73,9 +119,8 @@ export function mountWindowDrag(): (() => void) | void {
     let curY = 0;
 
     const onPointerDown = (event: PointerEvent) => {
-      bringToFront(win, bar);
       // B2 fix round: a caption button (min/max/close) still brings its
-      // window forward on press (bringToFront above already ran), but never
+      // window forward on press (mountWindowActivation, task 24), but never
       // starts a drag. No pointer capture and no preventDefault, so :active
       // still inverts the bevel (theme.css) and the press behaves like any
       // other button press instead of moving the window underneath it.
