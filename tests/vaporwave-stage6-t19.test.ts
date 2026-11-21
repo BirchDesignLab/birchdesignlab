@@ -30,6 +30,14 @@ describe('the phone kiosk props (V3)', () => {
     expect(block).toContain('--prop-w: clamp(107px, 27.5vw, 178px);');
     expect(block).toContain('--prop-w: clamp(82px, 20.95vw, 136px);');
   });
+  it('anchors each prop by its visible figure, not its image box (C1)', () => {
+    // The ball's figure starts 29.5% in from the image's side, Venus's 31.8%.
+    expect(block).toContain('--prop-m: 0.295;');
+    expect(block).toContain('--prop-m: 0.318;');
+    expect(block).toContain('left: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));');
+    expect(block).toContain('right: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));');
+    expect(block).not.toContain('max(0px, 50% - 320px)');
+  });
   it('drops the bases to the stand foot line and keeps the decoration off the pointer', () => {
     expect(block).toContain('bottom: -0.15rem;');
     expect(block).toContain('pointer-events: none;');

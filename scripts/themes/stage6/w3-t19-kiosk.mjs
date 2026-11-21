@@ -5,13 +5,16 @@
  * ball x 29.5 to 70.3% and y 29.5 to 74.2%, both at alpha > 50%, measured from
  * the shipped webp files) after each still's own translateY, against the
  * stand's foot line, the plaque's box and text, and the TOUCH button's text.
+ * Fix round 1 (critic C1) added the figure-versus-plaque-BOX overlap (the
+ * plaque becomes the elevator buttons in task 25) and each figure's gap to the
+ * stand edge; the text-only gap alone had hidden a 30px overlap at 390.
  *
  *   node scripts/themes/stage6/w3-t19-kiosk.mjs [scheme]
  */
 import { launch, open } from './w3-t19-lib.mjs';
 
 const scheme = process.argv[2] || 'dark';
-const widths = [360, 390, 430, 600, 761, 820, 900, 901, 1024];
+const widths = (process.env.WIDTHS ? process.env.WIDTHS.split(",").map(Number) : [360, 390, 430, 600, 761, 820, 900, 901, 1024]);
 const FIG = { venus: { x0: 0.318, x1: 0.68, y0: 0.156, y1: 0.891 }, sphere: { x0: 0.295, x1: 0.703, y0: 0.295, y1: 0.742 } };
 const browser = await launch();
 for (const width of widths) {
@@ -52,6 +55,16 @@ for (const width of widths) {
     if (f.b <= t.t || f.t >= t.b) return 'no vertical overlap';
     return f1(Math.max(t.l - f.r, f.l - t.r));
   };
+  // Overlap of a figure with the plaque's box: width x height, or clear.
+  const ov = (f) => {
+    if (!f) return null;
+    const x = Math.min(f.r, r.plaque.r) - Math.max(f.l, r.plaque.l);
+    const y = Math.min(f.b, r.plaque.b) - Math.max(f.t, r.plaque.t);
+    return x > 0 && y > 0 ? `OVERLAP ${f1(x)}x${f1(y)}` : 'clear';
+  };
+  console.log(width, 'plaque', `${f1(r.plaque.l)}-${f1(r.plaque.r)}`, 'stand', `${f1(r.stand.l)}-${f1(r.stand.r)}`,
+    '| venus/plaque', ov(r.venus), 'edge-to-stand', r.venus && f1(r.stand.l - r.venus.l),
+    '| sphere/plaque', ov(r.sphere), 'edge-to-stand', r.sphere && f1(r.sphere.r - r.stand.r));
   console.log(width,
     '| venus', dims(r.venus), 'base-foot', base(r.venus), 'x', r.venus && `${f1(r.venus.l)}-${f1(r.venus.r)}`,
     '| sphere', dims(r.sphere), 'base-foot', base(r.sphere), 'x', r.sphere && `${f1(r.sphere.l)}-${f1(r.sphere.r)}`,

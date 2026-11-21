@@ -595,7 +595,8 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      outer edge on the stand's own edge (the stand is min(100%, 640px) of
      .kiosk, so its half-width from the centre is min(50%, 320px)); on a
      tablet, where the stand leaves room beside it, a prop steps out by up to
-     a third of its width so it overlaps the corner rather than hiding in it.
+     a third of its width so it overlaps the corner rather than hiding in it
+     (superseded by the figure-anchored rule in the task 19 block below).
      The vertical anchor (bottom: 0.4rem and each prop's own translateY) is
      the desktop's, so the bases land on the stand's floor line as before. */
   /* V3 sizing and seat (Stage 6 wave 3, task 19, stop 3 answer 2): the stills
@@ -610,18 +611,29 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      lands on the kiosk's floor line, the foot's front edge, so the props
      stand in front of the stand, not on the plaque's lower edge. Props are
      pointer-events: none (decoration over the stand's corners). */
+  /* Fix round 1 (task 19, critic C1): anchored by the VISIBLE figure, not the
+     image box. Each still is mostly side margin (the ball's figure starts
+     29.5% in from either side, Venus's 31.8%), so with the image's outer edge
+     on the stand edge the figure sat 0.295 / 0.318 of a prop width inward,
+     on the plaque (at 390: Venus 29.8px x 25.3px and the ball 44px x 13px
+     over the plaque's box). --prop-m is that margin share: the image's outer
+     edge now sits --prop-m * --prop-w beyond the stand edge, so the figure's
+     own outer edge is on the stand edge. It replaces the old step-out of up
+     to 0.3 of a width on a tablet (the same offset, now at every width). */
   @media (max-width: 900px) {
     .lab :global(.kiosk-prop) {
       --prop-w: clamp(107px, 27.5vw, 178px);
+      --prop-m: 0.295;
       width: var(--prop-w);
       bottom: -0.15rem;
       pointer-events: none;
-      left: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
+      left: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));
     }
     .lab :global(.kiosk-prop-venus) {
       --prop-w: clamp(82px, 20.95vw, 136px);
+      --prop-m: 0.318;
       left: auto;
-      right: calc(50% + min(50%, 320px) - var(--prop-w) + min(0.3 * var(--prop-w), max(0px, 50% - 320px)));
+      right: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));
     }
   }
 </style>
