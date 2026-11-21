@@ -302,8 +302,15 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
 
 /* ---------- the constructed numerals (B3 d) ---------- */
 
-export function initNumerals(root: Document | Element = document): (() => void) | void {
-  if (!root.querySelector('.num')) return;
+/**
+ * `page` is a landmark only this page has (Home's doors, Services' process).
+ * Both pages mount this on the whole document, and the router runs each page's
+ * astro:page-load handler on the other page's body too, so without the guard a
+ * swap mounts a second instance. The taps are heard on the document; the guard
+ * only decides whether this page's mount belongs to the body that is showing.
+ */
+export function initNumerals(page: Element | null, root: Document | Element = document): (() => void) | void {
+  if (!page || !root.querySelector('.num')) return;
   const abort = new AbortController();
   onTap(
     root,

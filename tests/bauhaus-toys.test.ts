@@ -93,8 +93,10 @@ describe('bauhaus toys: touch, lifecycle, hover', () => {
   });
   it('the pages mount the toys through onMount', () => {
     expect(home).toMatch(/onMount\(\(\) => initSeesaw\(/);
-    expect(home).toMatch(/onMount\(\(\) => initNumerals\(\)\)/);
-    expect(services).toMatch(/onMount\(\(\) => initNumerals\(\)\)/);
+    expect(home).toMatch(/onMount\(\(\) => initNumerals\(document\.querySelector\('section\.doors'\)\)\)/);
+    expect(services).toMatch(/onMount\(\(\) => initNumerals\(document\.querySelector\('section\.process'\)\)\)/);
+    // The guard: a page's numeral mount must not run on the other page's body after a swap.
+    expect(toys).toMatch(/if \(!page \|\| !root\.querySelector\('\.num'\)\) return;/);
     expect(about).toMatch(/onMount\(\(\) => initLetterB\(/);
     expect(footer).toMatch(/onMount\(\(\) => initCornerSpin\(/);
   });

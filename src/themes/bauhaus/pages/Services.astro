@@ -310,5 +310,5 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
   import { initNumerals } from '../parts/toys';
 
   // The constructed numerals rebuild on a tap (parts/toys.ts).
-  onMount(() => initNumerals());
+  onMount(() => initNumerals(document.querySelector('section.process')));
 </script>

@@ -42,7 +42,7 @@ edit('src/themes/bauhaus/pages/Home.astro', [
   onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.poster')));
   // The see-saw tips and the door numerals rebuild on a tap (parts/toys.ts).
   onMount(() => initSeesaw(document.querySelector<HTMLElement>('button.seesaw')));
-  onMount(() => initNumerals());`,
+  onMount(() => initNumerals(document.querySelector('section.doors')));`,
   ],
 ]);
 
@@ -61,7 +61,7 @@ edit('src/themes/bauhaus/pages/Services.astro', [
   import { initNumerals } from '../parts/toys';
 
   // The constructed numerals rebuild on a tap (parts/toys.ts).
-  onMount(() => initNumerals());
+  onMount(() => initNumerals(document.querySelector('section.process')));
 </script>
 `,
   ],

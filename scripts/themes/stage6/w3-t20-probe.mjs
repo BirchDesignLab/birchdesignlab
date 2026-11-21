@@ -290,6 +290,49 @@ if (ONLY.includes('swap')) {
     check(`${tag} swap: no page errors`, errors.length === 0, errors);
     await ctx.close();
   }
+
+  /* One numeral instance per visit: after Home <-> Services swaps a tap must call
+     play() once per part, as on a direct load. */
+  const PLAYS = () => {
+    window.__plays = 0;
+    const o = Animation.prototype.play;
+    Animation.prototype.play = function () {
+      if (this instanceof CSSAnimation && this.effect?.target?.closest?.('.num')) window.__plays++;
+      return o.call(this);
+    };
+  };
+  async function tapNumeral(page, sel) {
+    await reach(page, sel);
+    const [cx, cy] = await centre(page, sel);
+    await page.evaluate(PLAYS);
+    await page.mouse.click(cx, cy);
+    await page.waitForTimeout(60);
+    return page.evaluate((s) => ({ parts: document.querySelector(s).getAnimations({ subtree: true }).filter((a) => a instanceof CSSAnimation).length, plays: window.__plays }), sel);
+  }
+  for (const scheme of SCHEMES) {
+    const tag = `${scheme}/1440`;
+    for (const [from, to, sel, back, fromSel] of [
+      ['/t/bauhaus/', '/t/bauhaus/services/', '.step-1 .num', '/t/bauhaus/', '.doors .num'],
+      ['/t/bauhaus/services/', '/t/bauhaus/', '.doors .num', '/t/bauhaus/services/', '.step-1 .num'],
+    ]) {
+      // Direct load of the page we will come back to, for the baseline.
+      const d = await open(browser, { path: back, width: 1440, scheme });
+      const direct = await tapNumeral(d.page, fromSel);
+      await d.ctx.close();
+      const { ctx, page, errors } = await open(browser, { path: from, width: 1440, scheme });
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.click(`header a[href$="${to}"]`).catch(() => page.goBack());
+      await page.waitForURL(`**${to}`);
+      await page.waitForTimeout(1200);
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.click(`header a[href$="${back}"]`).catch(() => page.goBack());
+      await page.waitForURL(`**${back}`);
+      await page.waitForTimeout(1500);
+      const swapped = await tapNumeral(page, fromSel);
+      check(`${tag} swap ${from} -> ${to} -> ${back}: numerals mounted once (one play() per part, as on a direct load)`, swapped.parts > 0 && swapped.plays === direct.plays && swapped.plays === direct.parts && swapped.parts === direct.parts, { swapped, direct });
+      await ctx.close();
+    }
+  }
 }
 
 log.fails = fails;

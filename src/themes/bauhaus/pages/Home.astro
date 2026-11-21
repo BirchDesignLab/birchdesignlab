@@ -292,5 +292,5 @@ const doorShape = ['circle', 'square'] as const;
   onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.poster')));
   // The see-saw tips and the door numerals rebuild on a tap (parts/toys.ts).
   onMount(() => initSeesaw(document.querySelector<HTMLElement>('button.seesaw')));
-  onMount(() => initNumerals());
+  onMount(() => initNumerals(document.querySelector('section.doors')));
 </script>
