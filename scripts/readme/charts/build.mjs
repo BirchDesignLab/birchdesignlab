@@ -21,7 +21,7 @@
 // Writes a size and contrast report to scripts/readme/.out/charts/report.json.
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { OUT_DIR, REPO, mermaidBlocks, registry, sha256, svgPath, variantsOf } from './source.mjs';
+import { OUT_DIR, REPO, mermaidBlocks, readDataText, registry, sha256, svgPath, variantsOf } from './source.mjs';
 import { layoutAll } from './layout.mjs';
 import { handLaid, prepare, renderScheme } from './render.mjs';
 import { specs } from './specs.mjs';
@@ -95,7 +95,7 @@ reqs.forEach((r, i) => {
 for (const c of charts.filter((x) => x.kind === 'showpiece')) {
   const build = SHOWPIECES[c.name];
   if (!build) throw new Error(`no builder for showpiece ${c.name}`);
-  const raw = readFileSync(resolve(REPO, c.data), 'utf8');
+  const raw = readDataText(c.data);
   const data = JSON.parse(raw);
   for (const variant of variantsOf(c)) {
     for (const scheme of ['light', 'dark']) jobs.push({ chart: c, variant, scheme, out: build(c, data, scheme, variant, { sourceHash: sha256(raw) }) });

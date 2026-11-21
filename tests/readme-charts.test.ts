@@ -12,7 +12,7 @@ import { parse as parseYaml } from 'yaml';
 import { describe, expect, it } from 'vitest';
 import { deltaE, contrast, paletteHash, palette } from '../scripts/readme/charts/theme.mjs';
 import { portalPaletteHash } from '../scripts/readme/charts/portal.mjs';
-import { REPO, mermaidBlocks, normalizeMermaid, readmeText, registry, sha256, svgName, svgPath } from '../scripts/readme/charts/source.mjs';
+import { REPO, mermaidBlocks, normalizeMermaid, readDataText, readmeText, registry, sha256, svgName, svgPath } from '../scripts/readme/charts/source.mjs';
 
 type Chart = {
   n: number;
@@ -209,8 +209,7 @@ describe('README charts', () => {
         const svg = readFileSync(svgPath(c, s, v), 'utf8');
         const recorded = svg.match(/<metadata[^>]*data-source-hash="([0-9a-f]{64})"/)?.[1];
         expect(c.data, `chart ${c.n} needs a data file in charts.json`).toBeDefined();
-        const data = readFileSync(resolve(REPO, c.data!), 'utf8');
-        expect(recorded, stale(c)).toBe(sha256(data));
+        expect(recorded, stale(c)).toBe(sha256(readDataText(c.data!)));
       });
       it('agrees with its Mermaid fallback', () => {
         const compare = agreement[c.name];

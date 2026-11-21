@@ -13,6 +13,11 @@ export const registry = JSON.parse(readFileSync(resolve(here, 'charts.json'), 'u
 
 export const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
+/** A showpiece's data file as text with LF endings, so the recorded hash is the
+ *  same on a core.autocrlf=true Windows checkout and on CI's LF checkout. */
+export const readDataText = (rel) =>
+  readFileSync(resolve(REPO, rel), 'utf8').split(String.fromCharCode(13, 10)).join(String.fromCharCode(10));
+
 /** LF endings, no trailing spaces, no leading or trailing blank lines. */
 export function normalizeMermaid(block) {
   return block
