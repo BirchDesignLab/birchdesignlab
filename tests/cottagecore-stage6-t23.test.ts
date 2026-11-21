@@ -80,7 +80,17 @@ describe('the dandelion clock (Home closer, Sent)', () => {
     expect(toys).toMatch(/s\.animate\(\[/);
     expect(toys).toMatch(/\{ duration: BLOW\.refillMs, easing: 'linear', fill: 'none' \}/);
     // a seed mid-refill is not blown again
-    expect(toys).toMatch(/const present = \(s: SVGPathElement\) => !anims\.has\(s\);/);
+    expect(toys).toMatch(/const present = \(s: SVGPathElement\) => !anims\.has\(s\) && !asked\.has\(s\);/);
+  });
+
+  it('lifts off the head only the seeds fx.ts says it released (round 1, C1)', () => {
+    // fire() picks the candidates and asks; the bald patch is built in report(), from the indices fx.ts answers with
+    expect(toys).toMatch(/report\?: \(placed: number\[\]\) => void;/);
+    expect(toys).toMatch(/report = \(placed\) => \{[\s\S]*?bald\(placed\.map\(\(i\) => go\[i\]\)\.filter\(Boolean\)\);/);
+    const fire = toys.slice(toys.indexOf('const fire = () =>'), toys.indexOf('const offPress'));
+    expect(fire).not.toMatch(/\bs\.animate\(/);
+    expect(toys).toMatch(/if \(report\) window\.setTimeout\(\(\) => report\?\.\(\[\]\), 1500\);/);
+    expect(toys).toMatch(/alive = false;\s*asked\.clear\(\);/);
   });
 
   it('sends one cc:blow event and, in the dark scheme, blows nothing', () => {
@@ -107,6 +117,12 @@ describe('fx.ts takes the release', () => {
     expect(fn).toMatch(/!seatClear\(x, y, kk, sy, turn, angle\)/);
     expect(fn).toMatch(/seatLife\(sx, sy2, kk, vx, vy, sy, turn, angle\) < SEED\.seatMinLife/);
     expect(fn).toMatch(/if \(!placed\) continue;/);
+    // it answers with the indices it placed, on every path (placed, none seated, window passed, dark, teardown)
+    expect(fn).toMatch(/placedAt\.push\(i\);/);
+    expect(fx).toMatch(/else b\.report\?\.\(releasePuff\(t, sy, b\)\);|b\.report\?\.\(releasePuff\(t, sy, b\)\)/);
+    expect(fx.match(/\.report\?\.\(\[\]\)|b\.report\?\.\(\[\]\)/g)!.length).toBeGreaterThanOrEqual(4);
+    // the cancel marks are not text to keep seeds off
+    expect(fx).toMatch(/closest\('\.cancel-pad'\)/);
     expect(fx).toMatch(/if \(s\.held \|\| s\.puff\) continue;/);
     expect(fx).toMatch(/for \(const s of seeds\) if \(!s\.held && !s\.puff && s\.cover > 0\.5/);
   });

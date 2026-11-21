@@ -82,7 +82,8 @@
  * `cc:blow` window event when it is pressed. By day that releases the 6 to 10 seeds it lost into this canvas as
  * puffs: ordinary seeds that leave the head with a kick and then ride the breeze like the rest, off text by the
  * same fade. A puff is seated by the seat rules (the whole drawn seed clear of the viewport edges, every sheet and
- * every line of text, and clear for seatMinLife s of drift; a seed with no such seat is not released), is kept
+ * every line of text, and clear for seatMinLife s of drift; a seed with no such seat is not released, and the
+ * event's `report` callback is told which seeds were, so the clock lifts only those off its head), is kept
  * out of the keep loop (it is never re-seated), at most puffCap live at once (the oldest fade first), and goes
  * when it leaves the view or after puffLife. By lamplight the same event is a tap on clear cloth at the clock,
  * and the mote it calls (or lights) rises from there.
@@ -575,7 +576,7 @@ export function mountFireflies(): void {
         line or sheet under it, measured when it happened). */
     const tap = { x: 0, y: 0, pending: false, clear: false, rise: false };
     /** The clock's release waiting for the next frame (see the header). */
-    let blow: { at: number; x: number; y: number; r: number; n: number; points: Array<{ x: number; y: number }> } | null = null;
+    let blow: { at: number; x: number; y: number; r: number; n: number; points: Array<{ x: number; y: number }>; report?: (placed: number[]) => void } | null = null;
     let extras = 0;
 
     const newFirefly = (x: number, y: number, r = 1.3 + Math.random() * 1.1): Firefly => ({
@@ -809,7 +810,9 @@ export function mountFireflies(): void {
       };
       document.querySelectorAll('header, main, footer').forEach((region) => {
         const walker = document.createTreeWalker(region, NodeFilter.SHOW_TEXT, {
-          acceptNode: (n) => (n.nodeValue && n.nodeValue.trim() && !SKIP_TAGS.has(n.parentElement?.tagName ?? '') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+          // The date stamp's cancel marks (task 23) are laid and faded by a press, so they are not lines of text
+          // to keep seeds off (they sit over a postage stamp or a postcard that already is one).
+          acceptNode: (n) => (n.nodeValue && n.nodeValue.trim() && !SKIP_TAGS.has(n.parentElement?.tagName ?? '') && !n.parentElement?.closest('.cancel-pad') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
         });
         for (let n = walker.nextNode(); n; n = walker.nextNode()) {
           range.selectNodeContents(n);
@@ -1171,8 +1174,9 @@ export function mountFireflies(): void {
     };
 
     /** The clock's release by day: up to rel.n seeds leave the head, each only where it has a strict seat. */
-    const releasePuff = (t: number, sy: number, rel: NonNullable<typeof blow>) => {
-      if (!fontsSettled || !rel.points.length) return;
+    const releasePuff = (t: number, sy: number, rel: NonNullable<typeof blow>): number[] => {
+      const placedAt: number[] = [];
+      if (!fontsSettled || !rel.points.length) return placedAt;
       // Room for them: the oldest puffs fade first.
       const live = seeds.filter((s) => s.puff);
       const over = live.length + rel.n - PUFF.cap;
@@ -1243,7 +1247,9 @@ export function mountFireflies(): void {
         }
         if (!placed) continue;
         seeds.push(s);
+        placedAt.push(i);
       }
+      return placedAt;
     };
 
     const draw = (t: number, dt: number, still: boolean) => {
@@ -1267,8 +1273,9 @@ export function mountFireflies(): void {
             tap.clear = true;
             tap.rise = true;
             tap.pending = true;
-          } else releasePuff(t, sy, b);
-        }
+            b.report?.([]);
+          } else b.report?.(releasePuff(t, sy, b));
+        } else b.report?.([]);
       }
       if (now === 'dark') drawFireflies(t, still, sy, dsy, switched);
       else drawDandelions(t, dt, still, sy, dsy, switched);
@@ -1355,7 +1362,10 @@ export function mountFireflies(): void {
     };
     const onBlow = (e: Event) => {
       const d = (e as CustomEvent).detail;
-      if (d && Number.isFinite(d.x) && Number.isFinite(d.y)) blow = { at: performance.now(), x: d.x, y: d.y, r: d.r, n: d.n, points: d.points ?? [] };
+      if (d && Number.isFinite(d.x) && Number.isFinite(d.y)) {
+        blow?.report?.([]);
+        blow = { at: performance.now(), x: d.x, y: d.y, r: d.r, n: d.n, points: d.points ?? [], report: typeof d.report === 'function' ? d.report : undefined };
+      }
     };
     const onPointerLeave = () => {
       pointer.fine = false;
@@ -1413,6 +1423,7 @@ export function mountFireflies(): void {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       window.removeEventListener('cc:blow', onBlow);
+      blow?.report?.([]);
       blow = null;
       presses.clear();
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);

@@ -30,6 +30,8 @@ export interface BlowDetail {
   r: number;
   n: number;
   points: Array<{ x: number; y: number }>;
+  /** fx.ts answers once with the indices of `points` it released as puffs; the clock lifts only those seeds. */
+  report?: (placed: number[]) => void;
 }
 export const BLOW_EVENT = 'cc:blow';
 
@@ -114,9 +116,38 @@ export function initDandelion(el: HTMLElement): () => void {
   const root = document.documentElement;
   const anims = new Map<SVGPathElement, Animation>();
   let litTimer = 0;
+  let alive = true;
+  /** Seeds picked for a release fx.ts has not answered yet: still on the head, and not picked again. */
+  const asked = new Set<SVGPathElement>();
 
-  /** A seed is on the head when it is not mid-refill. */
-  const present = (s: SVGPathElement) => !anims.has(s);
+  /** A seed is on the head when it is not mid-refill and not already promised to a release. */
+  const present = (s: SVGPathElement) => !anims.has(s) && !asked.has(s);
+
+  /** Lift `go` off the head: each refills in its own window, spread so the last is whole about 20 s after the tap. */
+  const bald = (go: SVGPathElement[]) => {
+    const n = go.length;
+    const order = go.map((_, i) => i).sort(() => Math.random() - 0.5);
+    go.forEach((s, i) => {
+      const j = order[i];
+      const start = n === 1 ? BLOW.first : BLOW.first + (j / (n - 1)) * (BLOW.last - BLOW.first) + rand(-400, 400);
+      const a = Number(s.dataset.a);
+      const dx = Math.cos(a) * 7;
+      const dy = Math.sin(a) * 7 - 3;
+      const t = (ms: number) => Math.min(1, Math.max(0, ms / BLOW.refillMs));
+      const gone = t(240);
+      const back = t(Math.max(start, 400));
+      const whole = t(Math.max(start, 400) + BLOW.fadeMs);
+      const anim = s.animate([
+        { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: 0 },
+        { opacity: 0, transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(1.04)`, offset: gone },
+        { opacity: 0, transform: 'translate(0px, 0px) scale(0.55)', offset: back },
+        { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: whole },
+        { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: 1 },
+      ], { duration: BLOW.refillMs, easing: 'linear', fill: 'none' });
+      anims.set(s, anim);
+      anim.onfinish = anim.oncancel = () => { anims.delete(s); };
+    });
+  };
 
   const fire = () => {
     const dark = root.dataset.scheme === 'dark';
@@ -126,6 +157,7 @@ export function initDandelion(el: HTMLElement): () => void {
     const cy = rect.top + 46 * k;
     const r = 33 * k;
     const points: BlowDetail['points'] = [];
+    let report: BlowDetail['report'];
     let oy = cy;
     if (!dark) {
       // The bald patch: the seeds nearest a random bearing, as many as are on the head up to 6 to 10.
@@ -138,31 +170,20 @@ export function initDandelion(el: HTMLElement): () => void {
         return Math.min(d, Math.PI * 2 - d) + Math.random() * 0.22;
       };
       const go = here.sort((a, b) => gap(a) - gap(b)).slice(0, n);
-      // Each seed refills in its own window, spread so the last is whole about 20 s after the tap.
-      const order = go.map((_, i) => i).sort(() => Math.random() - 0.5);
-      go.forEach((s, i) => {
-        const j = order[i];
-        const start = n === 1 ? BLOW.first : BLOW.first + (j / (n - 1)) * (BLOW.last - BLOW.first) + rand(-400, 400);
-        const a = Number(s.dataset.a);
-        const dx = Math.cos(a) * 7;
-        const dy = Math.sin(a) * 7 - 3;
-        const t = (ms: number) => Math.min(1, Math.max(0, ms / BLOW.refillMs));
-        const gone = t(240);
-        const back = t(Math.max(start, 400));
-        const whole = t(Math.max(start, 400) + BLOW.fadeMs);
-        const anim = s.animate([
-          { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: 0 },
-          { opacity: 0, transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(1.04)`, offset: gone },
-          { opacity: 0, transform: 'translate(0px, 0px) scale(0.55)', offset: back },
-          { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: whole },
-          { opacity: 1, transform: 'translate(0px, 0px) scale(1)', offset: 1 },
-        ], { duration: BLOW.refillMs, easing: 'linear', fill: 'none' });
-        anims.set(s, anim);
-        anim.onfinish = anim.oncancel = () => { anims.delete(s); };
-        const px = Number(s.dataset.px);
-        const py = Number(s.dataset.py);
-        points.push({ x: rect.left + px * k, y: rect.top + py * k });
-      });
+      // The seeds are not lifted yet: fx.ts seats each one on clear cloth and answers (report) with the ones it
+      // could release, and only those leave the head, so the bald patch is never larger than the puff.
+      for (const s of go) {
+        asked.add(s);
+        points.push({ x: rect.left + Number(s.dataset.px) * k, y: rect.top + Number(s.dataset.py) * k });
+      }
+      let answered = false;
+      report = (placed) => {
+        if (answered) return;
+        answered = true;
+        for (const s of go) asked.delete(s);
+        if (!alive) return;
+        bald(placed.map((i) => go[i]).filter(Boolean));
+      };
     } else {
       // By lamplight the same spot calls a firefly (fx.ts), from the top of the head, which glows while it rises.
       oy = cy - r * 0.5;
@@ -170,7 +191,9 @@ export function initDandelion(el: HTMLElement): () => void {
       clearTimeout(litTimer);
       litTimer = window.setTimeout(() => el.removeAttribute('data-lit'), 1300);
     }
-    window.dispatchEvent(new CustomEvent<BlowDetail>(BLOW_EVENT, { detail: { x: cx, y: oy, r, n: points.length, points } }));
+    window.dispatchEvent(new CustomEvent<BlowDetail>(BLOW_EVENT, { detail: { x: cx, y: oy, r, n: points.length, points, report } }));
+    // Nobody answered (no canvas is listening, or it dropped the tap): the head keeps its seeds.
+    if (report) window.setTimeout(() => report?.([]), 1500);
     // A little shiver of the whole head, whichever way the room is lit.
     head.animate([{ rotate: '0deg' }, { rotate: '5deg' }, { rotate: '-3deg' }, { rotate: '0deg' }], { duration: 520, easing: 'ease-out' });
   };
@@ -178,6 +201,8 @@ export function initDandelion(el: HTMLElement): () => void {
   const offPress = bindPress(el, fire);
   const offNudge = nudgeOnce(el);
   return () => {
+    alive = false;
+    asked.clear();
     offPress();
     offNudge();
     clearTimeout(litTimer);

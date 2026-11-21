@@ -114,7 +114,9 @@ const { copy, theme } = Astro.props;
   @media (max-width: 820px) {
     .sent { grid-template-columns: 1fr; }
     .envelope { width: min(76%, 18rem); margin-top: 3.5rem; }
-    .toys { width: min(76%, 18rem); padding-inline: 0.6rem; margin-top: 1.6rem; }
+    /* The room under the envelope is the clock's runway: its seeds drift up and right, so they need clear cloth
+       between the head and the postmark text above (round 1, C1). */
+    .toys { width: min(76%, 18rem); padding-inline: 0.6rem; margin-top: 4.8rem; }
     .toys :global(.sent-clock) { width: 5rem; }
   }
 </style>
