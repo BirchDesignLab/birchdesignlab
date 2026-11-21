@@ -261,10 +261,15 @@
    -webkit- name as a redundant alias and drops that branch of an `or`,
    which sent Safari 17 and older, the engines that only know the prefixed
    name, to the opaque fallback (scripts/themes/glassmorphism/
-   b1-fix2-lightningcss.mjs). Nested queries both survive. */
+   b1-fix2-lightningcss.mjs). Nested queries both survive.
+   The selectors are E10's (below): doubled attributes, (0,4,0) light and
+   (0,5,0) dark, so the fallback wins over dark's token block (0,3,0), Tinted
+   (0,3,0 light, 0,4,0 dark) and the phone pane wherever they sit in the file
+   (Stage 6 w3 task 18, T9 C2). */
 @supports not (backdrop-filter: blur(1px)) {
   @supports not (-webkit-backdrop-filter: blur(1px)) {
-    :root[data-theme='glassmorphism'] {
+    :root[data-theme='glassmorphism'][data-theme='glassmorphism'][data-theme='glassmorphism'],
+    :root[data-theme='glassmorphism'][data-scheme='dark'][data-theme='glassmorphism'][data-theme='glassmorphism'] {
       --mat-thin: var(--glass-fallback);
       --mat-regular: var(--glass-fallback);
       --mat-thick: var(--glass-fallback);
@@ -1167,9 +1172,21 @@
      re-critic nit); the dark selector is listed too, and this block sits
      after dark's, so it wins the tie on source order. */
   /* Stage 6 wave 2 (G2): the thinner regular pane (light; dark's token
-     block, 0,3,0, and Tinted's both outrank this, as they should). */
-  :root[data-theme='glassmorphism'] {
-    --mat-regular: var(--mat-regular-phone);
+     block, 0,3,0, and Tinted's both outrank this, as they should). Only
+     where a backdrop-filter works (w3 task 18, T9 C2): without one the pane
+     keeps the opaque fallback. Two exclusive blocks, the second nested, not
+     an `or` (the minifier drops the -webkit- branch of an `or`). */
+  @supports (backdrop-filter: blur(1px)) {
+    :root[data-theme='glassmorphism'] {
+      --mat-regular: var(--mat-regular-phone);
+    }
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    @supports (-webkit-backdrop-filter: blur(1px)) {
+      :root[data-theme='glassmorphism'] {
+        --mat-regular: var(--mat-regular-phone);
+      }
+    }
   }
   :root[data-theme='glassmorphism'],
   :root[data-theme='glassmorphism'][data-scheme='dark'] {

@@ -88,9 +88,11 @@ const [founderLead, ...founderRest] = copy.founder.body;
      between its own first letter's bearing and the T's the title's margin is
      measured for (T 0.018em; measured from pixels, ink minus the column, at
      1440, 1280, 1024 and 820: "The" 0.0068em right, "shining" 0.0211em right,
-     "tree" 0.0022em left; w2-t10-flush.mjs). The lines are the words, so the
-     rule holds for any copy of three words; Services' title wraps by measure
-     and is not corrected line by line (see Services.astro). */
+     "tree" 0.0022em left; w2-t10-flush.mjs). The values are the measured
+     bearings of today's copy (the first letters T, s and t): a change to the
+     heading must re-run scripts/themes/stage6/w2-t10-flush.mjs and set new
+     values here. Services' title wraps by measure and is not corrected line
+     by line (see Services.astro). */
   .title .ln:nth-child(1) { margin-inline-start: -0.0068em; }
   .title .ln:nth-child(2) { margin-inline-start: -0.0211em; }
   .title .ln:nth-child(3) { margin-inline-start: 0.0022em; }

@@ -24,6 +24,8 @@ const { href, label, class: className, reload = false } = Astro.props;
     transition: opacity var(--dur-2) var(--ease-weighted),
                 color var(--dur-2) var(--ease-weighted);
   }
-  .bark-credit:hover,
   .bark-credit:focus-visible { opacity: 1; color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .bark-credit:hover { opacity: 1; color: var(--accent); }
+  }
 </style>

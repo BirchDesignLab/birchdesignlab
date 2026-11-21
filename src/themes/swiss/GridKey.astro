@@ -146,9 +146,11 @@
       // The column tags sit at the top of the screen and the key sits at the
       // start of one column, a line down on a mouse and half a line down on
       // touch (the bar's padding is pulled in): a tag that would cover the key,
-      // the control that clears a latched grid, drops to the line below it.
+      // the control that clears a latched grid, drops to the next line of the
+      // baseline grid below the key's bottom edge (a whole number of lines
+      // from the top of the screen, so the tag stays on the grid).
       const kr = key.getBoundingClientRect();
-      guides.style.setProperty('--clear-y', `${Math.ceil(kr.bottom)}px`);
+      guides.style.setProperty('--clear-y', `${Math.ceil(kr.bottom / u) * u}px`);
       for (const col of Array.from(guides.children) as HTMLElement[]) {
         const cr = col.getBoundingClientRect();
         const hit = cr.width > 0 && kr.bottom > 0 && kr.top < u && kr.right > cr.left - 1 && kr.left < cr.left + 30;

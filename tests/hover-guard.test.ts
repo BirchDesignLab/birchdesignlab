@@ -3,21 +3,27 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 /**
- * Hover guard (Stage 6 w2 task 17). Every `:hover` rule in a school's CSS
- * (src/themes/** .css, and <style> blocks of .astro, quiet and the portal
- * included) must sit inside a media query that implies
- * `(hover: hover) and (pointer: fine)`, so a tap on a phone leaves no stuck
- * hover state. A rule that shares a selector list with `:focus` or
- * `:focus-visible` fails too: split it so focus stays ungated.
+ * Hover guard (Stage 6 w2 task 17, tightened in w3 task 18). Every `:hover`
+ * rule in a school's CSS (src/themes/** .css, <style> blocks of .astro, quiet
+ * and the portal included, and the switcher's shadow-root STYLE) must sit
+ * inside a media query whose every comma branch carries both
+ * `(hover: hover)` and `(pointer: fine)`, with no leading `not` and no `or`,
+ * so a tap on a phone leaves no stuck hover state. A rule that shares a
+ * selector list with `:focus` or `:focus-visible` fails too: split it so
+ * focus stays ungated.
  *
- * Checks the SOURCES (not dist/), so it needs no build. Scope is
- * src/themes/** plus the shared CSS quiet actually loads (EXTRA below):
+ * Checks the SOURCES (not dist/), so it needs no build and names the file a
+ * fix belongs in; the reasoning and the mutation check are recorded in
+ * docs/superpowers/specs/theme-schools-research/tier3-stage6/hover-guard.md.
+ * Scope is src/themes/** plus the shared CSS quiet actually loads (EXTRA):
  * quiet's CSS is the root site's own src/styles/base.css, and it mounts
- * ThemeToggle and BarkCredit.
+ * ThemeToggle and BarkCredit. Since w3 task 18 those are gated at the source,
+ * so there is no touch-only allowance and no exception left.
  */
 
 const SRC = join(__dirname, '..', 'src');
 const ROOT = join(SRC, 'themes');
+const SWITCHER = join(ROOT, 'portal', 'switcher.ts');
 
 /** Shared files outside src/themes that the quiet school ships. */
 const EXTRA = [
@@ -26,36 +32,35 @@ const EXTRA = [
   join(SRC, 'components', 'BarkCredit.astro'),
 ];
 
-const SHARED =
-  'shared with the live business site (src/styles/base.css and components), not changed from a school; ' +
-  'quiet ships it ungated, so src/themes/quiet/portal.css undoes it on touch (checked below)';
+/**
+ * Named exceptions only: `file::selector` -> reason. Empty since w3 task 18.
+ * An entry whose rule is gated (or gone) fails the stale-entry test.
+ */
+const ALLOW: Record<string, string> = {};
 
-/** Named exceptions only: `file::selector` -> reason. */
-const ALLOW: Record<string, string> = {
-  'styles/base.css::a:hover': SHARED,
-  'styles/base.css::.cta-engraved:hover .fill': `(hover: hover) without pointer: fine; ${SHARED}`,
-  'styles/base.css::.cta-engraved:hover .lbl': `(hover: hover) without pointer: fine; ${SHARED}`,
-  'styles/base.css::.more-link:hover': `(hover: hover) without pointer: fine; ${SHARED}`,
-  'styles/base.css::.more-link:hover .arw': `(hover: hover) without pointer: fine; ${SHARED}`,
-  'styles/base.css::.loud a:hover, .loud .more-link:hover': `outranks the gated .designation hover in quiet Home; ${SHARED}`,
-  'components/ThemeToggle.astro::button:hover': SHARED,
-  'components/BarkCredit.astro::.bark-credit:hover, .bark-credit:focus-visible': `hover shares a list with focus-visible; ${SHARED}`,
-};
+/** Fewest gated :hover rules the whole scan may find (canary against a silently shrunk scope). */
+const GATED_FLOOR = 60;
+/** Fewest :hover rules the switcher's shadow-root STYLE may yield. */
+const SWITCHER_FLOOR = 3;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.(css|astro)$/.test(name) || name === 'switcher.ts') out.push(p);
+    else if (/\.(css|astro)$/.test(name) || p === SWITCHER) out.push(p);
   }
   return out;
 }
 
-function cssBlocks(file: string): string[] {
-  const src = readFileSync(file, 'utf8');
+export function cssBlocks(file: string, src = readFileSync(file, 'utf8')): string[] {
   if (file.endsWith('.css')) return [src];
-  // The portal switcher's shadow-root CSS lives in template literals.
-  if (file.endsWith('.ts')) return [...src.matchAll(/`([^`]*)`/g)].map((m) => m[1]);
+  // The portal switcher's shadow-root CSS is the STYLE template literal. It
+  // is matched by name, so a backtick elsewhere in the file cannot shift it.
+  if (file.endsWith('.ts')) {
+    const m = /const STYLE = `([^`]*)`;/.exec(src);
+    if (!m) throw new Error(`no STYLE literal in ${file}`);
+    return [m[1]];
+  }
   const out: string[] = [];
   const re = /<style\b[^>]*>([\s\S]*?)<\/style>/g;
   let m: RegExpExecArray | null;
@@ -123,11 +128,12 @@ export function collectRules(css: string): Rule[] {
   return rules;
 }
 
-function splitList(sel: string): string[] {
+/** Splits on top-level commas (outside parentheses and brackets). */
+function splitTop(list: string): string[] {
   const out: string[] = [];
   let depth = 0;
   let cur = '';
-  for (const ch of sel) {
+  for (const ch of list) {
     if (ch === '(' || ch === '[') depth++;
     if (ch === ')' || ch === ']') depth--;
     if (ch === ',' && depth === 0) {
@@ -139,93 +145,129 @@ function splitList(sel: string): string[] {
   return out;
 }
 
-const gated = (media: string[]) =>
-  media.some((m) => /hover\s*:\s*hover/i.test(m) && /pointer\s*:\s*fine/i.test(m));
-
-/** A rule that only applies where nothing can hover (every comma branch has hover: none) cannot stick. */
-const touchOnly = (media: string[]) =>
-  media.some((m) =>
-    m
-      .replace(/^@media\s*/i, '')
-      .split(',')
-      .every((b) => /\(\s*hover\s*:\s*none\s*\)/i.test(b)),
+/**
+ * One @media prelude is a mouse gate when every top-level comma branch
+ * carries both `(hover: hover)` and `(pointer: fine)`, none starts with
+ * `not`, and none uses a level-4 `or` (either would let a touch device in).
+ */
+export function mouseGate(prelude: string): boolean {
+  const branches = splitTop(prelude.replace(/^@media\s*/i, ''));
+  return (
+    branches.length > 0 &&
+    branches.every(
+      (b) =>
+        !/^not\b/i.test(b) &&
+        !/\)\s*or\s*\(|\bor\s*\(/i.test(b) &&
+        /\(\s*hover\s*:\s*hover\s*\)/i.test(b) &&
+        /\(\s*pointer\s*:\s*fine\s*\)/i.test(b),
+    )
   );
+}
+
+/** Nested @media chains intersect, so one mouse gate anywhere in the chain is enough. */
+export const gated = (media: string[]) => media.some(mouseGate);
 
 function keyOf(file: string, selector: string): string {
   const rel = relative(file.startsWith(ROOT) ? ROOT : SRC, file).split(sep).join('/');
   return `${rel}::${selector.replace(/\s+/g, ' ')}`;
 }
 
-export function violations(file: string, css: string): string[] {
-  const bad: string[] = [];
+/** Every violation, before exceptions: `[key, message]`. */
+export function rawViolations(file: string, css: string): [string, string][] {
+  const bad: [string, string][] = [];
   for (const r of collectRules(css)) {
-    const parts = splitList(r.selector);
-    const hasHover = parts.some((s) => /:hover\b/.test(s));
-    if (!hasHover) continue;
+    const parts = splitTop(r.selector);
+    if (!parts.some((s) => /:hover\b/.test(s))) continue;
     const key = keyOf(file, r.selector);
-    if (ALLOW[key]) continue;
-    if (touchOnly(r.media)) continue;
-    if (!gated(r.media)) bad.push(`ungated :hover: ${key}`);
-    else if (parts.some((s) => /:focus/.test(s)))
-      bad.push(`hover shares a list with :focus: ${key}`);
+    if (!gated(r.media)) bad.push([key, `ungated :hover: ${key}`]);
+    else if (parts.some((s) => /:focus/.test(s))) bad.push([key, `hover shares a list with :focus: ${key}`]);
   }
   return bad;
 }
 
+export function violations(file: string, css: string, allow: Record<string, string> = ALLOW): string[] {
+  return rawViolations(file, css)
+    .filter(([key]) => !allow[key])
+    .map(([, msg]) => msg);
+}
+
+/** ALLOW keys that no longer name a real violation (the rule was gated, split or removed). */
+export function staleAllow(allow: Record<string, string>, sources: [string, string][]): string[] {
+  const live = new Set(sources.flatMap(([f, css]) => rawViolations(f, css).map(([k]) => k)));
+  return Object.keys(allow).filter((k) => !live.has(k));
+}
+
+/** Gated :hover rules in one block. */
+function gatedHoverCount(css: string): number {
+  return collectRules(css).filter(
+    (r) => splitTop(r.selector).some((s) => /:hover\b/.test(s)) && gated(r.media),
+  ).length;
+}
+
 describe('hover guard', () => {
   const files = [...walk(ROOT), ...EXTRA];
+  const sources: [string, string][] = files.flatMap((f) => cssBlocks(f).map((css) => [f, css] as [string, string]));
 
   it('finds the school sources', () => {
     expect(files.length).toBeGreaterThan(20);
+    expect(files).toContain(SWITCHER);
+  });
+
+  it('canary: the switcher STYLE yields its hover rules', () => {
+    const hovers = cssBlocks(SWITCHER).flatMap((css) =>
+      collectRules(css).filter((r) => splitTop(r.selector).some((s) => /:hover\b/.test(s))),
+    );
+    expect(hovers.length).toBeGreaterThanOrEqual(SWITCHER_FLOOR);
+  });
+
+  it('canary: the whole scan finds gated hover rules above the floor', () => {
+    const total = sources.reduce((n, [, css]) => n + gatedHoverCount(css), 0);
+    expect(total).toBeGreaterThan(GATED_FLOOR);
   });
 
   it('every :hover rule is gated and focus is never in its list', () => {
     const bad: string[] = [];
-    for (const f of files) for (const css of cssBlocks(f)) bad.push(...violations(f, css));
+    for (const [f, css] of sources) bad.push(...violations(f, css));
     expect(bad).toEqual([]);
   });
 
-  it('every ALLOW entry still matches a real violation (no stale exceptions)', () => {
-    const hit = new Set<string>();
-    for (const f of files)
-      for (const css of cssBlocks(f))
-        for (const r of collectRules(css)) {
-          const key = keyOf(f, r.selector);
-          hit.add(key);
-        }
-    expect(Object.keys(ALLOW).filter((k) => !hit.has(k))).toEqual([]);
-  });
-
-  it('quiet portal.css undoes every ungated shared hover on touch', () => {
-    const css = readFileSync(join(ROOT, 'quiet', 'portal.css'), 'utf8');
-    const undone = new Set(
-      collectRules(css)
-        .filter((r) => touchOnly(r.media))
-        .flatMap((r) => splitList(r.selector)),
-    );
-    // base.css a:hover, .loud a:hover, BarkCredit's hover, ThemeToggle's hover (the (hover: hover)-only
-    // cta and more-link rules never match on touch).
-    for (const sel of ['a:hover', '.loud a:hover', '.loud .designation:hover', '.bark-credit.bark-credit:hover:not(:focus-visible)', '#theme-toggle:hover'])
-      expect(undone.has(sel), sel).toBe(true);
+  it('every ALLOW entry still names a real violation (no stale exceptions)', () => {
+    expect(staleAllow(ALLOW, sources)).toEqual([]);
   });
 
   it('the scanner itself catches the failure modes', () => {
     const f = join(ROOT, 'x.css');
-    expect(violations(f, '.a:hover{color:red}')).toHaveLength(1);
-    expect(
-      violations(f, '@media (hover: hover) and (pointer: fine){.a:hover{color:red}}'),
-    ).toHaveLength(0);
-    expect(
-      violations(
-        f,
-        '@media (hover: hover) and (pointer: fine){.a:hover,.a:focus-visible{color:red}}',
-      ),
-    ).toHaveLength(1);
-    expect(violations(f, '@media (min-width:600px){.a:hover{color:red}}')).toHaveLength(1);
-    expect(violations(f, '@media (hover: none){.a:hover{color:red}}')).toHaveLength(0);
-    expect(violations(f, '@media (hover: none), (min-width:600px){.a:hover{color:red}}')).toHaveLength(1);
-    expect(
-      violations(f, '.b{background:url("data:image/svg+xml;utf8,<svg/>")}.a:hover{color:red}'),
-    ).toHaveLength(1);
+    const ok = (css: string) => expect(violations(f, css, {}), css).toHaveLength(0);
+    const bad = (css: string) => expect(violations(f, css, {}), css).toHaveLength(1);
+    bad('.a:hover{color:red}');
+    ok('@media (hover: hover) and (pointer: fine){.a:hover{color:red}}');
+    ok('@media (min-width:600px){@media (hover: hover) and (pointer: fine){.a:hover{color:red}}}');
+    bad('@media (hover: hover) and (pointer: fine){.a:hover,.a:focus-visible{color:red}}');
+    bad('@media (min-width:600px){.a:hover{color:red}}');
+    bad('@media (hover: hover){.a:hover{color:red}}');
+    // C2: a comma branch without the gate, a leading not, a level-4 or.
+    bad('@media (hover: hover) and (pointer: fine), (max-width: 640px){.a:hover{color:red}}');
+    ok('@media (hover: hover) and (pointer: fine) and (min-width: 600px), (hover: hover) and (pointer: fine) and (orientation: landscape){.a:hover{color:red}}');
+    bad('@media not all and (hover: hover) and (pointer: fine){.a:hover{color:red}}');
+    bad('@media ((hover: hover) and (pointer: fine)) or (max-width: 640px){.a:hover{color:red}}');
+    // No touch-only allowance any more: a (hover: none) hover is ungated like any other.
+    bad('@media (hover: none){.a:hover{color:red}}');
+    bad('.b{background:url("data:image/svg+xml;utf8,<svg/>")}.a:hover{color:red}');
+  });
+
+  it('the stale-entry check flags an exception whose rule is now gated', () => {
+    const f = join(ROOT, 'x.css');
+    const key = keyOf(f, '.a:hover');
+    const ungatedSrc: [string, string][] = [[f, '.a:hover{color:red}']];
+    const gatedSrc: [string, string][] = [[f, '@media (hover: hover) and (pointer: fine){.a:hover{color:red}}']];
+    expect(violations(f, ungatedSrc[0][1], { [key]: 'reason' })).toEqual([]);
+    expect(staleAllow({ [key]: 'reason' }, ungatedSrc)).toEqual([]);
+    expect(staleAllow({ [key]: 'reason' }, gatedSrc)).toEqual([key]);
+  });
+
+  it('the switcher STYLE is found by name, not by backtick pairing', () => {
+    const src = '// a stray ` backtick\nconst STYLE = `\n.b:hover{color:red}\n`;\nconst X = `y`;';
+    expect(cssBlocks(SWITCHER, src)).toEqual(['\n.b:hover{color:red}\n']);
+    expect(() => cssBlocks(SWITCHER, 'const OTHER = `x`;')).toThrow();
   });
 });

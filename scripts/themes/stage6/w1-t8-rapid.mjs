@@ -5,6 +5,9 @@
  * the cycle reaches (2, 3, 4: so 4). A CDP screencast films the sequence and
  * a timestamped strip (ms from the first press) is written beside the result.
  *
+ * Exits 1 when any size does not end on 4, main's clip-path is not none, or
+ * the page threw (w3 task 18, T11 C4).
+ *
  * Usage (GPU Chromium only; exits 2 on a software renderer):
  *   node scripts/themes/snap.mjs --name s6-w1-t8        # freeze once
  *   BDL_GPU=1 node scripts/themes/stage6/w1-t8-rapid.mjs --port 4470 [--snap s6-w1-t8] [--out <dir>]
@@ -122,4 +125,18 @@ for (const sizeId of ['1440', '390']) {
   await context.close();
 }
 await writeFile(join(OUT, 'rapid.json'), JSON.stringify(R, null, 2));
+// Pass only if every size ended on 4 with no clip and no page error (w3 task 18, T11 C4).
+const fails = Object.entries(R)
+  .filter(([k]) => k.startsWith('light__'))
+  .flatMap(([k, r]) => [
+    r.end !== 4 && `${k}: ended on ${r.end}, not 4`,
+    r.clip !== 'none' && `${k}: main clip-path is ${r.clip}, not none`,
+    r.errors.length > 0 && `${k}: ${r.errors.length} page error(s): ${r.errors.join(' | ')}`,
+  ])
+  .filter(Boolean);
+if (fails.length) {
+  console.error(`FAIL\n${fails.join('\n')}`);
+  await done(1);
+}
+console.log('PASS: every size ended on 4, clip none, no errors');
 await done(0);

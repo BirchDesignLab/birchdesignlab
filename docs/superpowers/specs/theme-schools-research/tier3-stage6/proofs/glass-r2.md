@@ -35,7 +35,7 @@ It adds three things over the page:
    face about 1.45x and pulls a ring of the backdrop into the rim (a thick
    bent edge, 18px of extra pull easing out over 30px). A sheen and an inset
    hairline draw the glass; there is no fill. The face ignores the pointer.
-   Only a 16px ring along the rim (18px on phones, `proof.js:307`; a real
+   Only a 16px ring along the rim (18px on phones, `proof.js:315`; a real
    `<button>`, clipped to the ring with an even-odd `clip-path`, which hit
    testing honours) grabs it. A ring under 24px is below the 24px target
    minimum, so a build must make it 24px (see "What building it for real
@@ -110,9 +110,13 @@ the page as built (`?r2=off`), dragging today's lens.
 
 The table is the 11-20-26 re-run (GPU Chromium, ANGLE D3D11, RTX 3070, same
 script, `w1-t7-proof.mjs --trace`), which also writes `busyMsPerSec` into
-`results.json`; the first run (11-19-26) lacked that field and its numbers
-sit within about 10% of these on every column except the 1440 scroll
-renderer-main (150 and 197 then, 142 and 199 now).
+`results.json`; the first run (11-19-26) lacked that field. Most of its
+numbers sit within 10% of these; five differ by more (first run, then
+re-run): R2 lens drag 1440 renderer main 86 and 71 (17%) and GPU main 86
+and 75 (13%), R2 lens drag 390 renderer main 54 and 42 (22%), WebGL lens
+drag 390 viz 78 and 67 (14%), and as built scroll 390 viz 128 and 113
+(12%). The 1440 scroll renderer main moved only 5% and 1% (150 and 197
+then, 142 and 199 now).
 
 | run | size | presented/s | rAF p95 | renderer main | compositor | viz | GPU main |
 |---|---|---|---|---|---|---|---|

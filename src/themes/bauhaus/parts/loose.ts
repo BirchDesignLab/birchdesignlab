@@ -53,10 +53,24 @@ function unitsPerPixel(svg: SVGSVGElement): number {
   return m && m.a > 0 ? 1 / m.a : 1;
 }
 
-/** True while any build animation under the shape is still to finish (or parked below the fold). */
-function stillBuilding(el: Element): boolean {
+/**
+ * True while any build animation under the shape is still to finish (or
+ * parked below the fold). The pick-me beat (`skip`) is not building: a
+ * press, touch, hover or arrow key during it cancels it and takes the shape.
+ * Nor is a CSS transition (the 120 ms hover lift, the settle): a press just
+ * after the pointer arrives must still pick the shape up.
+ */
+function stillBuilding(el: Element, skip: Animation | null = null): boolean {
   try {
-    return el.getAnimations({ subtree: true }).some((a) => a.playState !== 'finished' && a.playState !== 'idle');
+    return el
+      .getAnimations({ subtree: true })
+      .some(
+        (a) =>
+          a !== skip &&
+          !(typeof CSSTransition !== 'undefined' && a instanceof CSSTransition) &&
+          a.playState !== 'finished' &&
+          a.playState !== 'idle',
+      );
   } catch {
     return false;
   }
@@ -98,11 +112,12 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
     root.classList.add('is-carrying');
   }
 
-  function drop(el: SVGElement): void {
+  /** Falls back to the mark, or (lift > 0, the mouse still over it) straight to the hover lift. */
+  function drop(el: SVGElement, lift = 0): void {
     if (!el.hasAttribute('data-held')) return;
     el.removeAttribute('data-held');
     el.style.transition = `translate ${FALL_MS}ms var(--ease-snap, ${SNAP})`;
-    el.style.translate = '0px 0px';
+    el.style.translate = `${-lift}px ${-lift}px`;
     timers.set(
       el,
       window.setTimeout(() => {
@@ -139,6 +154,9 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
     beat = null;
   }
 
+  /** Building, not counting the pick-me beat. */
+  const building = (el: SVGElement): boolean => stillBuilding(el, beat);
+
   for (const el of shapes) {
     type Grab = { id: number; sx: number; sy: number; touch: boolean; held: boolean; px: number; py: number; hold: number };
     let grab: Grab | null = null;
@@ -159,7 +177,8 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
     el.addEventListener(
       'pointerenter',
       (e) => {
-        if (e.pointerType !== 'mouse' || !fine.matches || el.hasAttribute('data-held') || stillBuilding(el)) return;
+        if (e.pointerType !== 'mouse' || !fine.matches || el.hasAttribute('data-held') || building(el)) return;
+        cancelBeat();
         setLift(el, true);
       },
       opts,
@@ -169,9 +188,10 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
     el.addEventListener(
       'pointerdown',
       (e) => {
-        if (grab || (e.pointerType === 'mouse' && e.button !== 0) || stillBuilding(el)) return;
+        if (grab || (e.pointerType === 'mouse' && e.button !== 0) || building(el)) return;
         const at = pixelsToUnits(root, e.clientX, e.clientY);
         if (!at) return;
+        cancelBeat();
         const touch = e.pointerType === 'touch';
         const g: Grab = { id: e.pointerId, sx: at.x, sy: at.y, touch, held: false, px: e.clientX, py: e.clientY, hold: 0 };
         grab = g;
@@ -181,7 +201,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
           g.hold = window.setTimeout(() => { if (grab === g && !g.held) pickUp(g); }, HOLD_MS);
         } else {
           e.preventDefault();
-          if (shadows.get(el)) setLift(el, true);
+          if (fine.matches) setLift(el, true);
           pickUp(g);
         }
       },
@@ -215,9 +235,11 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
       const was = grab;
       grab = null;
       if (!was.held) return;
-      drop(el);
-      // Let go with the mouse still over it: it settles back into the hover lift.
-      setLift(el, !was.touch && fine.matches && el.matches(':hover'));
+      // Let go with the mouse still over it: it settles straight into the
+      // hover lift, one motion, not down to the mark and back up.
+      const over = !was.touch && fine.matches && el.matches(':hover');
+      drop(el, over ? LIFT_PX * unitsPerPixel(root) : 0);
+      setLift(el, over);
     };
     el.addEventListener('pointerup', release, opts);
     el.addEventListener('pointercancel', release, opts);
@@ -238,7 +260,7 @@ export function initLoose(svg: SVGSVGElement | null): (() => void) | void {
         };
         const move = step[e.key];
         if (move) {
-          if (stillBuilding(el)) return;
+          if (building(el)) return;
           e.preventDefault();
           cancelBeat();
           setLift(el, false);

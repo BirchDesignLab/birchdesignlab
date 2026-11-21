@@ -24,7 +24,9 @@ h3 { font-size: var(--text-lg); }
 
 a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.2em;
     transition: opacity var(--dur-1) var(--ease-weighted); }
-a:hover { color: var(--mark); }
+@media (hover: hover) and (pointer: fine) {
+  a:hover { color: var(--mark); }
+}
 a:active { opacity: 0.55; transition-duration: 100ms; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -74,7 +76,7 @@ img, canvas, svg, video { max-width: 100%; display: block; }
   position: relative; color: var(--accent);
   transition: color var(--dur-1) var(--ease-weighted);
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .cta-engraved:hover .fill { transform: scaleX(1); }
   .cta-engraved:hover .lbl { color: var(--on-accent); }
 }
@@ -91,7 +93,7 @@ img, canvas, svg, video { max-width: 100%; display: block; }
   display: inline-block;
   transition: transform var(--dur-1) var(--ease-weighted);
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .more-link:hover { color: var(--mark); }
   .more-link:hover .arw { transform: translateX(0.3em); }
 }
@@ -99,8 +101,11 @@ img, canvas, svg, video { max-width: 100%; display: block; }
 
 /* Loud-field links hover to a tone distinct from their resting color on BOTH
    faces (dark rests at moss, light at bark-white) — plain --mark collides on
-   light, plain --gf-accent collides on dark. */
-.loud a:hover, .loud .more-link:hover { color: var(--gf-link-hover); }
+   light, plain --gf-accent collides on dark. Every hover in this file is
+   mouse-only, so a tap on a phone never leaves a link in its hover colour. */
+@media (hover: hover) and (pointer: fine) {
+  .loud a:hover, .loud .more-link:hover { color: var(--gf-link-hover); }
+}
 
 /* The loud moment itself — one green field per page, border-top only (the next
    section/footer owns the seam below). Remaps the working tokens to the --gf-*

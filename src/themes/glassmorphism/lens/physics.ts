@@ -61,6 +61,16 @@ export function releaseVelocity(samples: Sample[], now: number): [number, number
   return [(n * stx - st * sx) / den, (n * sty - st * sy) / den];
 }
 
+/** Stage 6 w3 task 18 (T9 C3): a release whose whole travel from the press
+    is at most this many px is a tap (finger jitter), not a throw. Not in
+    FEEL, which stays the proof's verbatim feel. */
+export const TAP_SLOP_PX = 6;
+
+/** True when a press at (x0, y0) released at (x1, y1) is a tap, not a throw. */
+export function isTap(x0: number, y0: number, x1: number, y1: number): boolean {
+  return Math.hypot(x1 - x0, y1 - y0) <= TAP_SLOP_PX;
+}
+
 /** Cap a release velocity at FEEL.maxThrow, keeping its direction. */
 export function capThrow(vx: number, vy: number): [number, number] {
   const sp = Math.hypot(vx, vy);

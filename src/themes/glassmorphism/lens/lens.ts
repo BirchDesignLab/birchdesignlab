@@ -71,7 +71,7 @@
  *   a vertical scan across the seam measures the offset while scrolling.
  *   Both cost one float uniform and a string compare when absent.
  */
-import { FEEL, Lag2, releaseVelocity, capThrow, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, nearestOpenSpot, leastCoveredNearest, glideIntoCover, discCoverage, type Bounds, type RectLike, type ChosenStart } from './physics';
+import { FEEL, Lag2, releaseVelocity, capThrow, isTap, lensBounds, clampToBounds, stepGlide, stretchMatrix, stretchTarget, coverRect, chooseStart, cornerStart, nearestOpenSpot, leastCoveredNearest, glideIntoCover, discCoverage, type Bounds, type RectLike, type ChosenStart } from './physics';
 import { loadWallpaperImage, WALL_W, WALL_H, type Scheme } from './wallpaper-images';
 import { orbGradientAt } from '../fx';
 import type { Tint, TimeOfDay } from './settings';
@@ -497,6 +497,8 @@ export function mountLens(opts: LensOptions): LensHandle | null {
   const s = {
     x: 0, y: 0, vx: 0, vy: 0, held: false,
     grab: [0, 0] as [number, number],
+    /** Where the lens was when the current press began (the tap check). */
+    press: [0, 0] as [number, number],
     samples: [] as Sample[],
     ex: new Lag2(FEEL.stretchTau), ey: new Lag2(FEEL.stretchTau),
     lift: new Lag2(FEEL.liftTau), tint: new Lag2(FEEL.tintTau, opts.initialTint === 'tinted' ? 1 : 0),
@@ -694,6 +696,7 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     s.vx = 0;
     s.vy = 0;
     s.grab = [ev.clientX - s.x, ev.clientY - s.y];
+    s.press = [s.x, s.y];
     s.samples = [{ t: ev.timeStamp, x: s.x, y: s.y }];
     beginSelectionGuard();
     invalidate();
@@ -719,6 +722,14 @@ export function mountLens(opts: LensOptions): LensHandle | null {
     const samplesArr: Array<[number, number, number]> = s.samples.map((p) => [p.t, p.x, p.y]);
     const v = releaseVelocity(samplesArr, ev.timeStamp);
     [s.vx, s.vy] = capThrow(v[0], v[1]);
+    // A tap (T9 C3): a few px of finger jitter is not a throw. No glide, and
+    // the lens goes back to where it was pressed, so a tap on the approved
+    // half-covered corner start leaves it there (checkRest's corner margin).
+    if (isTap(s.press[0], s.press[1], s.x, s.y)) {
+      s.vx = 0;
+      s.vy = 0;
+      [s.x, s.y] = s.press;
+    }
     s.samples = [];
     invalidate();
     if (s.vx === 0 && s.vy === 0) checkRest();

@@ -24,6 +24,8 @@ import {
   glideIntoCover,
   type RectLike,
   type Bounds,
+  isTap,
+  TAP_SLOP_PX,
 } from '../src/themes/glassmorphism/lens/physics';
 
 describe('Lag2', () => {
@@ -466,5 +468,17 @@ describe('glideIntoCover (Stage 6 wave 2, G1)', () => {
     expect(glideIntoCover(0, 0.15)).toBe(false);
     expect(glideIntoCover(0.2, 0.2)).toBe(false);
     expect(glideIntoCover(0.6, 0.4)).toBe(false);
+  });
+});
+
+describe('isTap (Stage 6 w3 task 18, T9 C3)', () => {
+  it('a few px of finger jitter is a tap, a real move is not', () => {
+    expect(TAP_SLOP_PX).toBe(6);
+    expect(isTap(246, 573, 249, 573)).toBe(true);
+    expect(isTap(246, 573, 246, 570)).toBe(true);
+    expect(isTap(0, 0, 4, 4)).toBe(true); // 5.66px
+    expect(isTap(0, 0, 6, 0)).toBe(true);
+    expect(isTap(0, 0, 5, 5)).toBe(false); // 7.07px
+    expect(isTap(0, 0, 30, 0)).toBe(false);
   });
 });

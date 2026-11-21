@@ -315,6 +315,10 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     .lab-photo { bottom: auto; height: calc(var(--u) * 12.5); }
     .pull { margin-top: 0; }
     .pull .cut { background: none; box-shadow: none; }
+    /* The kicker's label fits its words (w3 task 18): one line over the
+       band's head, so a quarter-em of ground each side, not the 40px clear
+       zone a wrapping line needs against the marks. */
+    .lab-kicker .cut { box-shadow: 0.25em 0 0 var(--ground), -0.25em 0 0 var(--ground); }
   }
 
   @media (min-width: 640px) {
