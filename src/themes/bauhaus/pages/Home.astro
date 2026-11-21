@@ -79,15 +79,17 @@ const doorShape = ['circle', 'square'] as const;
     <p class="lead">{copy.closer.lead}</p>
     <a class="btn" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
   </div>
-  <svg class="seesaw" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-reveal>
-    <rect x="0" y="290" width="400" height="10" fill="var(--mark)" />
-    <polygon class="asm" points="200,178 262,290 138,290" fill="var(--yellow)" style="--from: translateY(40%) scale(0.2); --d: 0ms" />
-    <g class="beam">
-      <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
-      <circle class="asm" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
-      <rect class="asm" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
-    </g>
-  </svg>
+  <button class="seesaw toy" type="button" aria-label="See-saw, tip it">
+    <svg viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-reveal>
+      <rect x="0" y="290" width="400" height="10" fill="var(--mark)" />
+      <polygon class="asm" points="200,178 262,290 138,290" fill="var(--yellow)" style="--from: translateY(40%) scale(0.2); --d: 0ms" />
+      <g class="beam">
+        <rect class="asm" x="20" y="166" width="360" height="12" fill="var(--mark)" style="--from: rotate(-12deg); --d: 180ms" />
+        <circle class="asm" data-seat="left" cx="78" cy="116" r="50" fill="var(--blue)" style="--from: translateY(-180%); --d: 320ms" />
+        <rect class="asm" data-seat="right" x="286" y="80" width="86" height="86" fill="var(--red)" style="--from: translateY(-220%) rotate(45deg); --d: 460ms" />
+      </g>
+    </svg>
+  </button>
 </section>
 
 <style>
@@ -250,7 +252,9 @@ const doorShape = ['circle', 'square'] as const;
   .closer { padding-block: clamp(4.5rem, 9vw, 8rem); align-items: end; row-gap: 3rem; }
   .closer-text { grid-column: 1 / span 7; display: flex; flex-direction: column; align-items: flex-start; gap: 2.25rem; }
   .closer .lead { font-size: clamp(2.75rem, 7vw, 6.5rem); }
-  .seesaw { grid-column: 9 / span 4; width: 100%; height: auto; }
+  /* A real button (parts/toys.ts initSeesaw); the svg inside is the picture. */
+  .seesaw { grid-column: 9 / span 4; width: 100%; }
+  .seesaw svg { width: 100%; height: auto; }
 
   /* Below 900px the shapes can no longer keep clear of the band's text, so
      they drop beneath it instead of behind it. */
@@ -282,7 +286,11 @@ const doorShape = ['circle', 'square'] as const;
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { initLoose } from '../parts/loose';
+  import { initNumerals, initSeesaw } from '../parts/toys';
 
   // The hero's circle, square and triangle can be picked up (parts/loose.ts).
   onMount(() => initLoose(document.querySelector<SVGSVGElement>('svg.poster')));
+  // The see-saw tips and the door numerals rebuild on a tap (parts/toys.ts).
+  onMount(() => initSeesaw(document.querySelector<HTMLElement>('button.seesaw')));
+  onMount(() => initNumerals());
 </script>

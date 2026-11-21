@@ -470,6 +470,35 @@
     translate: calc(-1 * var(--lift, 0px)) calc(-1 * var(--lift, 0px));
   }
 }
+/* The toys below the fold (Stage 6 w3 task 20, parts/toys.ts). The pivots
+   are set here and not only under the assembly's no-preference gate, so a
+   toy turns about its own centre however the page was reached. */
+[data-theme='bauhaus'] .beam { transform-box: view-box; transform-origin: 200px 178px; }
+[data-theme='bauhaus'] [data-spin] { transform-box: fill-box; transform-origin: center; }
+/* The see-saw and the letter B are real buttons around their drawings. */
+[data-theme='bauhaus'] .toy {
+  display: block;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+[data-theme='bauhaus'] .toy > svg { transition: translate 120ms var(--ease-snap); }
+/* A real hover pointer lifts the whole drawing 4px up and left over a hard 4px
+   block of ink, its own silhouette, as the hero shapes do. The block shows at
+   once; only the drawing travels. */
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='bauhaus'] .toy:hover > svg {
+    translate: -4px -4px;
+    filter: drop-shadow(4px 4px 0 var(--mark));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   [data-theme='bauhaus'] .asm { animation: none; }
   [data-theme='bauhaus'] .btn,

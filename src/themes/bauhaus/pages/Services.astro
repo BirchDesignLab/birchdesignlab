@@ -304,3 +304,11 @@ const stepShape = ['circle', 'square', 'triangle', 'ring'] as const;
     .mini.ring { border-width: 6px; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initNumerals } from '../parts/toys';
+
+  // The constructed numerals rebuild on a tap (parts/toys.ts).
+  onMount(() => initNumerals());
+</script>

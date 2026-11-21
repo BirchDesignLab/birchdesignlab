@@ -12,7 +12,7 @@ const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
   <svg class="corner" viewBox="0 0 240 150" aria-hidden="true" focusable="false" data-reveal>
-    <rect class="asm" x="30" y="0" width="110" height="110" fill="var(--red)" style="--from: rotate(-90deg) scale(0); --d: 0ms" />
+    <rect class="asm" data-spin x="30" y="0" width="110" height="110" fill="var(--red)" style="--from: rotate(-90deg) scale(0); --d: 0ms" />
     <polygon class="asm" points="150,0 240,0 240,128" fill="var(--yellow)" style="--from: translateY(-70%) scale(0.2); --d: 220ms" />
   </svg>
   <div class="wrap grid12 cols">
@@ -126,3 +126,11 @@ const year = new Date().getFullYear();
     nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../lib/lifecycle';
+  import { initCornerSpin } from './parts/toys';
+
+  // A tap on the red corner square turns it 90 degrees (parts/toys.ts). Inert.
+  onMount(() => initCornerSpin(document.querySelector<HTMLElement>('footer.site-footer')));
+</script>
