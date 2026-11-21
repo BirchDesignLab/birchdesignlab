@@ -56,6 +56,13 @@
   --margin-line: rgba(155, 70, 82, 0.42);
   --stitch: rgba(122, 150, 110, 0.9);
   --stitch-rose: rgba(155, 70, 82, 0.75);
+  /* The needle's two threads on the hoop's linen (needle.ts): the sprig's own rose and sage, a lighter
+     top thread over a darker edge, as the lazy daisies and stems are drawn. The edge is what
+     reads against the linen, so it is the one meta.contrast holds. */
+  --thread-rose: var(--cc-rose-petal);
+  --thread-rose-edge: var(--cc-rose-edge);
+  --thread-sage: var(--cc-stem);
+  --thread-sage-edge: var(--cc-leaf-edge);
   /* The written boundary of a form field: darker than --stitch's decorative
      seams so it clears 3:1 as a control outline. */
   --field-line: #5f7a54;
@@ -179,6 +186,12 @@
   --margin-line: rgba(234, 184, 106, 0.3);
   --stitch: rgba(169, 194, 148, 0.55);
   --stitch-rose: rgba(234, 184, 106, 0.6);
+  /* The needle's threads on the hoop's board linen: the same deepened rose and sage the sprig is
+     worked in there (the .hoop .cloth block below sets --cc-rose-petal and friends to these). */
+  --thread-rose: #b85f6c;
+  --thread-rose-edge: #7a3440;
+  --thread-sage: #56704a;
+  --thread-sage-edge: #3f5a36;
   /* Lit sage on dark cloth, strong enough to read as a field's edge. */
   --field-line: #b9d1a3;
   --scribble: #c98a62;
@@ -914,6 +927,31 @@ html[data-theme='cottagecore'] :is(.pull, .closer-lead, .invite, .manifesto) { f
 [data-theme='cottagecore'] .cc-signature .sig-run { stroke-width: 1.15; stroke-dasharray: 2.6 1.5; }
 [data-theme='cottagecore'] .cc-signature .sig-swash { stroke-width: 0.9; stroke-dasharray: 2.2 1.7; opacity: 0.85; }
 [data-theme='cottagecore'] .cc-signature .sig-dot { stroke-width: 2.1; }
+
+/* The needle's stitches (needle.ts): an aria-hidden SVG laid under the hoop's words, clipped to the
+   linen circle (a hair inside its inset rim). The threads and knots are made by the script, so their
+   rules are global here. A thread is two dashed paths, the darker edge under the lighter top thread. */
+[data-theme='cottagecore'] .nt-layer {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  clip-path: circle(calc(50% - 2px));
+}
+[data-theme='cottagecore'] .nt-thread { --nt-over: var(--thread-rose); --nt-edge: var(--thread-rose-edge); }
+[data-theme='cottagecore'] .nt-thread[data-c='1'] { --nt-over: var(--thread-sage); --nt-edge: var(--thread-sage-edge); }
+[data-theme='cottagecore'] .nt-thread path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+[data-theme='cottagecore'] .nt-thread .nt-under { stroke: var(--nt-edge); }
+[data-theme='cottagecore'] .nt-thread .nt-over { stroke: var(--nt-over); }
+/* A French knot: a bead of thread, the edge colour round the top thread, with a glint. */
+[data-theme='cottagecore'] .nt-knot { transform-box: fill-box; transform-origin: center; animation: nt-knot 0.26s ease-out 1; }
+[data-theme='cottagecore'] .nt-knot .nt-kb { fill: var(--nt-edge); stroke: var(--nt-over); stroke-width: 0.9; }
+[data-theme='cottagecore'] .nt-knot .nt-kg { fill: none; stroke: rgba(255, 255, 255, 0.7); stroke-width: 0.6; stroke-linecap: round; }
+@keyframes nt-knot {
+  0% { scale: 0.3; opacity: 0.4; }
+  60% { scale: 1.22; opacity: 1; }
+  100% { scale: 1; opacity: 1; }
+}
 
 /* ---------- lamplight pools (dark only) ---------- */
 

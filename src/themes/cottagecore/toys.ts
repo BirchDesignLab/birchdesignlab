@@ -15,11 +15,14 @@
  * before the next swap; the teardown removes every listener, timer, observer
  * and animation, and puts every attribute and inline style back.
  *
+ * The needle and thread (About's hoop) lives in needle.ts and is mounted here with the others.
+ *
  * The clock blows seeds into fx.ts's canvas through one window event
  * (`cc:blow`), which fx.ts also reads in the dark scheme as a tap on clear
  * cloth, where the same spot calls a firefly that rises.
  */
 import { onMount } from '../../lib/lifecycle';
+import { initNeedle } from './needle';
 
 const SCHOOL = 'cottagecore';
 
@@ -309,6 +312,7 @@ export function mountToys(): void {
     const off: Array<() => void> = [];
     document.querySelectorAll<HTMLElement>('[data-cc-toy="dandelion"]').forEach((el) => off.push(initDandelion(el)));
     document.querySelectorAll<HTMLElement>('[data-cc-toy="stamp"]').forEach((el) => off.push(initStamp(el)));
+    document.querySelectorAll<HTMLElement>('[data-cc-toy="needle"]').forEach((el) => off.push(initNeedle(el)));
     if (!off.length) return;
     return () => off.forEach((f) => f());
   });

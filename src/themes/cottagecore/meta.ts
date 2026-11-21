@@ -35,6 +35,10 @@ export const meta: ThemeMeta = {
     { fg: '--link', bg: ['--glow', '--field'], min: 4.5, note: 'links under the lamp' },
     { fg: '--board-ink', bg: ['--hoop-cloth'], min: 4.5, note: 'the stitched manifesto in the hoop (the board linen by lamplight, CC5)' },
     { fg: '--board-accent', bg: ['--hoop-cloth'], min: 4.5, note: "the maker's line: the running-stitch script on the hoop (board rose by lamplight)" },
+    /* The needle's stitches on the hoop linen (Stage 6 w3 task 27): the darker edge of each thread is what
+       draws the stitch against the cloth; the lighter top thread inside it is the sprig's own pale rose and sage. */
+    { fg: '--thread-rose-edge', bg: ['--hoop-cloth'], min: 3, note: 'the edge of a rose needle stitch on the hoop linen' },
+    { fg: '--thread-sage-edge', bg: ['--hoop-cloth'], min: 3, note: 'the edge of a sage needle stitch on the hoop linen' },
     { fg: '--field-line', bg: ['--paper'], min: 3, note: 'the write-on line under a form field' },
     { fg: '--hand-kicker-ink', bg: ['--paper'], min: 4.5, note: 'kickers on a card' },
     { fg: '--hand-kicker-ink', bg: ['--note'], min: 4.5, note: 'kickers on a butter note' },
@@ -59,7 +63,7 @@ export const meta: ThemeMeta = {
   ],
   assets: {
     provenance: 'original-vector',
-    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a freehand embroidered sprig (stem stitch, satin stitch, lazy daisies, French knots); southern magnolia, maypop passionflower and wax myrtle for the Gulf Coast pages; garden twine round the Services posy; an envelope with twine, a perforated stamp (value 3) and a lettered postmark; a dried dandelion clock and a wooden-handled date stamp that lays fresh cancel marks (the postmark ring and date), both inert toys; a running-stitch script for the maker line; a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
+    note: 'Drawn for this school: pressed daisy, lavender, fern, wild rose, a birch twig with catkins and a leaf, generated at build time from hand-tuned petal and leaf curves with seeded jitter; a freehand embroidered sprig (stem stitch, satin stitch, lazy daisies, French knots); southern magnolia, maypop passionflower and wax myrtle for the Gulf Coast pages; garden twine round the Services posy; an envelope with twine, a perforated stamp (value 3) and a lettered postmark; a dried dandelion clock and a wooden-handled date stamp that lays fresh cancel marks (the postmark ring and date), both inert toys; a sewing needle parked on the embroidery hoop that sews freehand running stitches in rose and sage as it is dragged or the linen is tapped, tied off with a French knot and unpicked after about 15 s (an inert toy, its stitches drawn at run time); a running-stitch script for the maker line; a hand-drawn underline and arrows. Gingham, washi tape, torn and scalloped edges and the embroidery hoop are CSS gradients and masks.',
   },
   order: 4,
 };
