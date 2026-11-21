@@ -23,3 +23,23 @@ html[data-theme='quiet']:not([data-from-theme='quiet'])::view-transition-new(wor
 }
 @keyframes quiet-wordmark-out { 35%, 100% { opacity: 0; } }
 @keyframes quiet-wordmark-in { 0%, 40% { opacity: 0; } 100% { opacity: 1; } }
+
+/* No stuck hover on a tap. Quiet ships the root site's own CSS, and that CSS
+   (src/styles/base.css, ThemeToggle, BarkCredit) paints :hover without the
+   (hover: hover) and (pointer: fine) gate, so on a phone a tap leaves the link
+   in its hover colour until the next tap elsewhere. The shared files are the
+   live business site's and are not changed from a school; this block undoes the
+   hover on touch only, back to each rule's own rest value. It lives in
+   portal.css, which only the /t/quiet route imports, so the root pages are
+   untouched. Inside (hover: none) a :hover rule can never stick, which is why
+   tests/hover-guard.test.ts lets it through. If base.css, ThemeToggle or
+   BarkCredit change a rest value, change it here too. BarkCredit is scoped
+   (specificity 0,3,0, and its style lands after this file), hence the doubled
+   class. */
+@media (hover: none) {
+  a:hover { color: var(--link); }
+  .loud a:hover, .loud .more-link:hover { color: var(--link); }
+  .loud .designation:hover { color: var(--accent); }
+  .bark-credit.bark-credit:hover:not(:focus-visible) { opacity: 0.72; color: var(--mark-muted); }
+  #theme-toggle:hover { border-color: var(--line); }
+}

@@ -27,8 +27,8 @@ const EXTRA = [
 ];
 
 const SHARED =
-  'shared with the live business site (src/styles/base.css and components), outside the task owns; ' +
-  'quiet ships it ungated so a phone tap sticks. Controller decides whether to gate it';
+  'shared with the live business site (src/styles/base.css and components), not changed from a school; ' +
+  'quiet ships it ungated, so src/themes/quiet/portal.css undoes it on touch (checked below)';
 
 /** Named exceptions only: `file::selector` -> reason. */
 const ALLOW: Record<string, string> = {
@@ -142,6 +142,15 @@ function splitList(sel: string): string[] {
 const gated = (media: string[]) =>
   media.some((m) => /hover\s*:\s*hover/i.test(m) && /pointer\s*:\s*fine/i.test(m));
 
+/** A rule that only applies where nothing can hover (every comma branch has hover: none) cannot stick. */
+const touchOnly = (media: string[]) =>
+  media.some((m) =>
+    m
+      .replace(/^@media\s*/i, '')
+      .split(',')
+      .every((b) => /\(\s*hover\s*:\s*none\s*\)/i.test(b)),
+  );
+
 function keyOf(file: string, selector: string): string {
   const rel = relative(file.startsWith(ROOT) ? ROOT : SRC, file).split(sep).join('/');
   return `${rel}::${selector.replace(/\s+/g, ' ')}`;
@@ -155,6 +164,7 @@ export function violations(file: string, css: string): string[] {
     if (!hasHover) continue;
     const key = keyOf(file, r.selector);
     if (ALLOW[key]) continue;
+    if (touchOnly(r.media)) continue;
     if (!gated(r.media)) bad.push(`ungated :hover: ${key}`);
     else if (parts.some((s) => /:focus/.test(s)))
       bad.push(`hover shares a list with :focus: ${key}`);
@@ -186,6 +196,19 @@ describe('hover guard', () => {
     expect(Object.keys(ALLOW).filter((k) => !hit.has(k))).toEqual([]);
   });
 
+  it('quiet portal.css undoes every ungated shared hover on touch', () => {
+    const css = readFileSync(join(ROOT, 'quiet', 'portal.css'), 'utf8');
+    const undone = new Set(
+      collectRules(css)
+        .filter((r) => touchOnly(r.media))
+        .flatMap((r) => splitList(r.selector)),
+    );
+    // base.css a:hover, .loud a:hover, BarkCredit's hover, ThemeToggle's hover (the (hover: hover)-only
+    // cta and more-link rules never match on touch).
+    for (const sel of ['a:hover', '.loud a:hover', '.loud .designation:hover', '.bark-credit.bark-credit:hover:not(:focus-visible)', '#theme-toggle:hover'])
+      expect(undone.has(sel), sel).toBe(true);
+  });
+
   it('the scanner itself catches the failure modes', () => {
     const f = join(ROOT, 'x.css');
     expect(violations(f, '.a:hover{color:red}')).toHaveLength(1);
@@ -199,6 +222,8 @@ describe('hover guard', () => {
       ),
     ).toHaveLength(1);
     expect(violations(f, '@media (min-width:600px){.a:hover{color:red}}')).toHaveLength(1);
+    expect(violations(f, '@media (hover: none){.a:hover{color:red}}')).toHaveLength(0);
+    expect(violations(f, '@media (hover: none), (min-width:600px){.a:hover{color:red}}')).toHaveLength(1);
     expect(
       violations(f, '.b{background:url("data:image/svg+xml;utf8,<svg/>")}.a:hover{color:red}'),
     ).toHaveLength(1);
