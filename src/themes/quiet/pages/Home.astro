@@ -151,7 +151,8 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
      to the study it comes from (BDL-005). */
   .proof { margin-top: var(--space-3); max-width: 46ch; }
   .proof a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 0.2em; }
-  .proof a:hover, .proof a:focus-visible { color: var(--gf-link-hover); }
+  .proof a:focus-visible { color: var(--gf-link-hover); }
+  @media (hover: hover) and (pointer: fine) { .proof a:hover { color: var(--gf-link-hover); } }
   .specimens {
     list-style: none; padding: 0; margin-top: var(--space-5);
     display: flex; flex-direction: column; gap: var(--space-2);
@@ -160,7 +161,8 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
      catalog's classification, underlined on hover and focus in base.css's
      loud hover tone. The outline is the global :focus-visible. */
   .designation { color: var(--accent); text-decoration: none; }
-  .designation:hover, .designation:focus-visible { color: var(--gf-link-hover); text-decoration: underline; }
+  .designation:focus-visible { color: var(--gf-link-hover); text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .designation:hover { color: var(--gf-link-hover); text-decoration: underline; } }
   /* Same working-specimen tick as the Lab catalog. --accent, not --gf-accent:
      .loud remaps --accent to the loud value precisely so children do not have
      to know they sit on green, and the .designation beside it relies on that. */

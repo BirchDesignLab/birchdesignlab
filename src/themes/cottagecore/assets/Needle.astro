@@ -1,0 +1,89 @@
+---
+/**
+ * A sewing needle parked on the embroidery hoop's rim (Stage 6 w3 task 27).
+ * Drag it across the linen, or tap points on the linen, and needle.ts sews a
+ * running stitch behind it. Inert: aria-hidden, not focusable, no words (a
+ * press is the whole interface, so it takes pointer and touch and no keys).
+ * The page puts it inside `.hoop`, after `.cloth`, and sets `--ring` (the
+ * wood ring's width) there. The needle's wrapper has no size: its origin is
+ * the needle's TIP, parked at 140 degrees round the ring (lower left), and
+ * the picture hangs back from it. needle.ts moves the tip with the
+ * individual `translate` property, so the park is pure CSS and an idle hoop
+ * has no inline style at all. `data-c` (0 rose, 1 sage) is the colour of the
+ * thread in the eye.
+ */
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<div class:list={['needle', cls]} data-cc-toy="needle" data-c="0" aria-hidden="true">
+  <div class="nd-body">
+    <svg viewBox="0 0 96 16" focusable="false">
+      <path class="nd-shadow" fill-rule="evenodd" d="M6 7c0-.7.8-1 1.6-1H82l14 2-14 2H7.6C6.8 10 6 9.7 6 9ZM9.6 8a3.4 1.1 0 1 0 6.8 0 3.4 1.1 0 1 0-6.8 0Z" />
+      <path class="nd-thread nd-under" d="M13 8C8 8 5 10.5 3 12.5S-6 15 -11 11" />
+      <path class="nd-thread nd-over" d="M13 8C8 8 5 10.5 3 12.5S-6 15 -11 11" />
+      <path class="nd-steel" fill-rule="evenodd" d="M6 7c0-.7.8-1 1.6-1H82l14 2-14 2H7.6C6.8 10 6 9.7 6 9ZM9.6 8a3.4 1.1 0 1 0 6.8 0 3.4 1.1 0 1 0-6.8 0Z" />
+      <path class="nd-hl" d="M19 6.7H80" />
+    </svg>
+  </div>
+</div>
+
+<style>
+  .needle {
+    --nl: 4.75rem;
+    position: absolute;
+    /* 140 degrees round the ring's middle, measured from the hoop's centre (cos -0.766, sin 0.643). */
+    left: calc(50% - (50% - var(--ring, 0.9rem) / 2) * 0.766);
+    top: calc(50% + (50% - var(--ring, 0.9rem) / 2) * 0.643);
+    width: 0;
+    height: 0;
+    /* Lying along the rim, leaned a little in toward the linen. */
+    rotate: -112deg;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .nd-body {
+    position: absolute;
+    right: 0;
+    top: 0;
+    translate: 0 -50%;
+    width: var(--nl);
+    aspect-ratio: 96 / 16;
+    pointer-events: auto;
+    /* A vertical swipe that starts on it scrolls; it picks up on a short press or a horizontal move (needle.ts). */
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* A generous target round a slim needle. */
+  .nd-body::before { content: ''; position: absolute; inset: -0.8rem -0.5rem; }
+  .needle svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .nd-shadow { fill: rgba(var(--shadow), 0.32); translate: 0.7px 1.9px; }
+  .nd-steel { fill: #c9ccd1; stroke: #5f646b; stroke-width: 0.7; stroke-linejoin: round; }
+  .nd-hl { fill: none; stroke: #ffffff; stroke-width: 0.9; stroke-linecap: round; opacity: 0.8; }
+  :global([data-theme='cottagecore'][data-scheme='dark']) .nd-steel { fill: #b8bbc0; }
+  .nd-thread { fill: none; stroke-linecap: round; }
+  .nd-under { stroke: var(--nd-edge); stroke-width: 2.6; }
+  .nd-over { stroke: var(--nd-over); stroke-width: 1.4; }
+  .needle { --nd-over: var(--thread-rose); --nd-edge: var(--thread-rose-edge); }
+  .needle[data-c='1'] { --nd-over: var(--thread-sage); --nd-edge: var(--thread-sage-edge); }
+  /* Held: lifted off the wood a hair, its shadow wider. */
+  .needle[data-held] .nd-shadow { translate: 1.4px 3px; }
+  /* Once, when it first scrolls into view: it draws back along its length and settles, so a visitor who has not met it finds it moves. */
+  .needle[data-nudge] .nd-body svg { animation: nd-nudge 1.2s ease-in-out 1; }
+  @keyframes nd-nudge {
+    0%, 100% { translate: 0 0; }
+    30% { translate: -7px 0; }
+    55% { translate: 3px 0; }
+    75% { translate: -1.5px 0; }
+  }
+  @media (max-width: 640px) {
+    .needle { --nl: 3.8rem; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nd-body { cursor: grab; }
+    .needle[data-held] .nd-body { cursor: grabbing; }
+    .nd-body:hover .nd-steel { fill: #dfe1e5; }
+  }
+</style>

@@ -7,6 +7,7 @@ import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/cop
 import { hrefFor } from '../../paths';
 import Pressed from '../assets/Pressed.astro';
 import Arrow from '../assets/Arrow.astro';
+import Dandelion from '../assets/Dandelion.astro';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
@@ -14,13 +15,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
 const [nameFirst, ...nameRest] = chrome.name.split(' ');
 ---
 <section class="hero cc-wrap">
-  <div class="hero-copy">
-    <h1 class="billboard">
-      <span class="b1 cc-scribble">{nameFirst}</span> <span class="b2">{nameRest.join(' ')}</span>
-    </h1>
-    <p class="lead">{copy.opener.lead}</p>
-    <p class="subline">{copy.opener.subline}</p>
-  </div>
+  {/* The sheet comes first in the source so the tablet band (641 to 820) can float it right and let the
+      copy wrap beside it (CC6, Stage 6 w3 task 19). It is aria-hidden, so the reading order is unchanged;
+      the grid places it in the right column on a desktop and after the copy on a phone. */}
   <div class="specimen cc-lamp" aria-hidden="true">
     <div class="sheet cc-paper cc-board">
       <span class="cc-tape t1"></span>
@@ -47,6 +44,13 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     </div>
     <Pressed kind="leaf" seed={2} class="stray s1" />
     <Pressed kind="leaf" seed={8} class="stray s2" />
+  </div>
+  <div class="hero-copy">
+    <h1 class="billboard">
+      <span class="b1 cc-scribble">{nameFirst}</span> <span class="b2">{nameRest.join(' ')}</span>
+    </h1>
+    <p class="lead">{copy.opener.lead}</p>
+    <p class="subline">{copy.opener.subline}</p>
   </div>
 </section>
 
@@ -97,6 +101,7 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
 <section class="closer cc-wrap cc-lamp">
   <Pressed kind="lavender" seed={51} class="c-left" />
   <Pressed kind="rose" seed={52} class="c-right" />
+  <Dandelion class="c-clock" />
   <p class="closer-lead">{copy.closer.lead}</p>
   <a class="cc-label" href={hrefFor('contact', theme)}>{copy.closer.cta}</a>
 </section>
@@ -144,7 +149,10 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     color: var(--mark);
   }
 
-  .specimen { position: relative; justify-self: end; width: min(100%, 26rem); --lamp-inset: -18%; }
+  /* The sheet is first in the source (the tablet float below needs it before the copy); on a desktop
+     the grid still puts the copy left and the sheet right. */
+  .hero-copy { grid-column: 1; grid-row: 1; }
+  .specimen { grid-column: 2; grid-row: 1; position: relative; justify-self: end; width: min(100%, 26rem); --lamp-inset: -18%; }
   .sheet {
     --tilt: 2.4deg;
     aspect-ratio: 4 / 5;
@@ -267,9 +275,15 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
   }
   /* The designation links to its entry: plain ink at rest, the theme's wavy
      hand-drawn underline on hover and on focus. */
-  .des:hover, .des:focus-visible {
+  .des:focus-visible {
     text-decoration: underline wavy var(--clip-accent);
     text-decoration-thickness: 1px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .des:hover {
+      text-decoration: underline wavy var(--clip-accent);
+      text-decoration-thickness: 1px;
+    }
   }
   /* A Tab focus must show on the slip in both schemes (the global amber ring
      was about 1:1 on the dark newsprint): a 2px ring in the print ink, which
@@ -298,14 +312,35 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
      headline as the viewport narrows toward the breakpoint below. */
   .closer :global(.c-left) { left: max(0px, calc(50% - 25rem)); rotate: -24deg; }
   .closer :global(.c-right) { right: max(0px, calc(50% - 25rem)); rotate: 20deg; }
+  /* The dandelion clock (Stage 6 w3 task 23): standing on the cloth beside the lavender, in the gutter
+     the lavender leaves, clear of the headline. Pressed, it blows seeds into the seed canvas (toys.ts). */
+  .closer :global(.c-clock) { position: absolute; bottom: -1rem; width: 7.6rem; left: max(0px, calc(50% - 25rem - 8.6rem)); rotate: -4deg; }
+  @media (min-width: 1001px) and (max-width: 1100px) { .closer :global(.c-clock) { width: 6.1rem; } }
 
   @media (max-width: 820px) {
     .hero { grid-template-columns: 1fr; }
-    .specimen { justify-self: center; width: min(82%, 22rem); margin-top: 1.5rem; }
+    /* One column: the copy, then the sheet under it (the sheet is first in the source). */
+    .hero-copy, .specimen { grid-column: 1; }
+    .specimen { grid-row: 2; justify-self: center; width: min(82%, 22rem); margin-top: 1.5rem; }
     /* The sheet is smaller here, so the label's foot is nearer the sheet's
        edge and the indigo tape at the bottom right ran across its frame
        (390 sheet). Hold the tape on the bare corner at the bottom left. */
     .t2 { right: auto; left: 6%; --tape-tilt: -6deg; }
+  }
+  /* CC6 (founder, stop 1 call 10): from 641 to 820 the stacked hero left an empty right half beside the name above a
+     centred sheet, so the sheet slides right into it. It is a float now (task 19, below); phones keep the stack. */
+  /* Stage 6 w3 task 19 (stop 3 answer 2): the sheet FLOATS right and the copy wraps beside it. The
+     name and the handwritten line run in the column beside the sheet; the subline starts beside it,
+     under the lead, and continues at the full width once it is past the sheet's foot, so no empty band
+     is left under the name (the grid version put the subline below the sheet's whole height). The
+     sheet is first in the source so the float sits at the top; the hero is a flow-root so it contains
+     the float. Measured at 641 to 820 by scripts/themes/stage6/w3-t19-cc-tablet.mjs: every line of the
+     subline has two words or more (no single-word lines). */
+  @media (min-width: 641px) and (max-width: 820px) {
+    .hero { display: flow-root; }
+    .hero-copy { display: block; }
+    .specimen { float: right; width: min(38%, 18.5rem); margin: 0.8rem 0 1.25rem 2rem; }
+    .subline { max-width: none; }
   }
   /* Tablet: the corner sprig gets room below the last line so it never
      crosses text. */
@@ -330,9 +365,17 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
      than the rest of the page: the calc offset they use otherwise lands on
      the centred headline between 820 and 1000px. */
   @media (max-width: 1000px) {
-    .closer :global(.c-left), .closer :global(.c-right) { width: 4rem; bottom: 4.2rem; }
+    .closer :global(.c-left), .closer :global(.c-right) { width: 4rem; bottom: 15.8rem; }
     .closer :global(.c-left) { left: 0; }
     .closer :global(.c-right) { right: 0; }
+    /* The sprigs and the headline take the gutters and the width, so the clock stands under the button
+       and the closer grows by the room it takes (11.6rem: a released seed is seated clear of the button's
+       lettering, so the head stands about 2rem under the button and the seeds have cloth to leave over;
+       the sprigs keep their place against the button). Stage 6 w4 task 30 (critique B2) tried 9.6rem once the puffs
+       started small and grew: the puff probe (w4-t30-puff.mjs) then placed fewer seeds than the clock asked for at
+       1000, 820 and 390, so 11.6rem stays. */
+    .closer { padding-bottom: 11.6rem; }
+    .closer :global(.c-clock) { width: 5.6rem; left: calc(50% - 2.8rem); bottom: 0.6rem; rotate: 0deg; }
   }
   @media (max-width: 640px) {
     /* SOFT 0 sets the line narrower than the soft cut did, so it fits one

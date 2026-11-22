@@ -49,10 +49,9 @@ describe('cottagecore floaters', () => {
     const pad = fx.slice(fx.indexOf('const fireflyPad'), fx.indexOf('const SEED = {'));
     expect(pad).toMatch(/r \* \(FIREFLY\.haloMin \+ FIREFLY\.haloGrow\) \* FIREFLY\.padShare/);
     expect(pad).toMatch(/r \* \(FIREFLY\.phoneHaloMin \+ FIREFLY\.phoneHaloGrow\) \* FIREFLY\.phonePadShare/);
-    // The halo and the pad are the only phone differences: the rests are the desktop's.
+    // The desktop's rests stay; a phone's are shorter (CC1, below).
     expect(fx).toMatch(/darkMin: 4000/);
     expect(fx).toMatch(/darkMax: 8000/);
-    expect(fx).not.toMatch(/phoneDark/);
   });
 
   it('reacts to a touch only on a tap: a release with no movement and no scroll', () => {
@@ -88,7 +87,7 @@ describe('cottagecore floaters', () => {
     expect(fn).toMatch(/segmentHitsBox\(x, y, footX, footY/);
     // every caller passes the angle the draw uses
     const calls = fx.match(/seedHitsText\([^)]*\)/g) ?? [];
-    expect(calls.filter((c) => /angle\)|tilt\)/.test(c)).length).toBe(calls.length - 0 - 1); // all but the declaration
+    expect(calls.filter((c) => /(angle|tilt)(, SEED\.seatMargin)?\)/.test(c)).length).toBe(calls.length - 0 - 1); // all but the declaration
   });
 
   it('takes a seed off a line it is on right now on the first frame that sees it', () => {
@@ -128,9 +127,10 @@ describe('cottagecore floaters', () => {
     expect(fx).not.toMatch(/seatSeed\(seeds\[i\], sy\)\) seeds\[i\]\.cover = 1/);
   });
 
-  it('seats a cramped seed smaller, never under the size floor, and starts every seed unseen', () => {
+  it('seats a cramped seed smaller, never under the size floor except on a phone (task 19), and starts every seed unseen', () => {
     expect(fx).toMatch(/sizeMin: 0\.8/);
-    expect(fx).toMatch(/const sizes = \[s\.base, SEED\.sizeMin \+ \(s\.base - SEED\.sizeMin\) \/ 2, SEED\.sizeMin\]/);
+    // The three sizes every width uses; only a phone appends the smaller ones (cottagecore-stage6-t19.test.ts).
+    expect(fx).toMatch(/const sizes: number\[\] = \[s\.base, SEED\.sizeMin \+ \(s\.base - SEED\.sizeMin\) \/ 2, SEED\.sizeMin\]/);
     const mount = fx.slice(fx.indexOf('const seedDandelions'), fx.indexOf('/* Text, measured line by line'));
     expect(mount).toMatch(/cover: 0,/);
     expect(mount).not.toMatch(/\.cover = 1;\s*return s/);

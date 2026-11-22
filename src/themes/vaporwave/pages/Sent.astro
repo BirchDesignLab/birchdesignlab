@@ -1,7 +1,16 @@
 ---
 /** Vaporwave sent: a system dialog over a Win95 desktop (F1(b): the sunset
     stays the Home hero's alone). The message went out; the only button
-    takes you home. */
+    takes you home.
+
+    Stage 6 wave 3, task 25: the desktop works (../desktop.ts). The four
+    icons are real buttons that select, drag on a snap grid and open on a
+    double-click, a double tap or Enter into small windows (My Computer,
+    Recycle Bin, readme.txt) or an hourglass and then the screensaver
+    (birch.exe). The words are the founder's approved set (stop 3 answer 3):
+    "My Computer", "Recycle Bin", "readme.txt", "birch.exe", "0 object(s)".
+    The windows ship hidden and aria-hidden, so a closed desktop adds no
+    visible word to the page (word parity). */
 import type { CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
 import Win from '../parts/Win.astro';
@@ -11,19 +20,15 @@ const { copy, theme } = Astro.props;
 ---
 {/* F1(b): the message box sits on a Win95 desktop, not the sunset. A Display
     Properties dialog has one Close button, no minimise or maximise (E6). */}
-<section class="stage">
-  {/* fix round 2, item 5: a few aria-hidden desktop icons, My Computer
-      style, so the wallpaper reads as a working desktop rather than an empty
-      pattern. Plain elements, not focusable, decoration only. */}
-  <div class="desktop-icons" aria-hidden="true">
-    <div class="desktop-icon">
-      <span class="icon-glyph icon-computer">
-        {/* fix round 3, item 3: four blank bevelled squares read as
-            placeholders, not desktop icons. A tiny 16px pixel glyph per
-            square, drawn from rects (crisp edges, no anti-aliasing at this
-            size) in the school's own tokens so it repalettes with the
-            scheme. Decoration nested inside an aria-hidden ancestor: not
-            focusable, no separate aria-hidden needed on the svg itself. */}
+<section class="stage" data-desk>
+  {/* The desktop icons: real buttons (their visible names sit in aria-hidden
+      spans and the buttons are named by aria-label, starting with those
+      words). Each glyph is a tiny 16px pixel drawing from rects (crisp edges,
+      no anti-aliasing at this size) in the school's own tokens so it
+      repalettes with the scheme. */}
+  <div class="desktop-icons" role="group" aria-label="Desktop" data-desk-icons>
+    <button type="button" class="desktop-icon" data-desk-icon="computer" aria-label="My Computer: opens a window">
+      <span class="icon-glyph icon-computer" aria-hidden="true">
         <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
           <rect x="2" y="2" width="12" height="8" style="fill: var(--field-sunk)" />
           <rect x="3" y="3" width="10" height="6" style="fill: var(--crt-link)" />
@@ -32,10 +37,10 @@ const { copy, theme } = Astro.props;
           <rect x="4" y="12" width="8" height="1" style="fill: var(--bevel-hi)" />
         </svg>
       </span>
-      <span class="icon-label">My Computer</span>
-    </div>
-    <div class="desktop-icon">
-      <span class="icon-glyph icon-bin">
+      <span class="icon-label" aria-hidden="true">My Computer</span>
+    </button>
+    <button type="button" class="desktop-icon" data-desk-icon="bin" aria-label="Recycle Bin: opens a window">
+      <span class="icon-glyph icon-bin" aria-hidden="true">
         <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
           <rect x="5" y="2" width="6" height="1" style="fill: var(--bevel-hi)" />
           <rect x="4" y="4" width="8" height="1" style="fill: var(--bevel-hi)" />
@@ -45,23 +50,36 @@ const { copy, theme } = Astro.props;
           <rect x="10" y="7" width="1" height="5" style="fill: var(--mark-muted)" />
         </svg>
       </span>
-      <span class="icon-label">Recycle Bin</span>
-    </div>
-    <div class="desktop-icon">
-      <span class="icon-glyph icon-exe">
+      <span class="icon-label" aria-hidden="true">Recycle Bin</span>
+    </button>
+    <button type="button" class="desktop-icon" data-desk-icon="exe" aria-label="birch.exe: runs the screensaver">
+      <span class="icon-glyph icon-exe" aria-hidden="true">
         {/* The site's own striped sun (theme.css .vw-sun, hz-sun tokens),
-            small enough that plain stripes read fine without the mask. */}
-        <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+            small enough that plain stripes read fine without the mask. While
+            the program starts it is the hourglass. */}
+        <svg class="pixel glyph-sun" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
           <rect x="4" y="3" width="8" height="4" style="fill: var(--hz-sun-a)" />
           <rect x="4" y="7" width="8" height="1" style="fill: var(--hz-sun-b)" />
           <rect x="4" y="9" width="8" height="2" style="fill: var(--hz-sun-b)" />
           <rect x="4" y="12" width="8" height="1" style="fill: var(--hz-sun-c)" />
         </svg>
+        <svg class="pixel glyph-wait" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+          <rect x="3" y="2" width="10" height="1" style="fill: var(--bar-ink)" />
+          <rect x="3" y="13" width="10" height="1" style="fill: var(--bar-ink)" />
+          <rect x="4" y="3" width="8" height="1" style="fill: var(--field-raised)" />
+          <rect x="5" y="4" width="6" height="1" style="fill: var(--field-raised)" />
+          <rect x="6" y="5" width="4" height="1" style="fill: var(--field-raised)" />
+          <rect x="7" y="6" width="2" height="1" style="fill: var(--field-raised)" />
+          <rect x="7" y="7" width="2" height="2" style="fill: var(--hz-sun-a)" />
+          <rect x="6" y="9" width="4" height="1" style="fill: var(--hz-sun-a)" />
+          <rect x="5" y="10" width="6" height="1" style="fill: var(--hz-sun-a)" />
+          <rect x="4" y="11" width="8" height="2" style="fill: var(--hz-sun-a)" />
+        </svg>
       </span>
-      <span class="icon-label">birch.exe</span>
-    </div>
-    <div class="desktop-icon">
-      <span class="icon-glyph icon-txt">
+      <span class="icon-label" aria-hidden="true">birch.exe</span>
+    </button>
+    <button type="button" class="desktop-icon" data-desk-icon="readme" aria-label="readme.txt: opens a window">
+      <span class="icon-glyph icon-txt" aria-hidden="true">
         <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
           <rect x="4" y="2" width="8" height="12" style="fill: var(--field-sunk)" />
           <rect x="9" y="2" width="3" height="3" style="fill: var(--bevel-lo)" />
@@ -70,8 +88,8 @@ const { copy, theme } = Astro.props;
           <rect x="5" y="10" width="4" height="1" style="fill: var(--mark-muted)" />
         </svg>
       </span>
-      <span class="icon-label">readme.txt</span>
-    </div>
+      <span class="icon-label" aria-hidden="true">readme.txt</span>
+    </button>
   </div>
   <p class="vw-kana kana" aria-hidden="true">メッセージ送信完了</p>
   <Win title="transmission.sys" class="dialog" buttons="close">
@@ -88,13 +106,93 @@ const { copy, theme } = Astro.props;
       </div>
     </div>
   </Win>
+
+  {/* The three windows the icons open. Hidden and aria-hidden until opened
+      (desktop.ts), with the caption inactive; each is a draggable window (a
+      finger too, after a short press) with a real X. */}
+  <Win title="My Computer" class="desk-win win-computer" closeLabel="Close My Computer" role="dialog" aria-label="My Computer" data-desk-win="computer" data-touch-drag hidden aria-hidden="true" inactive>
+    {/* Drives: icons only. A floppy, a hard disk, a disc, a network drive. Their
+        bodies are --mark-muted and --mark (the school's ink on the window's
+        --field-raised, a pair meta.ts holds), never the bevel highlight, which is
+        near white in light and vanished into the window (task 25 C3). */}
+    <div class="drives" aria-hidden="true">
+      <svg class="pixel drive" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+        <rect x="2" y="2" width="12" height="12" style="fill: var(--mark-muted)" />
+        <rect x="5" y="2" width="6" height="4" style="fill: var(--field-sunk)" />
+        <rect x="9" y="3" width="1" height="2" style="fill: var(--mark-muted)" />
+        <rect x="4" y="8" width="8" height="6" style="fill: var(--field-raised)" />
+        <rect x="5" y="10" width="6" height="1" style="fill: var(--mark-muted)" />
+        <rect x="5" y="12" width="4" height="1" style="fill: var(--mark-muted)" />
+      </svg>
+      <svg class="pixel drive" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+        <rect x="1" y="5" width="14" height="7" style="fill: var(--mark-muted)" />
+        <rect x="1" y="11" width="14" height="1" style="fill: var(--mark)" />
+        <rect x="3" y="7" width="7" height="2" style="fill: var(--field-sunk)" />
+        <rect x="12" y="8" width="2" height="2" style="fill: var(--neon-mint)" />
+      </svg>
+      <svg class="pixel drive" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+        <rect x="5" y="2" width="6" height="1" style="fill: var(--mark-muted)" />
+        <rect x="3" y="3" width="10" height="1" style="fill: var(--mark-muted)" />
+        <rect x="2" y="4" width="12" height="8" style="fill: var(--mark-muted)" />
+        <rect x="3" y="12" width="10" height="1" style="fill: var(--mark-muted)" />
+        <rect x="5" y="13" width="6" height="1" style="fill: var(--mark-muted)" />
+        <rect x="6" y="6" width="4" height="4" style="fill: var(--field-sunk)" />
+        <rect x="7" y="7" width="2" height="2" style="fill: var(--neon-cyan)" />
+      </svg>
+      <svg class="pixel drive" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+        <rect x="2" y="2" width="12" height="8" style="fill: var(--mark-muted)" />
+        <rect x="3" y="3" width="10" height="6" style="fill: var(--neon-lav)" />
+        <rect x="7" y="10" width="2" height="2" style="fill: var(--mark)" />
+        <rect x="2" y="12" width="12" height="2" style="fill: var(--mark-muted)" />
+        <rect x="1" y="13" width="14" height="1" style="fill: var(--mark)" />
+      </svg>
+    </div>
+  </Win>
+  <Win title="Recycle Bin" class="desk-win win-bin" closeLabel="Close Recycle Bin" role="dialog" aria-label="Recycle Bin" data-desk-win="bin" data-touch-drag hidden aria-hidden="true" inactive>
+    <div class="bin-pane"></div>
+    <p class="bin-status">0 object(s)</p>
+  </Win>
+  <Win title="readme.txt" class="desk-win win-readme" closeLabel="Close readme.txt" role="dialog" aria-label="readme.txt" data-desk-win="readme" data-touch-drag hidden aria-hidden="true" inactive>
+    {/* Notepad: the site's own pages as file names, the way the school
+        already styles them (software.exe, web_design.htm). Plain text. */}
+    <ul class="notepad" role="list">
+      <li>index.htm</li>
+      <li>about.htm</li>
+      <li>services.htm</li>
+      <li>contact.htm</li>
+    </ul>
+  </Win>
 </section>
+
+{/* birch.exe: the hourglass while it starts, then Preview's own full-window
+    layer (fixed, above the header): the pipes loop, ended by any key, a click
+    or a tap. Decoration; nothing in it is read or focusable. */}
+<div class="desk-wait" data-desk-wait hidden aria-hidden="true">
+  <svg class="pixel" viewBox="0 0 16 16" focusable="false" shape-rendering="crispEdges">
+    <rect x="3" y="2" width="10" height="1" style="fill: var(--bar-ink)" />
+    <rect x="3" y="13" width="10" height="1" style="fill: var(--bar-ink)" />
+    <rect x="4" y="3" width="8" height="1" style="fill: var(--field-raised)" />
+    <rect x="5" y="4" width="6" height="1" style="fill: var(--field-raised)" />
+    <rect x="6" y="5" width="4" height="1" style="fill: var(--field-raised)" />
+    <rect x="7" y="6" width="2" height="1" style="fill: var(--field-raised)" />
+    <rect x="7" y="7" width="2" height="2" style="fill: var(--hz-sun-a)" />
+    <rect x="6" y="9" width="4" height="1" style="fill: var(--hz-sun-a)" />
+    <rect x="5" y="10" width="6" height="1" style="fill: var(--hz-sun-a)" />
+    <rect x="4" y="11" width="8" height="2" style="fill: var(--hz-sun-a)" />
+  </svg>
+</div>
+<div class="scr-fullscreen" data-desk-scr hidden aria-hidden="true">
+  <canvas class="scr-fs-canvas" data-desk-scr-canvas></canvas>
+</div>
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
+  import { mountDesktop } from '../desktop';
 
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
+  onMount(mountDesktop);
 </script>
 
 <style>
@@ -105,9 +203,14 @@ const { copy, theme } = Astro.props;
      55%-alpha-on-field tile read as nearly flat, especially in light; now
      the same --vw-desktop pattern (theme.css) Footer.astro carries into the
      footer behind this page, so the desktop and the footer read as one
-     surface instead of a wallpaper stopping short of a checkerboard. */
+     surface instead of a wallpaper stopping short of a checkerboard.
+     Task 25: clipped on the inline axis only (the windows may be dragged
+     down past the stage), above the footer (z-index) so a dragged window is
+     never painted under it, and one grid cell of padding for the phone's
+     icon row. */
   .stage {
-    position: relative; overflow: hidden; isolation: isolate;
+    --cw: 88px; --ch: 96px; --ltop: clamp(1rem, 4vh, 2.4rem);
+    position: relative; overflow-x: clip; isolation: isolate; z-index: 1;
     min-height: clamp(560px, 82vh, 860px);
     display: grid; justify-items: center; align-content: start; gap: 1.5rem;
     padding: clamp(3rem, 9vh, 6rem) var(--gutter) 0;
@@ -115,22 +218,31 @@ const { copy, theme } = Astro.props;
        under the stage, the footer and the portal tail. */
     background: transparent;
   }
-  /* item 5: a few aria-hidden desktop icons in the top-left, My Computer
-     style, file names in the school's own voice. Hidden under 700px so they
-     never compete with the dialog card on a narrow phone. */
+  /* The icon grid: one cell is one icon (--cw by --ch), laid out in columns
+     down the left of the desktop from 701px up, and as a row across the top
+     on a phone. The layer takes no pointer; the icons do. It sits under the
+     message window (z-index), so a dropped icon never covers it. */
   .desktop-icons {
-    position: absolute; left: clamp(1rem, 4vw, 2.5rem); top: clamp(1.4rem, 5vh, 2.8rem);
-    display: grid; gap: 1.3rem; z-index: 0;
+    position: absolute; z-index: 1; pointer-events: none;
+    left: clamp(0.5rem, 3vw, 2rem); top: var(--ltop); right: clamp(0.5rem, 3vw, 2rem); bottom: 1rem;
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(auto-fill, var(--ch)); grid-auto-columns: var(--cw);
+    justify-content: start; align-content: start;
   }
   /* Named .desktop-icon, not .icon: this component already uses .icon for
      the dialog's own striped-sun checkmark glyph below, and a same-named
-     class in the same scoped stylesheet applies to both - found when it
-     rendered as a circular sunset blob with the label text wrapped inside
-     it, the checkmark glyph's own border-radius/background bleeding onto
-     these. */
-  .desktop-icon { display: grid; justify-items: center; gap: 0.35rem; width: 72px; }
+     class in the same scoped stylesheet applies to both. */
+  .desktop-icon {
+    appearance: none; margin: 0; padding: 0.3rem 0.2rem 0; border: 0; background: none; font: inherit; color: inherit;
+    width: var(--cw); height: var(--ch); box-sizing: border-box;
+    display: grid; grid-template-rows: 34px auto; justify-items: center; align-content: start; gap: 0.35rem;
+    pointer-events: auto; cursor: pointer; touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  }
+  .desktop-icon[data-settle] { transition: transform 160ms cubic-bezier(0.7, 0, 0.2, 1); }
+  .desktop-icon[data-held] { cursor: grabbing; z-index: 2; opacity: 0.88; }
+  .desktop-icon:focus-visible { outline: 2px dotted var(--mark); outline-offset: -3px; box-shadow: 0 0 0 2px var(--link); }
   .icon-glyph {
-    display: grid; place-items: center;
+    display: grid; place-items: center; align-self: end;
     width: 34px; height: 30px;
     border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
   }
@@ -142,22 +254,28 @@ const { copy, theme } = Astro.props;
      scaled up with no smoothing so it reads as blocky pixel art rather
      than a blurred vector. */
   .icon-glyph .pixel { width: 18px; height: 18px; shape-rendering: crispEdges; image-rendering: pixelated; }
+  .glyph-wait { display: none; }
+  .desktop-icon[data-busy] .glyph-sun { display: none; }
+  .desktop-icon[data-busy] .glyph-wait { display: block; animation: vw-hourglass 1s steps(1) infinite; }
   .icon-label {
-    padding: 0.15em 0.35em; text-align: center;
+    padding: 0.15em 0.35em; text-align: center; max-width: 100%;
     font-family: var(--font-mono); font-size: 0.85rem; line-height: 1; letter-spacing: 0.03em;
     color: var(--mark);
     background: color-mix(in srgb, var(--field) 55%, transparent);
   }
-  @media (max-width: 700px) {
-    .desktop-icons { display: none; }
+  /* Selected: the Win95 inverse label (ink --on-accent on --accent, a meta.ts
+     pair) and a dotted keyline. */
+  .desktop-icon[data-selected] .icon-label { background: var(--accent); color: var(--on-accent); outline: 1px dotted var(--on-accent); outline-offset: -2px; }
+  .desktop-icon[data-selected] .icon-glyph { filter: saturate(0.7) brightness(0.9); }
+  @media (hover: hover) and (pointer: fine) {
+    .desktop-icon:not([data-selected]):hover .icon-label { outline: 1px dotted var(--mark-muted); outline-offset: 1px; }
   }
-  /* 1.1rem, not 0.85: Dela Gothic One is ultra-heavy, and at 13.6px the
-     kanji of 送信完了 closed up into blobs on a 1x screen. */
+
   .kana { position: relative; font-size: 1.1rem; letter-spacing: 0.55em; margin-right: -0.55em; color: var(--neon-pink); }
   :global([data-scheme='light']) .kana { color: var(--accent); }
   /* An opaque drop, so nothing of the tiled desktop behind shows through the shadow. */
   .stage :global(.dialog) {
-    width: min(100%, 560px);
+    width: min(100%, 560px); z-index: 5;
     box-shadow: 12px 12px 0 color-mix(in srgb, var(--win-drop) 100%, var(--field) 100%);
   }
   .dialog-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.4rem; align-items: start; }
@@ -177,6 +295,82 @@ const { copy, theme } = Astro.props;
      under a left-set paragraph. */
   .actions { display: flex; justify-content: flex-start; margin-top: 1.6rem; }
 
+  /* ---------- the windows the icons open ---------- */
+  .stage :global(.desk-win) { position: absolute; width: 340px; max-width: calc(100% - 1.5rem); margin: 0; }
+  .stage :global(.desk-win[hidden]) { display: none; }
+  .stage :global(.desk-win .vw-win-body) { padding: 0.75rem; }
+  /* Below 1280px the windows open under the message, cascaded, not over it;
+     from 1280px they open to its right. --wn is each window's step. */
+  .stage :global(.win-computer) { --wn: 0; }
+  .stage :global(.win-bin) { --wn: 1; }
+  .stage :global(.win-readme) { --wn: 2; }
+  .stage :global(.desk-win) {
+    left: calc(50% - 170px + var(--wn) * 26px);
+    top: calc(31rem + var(--wn) * 2.4rem);
+  }
+  @media (min-width: 1280px) {
+    .stage :global(.desk-win) {
+      left: min(calc(50% + 310px + var(--wn) * 26px), calc(100% - 340px - 1rem));
+      top: calc(3.5rem + var(--wn) * 2.6rem);
+    }
+  }
+  .drives { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; justify-items: center; padding: 0.4rem 0; }
+  .drive { width: 56px; height: 56px; shape-rendering: crispEdges; image-rendering: pixelated; }
+  .bin-pane {
+    height: 7.5rem; background: var(--field-sunk);
+    border: 2px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+  }
+  .bin-status {
+    margin: 0.4rem 0 0; padding: 0.15rem 0.4rem; color: var(--mark);
+    font-family: var(--font-mono); font-size: 1.15rem; line-height: 1;
+    border: 1px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+  }
+  .notepad {
+    margin: 0; padding: 0.5rem 0.7rem; list-style: none; min-height: 7.5rem;
+    background: var(--field-sunk); color: var(--mark);
+    border: 2px solid; border-color: var(--bevel-lo) var(--field-bevel-hi) var(--field-bevel-hi) var(--bevel-lo);
+    font-family: var(--font-mono); font-size: 1.3rem; line-height: 1.3;
+  }
+
+  /* birch.exe: the hourglass, then the screensaver full-window (a fixed layer
+     above the header, as Contact's Preview is). */
+  .desk-wait {
+    position: fixed; z-index: 190; left: 50%; top: 50%; translate: -50% -50%;
+    display: grid; place-items: center; width: 64px; height: 64px;
+    background: var(--field-raised);
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    box-shadow: 6px 6px 0 var(--win-drop);
+  }
+  .desk-wait[hidden] { display: none; }
+  .desk-wait .pixel { width: 40px; height: 40px; shape-rendering: crispEdges; image-rendering: pixelated; animation: vw-hourglass 1s steps(1) infinite; }
+  @keyframes vw-hourglass { 0%, 50% { rotate: 0deg; } 51%, 100% { rotate: 180deg; } }
+  :global(html.vw-wait), :global(html.vw-wait *) { cursor: wait !important; }
+  .scr-fullscreen { position: fixed; inset: 0; z-index: 200; background: #0a0220; cursor: pointer; }
+  .scr-fullscreen[hidden] { display: none; }
+  .scr-fs-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Narrow screens (to 800px): the icons are a row of four across the top,
+     not a column down the left. The column would sit under the centred
+     message window from 701 to about 760px (its labels cut), so the row holds
+     until the column clears it. The four tracks share the layer's width (88px
+     at most, narrower on a 360px phone, where 4 x 88 would not fit and the
+     fourth icon wrapped under the message window), the icon fills its track,
+     and desktop.ts reads the real, fractional track width. Windows keep their
+     tablet cascade, pushed down one icon row. */
+  @media (max-width: 800px) {
+    .stage { padding-top: calc(var(--ch) + 1.4rem); }
+    .desktop-icons { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(4, minmax(0, var(--cw))); grid-auto-rows: var(--ch); bottom: auto; height: var(--ch); }
+    .desktop-icon { width: 100%; }
+    .stage :global(.desk-win) { top: calc(29rem + 1.5rem + var(--wn) * 2.4rem); }
+  }
+  /* A phone: each window opens the full width of the desktop, below the icon
+     row (that row's own top plus one cell, so no window covers an icon). */
+  @media (max-width: 700px) {
+    .stage :global(.desk-win) {
+      left: 0.75rem; right: 0.75rem; width: auto; max-width: none;
+      top: calc(var(--ltop) + var(--ch) + 0.4rem + var(--wn) * 2.2rem);
+    }
+  }
   @media (max-width: 520px) {
     .dialog-row { grid-template-columns: 1fr; }
     /* E10: match theme.css's smaller window drop under 520px. */

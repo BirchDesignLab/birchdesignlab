@@ -1,0 +1,549 @@
+---
+/** The width dial: the Home billboard's "Design" is a variable-width word,
+    and this is the control that moves it. A real slider (role, label, value,
+    keys) laid over the word's line, drag it sideways and the word widens or
+    condenses along Archivo's width axis; let go and it travels back to rest
+    at a constant speed, the way a station clock's hand does. The h1 is not
+    touched: the dial is its sibling inside the hero, and the script only sets
+    one custom property (--sw-d) on the word.
+
+    Range 62 to 125. On a tablet and a phone the word may widen past the frame
+    and is cropped by the sheet's edge (the hero-sheet wrapper clips it so the
+    page never scrolls sideways). On a desktop the top of the range stops where
+    the word would touch the lede, measured live, and that is also where it
+    rests (125 when there is room).
+
+    Hidden until the script has measured the word, so nothing is offered to a
+    visitor without scripting. */
+---
+<div
+  class="dial"
+  role="slider"
+  tabindex="0"
+  hidden
+  aria-label="Design width"
+  aria-orientation="horizontal"
+  aria-valuemin="62"
+  aria-valuemax="125"
+  aria-valuenow="100"
+  aria-valuetext="100 percent"
+  data-sw-dial
+><span class="dial-mark" aria-hidden="true"></span><span class="dial-read" aria-hidden="true"></span></div>
+
+<script>
+  import { onMount } from '../../lib/lifecycle';
+
+  /** The width axis range, the table of stops it is measured at, the snap-back
+      travel (width units per millisecond, constant, linear, then stop dead),
+      the hold before it, the travel that starts a drag, and the beat the
+      first-visit hint counts its hold in. */
+  const MIN = 62;
+  const TOP = 125;
+  const STOPS = [62, 75, 87.5, 100, 112.5, 125];
+  const SPEED = 0.25;
+  const HOLD = 100;
+  const ENGAGE = 6;
+  const BEAT = 180;
+  const HINT_KEY = 'bdl-swiss-dial-hint';
+  /** The right side bearing of the word's last letter as a fraction of the
+      size, INK_A + INK_B * width (a least-squares fit of pixel measures at
+      62 to 125, w2-t10-rsb.mjs: it grows with the cut, from about -0.006 to
+      0.021): the bar sits a gutter past the ink, not past the advance. */
+  const INK_A = -0.0309;
+  const INK_B = 0.000434;
+
+  onMount(() => {
+    const dial = document.querySelector<HTMLElement>('[data-sw-dial]');
+    if (!dial || document.documentElement.dataset.theme !== 'swiss') return;
+    const hero = dial.parentElement;
+    const h1 = hero?.querySelector<HTMLElement>('.billboard');
+    const word = h1?.querySelector<HTMLElement>('.ln:nth-child(2)');
+    const lede = hero?.querySelector<HTMLElement>('.lede');
+    const mark = dial.querySelector<HTMLElement>('.dial-mark');
+    const read = dial.querySelector<HTMLElement>('.dial-read');
+    if (!hero || !h1 || !word || !lede || !mark || !read || word.textContent?.trim() !== 'Design') return;
+
+    const range = document.createRange();
+    range.selectNodeContents(word);
+    const wide = window.matchMedia('(min-width: 1024px)');
+
+    // Geometry, measured on mount, when the fonts are ready, and on resize.
+    // The word's right edge in px from the hero's left at each stop. Not its
+    // advance: Home.astro steps the word left by 0.000675em per width unit, so
+    // the edge moves less than the advance grows, and the drag and the bar
+    // follow the edge (Stage 6 wave 2, T4 C3).
+    let table: number[] = [];
+    let rest = 100;
+    let max = TOP;
+    let cur = 100;
+    let left = 0; // the word's left, from the hero's left
+    let size = 0; // the word's font size, px
+    let gap = 24; // the grid's gutter, px
+    let ready = false;
+    // A resize or a font load that landed while the dial held the word: the
+    // geometry is stale and is re-measured as soon as the word is at rest.
+    let stale = false;
+
+    const clamp = (s: number) => Math.min(max, Math.max(MIN, s));
+    /** The word's right edge at width s, interpolated over the table. */
+    const W = (s: number) => {
+      if (s <= STOPS[0]) return table[0];
+      for (let i = 1; i < STOPS.length; i++) {
+        if (s <= STOPS[i]) return table[i - 1] + ((s - STOPS[i - 1]) / (STOPS[i] - STOPS[i - 1])) * (table[i] - table[i - 1]);
+      }
+      return table[table.length - 1];
+    };
+    /** The width at which the word's right edge is at px from the hero's left. */
+    const Winv = (px: number) => {
+      if (px <= table[0]) return STOPS[0];
+      for (let i = 1; i < table.length; i++) {
+        if (px <= table[i]) return STOPS[i - 1] + ((px - table[i - 1]) / (table[i] - table[i - 1])) * (STOPS[i] - STOPS[i - 1]);
+      }
+      return TOP;
+    };
+
+    const setWidth = (s: number | null) => {
+      if (s === null) word.style.removeProperty('--sw-d');
+      else word.style.setProperty('--sw-d', s.toFixed(2));
+    };
+
+    const layout = () => {
+      setWidth(null);
+      h1.style.removeProperty('--sw-rest');
+      const cssRest = parseFloat(getComputedStyle(h1).getPropertyValue('--sw-rest')) || 100;
+      const heroR = hero.getBoundingClientRect();
+      const lineR = word.getBoundingClientRect();
+      // The word's right edge at each stop.
+      table = STOPS.map((s) => {
+        setWidth(s);
+        return range.getBoundingClientRect().right - heroR.left;
+      });
+      setWidth(null);
+      if (!(table[0] > 0) || !(table[table.length - 1] > table[0])) return;
+      const textR = range.getBoundingClientRect();
+      const fs = parseFloat(getComputedStyle(word).fontSize);
+      gap = parseFloat(getComputedStyle(hero).columnGap) || 24;
+      size = fs;
+      // The font's baseline and cap height in this line, for the bar.
+      const cs = getComputedStyle(word);
+      const c = document.createElement('canvas').getContext('2d');
+      let asc = textR.height * 0.8;
+      let cap = fs * 0.7;
+      let desc = fs * 0.2;
+      if (c) {
+        c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const mD = c.measureText('D');
+        const mW = c.measureText('Design');
+        if (mD.fontBoundingBoxAscent) asc = mD.fontBoundingBoxAscent;
+        if (mD.actualBoundingBoxAscent) cap = mD.actualBoundingBoxAscent;
+        if (mW.actualBoundingBoxDescent) desc = mW.actualBoundingBoxDescent;
+      }
+      const base = textR.top + asc; // viewport y of the baseline
+      // The cap: on a desktop the word must stop short of the lede.
+      let top = TOP;
+      if (wide.matches) {
+        const ledeR = lede.getBoundingClientRect();
+        if (ledeR.top < base + desc) top = Math.min(TOP, Math.max(MIN, Winv(ledeR.left - gap - heroR.left)));
+      }
+      max = wide.matches ? top : TOP;
+      rest = wide.matches ? max : cssRest;
+      // The CSS rest is written to match the cap (Home.astro, 1024 to 1195):
+      // when they agree to a quarter of a unit the CSS keeps the word, so
+      // nothing moves after mount.
+      if (Math.abs(rest - cssRest) <= 0.25) rest = cssRest;
+      else h1.style.setProperty('--sw-rest', rest.toFixed(2));
+      if (!active) cur = rest;
+      // The word's left at rest: the dial and the hairline are measured from it.
+      setWidth(null);
+      left = range.getBoundingClientRect().left - heroR.left;
+      // The dial's box: over the word's line, as wide as the word at its top.
+      dial.style.left = `${left}px`;
+      dial.style.top = `${lineR.top - heroR.top}px`;
+      dial.style.width = `${W(max) - left}px`;
+      dial.style.height = `${lineR.height}px`;
+      dial.style.setProperty('--base', `${base - lineR.top}px`);
+      dial.style.setProperty('--cap-top', `${base - cap - lineR.top}px`);
+      dial.style.setProperty('--cap-h', `${cap}px`);
+      const hr = h1.getBoundingClientRect();
+      dial.style.setProperty('--read-x', `${heroR.width - left}px`);
+      dial.style.setProperty('--read-y', `${hr.top - lineR.top - 28}px`);
+      dial.setAttribute('aria-valuemax', String(Math.round(max)));
+      ready = true;
+      dial.hidden = false;
+      render();
+    };
+
+    /** Measure now if the word is at rest, otherwise mark the geometry stale
+        (layout resets the word, so it cannot run under a drag or the keys). */
+    const remeasure = () => {
+      if (active || pending) { stale = true; return; }
+      stale = false;
+      layout();
+    };
+    /** The word has just come back to rest: catch up on a skipped measure,
+        else just redraw. */
+    const relayout = () => {
+      if (stale && !pending) { stale = false; layout(); return; }
+      render();
+    };
+
+    /** Everything that follows the width: the word, the slider's values, the
+        readout and the bar on the word's right edge. */
+    const render = () => {
+      if (!ready) return;
+      const shown = Math.round(cur);
+      dial.setAttribute('aria-valuenow', String(shown));
+      dial.setAttribute('aria-valuetext', `${shown} percent`);
+      read.textContent = String(shown);
+      // In the dial's own coordinates: its left is the word's left at rest.
+      const bar = W(cur) - left - (INK_A + INK_B * cur) * size + gap;
+      dial.style.setProperty('--bar-x', `${bar}px`);
+      // The hairline runs from the frame's left edge (a bearing to the left
+      // of the dial's) to the bar.
+      dial.style.setProperty('--rule-x', `${-left}px`);
+      dial.style.setProperty('--rule-w', `${bar + left}px`);
+    };
+
+    // The state: what has hold of the word right now.
+    let active = false; // a drag or the keys are moving it
+    let pointerId = -1;
+    let pending = false; // a press that has not travelled far enough yet
+    let x0 = 0;
+    let y0 = 0;
+    let s0 = 0;
+    let navigating = false;
+    let raf = 0;
+    let target = 0;
+    let holdTimer = 0;
+    let ret = 0; // the snap-back's frame request
+    let hintTimer = 0;
+    let hintRun = 0;
+    let navTimer = 0;
+    const timers = new Set<number>();
+    const later = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => { timers.delete(id); fn(); }, ms);
+      timers.add(id);
+      return id;
+    };
+
+    const stopReturn = () => {
+      if (holdTimer) { clearTimeout(holdTimer); timers.delete(holdTimer); holdTimer = 0; }
+      if (ret) { cancelAnimationFrame(ret); ret = 0; }
+    };
+    const stopHint = () => {
+      if (hintTimer) { clearTimeout(hintTimer); timers.delete(hintTimer); hintTimer = 0; }
+      if (hintRun) { cancelAnimationFrame(hintRun); hintRun = 0; }
+      delete dial.dataset.hint;
+    };
+    /** Back to rest at once, nothing left running (a swap's snapshot, a
+        hidden tab, a removed page). */
+    const reset = () => {
+      stopReturn();
+      stopHint();
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      active = false;
+      pending = false;
+      delete dial.dataset.active;
+      cur = rest;
+      setWidth(null);
+      relayout();
+    };
+
+    /** Travel to a width at the constant speed, then stop dead. */
+    const travel = (to: number, handle: (id: number) => void, done: () => void) => {
+      const from = cur;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const d = SPEED * (now - t0);
+        cur = from < to ? Math.min(to, from + d) : Math.max(to, from - d);
+        setWidth(cur);
+        render();
+        if (cur === to) { handle(0); done(); return; }
+        handle(requestAnimationFrame(step));
+      };
+      handle(requestAnimationFrame(step));
+    };
+    /** After a hold, travel back to rest. A grab on the way picks it up. */
+    const snapBack = () => {
+      stopReturn();
+      if (cur === rest) { finish(); return; }
+      holdTimer = window.setTimeout(() => {
+        timers.delete(holdTimer);
+        holdTimer = 0;
+        travel(rest, (id) => { ret = id; }, finish);
+      }, HOLD);
+      timers.add(holdTimer);
+    };
+    const finish = () => {
+      active = false;
+      delete dial.dataset.active;
+      cur = rest;
+      setWidth(null);
+      relayout();
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        cur = target;
+        setWidth(cur);
+        render();
+      });
+    };
+
+    // Pointer and touch. A press does nothing until it has travelled 6px
+    // sideways; a vertical swipe is the browser's (touch-action pan-y), so a
+    // page still scrolls from anywhere on the word.
+    const engage = (e: PointerEvent) => {
+      pending = false;
+      active = true;
+      x0 = e.clientX;
+      s0 = cur;
+      dial.dataset.active = '';
+      try { dial.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
+    };
+    const down = (e: PointerEvent) => {
+      if (navigating || !ready) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (pointerId !== -1) return;
+      stopHint();
+      stopReturn();
+      pointerId = e.pointerId;
+      x0 = e.clientX;
+      y0 = e.clientY;
+      s0 = cur;
+      pending = true;
+      // A grab mid-return picks the word up where it is.
+      if (active) { pending = false; engage(e); }
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      if (pending) {
+        const dx = e.clientX - x0;
+        const dy = e.clientY - y0;
+        if (Math.abs(dx) >= ENGAGE && Math.abs(dx) > Math.abs(dy)) engage(e);
+        return;
+      }
+      if (!active) return;
+      target = clamp(Winv(W(s0) + (e.clientX - x0)));
+      schedule();
+    };
+    const release = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = -1;
+      const was = active;
+      pending = false;
+      try { dial.releasePointerCapture(e.pointerId); } catch { /* already gone */ }
+      if (was) snapBack();
+      else if (stale) remeasure();
+    };
+    const lost = () => {
+      if (pointerId === -1) return;
+      pointerId = -1;
+      pending = false;
+      if (active) snapBack();
+      else if (stale) remeasure();
+    };
+
+    // Keyboard: arrows 1, Shift or PageUp and PageDown 10, Home the narrowest,
+    // End the widest. Instant. The value holds while the dial has focus; Esc
+    // or leaving it snaps the word back.
+    const keydown = (e: KeyboardEvent) => {
+      if (navigating || !ready || e.ctrlKey || e.metaKey || e.altKey) return;
+      let next: number | null = null;
+      const big = e.shiftKey ? 10 : 1;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = cur + big;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = cur - big;
+      else if (e.key === 'PageUp') next = cur + 10;
+      else if (e.key === 'PageDown') next = cur - 10;
+      else if (e.key === 'Home') next = MIN;
+      else if (e.key === 'End') next = max;
+      else if (e.key === 'Escape') {
+        if (active) { e.preventDefault(); stopReturn(); cur = rest; finish(); }
+        return;
+      }
+      if (next === null) return;
+      e.preventDefault();
+      stopHint();
+      stopReturn();
+      active = true;
+      dial.dataset.active = '';
+      cur = clamp(next);
+      setWidth(cur);
+      render();
+    };
+    const blur = () => {
+      if (pointerId !== -1) return;
+      if (active) { stopReturn(); cur = rest; finish(); }
+    };
+    const hide = () => {
+      if (document.hidden) reset();
+    };
+    const winBlur = () => {
+      if (pointerId !== -1 && active) { pointerId = -1; snapBack(); }
+    };
+
+    // The swap's snapshot is taken after this: whatever the dial is doing
+    // stops and the word is at rest, and the dial is deaf until the new page
+    // has landed (or two seconds, if the swap never comes).
+    const beforePreparation = () => {
+      navigating = true;
+      pointerId = -1;
+      reset();
+      clearTimeout(navTimer);
+      navTimer = window.setTimeout(() => { navigating = false; }, 2500);
+    };
+
+    // The first-visit hint: once per session, 600ms after the page has
+    // landed, the word travels to the narrowest, holds two beats and comes
+    // back. Any touch of the dial ends it.
+    const inView = () => {
+      const r = h1.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
+    const arrived = (cb: () => void, tries = 0) => {
+      // An arrival from another school holds data-from-theme until its
+      // transition has finished.
+      if (document.documentElement.dataset.fromTheme && tries < 80) {
+        hintTimer = window.setTimeout(() => arrived(cb, tries + 1), 50);
+        timers.add(hintTimer);
+        return;
+      }
+      hintTimer = window.setTimeout(cb, 600);
+      timers.add(hintTimer);
+    };
+    const hint = () => {
+      hintTimer = 0;
+      if (!ready || active || pending || navigating || document.hidden || !inView()) return;
+      try {
+        if (sessionStorage.getItem(HINT_KEY)) return;
+        sessionStorage.setItem(HINT_KEY, '1');
+      } catch { /* storage blocked: the hint just does not remember */ }
+      dial.dataset.hint = 'run';
+      dial.dataset.active = '';
+      active = true;
+      const back = () => {
+        hintTimer = window.setTimeout(() => {
+          timers.delete(hintTimer);
+          hintTimer = 0;
+          travel(rest, (id) => { hintRun = id; }, () => { delete dial.dataset.hint; finish(); });
+        }, 2 * BEAT);
+        timers.add(hintTimer);
+      };
+      travel(MIN, (id) => { hintRun = id; }, back);
+    };
+    try {
+      if (!sessionStorage.getItem(HINT_KEY)) arrived(hint);
+    } catch { /* no storage: no hint */ }
+
+    dial.addEventListener('pointerdown', down);
+    dial.addEventListener('pointermove', move);
+    dial.addEventListener('pointerup', release);
+    dial.addEventListener('pointercancel', release);
+    dial.addEventListener('lostpointercapture', lost);
+    dial.addEventListener('keydown', keydown);
+    dial.addEventListener('blur', blur);
+    dial.addEventListener('contextmenu', (e) => e.preventDefault());
+    dial.addEventListener('focus', stopHint);
+    document.addEventListener('astro:before-preparation', beforePreparation);
+    document.addEventListener('visibilitychange', hide);
+    window.addEventListener('blur', winBlur);
+    const ro = new ResizeObserver(() => remeasure());
+    ro.observe(hero);
+    layout();
+    void document.fonts.ready.then(() => remeasure());
+
+    return () => {
+      ro.disconnect();
+      reset();
+      for (const id of timers) clearTimeout(id);
+      timers.clear();
+      clearTimeout(navTimer);
+      h1.style.removeProperty('--sw-rest');
+      dial.removeEventListener('pointerdown', down);
+      dial.removeEventListener('pointermove', move);
+      dial.removeEventListener('pointerup', release);
+      dial.removeEventListener('pointercancel', release);
+      dial.removeEventListener('lostpointercapture', lost);
+      dial.removeEventListener('keydown', keydown);
+      dial.removeEventListener('blur', blur);
+      dial.removeEventListener('focus', stopHint);
+      document.removeEventListener('astro:before-preparation', beforePreparation);
+      document.removeEventListener('visibilitychange', hide);
+      window.removeEventListener('blur', winBlur);
+    };
+  });
+</script>
+
+<style>
+  /* The dial is laid over the word's line (the script sets left, top, width
+     and height from the measured word) and is invisible itself: the word is
+     the control, the bar on its right edge is the handle. It is as wide as
+     the word at its widest, so the whole word can be grabbed. */
+  .dial {
+    position: absolute;
+    z-index: 1;
+    cursor: ew-resize;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dial[hidden] { display: none; }
+
+  /* Home's one red mark: a bar from the baseline to the cap height, a gutter
+     past the word's ink, following it. */
+  .dial-mark {
+    position: absolute;
+    left: 0;
+    top: var(--cap-top, 0);
+    height: var(--cap-h, 0);
+    width: 6px;
+    background: var(--red-field);
+    transform: translateX(var(--bar-x, 0));
+    pointer-events: none;
+  }
+  @media (max-width: 639.98px) {
+    .dial-mark { width: 4px; }
+  }
+
+  /* Hover, focus and while it is moving: a hairline along the baseline from
+     the frame's left edge to the bar. */
+  .dial::before {
+    content: '';
+    position: absolute;
+    left: var(--rule-x, 0);
+    top: var(--base, 0);
+    width: var(--rule-w, 0);
+    height: 1px;
+    background: var(--mark);
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .dial:hover::before { opacity: 1; }
+  }
+  .dial:focus-visible::before,
+  .dial[data-active]::before { opacity: 1; }
+
+  /* The readout, right-aligned to the frame above the billboard, only while
+     the word is being moved. Meta type, tabular. */
+  .dial-read {
+    position: absolute;
+    left: var(--read-x, 0);
+    top: var(--read-y, 0);
+    transform: translateX(-100%);
+    visibility: hidden;
+    font-family: var(--font-display);
+    font-size: var(--fs-meta);
+    font-weight: 500;
+    line-height: var(--u);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    color: var(--mark);
+    pointer-events: none;
+  }
+  .dial[data-active] .dial-read { visibility: visible; }
+</style>

@@ -168,7 +168,9 @@ const semanticSwatches = [
     font-family: var(--font-body); font-size: var(--text-sm);
     transition: all var(--dur-1) var(--ease-weighted);
   }
-  .opts :global(button:hover) { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    .opts :global(button:hover) { color: var(--mark); }
+  }
   .opts :global(button[aria-pressed='true']) { color: var(--field); background: var(--accent); border-color: var(--accent); }
   #copy-tokens {
     margin-left: auto; background: none; color: var(--accent);
@@ -177,7 +179,9 @@ const semanticSwatches = [
     font-family: var(--font-body); font-size: var(--text-sm);
     transition: all var(--dur-1) var(--ease-weighted);
   }
-  #copy-tokens:hover { background: var(--accent); color: var(--field); }
+  @media (hover: hover) and (pointer: fine) {
+    #copy-tokens:hover { background: var(--accent); color: var(--field); }
+  }
 
   .swatches {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));

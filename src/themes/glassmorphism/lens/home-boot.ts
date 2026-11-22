@@ -17,12 +17,31 @@ function scheme(): Scheme {
   return document.documentElement.dataset.scheme === 'dark' ? 'dark' : 'light';
 }
 
+/** The travel box's top and bottom insets: below the header bar, above the
+    portal switcher. Stage 6 (the diagnosis's note for the glass critic): the
+    bottom used to read `[data-portal-tail]`, the 76 px spacer at the END of
+    the document, which sits far below the viewport on Home, so the inset was
+    always 0. It now measures the fixed `bdl-switcher` itself (the same
+    element lens.ts's collectObstructions reads). */
 function chromeInsets(): { top: number; bottom: number } {
   const header = document.querySelector('.site-header');
-  const tail = document.querySelector('[data-portal-tail]');
+  const switcher = document.querySelector('bdl-switcher');
   const top = header ? header.getBoundingClientRect().bottom + 8 : 0;
-  const bottom = tail ? window.innerHeight - tail.getBoundingClientRect().top + 8 : 0;
+  let bottom = 0;
+  if (switcher) {
+    const r = switcher.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && r.top < window.innerHeight) bottom = window.innerHeight - r.top + 8;
+  }
   return { top: Math.max(0, top), bottom: Math.max(0, bottom) };
+}
+
+/** The lens's off state: `prefers-contrast: more` hides the canvas, its
+    shadows and the hit control (theme.css) and the poster stands in, so no
+    lens mounts at all (no invisible WebGL context, loop or listeners).
+    Stage 6, stop 1 call 1 (a): `prefers-reduced-transparency` no longer
+    hides it; the Portal ignores that setting for glass. */
+function lensHidden(): boolean {
+  return window.matchMedia('(prefers-contrast: more)').matches;
 }
 
 /** `?lensProbe=identity|seam` (README, item 5): a production-behind-a-flag
@@ -40,7 +59,7 @@ export function mountHomeGlass(): (() => void) | void {
   const poster = document.querySelector<HTMLElement>('.lens-poster');
   if (!host || !poster) return;
 
-  const switchBtn = document.querySelector<HTMLButtonElement>('.hero .window-bar .switch');
+  const switchBtn = document.querySelector<HTMLButtonElement>('.control-centre .cc-tint-switch');
   const frostInput = document.querySelector<HTMLInputElement>('.cc-frost');
   const todButtons = [...document.querySelectorAll<HTMLButtonElement>('.cc-seg')];
 
@@ -126,22 +145,48 @@ export function mountHomeGlass(): (() => void) | void {
     /* Geometry only: a failure leaves the CSS spot, exactly as before. */
   }
 
-  const stopIdle = afterArrivalIdle(() => {
+  function mount(usePlan: ReturnType<typeof planLensStart> | null) {
+    // One lens per Home visit (Stage 6, diagnosis C): a second call must
+    // never overwrite a live lens without destroying it.
+    if (lens || lensHidden()) return;
     const settings = currentSettings();
     lens = mountLens({
-      host,
-      poster,
+      host: host!,
+      poster: poster!,
       phone: window.innerWidth <= 600,
       initialTint: settings.tint,
       initialTod: settings.tod,
       scheme,
       chromeInsets,
       probe: probeParam(),
-      plan: Math.abs(window.scrollY - planScrollY) > 1 ? plan : null,
+      plan: usePlan,
     });
+  }
+  let idleDone = false;
+  const stopIdle = afterArrivalIdle(() => {
+    idleDone = true;
+    mount(Math.abs(window.scrollY - planScrollY) > 1 ? plan : null);
   });
+
+  // Stage 6 wave 2 (T1 C3): the contrast setting can change mid-visit.
+  // Turning more contrast on tears the lens down (its CSS hides the canvas
+  // anyway; this also stops its loop and listeners); turning it off mounts
+  // a fresh lens, planned against the layout as it is now. Before the idle
+  // mount has run, the idle mount itself reads the setting.
+  const contrastMq = window.matchMedia('(prefers-contrast: more)');
+  function onContrast() {
+    if (!idleDone) return;
+    if (contrastMq.matches) {
+      lens?.destroy();
+      lens = null;
+    } else {
+      mount(null);
+    }
+  }
+  contrastMq.addEventListener('change', onContrast);
   return () => {
     stopIdle();
+    contrastMq.removeEventListener('change', onContrast);
     lens?.destroy();
     lens = null;
     stopOrbClock?.();

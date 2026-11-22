@@ -39,7 +39,7 @@ const { copy, theme } = Astro.props;
 
   <div class="side">
     <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <span class="sep" aria-hidden="true">&#9670;</span>}<span class="trust-part">{part}</span></>)}</p>
-    <Win title="mail.txt" class="mail">
+    <Win title="mail.txt" class="mail" inactive>
       <p class="invite">{copy.invite}</p>
       <a class="address" href={`mailto:${copy.email}`}>{copy.email}</a>
       <p class="fine">{copy.fine}</p>
@@ -51,7 +51,7 @@ const { copy, theme } = Astro.props;
         the words the visitor sees); screensaver.ts wires the loop cycle and
         the full-window preview. */}
     <div class="side-scene">
-      <Win title="screensaver.scr" class="screensaver">
+      <Win title="screensaver.scr" class="screensaver" inactive>
         <div class="screensaver-preview">
           <div data-scr-sunset><Horizon class="side-horizon" /></div>
           <canvas class="scr-canvas" data-scr-canvas aria-hidden="true"></canvas>
@@ -82,7 +82,7 @@ const { copy, theme } = Astro.props;
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
   import { mountScreensaver } from '../screensaver';
 
   /** E15: pause the CSS floor's infinite animation while it is off-screen
@@ -99,6 +99,7 @@ const { copy, theme } = Astro.props;
     return () => io.disconnect();
   });
 
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
   onMount(mountScreensaver);
 </script>
@@ -180,7 +181,16 @@ const { copy, theme } = Astro.props;
      64px grid tile only ever shows its converging verticals - a smaller
      --vw-floor-cell (theme.css .vw-floor::before) gets enough horizontal
      rungs into the box to read as a floor instead of radiating spikes. */
-  .screensaver-preview :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 160px; --vw-floor-cell: 22px; }
+  .screensaver-preview :global(.side-horizon) { --hz-line: 66%; --hz-sun-w: 160px; --vw-floor-cell: 22px; --hz-sun-sink: 8%; }
+  /* V10 (Stage 6 wave 2): the horizon box is transparent above its own
+     glow, so in light the sunken field's white showed through as a blown-out
+     sky. A lavender top (the scheme's own --hz-sky-top) fading to the sky's
+     mid pink under it. The sun also sits 8% lower on its line
+     (--hz-sun-sink, above), so its top clears the bezel in both schemes
+     (it touched it at 160px wide on a 160px preview). */
+  :global([data-scheme='light']) .screensaver-preview {
+    background: linear-gradient(180deg, var(--hz-sky-top) 0, color-mix(in srgb, var(--hz-sky-top) 45%, var(--hz-sky-mid)) 48%, var(--hz-sky-mid) 66%);
+  }
   /* B2 vw-3 item 3: the sunset and the canvas loops occupy the same box;
      screensaver.ts toggles which one is visible. */
   [data-scr-sunset] { position: absolute; inset: 0; transition: opacity 120ms ease; }

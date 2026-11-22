@@ -3,18 +3,35 @@
     dressing a room until the offline pipeline moves into src/ and the Venus
     head lands (B2). Decorative only: empty alt, lazy below the fold, sized
     so the layout never shifts. AVIF first, WebP fallback, both imported
-    through Vite so they ship hashed under /_astro/ (never public/). */
+    through Vite so they ship hashed under /_astro/ (never public/).
+
+    `eager` (Stage 6 wave 2, V6): About's centrepiece only. It sits in the
+    first screen, and on an in-school swap a lazy image started loading only
+    after the new page was on screen, so the bust popped in about 560 ms in.
+    Eager, high priority: the request goes out with the page. Decoded
+    synchronously too: an async decode finished after the swap's first frame
+    was captured, so the bust still appeared late even once the file had
+    arrived. */
 interface Props {
   avif: string;
   webp: string;
   size: number;
   class?: string;
+  eager?: boolean;
 }
-const { avif, webp, size, class: className } = Astro.props;
+const { avif, webp, size, class: className, eager = false } = Astro.props;
 ---
 <picture class:list={['vw-still', className]}>
   <source srcset={avif} type="image/avif" />
-  <img src={webp} width={size} height={size} alt="" loading="lazy" decoding="async" />
+  <img
+    src={webp}
+    width={size}
+    height={size}
+    alt=""
+    loading={eager ? 'eager' : 'lazy'}
+    fetchpriority={eager ? 'high' : undefined}
+    decoding={eager ? 'sync' : 'async'}
+  />
 </picture>
 
 <style>

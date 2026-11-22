@@ -76,6 +76,11 @@
   --stitch: #a8394a;
   /* The oxblood thread of the sampler's alphabet band (B1 fix call 2). */
   --thread: #a8394a;
+  /* The other two threads of the sampler's set (Stage 6 w3 task 22: a tap re-stitches a letter oxblood, hunter, gold,
+     round again). Each is a graphic on --field-raised at 3:1 or better (meta.contrast): the hunter is the school's
+     own, the gold its --gold-deep token (4.79:1 on --field-raised; the lighter --gold fails on cream). */
+  --thread-hunter: #1f4a33;
+  --thread-gold: var(--gold-deep);
   --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
   /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
   --bark-edge: #cfc6b4;
@@ -84,6 +89,13 @@
   /* About 6% L darker than the writing paper (oklch), so the fold reads (B1 item 12), in a warm paper
      hue (oklch 0.895 0.022 84), not the cool grey the first pass (#dfdcd6, chroma 0.009) read as (B1 fix call 7). */
   --flap: #e3dbcc;
+  /* The open envelope (Stage 6 w3 task 22): its lining, the notecard that slides out, and the card's monogram ink
+     (meta.contrast). The lining is the oxblood the wax and the bow are made of, so the opening reads as a cavity. */
+  --lining: #6e1623;
+  /* the flap's inside, seen when it is folded up: a shade over the outside, as the paper turns from the light */
+  --flap-in: #d6cbb7;
+  --notecard: #fffcf3;
+  --notecard-ink: #7d1f2b;
 
   /* The chintz repeat's inks (parts/Defs.astro and the wall files in assets/).
      Aged 20% down in chroma (B1 item 7, scripts/themes/grandmillennial/age-inks.mjs):
@@ -113,6 +125,12 @@
   /* The one saturated anchor of Services (B1 item 5, B): a buttery lacquer yellow
      under "How a project runs", hunter text on it. Used once. */
   --lacquer-yellow: #f0d77f;
+  /* The band's kicker: the school's oxblood by day; its own pale gold in the lacquer (below). The gloss is the dark band's alone. */
+  --lacquer-accent: var(--accent);
+  --lacquer-gloss: none;
+  /* Contact's ribbon-tape trust strip: a cream grosgrain by day, a warm parchment cream in the lacquered room, ink on it (meta.contrast). */
+  --tape: #f6ecd2;
+  --tape-ink: #4f4637;
   --tick-ink: var(--porcelain);
 
   /* About's chinoiserie wall (B1 task 2). The inks the INLINE pieces use (the
@@ -213,9 +231,17 @@
   --stitch: #c9a95c;
   /* The alphabet band's oxblood thread, lifted to a rose so it reads on the dark sampler. */
   --thread: #d4707e;
+  --thread-hunter: #5f9f78;
+  --thread-gold: #c9a95c;
   --bark-edge: #4a4130;
   --catkin: #a68f5c;
   --flap: #0f251b;
+  --lining: #3b0d16;
+  /* Lifted from #0b1c14, which was 1.02:1 on the wall and vanished when the flap opened (Stage 6 w4 task 30,
+     critique B5): 1.76:1 on --wall-ground, so the opened flap is seen against it. meta.contrast holds the pair. */
+  --flap-in: #2a4a39;
+  --notecard: #e6d9b8;
+  --notecard-ink: #6e1a29;
 
   --c-ground: #21392c;
   --c-rose: #a54f5c;
@@ -237,13 +263,30 @@
   /* The a2 minor: the accent is gold in the lacquer, and a gold pinstripe on
      the cream stripe was 1.1 to 1. A lacquer-dark oxblood shows. */
   --band-pin: #3b0d16;
-  /* Its dark equivalent stays an anchor: a burnished amber lacquer, cream text. */
-  --lacquer-yellow: #6f4700;
+  /* Its dark equivalent stays an anchor: a burnished amber lacquer, cream text.
+     GM5 (Stage 6 w2 task 14): #6f4700 read as mustard or brown leather. The
+     ground is lifted toward saffron (#84560a, about 8% more lightness, the same
+     hue family), and it is glossed like the room's other lacquer: a lit edge
+     along its top (--lacquer-gloss's first layer) and a slow specular band
+     across it, both faint enough to leave the type's contrast alone. The lifted
+     ground no longer carries the gold accent at 4.5:1 (3.55), so the band's
+     kicker takes its own pale gold, --lacquer-accent. */
+  --lacquer-yellow: #84560a;
+  --tape: #e6d9b8;
+  --tape-ink: #33291c;
+  --lacquer-accent: #f6e6b0;
+  --lacquer-gloss:
+    linear-gradient(180deg, rgb(255 226 150 / 0.11), transparent 30%),
+    linear-gradient(112deg, transparent 28%, rgb(255 244 214 / 0.06) 42%, rgb(255 244 214 / 0.06) 50%, transparent 64%);
   --tick-ink: #6e1a29;
 
-  /* The dark scheme's wall (chinoiserie-dark.svg): gold-cream line on hunter, the
-     wall darker than the cards. The founder's room is the same file. */
-  --sc-ground: #0b1f15;
+  /* The dark scheme's wall (chinoiserie-dark.svg): gold-cream line on a moonlit sage,
+     the wall darker than the cards. GM6 (Stage 6 w2 task 14): both walls were night-dark,
+     so the stripe band cut one wallpaper in two; this hero wall's ground (and its hills
+     and rocks, chinoiserie-palettes.json) is lifted 0.065 in oklch lightness and a fifth
+     less chroma (#0b1f15 to #1e2e25), a greyer sage beside the founder's deeper
+     bottle-green room (--sc-room). */
+  --sc-ground: #1e2e25;
   --sc-room: #0a3321;
   --sc-line: #d9c58d;
   --sc-trunk: #cfc6a6;
@@ -286,7 +329,9 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
-[data-theme='grandmillennial'] a:hover { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='grandmillennial'] a:hover { text-decoration-thickness: 2px; }
+}
 [data-theme='grandmillennial'] :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 [data-theme='grandmillennial'] main:focus { outline: none; }
 [data-theme='grandmillennial'] .skip { position: absolute; left: -100vw; top: 0; }
@@ -468,10 +513,14 @@
 }
 [data-theme='grandmillennial'][data-scheme='dark'] .gm-wall--toile { background-image: url('./assets/toile-dark.svg'); }
 
+/* --wall-room-pad is the room's block padding as one custom property (Stage 6 w3 task 19, ledger
+   w2 task 15 C5): Services scales its top from it (calc(var(--wall-room-pad) * 0.6)) instead of
+   repeating the clamp, so the two cannot drift apart. */
 [data-theme='grandmillennial'] .gm-wall-room {
+  --wall-room-pad: clamp(2.75rem, 6vw, 4.75rem);
   width: min(100% - 2 * var(--wall-side), var(--wrap));
   margin-inline: auto;
-  padding-block: clamp(2.75rem, 6vw, 4.75rem);
+  padding-block: var(--wall-room-pad);
 }
 /* Inside the room the cards take the room's width: the wall's own margin is
    the gutter. */
@@ -643,11 +692,14 @@ html[data-theme='grandmillennial']::view-transition-old(grandmillennial-header) 
    under the canopy's content on the page, so the picture's background carries
    the same two layers beneath --lamp and --field's paint, sized to the
    viewport so they land where the body's do (the canopy is at the viewport's
-   top left in the new state). Light sets both to none. */
+   top left in the new state). Wide is the picture's own width (100%), which is the page's
+   width without a classic scrollbar, as the fixed body::before is; 100vw counted the
+   scrollbar and put the vignette's edges 15px off (Stage 6 w2 task 15, ledger B1 T1 r2-N4).
+   Light sets both to none. */
 html[data-theme='grandmillennial']::view-transition-new(grandmillennial-header) {
   background:
-    var(--vignette) 0 0 / 100vw 100vh no-repeat,
-    var(--sheen) 0 0 / 100vw 100vh no-repeat,
+    var(--vignette) 0 0 / 100% 100vh no-repeat,
+    var(--sheen) 0 0 / 100% 100vh no-repeat,
     var(--lamp) 0 0 / 100% 3000px no-repeat,
     var(--field);
 }

@@ -25,8 +25,15 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   <Palm class="palm palm-l" />
   <Palm class="palm palm-r" flip />
   <div class="vw-scan" aria-hidden="true"></div>
-  <p class="osd osd-l" aria-hidden="true"><span class="play"></span>PLAY</p>
-  <p class="osd osd-r" aria-hidden="true">SP 0:19:85</p>
+  {/* Task 24: the VCR remote (../deck.ts). The OSD is the deck's one real
+      button; its face (the glyph and the approved words PLAY, PAUSE, FF,
+      REW) sits in an aria-hidden span and the button is named "Play" or
+      "Pause" to match. The tracking band shows only while paused. */}
+  <div class="deck-band" aria-hidden="true"><span></span></div>
+  <button type="button" class="osd osd-l deck" aria-label="Play" aria-pressed="false" data-deck>
+    <span class="deck-face" aria-hidden="true"><span class="play"></span><span data-deck-word>PLAY</span></span>
+  </button>
+  <p class="osd osd-r" aria-hidden="true">SP <span data-deck-counter>0:19:85</span></p>
   <div class="hero-title">
     <p class="vw-kana kana" aria-hidden="true">バーチ・デザイン・ラボ</p>
     <h1 class="billboard">
@@ -129,8 +136,22 @@ const doorFiles = ['software.exe', 'web_design.htm'];
           >
             <span aria-hidden="true">TOUCH SCREEN TO BEGIN</span>
           </button>
-          <div class="stand-plaque" aria-hidden="true">
-            <p class="kiosk-directory">B1 SOFTWARE / 1F WEB / 2F LAB</p>
+          {/* Stage 6 wave 3, task 25: the directory plaque is the elevator
+              (../elevator.ts). Three real floor buttons, the floor words
+              inside aria-hidden spans (the old plaque's strings, so no new
+              words) and the controls named by aria-label; aria-pressed on
+              the lit floor. The LED readout beside it is aria-hidden. No
+              sound, and nothing navigates. */}
+          <div class="elevator">
+            <div class="floor-box" aria-hidden="true" data-floor-box>
+              <span class="floor-dir"></span>
+              <span class="floor-readout" data-floor-readout>1F</span>
+            </div>
+            <div class="stand-plaque" role="group" aria-label="Elevator directory">
+              <button type="button" class="floor" data-floor="0" aria-label="B1 software" aria-pressed="false"><span aria-hidden="true"><b>B1</b><i>SOFTWARE</i></span></button>
+              <button type="button" class="floor" data-floor="1" aria-label="1F web" aria-pressed="false"><span aria-hidden="true"><b>1F</b><i>WEB</i></span></button>
+              <button type="button" class="floor" data-floor="2" aria-label="2F lab" aria-pressed="false"><span aria-hidden="true"><b>2F</b><i>LAB</i></span></button>
+            </div>
           </div>
         </div>
         <div class="stand-foot" aria-hidden="true"></div>
@@ -152,12 +173,17 @@ const doorFiles = ['software.exe', 'web_design.htm'];
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { mountHorizon } from '../fx';
-  import { mountWindowDrag } from '../windows';
+  import { mountWindowActivation, mountWindowDrag } from '../windows';
   import { mountKioskAttract } from '../kiosk';
+  import { mountElevator } from '../elevator';
+  import { mountDeck } from '../deck';
 
   onMount(mountHorizon);
+  onMount(mountDeck);
+  onMount(mountWindowActivation);
   onMount(mountWindowDrag);
   onMount(mountKioskAttract);
+  onMount(mountElevator);
 </script>
 
 <style>
@@ -187,6 +213,71 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   .osd-l { left: 1.4rem; display: flex; align-items: center; gap: 0.4em; }
   .osd-r { right: 1.4rem; }
   .play { width: 0; height: 0; border-left: 0.55em solid currentColor; border-block: 0.34em solid transparent; }
+
+  /* ---------- the VCR remote (task 24, ../deck.ts) ----------
+     The OSD's PLAY is a real button. Reset to the OSD's own look; the padding
+     grows its target to 44px and the inset is pulled back by the same amount,
+     so the face sits exactly where today's OSD did. */
+  .deck {
+    appearance: none; background: none; border: 0; margin: 0; font: inherit;
+    font-family: var(--font-mono); font-size: 1.7rem; line-height: 1; letter-spacing: 0.06em;
+    padding: 0.75rem 0.6rem; top: calc(1.1rem - 0.75rem); left: calc(1.4rem - 0.6rem);
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .deck-face { display: flex; align-items: center; gap: 0.4em; }
+  .deck:focus-visible { outline: 2px dotted currentColor; outline-offset: -2px; }
+  @media (hover: hover) and (pointer: fine) {
+    .deck { cursor: pointer; }
+    .deck:hover { text-shadow: 3px 0 0 var(--neon-pink), -3px 0 0 var(--neon-cyan); }
+    :global([data-scheme='light']) .deck:hover { text-shadow: 3px 0 0 #ffffff, -1px 0 0 var(--neon-pink); }
+  }
+  /* The glyph per mode: two bars for PAUSE, a doubled triangle for FF,
+     mirrored for REW. Decoration inside the aria-hidden face. */
+  .play { position: relative; }
+  .hero[data-deck-mode='pause'] .play {
+    width: 0.5em; height: 0.68em; border: 0;
+    border-inline: 0.17em solid currentColor;
+  }
+  .hero[data-deck-mode='ff'] .play, .hero[data-deck-mode='rew'] .play { margin-right: 0.55em; }
+  .hero[data-deck-mode='ff'] .play::after, .hero[data-deck-mode='rew'] .play::after {
+    content: ''; position: absolute; left: 0; top: -0.34em;
+    border-left: 0.55em solid currentColor; border-block: 0.34em solid transparent;
+  }
+  /* The pair spans 0 to 1.1em (border, then ::after); mirror about its middle. */
+  .hero[data-deck-mode='rew'] .play { transform: scaleX(-1); transform-origin: 0.55em 50%; }
+
+  /* The pause's tracking band: a jittering bar of tape noise rolling up the
+     frame, over the picture and the palms, under the OSD and the billboard.
+     Shown only while paused; its loops pause off screen and in a hidden tab
+     (data-deck-off). Transforms only. */
+  .hero { touch-action: pan-y pinch-zoom; --band-ink: #ffffff; }
+  :global([data-scheme='light']) .hero { --band-ink: #3a1a66; }
+  .deck-band {
+    position: absolute; z-index: 2; inset-inline: 0; bottom: 0; height: 8%;
+    display: none; pointer-events: none;
+  }
+  .deck-band span {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, transparent, color-mix(in srgb, var(--band-ink) 26%, transparent) 38%, color-mix(in srgb, var(--band-ink) 12%, transparent) 64%, transparent),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--band-ink) 34%, transparent) 0 3px, transparent 3px 11px, color-mix(in srgb, var(--band-ink) 18%, transparent) 11px 13px, transparent 13px 23px);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+  }
+  .hero[data-deck-mode='pause'] .deck-band { display: block; animation: vw-deck-roll 2.6s linear infinite; }
+  .hero[data-deck-mode='pause'] .deck-band span { animation: vw-deck-jitter 0.36s step-end infinite; }
+  .hero[data-deck-off] .deck-band, .hero[data-deck-off] .deck-band span { animation-play-state: paused; }
+  /* 8% tall, so the frame is 12.5 bands: from just under the foot to just
+     past the top. */
+  @keyframes vw-deck-roll { from { transform: translateY(100%); } to { transform: translateY(-1250%); } }
+  @keyframes vw-deck-jitter {
+    0% { transform: translateX(0) scaleY(1); }
+    20% { transform: translateX(7px) scaleY(0.7); }
+    40% { transform: translateX(-4px) scaleY(1.25); }
+    60% { transform: translateX(3px) scaleY(0.9); }
+    80% { transform: translateX(-6px) scaleY(1.1); }
+  }
 
   .hero-title {
     position: absolute; z-index: 3; left: 0; right: 0; top: clamp(3.5rem, 8vh, 5.5rem);
@@ -327,8 +418,13 @@ const doorFiles = ['software.exe', 'web_design.htm'];
   /* The designation is a link to its entry. On the CRT a live line answers in
      inverse video, the terminal's own highlight, on hover and on focus. */
   .designation { justify-self: start; padding-inline: 0.15em; margin-inline: -0.15em; text-decoration: none; }
-  .designation:hover, .designation:focus-visible {
+  .designation:focus-visible {
     color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover {
+      color: var(--crt-bg); background: var(--crt-phos); text-shadow: none;
+    }
   }
   .designation:focus-visible { outline-color: var(--crt-phos); }
   .summary { color: var(--crt-ink); font-size: 1rem; }
@@ -443,15 +539,59 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     position: absolute; inset: 0;
     background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0 1px, transparent 1px 3px);
   }
-  .stand-plaque {
-    width: min(100%, 420px); padding: 0.7rem 1.2rem;
-    background: var(--field-raised);
+  /* Stage 6 wave 3, task 25: the directory plaque is the elevator. An LED
+     readout box beside a plaque of three bevelled floor buttons (the
+     housing's case colour behind them, the school's raised key for the face).
+     A lit floor is the CRT's own phosphor panel: dark glass, green ink, a
+     faint glow, the bevel pressed in. Ink pairs are in meta.ts. */
+  .elevator { display: flex; align-items: stretch; justify-content: center; gap: 0.6rem; width: min(100%, 520px); }
+  .floor-box {
+    flex: none; display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+    min-width: 4.4rem; padding: 0.25rem 0.5rem;
+    background: var(--crt-bg);
     border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
   }
-  .kiosk-directory {
-    margin: 0; text-align: center;
-    font-family: var(--font-mono); font-size: 0.95rem; line-height: 1.3; letter-spacing: 0.06em;
-    color: var(--mark-muted);
+  .floor-readout {
+    font-family: var(--font-mono); font-size: 2.3rem; line-height: 1; letter-spacing: 0.04em;
+    color: var(--crt-phos); text-shadow: 0 0 8px color-mix(in srgb, var(--crt-phos) 60%, transparent);
+  }
+  /* The travel arrow: a small triangle that shows only while the car moves. */
+  .floor-dir { width: 0; height: 0; border: 0 solid transparent; opacity: 0; }
+  .floor-box[data-dir='up'] .floor-dir { opacity: 1; border-width: 0 6px 9px; border-bottom-color: var(--crt-phos); }
+  .floor-box[data-dir='down'] .floor-dir { opacity: 1; border-width: 9px 6px 0; border-top-color: var(--crt-phos); }
+  .stand-plaque {
+    flex: 1 1 auto; min-width: 0; max-width: 420px; display: flex; gap: 0.4rem; padding: 0.4rem;
+    background: var(--crt-case-b);
+    border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  }
+  .floor {
+    appearance: none; margin: 0; cursor: pointer; flex: 1 1 0; min-width: 0;
+    display: grid; place-items: center; padding: 0.3rem 0.15rem;
+    background: var(--field-raised); color: var(--mark);
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  }
+  .floor > span { display: grid; justify-items: center; gap: 0.1rem; }
+  .floor b { font: 400 1.7rem/1 var(--font-mono); letter-spacing: 0.04em; }
+  .floor i { font: 400 0.8rem/1 var(--font-mono); font-style: normal; letter-spacing: 0.1em; color: var(--mark-muted); }
+  .floor:active { border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); translate: 0 1px; }
+  .floor[aria-pressed='true'] {
+    background: var(--crt-bg); color: var(--crt-phos);
+    border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+    box-shadow: inset 0 0 10px color-mix(in srgb, var(--crt-phos) 35%, transparent), 0 0 8px color-mix(in srgb, var(--crt-phos) 35%, transparent);
+  }
+  .floor[aria-pressed='true'] i { color: var(--crt-phos); }
+  .floor:focus-visible { outline: 2px dotted currentColor; outline-offset: 2px; box-shadow: 0 0 0 2px var(--link); }
+  @media (hover: hover) and (pointer: fine) {
+    .floor[aria-pressed='false']:hover { background: color-mix(in srgb, var(--accent) 16%, var(--field-raised)); }
+  }
+  /* 2F: the CRT flips to its Lab list. A short flip of the screen's own
+     face, bright at the turn; the list is already in the markup, so the
+     links never leave the keyboard. */
+  .screen.flip { animation: vw-crt-flip 560ms cubic-bezier(0.2, 0.7, 0.2, 1); transform-origin: 50% 50%; }
+  @keyframes vw-crt-flip {
+    0% { transform: perspective(700px) rotateX(-82deg); filter: brightness(2.2); }
+    55% { transform: perspective(700px) rotateX(9deg); filter: brightness(1.4); }
+    100% { transform: perspective(700px) rotateX(0deg); filter: none; }
   }
   /* A fixed overhang (not a percentage), and a small one: at 390px the
      stand already fills the page's own gutter-to-gutter width with no
@@ -532,6 +672,30 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 1.05;
   }
 
+  /* V2 (Stage 6 wave 2): on a tablet the hero is as tall as 980px but only
+     820 to 1100 wide, so palms sized by that height (66% and 78%) met in the
+     middle and left 44px of clear sky against a sun about 420px wide. A
+     band of their own: palms about 50% and 58% high, pushed out to the
+     edges (-14% and -18%), which leaves the whole sun clear. Desktop (1101
+     and up) and the phone band below are untouched. */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .hero :global(.palm) { height: 50%; }
+    .hero :global(.palm-l) { left: -14%; }
+    .hero :global(.palm-r) { right: -18%; height: 58%; }
+  }
+
+  /* C5 (Stage 6 wave 3, task 19): the shader raises the phone horizon to 0.36
+     of the canvas height (PHONE_HORIZON in fx.ts, active below the 760px
+     COARSE_BREAKPOINT), so the horizon sits at 64% from the top, not the
+     desktop's 68%. The CSS sky stops follow it below 760px, so the sky that
+     shows before WebGL draws has its horizon where the shader's will: no
+     jump on arrival. */
+  @media (max-width: 759.98px) {
+    .hero {
+      background: linear-gradient(180deg, var(--hz-sky-top) 0, var(--hz-sky-mid) 50%, var(--hz-horizon) 64%, var(--hz-ground) 64.2%, var(--hz-ground));
+    }
+  }
+
   @media (max-width: 760px) {
     .opener { grid-template-columns: 1fr; }
     .subline { max-width: 52ch; }
@@ -542,6 +706,7 @@ const doorFiles = ['software.exe', 'web_design.htm'];
     .osd { font-size: 1.3rem; top: 0.8rem; }
     .osd-l { left: 0.9rem; }
     .osd-r { right: 0.9rem; }
+    .deck { font-size: 1.3rem; top: calc(0.8rem - 0.75rem); left: calc(0.9rem - 0.6rem); }
     .hero-title { top: 16%; }
     .hero :global(.palm) { height: 44%; }
     .hero :global(.palm-l) { left: -18%; }
@@ -560,8 +725,74 @@ const doorFiles = ['software.exe', 'web_design.htm'];
      the sphere here, rather than the old 760px cut, covers .lab's own
      `.vw-still { display: block }` tie too (ancestor-scoped `.lab` still
      outweighs it), so no separate 390px-only rule is needed. */
+  /* V3 (Stage 6 wave 2): the pair is no longer hidden below 900px, which left
+     the phone and tablet lobby one lone column. Seated instead in front of
+     the stand's lower corners, each at clamp(64px, 14vw, 96px) with its
+     outer edge on the stand's own edge (the stand is min(100%, 640px) of
+     .kiosk, so its half-width from the centre is min(50%, 320px)); on a
+     tablet, where the stand leaves room beside it, a prop steps out by up to
+     a third of its width so it overlaps the corner rather than hiding in it
+     (superseded by the figure-anchored rule in the task 19 block below).
+     The vertical anchor (bottom: 0.4rem and each prop's own translateY) is
+     the desktop's, so the bases land on the stand's floor line as before. */
+  /* V3 sizing and seat (Stage 6 wave 3, task 19, stop 3 answer 2): the stills
+     are mostly margin (the sphere ball fills 41% of its image's width, the
+     Venus on her drum 73% of its height), so sizing the IMAGE at 64px made
+     the figures about 26px and 47px at 390, specks. Sized by the visible
+     figure instead: Venus about 60px tall and the ball about 44px across at
+     390 (an image 82px and 107px wide), scaled with the viewport and capped
+     at 100px and 73px for 820 and the tablet band. Each width floor is the
+     360 read. The bottom is dropped from 0.4rem to -0.15rem: with each
+     still's own translateY (the baked-in bottom margin) the figure's base
+     lands on the kiosk's floor line, the foot's front edge, so the props
+     stand in front of the stand, not on the plaque's lower edge. Props are
+     pointer-events: none (decoration over the stand's corners). */
+  /* Fix round 1 (task 19, critic C1): anchored by the VISIBLE figure, not the
+     image box. Each still is mostly side margin (the ball's figure starts
+     29.5% in from either side, Venus's 31.8%), so with the image's outer edge
+     on the stand edge the figure sat 0.295 / 0.318 of a prop width inward,
+     on the plaque (at 390: Venus 29.8px x 25.3px and the ball 44px x 13px
+     over the plaque's box). --prop-m is that margin share: the image's outer
+     edge now sits --prop-m * --prop-w beyond the stand edge, so the figure's
+     own outer edge is on the stand edge. It replaces the old step-out of up
+     to 0.3 of a width on a tablet (the same offset, now at every width). */
+  /* Fix round 2 (task 19, film findings): the outward offset above puts each
+     image's TRANSPARENT outer margin past .kiosk's edge (up to 0.3 of a
+     width, 32px at 390), wider than the page gutter, so the document grew
+     16px past the screen. On a phone that widens the layout viewport (innerWidth
+     376 on a 360 device, 406 on 390), which also aborts the arrival's view
+     transition ("Viewport size changed"). The margin is empty, so clip the
+     inline axis of .lab, not .kiosk (controller ruling on reCritic r2-N1):
+     .lab is full width at 900 and below (--wrap is 1180), so its padding box
+     ends at the screen edge. The CRT's 16px drop, the stand's 10px drop and
+     the foot's 12px overhang sit in the --gutter (16px floor) and survive;
+     only the props' transparent margin past the screen is cut. Clipping
+     .kiosk cut all three flush. */
   @media (max-width: 900px) {
-    .lab :global(.kiosk-prop) { display: none; }
-    .lab :global(.kiosk-prop-venus) { display: none; }
+    .lab { overflow-x: clip; }
+    /* Task 25: the elevator (its readout and floor keys) stays clear of the
+       props' visible figures: the stand's foot-side padding is deeper by the
+       height the figures climb into it. */
+    .stand-body { padding-bottom: calc(0.78 * clamp(82px, 20.95vw, 136px) - 7px); }
+    /* Task 29 (task 19 C2): the props never get smaller as the window widens
+       across 900 to 901. The desktop rule above gives 108px at 901 (12vw), the
+       tablet 178px (ball) and 136px (Venus) at 900, so from 820 (where the tablet
+       sizes stay as the founder set them) the image width steps down in a straight
+       line to 108px at 900 for both, and the step at 901 is gone. Below 820 the
+       max() term is above the clamp and does nothing. */
+    .lab :global(.kiosk-prop) {
+      --prop-w: min(clamp(107px, 27.5vw, 178px), max(108px, calc(178px - (100vw - 820px) * 0.875)));
+      --prop-m: 0.295;
+      width: var(--prop-w);
+      bottom: -0.15rem;
+      pointer-events: none;
+      left: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));
+    }
+    .lab :global(.kiosk-prop-venus) {
+      --prop-w: min(clamp(82px, 20.95vw, 136px), max(108px, calc(136px - (100vw - 820px) * 0.35)));
+      --prop-m: 0.318;
+      left: auto;
+      right: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));
+    }
   }
 </style>

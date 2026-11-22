@@ -23,6 +23,8 @@
  *   BDL_GPU=1 node scripts/themes/vaporwave/render-venus.mjs
  *   BDL_GPU=1 node scripts/themes/vaporwave/render-venus.mjs --orient
  *   BDL_GPU=1 node scripts/themes/vaporwave/render-venus.mjs --port 4468
+ *   BDL_GPU=1 node scripts/themes/vaporwave/render-venus.mjs --drum --port 4470 [--yaw -0.3]
+ *       (Stage 6 w3 task 19: the pink Venus on a white drum, turned the other way)
  */
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -43,6 +45,8 @@ const arg = (n, d) => { const i = argv.indexOf(`--${n}`); return i === -1 ? d : 
 const PORT = Number(arg('port', '4468'));
 const HEADED = argv.includes('--headed');
 const ORIENT = argv.includes('--orient');
+const DRUM = argv.includes('--drum'); // Stage 6 w3 task 19: Services' pink Venus on a white drum
+const DRUM_YAW = Number(arg('yaw', '-0.3'));
 const DEBUG_MESH = argv.includes('--debug-mesh'); // orient mode against the unsimplified venus-raw.glb
 
 if (process.env.BDL_GPU !== '1') {
@@ -113,6 +117,10 @@ async function main() {
       await orientGrid(page);
       return;
     }
+    if (DRUM) {
+      await drumStill(page);
+      return;
+    }
     await stills(page);
   } finally {
     await browser.close();
@@ -142,6 +150,24 @@ async function orientGrid(page) {
   }
   writeFileSync(join(OUT, 'debug', 'orient-grid.png'), await c.encode('png'));
   console.log(`render-venus: wrote ${join(OUT, 'debug', 'orient-grid.png')}`);
+}
+
+/** Stage 6 wave 3, task 19 (stop 3 answer 2, V1): the same Venus cast in pink
+    marble, turned the other way (yaw -0.3 where Home's white one is +0.28),
+    on the white drum the pink tint already stages her on (the 'venus-kiosk'
+    prop picks the drum's contrasting stone: pink on white). Same still
+    quality, framing and 512px formats as venus-kiosk-512, so it drops into
+    the same <Still> and the same bottom margin. Output:
+    stills/venus-drum-512.{webp,avif} under the usual (gitignored) out dir. */
+async function drumStill(page) {
+  const url = await page.evaluate((o) => window.marble.render(o),
+    { prop: 'venus-kiosk', tint: 'pink', size: 2048, quality: 'still', yaw: DRUM_YAW, elevation: 0.22, pad: 1.05 });
+  writeFileSync(join(OUT, 'render', 'venus-drum-pink-still@2048.png'), Buffer.from(url.split(',')[1], 'base64'));
+  const img = await loadImage(readFileSync(join(OUT, 'render', 'venus-drum-pink-still@2048.png')));
+  const c = resized(img, 512);
+  writeFileSync(join(OUT, 'stills', 'venus-drum-512.webp'), await c.encode('webp', 82));
+  writeFileSync(join(OUT, 'stills', 'venus-drum-512.avif'), await sharp(await c.encode('png')).avif({ quality: 55, effort: 6, chromaSubsampling: '4:4:4' }).toBuffer());
+  console.log('render-venus: wrote the pink drum still (venus-drum-512)');
 }
 
 async function stills(page) {

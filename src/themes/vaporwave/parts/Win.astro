@@ -11,7 +11,12 @@
     `buttons` (Tier 3 stage 3, E6): a Win95 message box has no minimise or
     maximise, only Close (and sometimes Help). 'full' (default) keeps the
     three-button cluster every other window uses; 'close' draws the X alone;
-    'help-close' draws a "?" help glyph beside it. Decoration only. */
+    'help-close' draws a "?" help glyph beside it. Decoration only.
+
+    `closeLabel` (Stage 6 wave 3, task 25): the window's X is a real button,
+    named by this label (Sent's desktop windows, desktop.ts). The bar is then
+    not aria-hidden as a whole: its title stays aria-hidden, the button does
+    not. Any other attribute (id, role, hidden, data-*) lands on the window. */
 interface Props {
   title: string;
   tag?: 'div' | 'article' | 'section';
@@ -20,19 +25,30 @@ interface Props {
   class?: string;
   inactive?: boolean;
   buttons?: 'full' | 'close' | 'help-close';
+  closeLabel?: string;
+  [attr: string]: unknown;
 }
-const { title, tag: Tag = 'div', menu, address, class: className, inactive = false, buttons = 'full' } = Astro.props;
+const { title, tag: Tag = 'div', menu, address, class: className, inactive = false, buttons = 'full', closeLabel, ...attrs } = Astro.props;
 ---
-<Tag class:list={['vw-win', className]}>
-  <div class:list={['vw-win-bar', { inactive }]} aria-hidden="true">
-    <span class="vw-win-title">{title}</span>
-    <span class="vw-win-btns">
-      {buttons === 'help-close' && <span class="help">?</span>}
-      {buttons === 'full' && <span class="min"></span>}
-      {buttons === 'full' && <span class="max"></span>}
-      <span class="close"></span>
-    </span>
-  </div>
+<Tag class:list={['vw-win', className]} {...attrs}>
+  {closeLabel ? (
+    <div class:list={['vw-win-bar', { inactive }]}>
+      <span class="vw-win-title" aria-hidden="true">{title}</span>
+      <span class="vw-win-btns">
+        <button type="button" class="close vw-win-x" aria-label={closeLabel} data-win-close></button>
+      </span>
+    </div>
+  ) : (
+    <div class:list={['vw-win-bar', { inactive }]} aria-hidden="true">
+      <span class="vw-win-title">{title}</span>
+      <span class="vw-win-btns">
+        {buttons === 'help-close' && <span class="help">?</span>}
+        {buttons === 'full' && <span class="min"></span>}
+        {buttons === 'full' && <span class="max"></span>}
+        <span class="close"></span>
+      </span>
+    </div>
+  )}
   {menu && <div class="vw-win-menu" aria-hidden="true">{menu.map((item) => <span>{item}</span>)}</div>}
   {address && (
     <div class="vw-win-address" aria-hidden="true">

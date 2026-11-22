@@ -97,7 +97,9 @@ const year = new Date().getFullYear();
     text-transform: uppercase;
   }
   nav a { display: inline-block; padding-block: 0.7rem; color: var(--foot-link); text-decoration: none; }
-  nav a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    nav a:hover { text-decoration: underline; }
+  }
   .sep { color: var(--rule); font-size: 0.9rem; letter-spacing: 0; }
   .fine { font-size: 1rem; color: var(--foot-muted); }
   .fine a { display: inline-block; padding-block: 0.6rem; color: var(--foot-link); }

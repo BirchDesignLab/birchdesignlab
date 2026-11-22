@@ -2,7 +2,8 @@
 /** A small CSS sunset: sky glow, the striped sun sinking behind the horizon,
     and a neon floor running toward the viewer. Fills its positioned parent.
     Decoration only. Tune with --hz-line (horizon height), --hz-sun-w and
-    --hz-sun-x on the element. */
+    --hz-sun-x on the element. --hz-sun-sink (default 0%) sets the sun lower on
+    its own line: the part under the line is cut, as the rest is. */
 interface Props { class?: string }
 const { class: className } = Astro.props;
 ---
@@ -26,10 +27,10 @@ const { class: className } = Astro.props;
   }
   .hz-sun {
     position: absolute; left: var(--hz-sun-x); bottom: calc(100% - var(--hz-line) - 2px);
-    width: var(--hz-sun-w); translate: -50% 32%;
+    width: var(--hz-sun-w); translate: -50% calc(32% + var(--hz-sun-sink, 0%));
     filter: drop-shadow(0 0 40px color-mix(in srgb, var(--hz-sun-b) 60%, transparent));
     /* Cut at the horizon, so the set part never shows through the floor's fade. */
-    clip-path: inset(-50% -50% 32% -50%);
+    clip-path: inset(-50% -50% calc(32% + var(--hz-sun-sink, 0%)) -50%);
   }
   .hz-ground {
     position: absolute; left: 0; right: 0; bottom: 0; top: var(--hz-line);

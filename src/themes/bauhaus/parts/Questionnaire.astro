@@ -1,0 +1,304 @@
+---
+/** Bauhaus questionnaire card (Stage 6 w1 task 5): a printed form, after the
+    Weimar questionnaire of about 1923 that asked students to give a triangle,
+    a square and a circle each one primary colour. Memory only: nothing is
+    stored, every visit starts empty. Behaviour is parts/questionnaire.ts
+    (initQuestionnaire); About.astro wires it with onMount.
+
+    Words: every visible string sits inside an aria-hidden span, so word
+    parity across the schools is untouched. The controls carry aria-labels
+    that start with their visible word, and one empty role="status" is filled
+    at runtime. The key is in the markup, hidden once the script is live. */
+import { NUMERAL_PARTS } from './numerals';
+
+/* One path per shape, in a 100 unit box with the 3px stroke's room left, so
+   the same geometry draws the outline, the ink wipe and the printed key. */
+const SHAPES = [
+  { id: 'triangle', w: 112, d: 'M50 5L96 95L4 95Z', answer: 'yellow', from: 'translateY(-70%) rotate(120deg) scale(0)' },
+  { id: 'square', w: 96, d: 'M4 4H96V96H4Z', answer: 'red', from: 'translateX(-120%) rotate(-90deg)' },
+  { id: 'circle', w: 88, d: 'M4 50A46 46 0 1 0 96 50A46 46 0 1 0 4 50Z', answer: 'blue', from: 'scale(0)' },
+] as const;
+const COLOURS = ['yellow', 'red', 'blue'] as const;
+const TALLY: [number, string][] = [
+  [3, 'You and Kandinsky agree on 3 of 3.'],
+  [2, 'You and Kandinsky agree on 2 of 3.'],
+  [1, 'You and Kandinsky agree on 1 of 3.'],
+  [0, 'You and Kandinsky agree on none.'],
+];
+/* The question mark is the numeral 2's hook (parts/numerals.ts) with a stem
+   and a square dot: bars, a half ring and a quarter ring, nothing else. */
+const hook = NUMERAL_PARTS['2'];
+const QMARK = [
+  { d: hook[0].d, from: 'rotate(-90deg) scale(0)', delay: 0 },
+  { d: hook[1].d, from: 'rotate(-90deg) scale(0)', delay: 110 },
+  { d: 'M20 40h20v50h-20Z', from: 'scaleY(0)', delay: 220 },
+  { d: 'M20 106h20v20h-20Z', from: 'scale(0)', delay: 360 },
+];
+---
+<section class="quiz" aria-label="Questionnaire" data-quiz>
+  <div class="wrap grid12 quiz-grid">
+    <svg class="quiz-q" viewBox="0 0 60 126" aria-hidden="true" focusable="false" data-reveal>
+      {QMARK.map((p) => <path class="asm" d={p.d} fill="var(--mark)" fill-rule="evenodd" style={`--from: ${p.from}; --d: ${p.delay}ms`} />)}
+    </svg>
+
+    <div class="qcard">
+      <div class="qhead" aria-hidden="true">
+        <span class="qtitle">The one questionnaire we hand out.</span>
+        <span class="qno">no. 1</span>
+      </div>
+      <div class="qbody">
+        <p class="qsub" aria-hidden="true">After Kandinsky, Weimar, around 1923</p>
+        <p class="qinstr" aria-hidden="true">Give each shape one colour.</p>
+        <p class="qhint" aria-hidden="true">Pick a shape, then a colour.</p>
+
+        <div class="qrows" data-qrows>
+          <div class="qshapes" data-qshapes>
+            {SHAPES.map((s, i) => (
+              <button type="button" class="qshape" data-shape={s.id} aria-pressed="false" tabindex={i === 0 ? 0 : -1} aria-label={`${s.id[0].toUpperCase()}${s.id.slice(1)}, no colour yet`} style={`--w: ${s.w}px`}>
+                <span class="qbox" aria-hidden="true">
+                  <svg viewBox="0 0 100 100" focusable="false">
+                    <path class="qf" d={s.d} />
+                    <path class="qo" d={s.d} />
+                  </svg>
+                </span>
+                <span class="qname" aria-hidden="true">{s.id}</span>
+              </button>
+            ))}
+          </div>
+
+          <div class="qcolours" data-qcolours>
+            {COLOURS.map((c, i) => (
+              <button type="button" class="qbar" data-pick={c} aria-pressed="false" tabindex={i === 0 ? 0 : -1} aria-label={`${c[0].toUpperCase()}${c.slice(1)}`}>
+                <span class="qswatch" aria-hidden="true"></span>
+                <span class="qname" aria-hidden="true">{c}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="qreason" aria-hidden="true">
+          <span class="qreason-label">Reason, if you have one</span>
+          <span class="qline"></span>
+          <span class="qline"></span>
+        </div>
+
+        <div class="qfoot">
+          <button type="button" class="more qshow" data-qshow aria-label="Show the answer"><span aria-hidden="true">Show the answer</span></button>
+          <button type="button" class="btn qagain" data-qagain aria-label="Again" hidden><span aria-hidden="true">Again</span></button>
+        </div>
+
+        <div class="qkey" data-qkey aria-hidden="true">
+          <span class="qkey-rule"></span>
+          <p class="qkey-head">Kandinsky's answer</p>
+          <ul class="qkey-row">
+            {SHAPES.map((s, i) => (
+              <li class="qkey-item" data-key={s.id} style={`--w: ${s.w}px`}>
+                <span class="qkey-box">
+                  <svg viewBox="0 0 100 100" focusable="false">
+                    <path class="asm" d={s.d} fill={`var(--${s.answer})`} stroke="var(--ink)" stroke-width="3" vector-effect="non-scaling-stroke" style={`--from: ${s.from}; --d: ${200 + i * 120}ms`} />
+                  </svg>
+                  <span class="qstamp" style={`--d: ${200 + i * 120 + 520}ms`}>
+                    <svg viewBox="0 0 20 20" focusable="false"><path d="M4 10.5L8.2 14.5L16 5.5" fill="none" stroke="var(--paper)" stroke-width="3" /></svg>
+                  </span>
+                </span>
+                <span class="qname">{s.id}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="qtally">
+            {TALLY.map(([n, text]) => <span data-tally={n} hidden>{text}</span>)}
+          </p>
+          <p class="qhouse">This room builds on his answer.</p>
+        </div>
+      </div>
+    </div>
+    <p class="qvh" role="status" data-qstatus></p>
+  </div>
+</section>
+
+<style>
+  .quiz { border-top: var(--rule) solid var(--mark); padding-block: clamp(4rem, 8vw, 7rem); }
+  .quiz-grid { row-gap: 2rem; align-items: start; }
+
+  /* Desktop: the question mark in columns 1 to 4, the card in 6 to 12. */
+  .quiz-q { grid-column: 1 / span 4; grid-row: 1; width: min(100%, 230px); height: auto; align-self: center; }
+  .qcard { grid-column: 6 / span 7; grid-row: 1; }
+  .qvh { grid-column: 1; grid-row: 2; }
+
+  .qcard {
+    --mark: var(--ink);
+    --mark-muted: var(--card-muted);
+    --accent: var(--ink);
+    --on-accent: var(--paper);
+    --field: var(--paper);
+    --link: var(--ink);
+    --qs: 1;
+    position: relative;
+    background: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--mark-offset, var(--ink));
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* The offset block is ink on the light wall and paper on the dark one,
+     where ink would vanish into the field. */
+  :global([data-theme='bauhaus'][data-scheme='dark']) .qcard { --mark-offset: var(--paper); }
+  .qcard::before { content: ''; display: block; height: 6px; background: var(--red); }
+
+  .qhead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem clamp(1.25rem, 3vw, 2rem) 0.75rem;
+    border-bottom: var(--rule-thin) solid var(--ink);
+  }
+  .qtitle { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; line-height: 1.1; letter-spacing: -0.01em; text-transform: lowercase; text-wrap: balance; }
+  .qno { flex: none; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; font-variant-numeric: tabular-nums; text-transform: lowercase; }
+
+  .qbody { padding: 1.25rem clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2rem); display: flex; flex-direction: column; gap: 1.25rem; }
+  .qsub { font-size: 0.95rem; font-weight: var(--w-small); color: var(--mark-muted); text-transform: lowercase; }
+  .qinstr { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.05; letter-spacing: -0.02em; text-transform: lowercase; }
+  .qhint { font-size: 1rem; text-transform: lowercase; margin-top: -0.75rem; }
+
+  .qrows { display: flex; flex-direction: column; gap: 1.5rem; }
+  .qshapes { display: flex; align-items: flex-end; gap: 48px; padding-top: 6px; }
+  .qcolours { display: flex; gap: 16px; }
+
+  .qshape, .qbar {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .qshape { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+  .qname { font-family: var(--font-body); font-weight: 500; font-size: 0.95rem; line-height: 1.2; text-transform: lowercase; }
+
+  .qbox { position: relative; display: block; width: calc(var(--w) * var(--qs)); aspect-ratio: 1; }
+  .qbox svg { width: 100%; height: 100%; overflow: visible; }
+  .qo { fill: none; stroke: var(--ink); stroke-width: 3px; vector-effect: non-scaling-stroke; stroke-linejoin: miter; }
+  .qf { stroke: none; clip-path: inset(100% 0 0 0); }
+  .qshape[data-fill] .qf { clip-path: inset(0 0 0 0); }
+  .qshape[data-fill='yellow'] .qf { fill: var(--yellow); }
+  .qshape[data-fill='red'] .qf { fill: var(--red); }
+  .qshape[data-fill='blue'] .qf { fill: var(--blue); }
+
+  /* Four 6px crop-mark corners: red when the shape is picked (or a colour
+     is being dragged over it), ink while a mouse hovers. */
+  .qbox::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    pointer-events: none;
+    opacity: 0;
+    --m: var(--ink);
+    background:
+      linear-gradient(var(--m), var(--m)) 0 0 / 18px 6px no-repeat,
+      linear-gradient(var(--m), var(--m)) 0 0 / 6px 18px no-repeat,
+      linear-gradient(var(--m), var(--m)) 100% 0 / 18px 6px no-repeat,
+      linear-gradient(var(--m), var(--m)) 100% 0 / 6px 18px no-repeat,
+      linear-gradient(var(--m), var(--m)) 0 100% / 18px 6px no-repeat,
+      linear-gradient(var(--m), var(--m)) 0 100% / 6px 18px no-repeat,
+      linear-gradient(var(--m), var(--m)) 100% 100% / 18px 6px no-repeat,
+      linear-gradient(var(--m), var(--m)) 100% 100% / 6px 18px no-repeat;
+  }
+  .qshape[aria-pressed='true'] .qbox::after, .qshape.is-over .qbox::after { opacity: 1; --m: var(--red); }
+  .qshape:active .qbox svg { transform: scale(0.97); }
+
+  /* Colour-control bars: printed strips, never squares or circles. The
+     button is the 44px target, the bar inside is 100 x 32. */
+  .qbar { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; min-height: 44px; position: relative; touch-action: none; }
+  .qswatch { position: relative; display: block; width: 100px; height: 32px; border: 2px solid var(--ink); }
+  .qbar[data-pick='yellow'] .qswatch { background: var(--yellow); }
+  .qbar[data-pick='red'] .qswatch { background: var(--red); }
+  .qbar[data-pick='blue'] .qswatch { background: var(--blue); }
+  .qbar[aria-pressed='true'] .qswatch { box-shadow: 0 6px 0 var(--ink); translate: 0 -6px; }
+  .qbar[data-held] { z-index: 3; cursor: grabbing; pointer-events: none; }
+  .qbar[data-held] .qswatch { box-shadow: 0 6px 0 var(--ink); }
+
+  .qreason { display: flex; flex-direction: column; gap: 0.15rem; opacity: 0.8; }
+  .qreason-label { font-size: 0.875rem; font-weight: var(--w-small); text-transform: lowercase; color: var(--mark-muted); }
+  .qline { display: block; height: 1.6rem; border-bottom: 1px solid var(--ink); }
+
+  .qfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+  .quiz .qshow { background: none; border: 0; border-bottom: var(--rule-thin) solid currentColor; color: var(--ink); min-height: 44px; cursor: pointer; }
+  .quiz .qagain { margin-left: auto; min-height: 44px; }
+  .quiz [hidden] { display: none !important; }
+
+  /* Hover only for a real hover pointer; a finger gets :active instead. */
+  @media (hover: hover) and (pointer: fine) {
+    .qshape:hover .qbox::after { opacity: 1; }
+    .qbar:hover .qswatch { translate: 0 -3px; }
+    .qbar[aria-pressed='true']:hover .qswatch { translate: 0 -6px; }
+  }
+
+  /* The key: a rule draws, the printed shapes land, a red stamp marks each
+     match, then the tally and the house line. */
+  .qkey { display: flex; flex-direction: column; gap: 1rem; padding-top: 0.5rem; }
+  .qkey-rule { display: block; height: 6px; background: var(--ink); transform-origin: left center; animation: qrule 200ms var(--ease-snap) both; }
+  .qkey-head { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.05; letter-spacing: -0.02em; text-transform: lowercase; }
+  /* The top padding is room for the stamps, which sit outside the shapes. */
+  .qkey-row { display: flex; align-items: flex-end; gap: 48px; margin: 0; padding: 14px 0 0; list-style: none; }
+  .qkey-item { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+  .qkey-box { position: relative; display: block; width: calc(var(--w) * 0.7 * var(--qs)); aspect-ratio: 1; }
+  .qkey-box svg:first-child { width: 100%; height: 100%; overflow: visible; }
+  /* The match stamp stands outside its shape, its bottom left corner just
+     touching the shape's upper right, diagonally (--sx, --sy: that point on
+     the shape, in the key box). The square's corner, the circle's 45 degree
+     point, the triangle's apex. It covers no part of the shape. */
+  .qkey-item[data-key='triangle'] { --sx: 50%; --sy: 5%; }
+  .qkey-item[data-key='square'] { --sx: 96%; --sy: 4%; }
+  .qkey-item[data-key='circle'] { --sx: 82.5%; --sy: 17.5%; }
+  .qstamp {
+    position: absolute;
+    left: var(--sx);
+    top: calc(var(--sy) - 26px);
+    width: 26px;
+    height: 26px;
+    background: var(--red);
+    display: none;
+    animation: qstamp 160ms var(--ease-snap) both;
+    animation-delay: var(--d);
+  }
+  .qstamp svg { width: 100%; height: 100%; }
+  .qkey-item[data-match] .qstamp { display: block; }
+  .qtally, .qhouse { font-family: var(--font-display); font-weight: 600; font-size: 1.125rem; line-height: 1.2; text-transform: lowercase; }
+  .qtally { animation: qrise 240ms var(--ease-snap) 980ms both; }
+  .qhouse { animation: qrise 240ms var(--ease-snap) 1100ms both; }
+  @keyframes qrule { from { transform: scaleX(0); } }
+  @keyframes qstamp { from { transform: scale(0); opacity: 0; } }
+  @keyframes qrise { from { opacity: 0; transform: translateY(8px); } }
+
+  /* No script: nothing here can be operated, so the controls stay out and
+     the key shows (the script sets .is-live and hides the key). */
+  .quiz:not(.is-live) :is(.qrows, .qfoot, .qhint, .qinstr, .qreason, .qtally) { display: none; }
+  .qvh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+
+  /* Tablet: the card in columns 1 to 10, the question mark small in 11 to 12. */
+  @media (max-width: 1100px) {
+    .qcard { grid-column: 1 / span 10; max-width: 680px; }
+    .quiz-q { grid-column: 11 / span 2; width: min(100%, 96px); align-self: start; justify-self: end; }
+  }
+  /* Phones: gutter to gutter, portrait, no question mark. */
+  @media (max-width: 640px) {
+    .quiz-q { display: none; }
+    .qcard { grid-column: 1 / -1; max-width: none; --qs: 0.82; }
+    .qshapes, .qkey-row { gap: 24px; }
+    /* Fluid: three bars share the card's inner width, up to 96px each, so
+       they hold at 360 and 375 as well as 390. */
+    .qcolours { display: grid; grid-template-columns: repeat(3, minmax(0, 96px)); gap: 8px; }
+    .qswatch { width: 100%; height: 44px; }
+    .qbar { min-height: 44px; }
+  }
+  /* At 360 the three shapes and their two gaps run 7px past the card's padding, so the gaps close up. */
+  @media (max-width: 380px) {
+    .qshapes, .qkey-row { gap: 12px; }
+  }
+</style>

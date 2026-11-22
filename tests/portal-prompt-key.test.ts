@@ -15,3 +15,20 @@ describe('the first-load prompt key', () => {
     expect(key).toBe(PROMPT_KEY);
   });
 });
+
+/**
+ * The prompt's closing sentence is the founder's own words (stop 4, 11-21-26):
+ * it goes in exactly, with no em dash (a visitor reads it).
+ */
+describe('the first-load prompt text', () => {
+  const src = readFileSync(new URL('../src/themes/portal/switcher.ts', import.meta.url), 'utf8');
+  const text = /const FIRST_LOAD_PROMPT =\s*"([^"]+)";/.exec(src)?.[1] ?? '';
+  it('ends with the founders sentence, after a space, exactly', () => {
+    expect(text.endsWith(' Tap around, too: every school hides a few things that answer back.')).toBe(true);
+  });
+  it('keeps its first three sentences and uses no em dash', () => {
+    expect(text.startsWith('Welcome to the Portal. Choose a design school and watch the page transform.')).toBe(true);
+    expect(text).not.toContain(String.fromCharCode(0x2014));
+    expect(text).not.toContain(String.fromCharCode(0x2013));
+  });
+});

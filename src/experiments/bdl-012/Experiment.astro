@@ -447,7 +447,8 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .tour .t-label { font-family: var(--display); font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
     .tour button { cursor: pointer; border: 1px solid var(--line); background: var(--field-raised); border-radius: 999px; padding: 8px 16px 8px 12px; font-size: 16px; display: inline-flex; align-items: center; gap: 9px; transition: border-color .2s, background .2s; }
     .tour button i { width: 10px; height: 10px; border-radius: 50%; display: block; background: var(--c); box-shadow: 0 0 10px var(--c); }
-    .tour button:hover, .tour button[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--field-raised)); }
+    .tour button[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--field-raised)); }
+    @media (hover: hover) and (pointer: fine) { .tour button:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--field-raised)); } }
     .tour button.reset { --c: var(--muted); }
     .caption { margin-top: 14px; min-height: 64px; border: 1px solid var(--line); border-radius: 12px; background: var(--field-deep); padding: 12px 18px; display: flex; align-items: center; gap: 16px; }
     .caption .c-step { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--c, var(--line)); color: var(--c, var(--muted)); font-weight: 600; font-variant-numeric: lining-nums tabular-nums; font-size: 15px; }
@@ -464,7 +465,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     @media (min-width: 760px) { .mode { margin-left: auto; } }
     .mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--field-deep); }
     .mode button { cursor: pointer; border: 0; background: transparent; border-radius: 999px; padding: 7px 15px; font-size: 15px; color: var(--muted); transition: background .25s, color .25s; }
-    .mode button:hover { color: var(--mark); }
+    @media (hover: hover) and (pointer: fine) { .mode button:hover { color: var(--mark); } }
     .mode button[aria-pressed="true"] { background: var(--caramel); color: #1c1a17; }
     .mode button[data-mode="plain"][aria-pressed="true"] { background: var(--moss); }
 
@@ -554,7 +555,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
       .box-drawer { top: auto; left: 0; width: auto; max-height: 66vh; border-left: 0; border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -24px 60px rgba(0,0,0,.6); padding: 18px 18px 2.2rem; transform: translateY(104%); }
     }
     .dr-close { position: sticky; top: 0; display: block; width: 38px; height: 38px; margin: -4px -6px -34px auto; border-radius: 50%; border: 1px solid var(--line); background: var(--field-deep); cursor: pointer; font-size: 21px; line-height: 1; z-index: 1; }
-    .dr-close:hover { border-color: var(--mark); }
+    @media (hover: hover) and (pointer: fine) { .dr-close:hover { border-color: var(--mark); } }
     .dr-lanes { display: flex; gap: 5px; margin-bottom: 10px; }
     .dr-lanes i { width: 22px; height: 3px; border-radius: 2px; display: block; }
     .dr-kick { font-family: var(--display); font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
@@ -568,7 +569,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .dr-lines li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: start; font-size: 15px; line-height: 1.35; }
     .dr-lines li i { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--c); box-shadow: 0 0 8px var(--c); display: block; }
     .dr-lines button { background: none; border: 0; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--mark) 35%, transparent); text-underline-offset: 3px; }
-    .dr-lines button:hover { text-decoration-color: var(--mark); }
+    @media (hover: hover) and (pointer: fine) { .dr-lines button:hover { text-decoration-color: var(--mark); } }
     .dr-lines small { display: block; color: var(--muted); font-size: 14px; margin-top: 1px; }
     .dr-lines small.w { color: color-mix(in srgb, var(--caramel) 80%, var(--mark)); }
     .dr-sketch { font-family: ui-monospace, 'Cascadia Code', Consolas, Menlo, monospace; font-size: 12.5px; line-height: 1.65; background: var(--field-deep); border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px; overflow-x: auto; white-space: pre; color: color-mix(in srgb, var(--mark) 86%, transparent); }
@@ -598,7 +599,7 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .strip { display: flex; margin-top: 6px; }
     .strip img { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; background: var(--field-deep); border: 2px solid var(--field); margin-left: -7px; transition: transform .25s; }
     .strip img:first-child { margin-left: 0; }
-    .m-row:hover .strip img { transform: translateY(-3px); }
+    @media (hover: hover) and (pointer: fine) { .m-row:hover .strip img { transform: translateY(-3px); } }
     .bar { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .bar .track { flex: 1; height: 16px; display: flex; border-radius: 3px; overflow: hidden; background: var(--line-soft); }
     .bar .track i { display: block; height: 100%; transform-origin: left; }
@@ -741,9 +742,11 @@ const tierVar = ['--t1', '--t2', '--t3', '--t4'];
     .close .behind b { display: block; font-weight: 600; font-variant-numeric: lining-nums tabular-nums; font-size: 32px; color: var(--moss); line-height: 1.1; }
     .close .next { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px 16px; }
     .close .next a { display: inline-block; text-decoration: none; border-radius: 999px; padding: 11px 22px; font-size: 16.5px; color: var(--mark); border: 1px solid color-mix(in srgb, var(--mark) 40%, transparent); transition: background .25s, border-color .25s, color .25s; }
-    .close .next a:hover { border-color: var(--mark); background: color-mix(in srgb, var(--mark) 8%, transparent); }
+    @media (hover: hover) and (pointer: fine) { .close .next a:hover { border-color: var(--mark); background: color-mix(in srgb, var(--mark) 8%, transparent); } }
+    .close .next a:active { border-color: var(--mark); background: color-mix(in srgb, var(--mark) 8%, transparent); }
     .close .next a.primary { background: var(--moss); border-color: var(--moss); color: #1c1a17; }
-    .close .next a.primary:hover { background: var(--mark); border-color: var(--mark); }
+    @media (hover: hover) and (pointer: fine) { .close .next a.primary:hover { background: var(--mark); border-color: var(--mark); } }
+    .close .next a.primary:active { background: var(--mark); border-color: var(--mark); }
 
     /* ---------- phone layouts ---------- */
     /* Phone-only pieces. !important because several of them set their own

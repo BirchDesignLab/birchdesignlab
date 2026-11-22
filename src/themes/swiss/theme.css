@@ -33,6 +33,10 @@
      and --grey-on-ink swap in dark). */
   --paper-fixed: #fafaf7;
   --grey-on-black: #a6a6a2;
+  /* The white field (the dark page's lab band, Stage 6 call 9): white, with
+     black type and --grey-on-white for secondary type, whichever scheme. */
+  --white-field: #ffffff;
+  --grey-on-white: #5a5a58;
 
   /* Semantic tokens (light is native, and what a no-JS visitor sees). */
   --field: var(--paper);
@@ -224,6 +228,20 @@
   letter-spacing: -0.045em;
   line-height: 0.86;
 }
+/* Optical flush-left (Stage 6, S3). Archivo 700 keeps a left bearing that
+   grows with the width axis (measured from pixels: 0.049em at width 62, 0.076
+   at 100, 0.091 at 125, close to 0.0078em + 0.000675em per width unit), so a
+   giant set flush to its column starts its ink 16px right of the column line
+   at 1440. --sw-s is the giant's width (a number, 100 by default; a phone cut
+   sets 85), the width axis follows it, and the box steps left by the bearing
+   so the ink sits on the line. The selector ties the reset of margins on
+   headings above (and comes after it) but loses to a page's own scoped
+   rules, so a page's size, width and margin still win. */
+:where([data-theme='swiss']) h1.sw-display {
+  --sw-s: 100;
+  font-stretch: calc(var(--sw-s) * 1%);
+  margin-inline-start: calc(-1em * (0.0078 + 0.000675 * var(--sw-s)));
+}
 /* One word per line where a headline is set as a stack. */
 [data-theme='swiss'] .sw-display > .ln { display: block; }
 
@@ -302,6 +320,31 @@
   --btn-bg-alt: var(--black);
   --btn-fg-alt: var(--paper);
 }
+/* The sheet turned white in the dark scheme (Home's lab band, Stage 6 call 9):
+   on the black page the red close is the one red field, and the sheet above
+   it is the page's own negative, a white field with black type. In light it
+   stays the black sheet. Its button is a black field with white type, its
+   focus ring and press block are black. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white {
+  background: var(--white-field);
+  color: var(--black);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--black);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--black);
+}
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:active,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--black); }
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white .sw-btn:hover { box-shadow: inset 0 0 0 2px var(--black); }
+}
+
 /* The black sheet that stays black in both schemes (Contact's hero): paper
    type on black, where .sw-sheet turns red in dark. It restates the field
    tokens so everything inside it reads as on a black page. */
@@ -337,6 +380,7 @@
 [data-theme='swiss'] .sw-red.sw-bleed { --bleed-fill: var(--red-field); }
 [data-theme='swiss'] .sw-sheet.sw-bleed { --bleed-fill: var(--black); }
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-bleed { --bleed-fill: var(--red-field); }
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white.sw-bleed { --bleed-fill: var(--white-field); }
 
 /* The button: one rule. A field two lines tall (48px) with its label bottom
    left, on the baseline of the lower line, the way a poster sets a block of
@@ -372,6 +416,139 @@
 [data-theme='swiss'] .sw-btn:focus-visible { background: var(--btn-bg-alt); color: var(--btn-fg-alt); }
 @media (hover: hover) and (pointer: fine) {
   [data-theme='swiss'] .sw-btn:hover { background: var(--btn-bg-alt); color: var(--btn-fg-alt); text-decoration: none; }
+}
+
+/* ---- Pressed fields (Stage 6 wave 3 task 21, P6) -------------------- */
+
+/* A field turns to its inverse for as long as it is pressed (toys.ts sets
+   data-sw-flip on the press and takes it off on release; nothing animates,
+   it is one step each way): the red field is white with red type, the black
+   sheet white with black type, and the white sheet (the dark lab band) black
+   with paper type. Every state token is restated for the inverse, so a
+   link's press block, a button and a focus ring inside it still read: the
+   pairs are the ones meta.ts already holds, plus red type on white. */
+[data-theme='swiss'] .sw-red[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--red-field);
+  --flip-edge: var(--red-field);
+  --mark-muted: var(--red-field);
+  --ring: var(--red-field);
+  --press-bg: var(--red-field);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--red-field);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--red-field);
+}
+[data-theme='swiss'] .sw-red.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+[data-theme='swiss'] .sw-black[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--black);
+  --flip-edge: var(--black);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+}
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+/* The black sheet of the light scheme (Home's lab band): white with black type,
+   as the dark scheme's band is at rest. --ground is the band's own label
+   ground (Home.astro). */
+[data-theme='swiss']:not([data-scheme='dark']) .sw-sheet[data-sw-flip] {
+  background: var(--white-field);
+  color: var(--black);
+  --flip-edge: var(--black);
+  --ground: var(--white-field);
+  --field: var(--white-field);
+  --mark: var(--black);
+  --mark-muted: var(--grey-on-white);
+  --ring: var(--black);
+  --press-bg: var(--black);
+  --press-fg: var(--white-field);
+  --btn-bg: var(--black);
+  --btn-fg: var(--white-field);
+  --btn-bg-alt: var(--white-field);
+  --btn-fg-alt: var(--black);
+}
+[data-theme='swiss']:not([data-scheme='dark']) .sw-sheet.sw-bleed[data-sw-flip] { --bleed-fill: var(--white-field); }
+
+/* The white sheet of the dark scheme: black with paper type. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] {
+  background: var(--black);
+  color: var(--paper-fixed);
+  --flip-edge: var(--white-field);
+  --ground: var(--black);
+  --field: var(--black);
+  --mark: var(--paper-fixed);
+  --mark-muted: var(--grey-on-black);
+  --ring: var(--paper-fixed);
+  --press-bg: var(--paper-fixed);
+  --press-fg: var(--black);
+  --btn-bg: var(--paper-fixed);
+  --btn-fg: var(--black);
+  --btn-bg-alt: var(--black);
+  --btn-fg-alt: var(--paper-fixed);
+}
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white.sw-bleed[data-sw-flip] { --bleed-fill: var(--black); }
+/* Its buttons' keylines: the white sheet's were black, the black one's are paper. */
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:active,
+[data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--paper-fixed); }
+
+/* A pressed field's edge (Stage 6 wave 4 task 29, stop 4 critique C1): the
+   inverse stays, and while it lasts the field gets a 1px edge in its rest
+   colour (--flip-edge, set with each field's inverse above), so a white field
+   on the paper page (and the dark band gone black on the black page) reads as
+   a field turned over, not a field that vanished. Paint only, nothing moves.
+   A bleed field already paints its fill as a 100vw spread shadow clipped to its
+   own height, which would also paint over any shadow edge, so its edge is the
+   top and bottom 1px of a pseudo-element that runs out to the same width
+   (pointer-events none, inside the box, over padding only). A field that is not
+   a bleed (About's red field) takes an inset outline. An edge that already sits
+   on a rule is skipped (no 2px): Contact's black sheet sits between the
+   header's rule and the form's, and its red address on a desktop is hung from
+   the section's rule. The buttons are never touched. */
+[data-theme='swiss'] [data-sw-flip]:not(.sw-bleed) {
+  outline: 1px solid var(--flip-edge);
+  outline-offset: -1px;
+}
+/* The edge's pseudo-element is real (if empty) layout overflow, unlike the
+   fill's shadow: a 100vw spread past the frame would widen the document (and, on
+   a phone, the layout viewport, which zooms the page out). The body's own clip
+   does not stop it (a clip on the body propagates to the viewport, which still
+   counts the overflow), so the sheet's content is clipped at its own width: main
+   is the viewport wide, so this cuts nothing that was visible. */
+[data-theme='swiss'] main { overflow-x: clip; }
+[data-theme='swiss'] .sw-bleed[data-sw-flip] { position: relative; }
+[data-theme='swiss'] .sw-bleed[data-sw-flip]::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 0 -100vw;
+  border: 0 solid var(--flip-edge);
+  border-block-width: var(--flip-edge-t, 1px) var(--flip-edge-b, 1px);
+  pointer-events: none;
+}
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --flip-edge-t: 0px; --flip-edge-b: 0px; }
+@media (min-width: 1024px) {
+  /* Fill runs right only (Contact's address): so does its edge, and its top is the section's rule.
+     Its left is a real edge in the page, next to the form (fix round 1, C1), so it gets the 1px. */
+  [data-theme='swiss'] .sw-bleed.direct[data-sw-flip]::after { inset: 0 -200vw 0 0; --flip-edge-t: 0px; border-inline-start-width: 1px; }
+}
+
+/* While a field is held flipped, a mouse dragged across its button must not
+   hover it onto a ground equal to the flipped field (white on white, black on
+   black; Stage 6 w3 task 21 C3). The button keeps its rest fill until the press
+   ends. :root in the selector outweighs the scheme-scoped hover rules above. */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme='swiss'] [data-sw-flip][data-sw-flip] .sw-btn:hover {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    box-shadow: none;
+  }
 }
 
 /* ---- Arrival ------------------------------------------------------- */

@@ -1,78 +1,307 @@
 ---
 /** The grid key: a one-line square key in the header, on the wordmark's line.
-    Held (pointer, touch, Space or Enter on focus, or G held anywhere on a
-    keyboard), it lays the page's programme over the sheet the way a layout
-    is drawn: a hairline at each edge of every column (12 on a desktop, 6 on
-    a tablet, 4 on a phone) and a faint line on every 24px line of the
-    rhythm. Released, it all goes; the resting page stays undrawn. A real
-    button with an aria-label and no visible text, so the page's words are
-    unchanged (founder, 10-03-26: in the header, hold G, hairlines and
-    baselines). */
+    Pressed, it lays the page's programme over the sheet the way a layout is
+    marked up for the printer: a hairline at each edge of every column (12 on
+    a desktop, 6 on a tablet, 4 on a phone) with its number in red, a faint
+    line on every 24px line of the rhythm with a count every fourth, a red
+    tag on each block of the page with the columns it spans ("8-12"), and the
+    giant's spec (size, leading, tracking, width). Held (pointer, touch, Space
+    or Enter on focus, or G held anywhere on a keyboard) it shows for as long
+    as it is held. A tap under 250ms latches it until a second tap, Esc or
+    leaving the key; holding the key, or G, stays momentary. A real button
+    with an aria-label and no visible text, so the page's words are unchanged
+    (founder, 10-03-26: in the header, hold G, hairlines and baselines;
+    11-19-26: the full mark-up layer, tap to latch). Every mark is meta type
+    in the red field, aria-hidden, and drawn by script while the key is down:
+    none of it is in the page at rest. */
 ---
-<button class="grid-key" type="button" aria-label="Show the column grid while held" data-sw-grid-key></button>
+<button class="grid-key" type="button" aria-label="Show the column grid" aria-pressed="false" data-sw-grid-key></button>
 <div class="guides" aria-hidden="true" data-sw-guides hidden>
   {Array.from({ length: 12 }, () => <span />)}
 </div>
+<div class="marks" aria-hidden="true" data-sw-marks hidden></div>
 
 <script>
   import { onMount } from '../../lib/lifecycle';
 
+  /** A press shorter than this is a tap and latches the grid. */
+  const TAP_MS = 250;
+  /** The rhythm: one line, and a count on every fourth. */
+  const COUNT_EVERY = 4;
+
   onMount(() => {
     const key = document.querySelector<HTMLButtonElement>('[data-sw-grid-key]');
     const guides = document.querySelector<HTMLElement>('[data-sw-guides]');
-    if (!key || !guides) return;
-    // The baselines belong to the page, so their phase follows the scroll.
-    const phase = () => {
-      const u = parseFloat(getComputedStyle(guides).getPropertyValue('--line')) || 24;
+    const marks = document.querySelector<HTMLElement>('[data-sw-marks]');
+    if (!key || !guides || !marks) return;
+
+    let shown = false;
+    let latched = false;
+    let source: 'pointer' | 'key' | 'g' | null = null;
+    let pressedAt = 0;
+    let raf = 0;
+    let poll = 0;
+    let blocks: HTMLElement[] = [];
+
+    const root = document.documentElement;
+    const num = (v: string) => parseFloat(v) || 0;
+
+    /** The blocks of the page: what each band hangs on the grid. Children of
+        a band that is itself laid on the page's own columns (a row, a
+        subgrid) are the blocks; a band on other columns (the four numerals)
+        is one block; a wrapper (display: contents, the hero's sheet) is
+        looked through. */
+    const collect = () => {
+      const out: HTMLElement[] = [];
+      const cols = num(getComputedStyle(root).getPropertyValue('--cols')) || 4;
+      const frame = document.querySelector<HTMLElement>('main .sw-row');
+      const frameW = frame ? frame.getBoundingClientRect().width : 0;
+      const onPageColumns = (el: HTMLElement, cs: CSSStyleDeclaration) => {
+        if (!/grid/.test(cs.display)) return false;
+        const tracks = cs.gridTemplateColumns.split(' ').filter(Boolean);
+        return tracks.length === cols && Math.abs(el.getBoundingClientRect().width - frameW) < 2;
+      };
+      const visit = (parent: Element, depth: number) => {
+        for (const child of Array.from(parent.children)) {
+          if (!(child instanceof HTMLElement) || depth > 4) continue;
+          const cs = getComputedStyle(child);
+          if (cs.display === 'none' || cs.position === 'absolute' || cs.position === 'fixed') continue;
+          if (cs.display === 'contents' || (!/grid/.test(cs.display) && child.querySelector(':scope > .sw-row'))) { visit(child, depth + 1); continue; }
+          if (onPageColumns(child, cs) && child.children.length > 0) {
+            // A band: its children are the blocks (the band itself, a field
+            // that runs to the sheet's edge, is not tagged).
+            visit(child, depth + 1);
+            continue;
+          }
+          out.push(child);
+        }
+      };
+      for (const part of document.querySelectorAll('main, .site-footer')) visit(part, 0);
+      return out;
+    };
+
+    /** The columns a block spans, "8-12" or "4". The start comes from where
+        the block sits; the end from its grid placement, because a block with
+        a max-width is narrower than the columns it holds. */
+    const span = (el: HTMLElement, cols: number, frameL: number, colW: number, gap: number) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      const pitch = colW + gap;
+      let start = Math.round((r.left - frameL) / pitch) + 1;
+      start = Math.min(cols, Math.max(1, start));
+      let end = Math.round((r.right + gap - frameL) / pitch);
+      const e = cs.gridColumnEnd;
+      const s = cs.gridColumnStart;
+      if (/^-?\d+$/.test(s) && /^-?\d+$/.test(e)) {
+        const si = parseInt(s, 10);
+        const ei = parseInt(e, 10);
+        start = si > 0 ? si : cols + 2 + si;
+        end = (ei > 0 ? ei : cols + 2 + ei) - 1;
+      } else if (/^-?\d+$/.test(s) && /^span (\d+)$/.test(e)) {
+        const si = parseInt(s, 10);
+        start = si > 0 ? si : cols + 2 + si;
+        end = start + parseInt(e.slice(5), 10) - 1;
+      } else if (/^span (\d+)$/.test(e)) {
+        end = start + parseInt(e.slice(5), 10) - 1;
+      }
+      end = Math.min(cols, Math.max(start, end));
+      return start === end ? String(start) : `${start}-${end}`;
+    };
+
+    const chip = (text: string, x: number, y: number, kind = '') => {
+      const el = document.createElement('span');
+      el.textContent = text;
+      if (kind) el.className = kind;
+      el.style.left = `${Math.round(x)}px`;
+      el.style.top = `${Math.round(y)}px`;
+      return el;
+    };
+
+    /** The giant's spec: size, leading, tracking in thousandths of an em, and
+        the width axis of each of its lines. */
+    const giantSpec = (h: HTMLElement) => {
+      const cs = getComputedStyle(h);
+      const fs = num(cs.fontSize);
+      const lh = cs.lineHeight === 'normal' ? fs * 1.2 : num(cs.lineHeight);
+      const tr = Math.round((num(cs.letterSpacing) / fs) * 1000);
+      const kids = h.querySelectorAll<HTMLElement>('.ln');
+      const widths = [...new Set((kids.length ? Array.from(kids) : [h]).map((k) => Math.round(parseFloat(getComputedStyle(k).fontStretch) || 100)))];
+      return `Archivo ${cs.fontWeight} / size ${Math.round(fs)} / leading ${Math.round(lh)} / tracking ${tr} / width ${widths.join(', ')}`;
+    };
+
+    /** The mark-up layer, laid for where the page is now. */
+    const paint = () => {
+      raf = 0;
+      if (!shown) return;
+      // One line is the key's own height (it is a line square): a custom
+      // property read back from the stylesheet comes as "1.5rem", not pixels.
+      const u = key.getBoundingClientRect().height || 24;
       guides.style.setProperty('--phase', `${-(window.scrollY % u)}px`);
+      const cols = num(getComputedStyle(root).getPropertyValue('--cols')) || 4;
+      const frame = document.querySelector<HTMLElement>('main .sw-row');
+      const fr = frame ? frame.getBoundingClientRect() : { left: 0, width: window.innerWidth };
+      const gap = frame ? num(getComputedStyle(frame).columnGap) : 24;
+      const colW = (fr.width - gap * (cols - 1)) / cols;
+      const vh = window.innerHeight;
+      // The column tags sit at the top of the screen and the key sits at the
+      // start of one column, a line down on a mouse and half a line down on
+      // touch (the bar's padding is pulled in): a tag that would cover the key,
+      // the control that clears a latched grid, drops to the next line of the
+      // baseline grid below the key's bottom edge (a whole number of lines
+      // from the top of the screen, so the tag stays on the grid).
+      const kr = key.getBoundingClientRect();
+      guides.style.setProperty('--clear-y', `${Math.ceil(kr.bottom / u) * u}px`);
+      for (const col of Array.from(guides.children) as HTMLElement[]) {
+        const cr = col.getBoundingClientRect();
+        const hit = cr.width > 0 && kr.bottom > 0 && kr.top < u && kr.right > cr.left - 1 && kr.left < cr.left + 30;
+        if (hit) col.dataset.clear = '';
+        else delete col.dataset.clear;
+      }
+      const frag = document.createDocumentFragment();
+      // The count of lines down the sheet, every fourth, in the left margin.
+      const first = Math.floor(window.scrollY / u);
+      const last = Math.ceil((window.scrollY + vh) / u);
+      for (let n = first; n <= last; n++) {
+        if (n < COUNT_EVERY || n % COUNT_EVERY !== 0) continue;
+        const y = n * u - window.scrollY - u;
+        if (y < u || y > vh - u) continue;
+        frag.appendChild(chip(String(n), Math.max(0, fr.left - 34), y, 'count'));
+      }
+      // A tag on each block, on the line above it (so it never covers the
+      // block's first words), held inside the screen while the block is on it.
+      for (const el of blocks) {
+        if (!el.isConnected) continue;
+        const r = el.getBoundingClientRect();
+        if (r.bottom < u * 2 || r.top > vh - u || r.width === 0 || r.height === 0) continue;
+        frag.appendChild(chip(span(el, cols, fr.left, colW, gap), r.left, Math.max(r.top - u, u), 'span'));
+      }
+      const giant = document.querySelector<HTMLElement>('main h1.sw-display');
+      if (giant) {
+        const r = giant.getBoundingClientRect();
+        // Beside the giant's own span tag, on the same line above it.
+        if (r.bottom > u * 2 && r.top < vh - u) frag.appendChild(chip(giantSpec(giant), r.left + 58, Math.max(r.top - u, u), 'spec'));
+      }
+      marks.replaceChildren(frag);
     };
-    const show = () => { phase(); guides.hidden = false; key.dataset.held = ''; window.addEventListener('scroll', phase, { passive: true }); };
-    const hide = () => { guides.hidden = true; delete key.dataset.held; window.removeEventListener('scroll', phase); };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(paint); };
+
+    const show = () => {
+      if (shown) return;
+      shown = true;
+      blocks = collect();
+      guides.hidden = false;
+      marks.hidden = false;
+      key.dataset.held = '';
+      paint();
+      window.addEventListener('scroll', queue, { passive: true });
+      window.addEventListener('resize', onResize);
+      // The page can change under a held key (the width dial, a resize).
+      poll = window.setInterval(queue, 250);
+    };
+    const hide = () => {
+      latched = false;
+      source = null;
+      key.setAttribute('aria-pressed', 'false');
+      if (!shown) return;
+      shown = false;
+      guides.hidden = true;
+      marks.hidden = true;
+      marks.replaceChildren();
+      delete key.dataset.held;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      clearInterval(poll);
+      window.removeEventListener('scroll', queue);
+      window.removeEventListener('resize', onResize);
+    };
+    function onResize() { blocks = collect(); queue(); }
+    const latch = () => {
+      latched = true;
+      key.setAttribute('aria-pressed', 'true');
+    };
+
+    /** A press and its release, whichever way it was made. A first press
+        shows the grid; a quick release latches it, a slow one lets it go; a
+        press on a latched grid lets it go when it is released. */
+    const press = (via: 'pointer' | 'key') => {
+      pressedAt = performance.now();
+      source = via;
+      if (!latched) show();
+    };
+    const release = (via: 'pointer' | 'key') => {
+      if (source !== via) return;
+      source = null;
+      if (latched) { hide(); return; }
+      if (performance.now() - pressedAt < TAP_MS) latch();
+      else hide();
+    };
+    const cancel = (via: 'pointer' | 'key') => {
+      if (source !== via) return;
+      source = null;
+      if (!latched) hide();
+    };
+
     const down = (e: PointerEvent) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || source) return;
       try { key.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
-      show();
+      press('pointer');
     };
+    const up = () => release('pointer');
+    const lost = () => cancel('pointer');
     const keydown = (e: KeyboardEvent) => {
       if (e.key !== ' ' && e.key !== 'Enter') return;
       e.preventDefault();
-      show();
+      if (e.repeat || source) return;
+      press('key');
     };
     const keyup = (e: KeyboardEvent) => {
       if (e.key !== ' ' && e.key !== 'Enter') return;
       e.preventDefault();
-      hide();
+      release('key');
     };
-    // G held anywhere shows the grid, unless the visitor is typing.
+    // G held anywhere shows the grid, unless the visitor is typing. It is
+    // always momentary, and leaves a latched grid alone.
     const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
     const isG = (e: KeyboardEvent) => (e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey;
-    const gDown = (e: KeyboardEvent) => { if (isG(e) && !e.repeat && !typing(e.target)) show(); };
-    const gUp = (e: KeyboardEvent) => { if (isG(e)) hide(); };
+    const gDown = (e: KeyboardEvent) => {
+      if (!isG(e) || e.repeat || typing(e.target) || shown) return;
+      source = 'g';
+      show();
+    };
+    const gUp = (e: KeyboardEvent) => {
+      if (isG(e) && source === 'g') hide();
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && latched) hide();
+    };
+    // Leaving the key or the window lets go, latched or not.
+    const leave = () => hide();
     const noMenu = (e: Event) => e.preventDefault();
     key.addEventListener('pointerdown', down);
-    key.addEventListener('pointerup', hide);
-    key.addEventListener('pointercancel', hide);
-    key.addEventListener('lostpointercapture', hide);
+    key.addEventListener('pointerup', up);
+    key.addEventListener('pointercancel', lost);
+    key.addEventListener('lostpointercapture', lost);
     key.addEventListener('keydown', keydown);
     key.addEventListener('keyup', keyup);
-    key.addEventListener('blur', hide);
+    key.addEventListener('blur', leave);
     key.addEventListener('contextmenu', noMenu);
     document.addEventListener('keydown', gDown);
     document.addEventListener('keyup', gUp);
-    window.addEventListener('blur', hide);
+    document.addEventListener('keydown', esc);
+    window.addEventListener('blur', leave);
     return () => {
       hide();
       key.removeEventListener('pointerdown', down);
-      key.removeEventListener('pointerup', hide);
-      key.removeEventListener('pointercancel', hide);
-      key.removeEventListener('lostpointercapture', hide);
+      key.removeEventListener('pointerup', up);
+      key.removeEventListener('pointercancel', lost);
+      key.removeEventListener('lostpointercapture', lost);
       key.removeEventListener('keydown', keydown);
       key.removeEventListener('keyup', keyup);
-      key.removeEventListener('blur', hide);
+      key.removeEventListener('blur', leave);
       key.removeEventListener('contextmenu', noMenu);
       document.removeEventListener('keydown', gDown);
       document.removeEventListener('keyup', gUp);
-      window.removeEventListener('blur', hide);
+      document.removeEventListener('keydown', esc);
+      window.removeEventListener('blur', leave);
     };
   });
 </script>
@@ -80,11 +309,13 @@
 <style>
   /* The key: one line (24px) square, on the wordmark's line in the header's
      grid; an invisible pad takes its touch target to 44px without changing
-     the header's height. Its face is three ink columns; held, it is an ink
-     block with paper columns (the school's inversion).
-     Phones: the last column of the wordmark's row. Tablet: the right end of
-     the wordmark's two columns, a gutter clear of the nav. Desktop: the first
-     free column after the wordmark. */
+     the header's height. Its face is three ink columns; pressed or latched,
+     it is an ink block with paper columns (the school's inversion).
+     Phones: the last column of the wordmark's row. Tablet: the second column
+     of the wordmark's row, with the rest of that column and a gutter clear
+     before the nav begins in the third (it sat a gutter from "Services" and
+     read as a nav icon). Desktop: the first free column after the
+     wordmark. */
   .grid-key {
     position: relative;
     grid-row: 1;
@@ -116,7 +347,7 @@
     background: repeating-linear-gradient(90deg, var(--field) 0 3px, transparent 3px 5.5px);
   }
   @media (min-width: 640px) {
-    .grid-key { grid-column: 1 / 3; margin-right: var(--gutter); }
+    .grid-key { grid-column: 2 / 3; justify-self: start; margin-right: 0; }
   }
   @media (min-width: 1024px) {
     .grid-key { grid-column: 4 / 5; justify-self: start; margin-right: 0; }
@@ -126,7 +357,8 @@
      --frame are the school's own). Each column is a pair of hairlines and the
      rhythm a faint line every 24px, in the school's one red, the way a
      layout is drawn over the printed sheet. (A difference blend was tried:
-     column edges on fractional pixels came out grey beside red.) */
+     column edges on fractional pixels came out grey beside red.) Each column
+     carries its number, in a red tag at the top of the screen. */
   .guides {
     --line: var(--u);
     --phase: 0px;
@@ -139,6 +371,7 @@
     column-gap: var(--gutter);
     width: var(--frame);
     margin-inline: auto;
+    counter-reset: sw-col;
   }
   .guides::before {
     content: '';
@@ -148,7 +381,53 @@
     background-position: 0 var(--phase);
   }
   .guides[hidden] { display: none; }
-  .guides span { border-inline: 1px solid var(--red-field); }
+  .guides span { position: relative; border-inline: 1px solid var(--red-field); counter-increment: sw-col; }
+  .guides span::before {
+    content: counter(sw-col);
+    position: absolute;
+    left: -1px;
+    top: 0;
+    padding: 0 5px;
+    background: var(--red-field);
+    color: var(--on-red);
+    font-family: var(--font-display);
+    font-size: var(--fs-meta);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: var(--u);
+  }
+  .guides span[data-clear]::before { top: var(--clear-y, 0px); }
   @media (max-width: 1023.98px) { .guides span:nth-child(n + 7) { display: none; } }
   @media (max-width: 639.98px) { .guides span:nth-child(n + 5) { display: none; } }
+
+  /* The tags drawn by the script: the line count in the left margin, the span
+     of each block at its corner, the giant's spec above it. Meta type, white
+     on the red field, so each reads over ink, over paper and over the other
+     fields alike. */
+  .marks {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .marks[hidden] { display: none; }
+  .marks :global(.spec) {
+    /* At phone width the spec wraps inside the frame rather than leaving the sheet. */
+    white-space: normal;
+    max-width: calc(var(--frame) - 58px);
+  }
+  .marks :global(span) {
+    position: absolute;
+    padding: 0 5px;
+    background: var(--red-field);
+    color: var(--on-red);
+    font-family: var(--font-display);
+    font-size: var(--fs-meta);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    line-height: var(--u);
+    white-space: nowrap;
+  }
 </style>

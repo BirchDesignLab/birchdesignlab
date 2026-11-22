@@ -65,7 +65,9 @@ import '@fontsource/cormorant-sc/500.css';
     cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm);
     transition: all var(--dur-1) var(--ease-weighted);
   }
-  .ghost:hover { background: var(--accent); color: var(--field); }
+  @media (hover: hover) and (pointer: fine) {
+    .ghost:hover { background: var(--accent); color: var(--field); }
+  }
   .panel { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
   .panel h2 { font-size: var(--text-sm); color: var(--mark-muted); }
   .opts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
@@ -76,7 +78,9 @@ import '@fontsource/cormorant-sc/500.css';
     font-family: var(--font-body); font-size: var(--text-sm);
     transition: all var(--dur-1) var(--ease-weighted);
   }
-  .opts :global(button:hover) { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    .opts :global(button:hover) { color: var(--mark); }
+  }
   .opts :global(button[aria-pressed='true']) { color: var(--field); background: var(--accent); border-color: var(--accent); }
   .bb-preview {
     margin-top: var(--space-3);

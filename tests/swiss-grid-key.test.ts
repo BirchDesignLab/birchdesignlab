@@ -31,7 +31,7 @@ describe('swiss grid key', () => {
     expect(key).toContain("document.addEventListener('keyup', gUp)");
   });
   it('draws hairlines at the column edges and a baseline on every line', () => {
-    expect(key).toMatch(/\.guides span \{ border-inline: 1px solid/);
+    expect(key).toMatch(/\.guides span \{[^}]*border-inline: 1px solid/);
     expect(key).toMatch(/repeating-linear-gradient\(180deg/);
   });
   it('shows 12, 6 or 4 guides to match the school columns', () => {

@@ -28,6 +28,15 @@ const year = new Date().getFullYear();
   </div>
 </footer>
 
+<script>
+  import { onMount } from '../../lib/lifecycle';
+  import { initFieldPress } from './toys';
+
+  // Every page's red and black fields turn to their inverse while pressed
+  // (toys.ts, wave 3 task 21, P6). One mount per body: the footer is on all of them.
+  onMount(() => initFieldPress());
+</script>
+
 <style>
   .foot {
     border-top: 1px solid var(--mark);

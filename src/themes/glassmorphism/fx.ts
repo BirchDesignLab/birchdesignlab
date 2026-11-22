@@ -33,13 +33,13 @@ export function mountOrbs(): (() => void) | void {
  * --mark/--mark-muted over the worst orb, and flipping ink at runtime would
  * escape that discipline without a matching checked pair.
  *
- * The frosted base (blur/saturate/brightness, literal for -webkit-) and the
- * rim ring are CSS (theme.css); this only prepends url(#...) to the
- * unprefixed backdrop-filter, and only where it actually bends something
- * (the Blink gate below, never CSS.supports, which lies true in every
- * engine: proofs/lens.md, "Detecting url() in backdrop-filter"), and not on
- * the header bar or pill-shaped panes (mountPanes, bendable()). All of it
- * waits until the page has arrived and gone idle (B1 fix round 2).
+ * The frosted base (blur/saturate, literal for -webkit-) and the rim ring
+ * are CSS (theme.css). Stage 6 R1 (G4): where url() in backdrop-filter
+ * actually bends something (the Blink gate below, never CSS.supports, which
+ * lies true in every engine: proofs/lens.md, "Detecting url() in
+ * backdrop-filter"), each pane's frost moves onto two layers, an unblurred
+ * displacement band along the rim and the frost inside it (buildOne). All
+ * of it waits until the page has arrived and gone idle (B1 fix round 2).
  */
 
 /** Same check as the lens proof's bendSupport(): only Blink applies url() in
@@ -54,17 +54,16 @@ function bendSupported(): boolean {
   return blink && grammar;
 }
 
-/** E10's off state (theme.css, prefers-reduced-transparency/prefers-contrast)
-    turns every pane's blur off in CSS, but mountPanes() used to write the
-    bevel's url(#...) into each pane's inline style unconditionally, and an
-    inline style always wins over a stylesheet rule regardless of the media
-    query it is gated on. Checked live (not cached) so a mid-session OS
-    setting change is picked up by the matchMedia listener below. */
-function transparencyReduced(): boolean {
-  return (
-    window.matchMedia('(prefers-reduced-transparency: reduce)').matches ||
-    window.matchMedia('(prefers-contrast: more)').matches
-  );
+/** E10's off state (theme.css, prefers-contrast: more) turns every pane's
+    blur off in CSS, but mountPanes() used to write the bevel's url(#...)
+    into each pane's inline style unconditionally, and an inline style always
+    wins over a stylesheet rule regardless of the media query it is gated
+    on. Checked live (not cached) so a mid-session OS setting change is
+    picked up by the matchMedia listener below. Stage 6, stop 1 call 1 (a):
+    prefers-reduced-transparency no longer counts; the Portal ignores it for
+    glass. */
+function fallbackActive(): boolean {
+  return window.matchMedia('(prefers-contrast: more)').matches;
 }
 
 /** Signed distance from (x, y) to a rounded rect of size w x h and corner
@@ -95,60 +94,97 @@ function roundedRectSdf(x: number, y: number, w: number, h: number, r: number) {
   return { d, nx: nx * Math.sign(cx || 1), ny: ny * Math.sign(cy || 1) };
 }
 
-/** The bevel refraction map for one pane, as a data: URL (room.js's
-    bevelMap(), bevel always inward per the founder's Tier A decision: dir is
-    not parameterised here). R carries x, G carries y, 128 is no shift.
+/** The rim band's two maps for one pane, as data: URLs (Stage 6 R1, G4).
+    `map` is room.js's bevel refraction map (bevel always inward per the
+    founder's Tier A decision): R carries x, G carries y, 128 is no shift.
+    `mask` is the band itself as alpha: opaque along the outer part of the
+    band, feathered to clear over its inner part, clear across the interior.
+    The rim layer shows through `mask`; the frost layer shows through its
+    complement (theme.css, `mask-composite: exclude` against a solid layer),
+    so the two always add up to one and no seam opens between them.
 
-    The map covers the pane plus `pad` px on every side (all 128 there), to
-    match the padded filter region in buildOne() below. Only the band along
-    the rim is computed; everything else is the flat 128 fill, so a big pane
-    costs a thin ring of SDF work instead of its whole area. */
-function bevelMapUrl(w: number, h: number, r: number, band: number, max: number, pad: number): string {
-  const scale = 2;
-  const W = w + 2 * pad;
-  const H = h + 2 * pad;
-  const mw = Math.max(2, Math.round(W / scale));
-  const mh = Math.max(2, Math.round(H / scale));
-  const c = document.createElement('canvas');
-  c.width = mw;
-  c.height = mh;
-  // willReadFrequently keeps this canvas in software: a GPU canvas makes
-  // toDataURL() wait on a GPU readback, which the B1 fix-round-2 trace
-  // measured at 20 to 60 ms per pane (scripts/themes/glassmorphism/
-  // b1-fix2-trace.mjs). The flat fill is written straight into the pixel
-  // buffer for the same reason (no getImageData).
-  const g = c.getContext('2d', { willReadFrequently: true });
-  if (!g) return '';
-  const img = g.createImageData(mw, mh);
-  new Uint32Array(img.data.buffer).fill(0xff808080); // RGBA 128,128,128,255 (little-endian)
+    Both cover the pane's padding box (the layers sit inside the border).
+    Only the band along the rim is computed; everything else is a flat fill,
+    so a big pane costs a thin ring of SDF work instead of its whole area.
+
+    `yScale` scales the vertical shift alone (Stage 6 wave 2, G5): the
+    header bar passes HEADER_Y_SCALE, so text scrolling under its flat
+    bottom edge bends instead of smearing into vertical streaks; every other
+    pane keeps 1. */
+function rimMaps(w: number, h: number, r: number, band: number, max: number, yScale = 1): { map: string; mask: string } | null {
+  // One map pixel per CSS pixel: at 2 the displaced rim stepped in 2px
+  // blocks and smeared text passing under the header into streaks.
+  const scale = 1;
+  const mw = Math.max(2, Math.round(w / scale));
+  const mh = Math.max(2, Math.round(h / scale));
+  const make = () => {
+    const c = document.createElement('canvas');
+    c.width = mw;
+    c.height = mh;
+    // willReadFrequently keeps this canvas in software: a GPU canvas makes
+    // toDataURL() wait on a GPU readback, which the B1 fix-round-2 trace
+    // measured at 20 to 60 ms per pane (scripts/themes/glassmorphism/
+    // b1-fix2-trace.mjs). Flat fills go straight into the pixel buffer for
+    // the same reason (no getImageData).
+    const g = c.getContext('2d', { willReadFrequently: true });
+    return g ? { c, g, img: g.createImageData(mw, mh) } : null;
+  };
+  const disp = make();
+  const band2 = make();
+  if (!disp || !band2) return null;
+  new Uint32Array(disp.img.data.buffer).fill(0xff808080); // RGBA 128,128,128,255 (little-endian)
+  // The mask's interior stays the zero fill: transparent.
   // The band lies within `edge` px of the pane's box; with a rounded corner
   // of radius r, a corner pixel can be up to r from both edges.
   const edge = Math.max(band, r) + scale * 2;
+  const solid = band * 0.45; // the outer part of the band: rim only, no frost
   for (let j = 0; j < mh; j++) {
-    const y = (j + 0.5) * scale - pad;
-    if (y < -1 || y > h + 1) continue;
+    const y = (j + 0.5) * scale;
     const rowNearEdge = y < edge || y > h - edge;
     for (let i = 0; i < mw; i++) {
-      const x = (i + 0.5) * scale - pad;
-      if (x < -1 || x > w + 1) continue;
+      const x = (i + 0.5) * scale;
       if (!rowNearEdge && x > edge && x < w - edge) {
-        i = Math.max(i, Math.floor((w - edge + pad) / scale) - 1);
+        i = Math.max(i, Math.floor((w - edge) / scale) - 1);
         continue;
       }
       const { d, nx, ny } = roundedRectSdf(x, y, w, h, r);
-      if (!(d < band && d > -1)) continue;
+      if (d >= band) continue;
+      const k = (j * mw + i) * 4;
+      // Outside the rounded corner the layer's own border-radius clips;
+      // the band is full there so nothing frosts a corner it cannot reach.
+      const a = d <= solid ? 1 : 1 - (d - solid) / (band - solid);
+      band2.img.data[k + 3] = Math.round(255 * a * a * (3 - 2 * a));
       const t = Math.min(1, Math.max(0, 1 - d / band));
       const shift = max * Math.pow(t, 1.6);
-      const k = (j * mw + i) * 4;
-      img.data[k] = Math.round(128 + ((-nx * shift) / max) * 127);
-      img.data[k + 1] = Math.round(128 + ((-ny * shift) / max) * 127);
+      disp.img.data[k] = Math.round(128 + ((-nx * shift) / max) * 127);
+      disp.img.data[k + 1] = Math.round(128 + ((-ny * shift * yScale) / max) * 127);
     }
   }
-  g.putImageData(img, 0, 0);
-  return c.toDataURL('image/png');
+  disp.g.putImageData(disp.img, 0, 0);
+  band2.g.putImageData(band2.img, 0, 0);
+  return { map: disp.c.toDataURL('image/png'), mask: band2.c.toDataURL('image/png') };
 }
 
 const SVGNS = 'http://www.w3.org/2000/svg';
+
+/** The header bar's vertical rim shift, as a share of every other pane's
+    (Stage 6 wave 2, G5, founder: about a third, the bar only). */
+const HEADER_Y_SCALE = 1 / 3;
+
+/** The rim band's source is softened by this many px before it is displaced
+    (Stage 6 wave 2, T2 C3). The bevel (max shift 0.9 of the band, t^1.6)
+    folds: the band shows a thin strip of what lies about one band inside the
+    edge, magnified several times, and feDisplacementMap samples nearest
+    pixel, so a crisp 1 to 2px highlight at that depth (the light wallpaper's
+    wave crest under the hero window's bottom-left) smeared into a white
+    smudge at every Frost setting, plainest at Frost 0. A small blur ahead of
+    the displacement leaves the bend and the edge the same and spreads the
+    highlight before it is magnified. Lowering the shift instead stopped the
+    fold but left the wave's crisp edge in hard pixel steps along the band
+    (scripts/themes/stage6/w2-t9-smudge.mjs). The header bar keeps a crisp
+    source: its vertical shift (HEADER_Y_SCALE) never folds, and text passing
+    under it must stay readable (G5). */
+const RIM_SOFTEN = 1.5;
 
 /** The largest orb overlapping a pane's rect, and its colour, for the
     adaptive tint. Reads the orb's own --lo custom property by applying it
@@ -200,45 +236,19 @@ export function orbGradientAt(orb: HTMLElement): { hi: [number, number, number];
   return { hi: hiRgb, lo: loRgb };
 }
 
-/** Which blur token a pane's frosted list comes from, by class (theme.css:
-    .glass is --blur, .glass.thin --blur-thin, .glass-strong and .glass.thick
-    --blur-thick, the thick rule winning a tie on source order). Read as the
-    token, never as the pane's computed backdrop-filter: once buildOne() has
-    written an inline value, the computed value IS that inline value, so a
-    rebuild after a live scheme flip or a resize across 720 px would copy the
-    old scheme's list forward (the B1 re-critic's scheme-live nit). */
-/** Pad each bevel's filter region so the pane frosts all the way to its rim
-    (true), or keep the Tier A proof's look, where the rim band's frost is
-    thinner and crisp orb edges read through it as the bend (false). A
-    founder decision, open as of 09-25-26; see buildOne(). */
-const FULL_FROST_TO_RIM = false;
-
-function blurTokenFor(el: HTMLElement): string {
-  if (el.classList.contains('glass-strong') || el.classList.contains('thick')) return '--blur-thick';
-  if (el.classList.contains('thin')) return '--blur-thin';
-  return '--blur';
-}
-
 export function mountPanes(): (() => void) | void {
   if (document.documentElement.dataset.theme !== 'glassmorphism') return;
   const html = document.documentElement;
   const panes = [...document.querySelectorAll<HTMLElement>('.glass, .glass-strong')];
   if (panes.length === 0) return;
 
-  /* Which panes bend. Not the header bar: it is the one pane text scrolls
-     under, and it never bent anyway (its 999px radius made its map all
-     "no shift"), yet the url() still cost it its frost (the B1 re-critic's
-     header ghost); it also has to drop its whole backdrop-filter while it
-     is named for an in-school swap (theme.css, "The header bar holds
-     still"), which an inline style would outrank. Not a pill either (radius
-     at least half its short side, Home's locale widget): the bevel band
-     would be most of its height, and like the header it never bent. */
-  const bendable = (el: HTMLElement) => {
-    if (el.closest('.site-header')) return false;
-    const r = el.getBoundingClientRect();
-    const radius = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
-    return radius < Math.min(r.width, r.height) / 2;
-  };
+  /* Which panes bend: every pane, the header bar and pills included
+     (Stage 6 R1, G4 and G6). The old url()-before-blur recipe skipped them
+     because the blur erased the bend and cost the header its frost; the rim
+     band below never blurs, so a pill's band is simply kept thin (its
+     height times 0.22). While the header bar is named for an in-school swap
+     theme.css hides its two layers ("The header bar holds still"). */
+  const bendable = (el: HTMLElement) => el.clientWidth > 1 && el.clientHeight > 1;
 
   const bend = bendSupported();
   let svg: SVGSVGElement | null = null;
@@ -300,46 +310,68 @@ export function mountPanes(): (() => void) | void {
     return defs;
   };
 
+  /* The rim band (Stage 6 R1, G4). The old recipe prepended url(#bevel)
+     to the pane's own blur list, and the blur that followed erased the
+     bend. Now, in Chromium, the pane itself stops frosting (an inline
+     `backdrop-filter: none`) and carries two layers (theme.css, "The rim
+     band"), both at z-index -1 so they paint over the pane's own fill and
+     under its content:
+     - .glass-rim, first, whose backdrop-filter is the displacement alone
+       (no blur), masked to the band along the edge. Its backdrop is what is
+       behind the pane plus the pane's fill, so the crisp wallpaper and orbs
+       visibly bend into the edge.
+     - .glass-frost, second, the pane's frost (theme.css gives it the
+       pane's own --blur* token, so the Frost slider and Tinted reach it
+       live), masked to the complement of the band.
+     The pane must not be a backdrop root (no filter, opacity or mask of its
+     own), or both layers would see only the pane. Safari and Firefox keep
+     the pane's own CSS frost and get no layers (bendSupported). */
+  const layers = new WeakMap<HTMLElement, { rim: HTMLElement; frost: HTMLElement }>();
+  const layersFor = (el: HTMLElement) => {
+    let l = layers.get(el);
+    if (!l || !l.rim.isConnected) {
+      const rim = document.createElement('span');
+      const frost = document.createElement('span');
+      rim.className = 'glass-rim';
+      frost.className = 'glass-frost';
+      rim.setAttribute('aria-hidden', 'true');
+      frost.setAttribute('aria-hidden', 'true');
+      el.insertBefore(frost, el.firstChild);
+      el.insertBefore(rim, frost);
+      l = { rim, frost };
+      layers.set(el, l);
+    }
+    return l;
+  };
+  const clearPane = (el: HTMLElement) => {
+    const l = layers.get(el);
+    l?.rim.remove();
+    l?.frost.remove();
+    layers.delete(el);
+    el.style.removeProperty('backdrop-filter');
+  };
+
   function buildOne(el: HTMLElement) {
     if (!el.isConnected) return;
-    if (transparencyReduced() || !bendable(el)) {
-      el.style.removeProperty('backdrop-filter');
+    if (fallbackActive() || !bendable(el)) {
+      clearPane(el);
       return;
     }
-    const rect = el.getBoundingClientRect();
-    const w = Math.round(rect.width);
-    const h = Math.round(rect.height);
-    if (w < 2 || h < 2) return;
-    const list = getComputedStyle(el).getPropertyValue(blurTokenFor(el)).trim();
-    if (!list) return;
+    // The padding box: the layers sit inside the pane's border.
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    const cs = getComputedStyle(el);
+    const border = parseFloat(cs.borderTopWidth) || 0;
     // CSS clamps a radius to half the short side; so does the map.
-    const r = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, w / 2, h / 2);
-    const band = Math.max(8, Math.min(24, r * 0.85));
+    const r = Math.max(0, Math.min((parseFloat(cs.borderTopLeftRadius) || 0) - border, w / 2, h / 2));
+    const band = Math.max(6, Math.min(24, r * 0.85, Math.min(w, h) * 0.22));
     const max = Math.min(30, band * 0.9);
-    /* The filter region, and why the rim looks bent (B1 fix round 2). An
-       SVG filter's output stops at its filter region, so with the region
-       equal to the pane's box, the blur that follows the url() in the list
-       reads transparent past every rim: the frosted result loses alpha
-       toward the edges and the sharp, unfiltered backdrop shows through it
-       (proofs/lens.md finding 1's "4 px against 14 px", and the header
-       ghost). Much of the "bend" the founder approved in the Tier A proof
-       is that thinning: crisp orb edges read through the rim band. Padding
-       the region by three blur radii (Chromium mirrors the backdrop past
-       the box, finding 2) gives the blur real pixels to read and frosts
-       the pane to its rim like the plain list, but the bend then almost
-       vanishes under the blur (scripts/themes/.out/b1-glass-fix2/
-       order-light-1440/crop-hero-old-new-none.png). Which one ships is the
-       founder's call; until then the approved look stays (no padding) on
-       the rectangular panes, which have only wallpaper and orbs under
-       them, and the panes text can pass under (the header) or that never
-       bent (pills) take no url() at all, above. FULL_FROST_TO_RIM flips it. */
-    const sigma = Number(/blur\(\s*([\d.]+)px/.exec(list)?.[1] ?? 0);
-    const pad = FULL_FROST_TO_RIM ? Math.min(120, Math.ceil(3 * sigma) + 2) : 0;
-    const url = bevelMapUrl(w, h, r, band, max, pad);
-    if (!url) return;
+    const isBar = el.matches('.site-header .bar');
+    const maps = rimMaps(w, h, r, band, max, isBar ? HEADER_Y_SCALE : 1);
+    if (!maps) return;
     let id = ids.get(el);
     if (!id) {
-      id = `glass-pane-bevel-${nextId++}`;
+      id = `glass-pane-rim-${nextId++}`;
       ids.set(el, id);
     }
     const d = ensureDefs();
@@ -349,27 +381,33 @@ export function mountPanes(): (() => void) | void {
       filter.setAttribute('id', id);
       d.appendChild(filter);
     }
-    filter.setAttribute('x', String(-pad));
-    filter.setAttribute('y', String(-pad));
-    filter.setAttribute('width', String(w + 2 * pad));
-    filter.setAttribute('height', String(h + 2 * pad));
+    filter.setAttribute('x', '0');
+    filter.setAttribute('y', '0');
+    filter.setAttribute('width', String(w));
+    filter.setAttribute('height', String(h));
     filter.setAttribute('filterUnits', 'userSpaceOnUse');
     filter.setAttribute('primitiveUnits', 'userSpaceOnUse');
     filter.setAttribute('color-interpolation-filters', 'sRGB');
+    const soften = isBar ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${RIM_SOFTEN}" edgeMode="duplicate" result="soft"/>`;
     filter.innerHTML =
-      `<feImage href="${url}" x="${-pad}" y="${-pad}" width="${w + 2 * pad}" height="${h + 2 * pad}" preserveAspectRatio="none" result="map"/>` +
-      `<feDisplacementMap in="SourceGraphic" in2="map" scale="${2 * max}" xChannelSelector="R" yChannelSelector="G"/>`;
-    el.style.backdropFilter = `url(#${id}) ${list}`;
+      soften +
+      `<feImage href="${maps.map}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="map"/>` +
+      `<feDisplacementMap in="${isBar ? 'SourceGraphic' : 'soft'}" in2="map" scale="${2 * max}" xChannelSelector="R" yChannelSelector="G"/>`;
+    const { rim, frost } = layersFor(el);
+    rim.style.backdropFilter = `url(#${id})`;
+    rim.style.setProperty('--rim-mask', `url("${maps.mask}")`);
+    frost.style.setProperty('--rim-mask', `url("${maps.mask}")`);
+    el.style.backdropFilter = 'none';
   }
 
   const rebuildAll = () => {
     if (!ready) return;
-    if (transparencyReduced()) {
+    if (fallbackActive()) {
       // The CSS off state wins the look either way; drop any inline filter
       // a previous build left so the stylesheet's `none` is not shadowed by
       // an inline value that no longer matches the current preference.
       queue.clear();
-      for (const el of panes) el.style.removeProperty('backdrop-filter');
+      for (const el of panes) clearPane(el);
       return;
     }
     enqueue(panes);
@@ -378,30 +416,20 @@ export function mountPanes(): (() => void) | void {
     ? new ResizeObserver((entries) => enqueue(entries.map((e) => e.target as HTMLElement)))
     : null;
 
-  // A light/dark toggle or a reduced-transparency change does not itself
+  // A light/dark toggle or a contrast-preference change does not itself
   // resize any pane, so nothing else would ask for a rebuild; a resize past
   // the 720px breakpoint usually does reflow panes (caught by the
   // ResizeObserver), but the token can change without a reflow, so the
   // breakpoint is listened to directly too.
-  const rtMq = window.matchMedia('(prefers-reduced-transparency: reduce)');
   const contrastMq = window.matchMedia('(prefers-contrast: more)');
   const phoneMq = window.matchMedia('(max-width: 720px)');
-  rtMq.addEventListener('change', rebuildAll);
   contrastMq.addEventListener('change', rebuildAll);
   phoneMq.addEventListener('change', rebuildAll);
   /* A live scheme flip remaps the orb hues (dark's --blob-* set), so the
-     tint is read again too, not only the bevels (PR #91 review).
-     The frost slider (B2 fix round, item 1): settings.ts's applyToDocument
-     writes --glass-frost onto <html>.style, which changes the *token's*
-     computed value but never touches an already-written inline
-     backdrop-filter (buildOne() reads the token once, at build time, and
-     bakes the resolved px amount into the string it writes). Watching
-     'style' here, alongside 'data-scheme', means every settings update
-     (session restore included, since updateSettings/applySettingsNow both
-     go through applyToDocument on the SAME element this observer watches)
-     rebuilds every bendable pane's bevel with the new blur amount. */
+     tint is read again (PR #91 review). The Frost slider and Tinted no
+     longer need a rebuild (Stage 6 R1): the frost layer reads the pane's
+     --blur* token in CSS, live, and the rim maps depend on geometry only. */
   const settingsObserver = new MutationObserver(() => {
-    rebuildAll();
     scheduleTint();
   });
   settingsObserver.observe(html, { attributeFilter: ['data-scheme', 'style'] });
@@ -488,14 +516,13 @@ export function mountPanes(): (() => void) | void {
     window.removeEventListener('scroll', scheduleTint);
     window.removeEventListener('resize', scheduleTint);
     document.removeEventListener('visibilitychange', onVisibility);
-    rtMq.removeEventListener('change', rebuildAll);
     contrastMq.removeEventListener('change', rebuildAll);
     phoneMq.removeEventListener('change', rebuildAll);
     settingsObserver.disconnect();
     ro?.disconnect();
     svg?.remove();
     for (const el of panes) {
-      el.style.removeProperty('backdrop-filter');
+      clearPane(el);
       el.style.removeProperty('--pane-tint-alpha');
       el.style.removeProperty('--pane-tint-rgb');
     }

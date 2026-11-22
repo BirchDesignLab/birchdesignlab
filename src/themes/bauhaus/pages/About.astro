@@ -4,6 +4,7 @@
     beside an abstract tall pale tree, and the manifesto on a yellow slab. */
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import Questionnaire from '../parts/Questionnaire.astro';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -11,12 +12,14 @@ const [lead, ...rest] = copy.founder.body;
 ---
 <section class="wrap grid12 intro">
   <h1>{copy.heading}</h1>
-  <svg class="letter-b" viewBox="0 0 320 420" aria-hidden="true" focusable="false">
-    <rect class="asm" x="20" y="10" width="84" height="400" fill="var(--mark)" style="--from: scaleY(0); --d: 0ms; --beat: 0; --sub: 0ms" />
-    <path class="asm" d="M104 10 A96 96 0 0 1 104 202 Z" fill="var(--red)" style="--from: translateX(-40%) rotate(-180deg); --d: 220ms; --beat: 1; --sub: 0ms" />
-    <path class="asm" d="M104 202 A104 104 0 0 1 104 410 Z" fill="var(--blue)" style="--from: translateX(-40%) rotate(180deg); --d: 360ms; --beat: 1; --sub: 70ms" />
-    <polygon class="asm" points="272,10 314,94 230,94" fill="var(--yellow)" style="--from: scale(0); --d: 560ms; --beat: 2; --sub: 0ms" />
-  </svg>
+  <button class="letter-b toy" type="button" aria-label="Letter B, take apart">
+    <svg viewBox="0 0 320 420" aria-hidden="true" focusable="false">
+      <rect class="asm" x="20" y="10" width="84" height="400" fill="var(--mark)" style="--from: scaleY(0); --d: 0ms; --beat: 0; --sub: 0ms" />
+      <path class="asm" d="M104 10 A96 96 0 0 1 104 202 Z" fill="var(--red)" style="--from: translateX(-40%) rotate(-180deg); --d: 220ms; --beat: 1; --sub: 0ms" />
+      <path class="asm" d="M104 202 A104 104 0 0 1 104 410 Z" fill="var(--blue)" style="--from: translateX(-40%) rotate(180deg); --d: 360ms; --beat: 1; --sub: 70ms" />
+      <polygon class="asm" points="272,10 314,94 230,94" fill="var(--yellow)" style="--from: scale(0); --d: 560ms; --beat: 2; --sub: 0ms" />
+    </svg>
+  </button>
   <div class="etymology">
     {copy.etymology.map((para, i) => <p class={`etym etym-${i}`} set:html={rich(para)} />)}
   </div>
@@ -42,6 +45,8 @@ const [lead, ...rest] = copy.founder.body;
   </div>
 </section>
 
+<Questionnaire />
+
 <section class="manifesto block-yellow">
   <svg class="manifesto-shapes" viewBox="0 0 300 300" aria-hidden="true" focusable="false" data-reveal>
     <circle class="asm" cx="190" cy="110" r="110" fill="var(--ink)" style="--from: scale(0); --d: 0ms" />
@@ -65,7 +70,12 @@ const [lead, ...rest] = copy.founder.body;
     letter-spacing: -0.02em;
     text-transform: lowercase;
   }
-  .letter-b { grid-column: 9 / span 4; grid-row: 1; width: 100%; max-width: 320px; height: auto; justify-self: end; }
+  /* A real button (parts/toys.ts initLetterB); the svg inside is the picture. */
+  .letter-b { grid-column: 9 / span 4; grid-row: 1; width: 100%; max-width: 320px; justify-self: end; }
+  .letter-b svg { width: 100%; height: auto; }
+  /* While the pieces are out they leave the svg's box; at rest nothing does,
+     so the arrival's flight in stays clipped as it always was. */
+  .letter-b svg:global(.is-apart) { overflow: visible; }
   .etymology {
     grid-column: 1 / -1;
     display: grid;
@@ -159,3 +169,14 @@ const [lead, ...rest] = copy.founder.body;
     .tree { max-width: 200px; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initQuestionnaire } from '../parts/questionnaire';
+  import { initLetterB } from '../parts/toys';
+
+  // The questionnaire card: memory only, reset on every visit (parts/questionnaire.ts).
+  onMount(() => initQuestionnaire(document.querySelector<HTMLElement>('[data-quiz]')));
+  // The B comes apart and rebuilds on a tap (parts/toys.ts).
+  onMount(() => initLetterB(document.querySelector<HTMLElement>('button.letter-b')));
+</script>

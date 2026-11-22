@@ -113,6 +113,13 @@ const { chrome, theme } = Astro.props;
     nav a { font-size: var(--fs-meta); }
   }
 
+  /* From a tablet up the wordmark is only as wide as its words, so the grid
+     key beside it (column 2 on a tablet, column 4 on a desktop) is not under
+     the wordmark's pressed block or its hover underline. */
+  @media (min-width: 640px) {
+    .wordmark { justify-self: start; }
+  }
+
   @media (min-width: 1024px) {
     .wordmark { grid-column: 1 / 4; }
     /* Twelve narrow columns: a link is wider than one, so below 1280 each

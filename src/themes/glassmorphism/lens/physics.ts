@@ -61,6 +61,19 @@ export function releaseVelocity(samples: Sample[], now: number): [number, number
   return [(n * stx - st * sx) / den, (n * sty - st * sy) / den];
 }
 
+/** Stage 6 w3 task 18 (T9 C3): a release whose whole travel from the press
+    is at most this many px is a tap (finger jitter), not a throw. Not in
+    FEEL, which stays the proof's verbatim feel. */
+export const TAP_SLOP_PX = 6;
+
+/** True when a press at (x0, y0) released at (x1, y1) is a tap, not a throw.
+    `farthest` is the largest distance from the press at any moment of the
+    hold (w4 task 28, 18/C2): a flick out and back through the start ends
+    near the press but is a throw, so the release point alone cannot say. */
+export function isTap(x0: number, y0: number, x1: number, y1: number, farthest = 0): boolean {
+  return Math.max(Math.hypot(x1 - x0, y1 - y0), farthest) <= TAP_SLOP_PX;
+}
+
 /** Cap a release velocity at FEEL.maxThrow, keeping its direction. */
 export function capThrow(vx: number, vy: number): [number, number] {
   const sp = Math.hypot(vx, vy);
@@ -315,6 +328,80 @@ export function chooseStart(bounds: Bounds, radius: number, preferred: [number, 
   const foundCover = discCoverage(found.x, found.y, radius, obstructions);
   if (prefCover <= foundCover + 0.01) return { x: px, y: py, open: false, cover: prefCover, source: 'poster' };
   return { ...found, cover: foundCover, source: 'search' };
+}
+
+/** Stage 6 (diagnosis B): the nearest point to `from`, on the same grid
+    `findStartPosition` searches inside `bounds`, where at most `maxCover` of
+    the disc sits under `obstructions`. The lens eases there when it comes to
+    rest more than half under a pane (lens.ts checkRest), so it is never lost
+    where it cannot be grabbed. Ties on distance go to the less covered
+    point. Null when no grid point qualifies. */
+export function nearestOpenSpot(bounds: Bounds, radius: number, from: [number, number], obstructions: RectLike[], maxCover = 0.2): { x: number; y: number; cover: number } | null {
+  const [x0, y0, x1, y1] = bounds;
+  const w = Math.max(1, x1 - x0);
+  const h = Math.max(1, y1 - y0);
+  const cols = Math.max(1, Math.min(48, Math.round(w / 22)));
+  const rows = Math.max(1, Math.min(36, Math.round(h / 22)));
+  let best: { x: number; y: number; cover: number; d: number } | null = null;
+  for (let iy = 0; iy <= rows; iy++) {
+    const y = y0 + (h * iy) / rows;
+    for (let ix = 0; ix <= cols; ix++) {
+      const x = x0 + (w * ix) / cols;
+      const d = Math.hypot(x - from[0], y - from[1]);
+      if (best && d > best.d + 0.5) continue;
+      const clear = obstructions.every((rect) => circleRectGap(x, y, radius, rect) >= 0);
+      const cover = clear ? 0 : discCoverage(x, y, radius, obstructions);
+      if (cover > maxCover) continue;
+      if (!best || d < best.d - 0.5 || cover < best.cover) best = { x, y, cover, d };
+    }
+  }
+  return best ? { x: best.x, y: best.y, cover: best.cover } : null;
+}
+
+/** Stage 6 wave 2 (G1, founder): the fallback when no spot as open as
+    `nearestOpenSpot` asks for exists. The least covered grid point used to
+    win wherever it was, so at about 1088 px the lens eased right across the
+    travel box under the hero window to reach it. Now every grid point
+    within `slack` of the least cover found qualifies, and the nearest of
+    those to `from` wins (ties on distance to the less covered). Same grid
+    as `findStartPosition` and `nearestOpenSpot`. */
+export function leastCoveredNearest(bounds: Bounds, radius: number, from: [number, number], obstructions: RectLike[], slack = 0.05): { x: number; y: number; cover: number } {
+  const [x0, y0, x1, y1] = bounds;
+  const w = Math.max(1, x1 - x0);
+  const h = Math.max(1, y1 - y0);
+  const cols = Math.max(1, Math.min(48, Math.round(w / 22)));
+  const rows = Math.max(1, Math.min(36, Math.round(h / 22)));
+  const pts: { x: number; y: number; cover: number; d: number }[] = [];
+  let least = Infinity;
+  for (let iy = 0; iy <= rows; iy++) {
+    const y = y0 + (h * iy) / rows;
+    for (let ix = 0; ix <= cols; ix++) {
+      const x = x0 + (w * ix) / cols;
+      const clear = obstructions.every((rect) => circleRectGap(x, y, radius, rect) >= 0);
+      const cover = clear ? 0 : discCoverage(x, y, radius, obstructions);
+      least = Math.min(least, cover);
+      pts.push({ x, y, cover, d: Math.hypot(x - from[0], y - from[1]) });
+    }
+  }
+  let best: { x: number; y: number; cover: number; d: number } | null = null;
+  for (const p of pts) {
+    if (p.cover > least + slack) continue;
+    if (!best || p.d < best.d - 0.5 || (Math.abs(p.d - best.d) <= 0.5 && p.cover < best.cover)) best = p;
+  }
+  const pick = best ?? { x: (x0 + x1) / 2, y: (y0 + y1) / 2, cover: 0 };
+  return { x: pick.x, y: pick.y, cover: pick.cover };
+}
+
+/** Stage 6 wave 2 (G1, founder): whether one glide step from cover
+    `before` to cover `after` carries the lens deeper under a pane than a
+    resting lens may be (`maxCover`). The glide stops short instead, so a
+    throw never travels hidden under a pane (the 1024 throw film: about
+    1.8 s out of sight under the hero window). Past the limit only a step
+    that brings the disc out from under (lower cover) goes on: a disc
+    already fully under a pane keeps a cover of 1 at every step, so "no
+    deeper" alone would let it glide on hidden. */
+export function glideIntoCover(before: number, after: number, maxCover = 0.2): boolean {
+  return after > maxCover && after >= before - 1e-3;
 }
 
 /** The points where two circles' edges cross (none when they do not). */

@@ -41,7 +41,7 @@ import { drawOnIntent, SWITCHER_INFO, warmPages } from './runtime';
  * school count, so it survives tranche 2. Visitor-facing, so no em dashes.
  */
 const FIRST_LOAD_PROMPT =
-  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there.";
+  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there. Tap around, too: every school hides a few things that answer back.";
 
 /** sessionStorage key, set to 'dismissed' once the visitor has tapped the prompt or the switcher. */
 const PROMPT_KEY = 'bdl-portal-prompt';
@@ -93,7 +93,7 @@ button, a.btn {
   white-space: nowrap; text-decoration: none;
   transition: background-color 160ms ease, color 160ms ease;
 }
-button:hover, a.btn:hover { background: var(--raised); }
+@media (hover: hover) and (pointer: fine) { button:hover, a.btn:hover { background: var(--raised); } }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; }
 .current, .open .stack { color: var(--ink); font-weight: 600; }
@@ -160,7 +160,7 @@ button[aria-busy='true']::after {
 .prompt .go { gap: 12px; padding: 10px 16px 10px 14px; white-space: normal; line-height: 1.35; }
 .prompt .go .text { text-wrap: balance; }
 .prompt .dismiss { justify-content: center; width: 44px; padding: 0; color: var(--muted); }
-.prompt .dismiss:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .prompt .dismiss:hover { color: var(--ink); } }
 /* Three slow pulses, starting once the prompt has arrived. */
 .beacon { width: 8px; height: 8px; flex: none; background: var(--accent); animation: bdl-beacon 3.6s ease-out 1.7s 3; }
 @keyframes bdl-prompt-in {
@@ -196,7 +196,7 @@ li a {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 18px;
   color: var(--ink); text-decoration: none; border-left: 2px solid transparent;
 }
-li a:hover { background: var(--raised); }
+@media (hover: hover) and (pointer: fine) { li a:hover { background: var(--raised); } }
 li a[aria-current='page'] { border-left-color: var(--accent); background: var(--raised); }
 li .name { font-size: 15px; font-weight: 600; }
 li .era { color: var(--muted); font-size: 12px; text-align: right; align-self: center; }

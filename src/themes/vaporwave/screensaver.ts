@@ -30,7 +30,7 @@ const MAX_DPR = 1.5;
 const FRAME_BUDGET = 1000 / 30;
 const FRAME_TOLERANCE = 4;
 
-type Mode = 'sunset' | 'marble' | 'pipes';
+export type Mode = 'sunset' | 'marble' | 'pipes';
 const MODES: Mode[] = ['sunset', 'marble', 'pipes'];
 const MODE_LABEL: Record<Mode, string> = {
   sunset: 'resort sunset',
@@ -154,7 +154,7 @@ const PIPE_DEPTH_SHADOW = 'rgb(5, 1, 14)';
     full-window one. Each instance owns its own rAF, resize and visibility
     plumbing so the two can run independently (only one is ever visible: the
     small one pauses while Preview's full-window copy is open). */
-function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
+export function createLoop(canvas: HTMLCanvasElement, sphere: HTMLImageElement) {
   const ctx = canvas.getContext('2d');
   let mode: Mode = 'marble';
   let running = false;

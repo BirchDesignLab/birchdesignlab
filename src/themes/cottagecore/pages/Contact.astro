@@ -8,6 +8,8 @@ import type { CopyData } from '../../../lib/copy';
 import Pressed from '../assets/Pressed.astro';
 import Stamp from '../assets/Stamp.astro';
 import Postmark from '../assets/Postmark.astro';
+import CancelMark from '../assets/CancelMark.astro';
+import DateStamp from '../assets/DateStamp.astro';
 
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -44,6 +46,9 @@ const { copy, theme } = Astro.props;
       <span class="cc-tape cc-tape--rose cc-tape--half pc-tape" aria-hidden="true"></span>
       <Stamp class="stamp" seed={102} />
       <Postmark class="postmark" arcId="pm-arc-contact" />
+      <div class="cancel-pad" id="cc-pad-contact" data-jx="0.9" data-jy="1.8" aria-hidden="true">
+        {[1, 2, 3, 4, 5, 6].map((n) => <CancelMark arcId={`cm-arc-c${n}`} />)}
+      </div>
       <p class="invite">{copy.invite}</p>
       <div class="address">
         <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
@@ -53,6 +58,7 @@ const { copy, theme } = Astro.props;
       <p class="fine">{copy.fine}</p>
     </div>
     <div class="post-posy" aria-hidden="true">
+      <DateStamp class="pp-stamp" pad="#cc-pad-contact" />
       <Pressed kind="myrtle" seed={103} class="pp-myrtle" />
       <div class="pp-card cc-paper">
         <span class="cc-tape cc-tape--rose cc-tape--half pp-tape" aria-hidden="true"></span>
@@ -183,6 +189,21 @@ const { copy, theme } = Astro.props;
   .pp-card { --tilt: -3deg; position: absolute; right: 8%; bottom: 0; width: 9.5rem; height: 10.5rem; padding: 0.6rem; }
   .pp-tape { top: -0.7rem; left: 1.6rem; --tape-tilt: 6deg; --tape-w: 4.2rem; }
   .post-posy :global(.pp-rose) { position: absolute; width: 7.4rem; left: 1rem; bottom: 0.7rem; rotate: 12deg; }
+  /* The date stamp (Stage 6 w3 task 23) stands on the cloth beside the postcard; a press lays a fresh
+     cancel mark over the postcard's postage stamp (toys.ts). */
+  .post-posy :global(.pp-stamp) { position: absolute; right: 16%; top: 1.4rem; }
+  /* The cancel marks' layer: the postage stamp's own box (same cell, same margins), so a mark is laid
+     where the stamp is and rises at most 0.7rem past it into the empty cloth of the card. Nothing in the
+     layer takes a press and none can reach the invite, the address or the fine print. */
+  .cancel-pad {
+    grid-column: 2; grid-row: 1; align-self: end;
+    position: relative; z-index: 2;
+    width: 5.6rem; height: 6.6rem;
+    margin: -0.6rem -0.4rem 0 0.6rem;
+    rotate: 4deg;
+    pointer-events: none;
+    --cm: 4.3rem;
+  }
   /* The stamp's look (perforations, face, the value 3) is assets/Stamp.astro.
      In the flow: it stands at the foot of the first row, 1.2rem from the
      card's top and right when the heading is short. */
@@ -228,7 +249,9 @@ const { copy, theme } = Astro.props;
     padding-bottom: 0.25rem;
     overflow-wrap: anywhere;
   }
-  .mail:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.15em; }
+  @media (hover: hover) and (pointer: fine) {
+    .mail:hover { text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 0.15em; }
+  }
   .addr-line { height: 1px; background: var(--rule); }
   .addr-line.short { width: 62%; }
   .fine { margin-top: 1.6rem; font-size: 0.98rem; color: var(--mark-muted); }
@@ -242,6 +265,7 @@ const { copy, theme } = Astro.props;
     .post-posy { flex: none; min-height: 0; height: 6rem; margin-top: 0; }
     .pp-card { display: none; }
     .post-posy :global(.pp-myrtle) { width: 5.4rem; left: auto; right: 14%; top: -3.2rem; rotate: 160deg; }
+    .post-posy :global(.pp-stamp) { right: auto; left: 12%; top: 0.3rem; }
   }
   @media (max-width: 640px) {
     /* The trust line breaks at the flower, never inside 'A reply within...'. */
@@ -255,6 +279,7 @@ const { copy, theme } = Astro.props;
     /* Out of the grid areas too (auto), or the absolute offsets would be
        measured from the first row, below the padding, not from the card. */
     .postcard :global(.stamp) { grid-column: auto; grid-row: auto; position: absolute; top: 1.2rem; right: 1.2rem; margin: 0; }
+    .cancel-pad { grid-column: auto; grid-row: auto; position: absolute; top: 1.2rem; right: 1.2rem; margin: 0; }
     .invite { padding-bottom: 0; }
     .postcard :global(.postmark) { grid-column: auto; grid-row: auto; position: absolute; margin: 0; right: 2.4rem; top: 4.8rem; width: 7.6rem; }
   }

@@ -38,9 +38,9 @@ const leaves = (to: string) => (theme && (to === 'lab' || to === 'privacy') ? ''
   }
   nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
   nav a { color: var(--mark-muted); text-decoration: none; font-size: var(--text-sm); }
-  nav a:hover { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) { nav a:hover { color: var(--mark); } }
   .fine { color: var(--mark-muted); font-size: var(--text-sm); }
   .loc { margin-top: var(--space-1); }
   .fine a { color: var(--mark-muted); text-decoration: none; }
-  .fine a:hover { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) { .fine a:hover { color: var(--mark); } }
 </style>

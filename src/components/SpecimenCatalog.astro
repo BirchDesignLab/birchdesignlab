@@ -82,7 +82,9 @@ const working = entries.filter((e) => e.data.status === 'live').length;
                 background-color var(--dur-1) var(--ease-weighted),
                 border-color var(--dur-1) var(--ease-weighted);
   }
-  .filter a:hover { color: var(--mark); }
+  @media (hover: hover) and (pointer: fine) {
+    .filter a:hover { color: var(--mark); }
+  }
   /* Filled when active, the loud grammar's strongest control state. */
   .filter a[aria-current='true'] {
     color: var(--on-accent); background: var(--accent); border-color: var(--accent);

@@ -11,6 +11,7 @@ import Chintz from '../parts/Chintz.astro';
 import ChinoiserieShapes from '../parts/ChinoiserieShapes.astro';
 import Framed from '../parts/Framed.astro';
 import Frame2 from '../parts/Frame2.astro';
+import { ALPHABET, GLYPH_H, GLYPH_W, crossPath, stitchDelay, stitchOrder } from '../parts/sampler';
 import WallBird from '../parts/WallBird.astro';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
@@ -23,6 +24,15 @@ const { copy, theme } = Astro.props;
    same drawing cropped differently, so each has its own pair. */
 const BIRD_WIDE = { home: [575, 119, 1.05, -1], away: [644, 89, 1.0, 1] } as const;
 const BIRD_PHONE = { home: [336, 217, 0.5, -1], away: [357, 204, 0.5, 1] } as const;
+/* GM4 (Stage 6 w2 task 14): from 701 to 820 the phone pair (above) put the bird half under the gilt oval's rim,
+   its tail running under the frame. Sliding it left along limb 2 does not cure it: the limb leaves the trunk at
+   x = 273 and the oval covers 30 to 90% of a bird on its first 100 units at 701 to 760. So that band perches on
+   limb 3 of scene.json, the bough that forks off limb 2 at (485, 134) and runs out to (653, 85): its centreline
+   passes (594, 68), (606, 68), (618, 70), (630, 73), and both points below are read off it, not off a line
+   extended past a limb's end. The bird is clear of the oval and the cards at 701, 720, 760, 800 and 820 (under 5%).
+   At 390 the phone pair sits right of the oval and stays. scripts/themes/stage6/w2-t14-livebird.mjs (LIMB=3)
+   maps the bird's cover along a real limb at each width. */
+const BIRD_TABLET = { home: [600, 68, 0.5, -1], away: [626, 72, 0.5, 1] } as const;
 
 /* The sampler's cross-stitch border motif: a heart between two flowers, one
    cross per cell. r = the stitch thread, g = leaf green. */
@@ -41,59 +51,20 @@ const stitches = motif.flatMap((row, y) =>
   [...row].flatMap((ch, x) => (ch === '.' ? [] : [{ x: x * cell, y: y * cell, kind: ch }])),
 );
 
-/* The sampler's alphabet, counted: a 5 x 7 grid per letter, a column between,
-   two rows of thirteen. Drawn as a mask of filled cells over a field of crosses
-   (a pattern), so it is one small SVG and no text node. */
-const FONT: Record<string, string> = {
-  A: '.XXX.X...XX...XXXXXXX...XX...XX...X', B: 'XXXX.X...XX...XXXXX.X...XX...XXXXX.',
-  C: '.XXXXX....X....X....X....X.....XXXX', D: 'XXXX.X...XX...XX...XX...XX...XXXXX.',
-  E: 'XXXXXX....X....XXXX.X....X....XXXXX', F: 'XXXXXX....X....XXXX.X....X....X....',
-  G: '.XXXXX....X....X..XXX...XX...X.XXXX', H: 'X...XX...XX...XXXXXXX...XX...XX...X',
-  I: 'XXXXX..X....X....X....X....X..XXXXX', J: '..XXX...X....X....X....X.X..X..XX..',
-  K: 'X...XX..X.X.X..XX...X.X..X..X.X...X', L: 'X....X....X....X....X....X....XXXXX',
-  M: 'X...XXX.XXX.X.XX.X.XX...XX...XX...X', N: 'X...XXX..XX.X.XX..XXX...XX...XX...X',
-  O: '.XXX.X...XX...XX...XX...XX...X.XXX.', P: 'XXXX.X...XX...XXXXX.X....X....X....',
-  Q: '.XXX.X...XX...XX...XX.X.XX..X..XX.X', R: 'XXXX.X...XX...XXXXX.X.X..X..X.X...X',
-  S: '.XXXXX....X.....XXX.....X....XXXXX.', T: 'XXXXX..X....X....X....X....X....X..',
-  U: 'X...XX...XX...XX...XX...XX...X.XXX.', V: 'X...XX...XX...XX...XX...X.X.X...X..',
-  W: 'X...XX...XX...XX.X.XX.X.XXX.XXX...X', X: 'X...XX...X.X.X...X...X.X.X...XX...X',
-  Y: 'X...XX...X.X.X...X....X....X....X..', Z: 'XXXXX....X...X...X...X...X....XXXXX',
-};
-const ABC_CELL = 3;
-/** The filled cells of the letters laid out in the given rows, and the size of the sheet.
-    A row shorter than the longest is centred on the sheet, as a counted sampler centres
-    a short last line (B2 fix call 1: the phone's 7/7/7/5, the last row no longer
-    hangs left): its offset is half the missing letters, in whole cells. */
-function abcLayout(rows: string[]) {
-  let d = '';
-  const cols = Math.max(...rows.map((letters) => letters.length));
-  rows.forEach((letters, r) => {
-    const lead = Math.floor(((cols - letters.length) * 6) / 2);
-    [...letters].forEach((ch, i) => {
-      const g = FONT[ch];
-      for (let y = 0; y < 7; y++) {
-        let x = 0;
-        while (x < 5) {
-          if (g[y * 5 + x] !== 'X') { x++; continue; }
-          let run = x;
-          while (run < 5 && g[y * 5 + run] === 'X') run++;
-          d += `M${(lead + i * 6 + x) * ABC_CELL} ${(r * 9 + y) * ABC_CELL}h${(run - x) * ABC_CELL}v${ABC_CELL}h${-(run - x) * ABC_CELL}z`;
-          x = run;
-        }
-      }
-    });
-  });
-  // the last letter has no trailing column, the last row no trailing gap
-  return { d, w: (cols * 6 - 1) * ABC_CELL, h: (rows.length * 9 - 2) * ABC_CELL };
-}
-/* Two rows of thirteen on a wide sampler; four rows of seven on a phone, so each stitch is still a
-   visible X at the narrow width (B1 fix call 2). Only one of the two is ever shown. */
-const abcWide = abcLayout(['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ']);
-const abcNarrow = abcLayout(['ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ']);
-const abcSheets = [
-  { cls: 'abc wide', id: 'w', ...abcWide },
-  { cls: 'abc narrow', id: 'n', ...abcNarrow },
-];
+/* The sampler's alphabet, counted: a 5 x 7 grid per letter (parts/sampler.ts), one cross per filled cell.
+   Each letter is a real button (Stage 6 w3 task 22) holding its own small SVG: a tap re-stitches it in the
+   next thread, the crosses drawing in along the letter's path (stitchOrder). The same 26 buttons make the
+   wide band (two rows of thirteen) and the phone's (four rows of seven, the last row centred), laid out by
+   the grid in CSS, so there is one set of letters and no text node. */
+const letters = ALPHABET.map((ch, i) => {
+  const order = stitchOrder(ch);
+  return {
+    ch,
+    i,
+    under: order.map(crossPath).join(''),
+    crosses: order.map((c, k) => ({ d: crossPath(c), delay: stitchDelay(k, order.length), last: k === order.length - 1 })),
+  };
+});
 
 /* The Greek key: a hook between two rails, one cross per cell, as a repeating
    mask. The top and foot of the sampler take the tile across; the sides take it
@@ -140,6 +111,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     <div class="scene-art" aria-hidden="true"></div>
     <WallBird class="wide" colour="B" home={[...BIRD_WIDE.home]} away={[...BIRD_WIDE.away]} par="xMidYMin slice" />
     <WallBird class="phone" home={[...BIRD_PHONE.home]} away={[...BIRD_PHONE.away]} par="xMinYMin slice" />
+    <WallBird class="tablet" home={[...BIRD_TABLET.home]} away={[...BIRD_TABLET.away]} par="xMinYMin slice" />
     <section class="intro gm-wrap">
       <figure class="sitter" aria-hidden="true">
         <svg class="wire" viewBox="0 0 100 44" focusable="false">
@@ -188,17 +160,18 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     <span class="key corner tr" aria-hidden="true"></span>
     <span class="key corner bl" aria-hidden="true"></span>
     <span class="key corner br" aria-hidden="true"></span>
-    {abcSheets.map((a) => (
-      <svg class={a.cls} viewBox={`0 0 ${a.w} ${a.h}`} aria-hidden="true" focusable="false">
-        <defs>
-          <pattern id={`gm-abc-x-${a.id}`} width={ABC_CELL} height={ABC_CELL} patternUnits="userSpaceOnUse">
-            <path d="M.4 .4l2.2 2.2m0 -2.2l-2.2 2.2" />
-          </pattern>
-          <mask id={`gm-abc-m-${a.id}`}><path d={a.d} fill="#fff" /></mask>
-        </defs>
-        <rect width={a.w} height={a.h} fill={`url(#gm-abc-x-${a.id})`} mask={`url(#gm-abc-m-${a.id})`} />
-      </svg>
-    ))}
+    <div class="abc">
+     <div class="abc-in" role="toolbar" aria-label="Alphabet sampler, arrow keys move between letters" data-sampler>
+      {letters.map((l) => (
+        <button type="button" class="ltr" data-t="0" data-p="0" aria-label={`Letter ${l.ch}, re-stitch`}>
+          <svg viewBox={`0 0 ${GLYPH_W} ${GLYPH_H}`} aria-hidden="true" focusable="false">
+            <path class="u" d={l.under} />
+            {l.crosses.map((c) => <path class="x" pathLength="2" d={c.d} style={`--d:${c.delay}ms`} data-last={c.last ? '1' : undefined} />)}
+          </svg>
+        </button>
+      ))}
+     </div>
+    </div>
     <svg class="stitchwork" viewBox={`-2 -2 ${motif[0].length * cell + 4} ${motif.length * cell + 4}`} aria-hidden="true" focusable="false">
       {stitches.map(({ x, y, kind }) => (
         <path class={kind === 'g' ? 'st g' : 'st'} d={`M${x + 1} ${y + 1}l6 6m0-6l-6 6`} />
@@ -233,7 +206,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
   :global(html[data-scheme='dark']) .b .scene-art { background-image: url('../assets/chinoiserie-darkroom.svg'); }
   :global(.gm-wall-band.mid) { box-shadow: 0 5px 9px -5px rgb(0 0 0 / 0.38), 0 -5px 9px -5px rgb(0 0 0 / 0.38); }
 
-  .scene-part :global(.wall-bird-layer.phone) { display: none; }
+  .scene-part :global(.wall-bird-layer.phone), .scene-part :global(.wall-bird-layer.tablet) { display: none; }
 
   /* ---------- The sitter and the story ---------- */
   /* Above the live bird's layer (z 0): the oval, its wire and the story lie over the wall bird,
@@ -427,11 +400,50 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
   .key.tr { right: 14px; top: 14px; }
   .key.bl { left: 14px; bottom: 14px; }
   .key.br { right: 14px; bottom: 14px; }
-  /* Oxblood thread, each cross a visible X on the counted grid (B1 fix call 2): large, so a cell is
-     about 6px at 1440 and 5px on a phone. */
-  .abc { width: min(100%, 30rem); height: auto; }
-  .abc.narrow { display: none; width: min(100%, 17rem); }
-  .abc pattern path { fill: none; stroke: var(--thread); stroke-width: 0.8px; stroke-linecap: round; }
+  /* The alphabet band: 26 buttons, each a letter of crosses. 13 to a row on a wide sampler, 7 on a phone,
+     laid out by the grid at the counted proportions (a letter is 5 cells, a column between, two rows between
+     lines): --cells is the band's width in cells, so a cell is 100cqw / --cells, off the wrapper's own width.
+     Each cross is a visible X, about 6px at 1440 and 5px on a phone (B1 fix call 2). */
+  .abc { --cells: 77; width: min(100%, 30rem); container-type: inline-size; }
+  .abc-in {
+    display: grid;
+    grid-template-columns: repeat(13, minmax(0, 5fr));
+    column-gap: calc(100cqw / var(--cells));
+    row-gap: calc(100cqw * 2 / var(--cells));
+  }
+  /* The thread of a letter (data-t, as worked now; data-p, the one it replaces while a re-stitch runs). */
+  .ltr {
+    --now: var(--thread); --prev: var(--thread);
+    position: relative; display: block;
+    margin: 0; padding: 0; border: 0; border-radius: 3px;
+    background: none; color: inherit; font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .ltr[data-t='1'] { --now: var(--thread-hunter); }
+  .ltr[data-t='2'] { --now: var(--thread-gold); }
+  .ltr[data-p='1'] { --prev: var(--thread-hunter); }
+  .ltr[data-p='2'] { --prev: var(--thread-gold); }
+  /* The hit area reaches half the gap each way, so neighbouring letters tile with no dead strip between. */
+  .ltr::before {
+    content: ''; position: absolute;
+    inset: calc(-100cqw / var(--cells)) calc(-50cqw / var(--cells));
+  }
+  .ltr svg { width: 100%; height: auto; overflow: visible; }
+  .ltr path { fill: none; stroke-width: 0.8px; stroke-linecap: round; }
+  .ltr .x { stroke: var(--now); stroke-dasharray: 2 2; }
+  /* A re-stitch (about 500 ms): the old thread lies under the letter, and the new thread sews over it one cross
+     at a time in the order the letter is worked, each cross drawing in stroke by stroke. Damped: it eases out, no
+     overshoot. The last cross ends the run (toys.ts removes .go). */
+  .ltr .u { display: none; stroke: var(--prev); }
+  .ltr.go .u { display: inline; }
+  .ltr.go .x { animation: gm-sew 150ms cubic-bezier(0.3, 0.6, 0.3, 1) both; animation-delay: var(--d); }
+  @keyframes gm-sew { from { stroke-dashoffset: 2; } to { stroke-dashoffset: 0; } }
+  @media (hover: hover) and (pointer: fine) {
+    .ltr:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 9%, transparent); }
+  }
+  .ltr:focus-visible { outline-offset: 2px; }
   .stitchwork { width: min(100%, 13rem); overflow: visible; }
   .st { fill: none; stroke: var(--stitch); stroke-width: 1.7; stroke-linecap: round; }
   .st.g { stroke: var(--c-leaf); }
@@ -443,9 +455,11 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     text-wrap: balance;
   }
 
+  /* A phone: four rows of seven, the last of five centred (the V sits one column in). */
   @media (max-width: 600px) {
-    .abc.wide { display: none; }
-    .abc.narrow { display: block; }
+    .abc { --cells: 41; width: min(100%, 17rem); }
+    .abc-in { grid-template-columns: repeat(7, minmax(0, 5fr)); }
+    .ltr:nth-child(22) { grid-column-start: 2; }
   }
 
   @media (max-width: 820px) {
@@ -461,4 +475,20 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     .scene-part :global(.wall-bird-layer.phone) { display: block; }
     .sampler { box-shadow: 0 0 0 12px var(--field), 0 0 0 14px var(--rule); }
   }
+  /* 701 to 820: the live bird's own pair (BIRD_TABLET), clear of the oval's rim (GM4). */
+  @media (min-width: 701px) and (max-width: 820px) {
+    .scene-part :global(.wall-bird-layer.phone) { display: none; }
+    .scene-part :global(.wall-bird-layer.tablet) { display: block; }
+  }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initSampler } from '../parts/toys';
+
+  // The sampler's letters re-stitch on a tap (parts/toys.ts). The landmark is this page's own band.
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    return initSampler(document.querySelector<HTMLElement>('.abc-in[data-sampler]'));
+  });
+</script>

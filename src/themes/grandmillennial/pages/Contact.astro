@@ -10,7 +10,7 @@ import Seal from '../parts/Seal.astro';
 interface Props { copy: CopyData<'contact'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
 ---
-<section class="intro gm-wrap">
+<section class="intro gm-trellis">
   <p class="gm-kicker ruled">{copy.kicker}</p>
   <h1>{copy.heading}</h1>
   <p class="subline">{copy.subline}</p>
@@ -44,8 +44,14 @@ const { copy, theme } = Astro.props;
     </Framed>
   </section>
 
-  <section class="envelope wall-card">
-    <div class="flap" aria-hidden="true"><Seal class="seal" /></div>
+  <section class="envelope wall-card" data-open="false">
+    <!-- The flap, its lining and the notecard are the picture (aria-hidden); the wax seal is the one control. -->
+    <div class="flap" aria-hidden="true">
+      <span class="lining"></span>
+      <span class="slot"><span class="card"><span class="mono">B</span></span></span>
+      <span class="lid"></span>
+    </div>
+    <button class="seal-btn" type="button" aria-label="Envelope, open" aria-expanded="false"><Seal class="seal" /></button>
     <div class="note">
       <p class="invite">{copy.invite}</p>
       <a class="mail" href={`mailto:${copy.email}`}>{copy.email}</a>
@@ -53,7 +59,7 @@ const { copy, theme } = Astro.props;
     </div>
   </section>
 
-  <p class="trust wall-card">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}{part}</>)}</p>
+  <p class="trust">{copy.trust.map((part, i) => <>{i > 0 && <> <span class="sep" aria-hidden="true">&#10086;</span> </>}<span class="tp">{part}</span></>)}</p>
 </div>
 </div>
 <div class="gm-wall-band" aria-hidden="true"></div>
@@ -63,6 +69,8 @@ const { copy, theme } = Astro.props;
   .intro {
     display: grid; justify-items: center; text-align: center;
     padding-block: clamp(3.5rem, 8vw, 5.5rem) clamp(2.5rem, 5vw, 3.5rem);
+    /* The trellis lattice (theme.css .gm-trellis) lies behind the intro edge to edge (GM3); the text keeps the wrap's measure. */
+    padding-inline: max(var(--gutter), calc((100% - var(--wrap)) / 2));
   }
   .intro h1 {
     font-style: italic;
@@ -81,7 +89,10 @@ const { copy, theme } = Astro.props;
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: var(--gap);
-    align-items: center;
+    /* The envelope sits level with the form's top, not centred against it: centred, the wall
+       showed a 143px band above it at 1024 (Stage 6 w2 task 15, ledger B1 T3 C5). Under 860
+       the desk is one column and this changes nothing. */
+    align-items: start;
   }
 
   /* ---------- Stationery ---------- */
@@ -143,14 +154,46 @@ const { copy, theme } = Astro.props;
     margin-top: 0.75rem;
     text-align: center;
     font-style: italic;
-    color: var(--mark-muted);
-    /* On the wall, the line sits on a small card of its own: text never on the paper. */
-    padding: 0.7rem 1.75rem 0.8rem;
-    background: var(--field-raised);
-    border: 1px solid var(--rule);
-    /* Its shadow and (in the lacquer) lit edge come from the wall-card rule in theme.css. */
+    color: var(--tape-ink);
+    /* The third frame (Stage 6 w2 task 14, stop 1 call 8): the line is a length of cream
+       grosgrain ribbon tape laid across the wall, oxblood picot edges, both ends cut in a
+       swallow-tail like the rosette's tails, a brass upholstery nail through each end. Not
+       pinked (that is the swatches' language). Text on the tape, never on the chintz: the
+       pair is in meta.ts. The tape is ::before and the nails ::after, so the cut is a
+       clip-path on a pseudo-element and the tape holds at two lines (390): the notch is 14px
+       at the middle of whatever height the text makes. The shadow is the line's own filter,
+       which runs after the clip and so follows the cut ends. */
+    position: relative; isolation: isolate;
+    padding: 0.95rem clamp(2.9rem, 6vw, 3.6rem) 1.05rem;
+    max-width: 100%;
+    filter: drop-shadow(0 8px 6px rgb(30 16 6 / 0.32)) drop-shadow(0 1px 0 rgb(0 0 0 / 0.1));
   }
-  .sep { font-style: normal; color: var(--rule); padding-inline: 0.35rem; }
+  .trust::before, .trust::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+  .trust::before {
+    z-index: -2;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
+    background:
+      /* the picots: a row of small loops under the top edge and over the bottom edge */
+      radial-gradient(circle at 50% 0, var(--bow) 2.5px, transparent 3px) 0 4px / 8px 5px repeat-x,
+      radial-gradient(circle at 50% 100%, var(--bow) 2.5px, transparent 3px) 0 calc(100% - 4px) / 8px 5px repeat-x,
+      /* the woven edge band either side */
+      linear-gradient(var(--bow), var(--bow)) top / 100% 4px no-repeat,
+      linear-gradient(var(--bow), var(--bow)) bottom / 100% 4px no-repeat,
+      /* the grosgrain's fine cross-rib */
+      repeating-linear-gradient(90deg, rgb(70 50 20 / 0.05) 0 1px, transparent 1px 3px),
+      var(--tape);
+  }
+  .trust::after {
+    z-index: -1;
+    background:
+      radial-gradient(circle at 28px 50%, var(--gold-light) 0 2px, var(--gold) 2.5px 4px, var(--gold-deep) 4.5px 5.5px, transparent 6px),
+      radial-gradient(circle at calc(100% - 28px) 50%, var(--gold-light) 0 2px, var(--gold) 2.5px 4px, var(--gold-deep) 4.5px 5.5px, transparent 6px);
+  }
+  .sep { font-style: normal; color: var(--bow); padding-inline: 0.35rem; }
+  /* Stage 6 w3 task 19 (w2 task 14 C3): each trust part is one unit, so at 390 and 360 the tape
+     breaks at the fleuron and never inside a part ("A" had been left alone at the end of the first
+     line). Words unchanged; the break still falls at the fleuron's spaces. */
+  .trust .tp { white-space: nowrap; }
 
   /* ---------- The envelope ---------- */
   /* Contact's one off-axis move (B1 item 12): the envelope is laid on the desk
@@ -166,24 +209,102 @@ const { copy, theme } = Astro.props;
     background: var(--field-raised);
     border: 1px solid var(--rule);
   }
-  .flap {
-    position: relative;
-    height: 7.5rem;
-    background:
+  /* Stage 6 w3 task 22: the envelope opens. The wax seal is a real button (Envelope, open / close,
+     aria-expanded); a tap hinges the flap up about 160 degrees over 300 ms, shows the lining, and slides a
+     notecard with the B monogram 24px out of the opening, no words. Tapped again (the seal or the card), it
+     closes. Damped, no overshoot: paper and silk. Every move is a transform, an opacity or a filter on the
+     envelope's own box: nothing shifts the layout. The flap folds up and back, so it lies above the envelope's
+     top edge; in the one-column desk the form sits there, so there the envelope is stacked UNDER the form
+     (the media rule below) and the flap tucks behind the stationery rather than covering it. */
+  /* --diagonals is the flap's two gold edges (the two slopes of the V): painted on the flap and, since Stage 6 w4 task 30
+     (critique B5), on the inside face of the lid too, so the opened flap's edges read against the wall. */
+  .envelope {
+    --ease: cubic-bezier(0.3, 0.6, 0.25, 1); --flap-h: 7.5rem; --seal-size: 4.6rem;
+    --diagonals:
       linear-gradient(to bottom left, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) left / 50% 100% no-repeat,
       linear-gradient(to bottom right, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) right / 50% 100% no-repeat;
   }
-  .flap::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: var(--flap);
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-    filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.2));
+  .flap {
+    position: relative;
+    height: var(--flap-h);
+    background: var(--diagonals);
+    /* the open flap and card cast a soft shadow on the desk; closed, none (it was never there) */
+    filter: drop-shadow(0 0 0 transparent);
+    transition: filter 300ms var(--ease);
+    pointer-events: none;
   }
-  .flap :global(.seal) {
-    position: absolute; left: 50%; bottom: 0;
-    width: 4.6rem;
-    translate: -50% 45%;
+  .envelope[data-open='true'] .flap { filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.22)); }
+  /* what the opening shows: the lining, the V of the flap's own shape */
+  .lining {
+    position: absolute; inset: 0;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    background: var(--lining);
+    opacity: 0;
+    transition: opacity 140ms linear;
+  }
+  .envelope[data-open='true'] .lining { opacity: 1; }
+  /* the notecard rides in a slot cut to the opening: the V of the flap and everything above the top edge */
+  .slot {
+    position: absolute; inset: 0; z-index: 2;
+    clip-path: polygon(-50% -100%, 150% -100%, 150% 0, 100% 0, 50% 100%, 0 0, -50% 0);
+  }
+  .card {
+    position: absolute; left: 50%; top: 8px;
+    width: 42%; height: calc(var(--flap-h) + 1rem);
+    translate: -50% 0;
+    display: grid; justify-items: center; align-content: start;
+    background: var(--notecard);
+    border: 1px solid var(--rule);
+    box-shadow: inset 0 0 0 4px var(--notecard), inset 0 0 0 5px color-mix(in srgb, var(--rule), transparent 35%);
+    transition: translate 300ms var(--ease) 0ms;
+  }
+  .envelope[data-open='true'] .card {
+    translate: -50% -24px;
+    transition-delay: 90ms;
+    pointer-events: auto; cursor: pointer;
+  }
+  .mono {
+    margin-top: 1.1rem;
+    font-family: var(--font-script);
+    font-size: 3rem; line-height: 1;
+    color: var(--notecard-ink);
+  }
+  /* the lid: the outside (--flap) and, seen from behind, the inside, folding about the top edge */
+  .lid {
+    position: absolute; inset: 0; z-index: 3;
+    transform-origin: 50% 0;
+    transform: perspective(900px) rotateX(0deg);
+    transform-style: preserve-3d;
+    transition: transform 300ms var(--ease) 120ms, z-index 0s linear 230ms;
+  }
+  .lid::before, .lid::after {
+    content: ''; position: absolute; inset: 0;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    backface-visibility: hidden;
+  }
+  .lid::before { background: var(--flap); }
+  .lid::after { background: var(--diagonals), var(--flap-in); transform: rotateY(180deg); }
+  .envelope[data-open='true'] .lid {
+    transform: perspective(900px) rotateX(-160deg);
+    z-index: 1;
+    transition: transform 300ms var(--ease), z-index 0s linear 150ms;
+  }
+  /* the seal stays where it was pressed (it breaks, it does not travel) and is the whole control: 4.6rem */
+  .seal-btn {
+    position: absolute; z-index: 4;
+    left: 50%; top: calc(var(--flap-h) - var(--seal-size) * 0.55);
+    width: var(--seal-size); height: var(--seal-size);
+    translate: -50% 0;
+    margin: 0; padding: 0; border: 0; border-radius: 50%;
+    background: none; color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .seal-btn :global(.seal) { width: 100%; height: 100%; transition: scale 160ms var(--ease); }
+  .seal-btn:active :global(.seal) { scale: 0.95; }
+  @media (hover: hover) and (pointer: fine) {
+    .seal-btn:hover :global(.seal) { scale: 1.06; }
   }
   .note {
     display: grid; gap: 0.9rem; justify-items: center; text-align: center;
@@ -195,9 +316,25 @@ const { copy, theme } = Astro.props;
 
   @media (max-width: 860px) {
     .desk { grid-template-columns: 1fr; }
-    .envelope { width: min(100%, 28rem); justify-self: center; rotate: 1.4deg; }
+    /* one column: the form is above the envelope, and the flap folds up behind its own top edge, so the
+       envelope lies under the form (z 0 against the form's 1) and the flap can never cover it (task 22). */
+    .envelope { width: min(100%, 28rem); justify-self: center; rotate: 1.4deg; z-index: 0; }
+    /* Open, the flap stands ajar (105 degrees, not 160): about 26px of it inside the 40px gap above the envelope, so the
+       whole hinge shows and it still never reaches the form (Stage 6 w4 task 30, critique B5). */
+    .envelope[data-open='true'] .lid { transform: perspective(900px) rotateX(-105deg); }
   }
   @media (max-width: 560px) {
     .pair { grid-template-columns: 1fr; }
   }
 </style>
+
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initEnvelope } from '../parts/toys';
+
+  // The wax seal opens and closes the envelope (parts/toys.ts). The landmark is this page's own envelope.
+  onMount(() => {
+    if (document.documentElement.dataset.theme !== 'grandmillennial') return;
+    return initEnvelope(document.querySelector<HTMLElement>('section.envelope'));
+  });
+</script>

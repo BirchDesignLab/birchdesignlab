@@ -6,17 +6,25 @@
  * during the arrival's own view transition cost the same kind of dropped
  * frames that gate was written to avoid, so the lens and the Control Centre
  * use the identical wait.
+ *
+ * Stage 6 (diagnosis C): `cb` runs at most once per call. The arrival path
+ * used to leave its 2500 ms safety timer running after the MutationObserver
+ * had already fired, so the callback ran twice and Home mounted a second,
+ * ghost lens over the first. `runIdle` now fires once (`fired`), and the
+ * observer path clears the safety timer.
  */
 export function afterArrivalIdle(cb: () => void): () => void {
   let idleId = 0;
   let timerId = 0;
   let cancelled = false;
+  let fired = false;
   const w = window as unknown as {
     requestIdleCallback?: (fn: () => void, o?: { timeout: number }) => number;
     cancelIdleCallback?: (id: number) => void;
   };
   const runIdle = () => {
-    if (cancelled) return;
+    if (cancelled || fired) return;
+    fired = true;
     if (w.requestIdleCallback) idleId = w.requestIdleCallback(cb, { timeout: 1000 });
     else timerId = window.setTimeout(cb, 120);
   };
@@ -28,14 +36,16 @@ export function afterArrivalIdle(cb: () => void): () => void {
   };
   const html = document.documentElement;
   if ('fromTheme' in html.dataset) {
+    let safety = 0;
     const mo = new MutationObserver(() => {
       if (!('fromTheme' in html.dataset)) {
         mo.disconnect();
+        clearTimeout(safety);
         runIdle();
       }
     });
     mo.observe(html, { attributeFilter: ['data-from-theme'] });
-    const safety = window.setTimeout(() => {
+    safety = window.setTimeout(() => {
       mo.disconnect();
       runIdle();
     }, 2500);

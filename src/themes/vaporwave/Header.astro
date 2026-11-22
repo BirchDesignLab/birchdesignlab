@@ -137,9 +137,22 @@ const { chrome, theme } = Astro.props;
        hypothetical size for the wrap decision, which was enough on its own
        to push the tray onto a third row instead of docking beside it. */
     nav { flex: 1 1 0%; min-width: 0; order: 2; display: grid; grid-template-columns: repeat(4, 1fr); }
-    .task { min-width: 0; min-height: 44px; padding-inline: 0.2rem; letter-spacing: 0.12em; font-size: 0.72rem; }
+    /* V8 (Stage 6 wave 2): the labels filled their buttons edge to edge at
+       390 (SERVICES and CONTACT at 61 of 61) and ran out of them at 360.
+       Tracking 0.12em to 0.06em, size 0.72rem to 0.68rem, padding 0.2rem to
+       0.35rem. */
+    .task { min-width: 0; min-height: 44px; padding-inline: 0.35rem; letter-spacing: 0.06em; font-size: 0.68rem; }
     .tray { flex: 0 0 auto; padding: 0.3rem 0.6rem; min-height: 44px; order: 3; }
     .tray-kana { display: none; }
+  }
+  /* C3 (Stage 6 wave 3, task 19): the V8 step still left SERVICES 2.2px a
+     side at 360 and 4.1px at 375 (the four buttons share what the clock
+     leaves, about 57.6px at 360). A narrower step at 380 and below, size
+     0.68rem to 0.64rem and tracking 0.06em to 0.02em, takes the label from
+     53.2px to about 46.5px, so it keeps 5px or more a side down to 360
+     (w3-t19-header.mjs measures it). */
+  @media (max-width: 380px) {
+    .task { font-size: 0.64rem; letter-spacing: 0.02em; }
   }
   @media (prefers-reduced-motion: reduce) {
     .colon { animation: none; }

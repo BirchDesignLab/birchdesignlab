@@ -357,7 +357,9 @@
     padding: 0.5em 1em 0.4em; cursor: pointer;
     transition: border-color var(--dur-1) var(--ease-weighted);
   }
-  .engraved:hover { border-color: var(--mark-muted); }
+  @media (hover: hover) and (pointer: fine) {
+    .engraved:hover { border-color: var(--mark-muted); }
+  }
 
   .lockin { display: grid; gap: var(--space-2); border-top: 1px solid var(--line); padding-top: var(--space-3); }
   .lockin-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }

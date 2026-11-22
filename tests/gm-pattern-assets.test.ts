@@ -104,9 +104,11 @@ describe('grandmillennial B1 calls', () => {
   });
   it('the phone alphabet keeps 7/7/7/5 and centres the short last row', () => {
     const about = read('pages/About.astro');
-    expect(about).toContain("['ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ']");
-    expect(about).toMatch(/const lead = Math\.floor\(\(\(cols - letters\.length\) \* 6\) \/ 2\)/);
-    expect(about).toContain('(lead + i * 6 + x) * ABC_CELL');
+    // Stage 6 w3 task 22: one set of 26 letter buttons; the grid makes seven columns on a phone and the V,
+    // the 22nd letter, sits one column in, which centres the five of the last row (6 of 41 cells).
+    expect(about).toContain('grid-template-columns: repeat(7, minmax(0, 5fr))');
+    expect(about).toContain('.ltr:nth-child(22) { grid-column-start: 2; }');
+    expect(about).toContain('--cells: 41');
   });
   it("the sampler's Greek key turns four corners and repeats whole motifs", () => {
     const about = read('pages/About.astro');

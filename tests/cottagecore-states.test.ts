@@ -9,8 +9,8 @@ const css = read('theme.css');
 describe('cottagecore states and layout', () => {
   it('presses the label flat on :active and gates hover lift behind (hover: hover)', () => {
     expect(css).toMatch(/\.cc-label:active \{[^}]*translate: 0 1px[^}]*rotate: 0deg|\.cc-label:active \{[^}]*rotate: 0deg[^}]*translate: 0 1px/);
-    expect(css).toMatch(/@media \(hover: hover\) \{\s*\[data-theme='cottagecore'\] \.cc-label:hover/);
-    expect(css).toMatch(/@media \(hover: hover\) \{\s*\[data-theme='cottagecore'\] \.cc-note-link:hover svg/);
+    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\[data-theme='cottagecore'\] \.cc-label:hover/);
+    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\[data-theme='cottagecore'\] \.cc-note-link:hover svg/);
   });
 
   it('lifts every tape variant corner on hover and on tap', () => {

@@ -6,20 +6,32 @@
     it is larger than lead. */
 import { featuredSpecimens, specimenLink, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
+import WidthDial from '../WidthDial.astro';
+/* The lab band's photograph: a hard threshold of birch bark, one colour in
+   the alpha channel (black marks on clear). Made by
+   scripts/themes/stage6/w1-t6-photos.mjs; sources in
+   src/assets/swiss-photos-SOURCE.md. It is decorative, so it has no alt. */
+import bandAvif1200 from '../../../assets/swiss-lab-band-1200.avif';
+import bandAvif2000 from '../../../assets/swiss-lab-band-2000.avif';
+import bandWebp1200 from '../../../assets/swiss-lab-band-1200.webp';
+import bandWebp2000 from '../../../assets/swiss-lab-band-2000.webp';
 
 interface Props { copy: CopyData<'home'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, chrome, theme } = Astro.props;
 const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: specimenLink(entry, theme) }));
 ---
-<section class="sw-row hero">
-  <h1 class="sw-display billboard">
-    {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class="ln">{word}</span></>)}
-  </h1>
-  <div class="lede">
-    <p class="sw-lead lead">{copy.opener.lead}</p>
-    <p class="subline">{copy.opener.subline}</p>
-  </div>
-</section>
+<div class="hero-sheet">
+  <section class="sw-row hero">
+    <h1 class="sw-display billboard">
+      {chrome.name.split(' ').map((word, i) => <>{i > 0 && ' '}<span class="ln">{word}</span></>)}
+    </h1>
+    <div class="lede">
+      <p class="sw-lead lead">{copy.opener.lead}</p>
+      <p class="subline">{copy.opener.subline}</p>
+    </div>
+    <WidthDial />
+  </section>
+</div>
 
 <section class="sw-row sw-sec doors">
   <h2 class="sw-kicker kicker">{copy.doors.kicker}</h2>
@@ -36,9 +48,16 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
 
 {featured.length > 0 && (
   <section class="sw-row lab-wrap">
-    <div class="sw-sheet lab sw-bleed">
-      <p class="sw-kicker lab-kicker">{copy.lab.kicker}</p>
-      <p class="sw-lead pull">{copy.lab.pull}</p>
+    <div class="sw-sheet sw-white lab sw-bleed">
+      <div class="lab-head">
+        <picture class="lab-photo" aria-hidden="true">
+          <source type="image/avif" srcset={`${bandAvif1200.src} 1200w, ${bandAvif2000.src} 2000w`} sizes="100vw" />
+          <source type="image/webp" srcset={`${bandWebp1200.src} 1200w, ${bandWebp2000.src} 2000w`} sizes="100vw" />
+          <img src={bandWebp2000.src} width="2000" height="1125" alt="" loading="lazy" decoding="async" />
+        </picture>
+        <p class="sw-kicker lab-kicker"><span class="cut">{copy.lab.kicker}</span></p>
+        <p class="sw-lead pull"><span class="cut">{copy.lab.pull}</span></p>
+      </div>
       <ul class="specimens" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li>
@@ -63,16 +82,30 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   /* The poster. The billboard size is one variable. cqw is the hero row's
      own width, which is the frame (the sheet between its margins), not the
      viewport. */
+  .hero-sheet { overflow-x: clip; }
   .hero {
     --bb: min(29.4cqw, 17.5rem);
+    position: relative;
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 4);
     row-gap: var(--u);
     align-items: start;
   }
+  /* The width dial's word. --sw-s is the billboard's own width (theme.css
+     keeps the ink flush to the column from it); "Design" is the word the dial
+     moves: --sw-d is its width, --sw-rest where it sits at rest (the widest
+     cut on a desktop, the line's own width on a tablet and a phone), and it
+     steps left by the extra bearing the wider cut carries. WidthDial.astro
+     sets --sw-d while the word is moved and clears it at rest. */
   .billboard {
+    --sw-rest: 100;
     grid-row: 1;
     font-size: var(--bb);
     margin-top: calc(var(--u) * 4);
+  }
+  .billboard .ln:nth-child(2) {
+    --sw-d: var(--sw-rest);
+    font-stretch: calc(var(--sw-d) * 1%);
+    margin-inline-start: calc(-1em * 0.000675 * (var(--sw-d) - var(--sw-s)));
   }
   /* The lead and the subline are one block, so they share one column line. */
   .lede {
@@ -98,7 +131,7 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
       grid-template-rows: auto auto auto;
       padding-bottom: calc(var(--u) * 4);
     }
-    .billboard { font-stretch: 85%; margin-top: calc(var(--u) * 2); }
+    .billboard { --sw-s: 85; --sw-rest: 85; margin-top: calc(var(--u) * 2); }
     .lede { display: contents; }
     .lead {
       grid-row: 2;
@@ -119,9 +152,26 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   @media (min-width: 1024px) {
     /* Name flush left, the block hung from column 8 on the baseline of the
        name's last word ("Lab"): last baselines align across the two items. */
-    .hero { --bb: min(16.8cqw, 17.5rem); padding-bottom: calc(var(--u) * 5); }
-    .billboard { grid-row: 1; grid-column: 1 / -1; align-self: last baseline; }
+    .hero { --bb: min(20.2cqw, 21rem); padding-bottom: calc(var(--u) * 5); }
+    .billboard { grid-row: 1; grid-column: 1 / -1; align-self: last baseline; margin-top: calc(var(--u) * 2); }
     .lede { grid-row: 1; grid-column: 8 / -1; align-self: last baseline; }
+  }
+  /* Poster scale (1.2x the old billboard, "Design" at the widest cut). The
+     dial's lede test (WidthDial.astro: the whole word must stop short of the
+     lede while the lede's top is above the word's descender) measures a cap
+     of 94.7 at every width from 1024 to 1195 and no cap from 1196 (measured at
+     each pixel, scripts/themes/stage6/w2-t10-restsweep.mjs). The CSS rest is
+     written to match, so the word does not narrow or widen after mount, inside
+     an arrival's new view, or for a visitor without scripting (Stage 6 wave 2,
+     S2, closes T4 C2). 1196 is where the lede's copy wraps one line shorter,
+     as a width of the hero (a container query: the frame is 1100px there,
+     whatever the scrollbar takes); a copy change moves it, so re-run the sweep
+     with the lede's copy. */
+  @media (min-width: 1024px) {
+    .billboard { --sw-rest: 94.7; }
+  }
+  @container (min-width: 1100px) {
+    .billboard { --sw-rest: 125; }
   }
 
   /* 02: the doors, two equal fields side by side, each with its title at
@@ -161,8 +211,9 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     .more { grid-column: 7 / -1; }
   }
 
-  /* 03: the lab, a full-bleed black sheet with paper type (red with white
-     type in dark). The block sits on the frame; its fill runs to the
+  /* 03: the lab, a full-bleed black sheet with paper type (a white field
+     with black type in dark, Stage 6 call 9: the red close below is then the
+     page's one red field). The block sits on the frame; its fill runs to the
      viewport edges. */
   .lab-wrap { padding-bottom: calc(var(--u) * 4); }
   .lab {
@@ -171,7 +222,64 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
     row-gap: var(--u);
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 2);
   }
-  :where(.lab) > * { grid-column: 1 / -1; min-width: 0; }
+  :where(.lab) > *, :where(.lab-head) > * { grid-column: 1 / -1; min-width: 0; }
+  /* The band's photograph (Stage 6, P4, typophoto): a hard threshold of birch
+     bark across the head of the sheet, running to the viewport edges and cut
+     by them, the kicker and the pull set over it. One colour in the alpha
+     channel, printed as it is made: black marks on a white band, in both
+     schemes (the brief's reading, the marks echoing the site's bark dashes).
+     In light the band is a white field at the head of the black sheet, ruled
+     off at the first specimen line; in dark the sheet is itself the white
+     field, so the same marks sit on it with no edge. Each line of type carries
+     the sheet's ground behind it (black in light, white in dark) and a clear
+     zone after it (1em, never under 40px, painted outside the line box), so no
+     mark sits under a letter or lands against a line's end like punctuation:
+     a reversed label. */
+  .lab { --ground: var(--black); }
+  :global([data-theme='swiss'][data-scheme='dark']) .lab { --ground: var(--white-field); }
+  .lab-head {
+    position: relative;
+    display: grid;
+    grid-template-columns: subgrid;
+    row-gap: var(--u);
+    align-content: space-between;
+  }
+  .lab-head > :not(.lab-photo) { position: relative; z-index: 1; }
+  .lab-photo {
+    position: absolute;
+    z-index: 0;
+    top: calc(var(--u) * -0.5);
+    bottom: calc(var(--u) * -2);
+    left: calc(50% - 50vw);
+    width: 100vw;
+    max-width: none;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--white-field);
+    /* The photograph ends on a rule, not in the open: a hairline the full width
+       of the sheet on its bottom edge, the row the first specimen's own rule
+       (the frame's part of it) is drawn on. A mass of bark that reaches the
+       foot of the band is then cut on a line the page draws, in both schemes
+       and at every width (Stage 6 wave 2, stop 2 answer 3, T6 C3). */
+    box-shadow: 0 1px 0 var(--mark-muted);
+  }
+  .lab-photo img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: 80% 50%;
+  }
+  .cut {
+    background: var(--ground);
+    /* The clear zone is a shadow, not padding: padding sits inside the line box,
+       so it widens the last line past the pull's measure (a widow) and hangs
+       past the column on every other line (sideways scroll on a phone); a
+       shadow takes no room and adds no scrollable overflow. */
+    box-shadow: max(1em, 2.5rem) 0 0 var(--ground);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
   .pull {
     margin-top: calc(var(--u) * 2);
     max-width: 20em;
@@ -196,13 +304,33 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   .summary { grid-column: 1 / -1; color: var(--mark-muted); }
   .lab-more { grid-column: 1 / -1; }
 
+  /* Phones: the band is a picture. The photograph has a band of its own, twelve
+     lines tall under the kicker (it ran about 230px, the kicker and a two-line
+     pull stacked on it, and read as a texture), and the pull sits under it on
+     the sheet's own ground, so it needs no label and no clear zone. The band
+     ends on the rule above; 360 to 430 are all the same (Stage 6 wave 2, stop
+     2 answer 3). */
+  @media (max-width: 639.98px) {
+    .lab-head { grid-template-rows: calc(var(--u) * 12) auto; align-content: start; }
+    .lab-photo { bottom: auto; height: calc(var(--u) * 12.5); }
+    .pull { margin-top: 0; }
+    .pull .cut { background: none; box-shadow: none; }
+    /* The kicker's label fits its words (w3 task 18): one line over the
+       band's head, so a quarter-em of ground each side, not the 40px clear
+       zone a wrapping line needs against the marks. */
+    .lab-kicker .cut { box-shadow: 0.25em 0 0 var(--ground), -0.25em 0 0 var(--ground); }
+  }
+
   @media (min-width: 640px) {
+    /* The photograph's band has height of its own, the kicker at the head of
+       it and the pull at its foot. */
+    .lab-head { min-height: clamp(260px, 30vw, 520px); }
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / -1; }
     .lab-more { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    .lab-kicker { grid-row: 1; grid-column: 1 / 7; }
+    .lab-kicker { grid-column: 1 / 7; }
     .designation { grid-column: 1 / 3; }
     .summary { grid-column: 3 / 9; }
     .lab-more { grid-column: 10 / -1; }

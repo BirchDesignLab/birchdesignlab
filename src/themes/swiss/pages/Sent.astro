@@ -15,6 +15,14 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
   <a class="back" href={hrefFor('home', theme)}>{copy.back}</a>
 </section>
 
+<script>
+  import { onMount } from '../../../lib/lifecycle';
+  import { initStopDrag } from '../toys';
+
+  // Drag the red full stop along the baseline (toys.ts, wave 3 task 21, P2).
+  onMount(() => initStopDrag(document.querySelector<HTMLElement>('.sent .stop')));
+</script>
+
 <style>
   .sent {
     padding-block: calc(var(--u) * 0.5) calc(var(--u) * 5);
@@ -29,10 +37,54 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
     letter-spacing: -0.06em;
     margin-top: calc(var(--u) * 3);
     margin-bottom: var(--u);
-    margin-left: -0.04em;
+    /* Optical flush-left (S3): the S's measured bearing at this size. */
+    margin-left: -0.0462em;
   }
-  /* The page's one typographic mark, in the red field (never remapped). */
-  .stop { color: var(--red-field); }
+  /* The page's one typographic mark, in the red field (never remapped).
+     Drag the stop (toys.ts): an inline-block so it can carry a translate, with
+     the same advance and baseline as the inline it was (always, so nothing
+     moves when the script arrives). The hit area is a square round the dot (a
+     dot is 17px at 390: under a fingertip), a pseudo-element out of flow, so
+     it widens nothing. A vertical swipe that starts on it still scrolls
+     (pan-y). */
+  .stop { color: var(--red-field); display: inline-block; position: relative; }
+  .stop[data-live] {
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stop[data-live]::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.02em;
+    width: max(0.34em, 44px);
+    height: max(0.34em, 44px);
+    translate: -50% 0;
+  }
+  .stop[data-held] { cursor: grabbing; }
+  /* A mouse over it: a one pixel keyline in ink boxes the dot, 8px out from the dot's own ink (a hard
+     edge and no motion; the school's manner is a rule, never a glow). The hit square above stays the hit
+     area, unpainted. The box is the dot's measured ink, not the advance (stop 5, D1; measured at 390 and
+     1440: the ink is 0.1434em square, 0.0812em in from the span's left edge and 0.5894em down from its
+     top), and the outline sits 8px outside it, which at 1440 clears the foot of the "t" by about 17px.
+     The gap between the "t" and the dot is 0.0475em, so below a font of about 235px (a viewport under
+     about 640px) the offset scales down with the type (0.034em, about 5px at 390) to stay clear of the "t". */
+  .stop[data-live]::before {
+    content: '';
+    position: absolute;
+    left: 0.0812em;
+    top: 0.5894em;
+    width: 0.1434em;
+    height: 0.1434em;
+    pointer-events: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .stop[data-live]:hover::before { outline: 1px solid var(--mark); outline-offset: min(8px, 0.034em); }
+  }
   .body { max-width: 20em; }
   .back { font-family: var(--font-display); font-weight: 700; justify-self: start; }
   @media (min-width: 640px) {

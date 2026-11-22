@@ -85,7 +85,9 @@ describe('grandmillennial chinoiserie', () => {
   });
   it('the sampler lettering is drawn, not typed', () => {
     const about = read('pages/About.astro');
-    expect(about).toContain('<mask id={`gm-abc-m-${a.id}`}>');
+    // Stage 6 w3 task 22: each letter is a button holding drawn crosses (parts/sampler.ts), never a text node
+    expect(about).toContain('<button type="button" class="ltr"');
+    expect(about).toContain('<path class="x"');
     expect(about).not.toMatch(/<text[ >]/);
   });
   it('services\' band has its own lacquer yellow token in both schemes', () => {

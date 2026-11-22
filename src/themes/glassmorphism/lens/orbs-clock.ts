@@ -35,7 +35,19 @@
  *   call (the nit: "rewrites every Home orb's translate each frame even
  *   when scrollY is unchanged"). Idle time is now a bare comparison, not a
  *   loop over every tracked orb.
+ *
+ * Stage 6 R1 (G7): Home's orbs ease away from a fine pointer (orb-repel.ts,
+ * the same math light.ts uses on every other page). The offset folds into
+ * the translate this loop already writes, and a frame in which an offset is
+ * still easing counts as a move (onMove, so the lens redraws with it); once
+ * every offset has settled the loop is idle again.
+ *
+ * Stage 6 wave 2 (T3 C4, C3): a scroll under a still cursor re-targets the
+ * push, as light.ts does on every other page (the target is relative to the
+ * orb's place in the viewport, which a scroll moves); and under
+ * prefers-contrast: more (E10, flat and still) no orb is pushed.
  */
+import { repelTarget, easeStep } from '../orb-repel';
 
 interface TrackedOrb {
   el: HTMLElement;
@@ -43,6 +55,11 @@ interface TrackedOrb {
   rate: number;
   docTop: number;
   height: number;
+  /** Document-relative x of the orb's centre (the untransformed box's left,
+      since the stylesheet centres it with translate -50%). */
+  docLeft: number;
+  ox: number;
+  oy: number;
 }
 
 function parseRate(el: HTMLElement): number {
@@ -60,7 +77,7 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
   const tracked: TrackedOrb[] = [];
   for (const g of groups) {
     for (const el of g.querySelectorAll<HTMLElement>('.orb')) {
-      tracked.push({ el, group: g, rate: parseRate(el), docTop: 0, height: 0 });
+      tracked.push({ el, group: g, rate: parseRate(el), docTop: 0, height: 0, docLeft: 0, ox: 0, oy: 0 });
     }
   }
   if (tracked.length === 0) return;
@@ -84,6 +101,7 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
       const r = o.el.getBoundingClientRect();
       o.docTop = r.top + window.scrollY;
       o.height = r.height;
+      o.docLeft = r.left + (window.scrollX || 0);
     }
     // Round 5: write every orb's clock position straight back, in the same
     // task, instead of clearing to the stylesheet's static -50% -50% until
@@ -96,12 +114,18 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
     writeAll(window.scrollY, window.innerHeight);
     lastScrollY = NaN; // rewrite the live groups on the next frame anyway
   }
-  function place(o: TrackedOrb, scrollY: number, vh: number) {
+  function scrollPx(o: TrackedOrb, scrollY: number, vh: number) {
     const elementTop = o.docTop - scrollY;
     const span = vh + o.height;
     const progress = span <= 0 ? 0 : Math.min(1, Math.max(0, (vh - elementTop) / span));
-    const px = o.rate * vh * progress;
-    o.el.style.translate = `-50% calc(-50% - ${px.toFixed(2)}px)`;
+    return o.rate * vh * progress;
+  }
+  function place(o: TrackedOrb, scrollY: number, vh: number) {
+    const px = scrollPx(o, scrollY, vh);
+    o.el.style.translate =
+      o.ox === 0 && o.oy === 0
+        ? `-50% calc(-50% - ${px.toFixed(2)}px)`
+        : `calc(-50% + ${o.ox.toFixed(2)}px) calc(-50% - ${(px - o.oy).toFixed(2)}px)`;
   }
   function writeAll(scrollY: number, vh: number) {
     for (const o of tracked) place(o, scrollY, vh);
@@ -121,6 +145,33 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
   tracked.forEach((o) => ro.observe(o.el));
   window.addEventListener('orientationchange', measure);
 
+  // The cursor, fine pointers only (orb-repel.ts); null while away.
+  const fine =
+    typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const contrast = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-contrast: more)') : null;
+  let pointer: { x: number; y: number } | null = null;
+  let easing = false;
+  const onPointer = (e: PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    pointer = contrast?.matches ? null : { x: e.clientX, y: e.clientY };
+    easing = true;
+  };
+  const onContrast = () => {
+    if (!contrast?.matches) return;
+    pointer = null;
+    easing = true;
+  };
+  contrast?.addEventListener('change', onContrast);
+  const onPointerLeave = () => {
+    pointer = null;
+    easing = true;
+  };
+  if (fine) {
+    window.addEventListener('pointermove', onPointer, { passive: true });
+    document.documentElement.addEventListener('pointerleave', onPointerLeave);
+  }
+  let lastT = 0;
+
   let lastVh = NaN;
   let lastLive = '';
   const groupList = [...groups];
@@ -137,12 +188,35 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
     // translate) likewise left them untranslated until the next scroll.
     let live = '';
     for (const g of groupList) live += g.hasAttribute('data-live') ? '1' : '0';
+    // Ease each live orb's cursor offset (fine pointers only). While any
+    // offset moves, this frame is not idle.
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const dt = lastT ? Math.min(64, now - lastT) : 16;
+    lastT = now;
+    let eased = false;
+    // A scroll moves every orb under a still cursor: take the push's target
+    // again (T3 C4), as a pointer move would.
+    if (pointer && scrollY !== lastScrollY) easing = true;
+    if (easing) {
+      for (const o of tracked) {
+        if (!o.group.hasAttribute('data-live')) continue;
+        const [tx, ty] = pointer
+          ? repelTarget(o.docLeft - (window.scrollX || 0), o.docTop - scrollY - scrollPx(o, scrollY, vh), o.height / 2, pointer.x, pointer.y)
+          : [0, 0];
+        const nx = easeStep(o.ox, tx, dt);
+        const ny = easeStep(o.oy, ty, dt);
+        if (nx !== o.ox || ny !== o.oy) eased = true;
+        o.ox = nx;
+        o.oy = ny;
+      }
+      easing = eased;
+    }
     // Idle: neither the scroll position, the viewport height nor the live
     // set changed since the last frame, so every orb's progress is identical
     // to what is already on screen. Skip the read/write pass entirely (a
     // real cost saved, not just a draw skipped) and call nothing, so the
     // lens does not redraw for a frame in which nothing actually moved.
-    if (scrollY === lastScrollY && vh === lastVh && live === lastLive) return;
+    if (!eased && scrollY === lastScrollY && vh === lastVh && live === lastLive) return;
     lastScrollY = scrollY;
     lastVh = vh;
     lastLive = live;
@@ -155,6 +229,11 @@ export function mountOrbClock(onMove?: () => void): (() => void) | void {
 
   return () => {
     cancelAnimationFrame(raf);
+    contrast?.removeEventListener('change', onContrast);
+    if (fine) {
+      window.removeEventListener('pointermove', onPointer);
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave);
+    }
     ro.disconnect();
     window.removeEventListener('orientationchange', measure);
     for (const g of groups) g.removeAttribute('data-clock');

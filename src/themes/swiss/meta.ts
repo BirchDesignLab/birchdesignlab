@@ -17,8 +17,17 @@ export const meta: ThemeMeta = {
      (white --on-red on --red-field, never remapped in dark), the black sheet
      (paper type on --black, the lab band in light) and the ink block
      (--field on --mark). Buttons inside red are black fields with white
+     type. In dark the lab band is a white field (--white-field) with black
+     type, --grey-on-white for secondary type and a black button with white
      type. The last rows are the focus rings (3px, 3:1) on paper, on the
-     black sheet and on red. */
+     black sheet, on red and on the white field.
+     The lab band's photograph (Stage 6, P4) adds no ink or surface: its marks
+     are black on a white band (--white-field) and each line of type over it
+     carries the sheet's own ground (--black, or --white-field in dark), so the
+     pairs above are the ones that hold. Stage 6 wave 2 adds hairlines only (the
+     band's foot, in --mark-muted on the sheet; the trunk band's foot, --black
+     on the red field) and puts the phone pull on the sheet's own ground with
+     no label: lines, not type, and the sheet's type pairs above. */
   contrast: [
     { fg: '--on-red', bg: ['--red-field'], min: 4.5, note: 'white type on the red field' },
     { fg: '--on-red', bg: ['--black'], min: 4.5, note: 'a button inside the red field' },
@@ -28,10 +37,16 @@ export const meta: ThemeMeta = {
     { fg: '--grey-on-black', bg: ['--black'], min: 4.5, note: 'secondary type on that black sheet' },
     { fg: '--mark-muted', bg: ['--field-raised'], min: 4.5, note: 'secondary text on a form field' },
     { fg: '--ink-muted', bg: ['--mark'], min: 4.5, note: 'secondary type on the ink block' },
+    { fg: '--black', bg: ['--white-field'], min: 4.5, note: 'type on the white field (the dark lab band)' },
+    { fg: '--grey-on-white', bg: ['--white-field'], min: 4.5, note: 'secondary type on the white field' },
+    { fg: '--white-field', bg: ['--black'], min: 4.5, note: 'the black button on the white field, its label' },
     { fg: '--red-field', bg: ['--black'], min: 3, note: 'the Sent full stop (large type) on the black page' },
+    { fg: '--red-field', bg: ['--white-field'], min: 4.5, note: 'type on the red field while it is pressed (white, red type); its link press block and button too' },
+    { fg: '--paper-fixed', bg: ['--black'], min: 3, note: 'focus ring on the white sheet while it is pressed (black, paper ring)' },
     { fg: '--mark', bg: ['--field'], min: 3, note: 'focus ring on paper' },
     { fg: '--on-red', bg: ['--black'], min: 3, note: 'focus ring on the black sheet' },
     { fg: '--on-red', bg: ['--red-field'], min: 3, note: 'focus ring on the red field' },
+    { fg: '--black', bg: ['--white-field'], min: 3, note: 'focus ring on the white field' },
   ],
   order: 2,
 };

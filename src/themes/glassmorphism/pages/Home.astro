@@ -28,20 +28,11 @@ const icons = ['violet', 'cyan'];
     { hue: 'pink', x: '17%', y: '80%', mx: '8%', my: '94%', size: 'clamp(70px, 9vw, 130px)', drift: 2 },
   ]} />
   <div class="window glass thin">
-    {/* The lights are decoration; the switch is now a real control (B2, item
-        3): Clear/Tinted, holding for the whole session and reaching every
-        pane and the lens, not only this window. */}
+    {/* The lights are decoration. Stage 6 R1 (G9): the window-bar
+        Clear/Tinted switch is retired (it carried no visible word); the
+        Control Centre's Glass tile below is the one control. */}
     <div class="window-bar">
       <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
-      {/* B2 item 4: the button itself is the 44px+ hit target at every
-          width; the visible pill track (its own size, unchanged) is a
-          separate inner span so growing the tap area on phones never grows
-          the track's look. */}
-      <button type="button" class="switch" role="switch" aria-checked="false" aria-label="Tinted glass">
-        <span class="switch-track" aria-hidden="true">
-          <i class="switch-thumb"></i>
-        </span>
-      </button>
     </div>
     <h1 class="billboard"><span class="b1">{first}</span> <span class="b2">{rest.join(' ')}</span></h1>
     <p class="lead">{copy.opener.lead}</p>
@@ -50,13 +41,10 @@ const icons = ['violet', 'cyan'];
   </div>
   {/* The Control Centre (B2 fix round, item 4): a macOS/iOS-style compact
       tile cluster in place of the old long pill, four rounded-square
-      modules in one row (a 2x2 grid on phones). Clear/Tinted rides in the
-      hero window bar (its own control, above) AND repeats here as its own
-      tile, the way a real Control Centre repeats a menu-bar toggle -- the
-      tile is a plain forwarding control (cc-tint-tile.ts) that clicks the
-      real switch and mirrors its state back, so there is exactly one source
-      of truth (session-hold.ts) and one place (home-boot.ts, lens/) that
-      ever calls updateSettings for tint. Frost and time-of-day are the same
+      modules in one row (a 2x2 grid on phones). Clear/Tinted lives here
+      only (Stage 6 R1, G9: the hero window-bar duplicate is retired);
+      home-boot.ts (lens/) wires the tile's switch to the session-held
+      setting, the one place that calls updateSettings for tint. Frost and time-of-day are the same
       live controls B2 already had, just re-homed into tiles; their class
       names (.cc-frost, .cc-seg) are unchanged, so home-boot.ts's existing
       queries keep working untouched (that file is lens/ territory, off
@@ -89,7 +77,7 @@ const icons = ['violet', 'cyan'];
           exact class name on this second control would make every such
           selector match two elements and throw under Playwright's
           strict-mode click. cc-switch gets the identical CSS (theme.css's
-          :is(.switch, .cc-switch) rules) without that collision. */}
+          .cc-switch rules) without that collision. */}
       <button type="button" class="cc-switch cc-tint-switch" role="switch" aria-checked="false" aria-label="Tinted glass">
         <span class="switch-track" aria-hidden="true">
           <i class="switch-thumb"></i>
@@ -117,7 +105,7 @@ const icons = ['violet', 'cyan'];
   </div>
   {/* The lens's poster (plain CSS, no script dependency): visible until the
       real lens's first WebGL frame, again on context loss, and permanently
-      when WebGL is unavailable, with reduced transparency, or in the
+      when WebGL is unavailable, with more contrast, or in the
       portal's drawn-ahead copy (which strips every script, so lens.ts never
       runs there at all). .lens-host is where lens.ts appends the canvas, the
       hit control and the shadows once it mounts; empty and inert without
@@ -167,7 +155,7 @@ const icons = ['violet', 'cyan'];
         <p class="pull">{copy.lab.pull}</p>
         <a class="btn" href={hrefFor('lab', theme)} data-astro-reload>{copy.lab.more} <span class="arw" aria-hidden="true">&rarr;</span></a>
       </div>
-      <ul class="cells" role="list" data-parity-skip>
+      <ul class="cells plate" role="list" data-parity-skip>
         {featured.map(({ entry, link }) => (
           <li class="cell">
             <a class="designation" href={link.href} data-astro-reload={link.leaves ? '' : undefined} aria-label={`${entry.data.designation}, ${entry.data.title}`}>{entry.data.designation}</a>
@@ -196,10 +184,8 @@ const icons = ['violet', 'cyan'];
 <script>
   import { onMount } from '../../../lib/lifecycle';
   import { mountHomeGlass } from '../lens/home-boot';
-  import { mountCcTintTile } from '../cc-tint-tile';
 
   onMount(mountHomeGlass);
-  onMount(mountCcTintTile);
 </script>
 
 <style>
@@ -239,7 +225,10 @@ const icons = ['violet', 'cyan'];
     padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 5vw, 4.25rem) clamp(2rem, 5vw, 4rem);
     border-radius: 40px;
   }
-  .window-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(1.5rem, 4vw, 2.75rem); }
+  /* Stage 6 R1 (G9): the bar keeps the retired switch's height (34px, 28px
+     on phones), so the window, the stage and every orb and lens spot placed
+     against them stay where they were. */
+  .window-bar { display: flex; align-items: center; justify-content: space-between; min-height: 34px; margin-bottom: clamp(1.5rem, 4vw, 2.75rem); }
   .lights { display: flex; gap: 8px; }
   .lights i {
     width: 13px; height: 13px; border-radius: 50%;
@@ -247,15 +236,12 @@ const icons = ['violet', 'cyan'];
   }
   .lights i:nth-child(2) { background: #febc2e; }
   .lights i:nth-child(3) { background: #28c840; }
-  /* The switch now rides in the window bar, glass on glass at one depth
-     instead of floating loose over the corner. B2 item 4: the button
-     (.switch) is the real hit target and stays unsized here (it takes the
-     track's own size by default); .switch-track carries the track's look,
-     so a phone-width min-height on the button alone cannot stretch it.
-     .cc-switch (the Control Centre's own Clear/Tinted tile, cc-tint-tile.ts)
-     shares this and every other .switch rule below by class list, never by
-     class name reuse -- see the tile's own markup comment for why. */
-  :is(.switch, .cc-switch) {
+  /* The Clear/Tinted switch (the Control Centre's Glass tile; the old
+     window-bar .switch is retired, Stage 6 R1 G9). B2 item 4: the button is
+     the real hit target and stays unsized here (it takes the track's own
+     size by default); .switch-track carries the track's look, so a
+     phone-width min-height on the button alone cannot stretch it. */
+  .cc-switch {
     display: flex; align-items: center; justify-content: center;
   }
   .switch-track {
@@ -265,10 +251,10 @@ const icons = ['violet', 'cyan'];
     background: var(--well);
     box-shadow: inset 0 1px 2px rgb(20 10 60 / 0.1);
   }
-  :is(.switch, .cc-switch) i {
+  .cc-switch i {
     /* B2: no longer margin-left: auto (a fixed right anchor). The thumb now
        rests at the track's left end by default and theme.css's
-       .switch[aria-checked='true'] rule slides it to the right, so Clear and
+       .cc-switch[aria-checked='true'] rule slides it to the right, so Clear and
        Tinted read as two different, opposite positions instead of both
        looking like the same right-parked dot. */
     display: block; width: 26px; height: 26px;
@@ -384,10 +370,11 @@ const icons = ['violet', 'cyan'];
       linear-gradient(135deg, rgb(255 255 255 / 0.05), transparent 45%, transparent 60%, rgb(20 10 40 / 0.05)),
       rgb(255 255 255 / 0.22);
   }
-  /* E10 (reduced transparency or more contrast): the canvas is off and the
-     poster stands in for good, so it keeps round 4's frosted disc there,
-     which reads without a see-through backdrop. */
-  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  /* E10 (more contrast): the canvas is off and the poster stands in for
+     good, so it keeps round 4's frosted disc there, which reads without a
+     see-through backdrop. Stage 6, stop 1 call 1 (a): reduced transparency
+     no longer triggers this; the Portal ignores it for glass. */
+  @media (prefers-contrast: more) {
     .lens-poster,
     :global(html[data-glass-tint='tinted']) .lens-poster,
     :global(html[data-scheme='dark'][data-glass-tint='tinted']) .lens-poster {
@@ -399,7 +386,7 @@ const icons = ['violet', 'cyan'];
     .lens-poster::before { content: none; }
     @supports (-webkit-backdrop-filter: none) {
       .lens-poster,
-      :global(html[data-glass-tint='tinted']) .lens-poster { -webkit-backdrop-filter: blur(20px) saturate(2.1) brightness(1.12); }
+      :global(html[data-glass-tint='tinted']) .lens-poster { -webkit-backdrop-filter: blur(10px) saturate(1.2); }
     }
   }
   /* 64 + 11.4 = the smaller lens's wall stop; 162 = the header's bottom
@@ -495,11 +482,12 @@ const icons = ['violet', 'cyan'];
     text-wrap: balance;
   }
   /* E7: no glass on glass. A hairline-divided list, not a second translucent
-     well fill nested inside the lab panel's own blur. */
+     well fill nested inside the lab panel's own blur. Stage 6 wave 2 (G2):
+     the list is one text block, so it carries the one soft plate (theme.css,
+     .plate) where each designation and summary used to carry its own. */
   .cells {
     list-style: none; padding: 0;
     border-radius: var(--r-lg);
-    background: transparent;
     border: 1px solid var(--line);
     overflow: hidden;
   }
@@ -519,10 +507,17 @@ const icons = ['violet', 'cyan'];
   }
   /* The designation links to its entry: a clean underline on hover and on
      focus, the theme's ring rounded to match the soft glass corners. */
-  .designation:hover, .designation:focus-visible {
+  .designation:focus-visible {
     text-decoration: underline;
     text-decoration-thickness: 1.5px;
     text-underline-offset: 0.25em;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .designation:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 0.25em;
+    }
   }
   .summary { font-size: 0.975rem; line-height: 1.5; }
 
@@ -561,8 +556,19 @@ const icons = ['violet', 'cyan'];
      290px down, centred in min(86vh, 860px)), so the stage's own slack under
      the window already keeps the Control Centre clear of the corner lens's
      visible lower half; round 4's 5rem margin rule is gone. */
+  /* Stage 6 R1 (G10): portrait tablets (721 to 943px) span the Control
+     Centre across the row under the window, 1 x 4 as on desktop, in place
+     of round 3's 2 x 2 stranded at the left with the time segments stacked.
+     Each tile is a quarter of the window's width (about 180px at 820), so
+     the three time segments sit in one row again. */
   @media (min-width: 721px) and (max-width: 943px) {
-    .cc-seg-row { flex-direction: column; border-radius: 24px; }
+    .control-centre {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: min(100%, 880px);
+      justify-self: center;
+      margin-inline-start: 0;
+    }
     .cc-locale-value { white-space: normal; max-width: 8.5em; text-align: center; }
   }
   @media (max-width: 720px) {
@@ -586,18 +592,16 @@ const icons = ['violet', 'cyan'];
     .cc-seg-row { padding: 3px; gap: 1px; }
     .cc-locale-value { white-space: normal; text-align: center; }
     .window { border-radius: 30px; }
-    /* B2 item 4: the button (.switch) grows to the 44px minimum; the track
+    /* B2 item 4: the button (.cc-switch) grows to the 44px minimum; the track
        stays its own compact 48x28, centred inside the larger real hit
        area, so the visible pill does not also grow. */
-    :is(.switch, .cc-switch) { min-width: 44px; min-height: 44px; }
-    /* Round 5 (R2): the window-bar switch's 44px target overhangs the bar by
-       8px above and below (into the window's padding and the bar's own
-       bottom margin, both empty) instead of growing the bar past the 28px
-       track. So the phone window is B1's height again (it had grown 16px),
-       and the hero orbs, placed in % of the stage, sit at B1's spots. */
-    .window-bar .switch { margin-block: -8px; }
+    .cc-switch { min-width: 44px; min-height: 44px; }
+    /* Round 5 (R2): the phone window bar is the 28px track's height (the
+       retired switch's 44px target used to overhang it), so the phone window
+       is B1's height and the hero orbs sit at B1's spots. */
+    .window-bar { min-height: 28px; }
     .switch-track { width: 48px; height: 28px; }
-    :is(.switch, .cc-switch) i { width: 20px; height: 20px; }
+    .cc-switch i { width: 20px; height: 20px; }
     .ask { justify-items: center; text-align: center; }
     /* B2 fix round, item 4: "a 2 by 2 grid on phones" (founder). theme.css's
        .control-centre is a 4-column grid by default; only the column count

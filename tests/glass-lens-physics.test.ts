@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   FEEL,
   Lag2,
@@ -19,8 +20,13 @@ import {
   chooseStart,
   cornerStart,
   circleIntersections,
+  nearestOpenSpot,
+  leastCoveredNearest,
+  glideIntoCover,
   type RectLike,
   type Bounds,
+  isTap,
+  TAP_SLOP_PX,
 } from '../src/themes/glassmorphism/lens/physics';
 
 describe('Lag2', () => {
@@ -387,5 +393,107 @@ describe('cornerStart (round 5, R1 and R3)', () => {
     const a = cornerStart(win, 64, bounds, [cc], [peach, pink]);
     const b = cornerStart(win, 64, bounds, [cc], [pink, peach]);
     expect(a).toEqual(b);
+  });
+});
+
+describe('nearestOpenSpot (Stage 6, diagnosis B)', () => {
+  const bounds: Bounds = [0, 0, 1000, 800];
+  const pane: RectLike = { left: 200, top: 100, right: 700, bottom: 600, radius: 24 };
+  it('moves a disc resting deep under a pane to the nearest spot with at most 20% cover', () => {
+    const got = nearestOpenSpot(bounds, 60, [650, 350], [pane], 0.2);
+    expect(got).not.toBeNull();
+    expect(got!.cover).toBeLessThanOrEqual(0.2);
+    expect(discCoverage(got!.x, got!.y, 60, [pane])).toBeLessThanOrEqual(0.2);
+    // Nearest: out past the pane's right edge, not across to the left side.
+    expect(got!.x).toBeGreaterThan(700);
+    expect(Math.abs(got!.y - 350)).toBeLessThan(30);
+  });
+  it('stays on the search grid inside the travel box', () => {
+    const b: Bounds = [100, 100, 900, 700];
+    const got = nearestOpenSpot(b, 60, [450, 350], [pane], 0.2)!;
+    expect(got.x).toBeGreaterThanOrEqual(100);
+    expect(got.x).toBeLessThanOrEqual(900);
+    expect(got.y).toBeGreaterThanOrEqual(100);
+    expect(got.y).toBeLessThanOrEqual(700);
+  });
+  it('returns a point near the start when the start already qualifies', () => {
+    const got = nearestOpenSpot(bounds, 60, [880, 700], [pane], 0.2)!;
+    expect(Math.hypot(got.x - 880, got.y - 700)).toBeLessThan(25);
+    expect(got.cover).toBe(0);
+  });
+  it('honours maxCover: 0 demands a fully clear disc', () => {
+    const got = nearestOpenSpot(bounds, 60, [700, 350], [pane], 0)!;
+    expect(got.cover).toBe(0);
+    expect(circleRectGap(got.x, got.y, 60, pane)).toBeGreaterThanOrEqual(0);
+  });
+  it('returns null when every point is covered past maxCover', () => {
+    expect(nearestOpenSpot(bounds, 60, [500, 400], [{ left: -100, top: -100, right: 1100, bottom: 900 }], 0.2)).toBeNull();
+  });
+});
+
+describe('leastCoveredNearest (Stage 6 wave 2, G1)', () => {
+  // A window spanning the whole travel box but for two shallow notches at
+  // its top corners, like the hero window at about 1088 px: no spot is 20%
+  // open, and the two corners tie on cover.
+  const bounds: Bounds = [100, 100, 900, 600];
+  const win: RectLike = { left: 40, top: 130, right: 960, bottom: 700, radius: 0 };
+  it('picks the nearest of the least covered spots, not the first found', () => {
+    const right = leastCoveredNearest(bounds, 80, [820, 420], [win]);
+    expect(right.x).toBeGreaterThan(700);
+    expect(right.y).toBeLessThan(200);
+    const left = leastCoveredNearest(bounds, 80, [180, 420], [win]);
+    expect(left.x).toBeLessThan(300);
+    expect(left.y).toBeLessThan(200);
+  });
+  it('stays within the slack of the least cover found', () => {
+    const got = leastCoveredNearest(bounds, 80, [500, 590], [win], 0.05);
+    let least = Infinity;
+    for (let x = 100; x <= 900; x += 800 / 36) least = Math.min(least, discCoverage(x, 100, 80, [win]));
+    expect(got.cover).toBeLessThanOrEqual(least + 0.05 + 1e-9);
+  });
+  it('with slack 0, returns a clear spot when one exists', () => {
+    expect(leastCoveredNearest([0, 0, 1000, 800], 60, [500, 400], [{ left: 200, top: 100, right: 700, bottom: 600 }], 0).cover).toBe(0);
+  });
+});
+
+describe('glideIntoCover (Stage 6 wave 2, G1)', () => {
+  it('stops a step that carries the disc deeper than the limit', () => {
+    expect(glideIntoCover(0.1, 0.25)).toBe(true);
+    expect(glideIntoCover(0.3, 0.35)).toBe(true);
+  });
+  it('stops a disc gliding on fully hidden, or level under a pane', () => {
+    expect(glideIntoCover(1, 1)).toBe(true);
+    expect(glideIntoCover(0.5, 0.5)).toBe(true);
+  });
+  it('lets a step stay open or come out from under', () => {
+    expect(glideIntoCover(0, 0.15)).toBe(false);
+    expect(glideIntoCover(0.2, 0.2)).toBe(false);
+    expect(glideIntoCover(0.6, 0.4)).toBe(false);
+  });
+});
+
+describe('isTap (Stage 6 w3 task 18, T9 C3)', () => {
+  it('a few px of finger jitter is a tap, a real move is not', () => {
+    expect(TAP_SLOP_PX).toBe(6);
+    expect(isTap(246, 573, 249, 573)).toBe(true);
+    expect(isTap(246, 573, 246, 570)).toBe(true);
+    expect(isTap(0, 0, 4, 4)).toBe(true); // 5.66px
+    expect(isTap(0, 0, 6, 0)).toBe(true);
+    expect(isTap(0, 0, 5, 5)).toBe(false); // 7.07px
+    expect(isTap(0, 0, 30, 0)).toBe(false);
+  });
+  it('a flick out and back through the start is a throw: the farthest point of the hold counts (w4 task 28, 18/C2)', () => {
+    // Ends 2px from the press, but travelled 40px away on the way: not a tap.
+    expect(isTap(100, 100, 102, 100, 40)).toBe(false);
+    expect(isTap(100, 100, 102, 100, 6)).toBe(true);
+    expect(isTap(100, 100, 102, 100, 6.5)).toBe(false);
+    // Omitted, it is the old release-point test.
+    expect(isTap(100, 100, 102, 100)).toBe(true);
+  });
+  it('the lens tracks the farthest distance on every move and resets it on a press', () => {
+    const lens = readFileSync('src/themes/glassmorphism/lens/lens.ts', 'utf8').replace(/\r\n/g, '\n');
+    expect(lens).toMatch(/s\.far = 0;/);
+    expect(lens).toMatch(/s\.far = Math\.max\(s\.far, Math\.hypot\(x - s\.press\[0\], y - s\.press\[1\]\)\);/);
+    expect(lens).toMatch(/isTap\(s\.press\[0\], s\.press\[1\], s\.x, s\.y, s\.far\)/);
   });
 });

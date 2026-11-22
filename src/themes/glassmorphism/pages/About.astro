@@ -22,7 +22,9 @@ const { copy, theme } = Astro.props;
     <h1>{copy.heading}</h1>
   </div>
   <div class="reading glass">
-    {copy.etymology.map((para) => <p set:html={rich(para)} />)}
+    <div class="reading-body plate">
+      {copy.etymology.map((para) => <p set:html={rich(para)} />)}
+    </div>
   </div>
 </section>
 
@@ -33,7 +35,7 @@ const { copy, theme } = Astro.props;
   ]} />
   <article class="founder-card glass">
     <h2>{copy.founder.heading}</h2>
-    <div class="founder-body">
+    <div class="founder-body plate">
       {copy.founder.body.map((para, i) => <p class={i === 0 ? 'first' : undefined}>{para}</p>)}
     </div>
   </article>
@@ -44,8 +46,16 @@ const { copy, theme } = Astro.props;
     behind the words themselves. */}
 <section class="promise wrap">
   <Orbs orbs={[
-    { hue: 'violet', x: '78%', y: '30%', mx: '88%', my: '10%', size: 'clamp(220px, 28vw, 400px)', drift: 3 },
-    { hue: 'peach', x: '18%', y: '80%', mx: '10%', my: '90%', size: 'clamp(200px, 26vw, 360px)', drift: 1 },
+    /* Stage 6 R1 fix round 1 (film palette-hue-light): the coral orb sat
+       low-left, where the manifesto enters over the wallpaper's fixed deep
+       blue corner, and blurred coral into blue is mauve (9% of the pane's
+       pixels at 1440, scroll 900, against 0% behind it). The blue orb takes
+       the low-left place instead (blue blurred into the warm bands goes
+       neutral, not violet: 3%), set a little lower so at the end of the
+       page it sits mostly below the pane; coral moves to the upper right,
+       where the pane meets it over the warm bands. */
+    { hue: 'peach', x: '78%', y: '30%', mx: '88%', my: '10%', size: 'clamp(220px, 28vw, 400px)', drift: 3 },
+    { hue: 'violet', x: '18%', y: '88%', mx: '10%', my: '90%', size: 'clamp(200px, 26vw, 360px)', drift: 1 },
     { hue: 'cyan', x: '50%', y: '54%', mx: '60%', my: '60%', size: 'clamp(120px, 15vw, 220px)', drift: 2 },
   ]} />
   <div class="promise-inner">
@@ -90,6 +100,9 @@ const { copy, theme } = Astro.props;
     padding: clamp(1.5rem, 4vw, 3rem);
   }
   .reading p { font-size: 1.125rem; line-height: 1.7; color: var(--mark); }
+  /* One plate behind the paragraphs (Stage 6 wave 2, G2), at the pane's
+     own 1.1rem rhythm. */
+  .reading-body { display: grid; gap: 1.1rem; }
   /* E9: "Birch", "beorc" and "bright" keep their emphasis through weight
      and italic, not hue: colour stays off body text. */
   .reading :global(em) { font-style: italic; font-weight: 650; }
@@ -150,6 +163,13 @@ const { copy, theme } = Astro.props;
     border-radius: var(--r-lg);
   }
 
+  /* Stage 6 R1 (G11): from 721 to 1279px the reading pane's overlap
+     reached the title's descenders (the h1's 0.92 line height leaves them
+     outside its line box). The title card's bottom padding grows by the
+     overlap there, so the pane rides up only into padding again. */
+  @media (min-width: 721px) and (max-width: 1279px) {
+    .title-card { padding-bottom: calc(clamp(1.5rem, 4vw, 3rem) + clamp(2rem, 3.6vw, 3rem)); }
+  }
   @media (max-width: 860px) {
     .intro { grid-template-columns: 1fr; }
     .title-card, .reading { grid-column: 1; }

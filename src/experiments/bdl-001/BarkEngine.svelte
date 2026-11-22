@@ -172,6 +172,8 @@
     cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm);
     transition: all var(--dur-1) var(--ease-weighted);
   }
-  button:hover { background: var(--accent); color: var(--field); }
+  @media (hover: hover) and (pointer: fine) {
+    button:hover { background: var(--accent); color: var(--field); }
+  }
   .note { font-size: var(--text-sm); color: var(--mark-muted); }
 </style>

@@ -5,35 +5,95 @@
     from directly above instead of a horizon glow, a potted palm and a
     marble column stand-in (the Tier A render; B2 moves the pipeline into
     src/ and swaps in the Venus). Decoration only, fills its positioned
-    parent. */
+    parent.
+
+    `variant` (Stage 6 wave 2, V12): the same tile floor, two rooms. 'plaza'
+    (default, Home's closer) keeps the palm, the column and the skylight.
+    'mall' (Services' closer) is its own room: a fountain basin, a Venus on
+    her drum and an escalator rail, lit by pools on the floor instead of an
+    overhead skylight. Stills and drawing only, no words.
+
+    Stage 6 wave 3, task 19 (stop 3 answer 2): the mall's Venus is a second
+    cast, not Home's kiosk figure again: the same scan in pink marble, turned
+    the other way, on a white drum (venus-drum-512, from
+    scripts/themes/vaporwave/render-venus.mjs --drum). */
 import Palm from './Palm.astro';
 import Still from './Still.astro';
 import columnAvif from '../stills/column-pink-512.avif?url';
 import columnWebp from '../stills/column-pink-512.webp?url';
+import venusAvif from '../stills/venus-drum-512.avif?url';
+import venusWebp from '../stills/venus-drum-512.webp?url';
 
-interface Props { class?: string }
-const { class: className } = Astro.props;
+interface Props { class?: string; variant?: 'plaza' | 'mall' }
+const { class: className, variant = 'plaza' } = Astro.props;
 ---
-<div class:list={['vw-lobby', className]} aria-hidden="true">
-  <div class="lobby-sky"></div>
+<div class:list={['vw-lobby', `lobby-${variant}`, className]} aria-hidden="true">
+  {variant === 'plaza' && <div class="lobby-sky"></div>}
   <div class="lobby-floor">
     <div class="tile"></div>
     <div class="sheen"></div>
   </div>
-  <div class="lobby-planter">
-    <Palm class="lobby-palm" />
-    <div class="lobby-pot"></div>
-  </div>
-  <Still class="lobby-column" avif={columnAvif} webp={columnWebp} size={512} />
+  {variant === 'plaza' && (
+    <>
+      <div class="lobby-planter">
+        <Palm class="lobby-palm" />
+        <div class="lobby-pot"></div>
+      </div>
+      <Still class="lobby-column" avif={columnAvif} webp={columnWebp} size={512} />
+    </>
+  )}
+  {variant === 'mall' && (
+    <>
+      <div class="mall-pool mall-pool-a"></div>
+      <div class="mall-pool mall-pool-b"></div>
+      <svg class="mall-rail" viewBox="0 0 320 170" preserveAspectRatio="xMinYMax meet" focusable="false">
+        <path class="rail-truss" d="M0 150 L34 150 L270 92 L320 92 L320 170 L0 170 Z" />
+        <path class="rail-glass" d="M34 98 L270 22 L270 92 L34 150 Z" />
+        <g class="rail-posts">
+          <path d="M34 98V150M93 79V135M152 60V121M211 41V106M270 22V92" />
+        </g>
+        <g class="rail-treads">
+          <path d="M34 150L270 92M34 158L270 100M0 150H34M270 92H320" />
+        </g>
+        <path class="rail-hand" d="M0 98 H34 L270 22 H320" />
+        <path class="rail-hand-hi" d="M0 95.5 H34 L270 19.5 H320" />
+      </svg>
+      <div class="mall-fountain">
+        <div class="fn-jets">
+          <span class="fn-jet fn-jet-c"></span>
+          <span class="fn-jet fn-jet-l"></span>
+          <span class="fn-jet fn-jet-r"></span>
+        </div>
+        <div class="fn-bowl"></div>
+        <div class="fn-basin"><div class="fn-water"></div></div>
+        <span class="fn-stem"></span>
+      </div>
+      <Still class="lobby-venus" avif={venusAvif} webp={venusWebp} size={512} />
+    </>
+  )}
 </div>
 
 <style>
-  .vw-lobby { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .vw-lobby {
+    --lobby-glow: color-mix(in srgb, var(--bb-plain) 22%, transparent);
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  }
+  /* V4: in light the skylight is light, mixed from white and the sun's own
+     highlight. It used to mix near-black --bb-plain at 22%, which painted a
+     dark mauve smudge across the pastel floor. */
+  :global([data-scheme='light']) .vw-lobby {
+    --lobby-glow: color-mix(in srgb, color-mix(in srgb, #ffffff 65%, var(--hz-sun-a)) 78%, transparent);
+  }
 
-  /* A skylight glow from directly overhead, not a sunset's horizon glow. */
+  /* A skylight glow from directly overhead, not a sunset's horizon glow.
+     V4: the ellipse is centred above the top edge (-10%) and the top 12% of
+     the layer is masked away, so the glow comes in from nowhere instead of
+     starting on a hard line where the closer's band begins, in both schemes. */
   .lobby-sky {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 55% at 50% 0%, color-mix(in srgb, var(--bb-plain) 22%, transparent), transparent 72%);
+    background: radial-gradient(ellipse 60% 70% at 50% -10%, var(--lobby-glow), transparent 72%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 12%);
   }
 
   /* Flattened atrium tile: a higher camera (a shallower rotateX, a longer
@@ -97,8 +157,111 @@ const { class: className } = Astro.props;
     filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.25));
   }
 
+  /* ---------- the mall (V12): Services' own room ---------- */
+
+  /* Light on the floor instead of a skylight: two soft pools, one under the
+     fountain and one under the Venus, from the same warm-white mix as the
+     plaza's glow. */
+  .mall-pool {
+    position: absolute; bottom: 2%; height: 34%; border-radius: 50%;
+    background: radial-gradient(ellipse, var(--lobby-glow), transparent 70%);
+    opacity: 0.9;
+  }
+  .mall-pool-a { left: 28%; width: 36%; }
+  .mall-pool-b { right: 2%; width: 28%; }
+
+  /* An escalator seen side-on: a glass balustrade under a chrome handrail
+     that bends flat at both landings, treads under it, a dark truss below. */
+  .mall-rail {
+    position: absolute; left: 0; bottom: 5%; width: clamp(180px, 25vw, 330px); height: auto;
+    overflow: visible;
+  }
+  .rail-truss { fill: var(--crt-case-b); stroke: var(--bevel-hi); stroke-width: 1.5; }
+  .rail-glass {
+    fill: color-mix(in srgb, var(--neon-cyan) 20%, transparent);
+    stroke: color-mix(in srgb, var(--neon-cyan) 70%, transparent); stroke-width: 1.5;
+  }
+  .rail-posts path { stroke: color-mix(in srgb, var(--neon-cyan) 55%, transparent); stroke-width: 1.5; fill: none; }
+  .rail-treads path { stroke: var(--neon-lav); stroke-width: 2; fill: none; stroke-dasharray: 5 4; }
+  .rail-hand { stroke: var(--neon-pink); stroke-width: 7; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .rail-hand-hi { stroke: #ffffff; stroke-opacity: 0.8; stroke-width: 1.8; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+
+  /* A fountain basin: a marble ring seen from above, water in it, a stem
+     and a bowl, three arcs of spray. */
+  .mall-fountain {
+    position: absolute; left: 36%; bottom: 7%;
+    width: clamp(140px, 22vw, 280px); aspect-ratio: 1 / 0.8;
+  }
+  .fn-basin {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff, var(--marble));
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    box-shadow: 0 9px 0 var(--marble-vein), 0 18px 14px -6px rgba(0, 0, 0, 0.35);
+  }
+  .fn-water {
+    position: absolute; inset: 14% 7%; border-radius: 50%;
+    background:
+      radial-gradient(ellipse 30% 36% at 50% 46%, rgba(255, 255, 255, 0.85), transparent 70%),
+      repeating-radial-gradient(ellipse at 50% 46%, transparent 0 7px, rgba(255, 255, 255, 0.45) 7px 8.5px),
+      linear-gradient(180deg, color-mix(in srgb, var(--neon-cyan) 75%, #ffffff), color-mix(in srgb, var(--neon-lav) 65%, #ffffff));
+    box-shadow: inset 0 3px 0 rgba(20, 8, 50, 0.25);
+  }
+  .fn-bowl {
+    position: absolute; left: 41%; width: 18%; bottom: 31%; height: 20%;
+    background: linear-gradient(180deg, #ffffff, var(--marble));
+    border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    z-index: 1;
+  }
+  /* C4 (Stage 6 wave 3, task 19): the stem. The bowl sat 10 to 15px above the
+     basin's water with nothing under it, so it read as floating. A marble
+     column rises from the middle of the basin (about 21% up the box) to the
+     bowl's underside, with a small collar at its foot. Shares of the box, so
+     it scales with it. */
+  .fn-stem {
+    position: absolute; left: 46.5%; width: 7%; bottom: 21%; height: 13%; z-index: 0;
+    background: linear-gradient(90deg, var(--marble), #ffffff 42%, var(--marble));
+    border-inline: 1.5px solid var(--bevel-lo);
+  }
+  .fn-stem::after {
+    content: ''; position: absolute; left: -45%; right: -45%; bottom: -2px; height: 28%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff, var(--marble));
+    border: 1.5px solid var(--bevel-lo);
+  }
+  /* C4: the jets are shares of the fountain box (its height 36% and 28%, its
+     width 3% and 2.4%), not 96px and 72px: at 820 the box is 144px tall, so
+     the old centre jet (96px) rose past the floor's horizon line; 36% of it
+     (58px) stays under. The box is the jets' containing block (inset: 0);
+     each jet leaves from the bowl's lip, 46% up. */
+  .fn-jets { position: absolute; inset: 0; z-index: 0; }
+  .fn-jet {
+    position: absolute; bottom: 46%; left: 50%; translate: -50% 0;
+    background: linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 80%, #ffffff), rgba(255, 255, 255, 0.9) 70%, transparent);
+    border-radius: 999px 999px 0 0;
+    transform-origin: 50% 100%;
+  }
+  .fn-jet-c { height: 36%; width: 3%; }
+  .fn-jet-l { height: 28%; width: 2.4%; rotate: -24deg; }
+  .fn-jet-r { height: 28%; width: 2.4%; rotate: 24deg; }
+  .lobby-mall :global(.lobby-venus) {
+    position: absolute; right: 9%; bottom: 3%; width: clamp(130px, 21vw, 270px); height: auto;
+    transform: translateY(10.9%);
+    z-index: 1;
+  }
+
+  /* V3: the phone lobby keeps its planter (about 64px, left) and its column
+     (right), instead of dropping the planter and centring a lone column. */
   @media (max-width: 620px) {
-    .lobby-planter { display: none; }
-    :global(.vw-lobby .lobby-column) { right: 50%; translate: 50% 0; width: clamp(90px, 26vw, 130px); }
+    .lobby-planter { width: 64px; }
+    :global(.vw-lobby .lobby-column) { width: clamp(90px, 26vw, 130px); }
+    /* C4: the phone mall keeps a smaller escalator rail at the left
+       (clamp(110px, 30vw, 150px)), the fountain toward the centre. */
+    .mall-rail { width: clamp(110px, 30vw, 150px); }
+    .mall-fountain { left: 31%; width: clamp(120px, 40vw, 170px); }
+    .mall-pool-a { left: 18%; width: 56%; }
+    .mall-pool-b { width: 44%; }
+    .lobby-mall :global(.lobby-venus) { right: 7%; width: clamp(110px, 32vw, 150px); }
   }
 </style>

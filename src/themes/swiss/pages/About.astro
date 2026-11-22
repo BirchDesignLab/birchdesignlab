@@ -2,15 +2,23 @@
 /** Swiss about: the name's meaning set beside the title at poster scale, the
     founder as a lead and two columns of text with the page's own capital
     turned up the frame edge, the manifesto in the red field that holds the
-    Shining Tree. */
-import { Image } from 'astro:assets';
+    birch-trunk photograph, its type hung at the field's foot. */
 import { rich, type CopyData } from '../../../lib/copy';
 import { hrefFor } from '../../paths';
-/* The field's one image, and the only place it is named. To use another logo
-   or photograph, swap this file (or this import) and set --fld-ratio on
-   .manifesto to the new image's height over width. It is decorative, so it
-   has no alt. Made by scripts/themes/swiss/make-field-image.mjs. */
-import fieldImage from '../../../assets/swiss-field.webp';
+/* The field's one photograph, and the only place it is named: a birch trunk
+   seen from below as a red duotone (Stage 6, P4, typophoto). The files hold
+   paper-coloured pixels whose alpha is the tone, so over the field's red the
+   mix is the duotone and the red is never an image's to get wrong. To use
+   another photograph, rerun scripts/themes/stage6/w1-t6-photos.mjs on it and
+   set --fld-ratio on .manifesto to the new image's height over width. It is
+   decorative, so it has no alt. Sources and the processing applied:
+   src/assets/swiss-photos-SOURCE.md. */
+import fieldAvif720 from '../../../assets/swiss-field-720.avif';
+import fieldAvif1200 from '../../../assets/swiss-field-1200.avif';
+import fieldAvif1800 from '../../../assets/swiss-field-1800.avif';
+import fieldWebp720 from '../../../assets/swiss-field-720.webp';
+import fieldWebp1200 from '../../../assets/swiss-field-1200.webp';
+import fieldWebp1800 from '../../../assets/swiss-field-1800.webp';
 
 interface Props { copy: CopyData<'about'>; chrome: CopyData<'chrome'>; theme: string }
 const { copy, theme } = Astro.props;
@@ -34,23 +42,31 @@ const [founderLead, ...founderRest] = copy.founder.body;
 
 <section class="sw-row manifesto-wrap">
   <div class="sw-red manifesto">
-    <Image
-      class="field-img"
-      src={fieldImage}
-      alt=""
-      widths={[480, 760, 1120, 1597]}
-      sizes="(min-width: 1280px) 560px, (min-width: 1024px) 400px, min(72vw, 380px)"
-      quality={82}
-      loading="lazy"
-      decoding="async"
-    />
+    <picture class="field-img" aria-hidden="true">
+      <source type="image/avif" srcset={`${fieldAvif720.src} 720w, ${fieldAvif1200.src} 1200w, ${fieldAvif1800.src} 1800w`} sizes="(min-width: 1024px) clamp(922px, 77.8vw, 1440px), (min-width: 640px) min(100vw, 820px), min(125vw, 900px)" />
+      <source type="image/webp" srcset={`${fieldWebp720.src} 720w, ${fieldWebp1200.src} 1200w, ${fieldWebp1800.src} 1800w`} sizes="(min-width: 1024px) clamp(922px, 77.8vw, 1440px), (min-width: 640px) min(100vw, 820px), min(125vw, 900px)" />
+      <img src={fieldWebp1800.src} width="1800" height="1250" alt="" loading="lazy" decoding="async" />
+    </picture>
     <p class="sw-lead manifesto-text">{copy.manifesto}</p>
     <a class="sw-btn cta" href={hrefFor('contact', theme)}>{copy.cta}</a>
   </div>
 </section>
+{/* The photograph's pressed state: the field turns white, and the trunk's
+    pixels (paper over the field, alpha the tone) turn the field's red, so the
+    duotone is the same picture in the inverse. Never seen but while pressed. */}
+<svg class="flip-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="sw-flip-red" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0 0 0 0 0.8549  0 0 0 0 0  0 0 0 0 0.0863  0 0 0 1 0" />
+  </filter>
+</svg>
 
 <script>
   import { onMount } from '../../../lib/lifecycle';
+  import { initAboutSweep } from '../toys';
+
+  /* The spine widens with the founder section's scroll and the title stack
+     narrows as it scrolls away (toys.ts, Stage 6 wave 3 task 21, P2). */
+  onMount(() => initAboutSweep());
 
   /* The rotated word runs the height of the founder section, and that height
      is set by the text, which reflows. Measure it and write it to --sw-sec-h;
@@ -77,11 +93,40 @@ const [founderLead, ...founderRest] = copy.founder.body;
   .title {
     font-size: min(28.3cqw, 16rem);
     margin-top: calc(var(--u) * 3);
+    /* Optical flush-left (S3): "The" starts on a T, whose bearing is small
+       (measured 0.018em at every size), not the stems theme.css assumes. */
+    margin-inline-start: -0.018em;
   }
+  /* The stack is set flush line by line: each line steps by the difference
+     between its own first letter's bearing and the T's the title's margin is
+     measured for (T 0.018em; measured from pixels, ink minus the column, at
+     1440, 1280, 1024 and 820: "The" 0.0068em right, "shining" 0.0211em right,
+     "tree" 0.0022em left; w2-t10-flush.mjs). The values are the measured
+     bearings of today's copy (the first letters T, s and t): a change to the
+     heading must re-run scripts/themes/stage6/w2-t10-flush.mjs and set new
+     values here. Services' title wraps by measure and is not corrected line
+     by line (see Services.astro). */
+  .title .ln:nth-child(1) { margin-inline-start: -0.0068em; }
+  .title .ln:nth-child(2) { margin-inline-start: -0.0211em; }
+  .title .ln:nth-child(3) { margin-inline-start: 0.0022em; }
+  /* The stack's width axis (the sweep under 1024, toys.ts): each line is at the
+     title's own cut, --sw-s, until the script sets --sw-d, and steps right by
+     the bearing it gives up as it narrows (0.000675em a width unit, the
+     dial's figure) so the ink stays on the column line. A translate, so
+     nothing reflows. */
+  .title .ln {
+    --sw-d: var(--sw-s);
+    font-stretch: calc(var(--sw-d) * 1%);
+    translate: calc(-1em * 0.000675 * (var(--sw-d) - var(--sw-s))) 0;
+  }
+  .flip-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
   /* Phones: the title is cut condensed to fill the measure (cqw is the hero
-     row's own width, the frame). */
+     row's own width, the frame), and the bearings are the condensed cut's. */
   @media (max-width: 639.98px) {
-    .title { font-size: calc(36.3cqw); font-stretch: 85%; }
+    .title { font-size: calc(36.3cqw); --sw-s: 85; }
+    .title .ln:nth-child(1) { margin-inline-start: -0.0025em; }
+    .title .ln:nth-child(2) { margin-inline-start: -0.0128em; }
+    .title .ln:nth-child(3) { margin-inline-start: 0.0025em; }
   }
   /* The one strong phrase in the etymology ("to shine") is bold ink. */
   .etym :global(strong) { font-weight: 700; }
@@ -163,6 +208,23 @@ const [founderLead, ...founderRest] = copy.founder.body;
   @media (min-width: 1024px) {
     .sw-birch { display: block; }
   }
+  /* The spine is a toy from 1280 (toys.ts sets data-live where the sweep is on
+     it). A mouse over it gets no cursor of its own (a resize, grab or move cursor would each promise a
+     drag; the scroll moves it) and the school's own hover, the word printed in negative: an ink block with paper
+     type, as a link is when pressed (the base pair, --field on --mark). Paint
+     only: the box and the ink do not move. The box is dropped by --sw-ty so the
+     ink sits on the section's edges, which leaves the top of the ink above the
+     box: a shadow of the box, raised by the same drop (the box is turned a half
+     turn, so +ty here is up on the page), paints that strip in the same ink.
+     The ink then reaches the section's rule, and its paper type would break the
+     hairline (the h's counter on the rule's row): the clip-path ends the
+     paint at the rule's inner edge, the box's drop back up (the half turn again
+     puts the box's bottom edge at the page's top), and leaves the rule whole.
+     Everywhere else it stays out of the pointer's way. */
+  @media (hover: hover) and (pointer: fine) {
+    .sw-birch[data-live] { pointer-events: auto; cursor: default; }
+    .sw-birch[data-live]:hover { background: var(--mark); color: var(--field); box-shadow: 0 var(--sw-ty) 0 0 var(--mark); clip-path: inset(-0.5em -0.5em calc(-1 * var(--sw-ty)) -0.5em); }
+  }
   @media (min-width: 1280px) {
     .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; --sw-tx: 0.030em; }
   }
@@ -172,14 +234,19 @@ const [founderLead, ...founderRest] = copy.founder.body;
 
   /* The manifesto: a true viewport-bleed red field. Its content keeps to the
      frame's columns (the padding gives back what the negative margin takes);
-     the tree is the field's image, an <img> so the browser can load it late.
-     Phone and tablet: the tree is a band across the top, the type on flat
-     red below it. */
+     the photograph is the field's image, a <picture> so the browser can load
+     it late. Its pixels are paper over the field's own red (see the import),
+     and the manifesto and the button hang at the field's foot at every size,
+     so the type and the image share its height. Phone and tablet: the trunk
+     is a band across the top, cut by the sheet's edges, the type on flat red
+     below it, the button last. Desktop: the trunk stands on the right and is
+     cropped by the sheet edge; the type is hung from the field's foot on the
+     left columns, clear of the trunk's base. */
   .manifesto-wrap { padding-bottom: calc(var(--u) * 4); }
   .manifesto {
     /* Height over width of the field image. */
-    --fld-ratio: 1.7244;
-    --fld-w: min(72vw, 380px);
+    --fld-ratio: 0.6944;
+    --fld-w: min(125vw, 900px);
     position: relative;
     overflow: clip;
     display: grid;
@@ -191,44 +258,67 @@ const [founderLead, ...founderRest] = copy.founder.body;
   }
   :where(.manifesto) > * { grid-column: 1 / -1; }
   .manifesto > :not(.field-img) { position: relative; z-index: 1; }
+  /* Below 1024 the trunk is a band across the head of the field and its foot
+     cuts the white trunk straight. The cut is made deliberate: a black
+     hairline the width of the field on the image's last row (Swiss: a hard
+     crop on a rule, Stage 6 wave 2, T6 C4). From 1024 the trunk stands on the
+     right and runs off the sheet's edge, so there is no foot. */
+  @media (max-width: 1023.98px) {
+    .manifesto::after {
+      content: '';
+      position: absolute;
+      z-index: 1;
+      left: 0;
+      right: 0;
+      top: calc(var(--fld-w) * var(--fld-ratio) - 1px);
+      height: 1px;
+      background: var(--black);
+      pointer-events: none;
+    }
+  }
   .manifesto :global(.field-img) {
     position: absolute;
     z-index: 0;
     grid-column: auto;
     top: 0;
-    left: calc((100% - var(--fld-w)) * 0.62);
+    left: calc((100% - var(--fld-w)) * 0.5);
     width: var(--fld-w);
-    height: auto;
     max-width: none;
     pointer-events: none;
   }
+  .manifesto :global(.field-img img) { width: 100%; height: auto; max-width: none; }
+  /* Pressed (theme.css, P6): the field is white, the trunk red (the filter in
+     the markup below sets every pixel to the field's red and keeps its alpha). */
+  .manifesto[data-sw-flip] :global(.field-img img) { filter: url(#sw-flip-red); }
   .manifesto-text { max-width: 20em; }
   @media (min-width: 640px) {
-    .manifesto :global(.field-img) { left: calc((100% - var(--fld-w)) * 0.78); }
+    .manifesto { --fld-w: min(100vw, 820px); }
+    .manifesto :global(.field-img) { left: auto; right: -6vw; }
     .cta { grid-column: 4 / -1; }
   }
   @media (min-width: 1024px) {
-    /* The tree stands on the right, cropped by the sheet edge; the manifesto
-       keeps to the left columns on flat red. The extra height is free space
-       under the stack, not stretched rows. */
+    /* The extra height is free space above the stack: the rows hang from the
+       foot (align-content: end), the image runs the field's height. */
     .manifesto {
       padding-block: calc(var(--u) * 1.5) var(--u);
       min-height: clamp(640px, 54vw, 1000px);
-      align-content: start;
+      align-content: end;
     }
     .manifesto :global(.field-img) {
-      left: auto;
-      right: 3vw;
+      top: 0;
+      bottom: 0;
+      left: 46%;
+      right: auto;
       width: auto;
       height: 100%;
     }
+    .manifesto :global(.field-img img) { width: auto; height: 100%; }
     .manifesto-text {
       grid-column: 1 / 7;
     }
     .cta { grid-column: 1 / 4; }
   }
   @media (min-width: 1280px) {
-    .manifesto :global(.field-img) { top: -2%; height: 108%; }
     .manifesto-text {
       grid-column: 1 / 8;
     }

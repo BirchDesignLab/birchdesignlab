@@ -19,7 +19,7 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   <div class="head-card glass thin">
     <p class="chip">{copy.kicker}</p>
     <h1>{copy.heading}</h1>
-    <div class="sublines">
+    <div class="sublines plate">
       {copy.sublines.map((line) => <p>{line}</p>)}
     </div>
   </div>
@@ -37,7 +37,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     <article class="offer glass">
       <span class={`app-icon ${offerHues[i % offerHues.length]}`} aria-hidden="true">{num(i)}</span>
       <h2>{offering.heading}</h2>
-      {offering.body.map((para) => <p>{para}</p>)}
+      <div class="offer-body plate">
+        {offering.body.map((para) => <p>{para}</p>)}
+      </div>
     </article>
   ))}
 </section>
@@ -137,6 +139,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
   .offer .app-icon { margin-bottom: 0.5rem; }
   .offer h2 { font-size: clamp(1.8rem, 3.4vw, 2.5rem); }
   .offer p { color: var(--mark); }
+  /* One plate behind the offer's paragraphs (Stage 6 wave 2, G2): the
+     wrapper keeps the card's own 1rem rhythm between them. */
+  .offer-body { display: grid; gap: 1rem; }
 
   .process { padding-block: clamp(3rem, 7vw, 5rem) clamp(1rem, 3vw, 2rem); }
   /* D8: weight/tracking come from the global h1,h2,h3 rule. */
@@ -155,6 +160,29 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     padding: 0;
     border-radius: var(--r-xl);
     overflow: hidden;
+  }
+  /* Stage 6 R1 (G15): the solid cream block out-shouted the thin head card,
+     so it takes a Mica-like surface instead: mostly opaque, the wallpaper
+     behind it showing through a heavy blur, so it tints toward whatever
+     band it sits over. Still no glass on glass inside it (E7). The prefixed
+     literal sits in its own @supports block (the minifier keeps one of a
+     prefixed and unprefixed twin in one rule; theme.css's note). More
+     contrast keeps the solid surface. */
+  @supports (-webkit-backdrop-filter: none) {
+    .settings-pane { -webkit-backdrop-filter: blur(40px) saturate(1.2); }
+  }
+  .settings-pane {
+    background: var(--surface-mica);
+    backdrop-filter: blur(40px) saturate(1.2);
+  }
+  @media (prefers-contrast: more) {
+    @supports (-webkit-backdrop-filter: none) {
+      .settings-pane.settings-pane { -webkit-backdrop-filter: none; }
+    }
+    .settings-pane.settings-pane {
+      background: var(--surface-solid);
+      backdrop-filter: none;
+    }
   }
   .settings-list { list-style: none; padding: 0; display: grid; }
   /* E5: the stagger (every other tile riding lower) had no visible reason
