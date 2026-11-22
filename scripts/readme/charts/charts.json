@@ -1,0 +1,191 @@
+{
+  "charts": [
+    {
+      "n": 1,
+      "name": "lab-specimens",
+      "built": true,
+      "kind": "mermaid",
+      "title": "The Lab: specimens",
+      "caption": "The Lab: specimens",
+      "alt": "How a Lab entry becomes pages. A Markdown file in src/content/lab is checked by the schema in lab-schema.ts, which feeds the Lab index and the detail page, the detail page also draws on the experiment and study registries, and a prebuild script renders its share card.",
+      "focus": [
+        "DET"
+      ],
+      "nodeStyle": "specimen",
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 30,
+        "rankSpacing": 56,
+        "padding": 14,
+        "wrap": 230,
+        "phone": {
+          "wrap": 280,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 13.5,
+          "padding": 12
+        }
+      },
+      "phone": true
+    },
+    {
+      "n": 2,
+      "name": "portal-schools",
+      "built": true,
+      "kind": "showpiece",
+      "title": "The Portal: design schools",
+      "caption": "The Portal: seven design schools",
+      "alt": "The seven design schools of the Portal side by side, each shown in its own real colors and display face with the same wordmark and the same shared sentence, above the files that make a school: shared copy and paths, the Portal runtime and switcher, one school's folder, its route and the guards.",
+      "phone": true,
+      "data": "scripts/readme/charts/data/portal.json"
+    },
+    {
+      "n": 3,
+      "name": "served",
+      "built": true,
+      "kind": "mermaid",
+      "title": "How the site is served",
+      "caption": "How the site is served",
+      "alt": "Flow diagram of how birchdesignlab.com is served. Page requests go to Cloudflare Static Assets, which serves the built site or its 404 page, while form and beacon posts go to the Worker, which checks a honeypot, a rate limit, validation and a daily cap before sending email and holds failed sends in KV for a daily cron to retry.",
+      "focus": [
+        "W"
+      ],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14.5,
+        "nodeSpacing": 14,
+        "rankSpacing": 40,
+        "padding": 12,
+        "wrap": 190,
+        "phone": {
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 15,
+          "padding": 10,
+          "wrap": 150,
+          "edgeWrap": 100
+        },
+        "edgeWrap": 150
+      },
+      "phone": true
+    },
+    {
+      "n": 4,
+      "name": "repo-map",
+      "built": true,
+      "kind": "mermaid",
+      "title": "Repository map",
+      "caption": "Repository map",
+      "alt": "Tree of the repository. The root holds src, worker, tests, scripts, docs, share, assets, social, attic, .claude and public, and src, scripts and docs each branch into their main subfolders.",
+      "focus": [
+        "ROOT"
+      ],
+      "render": {
+        "direction": "LR",
+        "fontSize": 15,
+        "headSize": 17,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 12,
+        "rankSpacing": 60,
+        "padding": 9,
+        "wrap": 165,
+        "phone": {
+          "wrap": 125,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 14.5,
+          "clusterSize": 13.5,
+          "padding": 9
+        }
+      },
+      "phone": true
+    },
+    {
+      "n": 5,
+      "name": "build-deploy",
+      "built": true,
+      "kind": "mermaid",
+      "title": "Build, verify and deploy",
+      "caption": "Build, verify and deploy",
+      "alt": "Pipeline from a feature branch to production. npm run verify runs unit tests, type checks, the build and the built output tests, a pull request then needs a green CI check before merging, and Cloudflare Workers Builds builds and deploys birchdesignlab.com.",
+      "focus": [
+        "LIVE"
+      ],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 24,
+        "rankSpacing": 40,
+        "padding": 12,
+        "wrap": 170,
+        "edgeWrap": 150,
+        "phone": {
+          "wrap": 190,
+          "fontSize": 15.5,
+          "headSize": 17.5,
+          "edgeSize": 15,
+          "clusterSize": 13.5,
+          "padding": 11,
+          "edgeWrap": 150
+        }
+      },
+      "phone": true
+    },
+    {
+      "n": 6,
+      "name": "harness",
+      "built": true,
+      "kind": "mermaid",
+      "title": "One task through bdl-task",
+      "caption": "One task through bdl-task",
+      "alt": "Flow of one workflow task. A brief goes to an implementer, a Haiku agent confirms from git which commit was built, and an Opus critic, a Sonnet verifier and a Sonnet gate review it in parallel, then each finding goes to a fixer, to us for a style or scope decision, to a log of minor issues, to a set-aside pile for us to rule on, or the task completes.",
+      "focus": [],
+      "render": {
+        "direction": "TB",
+        "fontSize": 16,
+        "headSize": 18,
+        "edgeSize": 15,
+        "clusterSize": 14,
+        "nodeSpacing": 26,
+        "rankSpacing": 42,
+        "padding": 12,
+        "wrap": 150,
+        "edgeWrap": 130,
+        "phone": {
+          "wrap": 200,
+          "fontSize": 15,
+          "headSize": 17,
+          "edgeSize": 15,
+          "clusterSize": 15.5,
+          "padding": 10,
+          "edgeWrap": 120
+        }
+      },
+      "phone": true
+    },
+    {
+      "n": 7,
+      "name": "timeline",
+      "built": true,
+      "kind": "showpiece",
+      "title": "Timeline",
+      "caption": "Timeline, July to November 2026",
+      "alt": "Timeline of Birch Design Lab as a birch trunk, from the founding on 2026-07-15 and the first pieces live on 2026-07-16, through the Portal merge on 2026-09-23, to the CI verify gate and the contact safety net on 2026-11-17.",
+      "phone": true,
+      "data": "scripts/readme/charts/data/timeline.json"
+    }
+  ]
+}

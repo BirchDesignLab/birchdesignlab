@@ -1,5 +1,5 @@
 ---
-import { ogImageFor } from '../lib/og/manifest';
+import { ogAltFor, ogImageFor } from '../lib/og/manifest';
 
 interface Props { title: string; description: string; ogImage?: string }
 const { title, description, ogImage } = Astro.props;
@@ -7,6 +7,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 // An explicit card name wins (the lab layouts pass 'lab-experiment' /
 // 'lab-study', since a /lab/<slug> pathname can't reveal the type); otherwise
 // resolve the card from the pathname.
+const ogAlt = ogAltFor(ogImage, title);
 const ogImageUrl = new URL(`/og/${ogImage ?? ogImageFor(Astro.url.pathname)}.png`, Astro.site);
 ---
 <title>{title}</title>
@@ -21,6 +22,6 @@ const ogImageUrl = new URL(`/og/${ogImage ?? ogImageFor(Astro.url.pathname)}.png
 <meta property="og:image" content={ogImageUrl} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content={title} />
+<meta property="og:image:alt" content={ogAlt} />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image:alt" content={title} />
+<meta name="twitter:image:alt" content={ogAlt} />

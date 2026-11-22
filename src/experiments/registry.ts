@@ -9,6 +9,7 @@ import BDL003 from './bdl-003/Experiment.astro';
 import BDL006 from './bdl-006/Experiment.astro';
 import BDL007 from './bdl-007/Experiment.astro';
 import BDL012 from './bdl-012/Experiment.astro';
+import BDL013 from './bdl-013/Experiment.astro';
 
 // Values are Astro component imports; typed loosely because Astro's
 // component factory type lives at an internal path that shifts between minors.
@@ -20,4 +21,5 @@ export const experimentComponents: Record<string, any> = {
   'BDL-006': BDL006,
   'BDL-007': BDL007,
   'BDL-012': BDL012,
+  'BDL-013': BDL013,
 };

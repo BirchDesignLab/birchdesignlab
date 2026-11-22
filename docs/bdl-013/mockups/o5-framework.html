@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bdlBase, our web framework</title>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('scheme');var d=q?q==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-scheme',d?'dark':'light');})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* BDL-013 round 5. Founder 11-20-26: own it. Name bdlBase, call it a
+   framework, be explicit. Five chapters, visitor-advanced, Plain / Under the
+   hood, Day / Night. Facts: docs/bdl-013/briefs/round5-strengths-audit.md. */
+:root{
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --field:#f5f1e8;--raised:#e9e1d2;--green-field:#2b4a37;--green-raised:#365a44;--on-green:#f5f1e8;
+  --mark:#1f1b15;--muted:#5a5244;--accent:#2b4a37;--accent-strong:#4a3a2c;--ok:#2f6644;--warm:#a8743f;
+  --line:color-mix(in srgb,var(--mark) 22%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 40%,transparent);
+  --code-bg:#1f1b15;--code-fg:#efe8da;--code-dim:#a89f8f;--code-key:#a3bd8f;--code-str:#d9b48a;
+}
+:root[data-scheme="dark"]{
+  --field:#1c1a17;--raised:#272319;--green-field:#22322a;--green-raised:#2d4236;--on-green:#f4f0e6;
+  --mark:#f4f0e6;--muted:#a89f8f;--accent:#a3bd8f;--accent-strong:#bf9468;--ok:#a3bd8f;--warm:#d9a86f;
+  --line:color-mix(in srgb,var(--mark) 18%,transparent);
+  --ghost:color-mix(in srgb,var(--mark) 34%,transparent);
+  --code-bg:#121110;--code-fg:#efe8da;--code-dim:#857c6d;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{margin:0;height:100%;background:var(--field);overflow:hidden}
+body{color:var(--mark);font-family:'Spectral',Georgia,serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+#stage{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;overflow:hidden;background:var(--field)}
+:root[data-scheme="dark"] #stage{background:radial-gradient(ellipse 55% 60% at 50% 55%,color-mix(in srgb,var(--green-field) 80%,transparent) 0%,transparent 72%),var(--field)}
+.mono{font-family:'IBM Plex Mono',monospace}
+body:not(.hood) .h{display:none!important}
+body.hood .p{display:none!important}
+
+/* header */
+#eyebrow{position:absolute;left:64px;top:36px;font:500 14px 'Spectral',serif;font-variant:small-caps;letter-spacing:.16em;color:var(--accent-strong)}
+#head{position:absolute;left:64px;top:72px;width:1000px;transition:opacity .5s var(--ease)}
+#head.fade{opacity:0;transition:opacity .2s}
+#h1{margin:0;font:400 52px/1.05 'Marcellus',Georgia,serif}
+#sub{margin:12px 0 0;font:400 22px/1.35 'Spectral',serif;color:var(--muted);max-width:940px}
+body.hood #sub{font:400 15px/1.55 'IBM Plex Mono',monospace;color:var(--mark)}
+#ctrl{position:absolute;right:64px;top:28px;display:flex;gap:10px}
+.seg{display:flex;border:1px solid var(--line)}
+.seg button,.cbtn{border:0;background:none;font:500 13px 'IBM Plex Mono',monospace;padding:10px 14px;color:var(--muted)}
+.seg button.on{background:var(--mark);color:var(--field)}
+.cbtn{border:1px solid var(--line);color:var(--mark)}
+.cbtn.on{background:var(--mark);color:var(--field)}
+
+/* nav */
+#nav{position:absolute;left:0;right:0;top:826px;display:flex;justify-content:center;gap:10px}
+#nav button{border:1px solid var(--line);background:none;font:500 14px 'IBM Plex Mono',monospace;height:46px;min-width:46px;padding:0 16px;color:var(--mark)}
+#nav button.mk.on{background:var(--mark);color:var(--field)}
+#nav button:disabled{opacity:.3;cursor:default}
+#nav #next{background:var(--mark);color:var(--field)}
+
+/* chapters */
+.ch{position:absolute;left:0;top:240px;width:1440px;height:570px;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .9s var(--ease),transform 1s var(--ease)}
+.ch.on{opacity:1;transform:none;pointer-events:auto}
+.ch svg.wires{position:absolute;left:0;top:0;width:1440px;height:570px;overflow:visible;pointer-events:none}
+.wire{fill:none;stroke:var(--accent-strong);stroke-width:2}
+.lab{position:absolute;font:500 16px 'Spectral',serif;font-variant:small-caps;letter-spacing:.12em;color:var(--muted)}
+body.hood .lab.h{font:400 14px 'IBM Plex Mono',monospace;font-variant:normal;letter-spacing:0}
+
+/* ch1 */
+.spec{position:absolute;left:64px;width:330px;height:220px;border:1px solid var(--line);background:var(--raised);padding:20px 22px}
+.spec b{display:block;font:400 28px/1.1 'Marcellus',serif}
+.spec .kind{font:400 17px 'Spectral',serif;color:var(--muted);margin:4px 0 14px}
+.spec .row{display:flex;justify-content:space-between;font:400 18px/1.75 'Spectral',serif;border-top:1px solid var(--line)}
+.spec .row i{font-style:normal;font-weight:500;color:var(--ok)}
+.spec .row i.off{color:var(--muted);font-weight:400}
+.spec pre{margin:0;font:400 13px/1.5 'IBM Plex Mono',monospace;color:var(--mark)}
+.spec pre .k{color:var(--accent)}
+.fw{position:absolute;left:540px;top:60px;width:360px;height:440px;background:var(--green-field);color:var(--on-green);padding:26px 26px}
+:root[data-scheme="dark"] .fw{box-shadow:0 0 60px color-mix(in srgb,var(--accent) 22%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.fw .nm{font:400 48px/1 'Marcellus',serif}
+.fw .tg{font:400 19px 'Spectral',serif;opacity:.8;margin:8px 0 22px}
+.fw .ly{height:52px;margin-top:9px;background:var(--green-raised);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font:400 19px 'Spectral',serif}
+.fw .ly span{font:400 13px 'IBM Plex Mono',monospace;opacity:.75}
+.site{position:absolute;left:1046px;width:330px;height:220px;background:#f5f1e8;color:#1f1b15;border:1px solid rgba(31,27,21,.35);overflow:hidden}
+:root[data-scheme="dark"] .site{box-shadow:0 0 40px rgba(244,240,230,.12)}
+.site nav{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#fff;border-bottom:1px solid #e6dfd0}
+.site nav b{font:400 14px 'Marcellus',serif;color:#2b4a37}
+.site nav span{font:400 10px 'Spectral',serif;color:#4a463d;display:flex;gap:9px}
+.site .hero{height:120px;padding:18px 16px}
+.site.r .hero{background:linear-gradient(135deg,#9fba92 0%,#c7d8bb 45%,#eef3e6 100%)}
+.site.s .hero{background:linear-gradient(135deg,#e9e1d2 0%,#f1e8d9 55%,#f5f1e8 100%)}
+.site h4{margin:0;font:400 22px/1.1 'Marcellus',serif;width:200px}
+.site .btn{display:inline-block;margin-top:12px;background:#2b4a37;color:#f5f1e8;font:500 10px 'Spectral',serif;padding:6px 12px}
+.site .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}
+.site .tiles u{display:block;height:44px;background:#e9e1d2}
+
+/* ch2 */
+.core{position:absolute;left:120px;top:370px;width:1200px;height:76px;background:var(--green-field);color:var(--on-green);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.core b{font:400 30px 'Marcellus',serif;font-weight:400}
+.core span{font:400 18px 'Spectral',serif;opacity:.85}
+.mod{position:absolute;top:60px;width:250px;height:280px;border:1px solid var(--edge,var(--line));background:var(--raised);padding:22px}
+.mod b{display:block;font:400 28px/1.1 'Marcellus',serif}
+.mod p{margin:12px 0 0;font:400 18px/1.4 'Spectral',serif;color:var(--muted)}
+.mod .chip{position:absolute;left:22px;bottom:20px;font:500 13px 'IBM Plex Mono',monospace;color:var(--ok)}
+.mod::after{content:"";position:absolute;left:95px;bottom:-31px;width:60px;height:30px;background:inherit;border:inherit;border-top:0}
+.mod.next{background:none;border:2px dashed var(--ghost)}
+.mod.next b,.mod.next p{color:var(--muted)}
+.mod.next .chip{color:var(--muted)}
+.cap{position:absolute;font:400 18px/1.4 'Spectral',serif;color:var(--muted)}
+.code{position:absolute;background:var(--code-bg);color:var(--code-fg);font:400 15px/24px 'IBM Plex Mono',monospace;padding:22px 26px;white-space:pre;border:1px solid var(--line)}
+.code .k{color:var(--code-key)}.code .s{color:var(--code-str)}.code .d{color:var(--code-dim)}
+.code .hl{background:color-mix(in srgb,var(--code-key) 16%,transparent);display:inline-block;margin:0 -8px;padding:0 8px}
+.tgt{position:absolute;left:860px;width:516px;height:66px;border:1px solid var(--line);background:var(--raised);padding:9px 18px}
+.tgt b{display:block;font:400 19px 'Marcellus',serif}
+.tgt span{font:400 13px 'IBM Plex Mono',monospace;color:var(--muted)}
+.foot{position:absolute;font:400 14px/1.5 'IBM Plex Mono',monospace;color:var(--muted)}
+
+/* ch3 */
+.col{position:absolute;top:0;width:520px}
+.col .hd b{font:400 30px 'Marcellus',serif;font-weight:400}
+.col .hd span{display:block;font:400 17px 'Spectral',serif;color:var(--muted);margin-top:2px}
+.rw{position:relative;height:36px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--raised);border-left:4px solid var(--accent);font:400 19px 'Spectral',serif;transition:background .9s var(--ease),border-color .9s var(--ease),color .9s var(--ease)}
+.rw .h{font:400 14px 'IBM Plex Mono',monospace}
+.rw em{font-style:italic;font-size:16px;color:var(--muted);opacity:0;transition:opacity .9s var(--ease)}
+.rw .nm{transition:opacity .6s var(--ease)}
+.col.hd-gap{height:58px}
+.ch3.run .gone{background:none;border-left:4px solid transparent;outline:1px dashed var(--ghost);outline-offset:-1px}
+.ch3.run .gone .nm{opacity:.38;text-decoration:line-through;text-decoration-thickness:1px}
+.ch3.run .gone em{opacity:1}
+
+.search{position:absolute;left:770px;top:478px;width:520px;height:64px;border:2px solid var(--mark);display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--field)}
+.search span{font:400 18px 'Spectral',serif}
+.search span.h{font:400 14px 'IBM Plex Mono',monospace}
+.search b{font:400 30px 'Marcellus',serif;font-weight:400;color:var(--ok)}
+
+/* ch4 */
+.gate{position:absolute;width:316px;height:118px;border:1px solid var(--line);background:var(--raised);padding:16px 18px 0 64px}
+.gate::before{content:"\2713";position:absolute;left:18px;top:18px;width:30px;height:30px;background:var(--ok);color:var(--field);font:500 18px/30px 'IBM Plex Mono',monospace;text-align:center}
+.gate b{display:block;font:400 22px/1.15 'Marcellus',serif}
+.gate span{display:block;margin-top:6px;font:400 17px/1.3 'Spectral',serif;color:var(--muted)}
+.gate span.h{font:400 13px/1.4 'IBM Plex Mono',monospace}
+.stamp{position:absolute;left:0;right:0;top:446px;text-align:center;font:400 32px 'Marcellus',serif}
+.stamp small{display:block;margin-top:8px;font:400 18px 'Spectral',serif;color:var(--muted)}
+.seq{position:absolute;top:440px;height:100px;border:1px solid var(--line);background:var(--raised);padding:12px 16px;width:330px}
+.seq b{display:block;font:400 19px 'Marcellus',serif}
+.seq span{display:block;margin-top:4px;font:400 13px/1.45 'IBM Plex Mono',monospace;color:var(--muted)}
+.seq.bounce{border-style:dashed}
+.seq.win{border:2px solid var(--ok)}
+
+/* ch5: lanes x sites */
+.fw5{position:absolute;left:64px;top:70px;width:250px;height:342px;background:var(--green-field);color:var(--on-green);padding:24px}
+.fw5 .nm{font:400 40px/1 'Marcellus',serif}
+.fw5 .tg{font:400 18px 'Spectral',serif;opacity:.8;margin-top:8px}
+.fw5 .fix{position:absolute;left:24px;top:22px;margin-top:84px;background:var(--warm);color:#1f1b15;font:500 16px 'IBM Plex Mono',monospace;padding:8px 12px}
+.sn{position:absolute;top:0;font:400 26px 'Marcellus',serif}
+.sn.next{color:var(--muted)}
+.lane{position:absolute;left:420px;font:500 16px 'Spectral',serif;font-variant:small-caps;letter-spacing:.1em;color:var(--muted)}
+body.hood .lane{font:400 14px 'IBM Plex Mono',monospace;font-variant:normal;letter-spacing:0}
+.cell{position:absolute;width:290px;border:1px solid var(--line);background:var(--raised);padding:0 18px;display:flex;align-items:center;gap:12px;font:400 19px 'Spectral',serif;transition:box-shadow .6s var(--ease),border-color .6s var(--ease)}
+.cell .ck{width:26px;height:26px;flex:none;background:var(--ok);color:var(--field);font:500 16px/26px 'IBM Plex Mono',monospace;text-align:center;opacity:0;transition:opacity .6s var(--ease)}
+.ch5.lit .cell.up{border-color:var(--warm);box-shadow:inset 4px 0 0 var(--warm)}
+.ch5.lit .cell.up .ck{opacity:1}
+.cell.own{background:none;border:2px solid var(--mark);flex-direction:column;align-items:flex-start;justify-content:center;gap:8px}
+.cell.own q{font:400 21px/1.2 'Marcellus',serif;quotes:"\201C" "\201D"}
+.cell.own .sw{display:flex;gap:6px;align-items:center;font:400 16px 'Spectral',serif;color:var(--muted)}
+.cell.own .sw i{display:block;width:22px;height:22px;border:1px solid var(--line)}
+.cell.nx{background:var(--field);border:1px dashed var(--ghost);color:var(--muted)}
+.cell.own.nx{border:2px dashed var(--ghost)}
+.flow{fill:none;stroke:var(--warm);stroke-width:2;stroke-dasharray:6 6;opacity:.4;transition:opacity .6s}
+.ch5.lit .flow{opacity:1;stroke-dasharray:none}
+.stop{stroke:var(--mark);stroke-width:3}
+.dot{fill:var(--warm)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="eyebrow">Birch Design Lab &middot; BDL-013</div>
+  <div id="ctrl">
+    <button class="cbtn" id="play" type="button">Play</button>
+    <div class="seg" id="mode"><button type="button" data-v="plain" class="on">Plain</button><button type="button" data-v="hood">Under the hood</button></div>
+    <div class="seg" id="scheme"><button type="button" data-v="light">Day</button><button type="button" data-v="dark">Night</button></div>
+  </div>
+  <div id="head"><h1 id="h1"></h1><p id="sub"></p></div>
+
+  <!-- 1: what it is -->
+  <section class="ch" data-ch="1">
+    <svg class="wires" viewBox="0 0 1440 570">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent-strong)"/></marker></defs>
+      <path class="wire" d="M394 140C470 140 466 280 536 280" marker-end="url(#ar)"/>
+      <path class="wire" d="M394 410C470 410 466 280 536 280"/>
+      <path class="wire" d="M900 280C975 280 970 140 1042 140" marker-end="url(#ar)"/>
+      <path class="wire" d="M900 280C975 280 970 410 1042 410" marker-end="url(#ar)"/>
+    </svg>
+    <div class="lab p" style="left:64px;top:0">The facts</div>
+    <div class="lab h" style="left:64px;top:0">client.json</div>
+    <div class="spec" style="top:30px">
+      <div class="p"><b>Harbor Table</b><div class="kind">Restaurant</div>
+        <div class="row">Menu<i>on</i></div><div class="row">Online ordering<i>on</i></div><div class="row">Booking<i>on</i></div></div>
+      <pre class="h">{
+  <span class="k">"businessName"</span>: "Harbor Table",
+  <span class="k">"category"</span>: "Restaurant",
+  <span class="k">"modules"</span>: {
+    "menu": true,
+    "ordering": true,
+    "booking": true
+  }
+}</pre>
+    </div>
+    <div class="spec" style="top:300px">
+      <div class="p"><b>Magnolia &amp; Mane</b><div class="kind">Beauty salon</div>
+        <div class="row">Menu<i class="off">off</i></div><div class="row">Online ordering<i class="off">off</i></div><div class="row">Booking<i>on</i></div></div>
+      <pre class="h">{
+  <span class="k">"businessName"</span>: "Magnolia &amp; Mane",
+  <span class="k">"category"</span>: "Beauty Salon",
+  <span class="k">"modules"</span>: {
+    "menu": false,
+    "ordering": false,
+    "booking": true
+  }
+}</pre>
+    </div>
+    <div class="fw">
+      <div class="nm">bdlBase</div>
+      <div class="tg p">our web framework</div>
+      <div class="tg h mono" style="font-size:14px">Astro &middot; Cloudflare Workers</div>
+      <div class="ly">Pages &amp; layout<span class="h">src/pages</span></div>
+      <div class="ly">Plug-in features<span class="h">src/modules/*</span></div>
+      <div class="ly">Languages<span class="h">en &middot; es &middot; vi</span></div>
+      <div class="ly">Privacy &amp; consent<span class="h">consent.ts</span></div>
+      <div class="ly">Checks before launch<span class="h">9 CI jobs</span></div>
+    </div>
+    <div class="lab p" style="left:1046px;top:0">Whole sites</div>
+    <div class="lab h" style="left:1046px;top:0">own repo &middot; own tests &middot; own deploy</div>
+    <div class="site r" style="top:30px"><nav><b>Harbor Table</b><span><u>Menu</u><u>Order</u><u>Book</u></span></nav>
+      <div class="hero"><h4>Coastal plates, cooked to order</h4><span class="btn">Order online</span></div><div class="tiles"><u></u><u></u><u></u></div></div>
+    <div class="site s" style="top:300px"><nav><b>Magnolia &amp; Mane</b><span><u>Services</u><u>Book</u></span></nav>
+      <div class="hero"><h4>Cuts, color and care</h4><span class="btn">Book a visit</span></div><div class="tiles"><u></u><u></u><u></u></div></div>
+    <div class="cap p" style="left:440px;top:522px;width:560px;text-align:center">Demo businesses, built by the same framework.</div>
+    <div class="foot h" style="left:440px;top:524px;width:560px;text-align:center">create-client-site: client.json in, fresh git repo out</div>
+  </section>
+
+  <!-- 2: plug-ins -->
+  <section class="ch" data-ch="2">
+    <div class="p">
+      <div class="mod" style="left:150px"><b>Menu</b><p>Prices by size, by market, kept in one place.</p><span class="chip">built</span></div>
+      <div class="mod" style="left:440px"><b>Online ordering</b><p>Pay online. The card is held until the kitchen accepts.</p><span class="chip">built</span></div>
+      <div class="mod" style="left:730px"><b>Booking</b><p>Appointments through the provider the business already uses.</p><span class="chip">built</span></div>
+      <div class="mod next" style="left:1020px"><b>Next feature</b><p>Same socket, whatever a client needs next.</p><span class="chip">open socket</span></div>
+      <div class="core"><b>bdlBase core</b><span>pages &middot; languages &middot; privacy &middot; checks</span></div>
+      <div class="cap" style="left:120px;top:470px;width:1200px;text-align:center">Each plug-in brings its own pages, its words in three languages, and its back-end pieces.</div>
+    </div>
+    <div class="h">
+      <svg class="wires" viewBox="0 0 1440 570">
+        <path class="wire" d="M704 84C790 84 780 43 860 43"/>
+        <path class="wire" d="M704 108C790 108 780 123 860 123"/>
+        <path class="wire" d="M704 132C790 132 780 203 860 203"/>
+        <path class="wire" d="M704 156C790 156 780 283 860 283"/>
+        <path class="wire" d="M704 300C790 300 780 363 860 363"/>
+        <path class="wire" d="M704 348C790 348 780 443 860 443"/>
+      </svg>
+      <div class="code" style="left:64px;top:0;width:640px;height:456px"><span class="d">// src/modules/ordering/module.manifest.ts</span>
+<span class="k">const</span> manifest: ModuleManifest = {
+  <span class="hl">navLink: { href: <span class="s">'/order'</span>, order: 20 },</span>
+  <span class="hl">uiStrings: orderingStrings,</span>
+  <span class="hl">requires: [<span class="s">'menu'</span>],</span>
+  <span class="hl">routes: [</span>
+    { pattern: <span class="s">'/order'</span>, … },
+    { pattern: <span class="s">'/api/checkout'</span>, … },
+    { pattern: <span class="s">'/orders'</span>, … },
+    <span class="d">// …6 more</span>
+  ],
+  <span class="hl">workerExports: [{ name: <span class="s">'OrderBoard'</span> }],</span>
+  wranglerContributions: {
+    <span class="hl">durableObjects: [{ binding: <span class="s">'ORDER_BOARD'</span> }]</span>
+  },
+};</div>
+      <div class="tgt" style="top:10px"><b>Nav bar gets an Order link</b><span>navLink, order 20</span></div>
+      <div class="tgt" style="top:90px"><b>Its words, in three languages</b><span>uiStrings: en &middot; es &middot; vi</span></div>
+      <div class="tgt" style="top:170px"><b>Won't build without the menu</b><span>requires: ['menu']</span></div>
+      <div class="tgt" style="top:250px"><b>Nine pages and endpoints</b><span>/order, /api/checkout, /orders/api/* …</span></div>
+      <div class="tgt" style="top:330px"><b>Worker exports the order board</b><span>worker-exports.generated.ts</span></div>
+      <div class="tgt" style="top:410px"><b>Cloud storage for live orders</b><span>wrangler.jsonc: Durable Object ORDER_BOARD</span></div>
+      <div class="foot" style="left:64px;top:486px;width:1312px">gen:modules derives the registry, Worker exports and entry from these files. CI regenerates them and fails on any diff.</div>
+    </div>
+  </section>
+
+  <!-- 3: off means gone -->
+  <section class="ch ch3" data-ch="3">
+    <div class="col" style="left:150px">
+      <div class="hd"><b>Harbor Table</b><span>restaurant &middot; ordering on</span></div>
+      <div id="treeR"></div>
+    </div>
+    <div class="col" style="left:770px">
+      <div class="hd"><b>Magnolia &amp; Mane</b><span>salon &middot; ordering off</span></div>
+      <div id="treeS"></div>
+    </div>
+    <div class="cap p" style="left:150px;top:494px;width:520px">The restaurant keeps everything it uses.</div>
+    <div class="foot h" style="left:150px;top:496px;width:520px">positive control: the restaurant must still carry all of it</div>
+    <div class="search"><span class="p">Search the salon for ordering code</span><span class="h">grep -r "modules/ordering"</span><b>0 files</b></div>
+  </section>
+
+  <!-- 4: gates -->
+  <section class="ch" data-ch="4"><div id="gates"></div>
+    <div class="stamp p">Every check green, or nothing ships.<small>Run on each new site the framework builds, not only on the framework itself.</small></div>
+    <div class="h">
+      <div class="seq" style="left:64px"><b>Stripe sends a payment webhook</b><span>checkout.session.completed<br>authorize now, capture on accept</span></div>
+      <div class="seq bounce" style="left:555px"><b>Stripe retries the same event</b><span>dedup on event id, then session<br>the retry is acked, not applied</span></div>
+      <div class="seq win" style="left:1046px"><b>1 order, 1 charge</b><span>live run, Stripe test mode<br>scripts/stripe-e2e.mjs in the e2e job</span></div>
+      <svg class="wires" viewBox="0 0 1440 570"><path class="wire" d="M394 490L551 490" marker-end="url(#ar)"/><path class="wire" d="M885 490L1042 490" marker-end="url(#ar)"/></svg>
+    </div>
+  </section>
+
+  <!-- 5: upgrades -->
+  <section class="ch ch5" data-ch="5">
+    <svg class="wires" viewBox="0 0 1440 570" id="flows"></svg>
+    <div class="fw5"><div class="nm">bdlBase</div><div class="tg p">gets better</div><div class="tg h mono" style="font-size:14px">HEAD</div><span class="fix">+ a fix</span></div>
+    <div id="grid5"></div>
+    <div class="cap p" style="left:64px;top:470px;width:1312px">Tested on every change: build a site on the old version, then upgrade it.</div>
+    <div class="foot h" style="left:64px;top:472px;width:1312px">sync_from_base_check: generate a client at the PR's base commit, sync it to head. Every PR.</div>
+  </section>
+
+  <nav id="nav"><button id="back" type="button">&larr; Back</button></nav>
+</div>
+<script>
+const COPY = {
+  1:{h:"We built our own web framework.",
+     p:"It's called bdlBase. Give it the facts about a business and it builds the whole site, ready to launch.",
+     u:"bdlBase: Astro on Cloudflare Workers. One client.json in, one standalone repo out, with its own git history, test suites and deploy pipeline."},
+  2:{h:"Features are plug-ins.",
+     p:"A menu, online ordering, booking: each one plugs in through a single socket. The framework wires up the rest.",
+     u:"One module.manifest.ts per feature declares its routes, nav, strings, dependencies, Worker exports and bindings. Everything downstream is generated from it."},
+  3:{h:"Off means gone.",
+     p:"A feature that's switched off isn't hidden. It isn't in the site at all.",
+     u:"Modules are included at build time. A site without one has no folder, specs, binding, config block or comment for it. test/build/module-absence.spec.ts greps every shipped file to prove it."},
+  4:{h:"Every site has to pass.",
+     p:"Each new site runs the same checks before launch. If one fails, nothing ships.",
+     u:"CI scaffolds fresh sites from fixtures and runs each one's own suites. Run manifests stop a suite from passing by quietly not running."},
+  5:{h:"Every site can take the upgrade.",
+     p:"When the framework gets better, the sites built on it can too. Each business's words and colors are never touched.",
+     u:"sync-from-base moves a client repo from its recorded framework commit to head, in three lanes."}
+};
+// ch3 rows: [plain, hood, both?]
+const ROWS = [
+  ["Pages & layout","src/pages/ · src/layouts/",1],
+  ["Languages","src/i18n/ (en · es · vi)",1],
+  ["Privacy & consent","src/lib/analytics/",1],
+  ["Booking","src/modules/booking/",1],
+  ["Menu","src/modules/menu/",0],
+  ["Online ordering","src/modules/ordering/",0],
+  ["Kitchen order board","ordering/durable-objects/order-board.ts",0],
+  ["Order board storage","wrangler.jsonc: ORDER_BOARD",0],
+  ["Menu and ordering tests","test/modules/{menu,ordering}/",0]
+];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const row = (r, salon) => `<div class="rw${salon && !r[2] ? ' gone' : ''}"><span class="nm"><span class="p">${esc(r[0])}</span><span class="h">${esc(r[1])}</span></span>${salon && !r[2] ? '<em><span class="p">not in this site</span><span class="h">absent</span></em>' : ''}</div>`;
+document.getElementById('treeR').innerHTML = '<div style="height:14px"></div>' + ROWS.map(r => row(r, false)).join('');
+document.getElementById('treeS').innerHTML = '<div style="height:14px"></div>' + ROWS.map(r => row(r, true)).join('');
+
+const GATES = [
+  ["Automated tests","About 1,000, on every change","unit_test: 92 spec files"],
+  ["The built site","The finished files are checked too","build-output suite on dist/"],
+  ["Real browser","A browser clicks through the site","e2e: Playwright"],
+  ["Security","Same headers on every page and API","e2e-security/security-headers"],
+  ["Privacy","Nothing sent before consent","network watched: 0 third-party calls"],
+  ["No secrets","No keys in what ships","check-no-secrets-in-build"],
+  ["No placeholders","Demo text can't go live","placeholder-guard.spec.ts"],
+  ["Dependencies","Audited for known issues","audit_deps"],
+  ["Speed and quality","Lighthouse 95+ in every category","lhci_fixtures: 3 runs, SEO 1.0"],
+  ["Languages","An unreviewed translation fails the build","i18n review stamps, prod build"],
+  ["Contrast","Text readable for everyone","check:contrast"],
+  ["Payments","A retried payment can't charge twice","webhook dedup, Stripe test mode"]
+];
+document.getElementById('gates').innerHTML = GATES.map((g, i) => {
+  const x = 64 + (i % 4) * 332, y = 10 + Math.floor(i / 4) * 134;
+  return `<div class="gate" style="left:${x}px;top:${y}px"><b>${esc(g[0])}</b><span class="p">${esc(g[1])}</span><span class="h">${esc(g[2])}</span></div>`;
+}).join('');
+
+const SX = [420, 740, 1060];
+const SITES = [
+  ["Harbor Table", "Coastal plates, cooked to order", "#9fba92", "#2b4a37"],
+  ["Magnolia & Mane", "Cuts, color and care", "#f1e8d9", "#4a3a2c"],
+  ["The next site", "", "", ""]
+];
+const LANES = [
+  {y: 70, h: 70, p: "Framework parts: updated", u: "framework files: patched one at a time, git apply --3way"},
+  {y: 186, h: 70, p: "Setup files: rebuilt, your edits kept", u: "8 rendered artifacts: rendered at both ends, git merge-file"},
+  {y: 302, h: 110, p: "Words, colors, settings: never touched", u: "src/content · theme.css · site.config.ts: excluded from every sync"}
+];
+let g = '';
+SITES.forEach((s, i) => { g += `<div class="sn${i === 2 ? ' next' : ''}" style="left:${SX[i]}px">${esc(s[0])}</div>`; });
+LANES.forEach((l, li) => {
+  g += `<div class="lane" style="top:${l.y - 26}px"><span class="p">${esc(l.p)}</span><span class="h">${esc(l.u)}</span></div>`;
+  SITES.forEach((s, i) => {
+    const nx = i === 2 ? ' nx' : '';
+    if (li < 2) g += `<div class="cell up${nx}" style="left:${SX[i]}px;top:${l.y}px;height:${l.h}px"><span class="ck">✓</span><span class="p">${li ? 'Rebuilt' : 'Updated'}</span><span class="h mono" style="font-size:14px">${li ? 'merge-file, clean' : 'patch applied'}</span></div>`;
+    else g += `<div class="cell own${nx}" style="left:${SX[i]}px;top:${l.y}px;height:${l.h}px">${s[1] ? `<q>${esc(s[1])}</q><span class="sw"><i style="background:${s[2]}"></i><i style="background:${s[3]}"></i>its own words and colors</span>` : '<span>its own words and colors</span>'}</div>`;
+  });
+});
+document.getElementById('grid5').innerHTML = g;
+let f = '';
+[105, 221].forEach(y => { f += `<path class="flow" d="M314 ${y}L1350 ${y}"/>`; });
+f += '<path class="flow" d="M314 357L384 357"/><path class="stop" d="M386 333L386 381"/>';
+f += '<circle class="dot" id="dotA" r="7" cx="314" cy="105" opacity="0"/><circle class="dot" id="dotB" r="7" cx="314" cy="221" opacity="0"/>';
+document.getElementById('flows').innerHTML = f;
+
+// state
+const N = 5;
+const q = new URLSearchParams(location.search);
+let ch = Math.min(N, Math.max(1, +q.get('ch') || 1));
+let playing = null;
+const nav = document.getElementById('nav');
+for (let i = 1; i <= N; i++) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'mk'; b.textContent = i; b.dataset.i = i;
+  b.setAttribute('aria-label', 'Chapter ' + i);
+  b.onclick = () => { stop(); go(i); };
+  nav.appendChild(b);
+}
+const nx = document.createElement('button');
+nx.id = 'next'; nx.type = 'button'; nx.innerHTML = 'Next &rarr;';
+nav.appendChild(nx);
+document.getElementById('back').onclick = () => { stop(); go(ch - 1); };
+nx.onclick = () => { stop(); go(ch + 1); };
+
+function text() {
+  const c = COPY[ch], hood = document.body.classList.contains('hood');
+  document.getElementById('h1').textContent = c.h;
+  document.getElementById('sub').textContent = hood ? c.u : c.p;
+}
+let timers = [];
+function enter(n) {
+  timers.forEach(clearTimeout); timers = [];
+  const s3 = document.querySelector('.ch3'), s5 = document.querySelector('.ch5');
+  s3.classList.remove('run'); s5.classList.remove('lit');
+  if (n === 3) timers.push(setTimeout(() => s3.classList.add('run'), 900));
+  if (n === 5) timers.push(setTimeout(fly, 700));
+}
+function fly() {
+  const s5 = document.querySelector('.ch5'), A = document.getElementById('dotA'), B = document.getElementById('dotB');
+  const t0 = performance.now(), D = 1100;
+  A.setAttribute('opacity', '1'); B.setAttribute('opacity', '1');
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3), x = 314 + (1350 - 314) * e;
+    A.setAttribute('cx', x); B.setAttribute('cx', x);
+    if (k < 1) requestAnimationFrame(step);
+    else { A.setAttribute('opacity', '0'); B.setAttribute('opacity', '0'); s5.classList.add('lit'); }
+  })(t0);
+}
+function go(n, instant) {
+  n = Math.min(N, Math.max(1, n));
+  const changed = n !== ch;
+  ch = n;
+  document.querySelectorAll('.ch').forEach(s => s.classList.toggle('on', +s.dataset.ch === ch));
+  document.querySelectorAll('#nav .mk').forEach(b => b.classList.toggle('on', +b.dataset.i === ch));
+  document.getElementById('back').disabled = ch === 1;
+  nx.disabled = ch === N;
+  const head = document.getElementById('head');
+  if (changed && !instant) { head.classList.add('fade'); setTimeout(() => { text(); head.classList.remove('fade'); }, 220); }
+  else text();
+  enter(ch);
+}
+function stop() { if (playing) { clearInterval(playing); playing = null; document.getElementById('play').classList.remove('on'); } }
+document.getElementById('play').onclick = () => {
+  if (playing) return stop();
+  document.getElementById('play').classList.add('on');
+  if (ch === N) go(1);
+  playing = setInterval(() => { if (ch === N) stop(); else go(ch + 1); }, 7000);
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') { stop(); go(ch + 1); }
+  if (e.key === 'ArrowLeft') { stop(); go(ch - 1); }
+});
+function setMode(v) {
+  document.body.classList.toggle('hood', v === 'hood');
+  document.querySelectorAll('#mode button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  text();
+}
+function setScheme(v) {
+  document.documentElement.setAttribute('data-scheme', v);
+  document.querySelectorAll('#scheme button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+document.querySelectorAll('#mode button').forEach(b => b.onclick = () => setMode(b.dataset.v));
+document.querySelectorAll('#scheme button').forEach(b => b.onclick = () => setScheme(b.dataset.v));
+setScheme(document.documentElement.getAttribute('data-scheme'));
+setMode(q.get('hood') === '1' ? 'hood' : 'plain');
+
+function fit() {
+  const s = Math.min(innerWidth / 1440, innerHeight / 900);
+  const st = document.getElementById('stage');
+  st.style.transform = `scale(${s})`;
+  st.style.left = (innerWidth - 1440 * s) / 2 + 'px';
+  st.style.top = (innerHeight - 900 * s) / 2 + 'px';
+}
+addEventListener('resize', fit); fit();
+go(ch, true);
+</script>
+</body>
+</html>
