@@ -4,6 +4,8 @@ import sitemap from '@astrojs/sitemap';
 import { FontaineTransform } from 'fontaine';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { satteri } from '@astrojs/markdown-satteri';
+import { stripComments } from './src/lib/markdown-strip-comments.mjs';
 
 /**
  * three's DRACOLoader carries module-scope `new URL('../libs/draco/...',
@@ -129,6 +131,10 @@ export default defineConfig({
   // the specimen lines lost the gap around their tick), so keep Astro 6's
   // collapse-to-one-space behaviour. Caught by pixel-diffing the upgrade.
   compressHTML: true,
+  // Lab entries keep working notes in HTML comments; they never ship
+  // (src/lib/markdown-strip-comments.mjs). satteri() keeps its defaults
+  // (GFM, smart punctuation) when only plugins are passed.
+  markdown: { processor: satteri({ mdastPlugins: [stripComments] }) },
   integrations: [
     svelte(),
     sitemap({
