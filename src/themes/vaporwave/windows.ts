@@ -11,11 +11,17 @@
  * only ever sets an inline `transform`/`z-index`, so a fresh page (a new
  * `.vw-win` set from the router or a hard load) starts untouched.
  *
- * Touch and coarse pointers: pointerdown still brings the window to the
- * front (list order sits below it) but never starts a drag, and the page
- * scrolls normally (`touch-action: none` only applies under the desktop
- * media query in theme.css, so a touch drag on the bar is never captured
- * here either).
+ * Touch and coarse pointers: a finger brings a window to the front on
+ * release, and only when the touch did not turn into a scroll
+ * (mountWindowActivation, task 24); it never starts a drag, except on a
+ * window marked data-touch-drag (task 25, below), and the page scrolls
+ * normally (`touch-action: none` only applies under the desktop media query
+ * in theme.css, so a touch drag on the bar is never captured here either).
+ *
+ * Task 29 (the signifier rule): each bar this mounts drag on is marked
+ * `data-drag`, and the grab cursor and the hover (an ink rule along the
+ * bar's foot, gated to a fine hover pointer) belong to those bars only, so a
+ * window that does not drag (About's) does not promise it.
  *
  * No view-transition name lives on `.vw-win` or `.vw-win-bar` anywhere in
  * this school (only `.taskbar` carries one, `vaporwave-taskbar`), so a
@@ -123,6 +129,8 @@ export function mountWindowDrag(): (() => void) | void {
   for (const win of wins) {
     const bar = win.querySelector<HTMLElement>('.vw-win-bar');
     if (!bar) continue;
+    // The bar is a drag handle from here: the grab cursor and the hover are keyed on this (theme.css).
+    bar.setAttribute('data-drag', '');
 
     let dragging = false;
     let pointerId = -1;
@@ -237,6 +245,7 @@ export function mountWindowDrag(): (() => void) | void {
 
     cleanups.push(() => {
       disarm();
+      bar.removeAttribute('data-drag');
       bar.removeEventListener('touchmove', onTouchMove);
       bar.removeEventListener('pointerdown', onPointerDown);
       bar.removeEventListener('pointermove', onPointerMove);

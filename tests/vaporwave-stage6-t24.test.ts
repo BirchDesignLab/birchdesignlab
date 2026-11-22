@@ -26,12 +26,17 @@ describe('the deck', () => {
     expect(formatCounter(61.5)).toBe('1:01:50');
     expect(formatCounter(-3)).toBe('0:00:00');
   });
-  it('decides a swipe only past 8px, horizontal when mostly horizontal, else leaves it to scroll', () => {
+  it('decides a swipe only past 8px, horizontal when wider than tall, else leaves it to scroll (task 24 C3)', () => {
     expect(swipeAxis(5, 1)).toBeNull();
     expect(swipeAxis(12, 3)).toBe('x');
     expect(swipeAxis(-12, 3)).toBe('x');
     expect(swipeAxis(3, 12)).toBe('y');
-    expect(swipeAxis(10, 9)).toBe('y');
+    // The old half-again rule left 34 to 45 degrees from the horizontal neither scrolling nor scanning.
+    expect(swipeAxis(10, 9)).toBe('x');
+    expect(swipeAxis(10, 7)).toBe('x');
+    expect(swipeAxis(9, 10)).toBe('y');
+    expect(swipeAxis(9, 9)).toBe('y');
+    expect(swipeAxis(-20, 16)).toBe('x');
   });
   it('is one real button named Play or Pause, aria-pressed while paused, its face aria-hidden', () => {
     expect(home).toMatch(/<button type="button" class="osd osd-l deck" aria-label="Play" aria-pressed="false" data-deck>/);

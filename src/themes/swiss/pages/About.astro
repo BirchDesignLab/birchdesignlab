@@ -208,6 +208,16 @@ const [founderLead, ...founderRest] = copy.founder.body;
   @media (min-width: 1024px) {
     .sw-birch { display: block; }
   }
+  /* The spine is a toy from 1280 (toys.ts sets data-live where the sweep is on
+     it). A mouse over it gets a resize cursor (the scroll moves it) and the
+     school's own hover, the word printed in negative: an ink block with paper
+     type, as a link is when pressed (the base pair, --field on --mark). Paint
+     only: the box and the ink do not move. Everywhere else it stays out of the
+     pointer's way. */
+  @media (hover: hover) and (pointer: fine) {
+    .sw-birch[data-live] { pointer-events: auto; cursor: ns-resize; }
+    .sw-birch[data-live]:hover { background: var(--mark); color: var(--field); }
+  }
   @media (min-width: 1280px) {
     .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; --sw-tx: 0.030em; }
   }

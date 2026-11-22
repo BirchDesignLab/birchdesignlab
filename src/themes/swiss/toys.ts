@@ -6,17 +6,22 @@
  * puts the page back; each is deaf and at rest from the router's
  * before-preparation (the swap's snapshot) until the new page has landed.
  *
- *   initAboutSweep   About. The rotated "Birch" spine (from 1024) widens from
+ *   initAboutSweep   About. The rotated "Birch" spine (from 1280) widens from
  *                    its rest cut to 125 and back as the founder section
  *                    crosses the screen, scroll-linked, its ink always the
- *                    section's height. Under 1024 the spine has no travel (it
- *                    is already at its widest, the room beside the text is
- *                    spent) or does not exist (under 640), so the same sweep
- *                    goes to the title stack, which can only narrow: it
- *                    narrows from its rest cut to 62 as the title scrolls away.
- *   initNumeralHold  Services. Inert. Pressing and holding a step numeral
- *                    travels its weight 100 to 900 over about a second;
- *                    release snaps it back to rest at a constant speed.
+ *                    section's height. Under 1280 the spine has little or no
+ *                    travel (105 to 125 from 1024, the widest below that: the
+ *                    room beside the text is spent) or does not exist (under
+ *                    640), so the same sweep goes to the title stack, which
+ *                    can only narrow: it narrows from its rest cut to 62 as
+ *                    the title scrolls away. A resize keeps the sweep at its
+ *                    current cut.
+ *   initNumeralHold  Services. Inert. Pressing a step numeral dips its weight
+ *                    from where it is to 100 (about 200 ms), then it travels
+ *                    100 to 900 over about a second while held; release snaps
+ *                    it back to rest at a constant speed. A mouse over the
+ *                    digit gets a pointer and a rule under it; a finger gets
+ *                    one small beat (below).
  *   initStopDrag     Sent. Inert. The red full stop drags along the baseline,
  *                    clamped to the measure, and snaps back at a constant
  *                    speed.
@@ -30,7 +35,11 @@
  * over 8px), and a vertical swipe still scrolls: none of these calls
  * preventDefault on a touch.
  */
+import { scheduleBeat } from '../bauhaus/parts/beat';
+
 const isSwiss = () => document.documentElement.dataset.theme === 'swiss';
+/** A real mouse on a fine pointer: the cursor and hover live there, the touch beat on everything else. */
+const mouseHere = (): boolean => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /** The time a finger has to stay still before a toy takes it, and how far "still" is. */
 const TOUCH_HOLD_MS = 200;
@@ -92,7 +101,8 @@ export function initAboutSweep(): (() => void) | void {
   const lines = title ? [...title.querySelectorAll<HTMLElement>('.ln')] : [];
   if (!sec || !birch || !title || lines.length === 0) return;
 
-  const desk = window.matchMedia('(min-width: 1024px)');
+  // From 1280 the spine has a real run (62 or 75 to 125); below it the run is 20 units or none, so the title stack takes the sweep.
+  const desk = window.matchMedia('(min-width: 1280px)');
   const abort = new AbortController();
   const opts = { signal: abort.signal };
   let frozen = false;
@@ -111,6 +121,8 @@ export function initAboutSweep(): (() => void) | void {
   /** Read the rest values (the CSS ones, with nothing inline) and build the spine's table. */
   const measure = () => {
     clearAll();
+    // The spine is the toy only while the sweep is on it: that is when a mouse over it gets its cursor and its ink block (About.astro).
+    birch.toggleAttribute('data-live', desk.matches);
     if (desk.matches) {
       const cs = getComputedStyle(birch);
       const w = parseFloat(cs.getPropertyValue('--sw-bwdth'));
@@ -159,9 +171,19 @@ export function initAboutSweep(): (() => void) | void {
     visible = entries.some((e) => e.isIntersecting);
     if (visible) schedule();
   });
-  const observe = () => { io.disconnect(); visible = false; io.observe(target()); };
+  // `visible` carries across a re-observe (the observer reports again at once), so a resize
+  // does not stop the sweep for the frames before it does.
+  const observe = () => { io.disconnect(); io.observe(target()); };
 
-  const remeasure = () => { measure(); observe(); schedule(); };
+  // measure() clears the inline cut to read the rest values; put the sweep back in the same task, so a resize
+  // (a window drag, a phone's URL bar) never paints one frame at the rest cut (Stage 6 w3 task 21, C1).
+  const remeasure = () => {
+    measure();
+    observe();
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    if (visible && !frozen) update();
+    else schedule();
+  };
   window.addEventListener('scroll', schedule, { passive: true, signal: abort.signal });
   window.addEventListener('resize', remeasure, opts);
   desk.addEventListener('change', remeasure, opts);
@@ -178,6 +200,7 @@ export function initAboutSweep(): (() => void) | void {
     io.disconnect();
     if (raf) cancelAnimationFrame(raf);
     clearAll();
+    birch.removeAttribute('data-live');
   };
 }
 
@@ -189,6 +212,13 @@ const W_MAX = 900;
 const RISE_MS = 1000;
 /** Weight units a millisecond on the way back: the full range in BACK_FULL_MS, constant. */
 const W_SPEED = (W_MAX - W_MIN) / BACK_FULL_MS;
+/** A press travels from the current weight down to W_MIN at a constant speed: rest to the hairline in about 200 ms (Stage 6 w4 task 29, critique C2). */
+const DIP_MS = 200;
+const DIP_SPEED = (W_REST - W_MIN) / DIP_MS;
+/** The touch beat (the common conditions are beat.ts's): a short dip and a short rise, then the ordinary snap-back. */
+const BEAT_DIP_TO = 450;
+const BEAT_RISE_TO = 800;
+const BEAT_RISE_MS = 440;
 
 export function initNumeralHold(page: Element | null, root: Document | Element = document): (() => void) | void {
   if (!page || !isSwiss()) return;
@@ -232,19 +262,48 @@ export function initNumeralHold(page: Element | null, root: Document | Element =
     delete n.dataset.held;
   };
 
-  /** The press has settled: the weight steps to the thinnest and travels to the heaviest while held. */
+  /**
+   * The press has settled: the weight travels from where it is down to the
+   * thinnest (constant speed, about 200 ms from rest), then up to the heaviest
+   * while held. Starting from the current weight means a press during the
+   * snap-back never jumps (critique C2).
+   */
   const begin = (n: HTMLElement) => {
     stopRun(n);
     const r = runOf(n);
     r.started = true;
     n.dataset.held = '';
+    const from = r.weight;
+    const dipMs = Math.max(0, from - W_MIN) / DIP_SPEED;
     const t0 = performance.now();
     const step = (now: number) => {
-      const w = Math.min(W_MAX, W_MIN + ((W_MAX - W_MIN) * (now - t0)) / RISE_MS);
+      const t = now - t0;
+      let w: number;
+      if (t < dipMs) w = from - DIP_SPEED * t;
+      else w = Math.min(W_MAX, W_MIN + ((W_MAX - W_MIN) * (t - dipMs)) / RISE_MS);
       show(n, w);
       r.raf = w >= W_MAX ? 0 : requestAnimationFrame(step);
     };
-    show(n, W_MIN);
+    show(n, from);
+    r.raf = requestAnimationFrame(step);
+  };
+
+  /** The touch beat: a small version of the hold (dip, rise), let go of at once so the snap-back brings it home. */
+  const beat = (n: HTMLElement) => {
+    stopRun(n);
+    const r = runOf(n);
+    r.started = true;
+    const from = r.weight;
+    const dipMs = Math.max(0, from - BEAT_DIP_TO) / DIP_SPEED;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const t = now - t0;
+      if (t < dipMs) { show(n, from - DIP_SPEED * t); r.raf = requestAnimationFrame(step); return; }
+      const w = Math.min(BEAT_RISE_TO, BEAT_DIP_TO + ((BEAT_RISE_TO - BEAT_DIP_TO) * (t - dipMs)) / BEAT_RISE_MS);
+      show(n, w);
+      if (w >= BEAT_RISE_TO) { r.raf = 0; snapBack(n); return; }
+      r.raf = requestAnimationFrame(step);
+    };
     r.raf = requestAnimationFrame(step);
   };
 
@@ -302,14 +361,34 @@ export function initNumeralHold(page: Element | null, root: Document | Element =
     }
   };
   const up = (e: Event) => end((e as PointerEvent).pointerId);
+
+  // A mouse: the pointer and the underline rule belong to the digit and a few pixels round it, not to the three-column
+  // box it sits in (Stage 6 w3 task 21 C2). `data-hot` is the signal; Services.astro paints it, on a fine hover pointer only.
+  let hotNum: HTMLElement | null = null;
+  const setHot = (n: HTMLElement | null) => {
+    if (hotNum === n) return;
+    hotNum?.removeAttribute('data-hot');
+    hotNum = n;
+    n?.setAttribute('data-hot', '');
+  };
+  const hover = (e: Event) => {
+    const p = e as PointerEvent;
+    if (p.pointerType !== 'mouse' || frozen || !mouseHere()) return;
+    const num = p.target instanceof Element ? p.target.closest<HTMLElement>('.num') : null;
+    setHot(num && nums.includes(num) && onGlyph(num, p.clientX, p.clientY) ? num : null);
+  };
+
   const freeze = () => {
     frozen = true;
     press = null;
+    setHot(null);
     for (const n of nums) rest(n);
   };
 
   root.addEventListener('pointerdown', down, opts);
   root.addEventListener('pointermove', move, opts);
+  root.addEventListener('pointermove', hover, opts);
+  page.addEventListener('pointerleave', () => setHot(null), opts);
   document.addEventListener('pointerup', up, opts);
   document.addEventListener('pointercancel', up, opts);
   root.addEventListener('contextmenu', (e) => { if (e.target instanceof Element && e.target.closest('.num')) e.preventDefault(); }, opts);
@@ -320,16 +399,25 @@ export function initNumeralHold(page: Element | null, root: Document | Element =
   window.addEventListener('focus', () => { frozen = false; }, opts);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) frozen = false; }, opts);
 
+  // A finger gets one small beat of the hold, once a visit, on the common conditions (beat.ts); a mouse has the pointer and the step.
+  if (!mouseHere()) {
+    scheduleBeat('swiss:numerals', nums, (t) => beat(t as HTMLElement), abort.signal, (t) => !frozen && !press && !runOf(t as HTMLElement).started);
+  }
+
   return () => {
     abort.abort();
     stopNav();
     press = null;
+    setHot(null);
     for (const n of nums) { rest(n); delete n.dataset.live; }
     runs.clear();
   };
 }
 
 /* ---------- Sent: drag the red full stop ---------- */
+
+/** The touch beat's slide out, at a constant speed. */
+const STOP_BEAT_MS = 320;
 
 export function initStopDrag(stop: HTMLElement | null): (() => void) | void {
   if (!stop || !isSwiss()) return;
@@ -407,6 +495,27 @@ export function initStopDrag(stop: HTMLElement | null): (() => void) | void {
     }, BACK_HOLD_MS);
   };
 
+  /**
+   * The touch beat: the stop slides about its own width along the baseline and
+   * snaps back by the ordinary return. It goes the way there is room: the word
+   * fills the measure, so that is usually left, over its last letter, as a full
+   * drag would.
+   */
+  const beat = () => {
+    limits();
+    const dist = Math.max(24, stop.getBoundingClientRect().width * 0.9);
+    const to = hi >= dist ? dist : lo <= -dist ? -dist : 0;
+    if (to === 0) return;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / STOP_BEAT_MS);
+      put(to * t);
+      if (t >= 1) { ret = 0; snapBack(); return; }
+      ret = requestAnimationFrame(step);
+    };
+    ret = requestAnimationFrame(step);
+  };
+
   const down = (e: Event) => {
     const p = e as PointerEvent;
     if (frozen || press) return;
@@ -454,6 +563,9 @@ export function initStopDrag(stop: HTMLElement | null): (() => void) | void {
   window.addEventListener('blur', () => { if (press?.engaged) { press = null; delete stop.dataset.held; snapBack(); } else if (press) rest(); }, opts);
   document.addEventListener('visibilitychange', () => { if (document.hidden) rest(); }, opts);
   const stopNav = onNavigate(freeze, () => { frozen = false; });
+
+  // A finger gets one small beat of the drag, once a visit, on the common conditions (beat.ts); a mouse has the grab cursor and the keyline.
+  if (!mouseHere()) scheduleBeat('swiss:stop', [stop], beat, abort.signal, () => !frozen && !press && dx === 0 && !ret && !hold);
 
   return () => {
     abort.abort();

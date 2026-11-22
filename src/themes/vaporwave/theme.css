@@ -408,7 +408,16 @@
    pointers get no affordance and no drag (windows.ts gates the drag itself
    the same way, so this is belt and braces, not the only guard). */
 @media (hover: hover) and (pointer: fine) {
-  [data-theme='vaporwave'] .vw-win-bar { cursor: grab; touch-action: none; }
+  [data-theme='vaporwave'] .vw-win-bar { touch-action: none; }
+  /* Stage 6 wave 4, task 29 (the signifier rule): the grab cursor and one hover
+     belong to the bars windows.ts has mounted a drag on (data-drag), so About's
+     windows, which do not drag, do not promise it. The hover is a two pixel rule
+     along the bar's foot in the bar's own ink (--bar-ink, the pair meta.ts holds
+     against the bar; the dim ink on an inactive caption): a hard edge, no motion,
+     nothing that moves the bar or its buttons. */
+  [data-theme='vaporwave'] .vw-win-bar[data-drag] { cursor: grab; }
+  [data-theme='vaporwave'] .vw-win-bar[data-drag]:hover { box-shadow: inset 0 -2px 0 var(--bar-ink); }
+  [data-theme='vaporwave'] .vw-win-bar.inactive[data-drag]:hover { box-shadow: inset 0 -2px 0 var(--bar-ink-dim); }
   [data-theme='vaporwave'] .vw-win.dragging .vw-win-bar { cursor: grabbing; }
 }
 /* A window being dragged sits above the rest of its stack even before

@@ -80,7 +80,7 @@ describe('swiss toys: About', () => {
 });
 
 describe('swiss toys: Services numerals', () => {
-  it('weight travels 100 to 900 in a second and snaps back at a constant speed after 100 ms', () => {
+  it('weight dips to 100 and travels to 900 in a second, and snaps back at a constant speed after 100 ms', () => {
     expect(toys).toContain('const W_MIN = 100');
     expect(toys).toContain('const W_MAX = 900');
     expect(toys).toContain('const RISE_MS = 1000');
@@ -91,8 +91,10 @@ describe('swiss toys: Services numerals', () => {
   it('a press counts on the digit, not on the empty columns of its box', () => {
     expect(toys).toContain('onGlyph(num, p.clientX, p.clientY)');
   });
-  it('a pointer and no text selection on a live numeral', () => {
-    expect(services).toMatch(/\.num\[data-live\] \{[^}]*cursor: pointer[^}]*user-select: none/);
+  it('no text selection on a live numeral; the pointer belongs to the digit (task 29, 21/C2)', () => {
+    expect(services).toMatch(/\.num\[data-live\] \{[^}]*user-select: none/);
+    expect(services).not.toMatch(/\.num\[data-live\] \{[^}]*cursor/);
+    expect(services).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.num\[data-hot\] \{ cursor: pointer; text-decoration: underline;/);
   });
 });
 

@@ -27,8 +27,23 @@ describe("the drum's Venus (V1)", () => {
 describe('the phone kiosk props (V3)', () => {
   const block = home.slice(home.indexOf('@media (max-width: 900px)'));
   it('sizes the ball by its figure, about 44px across at 390, and the Venus about 60px tall', () => {
-    expect(block).toContain('--prop-w: clamp(107px, 27.5vw, 178px);');
-    expect(block).toContain('--prop-w: clamp(82px, 20.95vw, 136px);');
+    expect(block).toContain('clamp(107px, 27.5vw, 178px)');
+    expect(block).toContain('clamp(82px, 20.95vw, 136px)');
+  });
+  it('never gets smaller across 900 to 901: both props step down to the desktop 108px at 900 (task 19 C2, task 29)', () => {
+    // The desktop rule's 12vw is 108.12px at 901; the tablet sizes (178 and 136) stay as set until 820, then fall in a straight line to 108 at 900.
+    expect(home).toContain('width: clamp(90px, 12vw, 140px)');
+    expect(block).toContain('max(108px, calc(178px - (100vw - 820px) * 0.875))');
+    expect(block).toContain('max(108px, calc(136px - (100vw - 820px) * 0.35))');
+    const at = (vw: number, cap: number, slope: number, floor: number, lo: number, k: number) =>
+      Math.min(Math.min(cap, Math.max(lo, k * vw)), Math.max(floor, cap - (vw - 820) * slope));
+    expect(at(900, 178, 0.875, 108, 107, 0.275)).toBeCloseTo(108, 5);
+    expect(at(900, 136, 0.35, 108, 82, 0.2095)).toBeCloseTo(108, 5);
+    expect(at(820, 178, 0.875, 108, 107, 0.275)).toBe(178);
+    expect(at(820, 136, 0.35, 108, 82, 0.2095)).toBe(136);
+    expect(at(390, 178, 0.875, 108, 107, 0.275)).toBeCloseTo(107.25, 2);
+    // 901 on the desktop rule is 108.12px: never below the 900 value.
+    expect(Math.max(90, Math.min(140, 0.12 * 901))).toBeGreaterThanOrEqual(at(900, 178, 0.875, 108, 107, 0.275));
   });
   it('anchors each prop by its visible figure, not its image box (C1)', () => {
     // The ball's figure starts 29.5% in from the image's side, Venus's 31.8%.

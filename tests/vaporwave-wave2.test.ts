@@ -43,7 +43,7 @@ describe('V3 the phone plaza', () => {
   it('seats the kiosk pair in front of the stand corners below 900px instead of hiding it', () => {
     const block = home.slice(home.indexOf('@media (max-width: 900px)'));
     // Task 19 resized the props by their visible figure (vaporwave-stage6-t19).
-    expect(block).toContain('--prop-w: clamp(107px, 27.5vw, 178px);');
+    expect(block).toContain('clamp(107px, 27.5vw, 178px)');
     expect(block).not.toMatch(/display: none/);
   });
   it('keeps the lobby planter at 64px on the left with the column on the right below 620px', () => {

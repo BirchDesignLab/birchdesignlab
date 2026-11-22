@@ -24,6 +24,12 @@
  * takes the cell nearest where it was dropped, or the nearest free one.
  * Icons live under the message window (z-index), so a drag never covers it.
  *
+ * Touch (task 29, the signifier rule): a finger that has not touched the
+ * desktop gets one small beat, once a visit, on the common conditions
+ * (bauhaus's beat.ts): the first icon in view takes the Win95 selection (the
+ * inverse label) for a moment and lets it go, unless the visitor has picked
+ * something by then. A mouse has the pointer and the label's hover instead.
+ *
  * Lifecycle: mounted through onMount, returns a cleanup that removes every
  * listener, timer, observer and loop, closes every window and ends the
  * screensaver, so a swap away leaves nothing behind and the page remounts
@@ -31,6 +37,7 @@
  */
 import { ACTIVATE_EVENT } from './windows';
 import { createLoop } from './screensaver';
+import { scheduleBeat } from '../bauhaus/parts/beat';
 
 const THEME = 'vaporwave';
 const HOLD_MS = 200;
@@ -38,6 +45,8 @@ const SLOP_PX = 8;
 const TAP_MS = 450;
 const TAP_PX = 28;
 const WAIT_MS = 1100;
+/** How long the beat's selection shows. */
+const BEAT_SELECT_MS = 1300;
 
 type Key = 'computer' | 'bin' | 'readme' | 'exe';
 
@@ -400,7 +409,29 @@ export function mountDesktop(): (() => void) | void {
     });
   }
 
+  // ---- the touch beat -------------------------------------------------------
+  const abort = new AbortController();
+  let beatTimer = 0;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    scheduleBeat(
+      'vaporwave:icons',
+      icons,
+      (target) => {
+        const icon = target as HTMLElement;
+        select(icon);
+        beatTimer = window.setTimeout(() => {
+          beatTimer = 0;
+          if (selected === icon) select(null);
+        }, BEAT_SELECT_MS);
+      },
+      abort.signal,
+      () => !selected && !saverOpen && !waitTimer && !layer.querySelector('[data-held]') && Array.from(wins.values()).every((w) => w.hidden),
+    );
+  }
+
   return () => {
+    abort.abort();
+    window.clearTimeout(beatTimer);
     stopWait();
     endSaver(false);
     for (const win of Array.from(wins.values())) closeWindow(win, false);

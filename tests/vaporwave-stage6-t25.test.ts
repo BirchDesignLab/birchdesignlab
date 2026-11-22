@@ -88,7 +88,7 @@ describe('the Sent desktop (stop 3 answer 3 words)', () => {
   });
   it('mounts through onMount and cleans up every listener, timer, loop and window', () => {
     expect(sent).toContain('onMount(mountDesktop);');
-    expect(desktop).toMatch(/return \(\) => \{\s*stopWait\(\);\s*endSaver\(false\);[\s\S]*closeWindow\(win, false\)[\s\S]*for \(const fn of cleanups\) fn\(\);/);
+    expect(desktop).toMatch(/return \(\) => \{\s*abort\.abort\(\);\s*window\.clearTimeout\(beatTimer\);\s*stopWait\(\);\s*endSaver\(false\);[\s\S]*closeWindow\(win, false\)[\s\S]*for \(const fn of cleanups\) fn\(\);/);
     expect(desktop).toContain('loop?.destroy();');
     expect(desktop).toContain("cleanups.push(() => resizer.disconnect());");
   });
@@ -127,10 +127,14 @@ describe('the elevator', () => {
     expect(elevator).toContain("b.setAttribute('aria-pressed', String(i === floor))");
   });
   it('activates B1 and 1F as the doors and flips the CRT for 2F, navigating nowhere', () => {
-    expect(elevator).toContain("document.querySelector('.door-0')?.dispatchEvent(new CustomEvent(ACTIVATE_EVENT))");
-    expect(elevator).toContain("document.querySelector('.door-1')?.dispatchEvent(new CustomEvent(ACTIVATE_EVENT))");
+    expect(elevator).toContain("bring(document.querySelector('.door-0'))");
+    expect(elevator).toContain("bring(document.querySelector('.door-1'))");
+    expect(elevator).toContain("door.dispatchEvent(new CustomEvent(ACTIVATE_EVENT))");
     expect(elevator).toContain("screen.classList.add('flip')");
-    expect(elevator).not.toMatch(/location|history|scrollIntoView|scrollTo|\.href/);
+    // Task 29 (C5): B1 and 1F scroll their window into view when it is off screen, and nothing else scrolls or navigates.
+    expect(elevator).not.toMatch(/location|history|scrollTo|\.href/);
+    expect(elevator.match(/scrollIntoView/g)).toHaveLength(1);
+    expect(elevator).toContain("door.scrollIntoView({ behavior: 'smooth', block: 'center' })");
   });
   it('mounts on Home through onMount and gates its hover', () => {
     expect(home).toContain('onMount(mountElevator);');

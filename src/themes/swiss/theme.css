@@ -430,6 +430,7 @@
 [data-theme='swiss'] .sw-red[data-sw-flip] {
   background: var(--white-field);
   color: var(--red-field);
+  --flip-edge: var(--red-field);
   --mark-muted: var(--red-field);
   --ring: var(--red-field);
   --press-bg: var(--red-field);
@@ -444,6 +445,7 @@
 [data-theme='swiss'] .sw-black[data-sw-flip] {
   background: var(--white-field);
   color: var(--black);
+  --flip-edge: var(--black);
   --field: var(--white-field);
   --mark: var(--black);
   --mark-muted: var(--grey-on-white);
@@ -459,6 +461,7 @@
 [data-theme='swiss']:not([data-scheme='dark']) .sw-sheet[data-sw-flip] {
   background: var(--white-field);
   color: var(--black);
+  --flip-edge: var(--black);
   --ground: var(--white-field);
   --field: var(--white-field);
   --mark: var(--black);
@@ -477,6 +480,7 @@
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] {
   background: var(--black);
   color: var(--paper-fixed);
+  --flip-edge: var(--white-field);
   --ground: var(--black);
   --field: var(--black);
   --mark: var(--paper-fixed);
@@ -493,6 +497,58 @@
 /* Its buttons' keylines: the white sheet's were black, the black one's are paper. */
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:active,
 [data-theme='swiss'][data-scheme='dark'] .sw-sheet.sw-white[data-sw-flip] .sw-btn:focus-visible { box-shadow: inset 0 0 0 2px var(--paper-fixed); }
+
+/* A pressed field's edge (Stage 6 wave 4 task 29, stop 4 critique C1): the
+   inverse stays, and while it lasts the field gets a 1px edge in its rest
+   colour (--flip-edge, set with each field's inverse above), so a white field
+   on the paper page (and the dark band gone black on the black page) reads as
+   a field turned over, not a field that vanished. Paint only, nothing moves.
+   A bleed field already paints its fill as a 100vw spread shadow clipped to its
+   own height, which would also paint over any shadow edge, so its edge is the
+   top and bottom 1px of a pseudo-element that runs out to the same width
+   (pointer-events none, inside the box, over padding only). A field that is not
+   a bleed (About's red field) takes an inset outline. An edge that already sits
+   on a rule is skipped (no 2px): Contact's black sheet sits between the
+   header's rule and the form's, and its red address on a desktop is hung from
+   the section's rule. The buttons are never touched. */
+[data-theme='swiss'] [data-sw-flip]:not(.sw-bleed) {
+  outline: 1px solid var(--flip-edge);
+  outline-offset: -1px;
+}
+/* The edge's pseudo-element is real (if empty) layout overflow, unlike the
+   fill's shadow: a 100vw spread past the frame would widen the document (and, on
+   a phone, the layout viewport, which zooms the page out). The body's own clip
+   does not stop it (a clip on the body propagates to the viewport, which still
+   counts the overflow), so the sheet's content is clipped at its own width: main
+   is the viewport wide, so this cuts nothing that was visible. */
+[data-theme='swiss'] main { overflow-x: clip; }
+[data-theme='swiss'] .sw-bleed[data-sw-flip] { position: relative; }
+[data-theme='swiss'] .sw-bleed[data-sw-flip]::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 0 -100vw;
+  border: 0 solid var(--flip-edge);
+  border-block-width: var(--flip-edge-t, 1px) var(--flip-edge-b, 1px);
+  pointer-events: none;
+}
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --flip-edge-t: 0px; --flip-edge-b: 0px; }
+@media (min-width: 1024px) {
+  /* Fill runs right only (Contact's address): so does its edge, and its top is the section's rule. */
+  [data-theme='swiss'] .sw-bleed.direct[data-sw-flip]::after { inset: 0 -200vw 0 0; --flip-edge-t: 0px; }
+}
+
+/* While a field is held flipped, a mouse dragged across its button must not
+   hover it onto a ground equal to the flipped field (white on white, black on
+   black; Stage 6 w3 task 21 C3). The button keeps its rest fill until the press
+   ends. :root in the selector outweighs the scheme-scoped hover rules above. */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme='swiss'] [data-sw-flip][data-sw-flip] .sw-btn:hover {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    box-shadow: none;
+  }
+}
 
 /* ---- Arrival ------------------------------------------------------- */
 

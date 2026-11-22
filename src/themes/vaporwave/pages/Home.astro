@@ -774,8 +774,14 @@ const doorFiles = ['software.exe', 'web_design.htm'];
        props' visible figures: the stand's foot-side padding is deeper by the
        height the figures climb into it. */
     .stand-body { padding-bottom: calc(0.78 * clamp(82px, 20.95vw, 136px) - 7px); }
+    /* Task 29 (task 19 C2): the props never get smaller as the window widens
+       across 900 to 901. The desktop rule above gives 108px at 901 (12vw), the
+       tablet 178px (ball) and 136px (Venus) at 900, so from 820 (where the tablet
+       sizes stay as the founder set them) the image width steps down in a straight
+       line to 108px at 900 for both, and the step at 901 is gone. Below 820 the
+       max() term is above the clamp and does nothing. */
     .lab :global(.kiosk-prop) {
-      --prop-w: clamp(107px, 27.5vw, 178px);
+      --prop-w: min(clamp(107px, 27.5vw, 178px), max(108px, calc(178px - (100vw - 820px) * 0.875)));
       --prop-m: 0.295;
       width: var(--prop-w);
       bottom: -0.15rem;
@@ -783,7 +789,7 @@ const doorFiles = ['software.exe', 'web_design.htm'];
       left: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));
     }
     .lab :global(.kiosk-prop-venus) {
-      --prop-w: clamp(82px, 20.95vw, 136px);
+      --prop-w: min(clamp(82px, 20.95vw, 136px), max(108px, calc(136px - (100vw - 820px) * 0.35)));
       --prop-m: 0.318;
       left: auto;
       right: calc(50% + min(50%, 320px) - var(--prop-w) + var(--prop-m) * var(--prop-w));

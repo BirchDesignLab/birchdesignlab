@@ -156,14 +156,20 @@ const { copy, theme } = Astro.props;
      100), so each steps left by its own, and the ink starts on the column
      line the way the title's does. */
   /* Hold a numeral (toys.ts): once the script has it, the digit is a thing to
-     press, on a mouse a different pointer, and a long press on a phone is not
-     a text selection or a menu. The weight is the script's, inline. */
+     press, and a long press on a phone is not a text selection or a menu. The
+     weight is the script's, inline. On a mouse the pointer and a rule under the
+     digit (the school's hover is an underline, as on its links) belong to the
+     digit and a few pixels round it (toys.ts sets data-hot there), never to the
+     three-column box it sits in. The rule is paint only and leaves the weight
+     alone, so a press from a hover starts from the weight it sees. */
   .num[data-live] {
-    cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .num[data-hot] { cursor: pointer; text-decoration: underline; text-decoration-thickness: 0.03em; text-underline-offset: 0.07em; }
   }
   .step:nth-child(1) .num { margin-inline-start: -0.1em; --sw-flat: 0.0108em; }
   .step:nth-child(2) .num { margin-inline-start: -0.053em; }

@@ -66,6 +66,11 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
     translate: -50% 0;
   }
   .stop[data-held] { cursor: grabbing; }
+  /* A mouse over it: the hit square shows as a one pixel keyline in ink, a
+     hard edge and no motion (the school's manner is a rule, never a glow). */
+  @media (hover: hover) and (pointer: fine) {
+    .stop[data-live]:hover::after { outline: 1px solid var(--mark); }
+  }
   .body { max-width: 20em; }
   .back { font-family: var(--font-display); font-weight: 700; justify-self: start; }
   @media (min-width: 640px) {

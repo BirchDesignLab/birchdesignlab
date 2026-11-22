@@ -17,6 +17,13 @@
  * `aria-label` is "Play" or "Pause", matching the OSD, and `aria-pressed` is
  * true while paused. No new words beyond the approved PAUSE, FF and REW.
  *
+ * Task 29 (the signifier rule, critique A1): a mouse has the pointer and the
+ * OSD's chromatic hover (Home.astro, gated). A finger that has not touched the
+ * remote gets one small beat, once a visit, on the common conditions (bauhaus's
+ * beat.ts: 60% visible, still 400 ms, no form focus): the deck pauses for a
+ * beat, the band rolling up the frame, and resumes with the seam's hiccup. A
+ * press, a key or a tap on the hero takes the deck over from the beat at once.
+ *
  * The picture itself lives in fx.ts: this module only announces the mode as a
  * DECK_EVENT on the hero canvas, so the remote still answers on the CSS sky
  * when WebGL never starts. Memory only: a fresh page (every arrival, every
@@ -25,6 +32,8 @@
  * page is hidden or the hero leaves the screen; the pause band's CSS loop is
  * paused off screen (`data-deck-off`).
  */
+import { scheduleBeat, spendBeat } from '../bauhaus/parts/beat';
+
 const THEME = 'vaporwave';
 
 export const DECK_EVENT = 'vw-deck';
@@ -38,6 +47,8 @@ export const DECK_WORDS: Record<DeckMode, string> = { play: 'PLAY', pause: 'PAUS
 export const HOLD_MS = 350;
 /** A move this far, mostly along one axis, decides a swipe (w3-common). */
 export const SWIPE_PX = 8;
+/** The touch beat's pause. */
+export const BEAT_PAUSE_MS = 700;
 /** A scan shows for at least this long, so a quick flick still reads. */
 export const MIN_SCAN_MS = 600;
 /** Today's counter, "SP 0:19:85", read as minutes, seconds, hundredths. */
@@ -54,15 +65,19 @@ export function formatCounter(seconds: number): string {
 
 /**
  * Which way a move from the press point goes, once it is decided: 'x' for a
- * mostly horizontal move past SWIPE_PX (half again as wide as it is tall),
- * 'y' for any other move past it (vertical or diagonal, left to the
- * browser's scroll), null while it is still too small to say.
+ * move past SWIPE_PX that is wider than it is tall, 'y' for any other move
+ * past it (taller than wide, left to the browser's scroll), null while it is
+ * still too small to say. The line between them is the diagonal because it is
+ * the browser's: under `touch-action: pan-y` Chrome starts no scroll for a
+ * pan whose first movement is wider than tall, so a swipe classed 'y' at 34 to
+ * 45 degrees from the horizontal (the old half-again rule) neither scrolled
+ * nor scanned (task 24 C3). Now a swipe either scans or scrolls.
  */
 export function swipeAxis(dx: number, dy: number, threshold = SWIPE_PX): 'x' | 'y' | null {
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);
-  if (ax >= threshold && ax > ay * 1.5) return 'x';
-  // Past the threshold and not mostly horizontal: the page's scroll.
+  if (ax >= threshold && ax > ay) return 'x';
+  // Past the threshold and not wider than tall: the page's scroll.
   if (Math.max(ax, ay) >= threshold) return 'y';
   return null;
 }
@@ -146,8 +161,34 @@ export function mountDeck(): (() => void) | void {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
   };
 
+  // ---- the touch beat (task 29) -------------------------------------------
+  const BEAT_KEY = 'vaporwave:remote';
+  let beatTimer = 0;
+  let beating = false;
+  /** One pause and a resume with the hiccup, as a tap and a tap would give. */
+  const beat = () => {
+    if (mode !== 'play') return;
+    beating = true;
+    setMode('pause');
+    beatTimer = window.setTimeout(() => {
+      beatTimer = 0;
+      beating = false;
+      if (mode === 'pause') setMode('play', true);
+    }, BEAT_PAUSE_MS);
+  };
+  /** The visitor takes the remote mid-beat: the beat resumes at once and their press goes on as usual. */
+  const cancelBeat = () => {
+    if (!beating) return;
+    window.clearTimeout(beatTimer);
+    beatTimer = 0;
+    beating = false;
+    if (mode === 'pause') setMode('play');
+  };
+
   const onPointerDown = (event: PointerEvent) => {
     if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    cancelBeat();
+    spendBeat(BEAT_KEY);
     const onButton = button.contains(event.target as Node);
     const touch = event.pointerType === 'touch';
     // A mouse or pen works the button; a finger works the whole hero.
@@ -181,7 +222,9 @@ export function mountDeck(): (() => void) | void {
       gesture.axis = axis;
       clearHold();
       if (axis === 'y') {
-        // The browser scrolls; a hold that already began still ends on release.
+        // The browser scrolls; a hold that already began still ends on release. A mouse dragged off the
+        // button vertically is no click either, as a horizontal drag is not (task 24 C2).
+        suppressClick = true;
         return;
       }
       suppressClick = true;
@@ -214,11 +257,15 @@ export function mountDeck(): (() => void) | void {
       return;
     }
     suppressClick = false;
+    cancelBeat();
     togglePause();
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    // Alt+Left is the browser's Back, Ctrl and Meta are the page's own: a press with a modifier is not the remote's (task 24 C1).
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    cancelBeat();
     event.preventDefault();
     if (event.repeat) return;
     keyScan = event.key;
@@ -276,7 +323,14 @@ export function mountDeck(): (() => void) | void {
   window.addEventListener('pagehide', onPageHide);
   render();
 
+  const abort = new AbortController();
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    scheduleBeat(BEAT_KEY, [button], beat, abort.signal, () => mode === 'play' && !gesture && inView);
+  }
+
   return () => {
+    abort.abort();
+    window.clearTimeout(beatTimer);
     clearHold();
     if (endTimer) clearTimeout(endTimer);
     if (scanFrame) cancelAnimationFrame(scanFrame);
