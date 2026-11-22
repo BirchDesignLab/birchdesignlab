@@ -394,11 +394,11 @@ function knock(num: Element): boolean {
   return true;
 }
 
-/** True once a numeral's own build has finished (the beat waits for it). */
+/** True once a numeral's own build has finished (the beat waits for it), or when it has no CSS animation to wait for (so the beat spends once and its retry timer stops re-arming). */
 function built(num: Element): boolean {
   try {
     const parts = num.getAnimations({ subtree: true }).filter((a) => typeof CSSAnimation !== 'undefined' && a instanceof CSSAnimation);
-    return parts.length > 0 && parts.every((a) => a.playState === 'finished');
+    return parts.every((a) => a.playState === 'finished');
   } catch {
     return false;
   }

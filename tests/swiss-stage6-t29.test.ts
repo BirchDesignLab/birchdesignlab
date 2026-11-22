@@ -90,14 +90,16 @@ describe('the signifier rule (stop 4 critique A1) for swiss', () => {
     // The rule leaves the weight alone: a hover that changed it would jump the weight at the press and at the end of the return.
     expect(services).not.toMatch(/\.num\[data-hot\] \{[^}]*font-weight/);
   });
-  it('the full stop keeps its grab cursor and gets a gated one pixel keyline over its hit square', () => {
+  it('the full stop keeps its grab cursor and gets a gated one pixel keyline 8px outside the dot ink, not over its hit square', () => {
     expect(sent).toMatch(/cursor: grab;/);
-    expect(sent).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.stop\[data-live\]:hover::after \{ outline: 1px solid var\(--mark\); \}/);
+    expect(sent).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.stop\[data-live\]:hover::before \{ outline: 1px solid var\(--mark\); outline-offset: 8px; \}/);
+    expect(sent).not.toMatch(/:hover::after/);
+    expect(sent).toMatch(/\.stop\[data-live\]::before \{[^}]*width: 0\.1434em;[^}]*height: 0\.1434em;/);
   });
-  it('the spine is live only while the sweep is on it, and a mouse over it gets a resize cursor and an ink block', () => {
+  it('the spine is live only while the sweep is on it, and a mouse over it gets no cursor of its own and an ink block', () => {
     expect(toys).toContain("birch.toggleAttribute('data-live', desk.matches)");
     expect(toys).toContain("birch.removeAttribute('data-live')");
-    expect(about).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.sw-birch\[data-live\] \{ pointer-events: auto; cursor: ns-resize; \}\s*\.sw-birch\[data-live\]:hover \{ background: var\(--mark\); color: var\(--field\); box-shadow: 0 var\(--sw-ty\) 0 0 var\(--mark\); clip-path: inset\(-0\.5em -0\.5em calc\(-1 \* var\(--sw-ty\)\) -0\.5em\); \}/);
+    expect(about).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.sw-birch\[data-live\] \{ pointer-events: auto; cursor: default; \}\s*\.sw-birch\[data-live\]:hover \{ background: var\(--mark\); color: var\(--field\); box-shadow: 0 var\(--sw-ty\) 0 0 var\(--mark\); clip-path: inset\(-0\.5em -0\.5em calc\(-1 \* var\(--sw-ty\)\) -0\.5em\); \}/);
   });
   it('the numeral and the full stop have a touch beat on the common conditions, for a finger only; the fields and the spine have none', () => {
     expect(toys).toContain("import { scheduleBeat } from '../bauhaus/parts/beat'");

@@ -175,6 +175,5 @@
   @media (hover: hover) and (pointer: fine) {
     button:hover { background: var(--accent); color: var(--field); }
   }
-  button:active { background: var(--accent); color: var(--field); }
   .note { font-size: var(--text-sm); color: var(--mark-muted); }
 </style>

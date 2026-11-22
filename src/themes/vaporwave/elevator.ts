@@ -9,11 +9,10 @@
  * page: B1 SOFTWARE the software.exe door, 1F WEB the web_design.htm door
  * (both through mountWindowActivation's ACTIVATE_EVENT), and 2F LAB flips the
  * CRT to its Lab list (a short flip of the screen, the list already there).
- * It navigates nowhere. Task 29 (critique C5): on a phone or tablet (900px
- * and under, BRING_QUERY) B1 and 1F bring their window into view when it is
- * off screen (a smooth scroll to its middle, after the activate event); a
- * window already in view is left where it is, the desktop scrolls nothing,
- * and 2F stays as built. The car starts at 1F with no button lit. Memory only; the
+ * It navigates nowhere. Task 29 (critique C5), widened at stop 5: at every
+ * width B1 and 1F bring their window into view when it is off screen (a
+ * smooth scroll to its middle, after the activate event); a window already in
+ * view is left where it is, nothing scrolls back, and 2F stays as built. The car starts at 1F with no button lit. Memory only; the
  * cleanup clears the timers and the flip.
  *
  * Touch (task 29, the signifier rule): a finger that has not touched it gets
@@ -50,18 +49,6 @@ export function offScreen(rect: { top: number; bottom: number }, viewportHeight:
   return rect.bottom <= 0 || rect.top >= viewportHeight;
 }
 
-/**
- * Where the car scrolls a window into view: the phone and tablet layouts, the
- * kiosk's own 900px step (Home.astro). The desktop stays as built: the founder
- * took the critique's "in view, nothing (1440 unchanged)" and the brief films
- * 1440 as no scroll. The critique assumed 1440 shows the window beside the
- * plaque; it does not (the page is one long column there too, the window a
- * screen or more above the plaque), so the rule is cut at the width, not left to
- * the viewport test alone. One line lifts it if the founder wants the desktop to
- * scroll as well.
- */
-export const BRING_QUERY = '(max-width: 900px)';
-
 /** The beat's two steps: up to 2F, then home to 1F. */
 const BEAT_FLOOR = 2;
 
@@ -84,11 +71,11 @@ export function mountElevator(): (() => void) | void {
   };
   show(at);
 
-  /** The window the car brought forward, if it is off the screen (an overlap with the viewport at all counts as in view) on a phone or tablet: scroll it to the middle. */
+  /** The window the car brought forward, if it is off the screen (an overlap with the viewport at all counts as in view) at any width: scroll it to the middle. */
   const bring = (door: Element | null) => {
     if (!door) return;
     door.dispatchEvent(new CustomEvent(ACTIVATE_EVENT));
-    if (window.matchMedia(BRING_QUERY).matches && offScreen(door.getBoundingClientRect(), window.innerHeight)) door.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (offScreen(door.getBoundingClientRect(), window.innerHeight)) door.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const arrive = (floor: number) => {

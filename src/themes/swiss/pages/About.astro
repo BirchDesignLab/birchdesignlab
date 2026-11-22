@@ -209,8 +209,8 @@ const [founderLead, ...founderRest] = copy.founder.body;
     .sw-birch { display: block; }
   }
   /* The spine is a toy from 1280 (toys.ts sets data-live where the sweep is on
-     it). A mouse over it gets a resize cursor (the scroll moves it) and the
-     school's own hover, the word printed in negative: an ink block with paper
+     it). A mouse over it gets no cursor of its own (a resize, grab or move cursor would each promise a
+     drag; the scroll moves it) and the school's own hover, the word printed in negative: an ink block with paper
      type, as a link is when pressed (the base pair, --field on --mark). Paint
      only: the box and the ink do not move. The box is dropped by --sw-ty so the
      ink sits on the section's edges, which leaves the top of the ink above the
@@ -222,7 +222,7 @@ const [founderLead, ...founderRest] = copy.founder.body;
      puts the box's bottom edge at the page's top), and leaves the rule whole.
      Everywhere else it stays out of the pointer's way. */
   @media (hover: hover) and (pointer: fine) {
-    .sw-birch[data-live] { pointer-events: auto; cursor: ns-resize; }
+    .sw-birch[data-live] { pointer-events: auto; cursor: default; }
     .sw-birch[data-live]:hover { background: var(--mark); color: var(--field); box-shadow: 0 var(--sw-ty) 0 0 var(--mark); clip-path: inset(-0.5em -0.5em calc(-1 * var(--sw-ty)) -0.5em); }
   }
   @media (min-width: 1280px) {

@@ -188,8 +188,8 @@
   --margin-line: rgba(234, 184, 106, 0.3);
   --stitch: rgba(169, 194, 148, 0.55);
   --stitch-rose: rgba(234, 184, 106, 0.6);
-  /* The needle's threads on the hoop's board linen: the same deepened rose and sage the sprig is
-     worked in there (the .hoop .cloth block below sets --cc-rose-petal and friends to these). */
+  /* The needle's threads on the hoop's board linen. The sage is the sprig's; the dark rose is no longer
+     the sprig's (the .hoop .cloth block below sets --cc-rose-petal and friends): it is #a24a58, deepened for contrast. */
   /* The top thread is deepened from #b85f6c (2.41:1 on the board linen) to clear the 3:1 row meta.contrast now holds
      (Stage 6 w4 task 30, critique B3); the edge under it is unchanged and is the dark that light borrows. */
   --thread-rose: #a24a58;

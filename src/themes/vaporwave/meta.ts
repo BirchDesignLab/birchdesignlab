@@ -41,6 +41,7 @@ export const meta: ThemeMeta = {
     { fg: '--accent', bg: ['--field-raised'], min: 4.5, note: 'kickers inside a window' },
     { fg: '--mark', bg: ['--field-sunk'], min: 4.5, note: 'typed text in a sunken form field, and the readme.txt Notepad' },
     { fg: '--mark', bg: ['--field-raised'], min: 4.5, note: 'the elevator floor keys, the Recycle Bin status line (task 25), and the My Computer drive glyphs\' ink (task 29)' },
+    { fg: '--mark-muted', bg: ['--field-sunk'], min: 3, note: 'the My Computer floppy\'s shutter (--field-sunk) against its body (--mark-muted), stop 5' },
     { fg: '--on-accent', bg: ['--accent'], min: 4.5, note: 'a selected desktop icon label on Sent (task 25)' },
     { fg: '--bar-ink', bg: ['--bar-a'], min: 4.5, note: 'window title, pink end of the bar' },
     { fg: '--bar-ink', bg: ['--bar-b'], min: 4.5, note: 'window title, lavender middle of the bar' },

@@ -324,11 +324,11 @@ export function initPlates(hero: HTMLElement | null): (() => void) | void {
 
   /* The touch beat (Stage 6 w4 task 30, critique A1): with no pointer to brush them, one plate gives a half-size swing,
      once a visit, when it is at least 60% on screen, the page has been still 400 ms and no form field has focus
-     (bauhaus/parts/beat.ts). The first shown plate in document order that qualifies; a press on any plate spends it. */
+     (bauhaus/parts/beat.ts) and the warm-up has run (stop 5, m6: the beat never carries the filter hitch). The first shown plate in document order that qualifies; a press on any plate spends it. */
   const beatAbort = new AbortController();
   const stopBeat = window.matchMedia('(hover: hover) and (pointer: fine)').matches
     ? () => {}
-    : scheduleBeat('grandmillennial:plates', plates, (t) => { if (isShown(t)) swing(t as SVGElement, 0, 0.5); }, beatAbort.signal, (t) => live && isShown(t) && !running.size && !document.hidden);
+    : scheduleBeat('grandmillennial:plates', plates, (t) => { if (isShown(t)) swing(t as SVGElement, 0, 0.5); }, beatAbort.signal, (t) => live && warmed && isShown(t) && !running.size && !document.hidden);
 
   hero.addEventListener('pointerenter', warm);
   hero.addEventListener('pointerdown', warm);

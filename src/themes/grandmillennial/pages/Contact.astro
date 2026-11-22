@@ -319,7 +319,7 @@ const { copy, theme } = Astro.props;
     /* one column: the form is above the envelope, and the flap folds up behind its own top edge, so the
        envelope lies under the form (z 0 against the form's 1) and the flap can never cover it (task 22). */
     .envelope { width: min(100%, 28rem); justify-self: center; rotate: 1.4deg; z-index: 0; }
-    /* Open, the flap stands ajar (105 degrees, not 160): about 36px of it inside the 40px gap above the envelope, so the
+    /* Open, the flap stands ajar (105 degrees, not 160): about 26px of it inside the 40px gap above the envelope, so the
        whole hinge shows and it still never reaches the form (Stage 6 w4 task 30, critique B5). */
     .envelope[data-open='true'] .lid { transform: perspective(900px) rotateX(-105deg); }
   }

@@ -66,10 +66,22 @@ const word = stop ? copy.heading.slice(0, -1) : copy.heading;
     translate: -50% 0;
   }
   .stop[data-held] { cursor: grabbing; }
-  /* A mouse over it: the hit square shows as a one pixel keyline in ink, a
-     hard edge and no motion (the school's manner is a rule, never a glow). */
+  /* A mouse over it: a one pixel keyline in ink boxes the dot, 8px out from the dot's own ink (a hard
+     edge and no motion; the school's manner is a rule, never a glow). The hit square above stays the hit
+     area, unpainted. The box is the dot's measured ink, not the advance (stop 5, D1; measured at 390 and
+     1440: the ink is 0.1434em square, 0.0812em in from the span's left edge and 0.5894em down from its
+     top), and the outline sits 8px outside it, which at 1440 clears the foot of the "t" by about 18px. */
+  .stop[data-live]::before {
+    content: '';
+    position: absolute;
+    left: 0.0812em;
+    top: 0.5894em;
+    width: 0.1434em;
+    height: 0.1434em;
+    pointer-events: none;
+  }
   @media (hover: hover) and (pointer: fine) {
-    .stop[data-live]:hover::after { outline: 1px solid var(--mark); }
+    .stop[data-live]:hover::before { outline: 1px solid var(--mark); outline-offset: 8px; }
   }
   .body { max-width: 20em; }
   .back { font-family: var(--font-display); font-weight: 700; justify-self: start; }

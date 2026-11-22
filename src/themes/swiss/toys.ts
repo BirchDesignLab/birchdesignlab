@@ -307,23 +307,36 @@ export function initNumeralHold(page: Element | null, root: Document | Element =
     r.raf = requestAnimationFrame(step);
   };
 
+  /** The constant-speed return from the current weight to rest, then stop dead (nothing eased). */
+  const runHome = (n: HTMLElement) => {
+    const r = runOf(n);
+    const from = r.weight;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const d = W_SPEED * (now - t0);
+      const w = from < W_REST ? Math.min(W_REST, from + d) : Math.max(W_REST, from - d);
+      if (w === W_REST) { rest(n); return; }
+      show(n, w);
+      r.raf = requestAnimationFrame(step);
+    };
+    r.raf = requestAnimationFrame(step);
+  };
+
+  /** A touch that never settled (a tap or a swipe): nothing to hold, and a weight still on its way home carries on from where it is instead of snapping (stop 5, m2). */
+  const letGo = (n: HTMLElement) => {
+    stopRun(n);
+    if (runOf(n).weight !== W_REST) runHome(n);
+    else rest(n);
+  };
+
   /** Released: after the hold, back to rest at a constant speed, then stop dead. */
   const snapBack = (n: HTMLElement) => {
     const r = runOf(n);
     stopRun(n);
-    if (!r.started) { rest(n); return; }
+    if (!r.started) { letGo(n); return; }
     r.hold = window.setTimeout(() => {
       r.hold = 0;
-      const from = r.weight;
-      const t0 = performance.now();
-      const step = (now: number) => {
-        const d = W_SPEED * (now - t0);
-        const w = from < W_REST ? Math.min(W_REST, from + d) : Math.max(W_REST, from - d);
-        if (w === W_REST) { rest(n); return; }
-        show(n, w);
-        r.raf = requestAnimationFrame(step);
-      };
-      r.raf = requestAnimationFrame(step);
+      runHome(n);
     }, BACK_HOLD_MS);
   };
 
@@ -357,7 +370,7 @@ export function initNumeralHold(page: Element | null, root: Document | Element =
     if (!runOf(press.num).started && Math.hypot(p.clientX - press.x, p.clientY - press.y) > SLOP_PX) {
       const n = press.num;
       press = null;
-      rest(n);
+      letGo(n);
     }
   };
   const up = (e: Event) => end((e as PointerEvent).pointerId);

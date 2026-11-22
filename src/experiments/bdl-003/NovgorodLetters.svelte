@@ -77,5 +77,4 @@
   @media (hover: hover) and (pointer: fine) {
     .back:hover { background: var(--accent); color: var(--field); }
   }
-  .back:active { background: var(--accent); color: var(--field); }
 </style>
