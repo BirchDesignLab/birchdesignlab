@@ -4,8 +4,12 @@
    Basic and accurate, not final. Every sentence describes what the site
    actually does: Google Analytics (Analytics consent), the Meta Pixel
    (Marketing consent, PageView only), Cloudflare Web Analytics (cookieless,
-   not consent-gated, injected by Cloudflare), and the contact form, nothing
-   else. The two tags run through Cloudflare Zaraz, never site code; the
+   not consent-gated, injected by Cloudflare), the QR scan beacon
+   (POST /api/beacon: time and channel only, Analytics Engine, about three
+   months), and the contact form (failed sends held in KV for the daily
+   retry, HELD_TTL_SECONDS = 30 days; per-IP rate limit, IP not stored),
+   nothing else. If worker/index.ts changes any of that, change this page in
+   the same PR. The two tags run through Cloudflare Zaraz, never site code; the
    config of record is docs/analytics.md. If a tag, event or consent purpose changes
    there, change this page in the same PR.
    No placeholders or TODOs in the rendered page. A founder voice-and-legal
@@ -19,7 +23,7 @@
    No emdashes (external copy). Unnamed studio voice, no founder name. */
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const updated = 'October 22, 2026';
+const updated = 'November 22, 2026';
 ---
 <BaseLayout
   title="Privacy · Birch Design Lab"
@@ -30,7 +34,7 @@ const updated = 'October 22, 2026';
       <p class="smallcaps kicker">Privacy</p>
       <h1>What we collect, and why.</h1>
       <p class="subline">
-        The short version. This site measures its own traffic, measures our ads if you allow it, and lets you send us a message. We do not sell your data, and we never have.
+        The short version. This site measures its own traffic, measures our ads if you allow it, counts scans of our QR codes, and lets you send us a message. We do not sell your data, and we never have.
       </p>
       <p class="fine-print">Last updated {updated}.</p>
     </header>
@@ -65,6 +69,13 @@ const updated = 'October 22, 2026';
     </article>
 
     <article class="clause">
+      <h2>QR code scans</h2>
+      <p>
+        Some of our printed material carries a QR code that opens a page on this site. When that page loads, it records one scan: the time, and which code was scanned. Nothing else. No cookies, no IP address, no device details. Cloudflare keeps the count for us, and we only ever see totals.
+      </p>
+    </article>
+
+    <article class="clause">
       <h2>When you contact us</h2>
       <p>
         If you send a message through the contact form, we receive what you type. Your name, your email address, and the details of your message. We use it to reply to you and to talk through your project. That is all.
@@ -72,19 +83,25 @@ const updated = 'October 22, 2026';
       <p>
         We do not add you to a mailing list, and we do not pass your message to anyone else. It sits in our inbox like any other email.
       </p>
+      <p>
+        If something goes wrong on the way to our inbox, your message is not lost. Our host, Cloudflare, holds it and tries again once a day until it arrives. It is deleted the moment it goes through, and after 30 days at the most.
+      </p>
+      <p>
+        To keep out spam, Cloudflare also checks how often messages come from the same connection. We do not store your IP address.
+      </p>
     </article>
 
     <article class="clause">
       <h2>Who we share it with</h2>
       <p>
-        The services above are the only third parties involved. Google, for analytics, and Meta, for advertising, each only if you say yes. And the email provider that carries your message to our inbox. This site is hosted on Cloudflare, which processes requests to serve the pages to you and counts visits for us, as described above. We do not sell, rent, or trade any of it.
+        The services above are the only third parties involved. Google, for analytics, and Meta, for advertising, each only if you say yes. And the email provider that carries your message to our inbox. This site is hosted on Cloudflare, which processes requests to serve the pages to you, counts visits and QR code scans for us, and holds a message for a retry if it cannot be delivered right away, all as described above. We do not sell, rent, or trade any of it.
       </p>
     </article>
 
     <article class="clause">
       <h2>How long we keep it</h2>
       <p>
-        Analytics data is held by Google under the retention period set on our account and Google's own policies. Advertising data is held by Meta under Meta's own policies. Visit counts from Cloudflare Web Analytics are held by Cloudflare under its own policies. Messages you send us stay in our inbox for as long as we are in touch about your project, and are cleared out when they are no longer needed.
+        Analytics data is held by Google under the retention period set on our account and Google's own policies. Advertising data is held by Meta under Meta's own policies. Visit counts from Cloudflare Web Analytics are held by Cloudflare under its own policies. QR code scan counts are kept for about three months. A message that could not be delivered right away is held for 30 days at the most. Messages you send us stay in our inbox for as long as we are in touch about your project, and are cleared out when they are no longer needed.
       </p>
     </article>
 
