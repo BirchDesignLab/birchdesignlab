@@ -23,6 +23,7 @@
     "test:dist": "vitest run --config vitest.dist.config.ts"
   },
   "dependencies": {
+    "@astrojs/markdown-satteri": "^0.4.10",
     "@astrojs/sitemap": "^3.7.4",
     "@astrojs/svelte": "^9.0.1",
     "@fontsource-variable/archivo": "^5.3.0",
