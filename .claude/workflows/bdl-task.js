@@ -182,6 +182,7 @@ const RULES_GIT = ['Rules:', '- Never dispatch subagents. Do all of this work yo
 const RULES = [
   RULES_GIT,
   `- Change only the files in owns: ${OWNS.join(', ')}. Read-only roles change nothing but their own review file and scratch path.`,
+  `- One-off probe, crop, measure and verify scripts go in scripts/scratch/${A.runLabel}/ (gitignored, in the repo folder). Never commit them; commit a script only if the brief names it as a kept tool.`,
   '- Serve only on your assigned port. Before you return, stop every server you started and check netstat for 4460 to 4480 and 8787.',
   '- Wait once: one Monitor or foreground chunks under 10 minutes; never re-issue a timed-out waiter.',
   '- Film with GPU Chromium (BDL_GPU=1; --use-angle=d3d11 --enable-gpu) and confirm the renderer through WEBGL_debug_renderer_info. Never mix software and GPU frames in one delivery.',

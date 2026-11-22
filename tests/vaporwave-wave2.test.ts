@@ -5,7 +5,8 @@ import { execFileSync } from 'node:child_process';
 /** Stage 6 wave 2, task 13: vaporwave V1 to V14, pinned in source. The
     measured results (the sizes each finding names, both schemes) are in the
     task report; these keep the decisions from drifting. */
-const read = (p: string) => readFileSync(`src/themes/vaporwave/${p}`, 'utf8');
+// LF-normalised: a Windows checkout (autocrlf) writes CRLF, and the slices below match on '\n'.
+const read = (p: string) => readFileSync(`src/themes/vaporwave/${p}`, 'utf8').replace(/\r\n/g, '\n');
 const services = read('pages/Services.astro');
 const home = read('pages/Home.astro');
 const about = read('pages/About.astro');

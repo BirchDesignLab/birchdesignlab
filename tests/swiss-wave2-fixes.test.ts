@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
     minors (T4 C3 to C6, T6 C3 to C8), pinned in source. The measured results
     are in the task report; these keep the decisions from drifting. */
 const dial = readFileSync('src/themes/swiss/WidthDial.astro', 'utf8');
-const home = readFileSync('src/themes/swiss/pages/Home.astro', 'utf8');
+// LF-normalised: a Windows checkout (autocrlf) writes CRLF, and a slice below matches on '\n'.
+const home = readFileSync('src/themes/swiss/pages/Home.astro', 'utf8').replace(/\r\n/g, '\n');
 const about = readFileSync('src/themes/swiss/pages/About.astro', 'utf8');
 const services = readFileSync('src/themes/swiss/pages/Services.astro', 'utf8');
 const key = readFileSync('src/themes/swiss/GridKey.astro', 'utf8');
