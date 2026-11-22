@@ -417,7 +417,10 @@ const t0 = TB[0];
 
   /* bubble cards and forks */
   .ds .bub { grid-column: 5; display: flex; gap: 12px; align-items: center; border: 1.5px solid var(--ink); padding: 10px 14px; opacity: .8; transition: opacity .3s var(--ease), background .3s, transform .3s var(--ease), box-shadow .3s; margin: 3px 0; background: none; position: relative; cursor: pointer; }
-  .ds .bub:hover, .ds .bub:focus-visible { opacity: 1; background: var(--tile); border-color: var(--ink); box-shadow: inset 0 0 0 .5px var(--ink), 0 3px 0 var(--ink); transform: translateY(-2px); }
+  .ds .bub:focus-visible { opacity: 1; background: var(--tile); border-color: var(--ink); box-shadow: inset 0 0 0 .5px var(--ink), 0 3px 0 var(--ink); transform: translateY(-2px); }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .bub:hover { opacity: 1; background: var(--tile); border-color: var(--ink); box-shadow: inset 0 0 0 .5px var(--ink), 0 3px 0 var(--ink); transform: translateY(-2px); }
+  }
   .ds .bub .bal { width: 36px; height: 36px; font-size: 20px; border-color: var(--ink); margin: 0; }
   .ds .bub b { display: block; font: 400 20px/1.1 'Marcellus', serif; }
   .ds .bub b span { font: inherit; }
@@ -455,16 +458,23 @@ const t0 = TB[0];
   .ds a.go { text-decoration: none; }
   .ds .bub b { text-wrap: balance; }
   .ds .go { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px 18px; background: var(--mark); color: var(--field); font: 500 15px/1.2 'IBM Plex Mono', monospace; border: 2px solid var(--mark); text-align: left; transition: background .25s var(--ease), border-color .25s var(--ease); }
-  .ds .go:hover, .ds .go:focus-visible { background: var(--accent); border-color: var(--accent); }
-  .ds .go:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .go:hover { background: var(--accent); border-color: var(--accent); }
+  }
+  .ds .go:focus-visible { background: var(--accent); border-color: var(--accent); outline: 2px solid var(--ink); outline-offset: 2px; }
   .ds .go.alt { background: var(--field); color: var(--ink); border-color: var(--ink); }
-  .ds .go.alt:hover, .ds .go.alt:focus-visible { background: var(--tile); border-color: var(--ink); }
+  .ds .go.alt:focus-visible { background: var(--tile); border-color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .go.alt:hover { background: var(--tile); border-color: var(--ink); }
+  }
   .ds #nav { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
   .ds #nav > * { pointer-events: auto; }
   .ds .strip { position: absolute; left: 64px; top: 804px; width: 616px; display: flex; align-items: stretch; border: 1.5px solid var(--ink); height: 52px; }
   .ds .mk { display: flex; align-items: center; gap: 7px; padding: 0 12px; font: 400 16px/1 'Spectral', serif; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; text-align: left; }
   .ds .mk .mi { font: 500 15px/1 'IBM Plex Mono', monospace; }
-  .ds .mk:hover { color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .mk:hover { color: var(--ink); }
+  }
   .ds .mk[aria-current="step"] { color: var(--ink); font-weight: 500; background: var(--tile); border-bottom-color: var(--ink); }
   .ds .sep { align-self: center; color: var(--muted); font-size: 16px; }
   .ds .acts { position: absolute; left: 700px; top: 804px; width: 676px; display: flex; align-items: center; gap: 12px; min-height: 52px; }
@@ -476,7 +486,10 @@ const t0 = TB[0];
   .ds.used .cue, .ds:not([data-detail="0"]) .cue { display: none; }
   .ds #nav [hidden] { display: none !important; }
   .ds .bub .open { position: absolute; right: 10px; bottom: 9px; background: var(--ink); color: var(--field); font: 500 15px/1 'IBM Plex Mono', monospace; padding: 7px 10px; transition: background .25s; }
-  .ds .bub:hover .open, .ds .bub:focus-visible .open { background: var(--lead); color: var(--field); }
+  .ds .bub:focus-visible .open { background: var(--lead); color: var(--field); }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .bub:hover .open { background: var(--lead); color: var(--field); }
+  }
   .ds.og #nav { display: none; }
 
   /* ---- detail sheets ---- */
@@ -500,8 +513,10 @@ const t0 = TB[0];
   .ds.hood .tree .th > span { font: 400 13px 'IBM Plex Mono', monospace; }
   /* The one link out: the salon tree's heading goes to its own page (BDL-008). */
   .ds .tree .th b a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: color-mix(in srgb, var(--ink) 55%, transparent); transition: color .25s var(--ease), text-decoration-color .25s var(--ease); }
-  .ds .tree .th b a:hover, .ds .tree .th b a:focus-visible { color: var(--lead); text-decoration-color: var(--lead); }
-  .ds .tree .th b a:focus-visible { outline: 2px solid var(--lead); outline-offset: 3px; }
+  @media (hover: hover) and (pointer: fine) {
+    .ds .tree .th b a:hover { color: var(--lead); text-decoration-color: var(--lead); }
+  }
+  .ds .tree .th b a:focus-visible { color: var(--lead); text-decoration-color: var(--lead); outline: 2px solid var(--lead); outline-offset: 3px; }
   .ds .tr { height: var(--rw); display: flex; align-items: center; font: 400 14px 'IBM Plex Mono', monospace; white-space: pre; width: 330px; padding-left: 8px; margin: 0; }
   .ds .tr.l1 { padding-left: 28px; }
   .ds .tr.l2 { padding-left: 48px; }
