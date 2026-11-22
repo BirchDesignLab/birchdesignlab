@@ -44,3 +44,12 @@ export const SOCIAL_PROFILES = [
   { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/birchdesignlab/' },
   { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/p/Birch-Design-Lab-61593412854284/' },
 ] as const;
+
+/**
+ * The Google Business Profile, linked from structured data only (`sameAs`).
+ * The footer stays the social accounts unless the founder asks for this one
+ * there too (open as of 11-22-26). The URL is
+ * the profile's knowledge-graph id, which is stable, rather than a share link
+ * or a search URL with session parameters.
+ */
+export const GOOGLE_BUSINESS_PROFILE_URL = 'https://www.google.com/search?kgmid=/g/11nvjpz5dy';

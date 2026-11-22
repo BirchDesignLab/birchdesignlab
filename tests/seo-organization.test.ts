@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SOCIAL_PROFILES } from '../src/lib/seo/site';
+import { SOCIAL_PROFILES, GOOGLE_BUSINESS_PROFILE_URL } from '../src/lib/seo/site';
 import {
   buildOrganization,
   buildService,
@@ -55,12 +55,17 @@ describe('buildOrganization', () => {
     expect(serialized).not.toMatch(/"Person"/);
   });
 
-  it('lists the business social profiles in sameAs, the same ones the footer links', () => {
+  it('lists the footer social profiles in sameAs, then the Google Business Profile', () => {
     expect(org.sameAs).toEqual([
       'https://www.instagram.com/birchdesignlab/',
       'https://www.facebook.com/p/Birch-Design-Lab-61593412854284/',
+      'https://www.google.com/search?kgmid=/g/11nvjpz5dy',
     ]);
-    expect(org.sameAs).toEqual(SOCIAL_PROFILES.map((p) => p.url));
+    expect(org.sameAs).toEqual([...SOCIAL_PROFILES.map((p) => p.url), GOOGLE_BUSINESS_PROFILE_URL]);
+  });
+
+  it('links the Business Profile by its stable kgmid, with no share or session parameters', () => {
+    expect(GOOGLE_BUSINESS_PROFILE_URL).toMatch(/^https:\/\/www\.google\.com\/search\?kgmid=\/g\/[a-z0-9_]+$/i);
   });
 
   it('keeps every profile on https and off any personal account path', () => {
