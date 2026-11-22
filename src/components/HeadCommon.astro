@@ -4,8 +4,9 @@
     Layout-specific tags stay in the layout.
 
     On the icon set: the SVG is the real one, and the 32px PNG exists only
-    because anything that will not take an SVG icon otherwise falls through
-    to /favicon.ico, which does not exist, and shows nothing at all. iOS
+    for anything that will not take an SVG icon. Clients that read no link
+    tags at all request /favicon.ico, which is built from the SVG by
+    scripts/brand/make-favicon-ico.mjs (16, 32, 48 px) and needs no tag. iOS
     ignores SVG for the touch icon, so that gets its own 180px PNG. All are
     committed assets. The JSON-LD Organization logo points at the committed
     /icon-512.png (the locked mark), not a generated build artefact. */

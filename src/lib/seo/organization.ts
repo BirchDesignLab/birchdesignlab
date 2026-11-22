@@ -23,15 +23,18 @@
  * Deliberately absent: `founder`, `address`, `telephone`. The founder stays
  * abstracted from the brand.
  *
- * `sameAs` is the business's social profiles (SOCIAL_PROFILES in site.ts), the
- * same list the footer links. It is still omitted rather than emitted empty if
- * that list is ever emptied.
+ * `sameAs` is the business's social profiles (SOCIAL_PROFILES in site.ts, the
+ * same list the footer links) plus the Google Business Profile, which is in
+ * structured data only. It is still omitted rather than emitted empty if both
+ * are ever emptied.
  *
  * Name, description, and service area come from site.ts, the single source of
  * truth shared with the home-page meta.
  */
 
-import { SITE_NAME, SITE_DESCRIPTION, SERVICE_AREA, SOCIAL_PROFILES } from './site';
+import { SITE_NAME, SITE_DESCRIPTION, SERVICE_AREA, SOCIAL_PROFILES, GOOGLE_BUSINESS_PROFILE_URL } from './site';
+
+const SAME_AS: string[] = [...SOCIAL_PROFILES.map((p) => p.url), GOOGLE_BUSINESS_PROFILE_URL].filter(Boolean);
 
 export interface AreaServedJsonLd {
   '@type': 'AdministrativeArea';
@@ -63,7 +66,7 @@ export function buildOrganization(site: URL | string): OrganizationJsonLd {
     logo: new URL('/icon-512.png', base).href,
     description: SITE_DESCRIPTION,
     areaServed: areaServed(),
-    ...(SOCIAL_PROFILES.length ? { sameAs: SOCIAL_PROFILES.map((p) => p.url) } : {}),
+    ...(SAME_AS.length ? { sameAs: SAME_AS } : {}),
   };
 }
 
