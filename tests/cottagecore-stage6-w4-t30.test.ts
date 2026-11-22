@@ -12,10 +12,16 @@ const home = read('pages/Home.astro');
 const sent = read('pages/Sent.astro');
 
 describe('released seeds start small and grow (B1)', () => {
-  it('gives each puff a bornAt and waits i x 70 ms, still and undrawn', () => {
+  it('gives each puff a bornAt and waits n x 70 ms (n = seeds already seated), still and undrawn', () => {
     expect(fx).toMatch(/stagger: 70, grow0: 0\.3, growMs: 1400/);
-    expect(fx).toMatch(/bornAt: t \+ i \* PUFF\.stagger,/);
-    expect(fx).toMatch(/dieAt: t \+ i \* PUFF\.stagger \+ PUFF\.life/);
+    // The stagger counts seated seeds (Stage 6 minor m7), never the point index, which counts points with no seat.
+    const rel = fx.slice(fx.indexOf('const releasePuff'), fx.indexOf('const draw = '));
+    expect(rel).not.toMatch(/i \* PUFF\.stagger/);
+    expect(rel).toContain('const wait = placedAt.length * PUFF.stagger;');
+    expect(rel).toContain('s.bornAt = t + wait;');
+    expect(rel).toContain('s.dieAt = (s.dieAt ?? t) + wait;');
+    expect(rel.indexOf('if (!placed) continue;')).toBeLessThan(rel.indexOf('const wait = placedAt.length'));
+    expect(rel.indexOf('const wait = placedAt.length')).toBeLessThan(rel.indexOf('placedAt.push(i);'));
     expect(fx).toContain('if (s.puff && !still && t < (s.bornAt ?? 0)) continue;');
   });
   it('scales only the drawImage size, never s.size', () => {

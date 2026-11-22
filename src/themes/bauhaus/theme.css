@@ -518,9 +518,12 @@
     translate: -4px -4px;
     filter: drop-shadow(4px 4px 0 currentColor);
   }
+  /* In the svg's viewBox units, which scale with the corner's width: --u-px (parts/toys.ts) is one screen
+     pixel in them, so the lift and its block are 4 screen px at every width, as on the other toys. */
   [data-theme='bauhaus'] .corner[data-hot] [data-lift] {
-    translate: -4px -4px;
-    filter: drop-shadow(4px 4px 0 var(--on-poster));
+    --lift: calc(4px * var(--u-px, 1));
+    translate: calc(-1 * var(--lift)) calc(-1 * var(--lift));
+    filter: drop-shadow(var(--lift) var(--lift) 0 var(--on-poster));
   }
 }
 @media (prefers-reduced-motion: reduce) {

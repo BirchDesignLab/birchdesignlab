@@ -509,8 +509,9 @@
    (pointer-events none, inside the box, over padding only). A field that is not
    a bleed (About's red field) takes an inset outline. An edge that already sits
    on a rule is skipped (no 2px): Contact's black sheet sits between the
-   header's rule and the form's, and its red address on a desktop is hung from
-   the section's rule. The buttons are never touched. */
+   header's rule and the form's (so it gets its edge in the margins only, below),
+   and its red address on a desktop is hung from the section's rule. The buttons
+   are never touched. */
 [data-theme='swiss'] [data-sw-flip]:not(.sw-bleed) {
   outline: 1px solid var(--flip-edge);
   outline-offset: -1px;
@@ -532,7 +533,26 @@
   border-block-width: var(--flip-edge-t, 1px) var(--flip-edge-b, 1px);
   pointer-events: none;
 }
-[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --flip-edge-t: 0px; --flip-edge-b: 0px; }
+/* Contact's black sheet: inside the frame the header's rule (the row above the sheet) and the form's rule (the
+   row below it) are its edges, but both stop at the frame, and in the margins the pressed sheet's white met the
+   paper at 1.03:1 (Stage 6 stop 5, m3). So its edge runs in the margins only, on those same two rows, and
+   continues the rules out to the viewport, with a mask keeping the frame's span bare (no 2px over a rule).
+   Those rows are outside the box, which the bleed's clip cuts away, so while pressed this sheet paints its fill
+   with a border-image outset to the sides instead (out sideways only, so no clip is needed) and drops the clip.
+   A clip there would end on the frame's fractional px (57.6 at 1440) and anti-alias the fill and the edge each
+   on its own, leaving a grey notch where the edge meets the rule. The mask reaches 1px into the frame, over the
+   rule's own row in its own ink, so the join has no seam either. The ink is the page's (--ink, the rules'
+   colour in both schemes), not the sheet's rest black: in dark a black edge would cut 1px off each rule. */
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] {
+  box-shadow: none;
+  clip-path: none;
+  border-image: linear-gradient(var(--bleed-fill), var(--bleed-fill)) fill 0 / 0 / 0 100vw;
+}
+[data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip]::after {
+  inset: -1px -100vw;
+  border-color: var(--ink);
+  mask-image: linear-gradient(to right, #000 calc(100vw + 1px), transparent calc(100vw + 1px) calc(100% - 100vw - 1px), #000 calc(100% - 100vw - 1px));
+}
 @media (min-width: 1024px) {
   /* Fill runs right only (Contact's address): so does its edge, and its top is the section's rule.
      Its left is a real edge in the page, next to the form (fix round 1, C1), so it gets the 1px. */
