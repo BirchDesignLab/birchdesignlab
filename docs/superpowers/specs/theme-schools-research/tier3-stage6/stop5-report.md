@@ -106,3 +106,8 @@ the run finished clean).
 
 ## Answers (founder)
 
+Founder, 11-21-26: **took every critic verdict** in `stop5-critique.md`,
+including call 3 (the elevator scrolls to an off-screen window at every
+width, reversing stop 4's "1440 unchanged"). The final fixes run as one
+task (31) with a review; m1 (the corner lift's scaling), m3, m4 and m7 go to
+`docs/lab-backlog.md`. Then the close.
