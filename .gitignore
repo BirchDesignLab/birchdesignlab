@@ -33,6 +33,10 @@ social/out/
 # it is worth running again. See CLAUDE.md "Scripts".
 scripts/scratch/
 
+# Session handoffs: resume notes between sessions (run ids, ledger pointers,
+# controller state). Local working material, never pushed (founder, 11-22-26).
+docs/handoffs/
+
 # Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
 scripts/themes/.out/
 scripts/footer/.out/
