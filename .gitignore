@@ -27,6 +27,12 @@ assets/brand/logos/3d/*.mtl
 # social/calendar.html + the site itself. Never source.
 social/out/
 
+# Scratch: one-off probes, crops, measures and verifies (agents' and ours).
+# Lives in the repo folder on purpose (founder, 11-22-26: never the system
+# temp scratchpad), but never committed. Promote a script out of here only when
+# it is worth running again. See CLAUDE.md "Scripts".
+scripts/scratch/
+
 # Theme-schools capture/diff outputs (scripts/themes/): regenerable PNGs.
 scripts/themes/.out/
 scripts/footer/.out/

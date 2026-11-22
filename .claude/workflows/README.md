@@ -45,7 +45,7 @@ Workflow({ scriptPath: ".claude/workflows/bdl-task.js", args: {
 
 Required: `task`, `title`, `repoDir`, `branch`, `base` (full 40-hex sha), `briefPath`, `reportPath`, `workDir`, `scratchRoot`, `runLabel` (lowercase letters, digits, dashes, at most 29: it names the snap builds), `owns`, `ports` (three or more distinct, 4460 to 4480), `trailer`. A missing one throws before any agent runs.
 
-Keep `reportPath`, `workDir` and `scratchRoot` out of the clean-tree checks: put them outside the repo, under a gitignored path (`scripts/themes/.out/` is gitignored), or list them in `foreignPaths`. A report or review file that shows up as untracked and sits outside `owns` makes gate-0 report a dirty tree that no fixer may clear, and the task parks.
+Keep `reportPath`, `workDir` and `scratchRoot` out of the clean-tree checks: put them outside the repo, under a gitignored path (`scripts/scratch/` and `scripts/themes/.out/` are gitignored), or list them in `foreignPaths`. Agents write one-off probe scripts to `scripts/scratch/<runLabel>/` (a rule in every prompt); never put probe globs in a brief's `owns`, and name any script a task must commit as a kept tool in the brief (CLAUDE.md "One-off probes go in `scripts/scratch/`"). A report or review file that shows up as untracked and sits outside `owns` makes gate-0 report a dirty tree that no fixer may clear, and the task parks.
 
 Optional:
 

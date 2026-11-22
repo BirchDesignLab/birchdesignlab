@@ -88,6 +88,18 @@ in `%TEMP%` is gone the moment it would have been useful.
 directory. Commit-message drafts, diff dumps, notes to self. The rule is about
 executable work that could ever be run twice, not about every byte written.
 
+**One-off probes go in `scripts/scratch/`** (founder, 11-22-26). Crops,
+probes, measures, verifies and critic evidence scripts, ours and every
+workflow agent's, live in `scripts/scratch/` (subfolders by run or task). It is
+inside the repo folder, so it survives like everything else here, and it is
+gitignored, so it never lands in this public repo. Commit a script only when it
+is worth running again: the gates, the harness, asset builders, evidence tools
+a report tells a reader to re-run. Promote it out of scratch into its real
+folder when that happens. Briefs never put probe scripts in a task's `owns`.
+Stage 6 committed 190 probes because a brief said "probe scripts go in
+`scripts/themes/stage6/`"; `scripts/migrations/2026-11-22-probes-to-scratch.mjs`
+moved 307 of them back out.
+
 ## Git workflow
 
 Branch and open a PR for review. Do not commit directly to `main`. Merging to
