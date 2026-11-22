@@ -92,7 +92,7 @@ describe('the signifier rule (stop 4 critique A1) for swiss', () => {
   });
   it('the full stop keeps its grab cursor and gets a gated one pixel keyline 8px outside the dot ink, not over its hit square', () => {
     expect(sent).toMatch(/cursor: grab;/);
-    expect(sent).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.stop\[data-live\]:hover::before \{ outline: 1px solid var\(--mark\); outline-offset: 8px; \}/);
+    expect(sent).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.stop\[data-live\]:hover::before \{ outline: 1px solid var\(--mark\); outline-offset: min\(8px, 0\.034em\); \}/);
     expect(sent).not.toMatch(/:hover::after/);
     expect(sent).toMatch(/\.stop\[data-live\]::before \{[^}]*width: 0\.1434em;[^}]*height: 0\.1434em;/);
   });

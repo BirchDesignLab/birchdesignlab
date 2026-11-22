@@ -72,7 +72,8 @@ if (ONLY.includes('stop')) {
     let minX = 1e9, maxX = -1, minY = 1e9, maxY = -1;
     for (let y = Math.floor((m.top - 6) * dpr); y < Math.ceil((m.top + m.h + 6) * dpr); y++) for (let x = Math.floor((m.left - 6) * dpr); x < Math.ceil((m.left + m.w + 6) * dpr); x++) if (isRed(px.at(x, y))) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
     const ink = { left: minX / dpr, right: (maxX + 1) / dpr, top: minY / dpr, bottom: (maxY + 1) / dpr };
-    const ring = { left: m.left - 8 - 1, right: m.left + m.w + 8, top: m.top - 8 - 1, bottom: m.top + m.h + 8 };
+    const off = parseFloat(m.outline.split(' ')[2]); // the computed offset: 8px at 1440, scaled with the type below ~640px
+    const ring = { left: m.left - off - 1, right: m.left + m.w + off, top: m.top - off - 1, bottom: m.top + m.h + off };
     const dk = (c) => c[0] < 60 && c[1] < 60 && c[2] < 60;
     // ring pixels: a dark vertical line at the ring's left edge over the box's middle rows
     const midY = (m.top + m.h / 2) * dpr;
@@ -86,7 +87,7 @@ if (ONLY.includes('stop')) {
     R.stop[width] = { m, ink, ring, ringLeftDark, tRight, clearOfT: ring.left - tRight };
     check(`stop ${width}: outline on ::before, none on ::after, box equals the ink`, m.outline.startsWith('solid') && m.afterOutline === 'none' && Math.abs(ink.left - m.left) <= 1.5 && Math.abs(ink.right - (m.left + m.w)) <= 1.5 && Math.abs(ink.top - m.top) <= 1.5, { outline: m.outline, ink, box: [m.left, m.top, m.w, m.h] });
     check(`stop ${width}: the ring is drawn`, ringLeftDark, { ringLeft: ring.left });
-    check(`stop ${width}: ring clears the t's foot`, tRight < 0 || ring.left - tRight > 4, { tRight, gap: ring.left - tRight });
+    check(`stop ${width}: ring clears the t's foot`, tRight < 0 || ring.left - tRight >= 0, { off, tRight, gap: ring.left - tRight });
     const clip = { x: Math.max(0, m.left - 140), y: Math.max(0, m.top - 160), width: Math.min(width, 300), height: 300 };
     await page.screenshot({ path: join(OUT, `stop-hover-${width}.png`), clip });
     await ctx.close();
