@@ -176,6 +176,10 @@ for (const step of steps) {
   } else throw new Error(`unknown step ${step}`);
   // Re-reading keeps the commands and exit codes of the run that filmed.
   if (reuse && summary.steps[step]?.runs?.length) s.runs = summary.steps[step].runs.map((r) => ({ ...r, verdictsReread: true }));
+  // Smoke has no output to re-read: its verdict is its exit codes, so take it
+  // from the restored runs (under --reuse, run() returned exit null; Stage 6
+  // close reported smoke FAIL from that).
+  if (step === 'smoke') s.pass = s.runs.length > 0 && s.runs.every((r) => r.exit === 0);
   summary.steps[step] = s;
   await writeFile(summaryFile, JSON.stringify(summary, null, 2));
 }
