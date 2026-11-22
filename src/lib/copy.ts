@@ -29,13 +29,13 @@ export async function getCopy<P extends CopyPage>(page: P): Promise<CopyData<P>>
 }
 
 /**
- * The three newest live, listed specimens: the home page's "From the lab"
- * lines. One query for every school, so they all show the same three.
+ * The six newest live, listed specimens: the home page's "From the lab"
+ * lines. One query for every school, so they all show the same six.
  */
 export async function featuredSpecimens(): Promise<CollectionEntry<'lab'>[]> {
   return (await getCollection('lab', ({ data }) => data.status === 'live' && !data.noindex))
     .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
-    .slice(0, 3);
+    .slice(0, 6);
 }
 
 /**
