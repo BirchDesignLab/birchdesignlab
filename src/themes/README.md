@@ -73,7 +73,7 @@ switcher (`THEMES` in `registry.ts` lists only schools with an enabled route;
   and fails parity. Do not use `data-parity-skip`; it exists for quiet's bark
   credit and the lab-derived specimen lines only.
 - The home page's "From the lab" lines come from `featuredSpecimens()`
-  (`src/lib/copy.ts`, the three newest); render them inside an element with
+  (`src/lib/copy.ts`, the six newest); render them inside an element with
   `data-parity-skip` (they change whenever a specimen ships), like quiet does.
   Each designation links to its entry through `specimenLink(entry, theme)`:
   use its `href`, add `data-astro-reload` when `leaves` is true, and give the

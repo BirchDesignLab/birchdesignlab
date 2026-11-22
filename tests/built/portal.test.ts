@@ -377,8 +377,8 @@ describe('"From the lab" lines link to their entries', () => {
       });
   const root = lines('/');
 
-  it('the root home shows the three newest, each designation one link', () => {
-    expect(root).toHaveLength(3);
+  it('the root home shows the six newest, each designation one link', () => {
+    expect(root).toHaveLength(6);
     for (const l of root) {
       expect(l.count).toBe(1);
       expect(l.text).toMatch(/^BDL-\d{3}$/);
@@ -395,7 +395,7 @@ describe('"From the lab" lines link to their entries', () => {
   });
 
   for (const id of schools) {
-    it(`/t/${id}/ links the same three, leaving the school only for the Lab`, () => {
+    it(`/t/${id}/ links the same six, leaving the school only for the Lab`, () => {
       const here = lines(`/t/${id}/`);
       expect(here.map((l) => [l.count, l.text, l.label])).toEqual(root.map((l) => [l.count, l.text, l.label]));
       for (const { href, reload } of here) {
