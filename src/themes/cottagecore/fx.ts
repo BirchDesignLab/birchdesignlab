@@ -89,7 +89,7 @@
  * out of the keep loop (it is never re-seated), at most puffCap live at once (the oldest fade first), and goes
  * when it leaves the view or after puffLife. By lamplight the same event is a tap on clear cloth at the clock,
  * and the mote it calls (or lights) rises from there. Stage 6 w4 task 30 (critique B1): seed i of a release waits
- * i x PUFF.stagger ms, still and undrawn, then grows in the DRAW only, from the head's own seed scale (0.3) to
+ * i x PUFF.stagger ms (i counts the seeds that found a seat, so the births are evenly spaced), still and undrawn, then grows in the DRAW only, from the head's own seed scale (0.3) to
  * full over PUFF.growMs; `size` is never shrunk, because the seat rules and the phone-seed test read it.
  *
  * Text (item 14): text is measured line by line, in document space, once on
@@ -336,7 +336,7 @@ interface Seed {
   /** A seed released by the clock: outside the keep loop, gone at dieAt (ms). */
   puff?: boolean;
   dieAt?: number;
-  /** A puff waits, still and undrawn, until bornAt (ms: the release plus its place in the puff x PUFF.stagger),
+  /** A puff waits, still and undrawn, until bornAt (ms: the release plus its place among the SEATED puffs x PUFF.stagger),
       then grows in the DRAW only from PUFF.grow0 to 1 over PUFF.growMs. `size` never changes (the seat rules read it). */
   bornAt?: number;
 }
@@ -1256,8 +1256,9 @@ export function mountFireflies(): void {
           seatedAt: t,
           held: false,
           puff: true,
-          bornAt: t + i * PUFF.stagger,
-          dieAt: t + i * PUFF.stagger + PUFF.life + rand(-4000, 4000),
+          // Its place in the stagger is set once it has a seat (below): a point with no seat takes no turn.
+          bornAt: t,
+          dieAt: t + PUFF.life + rand(-4000, 4000),
         };
         const turn = turnOf(s);
         const angle = angleOf(s);
@@ -1294,6 +1295,12 @@ export function mountFireflies(): void {
           }
         }
         if (!placed) continue;
+        // Births step evenly through the seeds that leave the head: the stagger counts seated seeds, not points
+        // (counting every point left a gap of 140 ms or more wherever a point found no seat, and could hold the
+        // first seed back by several turns).
+        const wait = placedAt.length * PUFF.stagger;
+        s.bornAt = t + wait;
+        s.dieAt = (s.dieAt ?? t) + wait;
         seeds.push(s);
         placedAt.push(i);
       }

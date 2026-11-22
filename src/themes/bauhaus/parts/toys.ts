@@ -322,7 +322,13 @@ export function initCornerSpin(footer: HTMLElement | null): (() => void) | void 
 
   // The mouse's half of the signifier: the pointer cursor over the square only (the footer carries
   // the attribute because the grid lies over the svg), and the lift in the theme's gated rule.
+  // The lift is drawn inside the svg, in its viewBox units, and the corner's width runs from 120 to 300px; --u-px
+  // is one CSS pixel in those units, so the theme's 4px lift and ink block stay 4 screen px at every width.
   const setHot = (on: boolean): void => {
+    if (on) {
+      const w = corner.getBoundingClientRect().width;
+      if (w) corner.style.setProperty('--u-px', String(SQUARE.w / w));
+    }
     footer.toggleAttribute('data-corner-hot', on);
     corner.toggleAttribute('data-hot', on);
   };

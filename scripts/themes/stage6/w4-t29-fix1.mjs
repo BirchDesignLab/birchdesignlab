@@ -92,17 +92,31 @@ for (const width of [1280, 1440]) {
     // The block's top: down the word's middle column, the rows from the rule to 30px below; hovered, no row is the page's paper before the block starts.
     const mx = Math.round((geo.box[0] + geo.box[2]) / 2);
     const col = []; for (let dy = ruleDy; dy <= ruleDy + 30; dy++) col.push(hex(hov.at(mx, ruleY + dy)));
-    // Paper strips above the block: across the box's x range, the rows from the rule down to the first row whose pixels are mostly ink.
-    const paper = rgbOf(hex(hov.at(900, ruleY + 60)));
-    let firstInkRow = null;
-    for (let dy = ruleDy; dy <= ruleDy + 40; dy++) {
+    // Paper strips above the block. The scan starts BELOW the rule: the rule's own rows are always ink, so a scan
+    // that starts on them can never fail (the first version did; Stage 6 ledger, task 29 minor N1). The rule's last
+    // row is read at rest at x = 300, clear of the spine.
+    let ruleEnd = ruleDy;
+    while (ruleEnd < ruleDy + 6 && dist(rgbOf(hex(rest.at(300, ruleY + ruleEnd + 1))), ink) < 40) ruleEnd++;
+    // The hover inverts what the block covers (ink ground, the word in the field's colour), so every covered pixel
+    // changes between rest and hover, and a strip of page the block missed does not. Per row across the box's x
+    // range: the share of pixels that changed. (Counting ink would not do: the word's inverted letters are paper.)
+    const changed = (dy) => {
       let n = 0, t = 0;
-      for (let x = Math.round(geo.box[0]) + 2; x <= Math.round(geo.box[2]) - 2; x++) { t++; if (dist(rgbOf(hex(hov.at(x, ruleY + dy))), ink) < 40) n++; }
-      if (n / t > 0.5) { firstInkRow = dy; break; }
-    }
-    R.c2[key] = { geo, ruleY, ruleDy, ink: hex(ink), broken: broken.length, brokenRest: brokenRest.length, firstInkRow, paper: hex(paper), col: col.join(' ') };
+      for (let x = Math.round(geo.box[0]) + 2; x <= Math.round(geo.box[2]) - 2; x++) {
+        t++;
+        if (dist(rgbOf(hex(hov.at(x, ruleY + dy))), rgbOf(hex(rest.at(x, ruleY + dy)))) > 60) n++;
+      }
+      return +(n / t).toFixed(3);
+    };
+    const covered = (rows) => rows.every((c) => c > 0.9);
+    const STRIP = 3;
+    const under = []; for (let dy = ruleEnd + 1; dy <= ruleEnd + STRIP; dy++) under.push(changed(dy));
+    // The negative control: the page just above the rule, where the block must not reach, so the same test must fail.
+    const above = []; for (let dy = ruleDy - STRIP; dy <= ruleDy - 1; dy++) above.push(changed(dy));
+    R.c2[key] = { geo, ruleY, ruleDy, ruleEnd, ink: hex(ink), broken: broken.length, brokenRest: brokenRest.length, under, above, col: col.join(' ') };
     check(`${key}: the section rule is unbroken across the spine while hovered (${brokenRest.length} at rest)`, geo.live && broken.length === 0, { ruleY, ruleDy, broken: broken.slice(0, 8), brokenRest: brokenRest.slice(0, 8) });
-    check(`${key}: the ink block starts on the rule, no paper strip above it`, firstInkRow !== null && firstInkRow <= ruleDy + 1, { firstInkRow, ruleDy });
+    check(`${key}: the ink block starts on the rule, no paper strip above it`, covered(under), { ruleDy, ruleEnd, under });
+    check(`${key}: the strip test fails on the page above the rule (negative control)`, !covered(above), { above });
     await ctx.close();
   }
 }

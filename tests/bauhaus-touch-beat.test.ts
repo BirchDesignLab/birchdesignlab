@@ -70,6 +70,12 @@ describe('bauhaus signifiers for the inert toys (mouse)', () => {
     // The lift and ink block ride a group that never turns; on the turning rect they would turn with it.
     expect(css).not.toMatch(/\[data-hot\] \[data-spin\]/);
     expect(footer).toMatch(/<g data-lift><rect[^>]*data-spin/);
+    // The lift is in the svg's viewBox units, so it is scaled by one screen px in those units: 4 screen px at every corner width (Stage 6 m1).
+    expect(toys).toContain("corner.style.setProperty('--u-px', String(SQUARE.w / w));");
+    const lift = css.slice(at, css.indexOf('}', at));
+    expect(lift).toContain('--lift: calc(4px * var(--u-px, 1));');
+    expect(lift).toContain('translate: calc(-1 * var(--lift)) calc(-1 * var(--lift));');
+    expect(lift).toContain('filter: drop-shadow(var(--lift) var(--lift) 0 var(--on-poster));');
     expect(css.lastIndexOf('@media (hover: hover) and (pointer: fine)', at)).toBeGreaterThan(css.lastIndexOf('\n}\n', at));
     // Only a mouse on a fine pointer sets it, so a finger never leaves the cursor or the lift behind.
     expect(toys).toMatch(/e\.pointerType === 'mouse' && mouseHere\(\) && hit\(e\)/);

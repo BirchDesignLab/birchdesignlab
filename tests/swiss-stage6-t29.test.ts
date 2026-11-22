@@ -34,7 +34,13 @@ describe('C1: a pressed field keeps its inverse and gains a 1px edge in its rest
     expect(flipBlock).toMatch(/\[data-theme='swiss'\] main \{ overflow-x: clip; \}/);
   });
   it('skips an edge that already sits on a rule: Contact\'s black sheet and its address\'s top on a desktop', () => {
-    expect(flipBlock).toMatch(/\.sw-black\.sw-bleed\[data-sw-flip\] \{ --flip-edge-t: 0px; --flip-edge-b: 0px; \}/);
+    // Contact's black sheet (Stage 6 m3): no edge over the rules inside the frame, but the margins, where the rules
+    // stop, get it on the rules' own rows (one row above, one below), so the line runs on to the viewport.
+    expect(flipBlock).not.toMatch(/\.sw-black\.sw-bleed\[data-sw-flip\] \{ --flip-edge-t: 0px; --flip-edge-b: 0px; \}/);
+    // Those rows are outside the box: while pressed the fill is a sideways border-image outset, so no clip cuts them
+    // (a clip ending on the frame's fractional px left a grey notch at the join).
+    expect(flipBlock).toMatch(/\.sw-black\.sw-bleed\[data-sw-flip\] \{\s*box-shadow: none;\s*clip-path: none;\s*border-image: linear-gradient\(var\(--bleed-fill\), var\(--bleed-fill\)\) fill 0 \/ 0 \/ 0 100vw;\s*\}/);
+    expect(flipBlock).toMatch(/\.sw-black\.sw-bleed\[data-sw-flip\]::after \{\s*inset: -1px -100vw;\s*border-color: var\(--ink\);\s*mask-image: linear-gradient\(to right, #000 calc\(100vw \+ 1px\), transparent calc\(100vw \+ 1px\) calc\(100% - 100vw - 1px\), #000 calc\(100% - 100vw - 1px\)\);/);
     expect(flipBlock).toMatch(/\.sw-bleed\.direct\[data-sw-flip\]::after \{ inset: 0 -200vw 0 0; --flip-edge-t: 0px; border-inline-start-width: 1px; \}/);
   });
   it('paints only: nothing animates and the buttons are not touched by the edge', () => {
