@@ -406,7 +406,35 @@ and 15M tokens.
 
 - `npm run verify` clean after the merge of main and dad7f3f: vitest 76
   files / 1132 tests passed, `astro check` 0 errors, build 58 pages.
-- STAGE-GATES: pending
+- Stage gates (11-21/22-26, GPU, against the Worker on :8787,
+  `stage-gates.mjs --label stage6-gates --before-dir stage5-after
+  --after-label stage6-after`; summary in gitignored
+  `scripts/themes/.out/stage6-gates/gates.md`):
+  - **smoke PASS** (every school walked, every form sent with the honeypot).
+  - **timing PASS**, **switcher PASS** (every strip held still), **wordmark
+    PASS** (28/28 overlap, blank max 67.9 ms, 28/28 blink, 0 drawn suspects),
+    **sheets PASS** (48).
+  - **after PASS** on a re-film. The first run's one problem, "grandmillennial
+    page light mobile: no frame from before the trigger", did not recur when
+    that strip was filmed alone, so it was a flake in the film.
+  - **unname FAIL, explained, not a regression.** The negative control
+    needs 5 of 6 schools to move the unnamed switcher; it got 4 (vaporwave,
+    glassmorphism, swiss, cottagecore), with grandmillennial and bauhaus
+    holding still (Stage 5: only bauhaus held). Grandmillennial repeats on
+    a re-film. The full-frame arrival sheet (`stage6-after-compare/
+    grandmillennial__arrive__dark__desktop.jpg`, before over after) shows
+    grandmillennial's unfold from the centre is intact, timing included.
+    But in Stage 6 its growing panel stops just above the switcher bar,
+    so with the switcher unnamed nothing crosses the switcher crop until
+    the final cut at about 720 ms. In Stage 5 the reveal swept across the
+    crop from 400 to 800 ms. The control still catches four schools, so it
+    has not gone blind; the hold-still gate itself passed for every school.
+    We left the threshold alone. The transitions phase reworks arrivals and
+    should re-baseline the control.
+  - Harness note: `--reuse` reports smoke as FAIL because it computes the
+    smoke verdict from null exit codes before restoring the earlier runs
+    (`stage-gates.mjs`, the `smoke` branch vs line 178). The real smoke run
+    passed. Small fix, parked for the transitions phase.
 
 ## 9. Leftovers and what comes next
 
