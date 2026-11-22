@@ -31,6 +31,9 @@ describe('C5: the elevator scrolls an off-screen window into view', () => {
     const bring = elevator.slice(elevator.indexOf('const bring ='), elevator.indexOf('const arrive ='));
     expect(bring.indexOf('door.dispatchEvent(new CustomEvent(ACTIVATE_EVENT))')).toBeGreaterThan(0);
     expect(bring.indexOf('offScreen(door.getBoundingClientRect(), window.innerHeight)')).toBeGreaterThan(bring.indexOf('dispatchEvent'));
+    // Only on the phone and tablet layouts: the desktop (1440) scrolls nothing.
+    expect(elevator).toContain("export const BRING_QUERY = '(max-width: 900px)';");
+    expect(bring).toContain('window.matchMedia(BRING_QUERY).matches && offScreen(');
     expect(bring).toContain("door.scrollIntoView({ behavior: 'smooth', block: 'center' })");
     expect(elevator).toContain("if (floor === 0) bring(document.querySelector('.door-0'));");
     expect(elevator).toContain("else if (floor === 1) bring(document.querySelector('.door-1'));");

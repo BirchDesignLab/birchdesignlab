@@ -3,8 +3,9 @@
  * Sections (ONLY=elevator,props,swipes,remote,drives,phonewins,signifiers,beats):
  *
  *   elevator    B1 and 1F at 390 and 820 (the window is brought into view) and
- *               at 1440 (no scroll), both schemes: the page scrolled so the plaque
- *               is in view and the target window is not (or is, at 1440), the key
+ *               at 1440 (no scroll: the window is off screen there too, the desktop is
+ *               unchanged), both schemes: the page scrolled so the plaque
+ *               is in view and the target window is not, the key
  *               pressed with a real click or tap, scrollY and the window's rect
  *               measured before and after the smooth scroll, a strip. 2F
  *               scrolls nothing. Writes elevator.json.
@@ -84,6 +85,9 @@ if (ONLY.includes('elevator')) {
         await strip(pickAt(frames, [0, 400, 800, 1200, 1600, 2000, 2400]), join(D, `elevator-${key}.png`), `elevator ${key}: the key pressed at +0 (the plaque in view)`, { cols: 7, cellW: 200 });
         if (floor === 2) {
           check(`2F scrolls nothing (${key})`, after.scrollY === before.scrollY, { before: before.scrollY, after: after.scrollY });
+        } else if (width > 900) {
+          // The desktop is unchanged (fix round 1): the window is off screen here too, and the page stays put.
+          check(`the desktop scrolls nothing (${key})`, after.scrollY === before.scrollY && after.active, { before, after });
         } else if (before.off) {
           check(`the off-screen window scrolls into view, centred (${key})`, after.inView && Math.abs(after.centreOff) <= 6 && after.active, { before, after });
         } else {

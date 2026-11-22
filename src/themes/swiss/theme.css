@@ -534,8 +534,9 @@
 }
 [data-theme='swiss'] .sw-black.sw-bleed[data-sw-flip] { --flip-edge-t: 0px; --flip-edge-b: 0px; }
 @media (min-width: 1024px) {
-  /* Fill runs right only (Contact's address): so does its edge, and its top is the section's rule. */
-  [data-theme='swiss'] .sw-bleed.direct[data-sw-flip]::after { inset: 0 -200vw 0 0; --flip-edge-t: 0px; }
+  /* Fill runs right only (Contact's address): so does its edge, and its top is the section's rule.
+     Its left is a real edge in the page, next to the form (fix round 1, C1), so it gets the 1px. */
+  [data-theme='swiss'] .sw-bleed.direct[data-sw-flip]::after { inset: 0 -200vw 0 0; --flip-edge-t: 0px; border-inline-start-width: 1px; }
 }
 
 /* While a field is held flipped, a mouse dragged across its button must not

@@ -35,7 +35,7 @@ describe('C1: a pressed field keeps its inverse and gains a 1px edge in its rest
   });
   it('skips an edge that already sits on a rule: Contact\'s black sheet and its address\'s top on a desktop', () => {
     expect(flipBlock).toMatch(/\.sw-black\.sw-bleed\[data-sw-flip\] \{ --flip-edge-t: 0px; --flip-edge-b: 0px; \}/);
-    expect(flipBlock).toMatch(/\.sw-bleed\.direct\[data-sw-flip\]::after \{ inset: 0 -200vw 0 0; --flip-edge-t: 0px; \}/);
+    expect(flipBlock).toMatch(/\.sw-bleed\.direct\[data-sw-flip\]::after \{ inset: 0 -200vw 0 0; --flip-edge-t: 0px; border-inline-start-width: 1px; \}/);
   });
   it('paints only: nothing animates and the buttons are not touched by the edge', () => {
     const edge = flipBlock
@@ -97,7 +97,7 @@ describe('the signifier rule (stop 4 critique A1) for swiss', () => {
   it('the spine is live only while the sweep is on it, and a mouse over it gets a resize cursor and an ink block', () => {
     expect(toys).toContain("birch.toggleAttribute('data-live', desk.matches)");
     expect(toys).toContain("birch.removeAttribute('data-live')");
-    expect(about).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.sw-birch\[data-live\] \{ pointer-events: auto; cursor: ns-resize; \}\s*\.sw-birch\[data-live\]:hover \{ background: var\(--mark\); color: var\(--field\); \}/);
+    expect(about).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\.sw-birch\[data-live\] \{ pointer-events: auto; cursor: ns-resize; \}\s*\.sw-birch\[data-live\]:hover \{ background: var\(--mark\); color: var\(--field\); box-shadow: 0 var\(--sw-ty\) 0 0 var\(--mark\); clip-path: inset\(-0\.5em -0\.5em calc\(-1 \* var\(--sw-ty\)\) -0\.5em\); \}/);
   });
   it('the numeral and the full stop have a touch beat on the common conditions, for a finger only; the fields and the spine have none', () => {
     expect(toys).toContain("import { scheduleBeat } from '../bauhaus/parts/beat'");

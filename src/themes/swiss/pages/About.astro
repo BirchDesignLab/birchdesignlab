@@ -212,11 +212,18 @@ const [founderLead, ...founderRest] = copy.founder.body;
      it). A mouse over it gets a resize cursor (the scroll moves it) and the
      school's own hover, the word printed in negative: an ink block with paper
      type, as a link is when pressed (the base pair, --field on --mark). Paint
-     only: the box and the ink do not move. Everywhere else it stays out of the
-     pointer's way. */
+     only: the box and the ink do not move. The box is dropped by --sw-ty so the
+     ink sits on the section's edges, which leaves the top of the ink above the
+     box: a shadow of the box, raised by the same drop (the box is turned a half
+     turn, so +ty here is up on the page), paints that strip in the same ink.
+     The ink then reaches the section's rule, and its paper type would break the
+     hairline (the h's counter on the rule's row): the clip-path ends the
+     paint at the rule's inner edge, the box's drop back up (the half turn again
+     puts the box's bottom edge at the page's top), and leaves the rule whole.
+     Everywhere else it stays out of the pointer's way. */
   @media (hover: hover) and (pointer: fine) {
     .sw-birch[data-live] { pointer-events: auto; cursor: ns-resize; }
-    .sw-birch[data-live]:hover { background: var(--mark); color: var(--field); }
+    .sw-birch[data-live]:hover { background: var(--mark); color: var(--field); box-shadow: 0 var(--sw-ty) 0 0 var(--mark); clip-path: inset(-0.5em -0.5em calc(-1 * var(--sw-ty)) -0.5em); }
   }
   @media (min-width: 1280px) {
     .sw-birch { --sw-bwdth: 75; --sw-birch-r: 2.064; --sw-k: 0.9683; --sw-ty: 0.0564em; --sw-tx: 0.030em; }
