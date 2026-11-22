@@ -312,7 +312,11 @@ export function initPlates(hero: HTMLElement | null): (() => void) | void {
   };
 
   /* nothing moves while the page is hidden or the plates are off screen */
-  const onVisibility = () => { if (document.hidden) cancelAll(); };
+  /* A warm-up that fired while hidden gave up; re-arm it on return so the beat's retry is not stuck forever (task 31 critic C2). */
+  const onVisibility = () => {
+    if (document.hidden) cancelAll();
+    else if (live && !warmed && !warmTimer) warmTimer = window.setTimeout(warm, 900);
+  };
   const io = new IntersectionObserver((entries) => {
     live = entries[entries.length - 1].isIntersecting;
     if (!live) { cancelAll(); window.clearTimeout(warmTimer); warmTimer = 0; }
