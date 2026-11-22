@@ -95,7 +95,7 @@ describe('cottagecore seeds (CC3)', () => {
     const draw = fx.slice(fx.indexOf('const drawDandelions'), fx.indexOf('const draw = '));
     // a held seed is neither moved nor drawn, and is seated in the still frame too
     // (task 23: a puff from the clock that has run its course is dropped between the two)
-    expect(draw).toMatch(/if \(s\.held\) continue;\s*if \(s\.puff && t >= \(s\.dieAt \?\? 0\)\) \{ spent = true; continue; \}\s*if \(!still\) \{/);
+    expect(draw).toMatch(/if \(s\.held\) continue;\s*if \(s\.puff && t >= \(s\.dieAt \?\? 0\)\) \{ spent = true; continue; \}\s*(?:\/\/[^\n]*\n\s*)?if \(s\.puff && !still && t < \(s\.bornAt \?\? 0\)\) continue;\s*if \(!still\) \{/);
     expect(draw).toMatch(/else if \(fontsSettled\) seatHeld\(sy, t, 0, true\);/);
     expect(draw).toMatch(/seatHeld\(sy, t, shown, false\)/);
   });

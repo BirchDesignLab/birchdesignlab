@@ -161,7 +161,7 @@ const keyStyle = `--key-h:${tile(KEY)};--key-v:${tile(turned)};--key-c:${tile(CO
     <span class="key corner bl" aria-hidden="true"></span>
     <span class="key corner br" aria-hidden="true"></span>
     <div class="abc">
-     <div class="abc-in" role="group" data-sampler>
+     <div class="abc-in" role="toolbar" aria-label="Alphabet sampler, arrow keys move between letters" data-sampler>
       {letters.map((l) => (
         <button type="button" class="ltr" data-t="0" data-p="0" aria-label={`Letter ${l.ch}, re-stitch`}>
           <svg viewBox={`0 0 ${GLYPH_W} ${GLYPH_H}`} aria-hidden="true" focusable="false">

@@ -65,8 +65,9 @@ describe('the stitch', () => {
     expect(needle).toContain('nextC = (nextC ^ 1) as 0 | 1;');
     expect(needle).toMatch(/const DASH = 3\.2;\s*const GAP = 7\.4;/);
     expect(needle).toContain("'stroke-dasharray'");
-    expect(css).toContain("--thread-rose: var(--cc-rose-petal);");
-    expect(css).toContain('--thread-rose: #b85f6c;');
+    // light: the school's rose-deep over dark's edge colour (Stage 6 w4 task 30, critique B3); dark: deepened to clear 3:1
+    expect(css).toContain("--thread-rose: var(--cc-rose-deep);");
+    expect(css).toContain('--thread-rose: #a24a58;');
     expect(css).toContain('--thread-sage: #56704a;');
     expect(css).toContain("[data-theme='cottagecore'] .nt-thread[data-c='1']");
   });
@@ -100,7 +101,8 @@ describe('the stitch', () => {
     expect(needle).toContain('window.clearTimeout(dueTimer)');
     expect(needle).toContain('window.clearTimeout(idleTimer)');
     expect(needle).toContain('io?.disconnect()');
-    expect(needle).toContain('nudgeIo?.disconnect()');
+    expect(needle).toContain('stopBeat();');
+    expect(needle).toContain('ro?.disconnect();');
   });
 
   it('parks the needle in CSS, so an idle hoop has no inline style and no frame', () => {

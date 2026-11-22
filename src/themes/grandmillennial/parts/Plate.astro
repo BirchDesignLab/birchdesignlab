@@ -22,4 +22,12 @@ const { class: cls, turn = 0, well = 'peony', lotus = 16 } = Astro.props;
      square box takes no pointer, its <use> rim and well do, so the round plate is the hit area. */
   .gm-plate { overflow: visible; filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.22)); pointer-events: none; }
   .gm-plate use { pointer-events: visiblePainted; }
+  /* Stage 6 w4 task 30 (critique A1): every toy answers a mouse. A plate is inert (aria-hidden) but it swings when brushed
+     or clicked, so it takes the press cursor on the painted disc and, under a fine pointer, lifts its shadow a little as
+     it is touched. Gated: a finger has no hover. */
+  .gm-plate { transition: filter 160ms ease-out; }
+  @media (hover: hover) and (pointer: fine) {
+    .gm-plate use { cursor: pointer; }
+    .gm-plate:hover { filter: drop-shadow(0 7px 8px rgb(0 0 0 / 0.3)); }
+  }
 </style>

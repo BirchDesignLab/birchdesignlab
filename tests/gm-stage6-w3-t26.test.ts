@@ -101,12 +101,15 @@ describe('the room a plate has', () => {
     expect(q.y).toBeCloseTo(0, 6);
   });
 
-  it('puts the hanging point at the top rim of the turned plate', () => {
+  it('puts the hanging point at the SCREEN top of the plate, whatever its resting turn (Stage 6 w4 task 30, 26/C4)', () => {
     const p = hangPoint({ x: 100, y: 100 }, 40, 0);
-    expect(p).toEqual({ x: 100, y: 80 });
-    const q = hangPoint({ x: 100, y: 100 }, 40, 90);
-    expect(q.x).toBeCloseTo(120, 6);
-    expect(q.y).toBeCloseTo(100, 6);
+    expect(p.x).toBeCloseTo(100, 6);
+    expect(p.y).toBeCloseTo(80, 6);
+    for (const rest of [90, 20, -14, 8, -12]) {
+      const q = hangPoint({ x: 100, y: 100 }, 40, rest);
+      expect(q.x, String(rest)).toBeCloseTo(100, 6);
+      expect(q.y, String(rest)).toBeCloseTo(80, 6);
+    }
   });
 
   it('stops a swing short of a protected box and lets the other side run free', () => {
@@ -124,7 +127,9 @@ describe('the room a plate has', () => {
   });
 
   it('writes the rotation about the top rim as one transform, so the resting rotate property is untouched', () => {
-    expect(swingTransform(4, 100)).toBe('translate(0, -50px) rotate(4.000deg) translate(0, 50px)');
+    expect(swingTransform(4, 100)).toBe('translate(0.000px, -50.000px) rotate(4.000deg) translate(0.000px, 50.000px)');
+    // a plate resting at 90 degrees: the screen top is the plate's own left, so the offset is turned by minus the rest angle
+    expect(swingTransform(4, 100, 90)).toBe('translate(-50.000px, 0.000px) rotate(4.000deg) translate(50.000px, 0.000px)');
   });
 });
 

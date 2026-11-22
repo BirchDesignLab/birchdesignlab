@@ -216,13 +216,18 @@ const { copy, theme } = Astro.props;
      envelope's own box: nothing shifts the layout. The flap folds up and back, so it lies above the envelope's
      top edge; in the one-column desk the form sits there, so there the envelope is stacked UNDER the form
      (the media rule below) and the flap tucks behind the stationery rather than covering it. */
-  .envelope { --ease: cubic-bezier(0.3, 0.6, 0.25, 1); --flap-h: 7.5rem; --seal-size: 4.6rem; }
+  /* --diagonals is the flap's two gold edges (the two slopes of the V): painted on the flap and, since Stage 6 w4 task 30
+     (critique B5), on the inside face of the lid too, so the opened flap's edges read against the wall. */
+  .envelope {
+    --ease: cubic-bezier(0.3, 0.6, 0.25, 1); --flap-h: 7.5rem; --seal-size: 4.6rem;
+    --diagonals:
+      linear-gradient(to bottom left, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) left / 50% 100% no-repeat,
+      linear-gradient(to bottom right, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) right / 50% 100% no-repeat;
+  }
   .flap {
     position: relative;
     height: var(--flap-h);
-    background:
-      linear-gradient(to bottom left, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) left / 50% 100% no-repeat,
-      linear-gradient(to bottom right, transparent calc(50% - 2px), color-mix(in srgb, var(--rule), transparent 40%) calc(50% - 2px) 50%, transparent 50%) right / 50% 100% no-repeat;
+    background: var(--diagonals);
     /* the open flap and card cast a soft shadow on the desk; closed, none (it was never there) */
     filter: drop-shadow(0 0 0 transparent);
     transition: filter 300ms var(--ease);
@@ -278,7 +283,7 @@ const { copy, theme } = Astro.props;
     backface-visibility: hidden;
   }
   .lid::before { background: var(--flap); }
-  .lid::after { background: var(--flap-in); transform: rotateY(180deg); }
+  .lid::after { background: var(--diagonals), var(--flap-in); transform: rotateY(180deg); }
   .envelope[data-open='true'] .lid {
     transform: perspective(900px) rotateX(-160deg);
     z-index: 1;
@@ -314,6 +319,9 @@ const { copy, theme } = Astro.props;
     /* one column: the form is above the envelope, and the flap folds up behind its own top edge, so the
        envelope lies under the form (z 0 against the form's 1) and the flap can never cover it (task 22). */
     .envelope { width: min(100%, 28rem); justify-self: center; rotate: 1.4deg; z-index: 0; }
+    /* Open, the flap stands ajar (105 degrees, not 160): about 36px of it inside the 40px gap above the envelope, so the
+       whole hinge shows and it still never reaches the form (Stage 6 w4 task 30, critique B5). */
+    .envelope[data-open='true'] .lid { transform: perspective(900px) rotateX(-105deg); }
   }
   @media (max-width: 560px) {
     .pair { grid-template-columns: 1fr; }

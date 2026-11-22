@@ -327,12 +327,8 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
        (390 sheet). Hold the tape on the bare corner at the bottom left. */
     .t2 { right: auto; left: 6%; --tape-tilt: -6deg; }
   }
-  /* CC6 (founder, stop 1 call 10): from 641 to 820 the stacked hero left an
-     empty right half beside the name above a centred sheet. The sheet slides
-     right into it, beside the name and the handwritten line, keeping the
-     off-centre collage; the one-sentence subline runs the full width under
-     both. (The copy block lets its three children join the hero grid.) Phones
-     keep the stack. */
+  /* CC6 (founder, stop 1 call 10): from 641 to 820 the stacked hero left an empty right half beside the name above a
+     centred sheet, so the sheet slides right into it. It is a float now (task 19, below); phones keep the stack. */
   /* Stage 6 w3 task 19 (stop 3 answer 2): the sheet FLOATS right and the copy wraps beside it. The
      name and the handwritten line run in the column beside the sheet; the subline starts beside it,
      under the lead, and continues at the full width once it is past the sheet's foot, so no empty band
@@ -375,7 +371,9 @@ const [nameFirst, ...nameRest] = chrome.name.split(' ');
     /* The sprigs and the headline take the gutters and the width, so the clock stands under the button
        and the closer grows by the room it takes (11.6rem: a released seed is seated clear of the button's
        lettering, so the head stands about 2rem under the button and the seeds have cloth to leave over;
-       the sprigs keep their place against the button). */
+       the sprigs keep their place against the button). Stage 6 w4 task 30 (critique B2) tried 9.6rem once the puffs
+       started small and grew: the puff probe (w4-t30-puff.mjs) then placed fewer seeds than the clock asked for at
+       1000, 820 and 390, so 11.6rem stays. */
     .closer { padding-bottom: 11.6rem; }
     .closer :global(.c-clock) { width: 5.6rem; left: calc(50% - 2.8rem); bottom: 0.6rem; rotate: 0deg; }
   }

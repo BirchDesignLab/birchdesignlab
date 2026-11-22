@@ -56,11 +56,13 @@
   --margin-line: rgba(155, 70, 82, 0.42);
   --stitch: rgba(122, 150, 110, 0.9);
   --stitch-rose: rgba(155, 70, 82, 0.75);
-  /* The needle's two threads on the hoop's linen (needle.ts): the sprig's own rose and sage, a lighter
-     top thread over a darker edge, as the lazy daisies and stems are drawn. The edge is what
-     reads against the linen, so it is the one meta.contrast holds. */
-  --thread-rose: var(--cc-rose-petal);
-  --thread-rose-edge: var(--cc-rose-edge);
+  /* The needle's two threads on the hoop's linen (needle.ts): a lighter top thread over a darker edge, as the lazy
+     daisies and stems are drawn. The sage is the sprig's own. The rose is NOT the sprig's pale petal in light (Stage 6
+     w4 task 30, critique B3): that one was 1.04:1 against the hoop's own dashed ring (--stitch-rose at 0.75, about
+     #b3727a), so a new stitch read as part of the ring. It is the school's rose-deep over dark's edge colour, 5.74:1
+     on the linen and 1.65:1 apart from the ring; meta.contrast holds the edge and the top thread against the linen. */
+  --thread-rose: var(--cc-rose-deep);
+  --thread-rose-edge: #7a3440;
   --thread-sage: var(--cc-stem);
   --thread-sage-edge: var(--cc-leaf-edge);
   /* The written boundary of a form field: darker than --stitch's decorative
@@ -188,7 +190,9 @@
   --stitch-rose: rgba(234, 184, 106, 0.6);
   /* The needle's threads on the hoop's board linen: the same deepened rose and sage the sprig is
      worked in there (the .hoop .cloth block below sets --cc-rose-petal and friends to these). */
-  --thread-rose: #b85f6c;
+  /* The top thread is deepened from #b85f6c (2.41:1 on the board linen) to clear the 3:1 row meta.contrast now holds
+     (Stage 6 w4 task 30, critique B3); the edge under it is unchanged and is the dark that light borrows. */
+  --thread-rose: #a24a58;
   --thread-rose-edge: #7a3440;
   --thread-sage: #56704a;
   --thread-sage-edge: #3f5a36;

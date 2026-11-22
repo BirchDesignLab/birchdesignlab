@@ -90,7 +90,7 @@ describe('the dandelion clock (Home closer, Sent)', () => {
     const fire = toys.slice(toys.indexOf('const fire = () =>'), toys.indexOf('const offPress'));
     expect(fire).not.toMatch(/\bs\.animate\(/);
     expect(toys).toMatch(/if \(report\) window\.setTimeout\(\(\) => report\?\.\(\[\]\), 1500\);/);
-    expect(toys).toMatch(/alive = false;\s*asked\.clear\(\);/);
+    expect(toys).toMatch(/alive = false;\s*abort\.abort\(\);\s*asked\.clear\(\);/);
   });
 
   it('sends one cc:blow event and, in the dark scheme, blows nothing', () => {
@@ -122,7 +122,7 @@ describe('fx.ts takes the release', () => {
     expect(fx).toMatch(/else b\.report\?\.\(releasePuff\(t, sy, b\)\);|b\.report\?\.\(releasePuff\(t, sy, b\)\)/);
     expect(fx.match(/\.report\?\.\(\[\]\)|b\.report\?\.\(\[\]\)/g)!.length).toBeGreaterThanOrEqual(4);
     // the cancel marks are not text to keep seeds off
-    expect(fx).toMatch(/closest\('\.cancel-pad'\)/);
+    expect(fx).toMatch(/closest\('\.cancel-pad \.cm'\)/);
     expect(fx).toMatch(/if \(s\.held \|\| s\.puff\) continue;/);
     expect(fx).toMatch(/for \(const s of seeds\) if \(!s\.held && !s\.puff && s\.cover > 0\.5/);
   });
@@ -181,7 +181,10 @@ describe('lifecycle', () => {
       expect(toys).toContain(`el.removeEventListener('${ev}'`);
     }
     expect(toys).toMatch(/a\.oncancel = a\.onfinish = null; a\.cancel\(\);/);
-    expect(toys).toMatch(/io\?\.disconnect\(\);/);
+    // the one-shot nudge is the touch beat now (Stage 6 w4 task 30): it stops with the toy
+    expect(toys).toContain("import { scheduleBeat } from '../bauhaus/parts/beat';");
+    expect(toys).toMatch(/const stop = scheduleBeat\(key, \[el\],/);
+    expect(toys).toMatch(/stop\(\);\s*el\.removeEventListener\('animationend', off\);/);
     expect(toys).toContain("el.addEventListener('mousedown', onMouseDown);");
     expect(toys).not.toMatch(/localStorage|sessionStorage|fetch\(|Audio|new Audio/);
     expect(toys).not.toMatch(/setInterval|requestAnimationFrame/);

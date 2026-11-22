@@ -27,6 +27,7 @@
  * teardown removes every listener, timer, frame and observer, and puts the
  * needle, its attributes and the stitch layer back as the markup had them.
  */
+import { scheduleBeat } from '../bauhaus/parts/beat';
 
 const NS = 'http://www.w3.org/2000/svg';
 const SLOP = 10;
@@ -102,6 +103,10 @@ export function initNeedle(el: HTMLElement): () => void {
   /* ---- geometry: page pixels, cached at the start of each interaction ---- */
   /** Layer units per page pixel; the hoop's centre and radii (page px); the needle's parked tip (page px). */
   const geo = { k: 1, cx: 0, cy: 0, left: 0, top: 0, linenR: 1, hoopR: 1, homeX: 0, homeY: 0, S: 0 };
+  /** The call-to-action under the hoop (page px), and how far the needle's body (the hit padding too) reaches from
+      its tip: left and right, and down. The tip is held where the body clears the link (clampTip). */
+  const avoid = { l: 0, r: 0, t: 0, on: false, reachL: 0, reachR: 0, reachDown: 0 };
+  const cta = hoop.parentElement?.querySelector<HTMLElement>('a') ?? null;
   /** The needle's offset from its park (page px), what `translate` holds. */
   const off: Pt = { x: 0, y: 0 };
   const sx = () => window.scrollX;
@@ -143,6 +148,19 @@ export function initNeedle(el: HTMLElement): () => void {
     geo.homeY = n.top + sy() - o.y;
     off.x = o.x;
     off.y = o.y;
+    // The body's reach from the tip (its box and the 0.8rem by 0.5rem hit padding round it), for the link below.
+    const bb = body.getBoundingClientRect();
+    const pad = 14;
+    avoid.reachL = n.left - bb.left + pad;
+    avoid.reachR = bb.right - n.left + pad;
+    avoid.reachDown = bb.bottom - n.top + pad;
+    const a = cta?.getBoundingClientRect();
+    avoid.on = !!a && a.width > 1;
+    if (a) {
+      avoid.l = a.left + sx();
+      avoid.r = a.right + sx();
+      avoid.t = a.top + sy();
+    }
     knockOut(c);
   };
 
@@ -290,9 +308,11 @@ export function initNeedle(el: HTMLElement): () => void {
     const th = live;
     if (!th) return;
     live = null;
+    // A thread that was begun and dropped (a click on the needle with no move, a hold released in place, a drag that
+    // never reached the linen) was never sewn: the colour in the eye stays, so two threads in a row never share one.
+    if (th.pts.length < 4 || th.lastIn < 1) { removeThread(th); return; }
     nextC = (nextC ^ 1) as 0 | 1;
     el.setAttribute('data-c', String(nextC));
-    if (th.pts.length < 4 || th.lastIn < 1) { removeThread(th); return; }
     const kx = th.pts[th.lastIn * 2];
     const ky = th.pts[th.lastIn * 2 + 1];
     const k = ns('g');
@@ -357,8 +377,11 @@ export function initNeedle(el: HTMLElement): () => void {
     const dx = x - geo.cx;
     const dy = y - geo.cy;
     const d = Math.hypot(dx, dy);
-    if (d <= geo.hoopR) return { x, y };
-    return { x: geo.cx + (dx / d) * geo.hoopR, y: geo.cy + (dy / d) * geo.hoopR };
+    const p = d <= geo.hoopR ? { x, y } : { x: geo.cx + (dx / d) * geo.hoopR, y: geo.cy + (dy / d) * geo.hoopR };
+    // Held clear of the call-to-action: where the body would reach it, the tip stops short, so a held or idling needle
+    // never sits over the link and a click on the link is never the needle's (27/C3).
+    if (avoid.on && p.x + avoid.reachR > avoid.l && p.x - avoid.reachL < avoid.r) p.y = Math.min(p.y, avoid.t - avoid.reachDown);
+    return p;
   };
 
   /** Put the needle's tip at page (x, y); a live thread is sewn to it. */
@@ -387,7 +410,7 @@ export function initNeedle(el: HTMLElement): () => void {
   const stepTravel = (now: number) => {
     const tr = travel;
     if (!tr) return;
-    const t = Math.min(1, (now - tr.t0) / tr.dur);
+    const t = Math.min(1, Math.max(0, (now - tr.t0) / tr.dur));
     const e = ease(t);
     const u = 1 - e;
     const x = u * u * tr.ax + 2 * u * e * tr.cx + e * e * tr.bx;
@@ -419,13 +442,15 @@ export function initNeedle(el: HTMLElement): () => void {
 
   const loop = () => {
     if (raf || !alive) return;
-    lastFrame = performance.now();
+    // The first frame's own timestamp starts the clock (it can be earlier than performance.now() here).
+    lastFrame = 0;
     raf = requestAnimationFrame(tick);
   };
   const tick = (now: number) => {
     raf = 0;
     if (!alive) return;
-    const dt = Math.min(64, now - lastFrame);
+    if (!lastFrame) lastFrame = now;
+    const dt = Math.max(0, Math.min(64, now - lastFrame));
     lastFrame = now;
     if (travel) stepTravel(now);
     const th = threads.find((t) => t.unpicking);
@@ -558,18 +583,25 @@ export function initNeedle(el: HTMLElement): () => void {
     io = new IntersectionObserver((entries) => { for (const en of entries) onScreen = en.isIntersecting; });
     io.observe(hoop);
   }
-  // Once, when the needle first scrolls into view: a small draw-back and settle, so a visitor who has not met it finds it moves.
+  // The touch beat (Stage 6 w4 task 30, critique A1): once per visit, when the needle is at least 60% visible, the page
+  // has been still 400 ms and no form field has focus (bauhaus/parts/beat.ts), a small draw-back and settle, so a visitor
+  // who has not met it finds it moves. A mouse has the grab cursor and the steel highlight instead.
   const offNudge = () => el.removeAttribute('data-nudge');
   el.addEventListener('animationend', offNudge);
-  let nudgeIo: IntersectionObserver | null = null;
-  if ('IntersectionObserver' in window) {
-    nudgeIo = new IntersectionObserver((entries) => {
-      if (!entries.some((en) => en.isIntersecting)) return;
-      el.setAttribute('data-nudge', '');
-      nudgeIo?.disconnect();
-      nudgeIo = null;
-    }, { threshold: 0.6 });
-    nudgeIo.observe(el);
+  const beatAbort = new AbortController();
+  const stopBeat = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    ? () => {}
+    : scheduleBeat('cottagecore:needle', [body], () => el.setAttribute('data-nudge', ''), beatAbort.signal, () => !grab && !travel && !live && !threads.some((t) => t.unpicking));
+
+  // A resize or a rotation while a thread lives re-flows the manifesto: the word mask is built again so the threads
+  // keep clear of the words (27/C2). Nothing is measured while there is no thread.
+  let ro: ResizeObserver | null = null;
+  if ('ResizeObserver' in window) {
+    ro = new ResizeObserver(() => { if (alive && framed && threads.length) measure(); });
+    ro.observe(hoop);
+    // the hoop keeps its size from 640 to 1440 while the manifesto's own size (a vw clamp) reflows its lines
+    const words = cloth.querySelector('.manifesto');
+    if (words) ro.observe(words);
   }
 
   return () => {
@@ -597,7 +629,9 @@ export function initNeedle(el: HTMLElement): () => void {
     cloth.removeEventListener('pointercancel', onClothCancel);
     downs.clear();
     io?.disconnect();
-    nudgeIo?.disconnect();
+    ro?.disconnect();
+    stopBeat();
+    beatAbort.abort();
     el.removeEventListener('animationend', offNudge);
     for (const t of threads) t.g.remove();
     threads.length = 0;

@@ -119,4 +119,18 @@ const { copy, theme } = Astro.props;
     .toys { width: min(76%, 18rem); padding-inline: 0.6rem; margin-top: 4.8rem; }
     .toys :global(.sent-clock) { width: 5rem; }
   }
+  /* 600 to 820 (Stage 6 w4 task 30, critique B4): one column, so the toys leave the row under the envelope and stand
+     in the gutters beside it. The row put the clock's seeds into the envelope and the postmark (the strict-seat failure
+     round 1 fixed with 4.8rem of runway); in the gutter they rise over the flap and the lavender, above the postmark.
+     The clock's right edge is 1.2rem left of the envelope (its width is min(76%, 18rem) of this column), its head about
+     45% of the way down the envelope (the envelope starts 3.5rem down: margin-top above); the stamp is mirrored on the
+     right, its base about 80% of the way down, beside the postage it cancels (its target is unchanged). Below 600 the
+     gutters are under 110px, so the row stays. The empty band between the envelope and "Sent." closes with them. */
+  @media (min-width: 600px) and (max-width: 820px) {
+    .env-col { position: relative; }
+    .toys { position: absolute; inset: 0; width: auto; margin: 0; padding: 0; display: block; pointer-events: none; }
+    .toys :global(.sent-clock), .toys :global(.sent-stamp) { position: absolute; pointer-events: auto; }
+    .toys :global(.sent-clock) { right: calc(50% + min(38%, 9rem) + 1.2rem); top: calc(3.5rem + (100% - 3.5rem) * 0.45 - 2.3rem); }
+    .toys :global(.sent-stamp) { left: calc(50% + min(38%, 9rem) + 1.2rem); top: calc(3.5rem + (100% - 3.5rem) * 0.8 - 5.46rem); }
+  }
 </style>

@@ -8,7 +8,11 @@
  * Each init takes a landmark only its own page has and returns a cleanup that removes every
  * listener it added, the way parts/WallBird.astro does under lib/lifecycle's onMount.
  */
+import { scheduleBeat } from '../../bauhaus/parts/beat';
 import { nextThread } from './sampler';
+
+/** A finger (no hover, no fine pointer) gets each toy's one small beat; a mouse has the cursor and the hover. */
+const mouseHere = (): boolean => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /* ---------- the sampler: a tap re-stitches the letter in the next thread ---------- */
 
@@ -84,12 +88,33 @@ export function initSampler(set: HTMLElement | null): (() => void) | void {
     x.closest('button.ltr')?.classList.remove('go');
   };
 
+  /* The touch beat (Stage 6 w4 task 30, critique A1): once a visit, when the band is at least 60% on screen, the page has
+     been still 400 ms and no form field has focus (bauhaus/parts/beat.ts), ONE letter, the middle of the top row, is
+     re-stitched in the next thread, its crosses drawing in along the letter's path as a tap would. It leaves the roving
+     tab stop alone. A press on the band spends it. */
+  const beatAbort = new AbortController();
+  const stopBeat = mouseHere()
+    ? () => {}
+    : scheduleBeat(
+      'grandmillennial:sampler',
+      [set],
+      () => {
+        const top = letters[0].offsetTop;
+        const row = letters.filter((b) => Math.abs(b.offsetTop - top) < 2);
+        restitch(row[Math.floor(row.length / 2)]);
+      },
+      beatAbort.signal,
+      () => letters.every((b) => !b.classList.contains('go')),
+    );
+
   rove(current);
   set.addEventListener('click', onClick);
   set.addEventListener('keydown', onKey);
   set.addEventListener('focusin', onFocus);
   set.addEventListener('animationend', onEnd as EventListener);
   return () => {
+    stopBeat();
+    beatAbort.abort();
     set.removeEventListener('click', onClick);
     set.removeEventListener('keydown', onKey);
     set.removeEventListener('focusin', onFocus);
@@ -123,9 +148,33 @@ export function initEnvelope(env: HTMLElement | null): (() => void) | void {
     else if (env.dataset.open === 'true' && t.closest('.card')) set(false);
   };
 
+  /* The touch beat (Stage 6 w4 task 30, critique A1): the wax seal alone, once a visit, on the common conditions
+     (bauhaus/parts/beat.ts): it presses in a hair and comes back past rest, as a thumb would test it. It never opens the
+     envelope. A press on the seal spends it. */
+  const beatAbort = new AbortController();
+  const art = seal.querySelector<SVGElement>('.seal');
+  let beatAnim: Animation | null = null;
+  const stopBeat = mouseHere() || !art
+    ? () => {}
+    : scheduleBeat(
+      'grandmillennial:seal',
+      [seal],
+      () => {
+        beatAnim = art.animate(
+          [{ scale: '1' }, { scale: '0.9', offset: 0.3 }, { scale: '1.08', offset: 0.66 }, { scale: '1' }],
+          { duration: 520, easing: 'ease-in-out' },
+        );
+      },
+      beatAbort.signal,
+      () => env.dataset.open !== 'true',
+    );
+
   set(false);
   env.addEventListener('click', onClick);
   return () => {
+    stopBeat();
+    beatAbort.abort();
+    beatAnim?.cancel();
     env.removeEventListener('click', onClick);
     set(false);
   };

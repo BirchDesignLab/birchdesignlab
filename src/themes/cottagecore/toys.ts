@@ -22,6 +22,7 @@
  * cloth, where the same spot calls a firefly that rises.
  */
 import { onMount } from '../../lib/lifecycle';
+import { scheduleBeat } from '../bauhaus/parts/beat';
 import { initNeedle } from './needle';
 
 const SCHOOL = 'cottagecore';
@@ -37,6 +38,8 @@ export interface BlowDetail {
   report?: (placed: number[]) => void;
 }
 export const BLOW_EVENT = 'cc:blow';
+/** A date stamp was pressed: fx.ts measures the text again (a cancel mark that shows is text, one at opacity 0 is not). */
+export const STAMP_EVENT = 'cc:stamp';
 
 /** A touch counts as a tap when it moves no more than this many px and the page no more than 3. */
 const SLOP = 10;
@@ -85,22 +88,22 @@ function bindPress(el: HTMLElement, fire: () => void): () => void {
   };
 }
 
-/** Once, when the toy first scrolls into view: set `data-nudge` for its one-shot sway or lift. */
-function nudgeOnce(el: HTMLElement): () => void {
+/** A finger (no hover, no fine pointer): the toy gives its one-shot beat. A mouse has the cursor and the hover. */
+const mouseHere = (): boolean => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+/**
+ * The touch beat (Stage 6 w4 task 30, critique A1): once per page visit, when the toy is at least 60% visible, the page
+ * has been still 400 ms and no form field has focus (bauhaus/parts/beat.ts holds the conditions and the memory), set
+ * `data-nudge` for the toy's own one-shot sway or lift (the CSS beside the toy). It replaces the old scroll-in nudge,
+ * which fired mid-scroll with no dwell. `key` names the toy and the page, so an in-school swap does not repeat it.
+ */
+function nudgeBeat(key: string, el: HTMLElement, signal: AbortSignal, ready: () => boolean): () => void {
+  if (mouseHere()) return () => {};
   const off = () => el.removeAttribute('data-nudge');
   el.addEventListener('animationend', off);
-  let io: IntersectionObserver | null = null;
-  if ('IntersectionObserver' in window) {
-    io = new IntersectionObserver((entries) => {
-      if (!entries.some((e) => e.isIntersecting)) return;
-      el.setAttribute('data-nudge', '');
-      io?.disconnect();
-      io = null;
-    }, { threshold: 0.6 });
-    io.observe(el);
-  }
+  const stop = scheduleBeat(key, [el], () => el.setAttribute('data-nudge', ''), signal, ready);
   return () => {
-    io?.disconnect();
+    stop();
     el.removeEventListener('animationend', off);
     off();
   };
@@ -118,6 +121,7 @@ export function initDandelion(el: HTMLElement): () => void {
   if (!svg || !head || !seeds.length) return () => {};
   const root = document.documentElement;
   const anims = new Map<SVGPathElement, Animation>();
+  const abort = new AbortController();
   let litTimer = 0;
   let alive = true;
   /** Seeds picked for a release fx.ts has not answered yet: still on the head, and not picked again. */
@@ -202,9 +206,10 @@ export function initDandelion(el: HTMLElement): () => void {
   };
 
   const offPress = bindPress(el, fire);
-  const offNudge = nudgeOnce(el);
+  const offNudge = nudgeBeat(`cottagecore:clock:${location.pathname}`, el, abort.signal, () => !anims.size && !el.hasAttribute('data-lit'));
   return () => {
     alive = false;
+    abort.abort();
     asked.clear();
     offPress();
     offNudge();
@@ -238,6 +243,7 @@ export function initStamp(el: HTMLElement): () => void {
   const age = slots.map(() => slots.length);
   const base = slots.map(() => 0);
   const anims = new Set<Animation>();
+  const abort = new AbortController();
 
   const track = (a: Animation) => {
     anims.add(a);
@@ -286,11 +292,14 @@ export function initStamp(el: HTMLElement): () => void {
       { opacity: 0, scale: '1.14' },
       { opacity: base[fresh], scale: '1' },
     ], { duration: 150, delay: Math.round(PRESS_MS * CONTACT), easing: 'ease-out', fill: 'backwards' }));
+    // fx.ts counts a mark that shows as text and one at opacity 0 as nothing: tell it a mark was laid.
+    window.dispatchEvent(new Event(STAMP_EVENT));
   };
 
   const offPress = bindPress(el, press);
-  const offNudge = nudgeOnce(el);
+  const offNudge = nudgeBeat(`cottagecore:stamp:${location.pathname}`, el, abort.signal, () => !anims.size);
   return () => {
+    abort.abort();
     offPress();
     offNudge();
     for (const a of anims) { a.oncancel = a.onfinish = null; a.cancel(); }

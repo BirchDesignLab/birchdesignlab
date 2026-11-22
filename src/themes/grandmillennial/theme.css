@@ -78,9 +78,9 @@
   --thread: #a8394a;
   /* The other two threads of the sampler's set (Stage 6 w3 task 22: a tap re-stitches a letter oxblood, hunter, gold,
      round again). Each is a graphic on --field-raised at 3:1 or better (meta.contrast): the hunter is the school's
-     own, the gold the deepest end of its gold (a lighter one fails on cream). */
+     own, the gold its --gold-deep token (4.79:1 on --field-raised; the lighter --gold fails on cream). */
   --thread-hunter: #1f4a33;
-  --thread-gold: #a07c2a;
+  --thread-gold: var(--gold-deep);
   --gilt: linear-gradient(135deg, #f0dc9c 0%, #c9a24c 22%, #8a6a26 45%, #e6cd87 62%, #b8933f 80%, #7a5a1c 100%);
   /* A warm-grey edge on the birch trunk, so white bark separates from a cream oval. */
   --bark-edge: #cfc6b4;
@@ -237,7 +237,9 @@
   --catkin: #a68f5c;
   --flap: #0f251b;
   --lining: #3b0d16;
-  --flap-in: #0b1c14;
+  /* Lifted from #0b1c14, which was 1.02:1 on the wall and vanished when the flap opened (Stage 6 w4 task 30,
+     critique B5): 1.76:1 on --wall-ground, so the opened flap is seen against it. meta.contrast holds the pair. */
+  --flap-in: #2a4a39;
   --notecard: #e6d9b8;
   --notecard-ink: #6e1a29;
 

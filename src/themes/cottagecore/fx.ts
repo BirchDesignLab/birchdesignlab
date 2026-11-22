@@ -53,7 +53,9 @@
  * sizeMin; on a phone only, a view with no seat even at sizeMin (About and
  * Contact, where the body is sheet edge to edge) may seat one or two smaller
  * seeds (phoneSizes, at most phoneTinyMax at once) in the header cloth beside
- * the wordmark and under the nav, under the paper like every seed. A view
+ * the wordmark and under the nav, under the paper like every seed: the whole
+ * drawn seed must lie inside the header's own box (headerBand), never in a gap
+ * lower down the page (Stage 6 w4 task 30, task 19 minor C3). A view
  * with no seat at any of those sizes shows no seed. Every seed starts held
  * (not drawn, not moved) and is seated by
  * the keep loop on a strict seat, where it fades in, and none is seated or
@@ -86,7 +88,9 @@
  * event's `report` callback is told which seeds were, so the clock lifts only those off its head), is kept
  * out of the keep loop (it is never re-seated), at most puffCap live at once (the oldest fade first), and goes
  * when it leaves the view or after puffLife. By lamplight the same event is a tap on clear cloth at the clock,
- * and the mote it calls (or lights) rises from there.
+ * and the mote it calls (or lights) rises from there. Stage 6 w4 task 30 (critique B1): seed i of a release waits
+ * i x PUFF.stagger ms, still and undrawn, then grows in the DRAW only, from the head's own seed scale (0.3) to
+ * full over PUFF.growMs; `size` is never shrunk, because the seat rules and the phone-seed test read it.
  *
  * Text (item 14): text is measured line by line, in document space, once on
  * mount (after the fonts) and again, debounced, when the body resizes, the
@@ -265,7 +269,13 @@ const SEED = {
 };
 /** The clock's release (Stage 6 w3 task 23): at most puffCap released seeds live at once, each for puffLife ms
     (the last puffFade ms of it a fade), leaving the head with a kick (px/s) that the breeze takes back over. */
-const PUFF = { cap: 30, life: 42000, fade: 2500, kickX: [20, 85], kickY: [15, 60], tries: 14, window: 1200 } as const;
+const PUFF = { cap: 30, life: 42000, fade: 2500, kickX: [20, 85], kickY: [15, 60], tries: 14, window: 1200, stagger: 70, grow0: 0.3, growMs: 1400 } as const;
+/** How much of its size a puff draws at `age` ms after its birth (Stage 6 w4 task 30, critique B1): 0.3 (the head's
+    own seed scale) easing out to 1. A draw size only: the seed's own `size` is never shrunk. */
+const puffGrowth = (age: number): number => {
+  const u = Math.min(1, Math.max(0, age / PUFF.growMs));
+  return PUFF.grow0 + (1 - PUFF.grow0) * (1 - (1 - u) * (1 - u) * (1 - u));
+};
 /** Ink-brown, the school's --cc-ink. The seeds are drawn in it. */
 const SEED_INK = '58, 42, 31';
 
@@ -275,6 +285,8 @@ const TAP = { slop: 10, maxMs: 600, maxScroll: 3 };
 /** A resize that changes only the viewport's height (a phone toolbar) re-measures
     the text only after the page has been still this long (ms). */
 const SETTLE_MS = 700;
+/** How long after a date stamp's press the text is measured again (ms): the mark has landed and the rest have faded. */
+const STAMP_SETTLE_MS = 500;
 
 /* ---------- types ---------- */
 interface Flash {
@@ -324,6 +336,9 @@ interface Seed {
   /** A seed released by the clock: outside the keep loop, gone at dieAt (ms). */
   puff?: boolean;
   dieAt?: number;
+  /** A puff waits, still and undrawn, until bornAt (ms: the release plus its place in the puff x PUFF.stagger),
+      then grows in the DRAW only from PUFF.grow0 to 1 over PUFF.growMs. `size` never changes (the seat rules read it). */
+  bornAt?: number;
 }
 type Pt = [number, number];
 interface Box {
@@ -556,6 +571,8 @@ export function mountFireflies(): void {
     /** Lines of text, and the sheets that sit over the cloth, in document space. */
     let textBoxes: Box[] = [];
     let coverBoxes: Box[] = [];
+    /** The header's own box, in document space: the one patch of cloth a phone's smaller seeds may take. */
+    let headerBand: Box | null = null;
     let nextGust = 0;
     let lastFireflyT = -1e9;
     let lastSeedT = -1e9;
@@ -674,6 +691,16 @@ export function mountFireflies(): void {
       return t;
     };
 
+    /** Whether the whole drawn seed (fan, anchor and stalk) lies inside the header's box. False when there is none. */
+    const inHeaderBand = (x: number, y: number, k: number, sy: number, turn: number, angle: number) => {
+      const b = headerBand;
+      if (!b) return false;
+      const c = Math.cos(angle);
+      const n = Math.sin(angle);
+      const stalk: Pt = [x - 70 * k * n, y + 70 * k * c];
+      return [...drawnPoints(x, y, k, turn, angle), [x, y] as Pt, stalk].every(([px, py]) => px >= b.l && px <= b.r && py + sy >= b.t && py + sy <= b.b);
+    };
+
     /** Seat a seed on a clear patch of the cloth in view: fan on show, off
         every line of text now and where the breeze will have taken it, and
         not on top of another shown seed. Of the clear patches found it takes
@@ -698,6 +725,9 @@ export function mountFireflies(): void {
       const angle = angleOf(s);
       for (const size of sizes) {
         const k = size * SEED.spriteScale;
+        // A seed under sizeMin is a phone's header seed (stage 6 w3 task 19, w4 task 30): it seats only in the
+        // header's cloth band, never in a gap between blocks lower down the page.
+        const tiny = size < SEED.sizeMin;
         let bx = 0;
         let by = 0;
         let best = -1;
@@ -705,6 +735,7 @@ export function mountFireflies(): void {
         for (let i = 0; i < SEED.seatTries && pool < SEED.seatPool; i++) {
           const x = rand(24, width - 24);
           const y = rand(24, height - 24);
+          if (tiny && !inHeaderBand(x, y, k, sy, turn, angle)) continue;
           if (!seatClear(x, y, k, sy, turn, angle) || !seatClear(x + vx * SEED.lookAhead, y + vy * SEED.lookAhead, k, sy, turn, angle)) continue;
           const apart = i < SEED.seatTries / 2 ? SEED.seatApart : SEED.seatApartTight;
           // A seed seated in the last two seconds still has cover 0 (it fades
@@ -810,9 +841,15 @@ export function mountFireflies(): void {
       };
       document.querySelectorAll('header, main, footer').forEach((region) => {
         const walker = document.createTreeWalker(region, NodeFilter.SHOW_TEXT, {
-          // The date stamp's cancel marks (task 23) are laid and faded by a press, so they are not lines of text
-          // to keep seeds off (they sit over a postage stamp or a postcard that already is one).
-          acceptNode: (n) => (n.nodeValue && n.nodeValue.trim() && !SKIP_TAGS.has(n.parentElement?.tagName ?? '') && !n.parentElement?.closest('.cancel-pad') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+          // The date stamp's cancel marks (task 23) are laid and faded by a press: a mark at opacity 0 is not a
+          // line of text (the layer holds six, five of them blank on Contact), a mark that shows is. A press
+          // re-measures (the cc:stamp event, below), so a mark laid or faded since the last sweep is counted right.
+          acceptNode: (n) => {
+            if (!n.nodeValue || !n.nodeValue.trim() || SKIP_TAGS.has(n.parentElement?.tagName ?? '')) return NodeFilter.FILTER_REJECT;
+            const mark = n.parentElement?.closest('.cancel-pad .cm');
+            if (mark && Number.parseFloat(getComputedStyle(mark).opacity) < 0.05) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
         });
         for (let n = walker.nextNode(); n; n = walker.nextNode()) {
           range.selectNodeContents(n);
@@ -821,6 +858,12 @@ export function mountFireflies(): void {
         region.querySelectorAll('input, textarea, select, button').forEach((el) => push(text, el.getBoundingClientRect()));
       });
       document.querySelectorAll('.cc-paper, .cc-torn, .cc-gingham, .hoop').forEach((el) => push(cover, el.getBoundingClientRect()));
+      const head = document.querySelector('header');
+      headerBand = null;
+      if (head) {
+        const r = head.getBoundingClientRect();
+        if (r.width >= 1 && r.height >= 1) headerBand = { l: r.left + sx, t: r.top + sy, r: r.right + sx, b: r.bottom + sy };
+      }
       textBoxes = text;
       coverBoxes = cover;
     };
@@ -1104,6 +1147,8 @@ export function mountFireflies(): void {
       for (const s of seeds) {
         if (s.held) continue;
         if (s.puff && t >= (s.dieAt ?? 0)) { spent = true; continue; }
+        // A puff waits its turn on the head, still and undrawn (the stagger).
+        if (s.puff && !still && t < (s.bornAt ?? 0)) continue;
         if (!still) {
           s.swayPhase += s.swayRate * dt;
           s.turnPhase += s.turnRate * dt;
@@ -1166,7 +1211,9 @@ export function mountFireflies(): void {
         ctx.rotate(angle);
         ctx.scale(turn, 1);
         ctx.globalAlpha = a;
-        ctx.drawImage(seedSprites[s.sprite], -SEED_ANCHOR.x * kk, -SEED_ANCHOR.y * kk, SEED_SPRITE_SIZE * kk, SEED_SPRITE_SIZE * kk);
+        // A released seed grows from the head's own seed scale: only the drawn size, about the seed's anchor.
+        const g = s.puff && !still ? puffGrowth(t - (s.bornAt ?? 0)) : 1;
+        ctx.drawImage(seedSprites[s.sprite], -SEED_ANCHOR.x * kk * g, -SEED_ANCHOR.y * kk * g, SEED_SPRITE_SIZE * kk * g, SEED_SPRITE_SIZE * kk * g);
         ctx.restore();
       }
       if (spent) seeds = seeds.filter((s) => !(s.puff && t >= (s.dieAt ?? 0)));
@@ -1209,7 +1256,8 @@ export function mountFireflies(): void {
           seatedAt: t,
           held: false,
           puff: true,
-          dieAt: t + PUFF.life + rand(-4000, 4000),
+          bornAt: t + i * PUFF.stagger,
+          dieAt: t + i * PUFF.stagger + PUFF.life + rand(-4000, 4000),
         };
         const turn = turnOf(s);
         const angle = angleOf(s);
@@ -1370,6 +1418,9 @@ export function mountFireflies(): void {
     const onPointerLeave = () => {
       pointer.fine = false;
     };
+    /** A date stamp was pressed (toys.ts): a mark has been laid and the older ones have faded a step, so measure the
+        text again once the new mark has come in (it fades in over 150 ms after the rubber lands). */
+    const onStamp = () => scheduleRects(STAMP_SETTLE_MS);
 
     resize();
     sync();
@@ -1403,6 +1454,7 @@ export function mountFireflies(): void {
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     window.addEventListener('pointercancel', onPointerCancel, { passive: true });
     window.addEventListener('cc:blow', onBlow);
+    window.addEventListener('cc:stamp', onStamp);
     document.documentElement.addEventListener('pointerleave', onPointerLeave, { passive: true });
     document.addEventListener('visibilitychange', sync);
     reduced.addEventListener('change', sync);
@@ -1423,6 +1475,7 @@ export function mountFireflies(): void {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       window.removeEventListener('cc:blow', onBlow);
+      window.removeEventListener('cc:stamp', onStamp);
       blow?.report?.([]);
       blow = null;
       presses.clear();

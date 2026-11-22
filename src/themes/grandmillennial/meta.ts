@@ -46,6 +46,7 @@ export const meta: ThemeMeta = {
     { fg: '--thread-hunter', bg: ['--field-raised'], min: 3, note: "the sampler's hunter thread on its card (non-text, 3:1; Stage 6 w3 task 22)" },
     { fg: '--thread-gold', bg: ['--field-raised'], min: 3, note: "the sampler's gold thread on its card (non-text, 3:1)" },
     { fg: '--notecard-ink', bg: ['--notecard'], min: 4.5, note: "the open envelope's notecard monogram" },
+    { fg: '--flap-in', bg: ['--wall-ground'], min: 1.2, note: "the open envelope's flap (its inside) against the wall it folds over: a decorative edge, not text. Dark is 1.76:1 (Stage 6 w4 task 30, critique B5; it was 1.02:1); light is paper on a paler cloth ground, so the floor is the lowest it needs" },
   ],
   assets: {
     provenance: 'original-vector',

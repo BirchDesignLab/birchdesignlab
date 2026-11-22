@@ -38,6 +38,7 @@ export const meta: ThemeMeta = {
     /* The needle's stitches on the hoop linen (Stage 6 w3 task 27): the darker edge of each thread is what
        draws the stitch against the cloth; the lighter top thread inside it is the sprig's own pale rose and sage. */
     { fg: '--thread-rose-edge', bg: ['--hoop-cloth'], min: 3, note: 'the edge of a rose needle stitch on the hoop linen' },
+    { fg: '--thread-rose', bg: ['--hoop-cloth'], min: 3, note: 'the top thread of a rose needle stitch on the hoop linen (Stage 6 w4 task 30: it must read apart from the hoop ring)' },
     { fg: '--thread-sage-edge', bg: ['--hoop-cloth'], min: 3, note: 'the edge of a sage needle stitch on the hoop linen' },
     { fg: '--field-line', bg: ['--paper'], min: 3, note: 'the write-on line under a form field' },
     { fg: '--hand-kicker-ink', bg: ['--paper'], min: 4.5, note: 'kickers on a card' },
