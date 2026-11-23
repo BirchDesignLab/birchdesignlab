@@ -1,0 +1,52 @@
+/*
+ * The Lab's surface textures (src/lib/lab-presentation.ts names them).
+ *
+ * One fixed sheet behind the page, filled with the page's own ink (--mark)
+ * and cut by a mask, so a texture is defined once and reads right in light
+ * and dark. lab-presentation-client.ts sets data-lab-texture and
+ * --lab-texture-opacity on <html>; with neither, this file draws nothing.
+ */
+html[data-lab-texture] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  background-color: var(--mark);
+  opacity: var(--lab-texture-opacity, 0);
+  -webkit-mask-repeat: repeat; mask-repeat: repeat;
+}
+
+/* Paper: fine fibre. Fractal noise pushed into the alpha channel. */
+html[data-lab-texture='paper'] body::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.7 -0.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.7 -0.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 240px 240px; mask-size: 240px 240px;
+}
+
+/* Laid: close laid lines across, chain lines down, as a paper mould leaves. */
+html[data-lab-texture='laid'] body::before {
+  -webkit-mask-image:
+    repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 104px);
+  mask-image:
+    repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 104px);
+}
+
+/* Hatch: engraver's diagonals, kept to the edges of the plate. */
+html[data-lab-texture='hatch'] body::before {
+  -webkit-mask-image:
+    repeating-linear-gradient(45deg, #000 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse at center, transparent 38%, #000 100%);
+  mask-image:
+    repeating-linear-gradient(45deg, #000 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse at center, transparent 38%, #000 100%);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+  -webkit-mask-repeat: repeat, no-repeat; mask-repeat: repeat, no-repeat;
+}
+
+/* Bark: the house lenticels, still. The tile is generated from the same
+   pattern core as the living bark (barkTile) and handed over by script. */
+html[data-lab-texture='bark'] body::before {
+  -webkit-mask-image: var(--lab-bark-tile); mask-image: var(--lab-bark-tile);
+  -webkit-mask-size: 520px 520px; mask-size: 520px 520px;
+}

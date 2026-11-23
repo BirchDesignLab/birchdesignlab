@@ -189,8 +189,10 @@ Recorded because the frames were once downloaded, deleted, and unreferenced, and
 |---|---|
 | Density | **Shipped 07-30-26** (`c9186df`), the loose variant |
 | Accent | **Shipped 08-13-26**, the loud variant (frame 1c) |
-| Texture | **Never drawn.** Stages still show placeholder treatment. |
-| Motion | **Never drawn**, and grown: the Lab's presentation language, entrance beats, transition grammar, motion budget, GSAP available |
+| Texture | **On the bench, not picked** (11-22-26). Four candidates (paper, laid, hatch, bark) plus an amount dial, tuned live in BDL-006 section III. Ships at "none" until the founder sets one. Stages still show placeholder treatment. |
+| Motion | **On the bench, not picked** (11-22-26). One motion budget and three row entrances (rise, draw, develop) on the catalog, tuned in BDL-006. Ships at "still". GSAP installed, Lab only, fetched only when an entrance runs. Still undrawn: transition grammar between Lab pages, entrance beats on entry pages and stages. |
+
+**How the texture and motion pass runs (founder, 11-22-26):** tuned on the bench, not drawn as frames. The founder fiddles in `/lab/bdl-006/`, wears the setting on the real catalog (this browser only), pushes the crowns in, and the printed line is pasted over `LAB_PRESENTATION` in `src/lib/lab-presentation.ts`. After the pick: list BDL-006 (drop `noindex`, add a picture), then beef up BDL-001 and BDL-002 in the picked language. BDL-001: a fuller first view in light mode, the grow animation on typed seeds, more to touch (bark peel on tap, a shareable seed link). BDL-002: becomes a visitor-facing "swap the palette and faces, watch the page change" piece.
 
 *"Loud accents with the relaxed spacing"* is the founder's summary of the first two. Spec and plan: `docs/superpowers/specs/2026-08-13-lab-accent-pass-design.md`, `docs/archive/superpowers/plans/2026-08-13-lab-accent-pass.md`. Not to relitigate: the forthcoming chip keeps the word "forthcoming" (a claim about right now has to stay true through quiet weeks); the working dash is sized in `em` on purpose.
 

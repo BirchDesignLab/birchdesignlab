@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import SpecimenCard from './SpecimenCard.astro';
 import { specimenCountLabel } from '../lib/specimen-count';
+import '../styles/lab-texture.css';
 
 interface Props {
   entries: CollectionEntry<'lab'>[];
@@ -24,6 +25,18 @@ const working = entries.filter((e) => e.data.status === 'live').length;
 <div class="catalog" data-filter="all">
   {entries.map((entry) => <SpecimenCard entry={entry} level="h2" />)}
 </div>
+
+{/* The Lab's texture and row entrances (src/lib/lab-presentation.ts). At the
+    shipped setting of none and still this draws nothing and fetches nothing. */}
+<script>
+  import { initLabPresentation, refreshEntrances } from '../lib/lab-presentation-client';
+
+  initLabPresentation('.catalog .card');
+  // The filter moves rows without a scroll; look again once it has.
+  document.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('.filter a')) requestAnimationFrame(refreshEntrances);
+  });
+</script>
 
 {filterable && (
   <script>
