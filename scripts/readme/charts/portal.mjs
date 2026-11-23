@@ -368,7 +368,10 @@ function makePanel(c) {
     const matL = x + (phone ? 70 : 34 * g);
     const matT = y + aw + 14 * g;
     const matW = w - 2 * (matL - x);
-    const plW = Math.min(w - 2 * pad - 6, sp.copy.w(data.copy) + 34);
+    // The plaque may run to just inside the gilt frame; the sentence must clear its edges.
+    const plMax = w - 2 * pad + 6;
+    fit(sp.copy, data.copy, plMax - 16, 'copy');
+    const plW = Math.min(plMax, sp.copy.w(data.copy) + 34);
     const plH = sp.copy.size + 14;
     const plY = y + h - 15 - plH;
     const matH = plY - 5 - matT;

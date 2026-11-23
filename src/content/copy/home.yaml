@@ -5,25 +5,25 @@
 page: home
 title: Custom software and web design · Mississippi Gulf Coast
 opener:
-  lead: A design lab, not an agency.
+  lead: You talk to the person who builds it.
 doors:
   kicker: What we build
   items:
     - title: Software
       body: >-
-        The tool your business has been hoping for. The spreadsheet that has
-        grown into a monster, the process that you dread every week that eats
-        into your weekends? We can design, build, and maintain what fixes it.
+        If part of your business runs on a spreadsheet only one person
+        understands, or a weekly chore that takes your Saturday, we can build
+        the tool that replaces it. Then we keep it running.
     - title: Web design
       body: >-
-        A site that loads instantly, reads clearly, and presents your business
-        as the only one to even consider calling. No templates, no builders,
-        no bloat. Every site designed and constructed by hand.
+        A site that loads fast on a phone and makes it obvious what you do and
+        how to reach you. Each one is designed and constructed for your
+        business alone, so it won't look like anyone else's.
   more: How we build
 lab:
   kicker: From the lab
-  pull: Everything we sell, we practice in the open.
-  proof: One recent build went live on day thirteen. Its first nights sold out.
+  pull: The Lab is where we show our work.
+  proof: A game-night business on the Coast went live with us in thirteen days.
   more: Visit the lab
 closer:
   lead: Ready when you are.
