@@ -74,6 +74,8 @@ const [etymLead, ...etymRest] = copy.etymology;
   .manifesto {
     font-family: var(--font-display); font-size: var(--text-3xl);
     line-height: 1.15; max-width: 20ch;
+    /* Balanced, so the motto never leaves one word alone on its last line. */
+    text-wrap: balance;
   }
   .loud .cta-engraved { margin-top: var(--space-5); }
 </style>
