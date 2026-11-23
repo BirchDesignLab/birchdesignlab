@@ -29,6 +29,11 @@ export function makeLabSchema<Img extends z.ZodType>(image: () => Img) {
     /** Instruments that ship publicly but stay out of search and the sitemap
         (the /styleguide convention: unlinked, noindexed, filtered). */
     noindex: z.boolean().default(false),
+    /** The catalog picture: one still of the piece, shown in its row on /lab
+        so the work is visible before the click. Optional: a forthcoming
+        entry has nothing to show. scripts/lab/capture-catalog-thumbs.mjs
+        makes most of them. */
+    thumb: z.object({ src: image(), alt: z.string().min(1) }).optional(),
   };
 
   const experiment = z
