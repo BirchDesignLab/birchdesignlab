@@ -263,3 +263,55 @@ a.lw-visit:hover svg { transform: translate(2px, -2px); }
 html.lw-fading[data-lab-view='wall'] .lw-wall,
 html.lw-fading[data-lab-view='list'] .lab-page > .count,
 html.lw-fading[data-lab-view='list'] .lab-page > .catalog { animation: lw-fade 0.4s var(--ease-weighted) both; }
+
+/* ---------- the lamp: a light that follows the pointer (src/lib/lab-wall/lamp.ts, wall.ts) ---------- */
+:root { --lw-glow: 255 222 160; }
+
+/* The layer is made by the engine while the lamp runs and taken down when it stops, so off costs nothing. */
+.lw-lamp { position: absolute; inset: 0; z-index: 30; pointer-events: none; --lx: 60%; --ly: 30%; transition: opacity 0.4s; }
+html.lw-locked .lw-lamp, html[data-lab-view='list'] .lw-lamp { opacity: 0; }
+.lw-dusk, .lw-pool { position: absolute; inset: 0; }
+/* dark: the wall falls into dusk away from the lamp, and a warm pool sits under it */
+.lw-dusk { background: radial-gradient(circle at var(--lx) var(--ly), rgb(6 5 4 / 0) 0, rgb(6 5 4 / 0.06) 200px, rgb(6 5 4 / 0.3) 470px, rgb(6 5 4 / 0.42) 800px); }
+.lw-pool { mix-blend-mode: screen; background: radial-gradient(circle at var(--lx) var(--ly), rgb(var(--lw-glow) / 0.26) 0, rgb(var(--lw-glow) / 0.13) 170px, rgb(255 205 130 / 0.05) 400px, rgb(255 200 120 / 0) 680px); }
+/* light: soft shade away from the pointer, a pale pool under it */
+:root[data-scheme='light'] .lw-dusk { mix-blend-mode: multiply; background: radial-gradient(circle at var(--lx) var(--ly), rgb(255 255 255 / 0) 0, rgb(96 84 66 / 0.07) 240px, rgb(70 60 46 / 0.3) 560px, rgb(56 48 36 / 0.44) 950px); }
+:root[data-scheme='light'] .lw-pool { mix-blend-mode: soft-light; background: radial-gradient(circle at var(--lx) var(--ly), rgb(255 240 200 / 0.5) 0, rgb(255 236 190 / 0.2) 160px, rgb(255 230 180 / 0) 380px); }
+
+/* each tile near the lamp gets a warm rim, its strength set by the engine from the distance (dark only) */
+.lw-rim {
+  position: absolute; inset: -1px; border-radius: calc(var(--r, 10px) + 1px); pointer-events: none; opacity: 0; display: none;
+  box-shadow: 0 0 0 1px rgb(var(--lw-glow) / 0.75), 0 0 34px 2px rgb(var(--lw-glow) / 0.28);
+}
+:root:not([data-scheme='light']) .lw-rim { display: block; }
+.lw-tile.lw-open .lw-rim, .lw-tile.lw-out .lw-rim { display: none !important; }
+
+/* ---------- the bulb: the lamp's switch, in the site header just left of the light/dark switch ---------- */
+/* Shown only where the lamp runs: the wall view, and in light only with a fine pointer at desktop layout
+   (the same rule as lampRuns in lamp.ts). Without script html[data-lab-view] never exists, so it never shows. */
+.lw-bulb {
+  display: none; appearance: none; position: relative; flex: none;
+  width: 1.5rem; height: 1.5rem; padding: 0; place-items: center; cursor: pointer;
+  /* closes the header's gap up to the switch beside it */
+  margin-right: calc(var(--space-2) - var(--space-4));
+  font: inherit; color: #2a2110; background: rgb(var(--lw-glow)); border: 1px solid rgb(var(--lw-glow)); border-radius: 0;
+  transition: color var(--dur-1) var(--ease-weighted), background-color var(--dur-1) var(--ease-weighted), border-color var(--dur-1) var(--ease-weighted);
+}
+html[data-lab-lamp='off'] .lw-bulb { color: var(--mark-muted); background: transparent; border-color: var(--line); }
+.lw-bulb svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* a 44 by 44 hit area around the drawn square (12px more on the left, 8px on the right, 10px above and below); it stops short of the switch beside it */
+.lw-bulb::before { content: ''; position: absolute; left: -12px; top: -10px; width: 44px; height: 44px; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-lab-lamp='off'] .lw-bulb:hover { border-color: var(--mark-muted); }
+}
+html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { display: grid; }
+@media (hover: hover) and (pointer: fine) and (min-width: 720px) {
+  html[data-lab-view='wall'] .lw-bulb { display: grid; }
+}
+/* Phones: the header is wordmark, nav, bulb, switch in one row, and the bulb takes 32px. The row's gaps close up
+   (only while the bulb shows, so every other header stays as it was) so the wordmark keeps its two lines and the
+   nav and the switch stay on the row at 390 and 360. */
+@media (max-width: 640px) {
+  html[data-lab-view='wall']:not([data-scheme='light']) header .bar { gap: var(--space-2); }
+  html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { margin-right: 0; }
+}

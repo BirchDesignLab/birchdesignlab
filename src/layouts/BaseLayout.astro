@@ -34,7 +34,7 @@ const { title, description, noindex = false, zone } = Astro.props;
     <slot name="head" />
   </head>
   <body>
-    <SiteHeader />
+    <SiteHeader><slot name="header-controls" slot="header-controls" /></SiteHeader>
     <main id="main" tabindex="-1">
       <slot />
     </main>

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { REPO, doc, readPage } from './helpers';
+import { REPO, doc, listRoutes, readPage } from './helpers';
+import { LAMP_ATTR, LAMP_KEY } from '../../src/lib/lab-wall/lamp';
 
 /**
  * /lab ships the catalog list in its HTML and the wall on top of it. Without
@@ -135,4 +136,45 @@ describe('the category pages carry no wall', () => {
       expect(html).not.toContain('lab-page');
     });
   }
+});
+
+describe('the lamp bulb in the site header', () => {
+  const html = readPage('/lab/');
+  const d = doc(html);
+  const bulb = d.querySelector('[data-lw="bulb"]');
+
+  it('is one real button, on, named Lamp', () => {
+    expect(d.querySelectorAll('[data-lw="bulb"]').length).toBe(1);
+    expect(bulb?.tagName.toLowerCase()).toBe('button');
+    expect(bulb?.getAttribute('type')).toBe('button');
+    expect(bulb?.getAttribute('aria-pressed')).toBe('true');
+    expect(bulb?.getAttribute('aria-label')).toBe('Lamp');
+    expect(bulb?.closest('header')).not.toBeNull();
+  });
+
+  it('sits immediately before the light/dark switch, so it is the last stop before it', () => {
+    const toggle = d.querySelector('#theme-toggle');
+    expect(toggle).not.toBeNull();
+    const siblings = toggle!.parentNode!.childNodes.filter((n) => n.nodeType === 1);
+    expect(siblings.indexOf(toggle!) - 1).toBe(siblings.indexOf(bulb!));
+  });
+
+  it('has its words free of em dashes', () => {
+    expect(bulb?.outerHTML ?? '').not.toContain(String.fromCharCode(0x2014));
+  });
+
+  it('is decided before first paint from the key the module repeats', () => {
+    const inline = /<script[^>]*>([^<]*data-lab-view[^<]*)<\/script>/.exec(html)?.[1] ?? '';
+    expect(inline).toContain(`localStorage.getItem('${LAMP_KEY}')`);
+    expect(inline).toContain(`setAttribute('${LAMP_ATTR}'`);
+  });
+
+  it('is on no other page: no bulb and no lamp choice', () => {
+    for (const route of listRoutes().filter((r) => r !== '/lab/')) {
+      const page = readPage(route);
+      expect(page, route).not.toContain('data-lw="bulb"');
+      expect(page, route).not.toContain('lw-bulb');
+      expect(page, route).not.toContain(LAMP_ATTR);
+    }
+  });
 });

@@ -1,8 +1,10 @@
 /**
  * The wall engine: every listed piece as a live tile in one mosaic, and the
  * open piece (the "door") that fills the window. A typed port of the
- * mockup's app.js, with the lamp, the flying thumbnails and the mockup's own
- * list left out (the catalog's own list is the List view).
+ * mockup's app.js, with the flying thumbnails and the mockup's own list left
+ * out (the catalog's own list is the List view). The lamp (a light that
+ * follows the pointer, and a glowing rim on the tiles near it) is in here too:
+ * see the lamp section of mountWall, and lamp.ts for its rules.
  *
  * One requestAnimationFrame loop owns all of it. What keeps it steady:
  *  - geometry is eased toward a target every frame, never jumped;
@@ -14,6 +16,8 @@
  * Entry point: mountWall(). It reads the markup LabWall.astro rendered.
  */
 import { clamp, readTheme, T } from './draw';
+import { currentScheme } from '../scheme';
+import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
 import { layoutWall } from './layout';
 import type { Rect } from './layout';
 import { hasMini, loadMini } from './minis';
@@ -40,7 +44,7 @@ const MAX_DPR = 2;
 const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
 
 interface Written {
-  x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; tf: string;
+  x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; lit: number; tf: string;
 }
 
 interface Tile {
@@ -50,6 +54,8 @@ interface Tile {
   face: HTMLElement;
   cap: HTMLElement;
   veil: HTMLElement;
+  /** The lamp's glow around the tile; there only while the lamp runs. */
+  rim: HTMLElement | null;
   canvas: HTMLCanvasElement | null;
   ctx: CanvasRenderingContext2D | null;
   mod: LoadedMini | null;
@@ -75,6 +81,8 @@ interface Tile {
   H: number;
   dpr: number;
   depth: number;
+  /** How strongly the lamp lights the tile's rim, eased (0..1). */
+  lit: number;
   p: Pointer;
   last: number;
   born: number;
@@ -205,16 +213,16 @@ export function mountWall(): WallHandle {
     if (!animated) stillFor(face, veil, e);
     const canvas = el.querySelector<HTMLCanvasElement>('canvas');
     const s: Tile = {
-      e, idx, el, face, veil, cap: need<HTMLElement>(el, '.lw-cap'),
+      e, idx, el, face, veil, rim: null, cap: need<HTMLElement>(el, '.lw-cap'),
       canvas, ctx: canvas ? canvas.getContext('2d') : null,
       mod: null, mini: null, loading: false, broken: false, err: false,
       wall: { x: 0, y: 0, w: 10, h: 10 }, cur: null,
       open: false, exit: 0, flying: false, hot: false, focus: false, vis: false, intent: false, need: true,
-      cf: 1, oa: 0, W: 0, H: 0, dpr: 0, depth: 0.7,
+      cf: 1, oa: 0, W: 0, H: 0, dpr: 0, depth: 0.7, lit: 0,
       p: { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, a: 0 },
       last: 0, born: performance.now(), t0: 0,
       v: { sc: 1, rx: 0, ry: 0, tx: 0, ty: 0, dim: 0 },
-      w: { x: NaN, y: NaN, w: NaN, h: NaN, fh: NaN, cf: -1, r: -1, dim: -1, tf: '' },
+      w: { x: NaN, y: NaN, w: NaN, h: NaN, fh: NaN, cf: -1, r: -1, dim: -1, lit: -1, tf: '' },
     };
     el.addEventListener('click', () => { if (!current) openTile(s); });
     el.addEventListener('keydown', (ev) => {
@@ -518,6 +526,59 @@ export function mountWall(): WallHandle {
   disposers.push(() => schemeObs.disconnect());
   readTheme();
 
+  // ---- the lamp ----
+  // The visitor's choice (the bulb in the header) and where it runs decide
+  // whether there is a lamp at all. With no lamp there is no layer, no rims
+  // and no per-frame work: everything below is built when the lamp starts and
+  // taken down when it stops.
+  const fineQuery = matchMedia(FINE_POINTER_QUERY);
+  const deskQuery = matchMedia(DESKTOP_QUERY);
+  const lamp = { x: 0, y: 0, init: false, wx: '', wy: '' };
+  let lampEl: HTMLElement | null = null;
+  const lampWanted = (): boolean =>
+    view === 'wall' &&
+    lampRuns({
+      on: root.getAttribute(LAMP_ATTR) !== 'off',
+      light: currentScheme() === 'light',
+      finePointer: fineQuery.matches,
+      desktop: deskQuery.matches,
+    });
+  function applyLamp(): void {
+    const want = lampWanted();
+    if (want === (lampEl !== null)) return;
+    if (want) {
+      const el = document.createElement('div');
+      el.className = 'lw-lamp';
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = '<div class="lw-dusk"></div><div class="lw-pool"></div>';
+      wallEl.appendChild(el);
+      lampEl = el;
+      lamp.init = false;
+      lamp.wx = lamp.wy = '';
+      for (const s of tiles) {
+        const rim = document.createElement('div');
+        rim.className = 'lw-rim';
+        s.el.appendChild(rim);
+        s.rim = rim;
+        s.lit = 0;
+        s.w.lit = -1;
+      }
+    } else {
+      lampEl?.remove();
+      lampEl = null;
+      for (const s of tiles) { s.rim?.remove(); s.rim = null; }
+    }
+  }
+  const lampObs = new MutationObserver(applyLamp);
+  lampObs.observe(root, { attributes: true, attributeFilter: [LAMP_ATTR, 'data-scheme'] });
+  disposers.push(() => lampObs.disconnect());
+  for (const q of [fineQuery, deskQuery]) {
+    q.addEventListener('change', applyLamp);
+    disposers.push(() => q.removeEventListener('change', applyLamp));
+  }
+  disposers.push(() => { lampEl?.remove(); lampEl = null; for (const s of tiles) { s.rim?.remove(); s.rim = null; } });
+  applyLamp();
+
   // ---- miniatures ----
   function requestMod(s: Tile): void {
     if (s.mod || s.loading || s.broken || !hasMini(s.e.id)) return;
@@ -619,6 +680,21 @@ export function mountWall(): WallHandle {
     par.x += (pt.x - par.x) * kp;
     par.y += (pt.y - par.y) * kp;
 
+    // the lamp follows the pointer on the wall (or a finger that is down), and otherwise drifts by itself
+    const lampOn = lampEl !== null;
+    if (lampEl && fx) {
+      const box = { cw, ch, top: cr.top, vh };
+      const phoneLike = coarse || isPhone;
+      if (!lamp.init) { const at = lampStart(box, isPhone); lamp.x = at.x; lamp.y = at.y; lamp.init = true; }
+      const aim = inWall || (ptr.type === 'touch' && ptr.down) ? { x: qx, y: qy } : driftTarget(Ts, box, phoneLike);
+      const kl = 1 - Math.exp(-dt * (inWall ? 7 : 2.4));
+      lamp.x += (aim.x - lamp.x) * kl;
+      lamp.y += (aim.y - lamp.y) * kl;
+      const lx = lamp.x.toFixed(1), ly = lamp.y.toFixed(1);
+      if (lx !== lamp.wx) { lampEl.style.setProperty('--lx', lx + 'px'); lamp.wx = lx; }
+      if (ly !== lamp.wy) { lampEl.style.setProperty('--ly', ly + 'px'); lamp.wy = ly; }
+    }
+
     const moving = current !== null || tiles.some((s) => s.exit !== 0);
     const full = moving ? fullRect() : null;
     const dark = T.dark;
@@ -671,7 +747,7 @@ export function mountWall(): WallHandle {
           if (mouse) {
             const dx = bc.x - qx, dy = bc.y - qy, d = Math.max(1, Math.hypot(dx, dy)), wt = Math.exp(-((d / R) ** 2));
             sc = 1 - (0.012 + 0.05 * wt);
-            dim = dark ? 0.12 + 0.14 * wt : 0.34 + 0.24 * wt;
+            dim = dark ? 0.12 + 0.14 * wt : lampOn ? 0.08 + 0.1 * wt : 0.34 + 0.24 * wt;
             rx += (dy / d) * 9 * wt; ry -= (dx / d) * 9 * wt;
           } else { sc = 0.985; dim = dark ? 0.15 : 0.26; }
         }
@@ -687,6 +763,14 @@ export function mountWall(): WallHandle {
       if (sig(v.dim) !== w.dim) { s.veil.style.opacity = String(sig(v.dim)); w.dim = sig(v.dim); }
       const isHot = hov === s && !current;
       if (isHot !== s.hot) { s.hot = isHot; s.el.classList.toggle('lw-hot', isHot); }
+
+      // ---- the lamp's glow on the tile's rim (dark only; the rim is not drawn in light) ----
+      if (s.rim) {
+        const goal = dark && fx && matches(s) ? rimLit(s.wall, lamp.x, lamp.y) : 0;
+        s.lit += (goal - s.lit) * kv;
+        if (Math.abs(goal - s.lit) < 0.004) s.lit = goal;
+        if (sig(s.lit) !== w.lit) { s.rim.style.opacity = String(sig(s.lit)); w.lit = sig(s.lit); }
+      }
 
       // ---- the miniature ----
       const top = cr.top + c.y;
@@ -803,6 +887,7 @@ export function mountWall(): WallHandle {
     setView(next: View): void {
       if (next === view) return;
       view = next;
+      applyLamp();
       if (view === 'wall') { layout(); start(); } else { if (current) closeTile(); stop(); }
     },
     destroy(): void {

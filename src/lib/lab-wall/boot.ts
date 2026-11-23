@@ -1,13 +1,16 @@
 /**
  * The first script on /lab: small, and nothing here waits on the engine.
- * It wires the Wall/List switch, and loads the engine (wall.ts and the
+ * It wires the Wall/List switch and the lamp's bulb in the site header, and loads the engine (wall.ts and the
  * miniatures behind it) with a dynamic import only when the wall is the view.
  *
  * The view itself is decided before first paint by the inline line in
  * src/pages/lab/index.astro (data-lab-view on <html>); this file keeps that
- * attribute, the buttons and the remembered choice in step afterwards.
+ * attribute, the buttons and the remembered choice in step afterwards. The
+ * lamp's own choice (data-lab-lamp on <html>) is set the same way, by the
+ * inline line first and by wireBulb after; the engine only reads it.
  * Without script none of it exists and the page is the catalog list.
  */
+import { wireBulb } from './lamp';
 import { readView, writeView } from './model';
 import type { View } from './model';
 import type { WallHandle } from './wall';
@@ -26,6 +29,9 @@ export function bootLabWall(): void {
   const root = document.documentElement;
   const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-lw-view]'));
   if (!document.querySelector('[data-lw="wall"]') || buttons.length === 0) return;
+
+  const bulb = document.querySelector<HTMLElement>('[data-lw="bulb"]');
+  if (bulb) wireBulb(bulb, root, storage());
 
   let engine: WallHandle | null = null;
   let loading: Promise<WallHandle | null> | null = null;
