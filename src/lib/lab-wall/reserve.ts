@@ -34,6 +34,21 @@ export const SM_BELOW = 260;
 export const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
 /** The attribute a framed tile carries before the engine adopts it. */
 export const TILE_ATTR = 'data-lw-id';
+/** The attribute the engine puts on the wall once it is live: from then on the engine keeps the box, not the inline script. */
+export const LIVE_ATTR = 'data-lw-live';
+
+/**
+ * Everything laid out before the wall (the previous siblings of the wall and of each of its ancestors): a change in
+ * any of their heights moves the wall's top, and on desktop the wall's height follows its top. The inline script walks
+ * the same way.
+ */
+export function aboveWall(wallEl: HTMLElement): Element[] {
+  const out: Element[] = [];
+  for (let n: Element | null = wallEl; n && n !== document.body; n = n.parentElement) {
+    for (let s = n.previousElementSibling; s; s = s.previousElementSibling) out.push(s);
+  }
+  return out;
+}
 
 const sig = (n: number): number => Math.round(n * 100) / 100;
 
@@ -47,48 +62,59 @@ const sig = (n: number): number => Math.round(n * 100) / 100;
 export const RESERVE_INLINE = `(function () {
   var doc = document, w = doc.querySelector('[data-lw="wall"]');
   if (!w || doc.documentElement.getAttribute('data-lab-view') !== 'wall') return;
-  var p = w.parentElement;
-  if (p) w.style.setProperty('--lw-bleed', Math.max(0, p.getBoundingClientRect().left + (parseFloat(getComputedStyle(p).paddingLeft) || 0)).toFixed(2) + 'px');
+  var own = Object.prototype.hasOwnProperty;
   var rows = [];
   try { var d = doc.querySelector('[data-lw="data"]'); rows = JSON.parse((d && d.textContent) || '[]') || []; } catch (e) { rows = []; }
   var ids = [], seen = {}, i;
   for (i = 0; i < rows.length; i++) {
     var rid = rows[i] && rows[i].id;
-    if (typeof rid === 'string' && !Object.prototype.hasOwnProperty.call(seen, rid)) { seen[rid] = 1; ids.push(rid); }
+    if (typeof rid === 'string' && !own.call(seen, rid)) { seen[rid] = 1; ids.push(rid); }
   }
-  var phone = window.innerWidth < ${PHONE_BELOW};
-  var map = phone ? ${JSON.stringify(PHONE)} : ${JSON.stringify(DESK)};
-  var gap = phone ? ${PHONE_GAP} : ${DESK_GAP};
-  var mapCols = phone ? ${PHONE_COLS} : ${DESK_COLS}, mapRows = phone ? ${PHONE_ROWS} : ${DESK_ROWS};
-  var spC = phone ? ${SPILL_PHONE.cols} : ${SPILL_DESK.cols}, spR = phone ? ${SPILL_PHONE.rows} : ${SPILL_DESK.rows};
-  var perRow = Math.floor(mapCols / spC), spill = [];
-  for (i = 0; i < ids.length; i++) if (!Object.prototype.hasOwnProperty.call(map, ids[i])) spill.push(ids[i]);
-  var cw = (w.clientWidth - 2 * gap - (mapCols - 1) * gap) / mapCols, ch, base;
-  if (phone) {
-    ch = Math.round(cw * ${PHONE_ROW_RATIO});
-    base = 2 * gap + mapRows * ch + (mapRows - 1) * gap;
-  } else {
-    base = Math.max(window.innerHeight - (w.getBoundingClientRect().top + window.scrollY), ${DESK_MIN_HEIGHT});
-    ch = (base - 2 * gap - (mapRows - 1) * gap) / mapRows;
-  }
-  w.style.height = (base + Math.ceil(spill.length / perRow) * spR * (ch + gap)) + 'px';
-  w.style.minHeight = '0';
-  try {
+  var hung = [];
+  var r2 = function (n) { return Math.round(n * 100) / 100; };
+  var fit = function () {
+    var p = w.parentElement;
+    if (p) w.style.setProperty('--lw-bleed', Math.max(0, p.getBoundingClientRect().left + (parseFloat(getComputedStyle(p).paddingLeft) || 0)).toFixed(2) + 'px');
+    var phone = window.innerWidth < ${PHONE_BELOW};
+    var map = phone ? ${JSON.stringify(PHONE)} : ${JSON.stringify(DESK)};
+    var gap = phone ? ${PHONE_GAP} : ${DESK_GAP};
+    var mapCols = phone ? ${PHONE_COLS} : ${DESK_COLS}, mapRows = phone ? ${PHONE_ROWS} : ${DESK_ROWS};
+    var spC = phone ? ${SPILL_PHONE.cols} : ${SPILL_DESK.cols}, spR = phone ? ${SPILL_PHONE.rows} : ${SPILL_DESK.rows};
+    var perRow = Math.floor(mapCols / spC), spill = [], k;
+    for (k = 0; k < ids.length; k++) if (!own.call(map, ids[k])) spill.push(ids[k]);
+    var cw = (w.clientWidth - 2 * gap - (mapCols - 1) * gap) / mapCols, ch, base;
+    if (phone) {
+      ch = Math.round(cw * ${PHONE_ROW_RATIO});
+      base = 2 * gap + mapRows * ch + (mapRows - 1) * gap;
+    } else {
+      base = Math.max(window.innerHeight - (w.getBoundingClientRect().top + window.scrollY), ${DESK_MIN_HEIGHT});
+      ch = (base - 2 * gap - (mapRows - 1) * gap) / mapRows;
+    }
+    w.style.height = (base + Math.ceil(spill.length / perRow) * spR * (ch + gap)) + 'px';
+    w.style.minHeight = '0';
     var cells = {};
-    for (i = 0; i < ids.length; i++) cells[ids[i]] = Object.prototype.hasOwnProperty.call(map, ids[i]) ? map[ids[i]] : null;
-    for (i = 0; i < spill.length; i++) cells[spill[i]] = [(i % perRow) * spC, mapRows + Math.floor(i / perRow) * spR, spC, spR];
-    var mk = function (tag, cls, text) { var e = doc.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
-    var r2 = function (n) { return Math.round(n * 100) / 100; };
-    for (i = 0; i < rows.length; i++) {
-      var row = rows[i], c = row && cells[row.id];
+    for (k = 0; k < ids.length; k++) cells[ids[k]] = own.call(map, ids[k]) ? map[ids[k]] : null;
+    for (k = 0; k < spill.length; k++) cells[spill[k]] = [(k % perRow) * spC, mapRows + Math.floor(k / perRow) * spR, spC, spR];
+    for (k = 0; k < hung.length; k++) {
+      var t = hung[k].el, c = cells[hung[k].id];
       if (!c) continue;
       var x = gap + c[0] * (cw + gap), y = gap + c[1] * (ch + gap), tw = c[2] * cw + (c[2] - 1) * gap, th = c[3] * ch + (c[3] - 1) * gap;
-      var t = mk('div', 'lw-tile' + (tw < ${XS_BELOW} ? ' lw-xs' : '') + (tw < ${SM_BELOW} ? ' lw-sm' : ''));
+      t.className = 'lw-tile' + (tw < ${XS_BELOW} ? ' lw-xs' : '') + (tw < ${SM_BELOW} ? ' lw-sm' : '');
+      t.style.left = r2(x) + 'px'; t.style.top = r2(y) + 'px'; t.style.width = r2(tw) + 'px'; t.style.height = r2(th) + 'px';
+      hung[k].face.style.height = r2(Math.max(1, th - ${TILE_CAP})) + 'px';
+    }
+  };
+  try {
+    var mk = function (tag, cls, text) { var e = doc.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
+    var placed = {};
+    for (i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row || typeof row.id !== 'string' || own.call(placed, row.id)) continue;
+      placed[row.id] = 1;
+      var t = mk('div', 'lw-tile');
       t.setAttribute('${TILE_ATTR}', row.id);
       t.style.setProperty('--i', String(i));
-      t.style.left = r2(x) + 'px'; t.style.top = r2(y) + 'px'; t.style.width = r2(tw) + 'px'; t.style.height = r2(th) + 'px';
       var face = mk('div', 'lw-face');
-      face.style.height = r2(Math.max(1, th - ${TILE_CAP})) + 'px';
       face.appendChild(mk('div', 'lw-veil'));
       var cap = mk('div', 'lw-cap');
       cap.appendChild(mk('span', 'lw-d', row.designation));
@@ -97,9 +123,30 @@ export const RESERVE_INLINE = `(function () {
       var o = mk('span', 'lw-o'); o.innerHTML = 'Open ' + ${JSON.stringify(ARROW_SVG)};
       cap.appendChild(o);
       t.appendChild(face); t.appendChild(cap);
-      w.appendChild(t);
+      hung.push({ id: row.id, el: t, face: face });
     }
-  } catch (e) { /* the engine builds the tiles when it arrives */ }
+  } catch (e) { hung = []; /* the engine builds the tiles when it arrives */ }
+  fit();
+  for (i = 0; i < hung.length; i++) w.appendChild(hung[i].el);
+  // What sits above the wall can change height before the engine arrives, and on desktop the height follows the top.
+  // The usual cause: the measure above ran with the fallback face, and the intro's sentence takes two lines in it where
+  // the web font takes one, so when the font lands the top rises 24px. Two hands keep the box in step:
+  // - each face still loading when the measure ran: its own promise settles in the task that lands it, before the next
+  //   frame starts, so the box has its new height before anything in that frame reads or paints it;
+  // - a ResizeObserver on everything laid out above the wall, for any other change: it runs after layout and before
+  //   paint, so the lower edge never shows a stale size.
+  // Once the engine is live (${LIVE_ATTR}), or the page is its list, it is the engine's job.
+  var held = function () { return !w.hasAttribute('${LIVE_ATTR}') && doc.documentElement.getAttribute('data-lab-view') === 'wall'; };
+  var refit = function () { if (held()) fit(); };
+  try {
+    if (doc.fonts && doc.fonts.forEach) doc.fonts.forEach(function (f) { if (f.status === 'loading') f.loaded.then(refit, function () {}); });
+  } catch (e) { /* the observer below, boot.ts and the engine measure it again */ }
+  if (typeof ResizeObserver === 'function') {
+    try {
+      var ro = new ResizeObserver(function () { if (held()) fit(); else ro.disconnect(); });
+      for (var n = w; n && n !== doc.body; n = n.parentElement) for (var s = n.previousElementSibling; s; s = s.previousElementSibling) ro.observe(s);
+    } catch (e) { /* boot.ts and the engine measure it again */ }
+  }
 })();`;
 
 /**

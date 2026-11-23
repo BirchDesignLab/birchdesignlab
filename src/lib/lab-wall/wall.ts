@@ -19,7 +19,7 @@ import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
 import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
 import type { Rect } from './layout';
-import { ARROW_SVG, TILE_ATTR, TILE_CAP, measureWall } from './reserve';
+import { ARROW_SVG, LIVE_ATTR, TILE_ATTR, TILE_CAP, aboveWall, measureWall } from './reserve';
 import { hasMini, loadMini } from './minis';
 import type { LoadedMini } from './minis';
 import { counterLabel, hashFor, inFilter, readFilter, stepTarget, tryLine } from './model';
@@ -898,11 +898,19 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   // ---- size ----
   on(window, 'resize', () => { layout(); });
   let lastWidth = 0;
-  const ro = new ResizeObserver(() => {
+  // The wall's own width, and the height of everything above it: a web font landing after mount reflows the words over
+  // the wall and moves its top, and the desktop height follows the top. The observer runs before the frame is painted,
+  // so the box never shows a stale height.
+  const ro = new ResizeObserver((records) => {
     const w = wallEl.clientWidth;
-    if (w !== lastWidth) { lastWidth = w; layout(); }
+    const above = records.some((r) => r.target !== wallEl);
+    if (w !== lastWidth || above) { lastWidth = w; layout(); }
   });
   ro.observe(wallEl);
+  for (const el of aboveWall(wallEl)) ro.observe(el);
+  // The engine keeps the box from here: the page's inline script stands down (reserve.ts).
+  wallEl.setAttribute(LIVE_ATTR, '');
+  disposers.push(() => wallEl.removeAttribute(LIVE_ATTR));
   disposers.push(() => ro.disconnect());
   const refit = (): void => {
     layout();

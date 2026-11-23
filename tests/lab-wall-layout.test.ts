@@ -176,6 +176,75 @@ describe('the box held before the engine arrives', () => {
     expect(got.props['--lw-bleed']).toBe('104.00px');
   });
 
+  it('follows the wall top when a web font lands or what sits above it changes height before the engine arrives, then stands down', async () => {
+    const written: Record<string, string> = {};
+    const attrs: Record<string, string> = {};
+    let top = 244;
+    const view = 'wall';
+    const intro = { previousElementSibling: null };
+    const hint = { previousElementSibling: intro };
+    const body = {};
+    const page = { getBoundingClientRect: () => ({ left: 0 }), previousElementSibling: null, parentElement: body };
+    const wall = {
+      parentElement: page,
+      previousElementSibling: hint,
+      clientWidth: 1440,
+      style: {
+        set height(v: string) { written.height = v; },
+        set minHeight(v: string) { written.minHeight = v; },
+        setProperty: () => {},
+      },
+      getBoundingClientRect: () => ({ top }),
+      hasAttribute: (n: string) => n in attrs,
+    };
+    let land: () => void = () => {};
+    let watchedLoaded = false;
+    const loading = { status: 'loading', loaded: new Promise<void>((r) => { land = r; }) };
+    const loaded = { status: 'loaded', get loaded() { watchedLoaded = true; return Promise.resolve(); } };
+    const doc = {
+      body,
+      fonts: { forEach: (cb: (f: unknown) => void) => { cb(loading); cb(loaded); } },
+      querySelector: (s: string) => (s === '[data-lw="wall"]' ? wall : null),
+      documentElement: { getAttribute: (n: string) => (n === 'data-lab-view' ? view : null) },
+    };
+    const win = { innerWidth: 1440, innerHeight: 900, scrollY: 0 };
+    const observers: Array<{ cb: () => void; observed: unknown[]; off: boolean }> = [];
+    class FakeRO {
+      rec: { cb: () => void; observed: unknown[]; off: boolean };
+      constructor(cb: () => void) { this.rec = { cb, observed: [], off: false }; observers.push(this.rec); }
+      observe(el: unknown) { this.rec.observed.push(el); }
+      disconnect() { this.rec.off = true; }
+    }
+    new Function('document', 'window', 'getComputedStyle', 'ResizeObserver', RESERVE_INLINE)(doc, win, () => ({ paddingLeft: '0px' }), FakeRO);
+    const want = (t: number) => layoutWall(IDS, { width: 1440, viewportWidth: 1440, viewportHeight: 900, topHeight: t }).height;
+    expect(parseFloat(written.height!)).toBeCloseTo(want(244), 6);
+    expect(observers).toHaveLength(1);
+    const ro = observers[0]!;
+    // Everything laid out before the wall, and nothing that contains it.
+    expect(ro.observed).toEqual([hint, intro]);
+    // A face that was still loading when the measure ran lands, and the words above the wall take 24px less: the box
+    // follows its top in the task that landed it. A face already loaded is not watched.
+    expect(watchedLoaded).toBe(false);
+    top = 220;
+    land();
+    await Promise.resolve();
+    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
+    // Anything else above changes height: the observer refits.
+    top = 232;
+    ro.cb();
+    expect(parseFloat(written.height!)).toBeCloseTo(want(232), 6);
+    top = 220;
+    ro.cb();
+    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
+    expect(want(220) - want(244)).toBeCloseTo(24, 6);
+    // Once the engine is live the inline script stands down.
+    attrs['data-lw-live'] = '';
+    top = 200;
+    ro.cb();
+    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
+    expect(ro.off).toBe(true);
+  });
+
   it('does nothing in the list view or with no view chosen', () => {
     expect(reserve({ view: 'list', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
     expect(reserve({ view: null, windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});

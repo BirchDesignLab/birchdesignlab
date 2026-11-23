@@ -867,6 +867,50 @@ await drawn(390, 844, 'light', true);
   await ctx.close();
 }
 
+// ---------- a web font that lands after the wall was measured ----------
+// The slow load above hits this only now and then: the page measures the wall with the fallback face, in which the
+// intro's sentence can take two lines where the web font takes one, and the font lands before the engine does. Here
+// it is made to happen every time: the fonts and the scripts are held, the fonts land first, then the scripts. The
+// wall's lower edge must not move, read both at the start of each frame (requestAnimationFrame, where anything in the
+// frame first sees the layout) and after the frame is painted.
+for (const w of [1440, 1280]) {
+  const ctx = await context({ w, h: 900, scheme: 'dark' });
+  await ctx.addInitScript(() => {
+    window.__late = [];
+    const read = (when) => {
+      const el = document.querySelector('[data-lw=wall]');
+      if (!el || getComputedStyle(el).display === 'none') return;
+      const r = el.getBoundingClientRect();
+      window.__late.push({ when, top: Math.round((r.top + scrollY) * 10) / 10, bottom: Math.round((r.bottom + scrollY) * 10) / 10, live: el.hasAttribute('data-lw-live') });
+    };
+    const loop = () => { read('frame'); setTimeout(() => read('painted'), 0); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+  const page = await ctx.newPage();
+  watch(page, 'late font ' + w);
+  let fonts, scripts;
+  const fontGate = new Promise((r) => (fonts = r));
+  const scriptGate = new Promise((r) => (scripts = r));
+  await page.route(/\.woff2?(\?|$)/, async (route) => { await fontGate; await route.continue(); });
+  await page.route(/\/_astro\/[^?]*\.js(\?|$)/, async (route) => { await scriptGate; await route.continue(); });
+  await page.goto(URL, { waitUntil: 'commit' });
+  await page.waitForSelector('[data-lw=wall]', { state: 'attached' });
+  await wait(page, 400);
+  fonts();
+  await wait(page, 800);
+  const heldLive = await page.evaluate(() => !!document.querySelector('[data-lw-live]'));
+  scripts();
+  await page.waitForFunction(() => document.querySelector('[data-lw-live]'), null, { timeout: 30000 }).catch(() => {});
+  await wait(page, 600);
+  const s = await page.evaluate(() => window.__late);
+  const tops = [...new Set(s.map((x) => x.top))];
+  const bots = s.map((x) => x.bottom);
+  const live = s.some((x) => x.live);
+  ok(!heldLive && live && s.length > 0, `late font ${w}: fonts landed while the engine was held, then it mounted (${s.length} samples)`);
+  ok(Math.max(...bots) - Math.min(...bots) <= 1, `late font ${w}: the wall's lower edge holds as the font lands and as the engine mounts, at the start of every frame and after it is painted (${Math.min(...bots)} to ${Math.max(...bots)}; the top went ${tops.join(' to ')})`);
+  await ctx.close();
+}
+
 // ---------- phone ----------
 {
   const ctx = await context({ w: 390, h: 844, scheme: 'dark', touch: true });
