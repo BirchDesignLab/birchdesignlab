@@ -1,0 +1,276 @@
+---
+/**
+ * The Portal's catalog picture (BDL-010 on /lab): the way in, not a still.
+ *
+ * While the row is on screen the picture steps through the schools, one home
+ * page at a time, and the row's title is re-set in that school's type and
+ * colours. A click on the title or the picture grows the picture to fill the
+ * window and lands in the school it was showing. Pointing at the row holds
+ * the cycle still, so what you see is where you go.
+ *
+ * Without script the row is an ordinary one: the six-school still, the plain
+ * title, a link to the quiet school.
+ *
+ * The school pictures are the Field Guide's (src/content/lab/bdl-011/<id>.png,
+ * from scripts/lab/capture-school-shots.mjs), light scheme, so the title
+ * plates below use each school's light colours. A school joins the cycle when
+ * it has a picture there and a plate in PLATES; quiet has neither on purpose
+ * (it is the site the visitor is already looking at).
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { THEMES } from '../themes/registry';
+import { pagePath } from '../themes/paths';
+
+interface Props {
+  /** Where the row goes with no script, and before the cycle starts. */
+  href: string;
+  /** The entry's own still, shown until the first school is ready. */
+  still: ImageMetadata;
+}
+const { href, still } = Astro.props;
+
+const shots = import.meta.glob<{ default: ImageMetadata }>('../content/lab/bdl-011/*.png', { eager: true });
+const shotFor = (id: string) => shots[`../content/lab/bdl-011/${id}.png`]?.default;
+
+/** Which of the school's fonts sets the title, and how it is loaded here.
+    The look itself is the CSS at the foot of this file. */
+const PLATES: Record<string, { family: string; weight: string; style: string }> = {
+  bauhaus: { family: 'League Spartan Variable', weight: '100 900', style: 'normal' },
+  swiss: { family: 'Archivo Variable', weight: '100 900', style: 'normal' },
+  vaporwave: { family: 'Dela Gothic One', weight: '400', style: 'normal' },
+  cottagecore: { family: 'Fraunces Variable', weight: '100 900', style: 'normal' },
+  grandmillennial: { family: 'Playfair Display Variable', weight: '400 900', style: 'italic' },
+  glassmorphism: { family: 'Inter Variable', weight: '100 900', style: 'normal' },
+};
+
+const schools = THEMES.flatMap((t) => {
+  const plate = PLATES[t.id];
+  const shot = shotFor(t.id);
+  const url = plate && t.fonts.find((f) => f.family === plate.family)?.preload?.[0];
+  if (!plate || !shot || !url) return [];
+  return [{ id: t.id, name: t.name, href: pagePath('home', t.id), url, weight: plate.weight, style: plate.style, shot }];
+});
+const data = schools.map(({ shot: _shot, ...rest }) => rest);
+---
+<a class="portal-thumb" href={href} tabindex="-1" aria-hidden="true" data-portal-entrance data-schools={JSON.stringify(data)}>
+  <Image src={still} alt="" widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+  {schools.map((s) => (
+    <Image class="shot" data-school={s.id} src={s.shot} alt="" widths={[480, 720, 960, 1440]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+  ))}
+  <span class="enter">Enter in <span data-school-name></span> <span class="arrow">&rarr;</span></span>
+</a>
+
+<script>
+  interface School { id: string; name: string; href: string; url: string; weight: string; style: string }
+
+  /** How long each school holds. Slow on purpose: the row waits for the
+      visitor, and a quick loop reads as noise beside ten still rows. */
+  const DWELL = 3200;
+  const GROW = 520;
+
+  for (const thumb of document.querySelectorAll<HTMLAnchorElement>('[data-portal-entrance]')) {
+    const card = thumb.closest<HTMLElement>('.card');
+    const title = card?.querySelector<HTMLAnchorElement>('[data-portal-title]');
+    const label = thumb.querySelector<HTMLElement>('[data-school-name]');
+    const schools: School[] = JSON.parse(thumb.dataset.schools || '[]');
+    if (!card || !title || !label || !schools.length) continue;
+
+    const shots = new Map(
+      [...thumb.querySelectorAll<HTMLImageElement>('img[data-school]')].map((img) => [img.dataset.school!, img]),
+    );
+    const loaded = new Map<string, Promise<unknown>>();
+    /** A school's font and picture, fetched the first time it is next up. */
+    const ready = (s: School) => {
+      let p = loaded.get(s.id);
+      if (!p) {
+        const face = new FontFace(`pe-${s.id}`, `url(${s.url}) format('woff2')`, { weight: s.weight, style: s.style });
+        document.fonts.add(face);
+        const img = shots.get(s.id);
+        if (img) img.loading = 'eager';
+        p = Promise.allSettled([face.load(), img ? img.decode() : null]);
+        loaded.set(s.id, p);
+      }
+      return p;
+    };
+
+    let index = -1;
+    let current: School | null = null;
+    let timer = 0;
+    let onScreen = false;
+    let held = false;
+    let leaving = false;
+
+    const running = () => onScreen && !held && !leaving && !document.hidden;
+
+    const show = (s: School) => {
+      current = s;
+      title.dataset.school = s.id;
+      thumb.dataset.school = s.id;
+      title.href = s.href;
+      thumb.href = s.href;
+      label.textContent = s.name;
+      for (const [id, img] of shots) img.classList.toggle('on', id === s.id);
+    };
+
+    const schedule = () => {
+      clearTimeout(timer);
+      if (!running()) return;
+      timer = window.setTimeout(async () => {
+        const next = schools[(index + 1) % schools.length];
+        await ready(next);
+        // The wait can outlast the visitor: only step if nothing changed.
+        if (running()) {
+          index = (index + 1) % schools.length;
+          show(next);
+          // Fetch the one after during this dwell, so the step is on time.
+          void ready(schools[(index + 1) % schools.length]);
+        }
+        schedule();
+      }, current ? DWELL : 500);
+    };
+
+    new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      schedule();
+    }, { threshold: 0.4 }).observe(card);
+    document.addEventListener('visibilitychange', schedule);
+
+    // Holding: a mouse over the row, or keyboard focus on its title. Touch
+    // has no hover, so a tap lands in whatever is showing at that moment.
+    const hold = (on: boolean) => { held = on; schedule(); };
+    card.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hold(true); });
+    card.addEventListener('pointerleave', () => hold(false));
+    title.addEventListener('focus', () => hold(true));
+    title.addEventListener('blur', () => hold(false));
+
+    const enter = (e: MouseEvent) => {
+      const img = current && shots.get(current.id);
+      if (!current || !img || leaving) return;
+      // New tab, new window, download: leave those to the browser.
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      e.preventDefault();
+      leaving = true;
+      clearTimeout(timer);
+      const to = current.href;
+      const from = thumb.getBoundingClientRect();
+      const veil = document.createElement('div');
+      veil.className = 'portal-veil';
+      const pic = img.cloneNode() as HTMLImageElement;
+      pic.className = '';
+      pic.sizes = '100vw';
+      veil.appendChild(pic);
+      document.body.appendChild(veil);
+      const go = () => window.location.assign(to);
+      veil.animate(
+        [
+          { top: `${from.top}px`, left: `${from.left}px`, width: `${from.width}px`, height: `${from.height}px` },
+          { top: '0px', left: '0px', width: `${window.innerWidth}px`, height: `${window.innerHeight}px` },
+        ],
+        { duration: GROW, easing: 'cubic-bezier(0.7, 0, 0.2, 1)', fill: 'forwards' },
+      ).finished.then(go, go);
+    };
+    title.addEventListener('click', enter);
+    thumb.addEventListener('click', enter);
+
+    // Back from the school through the back-forward cache: the grown picture
+    // would still be covering the page.
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      document.querySelector('.portal-veil')?.remove();
+      leaving = false;
+      schedule();
+    });
+  }
+</script>
+
+<style is:global>
+  /* Global, not scoped: the title link belongs to SpecimenCard, the veil is
+     appended to <body>, and the school is an attribute set by script. Every
+     rule is namespaced portal-*. */
+
+  /* The picture frame: the same frame as SpecimenCard's .thumb. */
+  .portal-thumb {
+    position: relative; display: block; margin-top: var(--space-4);
+    border: 1px solid var(--line-accent); background: var(--field);
+    aspect-ratio: 16 / 10; overflow: hidden;
+  }
+  @media (min-width: 60rem) { .portal-thumb { margin-top: 0; } }
+  .portal-thumb img {
+    display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center;
+  }
+  .portal-thumb img.shot {
+    position: absolute; inset: 0; opacity: 0;
+    transition: opacity 600ms var(--ease-weighted);
+  }
+  .portal-thumb img.shot.on { opacity: 1; }
+
+  /* What a click does, said on the picture. Hidden until a school is showing
+     (so never without script). */
+  .portal-thumb .enter {
+    position: absolute; left: 0; bottom: 0; display: none;
+    padding: 0.7em 1em 0.6em; background: var(--field); color: var(--mark);
+    border-top: 1px solid var(--line-accent); border-right: 1px solid var(--line-accent);
+    font-family: var(--font-smallcaps); letter-spacing: var(--tracking-wide);
+    text-transform: uppercase; font-size: 0.68rem; line-height: 1;
+  }
+  .portal-thumb[data-school] .enter { display: block; }
+  .portal-thumb .enter .arrow { display: inline-block; transition: transform var(--dur-1) var(--ease-weighted); }
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover .portal-thumb .enter .arrow { transform: translateX(0.3em); }
+  }
+
+  /* The title. A fixed-height plate from the first paint, so the row does not
+     move when the type changes inside it; each school sizes its own letters
+     to sit about the same. */
+  .card .portal-title {
+    display: inline-flex; align-items: center; height: 1.5em;
+    white-space: nowrap; line-height: 1;
+  }
+  .card .portal-title[data-school] {
+    padding-inline: 0.4em; margin-inline-start: -0.4em;
+  }
+  .card .portal-title[data-school] > span { display: block; }
+
+  /* Bauhaus: lowercase geometric on poster paper, a red block at the edge. */
+  .card .portal-title[data-school='bauhaus'] { background: #f3efe6; color: #141414; box-shadow: inset 0.22em 0 #d42a1e; }
+  .card .portal-title[data-school='bauhaus'] > span {
+    font: 800 1.08em/1 'pe-bauhaus', system-ui, sans-serif; text-transform: lowercase;
+    letter-spacing: -0.02em; padding-top: 0.12em; padding-left: 0.12em;
+  }
+  /* Swiss: one heavy grotesque, tight, black on white, a red rule under. */
+  .card .portal-title[data-school='swiss'] { background: #fafaf7; color: #0b0b0b; box-shadow: inset 0 -0.14em #da0016; }
+  .card .portal-title[data-school='swiss'] > span {
+    font: 800 1em/1 'pe-swiss', 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.04em;
+  }
+  /* Vaporwave: chrome capitals, cyan and pink off-register, a sunset behind. */
+  .card .portal-title[data-school='vaporwave'] { background: linear-gradient(180deg, #d9c8ff, #ffd3e8); color: #3d0b6b; }
+  .card .portal-title[data-school='vaporwave'] > span {
+    font: 400 0.8em/1 'pe-vaporwave', Impact, sans-serif; text-transform: uppercase; letter-spacing: 0.04em;
+    text-shadow: -0.06em 0 #01cdfe, 0.06em 0 #ff71ce;
+  }
+  /* Cottagecore: a soft old-style serif on linen, a rose thread under. */
+  .card .portal-title[data-school='cottagecore'] { background: #f5eddd; color: #3a2a1f; }
+  .card .portal-title[data-school='cottagecore'] > span {
+    font: 600 1.02em/1 'pe-cottagecore', Georgia, serif;
+    text-decoration: underline wavy #9b4652 0.06em; text-underline-offset: 0.16em;
+  }
+  /* Grandmillennial: italic display serif on cream inside a gilt frame. */
+  .card .portal-title[data-school='grandmillennial'] { background: #f7f0e1; color: #1f3327; box-shadow: inset 0 0 0 0.05em #b8963f, inset 0 0 0 0.12em #f7f0e1, inset 0 0 0 0.15em #b8963f; }
+  .card .portal-title[data-school='grandmillennial'] > span {
+    font: italic 500 1.04em/1 'pe-grandmillennial', Georgia, serif;
+  }
+  /* Glassmorphism: a tight sans on a frosted pane over the wallpaper. */
+  .card .portal-title[data-school='glassmorphism'] {
+    background: linear-gradient(120deg, #c9d6ff, #ffe1cf 70%); color: #141a38;
+    border-radius: 0.3em; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.8);
+  }
+  .card .portal-title[data-school='glassmorphism'] > span {
+    font: 700 0.98em/1 'pe-glassmorphism', system-ui, sans-serif; letter-spacing: -0.035em;
+  }
+
+  /* The picture on its way to filling the window. */
+  .portal-veil { position: fixed; z-index: 2147483000; overflow: hidden; background: var(--field); }
+  .portal-veil img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+</style>
