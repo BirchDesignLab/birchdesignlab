@@ -70,9 +70,9 @@ The whole path works in production: form -> `POST /api/contact` -> Worker
 - **Voice: studio "we" everywhere, NOT first-person "I".** The founder first
   said "I", saw it, and reversed ("we definitely sounds better, basically
   anything but first person"). Kept "We meet, you talk, we take notes"-style
-  inclusive "we". This also suits the identity-obfuscation goal.
+  inclusive "we".
 - **No individual named.** No personal name on the public site; the
-  enterprise-credibility line is deliberately generic (no employer/client names).
+  enterprise-credibility line is deliberately generic.
 - **Geography / positioning.** "New Orleans to Mobile" on home; Gulf Coast + the
   decade already on About; the enterprise-credibility line on Services ("A decade
   of skills honed at the enterprise level, now served to the businesses that keep
