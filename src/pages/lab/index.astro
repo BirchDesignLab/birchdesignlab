@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
+import LabWall from '../../components/LabWall.astro';
 
 // Noindexed entries are instruments: reachable by direct URL, never listed.
 const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((a, b) =>
@@ -13,16 +14,24 @@ const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((
   description="Numbered experiments and client studies in design and web engineering. A specimen catalog."
   zone="lab"
 >
-  <section class="wrap">
+  {/* Which view this visitor gets, decided before first paint so the page never
+      flashes the other one. It repeats readView in src/lib/lab-wall/model.ts
+      (an inline script cannot import): the remembered 'lab-view', else the wall.
+      Without script the attribute never exists and the page is the catalog list. */}
+  <script slot="head" is:inline>
+    (function () {
+      var view = 'wall';
+      try { if (localStorage.getItem('lab-view') === 'list') view = 'list'; } catch (e) { /* storage blocked */ }
+      document.documentElement.setAttribute('data-lab-view', view);
+    })();
+  </script>
+  <section class="wrap lab-page">
     <header class="intro">
-      <h1>The Lab</h1>
-      <p>
-        Numbered specimens. Experiments are things we build to
-        learn in the open. Studies are finished sites, client work and our
-        own, shown in the same way.
-      </p>
+      <h1 class="lw-h1">The Lab</h1>
+      <p>Websites and software, designed and built on the Mississippi Gulf Coast.</p>
     </header>
     <SpecimenCatalog entries={entries} filterable />
+    <LabWall entries={entries} />
   </section>
 </BaseLayout>
 
