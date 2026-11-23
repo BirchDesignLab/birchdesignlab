@@ -5,8 +5,8 @@ description: Start a conversation with Birch Design Lab about your software or w
 kicker: Contact
 heading: Start a conversation
 subline: >-
-  Tell us what you're trying to build, fix, or grow. Plain English is the
-  house language.
+  Tell us what you're trying to build or fix, in whatever words you'd
+  normally use.
 labels:
   name: Name
   email: Email
@@ -18,4 +18,4 @@ trust:
   - A reply within one business day.
 invite: Prefer to skip the form? Email works the same.
 email: hello@birchdesignlab.com
-fine: Either way, one person reads it. The same one who builds the tools.
+fine: Either way, it goes to the person who would do the work.

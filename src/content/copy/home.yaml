@@ -11,19 +11,19 @@ doors:
   items:
     - title: Software
       body: >-
-        The tool your business has been hoping for. The spreadsheet that has
-        grown into a monster, the process that you dread every week that eats
-        into your weekends? We can design, build, and maintain what fixes it.
+        Somewhere in your business there's a spreadsheet that has grown into a
+        monster, or a weekly chore that eats into your weekend. We build the
+        tool that replaces it, and we keep it running afterwards.
     - title: Web design
       body: >-
-        A site that loads instantly, reads clearly, and presents your business
-        as the only one to even consider calling. No templates, no builders,
-        no bloat. Every site designed and constructed by hand.
+        A site that loads fast and makes it obvious why someone should call
+        you before anyone else. We don't start from templates or page
+        builders. Each site is designed and constructed by hand.
   more: How we build
 lab:
   kicker: From the lab
-  pull: Everything we sell, we practice in the open.
-  proof: One recent build went live on day thirteen. Its first nights sold out.
+  pull: The Lab is where we practice in public.
+  proof: One recent build went live on day thirteen, and its first nights sold out.
   more: Visit the lab
 closer:
   lead: Ready when you are.

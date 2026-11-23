@@ -8,11 +8,11 @@ kicker: Services
 heading: Two things, done properly.
 sublines:
   - >-
-    A decade of skills honed at the enterprise level, now served to the
-    businesses that keep the Gulf Coast running.
+    After a decade of enterprise software, we now work for the businesses that
+    keep the Gulf Coast running.
   - >-
-    Same person designs it, builds it, and answers when you call. That's the
-    whole model, twice.
+    The same person designs it, builds it, and answers when you call,
+    whichever of the two you need.
 offerings:
   - heading: Custom software
     body:
@@ -23,43 +23,44 @@ offerings:
         order that gets tracked in a group text until someone loses it.
       - >-
         We build the small, sturdy tool that replaces whichever one is costing
-        you the most time. We can stay around to keep it running as the
-        business grows past it.
+        you the most time. Then we can stay on to keep it running and add to
+        it as the business grows.
   - heading: Web design
     body:
       - >-
-        Your website is the first impression most customers will ever get.
-        Whether that's deciding where to eat tonight, booking a charter, or
-        comparing venues.
+        Most customers see your website before they see you. They're choosing
+        where to eat tonight, booking a charter, or comparing venues, and the
+        site is what they go on.
       - >-
-        Ours load fast, read clearly on any device, and are built around one
-        question. What should they do next; call, book, order, walk in?
+        Ours load fast and read clearly on a phone. Each is built around what
+        the visitor should do next: call, book, order, or walk in.
       - >-
-        Menus that update in minutes, not PDFs. Booking that keeps the
-        reservation with you instead of a third-party app. Every site is
-        designed and constructed by the same two hands, for the business it
-        belongs to.
+        You can update the menu yourself in a few minutes, with no PDF to
+        re-upload. Bookings come to you instead of going through a third-party
+        app. Every site is designed and constructed by hand for the business
+        it belongs to.
 process:
   heading: How a project runs
   steps:
     - title: Discovery
       body: >-
-        We have a conversation. No questionnaire, no intake form, no workshop
-        with a slide deck. We leave with a project scope you can actually read,
-        not a sales pitch.
+        We start with a conversation and skip the questionnaire and the
+        slide-deck workshop. Afterwards you get a scope in plain English,
+        short enough to read in one sitting.
     - title: Build
       body: >-
-        You get a working link at the beginning of the project. Access to the
-        real build you can click through, not a mockup. Watch it evolve and
-        fold in feedback throughout. No surprise reveal at the end.
+        You get a working link at the start of the project. It opens the real
+        build, so you can click through it as it takes shape and send feedback
+        as you go. Nothing waits for a big reveal at the end.
     - title: Launch
       body: >-
-        Tested on multiple devices. Delivered with an owner's manual and a bow.
-        Stay with us, or take the tools we built you anywhere you like
-        afterwards.
+        We test it on phones, tablets, and desktops, then hand it over with an
+        owner's manual and a bow. Stay with us afterwards, or take it anywhere
+        you like.
     - title: Care
       body: >-
-        Software is a living thing. We offer ongoing care so it stays fast,
-        secure, and current as your business grows. It's yours either way.
+        Software needs upkeep like anything else. We offer ongoing care that
+        keeps yours secure and up to date as the business changes. It's yours
+        either way.
 pull: Every project starts with a normal conversation.
 cta: Tell us about your project
