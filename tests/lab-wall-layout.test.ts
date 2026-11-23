@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DESK, PHONE, PHONE_BELOW, layoutWall } from '../src/lib/lab-wall/layout';
 import type { Rect } from '../src/lib/lab-wall/layout';
 import { MINI_IDS } from '../src/lib/lab-wall/minis';
-import { RESERVE_INLINE } from '../src/lib/lab-wall/reserve';
+import { RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW } from '../src/lib/lab-wall/reserve';
 
 const IDS = [...MINI_IDS] as string[];
 const WIDTHS = [1440, 1024, 720, 719, 390];
@@ -179,5 +179,84 @@ describe('the box held before the engine arrives', () => {
   it('does nothing in the list view or with no view chosen', () => {
     expect(reserve({ view: 'list', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
     expect(reserve({ view: null, windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
+  });
+});
+
+describe('the framed tiles held before the engine arrives', () => {
+  interface Fake {
+    tag: string; className: string; textContent: string; innerHTML: string; attrs: Record<string, string>;
+    style: Record<string, string> & { setProperty(k: string, v: string): void }; children: Fake[];
+    appendChild(c: Fake): Fake; setAttribute(k: string, v: string): void;
+  }
+  const fake = (tag: string): Fake => {
+    const f: Fake = {
+      tag, className: '', textContent: '', innerHTML: '', attrs: {}, children: [],
+      style: { setProperty(k: string, v: string) { (this as Record<string, string>)[k] = v; } } as Fake['style'],
+      appendChild(c) { f.children.push(c); return c; },
+      setAttribute(k, v) { f.attrs[k] = v; },
+    };
+    return f;
+  };
+  const KINDS: Record<string, string> = { experiment: 'Experiment', study: 'Study' };
+  const rowsFor = (ids: string[]) => ids.map((id, i) => ({ id, designation: 'BDL-' + String(i + 1).padStart(3, '0'), title: 'Piece ' + id, kindLabel: KINDS[i % 2 ? 'study' : 'experiment'] }));
+
+  function hang(ids: string[], windowWidth: number, windowHeight: number, wallTop: number, wallWidth: number) {
+    const wall = fake('div') as Fake & { parentElement: null; clientWidth: number; getBoundingClientRect(): { top: number } };
+    wall.parentElement = null;
+    wall.clientWidth = wallWidth;
+    wall.getBoundingClientRect = () => ({ top: wallTop });
+    const data = { textContent: JSON.stringify(rowsFor(ids)) };
+    const doc = {
+      querySelector: (q: string) => (q === '[data-lw="wall"]' ? wall : q === '[data-lw="data"]' ? data : null),
+      createElement: (t: string) => fake(t),
+      documentElement: { getAttribute: () => 'wall' },
+    };
+    const win = { innerWidth: windowWidth, innerHeight: windowHeight, scrollY: 0 };
+    new Function('document', 'window', 'getComputedStyle', RESERVE_INLINE)(doc, win, () => ({ paddingLeft: '0px' }));
+    return { wall, tiles: wall.children };
+  }
+  const px = (v: string | undefined) => parseFloat(v ?? 'NaN');
+
+  it('hangs a framed, captioned tile in the cell layoutWall gives each piece, desktop and phone', () => {
+    for (const [ww, wh] of [[1440, 900], [1024, 768], [390, 844], [360, 640]] as const) {
+      const { wall, tiles } = hang(IDS, ww, wh, 220, ww);
+      const L = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: 220 });
+      expect(tiles, `${ww}`).toHaveLength(IDS.length);
+      expect(px(wall.style.height), `${ww} height`).toBeCloseTo(L.height, 6);
+      for (const t of tiles) {
+        const id = t.attrs[TILE_ATTR]!;
+        const r = L.rects[id]!;
+        expect(px(t.style.left), `${id} x at ${ww}`).toBeCloseTo(r.x, 1);
+        expect(px(t.style.top), `${id} y at ${ww}`).toBeCloseTo(r.y, 1);
+        expect(px(t.style.width), `${id} w at ${ww}`).toBeCloseTo(r.w, 1);
+        expect(px(t.style.height), `${id} h at ${ww}`).toBeCloseTo(r.h, 1);
+        const [face, cap] = t.children;
+        expect(px(face!.style.height)).toBeCloseTo(Math.max(1, r.h - TILE_CAP), 1);
+        expect(t.className.includes('lw-xs'), `xs ${id} ${ww}`).toBe(r.w < XS_BELOW);
+        expect(t.className.includes('lw-sm'), `sm ${id} ${ww}`).toBe(r.w < SM_BELOW);
+        const [d, title, kind] = cap!.children;
+        expect(d!.textContent).toMatch(/^BDL-[0-9]{3}$/);
+        expect(title!.textContent).toBe('Piece ' + id);
+        expect(['Experiment', 'Study']).toContain(kind!.textContent);
+      }
+    }
+  });
+
+  it('gives a piece the maps do not know a spill cell and makes the box tall enough for it', () => {
+    const ids = [...IDS, 'bdl-901', 'bdl-902', 'bdl-903'];
+    for (const [ww, wh] of [[1440, 900], [390, 844]] as const) {
+      const { wall, tiles } = hang(ids, ww, wh, 220, ww);
+      const L = layoutWall(ids, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: 220 });
+      expect(px(wall.style.height), `${ww}`).toBeCloseTo(L.height, 6);
+      expect(tiles).toHaveLength(ids.length);
+      const spilled = tiles.find((t) => t.attrs[TILE_ATTR] === 'bdl-903')!;
+      expect(px(spilled.style.top), `${ww}`).toBeCloseTo(L.rects['bdl-903']!.y, 1);
+    }
+  });
+
+  it('hangs nothing for data it cannot read, and still sizes the box', () => {
+    const { wall, tiles } = hang([], 1440, 900, 220, 1440);
+    expect(tiles).toHaveLength(0);
+    expect(px(wall.style.height)).toBeCloseTo(900 - 220, 6);
   });
 });

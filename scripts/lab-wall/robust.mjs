@@ -860,6 +860,8 @@ await drawn(390, 844, 'light', true);
     ok(Math.max(...bs) - Math.min(...bs) <= 1, `slow load: what sits below the wall does not move relative to it (${Math.min(...bs)} to ${Math.max(...bs)})`);
     const ls = samples.map((s) => s.left + ':' + s.w);
     ok(new Set(ls).size === 1, `slow load: the wall box keeps its width and its full-bleed edge (${[...new Set(ls)].join(', ')})`);
+    // Never an empty box: the very first frame the wall shows already has every tile framed and captioned, before any script has arrived.
+    ok(first.tiles > 0 && first.captioned === first.tiles && first.drawn === 0, `slow load: the first frame the wall shows already holds framed, captioned tiles (${first.tiles} tiles, ${first.captioned} captioned, at ${first.t}ms)`);
     ok(firstTiles.t < firstDrawn.t && firstTiles.captioned === firstTiles.tiles && firstTiles.drawn === 0, `slow load: framed, captioned tiles come first (${firstTiles.t}ms), then the pictures fade in (${firstDrawn.t}ms; the box was there at ${first.t}ms)`);
   }
   await ctx.close();

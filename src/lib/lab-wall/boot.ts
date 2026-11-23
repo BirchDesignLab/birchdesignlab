@@ -19,7 +19,7 @@
 import { wireBulb } from './lamp';
 import { idFromHash, readView, writeView } from './model';
 import type { View } from './model';
-import { measureWall } from './reserve';
+import { clearFramedTiles, measureWall, placeFramedTiles } from './reserve';
 import type { WallHandle, mountWall } from './wall';
 
 const FADE_MS = 450;
@@ -81,11 +81,11 @@ export function bootLabWall(): void {
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.lwView === view));
   }
 
-  /** Until the engine is here, hold the wall's box at the size and place it will take. */
+  /** Until the engine is here, hold the wall's box, and the framed tiles the page hung in it, at the size and place the engine will give them. */
   function reserve(): void {
     if (engine || viewNow() !== 'wall') return;
     try {
-      measureWall(wallEl, ids);
+      placeFramedTiles(wallEl, measureWall(wallEl, ids));
     } catch {
       /* the engine measures it when it arrives */
     }
@@ -116,6 +116,7 @@ export function bootLabWall(): void {
       if (!e) {
         // The engine would not load: the page is its list, and the choice is not remembered against it.
         window.removeEventListener('resize', reserve);
+        clearFramedTiles(wallEl);
         paint('list', false);
         return;
       }

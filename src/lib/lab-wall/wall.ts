@@ -19,7 +19,7 @@ import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
 import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
 import type { Rect } from './layout';
-import { measureWall } from './reserve';
+import { ARROW_SVG, TILE_ATTR, TILE_CAP, measureWall } from './reserve';
 import { hasMini, loadMini } from './minis';
 import type { LoadedMini } from './minis';
 import { counterLabel, hashFor, inFilter, readFilter, stepTarget, tryLine } from './model';
@@ -42,11 +42,8 @@ export interface WallHandle {
 
 /** Resting pieces tick at about 15 fps. */
 const IDLE_MS = 66;
-/** The caption bar under each picture on the wall. */
-const CAP = 28;
 /** The widest pixel ratio a canvas is drawn at. */
 const MAX_DPR = 2;
-const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
 
 interface Written {
   x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; lit: number; tf: string;
@@ -203,20 +200,34 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   const matches = (s: Tile): boolean => inFilter(s.e.kind, filt);
   const pool = (): Tile[] => tiles.filter(matches);
 
+  // Tiles the page already framed and captioned before this engine arrived (reserve.ts): each is adopted as it stands.
+  const framed = new Map<string, HTMLElement>();
+  for (const el of Array.from(wallEl.children)) {
+    const id = el instanceof HTMLElement ? el.getAttribute(TILE_ATTR) : null;
+    if (id && el instanceof HTMLElement) framed.set(id, el);
+  }
+
   function makeTile(e: WallEntry, idx: number): Tile {
-    const el = document.createElement('div');
-    el.className = 'lw-tile';
+    const animated = hasMini(e.id);
+    const adopted = framed.get(e.id);
+    const el = adopted ?? document.createElement('div');
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', 'Open ' + e.title);
     el.style.setProperty('--i', String(idx));
-    const animated = hasMini(e.id);
-    el.innerHTML =
-      '<div class="lw-face">' + (animated ? '<canvas></canvas>' : '') + '<div class="lw-veil"></div></div>' +
-      '<div class="lw-cap"><span class="lw-d"></span><span class="lw-t"></span><span class="lw-k"></span><span class="lw-o">Open ' + ARROW + '</span></div>';
-    need(el, '.lw-d').textContent = e.designation;
-    need(el, '.lw-t').textContent = e.title;
-    need(el, '.lw-k').textContent = e.kindLabel;
+    if (adopted) {
+      // Its frame and caption are already on the wall; the picture's canvas goes in under the veil and fades in once drawn.
+      const veil0 = need<HTMLElement>(el, '.lw-veil');
+      if (animated) veil0.parentElement?.insertBefore(document.createElement('canvas'), veil0);
+    } else {
+      el.className = 'lw-tile';
+      el.innerHTML =
+        '<div class="lw-face">' + (animated ? '<canvas></canvas>' : '') + '<div class="lw-veil"></div></div>' +
+        '<div class="lw-cap"><span class="lw-d"></span><span class="lw-t"></span><span class="lw-k"></span><span class="lw-o">Open ' + ARROW_SVG + '</span></div>';
+      need(el, '.lw-d').textContent = e.designation;
+      need(el, '.lw-t').textContent = e.title;
+      need(el, '.lw-k').textContent = e.kindLabel;
+    }
     const face = need<HTMLElement>(el, '.lw-face');
     const veil = need<HTMLElement>(el, '.lw-veil');
     if (!animated) stillFor(face, veil, e);
@@ -269,7 +280,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   entries.forEach((e, idx) => {
     const s = makeTile(e, idx);
     tiles.push(s);
-    wallEl.appendChild(s.el);
+    // A tile the page already hung stays where it is: moving it would start its fade over.
+    if (s.el.parentNode !== wallEl) wallEl.appendChild(s.el);
   });
   const tileFor = (id: string): Tile | undefined => tiles.find((t) => t.e.id === id);
 
@@ -744,7 +756,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       const openGoal = s.open ? 1 : 0;
       s.oa += (openGoal - s.oa) * ko;
       if (Math.abs(s.oa - openGoal) < 0.004) s.oa = openGoal;
-      const faceH = Math.max(1, c.h - CAP * s.cf - cardReserve * s.oa);
+      const faceH = Math.max(1, c.h - TILE_CAP * s.cf - cardReserve * s.oa);
       const rad = 10 * (1 - s.oa);
       const st = s.el.style;
       const w = s.w;

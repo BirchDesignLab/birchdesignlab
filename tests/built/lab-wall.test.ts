@@ -146,6 +146,20 @@ describe('the first paint of /lab', () => {
     expect(inline).toMatch(/\^#bdl-/);
   });
 
+  it('hangs the framed, captioned tiles in the HTML itself: the data, the wall, then the script that frames them', () => {
+    const data = html.indexOf('data-lw="data"');
+    const wall = html.indexOf('data-lw="wall"');
+    const hang = html.indexOf('data-lw-id');
+    expect(data).toBeGreaterThan(-1);
+    expect(wall).toBeGreaterThan(data);
+    expect(hang).toBeGreaterThan(wall);
+    // one script, straight after the wall: no frame is painted with the box empty
+    const between = html.slice(wall, hang);
+    expect(between.split('<script').length - 1).toBe(1);
+    expect(between.indexOf('</div>')).toBeGreaterThan(-1);
+    expect(between.indexOf('</div>')).toBeLessThan(between.indexOf('<script'));
+  });
+
   it('brings the engine with the first script: two module scripts from the wall, both in the HTML', () => {
     const own = [...html.matchAll(/<script type="module" src="(\/_astro\/LabWall\.astro_astro_type_script_index_\d+_lang\.[^"]+\.js)"/g)].map((m) => m[1]);
     expect(own.length).toBe(2);

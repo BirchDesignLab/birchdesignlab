@@ -61,11 +61,12 @@ const ARROW = 'M7 17 17 7M8 7h9v9';
   <button type="button" data-lw-view="list" aria-pressed="false">List</button>
 </div>
 
-<div class="lw-wall" data-lw="wall" role="group" aria-label="The pieces in the Lab, each running live"></div>
-{/* The wall's box is sized here, in the first paint, to what the engine will give it (src/lib/lab-wall/reserve.ts). */}
-<script is:inline set:html={RESERVE_INLINE}></script>
-
 <script type="application/json" data-lw="data" is:inline set:html={json}></script>
+<div class="lw-wall" data-lw="wall" role="group" aria-label="The pieces in the Lab, each running live"></div>
+{/* In the first paint, before any module has arrived, this sizes the wall's box to what the engine will give it and hangs a
+    framed, captioned tile in each cell, from the data above (src/lib/lab-wall/reserve.ts); the engine adopts them. It sits
+    straight after the wall, so no frame is painted with the box empty. */}
+<script is:inline set:html={RESERVE_INLINE}></script>
 
 <div class="lw-scrim" data-lw="scrim" aria-hidden="true"></div>
 <div class="lw-door" data-lw="door" role="dialog" aria-modal="true" aria-label="Open piece" inert>

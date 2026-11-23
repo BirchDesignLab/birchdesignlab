@@ -70,8 +70,8 @@ export const PHONE_GAP = 6;
 export const PHONE_ROW_RATIO = 0.45;
 
 /** A spill cell: 6 columns by 4 rows on desktop (4 across), 1 column by 2 units on the phone (2 across). */
-const DESK_SPILL = { cols: 6, rows: 4 };
-const PHONE_SPILL = { cols: 1, rows: 2 };
+export const SPILL_DESK = { cols: 6, rows: 4 };
+export const SPILL_PHONE = { cols: 1, rows: 2 };
 
 const has = (map: Record<string, Cell>, id: string): boolean => Object.prototype.hasOwnProperty.call(map, id);
 
@@ -86,7 +86,7 @@ export function layoutWall(ids: string[], box: WallBox): WallLayout {
   const pad = gap;
   const mapCols = phone ? PHONE_COLS : DESK_COLS;
   const mapRows = phone ? PHONE_ROWS : DESK_ROWS;
-  const sp = phone ? PHONE_SPILL : DESK_SPILL;
+  const sp = phone ? SPILL_PHONE : SPILL_DESK;
   const perRow = Math.floor(mapCols / sp.cols);
   const spillBands = Math.ceil(spill.length / perRow);
 
