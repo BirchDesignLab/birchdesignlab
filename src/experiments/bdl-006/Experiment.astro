@@ -1,13 +1,28 @@
 ---
 import BarkField from '../../components/BarkField.astro';
 import Regulator from './Regulator.svelte';
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+import '../../styles/lab-texture.css';
+
+// Three real catalog rows for the bench to prove texture and motion on: the
+// newest listed entries that have a picture.
+const listed = (await getCollection('lab', ({ data }) => data.status === 'live' && !data.noindex && !!data.thumb))
+  .sort((a, b) => b.data.designation.localeCompare(a.data.designation))
+  .slice(0, 3);
+const proofs = await Promise.all(listed.map(async ({ data }) => ({
+  designation: data.designation,
+  title: data.title,
+  summary: data.summary,
+  src: (await getImage({ src: data.thumb!.src, width: 480 })).src,
+})));
 ---
 <div class="stage">
   <!-- The demo field: server-rendered so BarkField's own script claims it, and
        left at the component default so the grain readout starts honest. -->
   <BarkField density={140} />
   <div class="bench wrap">
-    <Regulator client:load surface="stage" />
+    <Regulator client:load surface="stage" proofs={proofs} />
   </div>
 </div>
 
