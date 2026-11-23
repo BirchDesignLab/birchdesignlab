@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  VIEW_KEY, counterLabel, hashFor, inFilter, readFilter, readView, stepTarget, tryLine, writeView,
+  VIEW_KEY, counterLabel, hashFor, idFromHash, inFilter, readFilter, readView, stepTarget, tryLine, writeView,
 } from '../src/lib/lab-wall/model';
 
 const store = (initial: Record<string, string> = {}) => {
@@ -88,5 +88,27 @@ describe('the words around an open piece', () => {
   });
   it('puts the piece in the address bar as a hash', () => {
     expect(hashFor('bdl-007')).toBe('#bdl-007');
+  });
+});
+
+describe('a link to a piece', () => {
+  const ids = ['bdl-012', 'bdl-007', 'bdl-001'];
+  it('names a listed piece by its hash', () => {
+    expect(idFromHash('#bdl-007', ids)).toBe('bdl-007');
+    expect(idFromHash(hashFor('bdl-012'), ids)).toBe('bdl-012');
+  });
+  it('does not mind case or an escaped character', () => {
+    expect(idFromHash('#BDL-007', ids)).toBe('bdl-007');
+    expect(idFromHash('#bdl%2D001', ids)).toBe('bdl-001');
+  });
+  it('is nothing for no hash, a hash for nothing here, an id that is not listed, or a broken escape', () => {
+    expect(idFromHash('', ids)).toBeNull();
+    expect(idFromHash('#', ids)).toBeNull();
+    expect(idFromHash('#nope', ids)).toBeNull();
+    expect(idFromHash('#bdl-004', ids)).toBeNull();
+    expect(idFromHash('#bdl-007/extra', ids)).toBeNull();
+    expect(idFromHash('#%E0%A4%A', ids)).toBeNull();
+    expect(idFromHash('bdl-007', ids)).toBeNull();
+    expect(idFromHash('#bdl-007', [])).toBeNull();
   });
 });

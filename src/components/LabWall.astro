@@ -15,6 +15,7 @@ import { getImage } from 'astro:assets';
 import { catalogSet } from '../lib/lab-sets';
 import { specimenLink } from '../lib/copy';
 import type { WallEntry } from '../lib/lab-wall/types';
+import { RESERVE_INLINE } from '../lib/lab-wall/reserve';
 import '../styles/lab-wall.css';
 
 interface Props {
@@ -61,6 +62,8 @@ const ARROW = 'M7 17 17 7M8 7h9v9';
 </div>
 
 <div class="lw-wall" data-lw="wall" role="group" aria-label="The pieces in the Lab, each running live"></div>
+{/* The wall's box is sized here, in the first paint, to what the engine will give it (src/lib/lab-wall/reserve.ts). */}
+<script is:inline set:html={RESERVE_INLINE}></script>
 
 <script type="application/json" data-lw="data" is:inline set:html={json}></script>
 
@@ -93,4 +96,14 @@ const ARROW = 'M7 17 17 7M8 7h9v9';
   import { bootLabWall } from '../lib/lab-wall/boot';
 
   bootLabWall();
+</script>
+
+{/* The engine, fetched with the first script instead of after it: this script imports it up front and hands it to
+    boot.ts, which would otherwise ask for it only once it was running. If this one fails to load, boot.ts asks for the
+    engine itself, fails the same way, and the page is its list. */}
+<script>
+  import { mountWall } from '../lib/lab-wall/wall';
+  import { offerEngine } from '../lib/lab-wall/boot';
+
+  offerEngine(mountWall);
 </script>

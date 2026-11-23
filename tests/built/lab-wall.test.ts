@@ -138,6 +138,20 @@ describe('the category pages carry no wall', () => {
   }
 });
 
+describe('the first paint of /lab', () => {
+  const html = readPage('/lab/');
+
+  it('shows the wall for a link to a piece, whatever view was remembered', () => {
+    const inline = /<script[^>]*>([^<]*data-lab-view[^<]*)<\/script>/.exec(html)?.[1] ?? '';
+    expect(inline).toMatch(/\^#bdl-/);
+  });
+
+  it('brings the engine with the first script: two module scripts from the wall, both in the HTML', () => {
+    const own = [...html.matchAll(/<script type="module" src="(\/_astro\/LabWall\.astro_astro_type_script_index_\d+_lang\.[^"]+\.js)"/g)].map((m) => m[1]);
+    expect(own.length).toBe(2);
+  });
+});
+
 describe('the lamp bulb in the site header', () => {
   const html = readPage('/lab/');
   const d = doc(html);

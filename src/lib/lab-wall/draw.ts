@@ -52,16 +52,20 @@ export interface Theme {
   v: number;
 }
 
-/** The theme as read from the site's custom properties. Refresh with readTheme() on a scheme change. */
+/**
+ * The theme as read from the site's custom properties. Refresh with readTheme() on a scheme change.
+ * Until the first read the values are the site's default scheme, which is dark (tokens.css), so a
+ * frame drawn before any read never flashes light colours.
+ */
 export const T: Theme = {
-  dark: false,
-  field: '#f5f1e8',
-  raised: '#e9e1d2',
-  mark: '#1f1b15',
-  muted: '#5a5244',
-  accent: '#2b4a37',
-  onAccent: '#f5f1e8',
-  line: 'rgba(31,27,21,.18)',
+  dark: true,
+  field: '#1c1a17',
+  raised: '#272319',
+  mark: '#f4f0e6',
+  muted: '#a89f8f',
+  accent: '#a3bd8f',
+  onAccent: '#1c1a17',
+  line: 'rgba(244,240,230,.18)',
   v: 0,
 };
 
@@ -69,14 +73,15 @@ export const T: Theme = {
 export function readTheme(): void {
   const root = document.documentElement;
   const cs = getComputedStyle(root);
-  const g = (n: string) => cs.getPropertyValue(n).trim();
+  // A token that reads empty (the stylesheet has not applied yet) keeps what T already holds.
+  const g = (n: string, kept: string) => cs.getPropertyValue(n).trim() || kept;
   T.dark = currentScheme(root) === 'dark';
-  T.field = g('--field');
-  T.raised = g('--field-raised');
-  T.mark = g('--mark');
-  T.muted = g('--mark-muted');
-  T.accent = g('--accent');
-  T.onAccent = g('--on-accent');
-  T.line = g('--line');
+  T.field = g('--field', T.field);
+  T.raised = g('--field-raised', T.raised);
+  T.mark = g('--mark', T.mark);
+  T.muted = g('--mark-muted', T.muted);
+  T.accent = g('--accent', T.accent);
+  T.onAccent = g('--on-accent', T.onAccent);
+  T.line = g('--line', T.line);
   T.v += 1;
 }

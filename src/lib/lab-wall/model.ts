@@ -66,3 +66,19 @@ export function stepTarget<T>(pool: readonly T[], current: T, dir: 1 | -1): T | 
 export function hashFor(id: string): string {
   return '#' + id;
 }
+
+/**
+ * The piece a link names: the hash of /lab/#bdl-007, if it is one of `ids` (the listed pieces). Anything else
+ * (no hash, a hash for nothing here, an id that is not listed, a broken escape) is null. Case does not matter.
+ */
+export function idFromHash(hash: string, ids: readonly string[]): string | null {
+  if (!hash.startsWith('#')) return null;
+  let raw = hash.slice(1);
+  try {
+    raw = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  const want = raw.toLowerCase();
+  return ids.find((id) => id.toLowerCase() === want) ?? null;
+}

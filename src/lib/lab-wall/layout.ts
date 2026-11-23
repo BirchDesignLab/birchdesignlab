@@ -19,8 +19,15 @@ export interface Rect {
 }
 
 export interface WallBox {
-  /** Width of the wall element in CSS px. Under PHONE_BELOW it lays out as the phone map. */
+  /** Width of the wall element in CSS px: what the cells divide up. */
   width: number;
+  /**
+   * Width of the window in CSS px, scrollbar included: what a CSS media query sees.
+   * Under PHONE_BELOW the wall lays out as the phone map. It is the window and not the wall
+   * that decides, so the layout and the stylesheet's own (max-width: 719px) rules always agree,
+   * even with an always-visible scrollbar taking 15px or so off the wall's width.
+   */
+  viewportWidth: number;
   viewportHeight: number;
   /** Height of whatever sits above the wall (the site header and the controls). */
   topHeight: number;
@@ -49,11 +56,18 @@ export const PHONE: Record<string, Cell> = {
   'bdl-009': [0, 12, 1, 2], 'bdl-008': [1, 12, 1, 2], 'bdl-002': [0, 14, 1, 2], 'bdl-001': [1, 14, 1, 2], 'bdl-003': [0, 16, 2, 2],
 };
 
-/** Below this width the wall lays out as the phone map. */
+/** Below this window width (and the CSS rules that repeat it) the wall lays out as the phone map. */
 export const PHONE_BELOW = 720;
 
 /** The shortest the desktop mosaic is allowed to be. */
-const DESK_MIN_HEIGHT = 540;
+export const DESK_MIN_HEIGHT = 540;
+
+/** The gap between cells, which is also the wall's inner padding. */
+export const DESK_GAP = 7;
+export const PHONE_GAP = 6;
+
+/** A phone row unit is this fraction of a column's width. */
+export const PHONE_ROW_RATIO = 0.45;
 
 /** A spill cell: 6 columns by 4 rows on desktop (4 across), 1 column by 2 units on the phone (2 across). */
 const DESK_SPILL = { cols: 6, rows: 4 };
@@ -63,12 +77,12 @@ const has = (map: Record<string, Cell>, id: string): boolean => Object.prototype
 
 /** Lay out `ids` (in catalog order) inside `box`. */
 export function layoutWall(ids: string[], box: WallBox): WallLayout {
-  const phone = box.width < PHONE_BELOW;
+  const phone = box.viewportWidth < PHONE_BELOW;
   const map = phone ? PHONE : DESK;
   const uniq = [...new Set(ids)];
   const spill = uniq.filter((id) => !has(map, id));
 
-  const gap = phone ? 6 : 7;
+  const gap = phone ? PHONE_GAP : DESK_GAP;
   const pad = gap;
   const mapCols = phone ? PHONE_COLS : DESK_COLS;
   const mapRows = phone ? PHONE_ROWS : DESK_ROWS;
@@ -81,7 +95,7 @@ export function layoutWall(ids: string[], box: WallBox): WallLayout {
   let cellH: number;
   let base: number;
   if (phone) {
-    cellH = Math.round(cellW * 0.45);
+    cellH = Math.round(cellW * PHONE_ROW_RATIO);
     base = 2 * pad + mapRows * cellH + (mapRows - 1) * gap;
   } else {
     base = Math.max(box.viewportHeight - box.topHeight, DESK_MIN_HEIGHT);

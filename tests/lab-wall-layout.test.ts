@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DESK, PHONE, layoutWall } from '../src/lib/lab-wall/layout';
+import { DESK, PHONE, PHONE_BELOW, layoutWall } from '../src/lib/lab-wall/layout';
 import type { Rect } from '../src/lib/lab-wall/layout';
 import { MINI_IDS } from '../src/lib/lab-wall/minis';
+import { RESERVE_INLINE } from '../src/lib/lab-wall/reserve';
 
 const IDS = [...MINI_IDS] as string[];
 const WIDTHS = [1440, 1024, 720, 719, 390];
-const box = (width: number) => ({ width, viewportHeight: 900, topHeight: 120 });
+/** The wall's box; the window is as wide as the wall unless a test says otherwise (no scrollbar). */
+const box = (width: number, viewportWidth = width) => ({ width, viewportWidth, viewportHeight: 900, topHeight: 120 });
 const EPS = 1e-6;
 
 function overlap(a: Rect, b: Rect): boolean {
@@ -46,6 +48,34 @@ describe('lab wall layout', () => {
     expect(layoutWall(IDS, box(719)).phone).toBe(true);
   });
 
+  it('chooses the map from the window, not the wall, so it agrees with the stylesheet (max-width: 719px)', () => {
+    // An always-visible scrollbar (15px) leaves the wall narrower than the window it sits in.
+    for (let vw = 690; vw <= 760; vw++) {
+      const L = layoutWall(IDS, box(vw - 15, vw));
+      expect(L.phone, `window ${vw}`).toBe(vw < PHONE_BELOW);
+    }
+    // the wall's own width has no say
+    expect(layoutWall(IDS, box(705, 720)).phone).toBe(false);
+    expect(layoutWall(IDS, box(735, 719)).phone).toBe(true);
+    expect(layoutWall(IDS, box(100, 1440)).phone).toBe(false);
+  });
+
+  it('keeps every rectangle sound across the breakpoint with a scrollbar taking 15px', () => {
+    for (const vw of [700, 719, 720, 721, 728, 735, 736, 737, 750]) {
+      const { rects, height } = layoutWall(IDS, box(vw - 15, vw));
+      const keys = Object.keys(rects);
+      for (const id of keys) {
+        const r = rects[id]!;
+        expect(r.x, `${id} x at window ${vw}`).toBeGreaterThanOrEqual(-EPS);
+        expect(r.x + r.w, `${id} right edge at window ${vw}`).toBeLessThanOrEqual(vw - 15 + EPS);
+        expect(r.y + r.h, `${id} bottom edge at window ${vw}`).toBeLessThanOrEqual(height + EPS);
+      }
+      for (let i = 0; i < keys.length; i++) {
+        for (let j = i + 1; j < keys.length; j++) expect(overlap(rects[keys[i]!]!, rects[keys[j]!]!), `${keys[i]} vs ${keys[j]} at window ${vw}`).toBe(false);
+      }
+    }
+  });
+
   for (const width of WIDTHS) {
     it(`gives every piece a rectangle that fits, overlapping nothing, at ${width}`, () => {
       expectSound(IDS, width);
@@ -54,7 +84,7 @@ describe('lab wall layout', () => {
 
   it('fills the viewport below the header on desktop, with a floor', () => {
     expect(layoutWall(IDS, box(1440)).height).toBeCloseTo(900 - 120, 6);
-    expect(layoutWall(IDS, { width: 1440, viewportHeight: 400, topHeight: 120 }).height).toBeCloseTo(540, 6);
+    expect(layoutWall(IDS, { width: 1440, viewportWidth: 1440, viewportHeight: 400, topHeight: 120 }).height).toBeCloseTo(540, 6);
   });
 
   for (const width of WIDTHS) {
@@ -92,5 +122,62 @@ describe('lab wall layout', () => {
   it('ignores a repeated id and an id that only exists on the prototype', () => {
     const { rects } = layoutWall([...IDS, 'bdl-900', 'bdl-900', 'constructor'], box(1440));
     expect(Object.keys(rects)).toHaveLength(IDS.length + 2);
+  });
+});
+
+describe('the box held before the engine arrives', () => {
+  /** Run the inline script against a stand-in page and return what it wrote on the wall. */
+  function reserve(opts: { view: string | null; windowWidth: number; windowHeight: number; wallTop: number; wallWidth: number; scrollY?: number; padLeft?: number; pageLeft?: number }) {
+    const written: Record<string, string> = {};
+    const props: Record<string, string> = {};
+    const page = { getBoundingClientRect: () => ({ left: opts.pageLeft ?? 0 }) };
+    const wall = {
+      parentElement: page,
+      clientWidth: opts.wallWidth,
+      style: {
+        get height() { return written.height ?? ''; },
+        set height(v: string) { written.height = v; },
+        get minHeight() { return written.minHeight ?? ''; },
+        set minHeight(v: string) { written.minHeight = v; },
+        setProperty: (k: string, v: string) => { props[k] = v; },
+      },
+      getBoundingClientRect: () => ({ top: opts.wallTop - (opts.scrollY ?? 0) }),
+    };
+    const doc = {
+      querySelector: (s: string) => (s === '[data-lw="wall"]' ? wall : null),
+      documentElement: { getAttribute: (n: string) => (n === 'data-lab-view' ? opts.view : null) },
+    };
+    const win = { innerWidth: opts.windowWidth, innerHeight: opts.windowHeight, scrollY: opts.scrollY ?? 0 };
+    const gcs = () => ({ paddingLeft: (opts.padLeft ?? 0) + 'px' });
+    new Function('document', 'window', 'getComputedStyle', RESERVE_INLINE)(doc, win, gcs);
+    return { written, props };
+  }
+
+  it('gives the wall the height layoutWall gives it on desktop, for a window of any height', () => {
+    for (const [ww, wh, top] of [[1440, 900, 220], [1920, 1080, 236], [1024, 768, 260], [1280, 400, 250], [720, 800, 300]] as const) {
+      const got = reserve({ view: 'wall', windowWidth: ww, windowHeight: wh, wallTop: top, wallWidth: ww });
+      const want = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: top }).height;
+      expect(parseFloat(got.written.height!), `${ww}x${wh}`).toBeCloseTo(want, 6);
+    }
+  });
+
+  it('gives the wall the height layoutWall gives it on a phone, for any width', () => {
+    for (const ww of [320, 360, 375, 390, 412, 600, 719]) {
+      const got = reserve({ view: 'wall', windowWidth: ww, windowHeight: 800, wallTop: 200, wallWidth: ww });
+      const want = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: 800, topHeight: 200 }).height;
+      expect(parseFloat(got.written.height!), `${ww}`).toBeCloseTo(want, 6);
+    }
+  });
+
+  it('counts the page scroll in what sits above the wall, and holds the full-bleed margin and the exact height', () => {
+    const got = reserve({ view: 'wall', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440, scrollY: 100, pageLeft: 80, padLeft: 24 });
+    expect(parseFloat(got.written.height!)).toBeCloseTo(900 - 220, 6);
+    expect(got.written.minHeight).toBe('0');
+    expect(got.props['--lw-bleed']).toBe('104.00px');
+  });
+
+  it('does nothing in the list view or with no view chosen', () => {
+    expect(reserve({ view: 'list', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
+    expect(reserve({ view: null, windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
   });
 });

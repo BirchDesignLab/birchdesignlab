@@ -18,8 +18,8 @@
 import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
 import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
-import { layoutWall } from './layout';
 import type { Rect } from './layout';
+import { measureWall } from './reserve';
 import { hasMini, loadMini } from './minis';
 import type { LoadedMini } from './minis';
 import { counterLabel, hashFor, inFilter, readFilter, stepTarget, tryLine } from './model';
@@ -27,6 +27,11 @@ import type { Filter, View } from './model';
 import type { Mini, MiniEnv, Pointer, WallEntry } from './types';
 
 export type { View } from './model';
+
+export interface MountOptions {
+  /** A piece to open as soon as the wall is up (a link to /lab/#bdl-007), already checked against the list. */
+  open?: string | null;
+}
 
 export interface WallHandle {
   /** Show the wall or the list: the loop runs for one and sleeps for the other. */
@@ -57,6 +62,8 @@ interface Tile {
   /** The lamp's glow around the tile; there only while the lamp runs. */
   rim: HTMLElement | null;
   canvas: HTMLCanvasElement | null;
+  /** The miniature has drawn its first frame (its canvas fades in then). */
+  drawn: boolean;
   ctx: CanvasRenderingContext2D | null;
   mod: LoadedMini | null;
   mini: Mini | null;
@@ -117,8 +124,10 @@ function need<E extends Element>(root: { querySelector: ParentNode['querySelecto
 
 const sig = (n: number): number => Math.round(n * 100) / 100;
 
-export function mountWall(): WallHandle {
+export function mountWall(opts: MountOptions = {}): WallHandle {
   const root = document.documentElement;
+  // The tokens and the scheme first: nothing draws until this has run (and T starts as the site's default, dark).
+  readTheme();
   const wallEl = need<HTMLElement>(document, '[data-lw="wall"]');
   const dataEl = need<HTMLElement>(document, '[data-lw="data"]');
   const hintEl = document.querySelector<HTMLElement>('[data-lw="hint"]');
@@ -214,7 +223,7 @@ export function mountWall(): WallHandle {
     const canvas = el.querySelector<HTMLCanvasElement>('canvas');
     const s: Tile = {
       e, idx, el, face, veil, rim: null, cap: need<HTMLElement>(el, '.lw-cap'),
-      canvas, ctx: canvas ? canvas.getContext('2d') : null,
+      canvas, drawn: false, ctx: canvas ? canvas.getContext('2d') : null,
       mod: null, mini: null, loading: false, broken: false, err: false,
       wall: { x: 0, y: 0, w: 10, h: 10 }, cur: null,
       open: false, exit: 0, flying: false, hot: false, focus: false, vis: false, intent: false, need: true,
@@ -242,7 +251,10 @@ export function mountWall(): WallHandle {
       img.alt = '';
       img.draggable = false;
       img.decoding = 'async';
+      // The picture fades in as it arrives; the frame and the caption are already there.
+      img.addEventListener('load', () => img.classList.add('lw-drawn'));
       img.src = e.thumb;
+      if (img.complete && img.naturalWidth) img.classList.add('lw-drawn');
       face.insertBefore(img, veil);
     } else {
       const plain = document.createElement('div');
@@ -265,16 +277,12 @@ export function mountWall(): WallHandle {
   function layout(): void {
     if (view !== 'wall') return;
     dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
-    // Full-bleed: the wall reaches past the page's column to both window edges.
-    const page = wallEl.parentElement;
-    if (page) {
-      const pr = page.getBoundingClientRect();
-      const pad = parseFloat(getComputedStyle(page).paddingLeft) || 0;
-      wallEl.style.setProperty('--lw-bleed', Math.max(0, pr.left + pad).toFixed(2) + 'px');
-    }
-    const top = wallEl.getBoundingClientRect().top + window.scrollY;
-    const L = layoutWall(entries.map((e) => e.id), { width: wallEl.clientWidth || root.clientWidth, viewportHeight: window.innerHeight, topHeight: top });
+    // Full-bleed margin, height and layout: measured the same way the first script measured the box before this engine arrived.
+    const L = measureWall(wallEl, entries.map((e) => e.id));
+    const wasPhone = isPhone;
     isPhone = L.phone;
+    // The open piece's words carry the counter on the phone layout only: write them again if the layout changed under it.
+    if (isPhone !== wasPhone && metaOf) writeMeta(metaOf);
     for (const s of tiles) {
       s.wall = L.rects[s.e.id] ?? s.wall;
       s.depth = clamp(1.3 - Math.sqrt(s.wall.w * s.wall.h) / 520, 0.3, 1.1);
@@ -283,7 +291,6 @@ export function mountWall(): WallHandle {
       if (!s.cur) s.cur = { ...s.wall };
       s.need = true;
     }
-    wallEl.style.height = L.height + 'px';
     if (current) measureBar();
   }
 
@@ -322,19 +329,29 @@ export function mountWall(): WallHandle {
     D.tryEl.textContent = line ?? '';
     D.tryEl.hidden = !line;
   }
-  function fillDoor(s: Tile): void {
-    const e = s.e;
+  const placeOf = (s: Tile): string => {
     const P = pool();
-    const place = counterLabel(P.indexOf(s) + 1, P.length);
+    return counterLabel(P.indexOf(s) + 1, P.length);
+  };
+  /** The tile whose words the door's meta line shows now. */
+  let metaOf: Tile | null = null;
+  /** The meta line: "n of N" first on the phone layout (where the count pill is hidden), then the number, kind and month. */
+  function writeMeta(s: Tile): void {
+    metaOf = s;
     D.meta.textContent = '';
     if (isPhone) {
       const n = document.createElement('span');
       n.className = 'lw-num';
-      n.textContent = place;
+      n.textContent = placeOf(s);
       D.meta.appendChild(n);
       D.meta.appendChild(document.createTextNode(' · '));
     }
-    D.meta.appendChild(document.createTextNode(e.designation + ' · ' + e.kindLabel + ' · ' + e.month));
+    D.meta.appendChild(document.createTextNode(s.e.designation + ' · ' + s.e.kindLabel + ' · ' + s.e.month));
+  }
+  function fillDoor(s: Tile): void {
+    const e = s.e;
+    const place = placeOf(s);
+    writeMeta(s);
     D.title.textContent = e.title;
     D.sum.textContent = e.summary;
     const link = e.live && e.href ? e.href : null;
@@ -373,7 +390,9 @@ export function mountWall(): WallHandle {
     for (const t of tiles) t.el.inert = !matches(t);
   }
 
-  function openTile(s: Tile, fromHistory = false): void {
+  /** How an open piece sits in the history: pushes an entry (a click), rides one already there (Forward), or has none (a link to it). */
+  type Entry = 'push' | 'existing' | 'none';
+  function openTile(s: Tile, entry: Entry = 'push'): void {
     if (current || backPending || view !== 'wall' || !matches(s)) return;
     current = s;
     s.open = true;
@@ -389,8 +408,8 @@ export function mountWall(): WallHandle {
     fillDoor(s);
     D.el.inert = false;
     D.el.classList.add('lw-on');
-    if (!fromHistory) history.pushState({ lwOpen: s.e.id }, '', hashFor(s.e.id));
-    pushed = true;
+    if (entry === 'push') history.pushState({ lwOpen: s.e.id }, '', hashFor(s.e.id));
+    pushed = entry !== 'none';
     D.back.focus({ preventScroll: true });
     start();
   }
@@ -405,6 +424,7 @@ export function mountWall(): WallHandle {
     D.scrim.classList.remove('lw-on');
     D.el.classList.remove('lw-on');
     D.el.inert = true;
+    metaOf = null;
     clearTimeout(swapTimer);
     D.bar.classList.remove('lw-swap');
     root.classList.remove('lw-locked');
@@ -478,7 +498,7 @@ export function mountWall(): WallHandle {
     // Forward onto an entry this page pushed: open that piece again, without pushing another.
     const id = (ev.state as { lwOpen?: string } | null)?.lwOpen;
     const s = id ? tileFor(id) : undefined;
-    if (s && view === 'wall') openTile(s, true);
+    if (s && view === 'wall') openTile(s, 'existing');
   });
 
   // Swipe between open pieces (touch or pen): a quick, mostly horizontal flick that starts on the bar. A drag on the piece plays the piece.
@@ -524,7 +544,6 @@ export function mountWall(): WallHandle {
   });
   schemeObs.observe(root, { attributes: true, attributeFilter: ['data-scheme'] });
   disposers.push(() => schemeObs.disconnect());
-  readTheme();
 
   // ---- the lamp ----
   // The visitor's choice (the bulb in the header) and where it runs decide
@@ -620,6 +639,11 @@ export function mountWall(): WallHandle {
     c.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
     try { s.mini.draw(c, t, dt, s.p); } catch (err) { if (!s.err) { console.error(s.e.id, err); s.err = true; } }
     c.restore();
+    if (!s.drawn) {
+      // The first frame is down: the picture fades in over the frame and the caption that were already there.
+      s.drawn = true;
+      s.canvas?.classList.add('lw-drawn');
+    }
   }
 
   // ---- who is awake ----
@@ -882,6 +906,21 @@ export function mountWall(): WallHandle {
 
   layout();
   start();
+
+  /** A link to a piece: open it over the wall, with the filter set to All if the filter would have hidden it. */
+  function openFromLink(id: string): void {
+    const s = tileFor(id);
+    if (!s || view !== 'wall') return;
+    if (!matches(s)) {
+      const all = document.querySelector<HTMLElement>('.filter a[data-set="all"]');
+      if (all) all.click();
+      else if (catalogEl) catalogEl.dataset.filter = 'all';
+      filt = readFilter(catalogEl?.dataset.filter);
+      applyFilter();
+    }
+    openTile(s, 'none');
+  }
+  if (opts.open) openFromLink(opts.open);
 
   return {
     setView(next: View): void {

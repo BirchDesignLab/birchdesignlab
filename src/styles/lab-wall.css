@@ -88,7 +88,10 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   position: relative;
   /* full-bleed: the engine sets --lw-bleed to the page column's distance from the window edge */
   margin-inline: calc(-1 * var(--lw-bleed, 0px));
-  min-height: 60vh;
+  /* Before script measures the box (src/lib/lab-wall/reserve.ts sets the exact height and drops this) it is
+     about what the layout will give it: the window below the header, at least 540px on desktop; the phone
+     map's height, which follows the width (18 rows of 0.45 of a cell, plus the gaps), under 720. */
+  min-height: max(540px, calc(100svh - 16rem));
   background: var(--lw-wall);
   /* a tile that leans or swells at the edge never makes the page scroll sideways; the open piece may still leave the wall vertically */
   overflow-x: clip;
@@ -107,8 +110,11 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
 :root[data-scheme='light'] .lw-tile { box-shadow: 0 14px 26px -18px rgb(40 30 15 / 0.55), 0 0 0 1px rgb(31 27 21 / 0.1); }
 @keyframes lw-rise { from { opacity: 0; } to { opacity: 1; } }
 .lw-face { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden; border-radius: var(--r, 10px); background: var(--field-raised); }
-.lw-face canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-.lw-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+/* A picture fades in over the frame and caption that are already there: the miniature when its first frame is down, a still when it has arrived. */
+.lw-face canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 0.7s var(--ease-weighted); }
+.lw-face canvas.lw-drawn { opacity: 1; }
+.lw-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; opacity: 0; transition: opacity 0.7s var(--ease-weighted); }
+.lw-still.lw-drawn { opacity: 1; }
 .lw-plain { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center; color: var(--mark); font-family: var(--font-display); font-size: var(--text-lg); line-height: 1.2; }
 .lw-veil { position: absolute; inset: 0; background: var(--lw-wall); opacity: 0; pointer-events: none; }
 
@@ -219,6 +225,7 @@ a.lw-visit:hover svg { transform: translate(2px, -2px); }
 
 /* ---------- phone: a card under the piece, the arrows in the top row beside Back ---------- */
 @media (max-width: 719px) {
+  .lw-wall { min-height: calc(4.05 * (100vw - 18px) + 114px); }
   .lw-tile .lw-cap { height: 24px; padding: 0 8px; }
   .lw-t { font-size: 11.5px; }
   .lw-k, .lw-o { display: none !important; }
@@ -263,6 +270,9 @@ a.lw-visit:hover svg { transform: translate(2px, -2px); }
 html.lw-fading[data-lab-view='wall'] .lw-wall,
 html.lw-fading[data-lab-view='list'] .lab-page > .count,
 html.lw-fading[data-lab-view='list'] .lab-page > .catalog { animation: lw-fade 0.4s var(--ease-weighted) both; }
+/* The wall's fade makes the wall a stacking context while it runs, and a piece opened in that window would sit under the
+   scrim (the scrim is outside the wall, at z-index 30). Opening a piece ends the fade: the open tile is above the scrim from the first frame. */
+html.lw-fading.lw-locked[data-lab-view='wall'] .lw-wall { animation: none; }
 
 /* ---------- the lamp: a light that follows the pointer (src/lib/lab-wall/lamp.ts, wall.ts) ---------- */
 :root { --lw-glow: 255 222 160; }

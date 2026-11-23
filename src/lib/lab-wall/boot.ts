@@ -9,13 +9,31 @@
  * lamp's own choice (data-lab-lamp on <html>) is set the same way, by the
  * inline line first and by wireBulb after; the engine only reads it.
  * Without script none of it exists and the page is the catalog list.
+ *
+ * Before the engine has arrived this file also holds the wall's place: it sets
+ * the box to the size and position the engine will give it (reserve.ts), so
+ * nothing below it moves when the engine mounts. And it reads a link to a
+ * piece (/lab/#bdl-007): the entry is replaced with plain /lab/ and the piece
+ * is handed to the engine to open once the wall is up.
  */
 import { wireBulb } from './lamp';
-import { readView, writeView } from './model';
+import { idFromHash, readView, writeView } from './model';
 import type { View } from './model';
-import type { WallHandle } from './wall';
+import { measureWall } from './reserve';
+import type { WallHandle, mountWall } from './wall';
 
 const FADE_MS = 450;
+
+/**
+ * The engine's entry, if the page's second script has already brought it (LabWall.astro). That script
+ * imports the engine up front, so the browser fetches it beside this file instead of after it; this file
+ * then mounts it the moment it is wanted. When it has not run yet, load() imports the engine itself,
+ * and the browser hands back the same module (one fetch, one copy).
+ */
+let offered: typeof mountWall | null = null;
+export function offerEngine(mount: typeof mountWall): void {
+  offered = mount;
+}
 
 function storage(): Storage | null {
   try {
@@ -32,6 +50,19 @@ export function bootLabWall(): void {
 
   const bulb = document.querySelector<HTMLElement>('[data-lw="bulb"]');
   if (bulb) wireBulb(bulb, root, storage());
+
+  const wallEl = document.querySelector<HTMLElement>('[data-lw="wall"]')!;
+  const ids = listedIds();
+  // A link to a listed piece opens it; a hash that names nothing here is dropped. Either way the entry
+  // becomes plain /lab/, so the address bar and Back never carry a hash this page did not push itself.
+  const linked = idFromHash(location.hash, ids);
+  if (location.hash) {
+    try {
+      history.replaceState(history.state, '', location.pathname + location.search);
+    } catch {
+      /* history blocked: the hash stays, harmlessly */
+    }
+  }
 
   let engine: WallHandle | null = null;
   let loading: Promise<WallHandle | null> | null = null;
@@ -50,9 +81,22 @@ export function bootLabWall(): void {
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.lwView === view));
   }
 
-  function load(): Promise<WallHandle | null> {
-    loading ??= import('./wall')
-      .then((m) => (engine = m.mountWall()))
+  /** Until the engine is here, hold the wall's box at the size and place it will take. */
+  function reserve(): void {
+    if (engine || viewNow() !== 'wall') return;
+    try {
+      measureWall(wallEl, ids);
+    } catch {
+      /* the engine measures it when it arrives */
+    }
+  }
+
+  function load(open: string | null): Promise<WallHandle | null> {
+    loading ??= (offered ? Promise.resolve({ mountWall: offered }) : import('./wall'))
+      .then((m) => {
+        window.removeEventListener('resize', reserve);
+        return (engine = m.mountWall({ open }));
+      })
       .catch((err: unknown) => {
         console.error('Lab wall failed to load', err);
         return null;
@@ -60,13 +104,18 @@ export function bootLabWall(): void {
     return loading;
   }
 
-  async function show(view: View, opts: { fade: boolean; remember: boolean }): Promise<void> {
+  async function show(view: View, opts: { fade: boolean; remember: boolean; open?: string | null }): Promise<void> {
     paint(view, opts.fade);
     if (opts.remember) writeView(storage(), view);
     if (view === 'wall') {
-      const e = engine ?? (await load());
+      if (!engine) {
+        reserve();
+        window.addEventListener('resize', reserve);
+      }
+      const e = engine ?? (await load(opts.open ?? null));
       if (!e) {
         // The engine would not load: the page is its list, and the choice is not remembered against it.
+        window.removeEventListener('resize', reserve);
         paint('list', false);
         return;
       }
@@ -85,7 +134,18 @@ export function bootLabWall(): void {
     });
   }
 
-  // The inline line has already set the attribute from the remembered choice; keep to it.
-  const first: View = root.dataset.labView ? viewNow() : readView(storage());
-  void show(first, { fade: false, remember: false });
+  // The remembered choice, which the inline line has already painted; except that a link to a piece shows the wall
+  // for this visit (the choice itself is left as it was).
+  const first: View = linked ? 'wall' : readView(storage());
+  void show(first, { fade: false, remember: false, open: linked });
+}
+
+/** The ids of the listed pieces, from the wall's own data block, in catalog order. */
+function listedIds(): string[] {
+  try {
+    const rows = JSON.parse(document.querySelector('[data-lw="data"]')?.textContent || '[]') as Array<{ id?: unknown }>;
+    return rows.map((r) => r.id).filter((id): id is string => typeof id === 'string');
+  } catch {
+    return [];
+  }
 }

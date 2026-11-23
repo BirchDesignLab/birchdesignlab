@@ -1,4 +1,5 @@
 /** Shared shapes for the Lab wall: the miniature contract and what the engine gets per piece. */
+import type { CatalogSet } from '../lab-sets';
 
 /** The pointer as a miniature sees it: x,y smoothed (0..1), tx,ty raw target, a = activity (0..1). */
 export interface Pointer {
@@ -32,7 +33,7 @@ export interface WallEntry {
   id: string;
   designation: string;
   title: string;
-  kind: 'experiment' | 'study';
+  kind: CatalogSet;
   kindLabel: string;
   month: string;
   summary: string;
