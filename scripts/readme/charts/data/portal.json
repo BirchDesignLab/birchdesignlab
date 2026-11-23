@@ -1,5 +1,5 @@
 {
- "copy": "A design lab, not an agency.",
+ "copy": "You talk to the person who builds it.",
  "wordmark": [
   "Birch",
   "Design Lab"
@@ -49,7 +49,7 @@
      "case": "none",
      "ls": 0,
      "color": "mark",
-     "size": 14
+     "size": 12.9
     }
    }
   },
@@ -104,7 +104,7 @@
      "case": "none",
      "ls": -0.02,
      "color": "mark",
-     "size": 14
+     "size": 13.7
     }
    }
   },
@@ -358,7 +358,7 @@
      "case": "none",
      "ls": 0,
      "color": "mark",
-     "size": 13.5,
+     "size": 12.6,
      "italic": true
     }
    }
@@ -429,7 +429,7 @@
      "case": "none",
      "ls": 0,
      "color": "hand",
-     "size": 21
+     "size": 17.1
     }
    }
   }

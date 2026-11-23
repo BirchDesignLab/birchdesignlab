@@ -6,10 +6,10 @@ BDL-001 · The Bark Engine, live
 Birch: Old English beorc, from the root meaning to shine. The same syllable survives in bright. The birch is literally "the shining tree," named for the way its white bark stands out amongst the dark woods, where you can see it from a long way off.
 The word is old enough to have kept its own letter. When English was still Olde and written in runes, the rune for B was beorc, the birch rune. The tree was so familiar that it stood for a sound. As business names go, this one had a few thousand years' head start.
 The founder
-Birch Design Lab is one man, much like the birch tree. Tall, pale, and shining amongst the darkness.
-There is no plan to grow into a team. The person who scopes your project also writes the code, tests it on phones, tablets, and desktop, and answers your email two months later when something needs to change. You never get passed to an account manager, and nobody has to loop in the team.
-He has spent over a decade designing and building things on the Gulf Coast, a stretch of country the birch has no business surviving in. What that decade taught him is that work lasts when it's built for the people who will use it. Work built to impress for a season gets left out in the weather.
-Everything here is one person's work. When something breaks, you know who to call.
+Birch Design Lab is one man. Like the tree, he is tall and pale.
+He has spent over a decade building enterprise software, and he lives on the Gulf Coast, a stretch of country the birch has no business surviving in. He started Birch Design Lab to put that knowledge to work for local business owners, and to drag the businesses here into the 21st century, kicking and screaming if he has to.
+There is no plan to grow into a team. The person who scopes your project also writes the code and answers your email two months later when something needs to change. With no office and no staff to pay for, the price comes in well under what a firm charges. Everything built for you is yours to keep, and another developer could pick it up if it ever came to that.
+Designed, constructed, and cared for.
 Let's get started
 Birch Design Lab
 Mississippi Gulf Coast

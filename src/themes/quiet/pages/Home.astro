@@ -114,6 +114,8 @@ const featured = (await featuredSpecimens()).map((entry) => ({ entry, link: spec
   .opener-lead {
     font-family: var(--font-display); font-size: var(--text-3xl);
     line-height: 1.15;
+    /* The lead wraps at desktop width; balance it so one word is never left alone. */
+    text-wrap: balance;
   }
   .subline {
     margin-top: var(--space-4); font-size: var(--text-lg);
