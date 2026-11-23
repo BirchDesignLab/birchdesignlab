@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import DeviceBadge from './DeviceBadge.astro';
+import PortalEntrance from './PortalEntrance.astro';
 import TypeBadge from './TypeBadge.astro';
 import { catalogSet, typeLabel } from '../lib/lab-sets';
 import { specimenLink } from '../lib/copy';
@@ -14,6 +15,9 @@ const { entry, level = 'h3' } = Astro.props;
 const { designation, title, summary, date, tech, status, thumb } = entry.data;
 const live = status === 'live';
 const { href } = specimenLink(entry);
+// The Portal's row links into a school, and its picture is the way in: it
+// cycles the schools and re-sets the title to match (PortalEntrance).
+const portal = live && !!thumb && href.startsWith('/t/');
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
 ---
@@ -29,7 +33,9 @@ const Heading = level;
       : <span class="soon">forthcoming</span>}
   </p>
   <Heading>
-    {live ? <a href={href}>{title}</a> : <span>{title}</span>}
+    {portal
+      ? <a href={href} class="portal-title" data-portal-title><span>{title}</span></a>
+      : live ? <a href={href}>{title}</a> : <span>{title}</span>}
   </Heading>
   <p class="summary">{summary}</p>
   <p class="meta">
@@ -42,7 +48,8 @@ const Heading = level;
   {/* The picture repeats the title link, so it stays out of the tab order
       and the accessibility tree; the alt text is for the image itself when
       the entry has no page to link to. */}
-  {thumb && (live
+  {portal && thumb && <PortalEntrance href={href} still={thumb.src} />}
+  {thumb && !portal && (live
     ? <a class="thumb" href={href} tabindex="-1" aria-hidden="true">
         <Image src={thumb.src} alt="" widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
       </a>
