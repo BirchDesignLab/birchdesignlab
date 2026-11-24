@@ -17,6 +17,11 @@ type Ctx = CanvasRenderingContext2D;
 export interface Detail {
   height(c: Ctx, W: number, H: number): number;
   build(c: Ctx, W: number, H: number): void;
+  /**
+   * Where the strip rests in a box W x H (CSS px from its top): 0 where the heading and enough rows to read fit under it,
+   * otherwise just above the first row, so the heading is left out whole and never cut by the box's top edge.
+   */
+  rest?(c: Ctx, W: number, H: number): number;
 }
 
 /** A box smaller than this (width x height, CSS px) gets the detail, not the page: the biggest wall tile is about 45,000, the smallest open piece about 180,000. */
@@ -54,6 +59,13 @@ export function pageMini(id: string, build: (c: Ctx, img: HTMLImageElement) => v
     return {
       t0: 0,
       resize(w, h, d) { W = w; H = h; dpr = d; pg = null; },
+      // rest: the top of the page, or in a small box the detail's own rest line (its readable rows), not scrolling, at every size
+      rest() {
+        if (!pg) make();
+        dir = 1; pause = 2.2;
+        y = small && detail?.rest ? clamp(detail.rest(document.createElement('canvas').getContext('2d')!, W, H), 0, Math.max(0, ph - H)) : 0;
+        return 0;
+      },
       draw(c, _t, dt, p) {
         if (!pg) make();
         c.fillStyle = '#f5f1e8'; c.fillRect(0, 0, W, H);

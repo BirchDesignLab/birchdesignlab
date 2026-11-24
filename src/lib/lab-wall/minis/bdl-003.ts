@@ -146,6 +146,8 @@ const factory: MiniFactory = (): Mini => {
       rnd = mulberry32(1066); layout();
       if (!ready) { si = 0; sd = 0; warm(8); ready = true; } else { si = Math.min(si, strokes.length); redrawScratch(); }
     },
+    // rest: the sheet part written (resize warms eight seconds of strokes), the stylus on its next stroke, at every size
+    rest() { return 0; },
     draw(c, t, dt, p) {
       c.fillStyle = T.raised; c.fillRect(0, 0, W, H);
       const user = p.a > 0.3;

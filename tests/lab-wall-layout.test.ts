@@ -5,7 +5,8 @@ import { DESK, DESK_MIN_HEIGHT, MAPS, PHONE, PHONE_BELOW, TABLET, TABLET_BELOW, 
 import type { WallKind } from '../src/lib/lab-wall/layout';
 import type { Rect } from '../src/lib/lab-wall/layout';
 import { MINI_IDS } from '../src/lib/lab-wall/minis';
-import { EARLY_ATTR, PAGE_MIN_VAR, RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW, holdBox, sizeClass } from '../src/lib/lab-wall/reserve';
+import { EARLY_ATTR, PAGE_MIN_VAR, RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW, holdBox, posterSrc, sizeClass } from '../src/lib/lab-wall/reserve';
+import { lampStart, revealSteps } from '../src/lib/lab-wall/lamp';
 
 const IDS = [...MINI_IDS] as string[];
 const WIDTHS = [1920, 1440, 1280, 1100, 1099, 1024, 820, 768, 720, 719, 430, 390, 360];
@@ -549,6 +550,24 @@ describe('the framed tiles held before the engine arrives', () => {
         expect(d!.textContent).toMatch(/^BDL-[0-9]{3}$/);
         expect(title!.textContent).toBe('Piece ' + id);
         expect(['Experiment', 'Study']).toContain(kind!.textContent);
+      }
+    }
+  });
+
+  it('fades the tiles in outward from where the lamp first hangs, and gives each miniature its rest frame as a picture from the first paint', () => {
+    for (const [ww, wh, kind] of [[1440, 900, 'desk'], [820, 1180, 'tablet'], [390, 844, 'phone']] as const) {
+      const wall = Math.min(ww, WALL_MAX);
+      const { tiles } = hang(IDS, ww, wh, 220, wall);
+      const L = layoutWall(IDS, { width: wall, viewportWidth: ww, viewportHeight: wh, topHeight: 220 });
+      const steps = tiles.map((t) => Number(t.style['--i']));
+      expect([...steps].sort((a, b) => a - b), `${ww} steps`).toEqual(IDS.map((_, i) => i));
+      const at = lampStart({ cw: wall, ch: L.height, top: 220, vh: wh }, kind === 'phone');
+      const want = revealSteps(L.rects, at);
+      for (const t of tiles) expect(Number(t.style['--i']), `${t.attrs[TILE_ATTR]} at ${ww}`).toBe(want[t.attrs[TILE_ATTR]!]);
+      for (const t of tiles) {
+        const id = t.attrs[TILE_ATTR]!;
+        const img = t.children[0]!.children.find((c) => c.className === 'lw-poster') as (Fake & { src?: string }) | undefined;
+        expect(img?.src, `${id} poster at ${ww}`).toBe(posterSrc(id, 'dark', kind));
       }
     }
   });

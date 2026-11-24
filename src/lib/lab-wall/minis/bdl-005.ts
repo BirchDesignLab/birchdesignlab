@@ -14,6 +14,8 @@ const factory: MiniFactory = (env: MiniEnv): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; },
+    // rest: mid-cycle, every card that fits the box has arrived and none has left (t 0 is 6.5s into the 13s cycle), at every size
+    rest() { return 0; },
     enter(_p, t) { tc = t - 0.1; },
     draw(c, t, _dt, p) {
       const img = env.img('bdl-005');

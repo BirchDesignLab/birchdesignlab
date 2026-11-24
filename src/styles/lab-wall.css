@@ -117,7 +117,8 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   user-select: none; will-change: transform;
   box-shadow: 0 0 0 1px rgb(244 240 230 / 0.09);
   transition: box-shadow 0.3s;
-  animation: lw-rise 0.9s var(--ease-weighted) both; animation-delay: calc(var(--i) * 55ms);
+  /* the load reveal: --i is the tile's step outward from where the lamp first hangs (reserve.ts); 11 steps finish inside 600ms */
+  animation: lw-rise 0.24s var(--ease-weighted) both; animation-delay: calc(var(--i) * 32ms);
 }
 :root[data-scheme='light'] .lw-tile { box-shadow: 0 14px 26px -18px rgb(40 30 15 / 0.55), 0 0 0 1px rgb(31 27 21 / 0.1); }
 @keyframes lw-rise { from { opacity: 0; } to { opacity: 1; } }
@@ -125,6 +126,8 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
 /* A picture fades in over the frame and caption that are already there: the miniature when its first frame is down, a still when it has arrived. */
 .lw-face canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 0.7s var(--ease-weighted); }
 .lw-face canvas.lw-drawn { opacity: 1; }
+/* A miniature's rest frame as a picture, under its canvas, from the first paint until the canvas has drawn (no tile is ever blank). */
+.lw-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; pointer-events: none; }
 .lw-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; opacity: 0; transition: opacity 0.7s var(--ease-weighted); }
 .lw-still.lw-drawn { opacity: 1; }
 .lw-plain { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center; color: var(--mark); font-family: var(--font-display); font-size: var(--text-lg); line-height: 1.2; }

@@ -10,15 +10,21 @@ const clipTo = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h:
 const factory: MiniFactory = (): Mini => {
   let W = 0, H = 0;
   const ws = [1, 1, 1, 1, 1, 1];
+  const widthAt = (i: number, fc: number) => 1 + 3.4 * Math.exp(-Math.pow((i - fc) / 0.85, 2));
+  /** The slice the drift widens at time t. */
+  const drift = (t: number) => 2.5 + 2.2 * Math.sin(t * 0.35);
+  /** Rest: the Vaporwave slice open wide and its neighbours giving way, already settled, at every size. */
+  const REST_T = Math.asin((2 - 2.5) / 2.2) / 0.35;
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; },
+    rest() { for (let i = 0; i < 6; i++) ws[i] = widthAt(i, drift(REST_T)); return REST_T; },
     draw(c, t, dt, p) {
       c.fillStyle = T.field; c.fillRect(0, 0, W, H);
-      const fc = p.a > 0.3 ? lerp(2.5 + 2.2 * Math.sin(t * 0.35), p.x * 6 - 0.5, clamp(p.a * 1.4)) : 2.5 + 2.2 * Math.sin(t * 0.35);
+      const fc = p.a > 0.3 ? lerp(drift(t), p.x * 6 - 0.5, clamp(p.a * 1.4)) : drift(t);
       const k = 1 - Math.exp(-dt * 7);
       let sum = 0;
-      for (let i = 0; i < 6; i++) { const tw = 1 + 3.4 * Math.exp(-Math.pow((i - fc) / 0.85, 2)); ws[i]! += (tw - ws[i]!) * k; sum += ws[i]!; }
+      for (let i = 0; i < 6; i++) { const tw = widthAt(i, fc); ws[i]! += (tw - ws[i]!) * k; sum += ws[i]!; }
       const gap = 3, avail = W - gap * 5;
       let x = 0; const VW = H * 1.6;
       for (let i = 0; i < 6; i++) {

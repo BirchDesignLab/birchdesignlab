@@ -11,20 +11,26 @@
  *  - a style is written only when its rounded value changes;
  *  - a canvas is resized only when its box (or the pixel ratio) changes;
  *  - the loop sleeps when the tab is hidden, the List shows, or the wall is
- *    scrolled out of view.
+ *    scrolled out of view;
+ *  - a tile rests on its rest frame and costs no drawing until it wakes: lit
+ *    by the lamp, hovered, focused, open, or the middle tile on a phone. Once
+ *    nothing keeps it awake it eases back to that frame over REST_MS and stops.
  *
  * Entry point: mountWall(). It reads the markup LabWall.astro rendered.
  */
 import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
-import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
-import type { Rect } from './layout';
-import { ARROW_SVG, LIVE_ATTR, TILE_ATTR, TILE_CAP, aboveWall, measureWall, sizeClass } from './reserve';
+import {
+  AWAY_MS, DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, LAMP_INNER, LINGER_MS, LIT_SLEEP, LIT_WAKE, lampRuns, lampStart, lingerRound, litCover, revealSteps, rimLit,
+} from './lamp';
+import type { Rect, WallKind } from './layout';
+import { ARROW_SVG, LIVE_ATTR, POSTER_IDS, TILE_ATTR, TILE_CAP, aboveWall, measureWall, posterSrc, sizeClass } from './reserve';
+import { wallKind } from './layout';
 import { hasMini, loadMini } from './minis';
 import type { LoadedMini } from './minis';
 import { counterLabel, hashFor, inFilter, readFilter, stepTarget, tryLine } from './model';
 import type { Filter, View } from './model';
-import type { Mini, MiniEnv, Pointer, WallEntry } from './types';
+import type { Mini, MiniEnv, Pointer, RestSize, WallEntry } from './types';
 
 export type { View } from './model';
 
@@ -45,10 +51,13 @@ export interface WallHandle {
   destroy(): void;
 }
 
-/** Resting pieces tick at about 15 fps. */
-const IDLE_MS = 66;
 /** The widest pixel ratio a canvas is drawn at. */
 const MAX_DPR = 2;
+/** How long a tile takes to ease back to its rest frame once nothing keeps it awake, ms. */
+const REST_MS = 400;
+/** The pointer as a resting miniature sees it: centred, idle. */
+const restPointer = (): Pointer => ({ x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, a: 0 });
+const easeInOut = (u: number): number => u * u * (3 - 2 * u);
 
 interface Written {
   x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; lit: number; tf: string;
@@ -92,10 +101,21 @@ interface Tile {
   depth: number;
   /** How strongly the lamp lights the tile's rim, eased (0..1). */
   lit: number;
+  /** The lamp's pool covers the tile (LIT_WAKE in, LIT_SLEEP out): it wakes. */
+  lamped: boolean;
+  /** Something keeps the tile awake this frame: lit, hovered, focused, open or flying open or shut. */
+  awake: boolean;
+  /** The pointer is playing it (a mouse over it, or a finger held on it). */
+  driven: boolean;
+  /** The canvas holds the rest frame and the live miniature sits at it: nothing is drawn until the tile wakes or its box changes. */
+  atRest: boolean;
+  /** The miniature's own clock, seconds: it runs only while the tile is awake, so waking plays on from the rest frame. */
+  clock: number;
+  /** How much of the live picture shows over the rest frame while the tile eases between them (1 awake, 0 at rest). */
+  mixA: number;
+  /** While it eases: the rest frame, the fresh miniature that drew it (it takes over at rest), its time, and the live picture. */
+  fade: { poster: HTMLCanvasElement; mini: Mini; t: number; live: HTMLCanvasElement } | null;
   p: Pointer;
-  last: number;
-  born: number;
-  t0: number;
   v: { sc: number; rx: number; ry: number; tx: number; ty: number; dim: number };
   w: Written;
 }
@@ -165,6 +185,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   let filt: Filter = readFilter(catalogEl?.dataset.filter);
   let dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
   let isPhone = false;
+  let kind: WallKind = 'desk';
   let cardReserve = 0;
   let current: Tile | null = null;
   let pushed = false;
@@ -193,6 +214,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
         if (!src) return null;
         im = new Image();
         im.decoding = 'async';
+        // a resting tile draws its rest frame again once its picture is here
+        im.addEventListener('load', () => { const t = tiles.find((x) => x.e.id === id); if (t) t.need = true; });
         im.src = src;
         images.set(id, im);
       }
@@ -219,15 +242,18 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', 'Open ' + e.title);
-    el.style.setProperty('--i', String(idx));
+    // A tile the page hung already carries its place in the load reveal (reserve.ts, by distance from the lamp): changing it now would restart its fade.
+    if (!adopted) el.style.setProperty('--i', String(idx));
     if (adopted) {
       // Its frame and caption are already on the wall; the picture's canvas goes in under the veil and fades in once drawn.
       const veil0 = need<HTMLElement>(el, '.lw-veil');
       if (animated) veil0.parentElement?.insertBefore(document.createElement('canvas'), veil0);
     } else {
       el.className = 'lw-tile';
+      // the rest frame as a picture under the canvas until the miniature draws (reserve.ts), as on a tile the page hung
+      const poster = animated && POSTER_IDS.includes(e.id) ? '<img class="lw-poster" alt="" draggable="false" decoding="async" src="' + posterSrc(e.id, currentScheme(), wallKind(window.innerWidth)) + '">' : '';
       el.innerHTML =
-        '<div class="lw-face">' + (animated ? '<canvas></canvas>' : '') + '<div class="lw-veil"></div></div>' +
+        '<div class="lw-face">' + poster + (animated ? '<canvas></canvas>' : '') + '<div class="lw-veil"></div></div>' +
         '<div class="lw-cap"><span class="lw-d"></span><span class="lw-t"></span><span class="lw-k"></span><span class="lw-o">Open ' + ARROW_SVG + '</span></div>';
       need(el, '.lw-d').textContent = e.designation;
       need(el, '.lw-t').textContent = e.title;
@@ -244,8 +270,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       wall: { x: 0, y: 0, w: 10, h: 10 }, cur: null,
       open: false, exit: 0, flying: false, hot: false, focus: false, vis: false, intent: false, need: true,
       cf: 1, oa: 0, W: 0, H: 0, dpr: 0, depth: 0.7, lit: 0,
-      p: { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, a: 0 },
-      last: 0, born: performance.now(), t0: 0,
+      lamped: false, awake: false, driven: false, atRest: true, clock: 0, mixA: 0, fade: null,
+      p: restPointer(),
       v: { sc: 1, rx: 0, ry: 0, tx: 0, ty: 0, dim: 0 },
       w: { x: NaN, y: NaN, w: NaN, h: NaN, fh: NaN, cf: -1, r: -1, dim: -1, lit: -1, tf: '' },
     };
@@ -298,6 +324,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     const L = measureWall(wallEl, entries.map((e) => e.id));
     const wasPhone = isPhone;
     isPhone = L.phone;
+    kind = L.kind;
     // The open piece's words carry the counter on the phone layout only: write them again if the layout changed under it.
     if (isPhone !== wasPhone && metaOf) writeMeta(metaOf);
     for (const s of tiles) {
@@ -309,11 +336,15 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       if (!s.cur) s.cur = { ...s.wall };
       s.need = true;
     }
+    linger.round = lingerRound(tiles.map((s) => ({ id: s.e.id, area: s.wall.w * s.wall.h })));
     if (current) measureBar();
   }
 
   // ---- pointer ----
-  const ptr = { x: -1, y: -1, in: false, type: 'mouse', down: false, last: 0 };
+  // gone: when the pointer last left the window (or the finger lifted); the page starts as if it had just left.
+  const ptr = { x: -1, y: -1, in: false, type: 'mouse', down: false, last: 0, gone: performance.now() };
+  /** The lamp's own round when no pointer leads it: the tile it lingers on and since when. */
+  const linger: { round: string[]; i: number; id: string | null; since: number } = { round: [], i: -1, id: null, since: 0 };
   const track = (ev: PointerEvent): void => {
     ptr.x = ev.clientX; ptr.y = ev.clientY; ptr.type = ev.pointerType || 'mouse'; ptr.in = true; ptr.last = performance.now();
   };
@@ -321,12 +352,12 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   on(window, 'pointerdown', (ev) => { track(ev); ptr.down = true; }, { passive: true });
   const release = (ev: PointerEvent): void => {
     ptr.down = false;
-    if (ev.pointerType === 'touch') ptr.in = false;
+    if (ev.pointerType === 'touch') { ptr.in = false; ptr.gone = performance.now(); }
     touchHold = null;
   };
   on(window, 'pointerup', release, { passive: true });
   on(window, 'pointercancel', release, { passive: true });
-  const onLeave = (): void => { ptr.in = false; };
+  const onLeave = (): void => { if (ptr.in) ptr.gone = performance.now(); ptr.in = false; };
   root.addEventListener('pointerleave', onLeave);
   disposers.push(() => root.removeEventListener('pointerleave', onLeave));
   on(window, 'blur', onLeave);
@@ -638,30 +669,99 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     s.ctx = null;
     stillFor(s.face, s.veil, s.e);
   }
-  function build(s: Tile): void {
-    if (!s.mod) return;
+  /** A new instance of the tile's miniature, sized to its box; null (and the tile's still put back) if it will not build. */
+  function freshMini(s: Tile): Mini | null {
+    if (!s.mod) return null;
     try {
-      s.mini = s.mod.factory(env);
-      s.mini.resize(s.W, s.H, s.dpr);
-      s.t0 = s.mini.t0 || 0;
+      const m = s.mod.factory(env);
+      m.resize(s.W, s.H, s.dpr);
+      return m;
     } catch (err) {
       console.error(s.e.id, err);
       breakTile(s);
+      return null;
     }
   }
-  function render(s: Tile, now: number, dt: number): void {
-    if (!s.mini || !s.ctx) return;
-    const t = (now - s.born) / 1000 + s.t0;
-    const c = s.ctx;
+  /** The rest frame this tile shows in the box it is in now. */
+  const restSize = (s: Tile): RestSize => (s.open ? 'open' : isPhone ? 'phone' : kind === 'tablet' ? 'tablet' : 'desktop');
+  function markDrawn(s: Tile): void {
+    if (s.drawn) return;
+    // The first frame is down: the picture fades in over the frame and the caption that were already there.
+    s.drawn = true;
+    s.canvas?.classList.add('lw-drawn');
+  }
+  /** One frame of `mini` into `c` at time t. */
+  function paint(s: Tile, mini: Mini, c: CanvasRenderingContext2D, t: number, dt: number, p: Pointer): void {
     c.save();
     c.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
-    try { s.mini.draw(c, t, dt, s.p); } catch (err) { if (!s.err) { console.error(s.e.id, err); s.err = true; } }
+    try { mini.draw(c, t, dt, p); } catch (err) { if (!s.err) { console.error(s.e.id, err); s.err = true; } }
     c.restore();
-    if (!s.drawn) {
-      // The first frame is down: the picture fades in over the frame and the caption that were already there.
-      s.drawn = true;
-      s.canvas?.classList.add('lw-drawn');
+  }
+  /** Draw `mini`'s rest frame into `c` (it sets itself up for this box) and return the time it was drawn at. */
+  function drawRest(s: Tile, mini: Mini, c: CanvasRenderingContext2D): number {
+    let t = mini.t0 || 0;
+    try { if (mini.rest) t = mini.rest(restSize(s)); } catch (err) { if (!s.err) { console.error(s.e.id, err); s.err = true; } }
+    paint(s, mini, c, t, 0, restPointer());
+    return t;
+  }
+  /** The live frame, onto the tile's canvas. */
+  function render(s: Tile, dt: number): void {
+    if (!s.mini || !s.ctx) return;
+    paint(s, s.mini, s.ctx, s.clock, dt, s.p);
+    markDrawn(s);
+  }
+  /** The tile's first miniature: it goes up on its rest frame. */
+  function build(s: Tile): void {
+    const m = freshMini(s);
+    if (!m || !s.ctx) return;
+    s.mini = m;
+    s.clock = drawRest(s, m, s.ctx);
+    s.atRest = true;
+    s.mixA = 0;
+    s.fade = null;
+    markDrawn(s);
+  }
+  const blankLike = (src: HTMLCanvasElement): HTMLCanvasElement => {
+    const c = document.createElement('canvas');
+    c.width = src.width;
+    c.height = src.height;
+    return c;
+  };
+  /** Start easing back to rest: the rest frame from a fresh miniature, and the live picture as it stands. */
+  function beginRest(s: Tile): boolean {
+    if (!s.canvas) return false;
+    const m = freshMini(s);
+    if (!m) return false;
+    const poster = blankLike(s.canvas), live = blankLike(s.canvas);
+    const pc = poster.getContext('2d'), lc = live.getContext('2d');
+    if (!pc || !lc) return false;
+    const t = drawRest(s, m, pc);
+    lc.drawImage(s.canvas, 0, 0);
+    s.fade = { poster, mini: m, t, live };
+    return true;
+  }
+  /** The rest frame with the live picture over it at `a`. */
+  function blend(s: Tile, a: number): void {
+    const f = s.fade, c = s.ctx;
+    if (!f || !c) return;
+    c.save();
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalAlpha = 1;
+    c.drawImage(f.poster, 0, 0);
+    if (a > 0) { c.globalAlpha = a; c.drawImage(f.live, 0, 0); }
+    c.restore();
+    markDrawn(s);
+  }
+  /** The tile's box changed: size the miniature to it and draw it again, at rest or live (an ease under way ends where it is headed). */
+  function refresh(s: Tile, awake: boolean): void {
+    if (!s.mini || !s.ctx) return;
+    if (s.fade) {
+      if (awake) { s.fade = null; s.mixA = 1; }
+      else { s.mini = s.fade.mini; s.fade = null; s.atRest = true; s.mixA = 0; s.p = restPointer(); }
     }
+    s.mini.resize(s.W, s.H, s.dpr);
+    if (s.atRest) { s.clock = drawRest(s, s.mini, s.ctx); markDrawn(s); }
+    else render(s, 0);
   }
 
   // ---- who is awake ----
@@ -691,6 +791,19 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     return best;
   }
 
+  // ---- the lamp's own round, when no pointer leads it ----
+  const lingerTile = (id: string): Tile | undefined => { const t = tileFor(id); return t && matches(t) ? t : undefined; };
+  /** The next tile in the round that the filter shows, not the one it is on now. */
+  function nextLinger(now: number): void {
+    const round = linger.round;
+    for (let k = 0; k < round.length; k++) {
+      linger.i = (linger.i + 1) % round.length;
+      const id = round[linger.i]!;
+      if (id !== linger.id && lingerTile(id)) { linger.id = id; linger.since = now; return; }
+    }
+    linger.id = null;
+  }
+
   // ---- the loop ----
   function tick(now: number): void {
     raf = 0;
@@ -698,19 +811,19 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     raf = requestAnimationFrame(tick);
     const dt = Math.min((now - lastNow) / 1000 || 0.016, 0.05);
     lastNow = now;
-    const Ts = now / 1000;
     const vw = root.clientWidth, vh = window.innerHeight;
     const cr = wallEl.getBoundingClientRect(), cw = cr.width, ch = cr.height;
     const qx = ptr.x - cr.left, qy = ptr.y - cr.top;
     const mouse = ptr.in && ptr.type !== 'touch';
     const inWall = mouse && qx >= 0 && qx <= cw && qy >= 0 && qy <= ch;
 
-    // who is awake
+    // who is awake: the tile under the mouse; on the phone the tile at the middle of the screen (scroll-wake), and on a touch
+    // screen with no lamp to wake things the same; a focused tile when no pointer says otherwise
     let hov: Tile | null = null;
     if (!current) {
       if (touchHold) hov = touchHold;
       else if (mouse) hov = inWall ? hitTile(qx, qy) : null;
-      else if (coarse || isPhone) hov = midTile(cr.top, cw, vh);
+      else if (isPhone || (coarse && !lampEl)) hov = midTile(cr.top, cw, vh);
       if (!hov && !mouse) { const f = tiles.find((s) => s.focus && matches(s)); if (f) hov = f; }
       if (!hov && mouse) { const f = tiles.find((s) => s.focus && matches(s)); if (f && !inWall && !ptr.down) hov = f; }
     }
@@ -722,14 +835,38 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     par.x += (pt.x - par.x) * kp;
     par.y += (pt.y - par.y) * kp;
 
-    // the lamp follows the pointer on the wall (or a finger that is down), and otherwise drifts by itself
+    // the lamp: it follows the mouse anywhere in the window (off the wall it lights nothing), or a finger that is down; on the
+    // phone it sits on the tile at the middle of the screen; with no pointer (a touch screen, or the mouse gone from the window
+    // for a while) it lingers on one tile at a time; in between it holds still
     const lampOn = lampEl !== null;
+    /** While the lamp lingers by itself, the one tile it lingers on: only that one wakes, so the wall shows one piece at a time. */
+    let lingerOn: Tile | null = null, lingering = false;
     if (lampEl && fx) {
       const box = { cw, ch, top: cr.top, vh };
-      const phoneLike = coarse || isPhone;
       if (!lamp.init) { const at = lampStart(box, isPhone); lamp.x = at.x; lamp.y = at.y; lamp.init = true; }
-      const aim = inWall || (ptr.type === 'touch' && ptr.down) ? { x: qx, y: qy } : driftTarget(Ts, box, phoneLike);
-      const kl = 1 - Math.exp(-dt * (inWall ? 7 : 2.4));
+      let aim: { x: number; y: number } = { x: lamp.x, y: lamp.y };
+      let rate = 2.4;
+      const away = coarse || (!ptr.in && now - ptr.gone >= AWAY_MS);
+      // a pointer that leads the lamp ends its round: the next round starts again at the lead piece
+      if (ptr.type === 'touch' && ptr.down) { aim = { x: qx, y: qy }; rate = 7; linger.id = null; linger.i = -1; }
+      else if (isPhone) {
+        const m = hov ?? midTile(cr.top, cw, vh);
+        if (m) aim = { x: m.wall.x + m.wall.w / 2, y: clamp(m.wall.y + m.wall.h / 2, -cr.top + 60, -cr.top + vh - 60) };
+      } else if (mouse) {
+        const out = LAMP_INNER * 1.6;
+        aim = { x: clamp(qx, -out, cw + out), y: clamp(qy, -out, ch + out) };
+        rate = 7;
+        linger.id = null;
+        linger.i = -1;
+      } else if (away) {
+        if (!linger.id || now - linger.since >= LINGER_MS || !lingerTile(linger.id)) nextLinger(now);
+        const t = linger.id ? lingerTile(linger.id) : undefined;
+        if (t) aim = { x: t.wall.x + t.wall.w / 2, y: t.wall.y + t.wall.h / 2 };
+        rate = 1.6;
+        lingering = true;
+        lingerOn = t ?? null;
+      }
+      const kl = 1 - Math.exp(-dt * rate);
       lamp.x += (aim.x - lamp.x) * kl;
       lamp.y += (aim.y - lamp.y) * kl;
       const lx = lamp.x.toFixed(1), ly = lamp.y.toFixed(1);
@@ -774,13 +911,10 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       if (sig(s.cf) !== w.cf) { s.cap.style.opacity = String(sig(s.cf)); s.cap.style.transform = 'translateY(' + sig((1 - s.cf) * 10) + 'px)'; w.cf = sig(s.cf); }
       if (sig(rad) !== w.r) { st.setProperty('--r', sig(rad) + 'px'); w.r = sig(rad); }
 
-      // ---- yield: the hovered tile comes forward, neighbours give way ----
+      // ---- yield: the hovered tile comes forward, neighbours give way (nothing bobs at rest) ----
       const bc = { x: s.wall.x + s.wall.w / 2, y: s.wall.y + s.wall.h / 2 };
       let sc = 1, rx = 0, ry = 0, tx = 0, ty = 0, dim = 0;
       if (fx) {
-        const breathe = hov ? 0 : 1;
-        sc += 0.004 * Math.sin(Ts * 0.6 + s.idx * 1.3) * breathe;
-        ty += 1.4 * Math.sin(Ts * 0.45 + s.idx * 0.9) * breathe;
         if (mouse) { tx -= par.x * s.depth * 6; ty -= par.y * s.depth * 5; ry -= par.x * 1.3; rx += par.y * 1.0; }
         if (hov === s) {
           const hs = mouse ? clamp(22 / Math.min(s.wall.w, s.wall.h), 0.04, 0.2) : 0.03;
@@ -813,11 +947,16 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
         if (Math.abs(goal - s.lit) < 0.004) s.lit = goal;
         if (sig(s.lit) !== w.lit) { s.rim.style.opacity = String(sig(s.lit)); w.lit = sig(s.lit); }
       }
+      // ---- the lamp wakes what its pool covers (on the phone the middle tile wakes instead) ----
+      const cover = lampOn && fx && !isPhone && matches(s) && (!lingering || s === lingerOn) ? litCover(s.wall, lamp.x, lamp.y) : 0;
+      s.lamped = s.lamped ? cover >= LIT_SLEEP : cover >= LIT_WAKE;
 
-      // ---- the miniature ----
+      // ---- the miniature: it rests on its rest frame and draws only while awake, or while it eases back to rest ----
       const top = cr.top + c.y;
       const onScreen = top < vh + 140 && top + c.h > -140 && c.x < vw + 40 && c.x + c.w > -40;
       s.vis = onScreen && (!current || s.open || s.flying);
+      const awake = s.vis && (hov === s || s.open || s.oa > 0 || s.exit !== 0 || (s.focus && !current) || s.lamped);
+      s.awake = awake;
       const W = Math.round(c.w), H = Math.round(faceH);
       if (W !== s.W || H !== s.H || (s.canvas && s.mini && s.dpr !== dpr)) {
         s.W = W; s.H = H;
@@ -825,8 +964,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
           s.dpr = dpr;
           s.canvas.width = Math.round(W * dpr);
           s.canvas.height = Math.round(H * dpr);
-          if (s.mini) { s.mini.resize(W, H, dpr); render(s, now, 0.016); }
-          s.need = true;
+          if (s.mini) refresh(s, awake);
+          else s.need = true;
         }
       }
       if (!s.vis || !s.canvas) continue;
@@ -837,40 +976,59 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
         s.canvas.width = Math.round(s.W * dpr);
         s.canvas.height = Math.round(s.H * dpr);
         build(s);
-        s.last = now - Math.random() * IDLE_MS;
-        s.need = true;
+        s.need = false;
       }
       if (!s.mini) continue;
       const p = s.p;
-      const driven = (hov === s && (mouse || touchHold === s)) || (s.open && ptr.in && now - ptr.last < 2600);
-      const wake = driven || hov === s || s.open || (s.focus && !current);
-      if (wake && !s.intent) {
+      const driven = awake && ((hov === s && (mouse || touchHold === s)) || (s.open && ptr.in && now - ptr.last < 2600));
+      if (awake && !s.intent) {
         if (driven) {
           p.tx = clamp((ptr.x - (cr.left + c.x)) / Math.max(1, c.w));
           p.ty = clamp((ptr.y - (cr.top + c.y)) / Math.max(1, faceH));
           p.x = p.tx; p.y = p.ty;
         } else { p.tx = p.x; p.ty = p.y; }
-        s.mini.enter?.(p, (now - s.born) / 1000 + s.t0);
       }
-      s.intent = wake;
-      const live = wake || p.a > 0.02;
-      if (!(live || s.need || now - s.last >= IDLE_MS)) continue;
-      const sdt = s.last ? Math.min((now - s.last) / 1000, 0.25) : 0.016;
-      s.last = now;
-      s.need = false;
-      if (live) {
+      // a pointer that starts playing the piece is the visitor's own move: the piece answers it (a replay, a regrowth)
+      if (driven && !s.driven) s.mini.enter?.(p, s.clock);
+      s.intent = awake;
+      s.driven = driven;
+      if (awake) {
+        // the live miniature sits at its rest frame: it plays on from there, no jump
+        if (s.atRest) { s.atRest = false; s.mixA = 1; }
         if (driven) {
           p.tx = clamp((ptr.x - (cr.left + c.x)) / Math.max(1, c.w));
           p.ty = clamp((ptr.y - (cr.top + c.y)) / Math.max(1, faceH));
-        } else if (wake) {
+        } else {
           p.tx = 0.5 + 0.32 * Math.sin(now / 1700 + s.idx);
           p.ty = 0.5 + 0.28 * Math.sin(now / 2300 + s.idx * 2);
         }
-        const k = 1 - Math.exp(-sdt * 9), ta = driven ? 1 : wake ? 0.85 : 0;
-        p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; p.a += (ta - p.a) * (1 - Math.exp(-sdt * 5));
-        if (p.a < 0.003 && !ta) p.a = 0;
+        const k = 1 - Math.exp(-dt * 9), ta = driven ? 1 : 0.85;
+        p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; p.a += (ta - p.a) * (1 - Math.exp(-dt * 5));
+        s.clock += dt;
+        const f = s.fade;
+        if (f) {
+          // woken while it eased to rest: the live picture comes back over the rest frame
+          const lc = f.live.getContext('2d');
+          if (lc) paint(s, s.mini, lc, s.clock, dt, p);
+          s.mixA = Math.min(1, s.mixA + (dt * 1000) / REST_MS);
+          blend(s, easeInOut(s.mixA));
+          if (s.mixA >= 1) s.fade = null;
+        } else render(s, dt);
+      } else if (!s.atRest) {
+        // nothing keeps it awake: ease back to the rest frame, then stop drawing
+        if (!s.fade && !beginRest(s)) continue;
+        s.mixA = Math.max(0, s.mixA - (dt * 1000) / REST_MS);
+        blend(s, easeInOut(s.mixA));
+        const f = s.fade;
+        if (s.mixA <= 0 && f) {
+          s.mini = f.mini; s.clock = f.t; s.fade = null; s.atRest = true; s.p = restPointer();
+        }
+      } else if (s.need && s.ctx) {
+        // at rest, only a reason to draw draws: the scheme changed, a picture arrived, a face landed
+        s.clock = drawRest(s, s.mini, s.ctx);
+        markDrawn(s);
       }
-      render(s, now, sdt);
+      s.need = false;
     }
   }
 
@@ -922,7 +1080,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     layout();
     for (const s of tiles) {
       s.need = true;
-      if (s.mini && s.W) s.mini.resize(s.W, s.H, s.dpr);
+      // a face that landed changes how the type fits: size and draw again, at rest or live
+      if (s.mini && s.W) refresh(s, s.awake);
     }
   };
   if (document.fonts) {
@@ -938,6 +1097,15 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   }
 
   layout();
+  // Tiles this engine made itself (the page hung none: it opened on the List) fade in by distance from the lamp's starting point too.
+  {
+    const made = tiles.filter((s) => !framed.has(s.e.id));
+    if (made.length) {
+      const cr = wallEl.getBoundingClientRect();
+      const steps = revealSteps(Object.fromEntries(made.map((s) => [s.e.id, s.wall])), lampStart({ cw: cr.width, ch: cr.height, top: cr.top, vh: window.innerHeight }, isPhone));
+      for (const s of made) s.el.style.setProperty('--i', String(steps[s.e.id] ?? s.idx));
+    }
+  }
   start();
 
   /** A link to a piece: open it over the wall, with the filter set to All if the filter would have hidden it. */

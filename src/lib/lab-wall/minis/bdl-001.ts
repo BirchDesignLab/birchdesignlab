@@ -37,6 +37,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; layers = []; rnd = mulberry32(2026); spawn(0, 0.5, 0.5, true); }, // wall: deterministic so per-frame resizes do not reshuffle
+    // rest: the whole trunk grown, at every size (the growth wave is what waking shows)
+    rest() { return 0; },
     enter(p, t) { spawn(t, p.x, p.y, false); },
     draw(c, t, _dt, p) {
       const dark = T.dark;

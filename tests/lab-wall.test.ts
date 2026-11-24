@@ -3,6 +3,11 @@ import {
   VIEW_KEY, counterLabel, hashFor, idFromHash, inFilter, readFilter, readView, stepTarget, tryLine, writeView,
 } from '../src/lib/lab-wall/model';
 import { bestLines, fit, per } from '../src/lib/lab-wall/minis/shared';
+import { LAMP_INNER, LIT_SLEEP, LIT_WAKE, lingerRound, litCover, revealSteps } from '../src/lib/lab-wall/lamp';
+import { MINI_IDS } from '../src/lib/lab-wall/minis';
+import { POSTER_IDS, posterSrc } from '../src/lib/lab-wall/reserve';
+import { detail as bayouDetail } from '../src/lib/lab-wall/minis/bdl-009';
+import { detail as magnoliaDetail } from '../src/lib/lab-wall/minis/bdl-008';
 
 const store = (initial: Record<string, string> = {}) => {
   const data = { ...initial };
@@ -139,5 +144,61 @@ describe('fitting a miniature\'s type to its box', () => {
     expect(tall.size).toBeGreaterThan(fit(ctx(), opts[0]!, font, 40, 400));
     // a tie between a one-line and a two-line break goes to the one line
     expect(bestLines(ctx(), [['abcd'], ['ab', 'cd']], font, 400, 400, 20).lines).toHaveLength(1);
+  });
+});
+
+describe('the wall at rest, and what the lamp wakes', () => {
+  it('counts a small tile lit when about half of it is under the pool, and a big one when about half the pool is on it', () => {
+    const small = { x: 0, y: 0, w: 200, h: 120 };
+    expect(litCover(small, 100, 60)).toBeGreaterThan(0.97);
+    expect(litCover(small, 100, 60 + LAMP_INNER + 200)).toBe(0);
+    // the pool beside the tile: a sliver lit, not enough to wake it; nearer, enough
+    const beside = litCover(small, 200 + LAMP_INNER * 0.75, 60);
+    expect(beside).toBeGreaterThan(0.02);
+    expect(beside).toBeLessThan(LIT_SLEEP);
+    expect(litCover(small, 200 + LAMP_INNER * 0.4, 60)).toBeGreaterThan(LIT_WAKE);
+    const big = { x: 0, y: 0, w: 900, h: 700 };
+    expect(litCover(big, 450, 350)).toBeGreaterThan(0.97);
+    expect(litCover(big, 0, 0)).toBeGreaterThan(0.2);
+    expect(litCover(big, 0, 0)).toBeLessThan(LIT_WAKE);
+    expect(LIT_SLEEP).toBeLessThan(LIT_WAKE);
+  });
+  it('lingers on the lead and the three secondary tiles twice as often as the rest, and on every tile in a round', () => {
+    const areas = [
+      { id: 'lead', area: 100 }, { id: 's1', area: 50 }, { id: 's2', area: 48 }, { id: 's3', area: 46 },
+      { id: 'm1', area: 20 }, { id: 'm2', area: 19 }, { id: 'x1', area: 5 },
+    ];
+    const round = lingerRound(areas);
+    expect(round[0]).toBe('lead');
+    for (const a of areas) expect(round).toContain(a.id);
+    const n = (id: string) => round.filter((x) => x === id).length;
+    for (const big of ['lead', 's1', 's2', 's3']) expect(n(big)).toBeGreaterThanOrEqual(2 * n('m1'));
+    for (let i = 1; i < round.length; i++) expect(round[i]).not.toBe(round[i - 1]);
+    expect(lingerRound(areas.slice(0, 3))).toEqual(['lead', 's1', 's2']);
+  });
+  it('reveals tiles nearest the lamp first', () => {
+    const steps = revealSteps({ a: { x: 0, y: 0, w: 10, h: 10 }, b: { x: 100, y: 0, w: 10, h: 10 }, c: { x: 40, y: 0, w: 10, h: 10 } }, { x: 105, y: 5 });
+    expect(steps).toEqual({ b: 0, c: 1, a: 2 });
+  });
+  it('rests the menu and the price cards on whole rows: the heading whole above them, or left out whole', () => {
+    const fake = { font: '', letterSpacing: '0px', measureText: (t: string) => ({ width: t.length * parseFloat(fake.font) * 0.5 }) };
+    const c = fake as unknown as CanvasRenderingContext2D;
+    for (const [name, d] of [['bayou', bayouDetail], ['magnolia', magnoliaDetail]] as const) {
+      for (const W of [180, 240, 300, 380]) {
+        const tall = d.rest!(c, W, 2000), short = d.rest!(c, W, 90);
+        expect(tall, `${name} ${W} tall`).toBe(0);
+        // a heading is at most 13 * 1.15 or 1.5 high with its baseline at most pad + 13 * 1.2: the rest line sits below all of it
+        expect(short, `${name} ${W} short`).toBeGreaterThan(Math.round(W * 0.055) + 13 * 1.2 + 4);
+        expect(short, `${name} ${W} short is inside the strip`).toBeLessThan(d.height(c, W, 90));
+      }
+    }
+  });
+  it('has a rest frame for every miniature', async () => {
+    for (const id of MINI_IDS) {
+      const m = (await import(`../src/lib/lab-wall/minis/${id}.ts`)) as { default: unknown };
+      expect(typeof m.default, id).toBe('function');
+    }
+    expect(POSTER_IDS).toEqual([...MINI_IDS]);
+    expect(posterSrc('bdl-010', 'dark', 'desk')).toBe('/lab-wall/posters/bdl-010-dark-desk.webp');
   });
 });

@@ -43,6 +43,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; },
+    // rest: the tree turned a little off square, so its branches read in depth, at every size
+    rest() { return 0; },
     draw(c, t, dt, p) {
       spin += dt * 0.16 * (1 - p.a);
       const yaw = spin + (p.x - 0.5) * 5.2 * p.a;

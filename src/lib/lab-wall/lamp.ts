@@ -66,6 +66,72 @@ export function rimLit(rect: Rect, lx: number, ly: number): number {
   return Math.exp(-((Math.hypot(dx, dy) / 230) ** 2));
 }
 
+/**
+ * The pool's inner radius, CSS px: inside it the wall is lit (the dusk only starts to darken past about 200px,
+ * lab-wall.css). What lies under it is what the lamp wakes.
+ */
+export const LAMP_INNER = 200;
+/** A tile wakes when this much of it lies under the pool's inner radius (or, for a tile bigger than the pool, this much of the pool lies on it)... */
+export const LIT_WAKE = 0.5;
+/** ...and goes back to rest when that falls under this, so a lamp at the edge does not flicker it awake and asleep. */
+export const LIT_SLEEP = 0.35;
+
+/**
+ * How much the lamp's inner pool covers a tile, 0..1: the area of the tile under the disc, over the smaller of the two
+ * areas. A small tile counts as lit when about half of it is under the pool; a tile bigger than the pool when about half
+ * the pool is on it. Sampled on a 16 x 16 grid over the part of the tile the disc's square overlaps, ample for a threshold.
+ */
+export function litCover(rect: Rect, lx: number, ly: number, r = LAMP_INNER): number {
+  if (rect.w <= 0 || rect.h <= 0 || r <= 0) return 0;
+  const x0 = Math.max(rect.x, lx - r), x1 = Math.min(rect.x + rect.w, lx + r);
+  const y0 = Math.max(rect.y, ly - r), y1 = Math.min(rect.y + rect.h, ly + r);
+  if (x1 <= x0 || y1 <= y0) return 0;
+  const N = 16, r2 = r * r, bw = x1 - x0, bh = y1 - y0;
+  let inside = 0;
+  for (let i = 0; i < N; i++) {
+    const x = x0 + ((i + 0.5) / N) * bw - lx;
+    for (let j = 0; j < N; j++) {
+      const y = y0 + ((j + 0.5) / N) * bh - ly;
+      if (x * x + y * y <= r2) inside++;
+    }
+  }
+  const under = (inside / (N * N)) * bw * bh;
+  return Math.min(1, under / Math.min(rect.w * rect.h, Math.PI * r2));
+}
+
+/** How long the lamp lingers on one tile when no pointer leads it, travel included, ms. */
+export const LINGER_MS = 5000;
+/** How long after the mouse leaves the window the lamp starts lingering by itself, ms (until then it holds still). */
+export const AWAY_MS = 2500;
+
+/**
+ * The order the lamp visits tiles in when no pointer leads it: the biggest four (the lead and the three secondary pieces)
+ * twice as often as the rest, one of the others after every two of them, so the wall shows one piece waking at a time and
+ * mostly the pieces it leads with. `areas` is each tile's id and area; the result is one full round of ids.
+ */
+export function lingerRound(areas: Array<{ id: string; area: number }>): string[] {
+  const by = [...areas].sort((a, b) => b.area - a.area || (a.id < b.id ? -1 : 1)).map((a) => a.id);
+  const big = by.slice(0, 4), rest = by.slice(4);
+  if (!rest.length) return big;
+  const out: string[] = [];
+  let b = 0;
+  for (const id of rest) {
+    out.push(big[b % big.length]!, big[(b + 1) % big.length]!, id);
+    b += 2;
+  }
+  // every big tile at least twice a round
+  while (b < big.length * 2) { out.push(big[b % big.length]!); b++; }
+  return out;
+}
+
+/** The order tiles fade in on load: by distance of their centres from the lamp's starting point, nearest first. Returns each id's step. */
+export function revealSteps(rects: Record<string, Rect>, at: { x: number; y: number }): Record<string, number> {
+  const ids = Object.keys(rects);
+  const d = (id: string) => { const r = rects[id]!; return Math.hypot(r.x + r.w / 2 - at.x, r.y + r.h / 2 - at.y); };
+  const order = [...ids].sort((a, b) => d(a) - d(b) || (a < b ? -1 : 1));
+  return Object.fromEntries(order.map((id, i) => [id, i]));
+}
+
 /** The wall's size and place in the window, as the lamp needs them. */
 export interface LampBox {
   /** Wall width and height, CSS px. */

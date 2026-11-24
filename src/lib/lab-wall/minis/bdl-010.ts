@@ -13,6 +13,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; },
+    // rest: one complete design style card (Bauhaus, which composes for wide and tall boxes alike), no crossing under way, at every size
+    rest() { return 0; },
     draw(c, t, _dt, p) {
       const want = Math.min(5, Math.floor(p.x * 6));
       if (p.a > 0.5) { const tgt = portal ? (portal as Portal).to : cur; if (want !== tgt) { go(want, t, p.x * W, p.y * H); nextAuto = t + 6; } }

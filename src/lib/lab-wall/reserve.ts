@@ -10,7 +10,8 @@
  * measureWall and placeTile read the page (browser only); the rest is pure.
  */
 import { DESK_MIN_HEIGHT, MAPS, PHONE_BELOW, TABLET_BELOW, WALL_MAX, layoutWall, wallBleed } from './layout';
-import type { Rect, WallLayout } from './layout';
+import type { Rect, WallKind, WallLayout } from './layout';
+import { MINI_IDS } from './minis';
 
 /** The caption bar under each picture on the wall. */
 export const TILE_CAP = 28;
@@ -25,6 +26,17 @@ export const TILE_ATTR = 'data-lw-id';
 export const LIVE_ATTR = 'data-lw-live';
 /** The attribute the inline script keeps on the wall while the engine is not here: the id of the framed tile clicked last (boot.ts hands it to the engine). */
 export const EARLY_ATTR = 'data-lw-early';
+
+/**
+ * A miniature's rest frame as a picture, shown in its tile from the first paint until the engine draws the real one over
+ * it, so no tile is ever blank. One per piece, scheme and map; made by scripts/lab-wall/posters.mjs (run it again after a
+ * miniature's rest frame changes). The inline script below builds the same path.
+ */
+export const POSTER_DIR = '/lab-wall/posters/';
+export const POSTER_IDS: readonly string[] = MINI_IDS;
+export function posterSrc(id: string, scheme: 'light' | 'dark', kind: WallKind): string {
+  return POSTER_DIR + id + '-' + scheme + '-' + kind + '.webp';
+}
 
 /** The custom property on the wall's page that holds the least height the page may have while the wall fills the window (lab-wall.css reads it). */
 export const PAGE_MIN_VAR = '--lw-page-min';
@@ -69,13 +81,16 @@ export const RESERVE_INLINE = `(function () {
     if (typeof rid === 'string' && !own.call(seen, rid)) { seen[rid] = 1; ids.push(rid); }
   }
   var hung = [];
+  var POSTERS = ${JSON.stringify(MINI_IDS)};
+  var kindNow = 'desk', startAt = null;
   var r2 = function (n) { return Math.round(n * 100) / 100; };
   var fit = function () {
     var p = w.parentElement;
     // The wall reaches past the page's column to the window's edges, or to its capped, centred width in a window wider than ${WALL_MAX}.
     if (p) w.style.setProperty('--lw-bleed', Math.max(0, p.getBoundingClientRect().left + (parseFloat(getComputedStyle(p).paddingLeft) || 0) - Math.max(0, ((doc.documentElement.clientWidth || window.innerWidth) - ${WALL_MAX}) / 2)).toFixed(2) + 'px');
     var iw = window.innerWidth;
-    var S = MAPS[iw < ${PHONE_BELOW} ? 'phone' : iw < ${TABLET_BELOW} ? 'tablet' : 'desk'];
+    kindNow = iw < ${PHONE_BELOW} ? 'phone' : iw < ${TABLET_BELOW} ? 'tablet' : 'desk';
+    var S = MAPS[kindNow];
     var map = S.cells, gap = S.gap, mapCols = S.cols, mapRows = S.rows, spC = S.spill.cols, spR = S.spill.rows;
     var perRow = Math.floor(mapCols / spC), spill = [], k;
     for (k = 0; k < ids.length; k++) if (!own.call(map, ids[k])) spill.push(ids[k]);
@@ -98,6 +113,9 @@ export const RESERVE_INLINE = `(function () {
       w.style.height = (base + Math.ceil(spill.length / perRow) * spR * (ch + gap)) + 'px';
       w.style.minHeight = '0';
     }
+    // where the lamp first hangs (lamp.ts, lampStart): the load reveal spreads out from it
+    var wtop = w.getBoundingClientRect().top;
+    startAt = { x: w.clientWidth * 0.64, y: kindNow === 'phone' ? window.innerHeight * 0.45 - wtop : (S.ratio === null ? Math.max(base, window.innerHeight - wtop) : base) * 0.36 };
     var cells = {};
     for (k = 0; k < ids.length; k++) cells[ids[k]] = own.call(map, ids[k]) ? map[ids[k]] : null;
     for (k = 0; k < spill.length; k++) cells[spill[k]] = [(k % perRow) * spC, mapRows + Math.floor(k / perRow) * spR, spC, spR];
@@ -106,6 +124,7 @@ export const RESERVE_INLINE = `(function () {
       if (!c) continue;
       var x = gap + c[0] * (cw + gap), y = gap + c[1] * (ch + gap), tw = c[2] * cw + (c[2] - 1) * gap, th = c[3] * ch + (c[3] - 1) * gap;
       t.className = 'lw-tile' + (tw < ${XS_BELOW} ? ' lw-xs' : '') + (tw < ${SM_BELOW} ? ' lw-sm' : '');
+      hung[k].cx = x + tw / 2; hung[k].cy = y + th / 2;
       t.style.left = r2(x) + 'px'; t.style.top = r2(y) + 'px'; t.style.width = r2(tw) + 'px'; t.style.height = r2(th) + 'px';
       hung[k].face.style.height = r2(Math.max(1, th - ${TILE_CAP})) + 'px';
     }
@@ -123,6 +142,7 @@ export const RESERVE_INLINE = `(function () {
       t.setAttribute('tabindex', '0');
       t.style.setProperty('--i', String(i));
       var face = mk('div', 'lw-face');
+      hung.push({ id: row.id, el: t, face: face, cx: 0, cy: 0 });
       face.appendChild(mk('div', 'lw-veil'));
       var cap = mk('div', 'lw-cap');
       cap.appendChild(mk('span', 'lw-d', row.designation));
@@ -131,10 +151,26 @@ export const RESERVE_INLINE = `(function () {
       var o = mk('span', 'lw-o'); o.innerHTML = 'Open ' + ${JSON.stringify(ARROW_SVG)};
       cap.appendChild(o);
       t.appendChild(face); t.appendChild(cap);
-      hung.push({ id: row.id, el: t, face: face });
     }
   } catch (e) { hung = []; /* the engine builds the tiles when it arrives */ }
   fit();
+  // The load reveal: each tile fades in by its distance from the lamp's starting point, nearest first (lamp.ts, revealSteps).
+  // And each miniature's rest frame as a picture under where its canvas will go, so the face is never blank.
+  try {
+    var scheme = doc.documentElement.getAttribute('data-scheme') === 'light' ? 'light' : 'dark';
+    var order = hung.slice(), sa = startAt || { x: 0, y: 0 };
+    var dist = function (h) { return Math.sqrt((h.cx - sa.x) * (h.cx - sa.x) + (h.cy - sa.y) * (h.cy - sa.y)); };
+    order.sort(function (a, b) { return dist(a) - dist(b) || (a.id < b.id ? -1 : 1); });
+    for (i = 0; i < order.length; i++) order[i].el.style.setProperty('--i', String(i));
+    for (i = 0; i < hung.length; i++) {
+      if (POSTERS.indexOf(hung[i].id) < 0) continue;
+      var im = doc.createElement('img');
+      im.className = 'lw-poster'; im.alt = ''; im.draggable = false; im.decoding = 'async';
+      im.onerror = function () { if (this.parentNode) this.parentNode.removeChild(this); };
+      im.src = '${POSTER_DIR}' + hung[i].id + '-' + scheme + '-' + kindNow + '.webp';
+      hung[i].face.insertBefore ? hung[i].face.insertBefore(im, hung[i].face.firstChild) : hung[i].face.appendChild(im);
+    }
+  } catch (e) { /* the tiles keep their frames and fade in in catalog order */ }
   for (i = 0; i < hung.length; i++) w.appendChild(hung[i].el);
   // A click, tap, Enter or Space on a framed tile before the engine is here is remembered on the wall, the last one
   // winning; boot.ts hands it to the engine, which opens that piece as a click after mount would. The engine puts its

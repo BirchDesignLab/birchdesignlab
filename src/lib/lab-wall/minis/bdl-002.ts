@@ -29,6 +29,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; },
+    // rest: the house palette and Marcellus, chips and swatches all showing, at every size
+    rest() { return 0; },
     enter(_p, t) { set((to.p + 1) % 3, (to.f + 1) % 3); nextAuto = t + 6; },
     draw(c, t, dt, p) {
       if (p.a > 0.5) set(Math.min(2, Math.floor(p.x * 3)), Math.min(2, Math.floor(p.y * 3)));

@@ -18,15 +18,23 @@ function size(c: CanvasRenderingContext2D, W: number): number {
 }
 
 const total = (f: number) => f * 1.5 * 1.6 + ROWS.length * f * 2 + f * 5.6;
+/** Where the rows start under the heading, and the most rows a box shows whole with the heading above them. */
+const rowsFrom = (f: number) => f * 1.5 * 1.6 + f * 0.6;
+const ROWS_WITH_HEADING = 3;
 
 /** In a small box: the menu's rows at a size that reads (dish, dotted leader, price), then the booking band, not the whole page shrunk. */
-const detail: Detail = {
+export const detail: Detail = {
   height(c, W) { return total(size(c, W)); },
+  rest(c, W, H) {
+    const f = size(c, W), rh = f * 2;
+    // the heading stays when it and three whole rows (and the line under the third) fit; otherwise the first row's baseline sits 1.6 lines down
+    return rowsFrom(f) + ROWS_WITH_HEADING * rh + f * 0.6 <= H ? 0 : rowsFrom(f) + rh - f * 1.6;
+  },
   build(c, W) {
     const f = size(c, W), pad = Math.round(W * 0.055), rh = f * 2;
     c.fillStyle = '#faf6ee'; c.fillRect(0, 0, W, total(f));
     heading(c, 'The Menu', pad, pad + f * 1.2, f * 1.5, '#1f1b15');
-    let yy = f * 1.5 * 1.6 + f * 0.6;
+    let yy = rowsFrom(f);
     for (const [n, pr] of ROWS) {
       const mkt = pr[0] === 'M', ps = f * (mkt ? 0.88 : 1);
       yy += rh;

@@ -34,10 +34,15 @@ function layout(f: number, W: number, lines: string[]): { card: number; cards: n
 }
 
 /** In a small box: the three price cards and the booking band at a size that reads, not the whole page shrunk. */
-const detail: Detail = {
+export const detail: Detail = {
   height(c, W) {
     const f = size(c, W);
     return layout(f, W, wrap(c, BAND, f * 1.15, W - Math.round(W * 0.055) * 2 - 14)).total;
+  },
+  rest(c, W, H) {
+    const f = size(c, W), L = layout(f, W, wrap(c, BAND, f * 1.15, W - Math.round(W * 0.055) * 2 - 14));
+    // the heading stays when it and two whole price cards fit; otherwise the first card sits just under the box's top edge
+    return L.cards + 2 * (L.card + f * 0.6) <= H ? 0 : L.cards - f * 0.6;
   },
   build(c, W) {
     const f = size(c, W), pad = Math.round(W * 0.055), lines = wrap(c, BAND, f * 1.15, W - pad * 2 - 14), L = layout(f, W, lines);

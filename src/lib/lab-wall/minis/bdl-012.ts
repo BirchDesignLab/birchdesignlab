@@ -72,6 +72,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; fitGeometry(); if (!seeded) { seeded = true; for (let i = 0; i < 60; i++) update(0.1, null); } },
+    // rest: every link drawn and six seconds of pulses already on them (seeded in resize), at every size
+    rest() { return 0; },
     draw(c, _t, dt, p) {
       update(Math.min(dt, 0.12), null);
       let hotNode: Node | null = null;

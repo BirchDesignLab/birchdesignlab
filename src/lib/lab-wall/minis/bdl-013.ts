@@ -61,6 +61,8 @@ const factory: MiniFactory = (): Mini => {
   return {
     t0: 0,
     resize(w, h) { W = w; H = h; G = geo(); },
+    // rest: all five arrows drawn and every part of the page lit (t 0 is 9.5s into the 15s cycle), at every size
+    rest() { return 0; },
     enter(_p, t) { tc = t - 0.2; },
     draw(c, t, _dt, p) {
       const g = G, ink = T.mark, ac = T.accent, fs = g.fs;

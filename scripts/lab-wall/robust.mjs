@@ -1443,6 +1443,84 @@ for (const path of ['List stored, then Wall', 'Wall, List, Wall']) {
   await ctx.close();
 }
 
+// ---------- the wall at rest: nothing draws unless something wakes it ----------
+/** Counts, per tile, the animation frames in which anything was drawn on its canvas (window.__n by tile id). */
+const countRepaints = (ctx) => ctx.addInitScript(() => {
+  window.__frame = 0;
+  const orig = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = (cb) => orig((t) => { window.__frame++; cb(t); });
+  const P = CanvasRenderingContext2D.prototype;
+  for (const m of ['fillRect', 'drawImage', 'fillText', 'fill', 'stroke']) {
+    const o = P[m];
+    P[m] = function (...a) { const c = this.canvas; if (c && c.isConnected && c.__lf !== window.__frame) { c.__lf = window.__frame; c.__n = (c.__n || 0) + 1; } return o.apply(this, a); };
+  }
+});
+const repaints = async (page, ms) => {
+  const read = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.lw-tile')].map((t) => [t.getAttribute('data-lw-id'), (t.querySelector('canvas') || {}).__n || 0])));
+  const a = await read();
+  await wait(page, ms);
+  const b = await read();
+  return Object.fromEntries(Object.keys(b).map((k) => [k, b[k] - (a[k] || 0)]));
+};
+const busy = (d) => Object.entries(d).filter(([, n]) => n > 0).map(([k, n]) => k + ':' + n);
+for (const scheme of ['dark', 'light']) {
+  const ctx = await context({ scheme });
+  await countRepaints(ctx);
+  const page = await ctx.newPage();
+  watch(page, `rest ${scheme}`);
+  await settle(page);
+  await wait(page, 1200);
+  const still = await repaints(page, 3000);
+  ok(busy(still).length === 0, `${scheme}: at rest with the lamp parked off the wall, no tile repaints in 3s${busy(still).length ? ': ' + busy(still).join(' ') : ''}`);
+  const rows = await data(page);
+  const lit = rows.find((e) => e.id === 'bdl-012') || rows[0];
+  const c = await center(page, labelOf(lit));
+  await page.mouse.move(c.x, c.y, { steps: 8 });
+  await wait(page, 300);
+  const woke = await repaints(page, 1000);
+  ok(woke[lit.id] >= 20, `${scheme}: the tile under the mouse and the lamp wakes and repaints (${lit.id}: ${woke[lit.id]} frames in 1s)`);
+  await page.mouse.move(1, 1, { steps: 4 });
+  await wait(page, 1500);
+  const again = await repaints(page, 2000);
+  ok(busy(again).length === 0, `${scheme}: the light gone, it settles back to rest and stops drawing${busy(again).length ? ': ' + busy(again).join(' ') : ''}`);
+  if (scheme === 'dark') {
+    // no pointer: the lamp lingers on one tile at a time, starting with the lead piece
+    await page.evaluate(() => document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
+    await wait(page, 4500);
+    const one = await repaints(page, 2000);
+    const awake = busy(one);
+    ok(awake.length === 1 && one['bdl-010'] > 20, `${scheme}: with no pointer the lamp lingers on one tile, the lead first (${awake.join(' ')})`);
+  }
+  await ctx.close();
+}
+{ // prefers-reduced-motion: the wall works as it always has (drawn, woken by the mouse, opened and closed)
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  await ctx.addInitScript(() => { try { localStorage.setItem('scheme', 'dark'); } catch (e) { /* storage blocked */ } });
+  await countRepaints(ctx);
+  const page = await ctx.newPage();
+  watch(page, 'reduced motion');
+  await settle(page);
+  const rows = await data(page);
+  let bad = [];
+  for (const e of rows) { const st = await drawnNow(page, labelOf(e)); if (!st.up) bad.push(e.id); }
+  ok(bad.length === 0, `reduced motion: every tile drawn${bad.length ? ': ' + bad.join(' ') : ''}`);
+  const e = rows.find((x) => x.id === 'bdl-010') || rows[0];
+  const c = await center(page, labelOf(e));
+  await page.mouse.move(c.x, c.y, { steps: 6 });
+  await wait(page, 300);
+  const woke = await repaints(page, 1000);
+  ok(woke[e.id] >= 20, `reduced motion: a hovered tile wakes (${woke[e.id]} frames in 1s)`);
+  await page.mouse.click(c.x, c.y);
+  await wait(page, 1300);
+  const st = await state(page);
+  ok(st.cur === labelOf(e) && st.door, `reduced motion: a click opens the piece (${st.cur})`);
+  await page.keyboard.press('Escape');
+  await wait(page, 1300);
+  const st2 = await state(page);
+  ok(st2.cur === null && !st2.door, 'reduced motion: Esc closes it');
+  await ctx.close();
+}
+
 if (errs.length) {
   for (const e of errs) console.log('FAIL console', e);
   fails += errs.length;
