@@ -139,3 +139,12 @@ html[data-lab-view='wall'] .filter a[aria-current='true'] {
   text-transform: none; letter-spacing: 0;
   padding: 0.6em 1em; border-top: 1px solid var(--line); border-right: 1px solid var(--line);
 }
+
+/* ---------- the closing band's link ---------- */
+/* "Talk to us" (LabContact.astro, which this file does not own) sits under the
+   List and is a touch target like the filter: at least 44px each way, the text
+   centred in it so the band's baseline row still lines up with the sentence. */
+.lab-contact .talk {
+  display: inline-flex; align-items: center;
+  min-height: 44px; min-width: 44px;
+}

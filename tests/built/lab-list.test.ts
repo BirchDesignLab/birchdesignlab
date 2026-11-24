@@ -94,4 +94,8 @@ describe('the List stylesheet', () => {
   it('keeps every filter link and card a touch target of at least 44px', () => {
     expect(css).toMatch(/\.filter a \{[^}]*min-height: 44px/);
   });
+
+  it('keeps the closing band\'s "Talk to us" link a touch target of at least 44px', () => {
+    expect(css).toMatch(/\.lab-contact \.talk \{[^}]*min-height: 44px[^}]*min-width: 44px/);
+  });
 });
