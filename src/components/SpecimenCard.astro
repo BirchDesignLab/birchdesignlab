@@ -31,6 +31,15 @@ const Heading = level;
 // the card), and falls back to the entry's own still if that file moves.
 const portalStills = import.meta.glob<{ default: ImageMetadata }>('../content/lab/bdl-011/thumb.png', { eager: true });
 const portalStill = Object.values(portalStills)[0]?.default ?? thumb?.src;
+// The Field Guide's own thumb is that same six-style sheet, which would make it
+// and the Portal (its neighbour in date order) one picture twice. Its card
+// shows a page of the guide instead (scripts/lab/capture-bdl-011-list.mjs: the
+// Bauhaus section, written words and all), falling back to its own thumb if the
+// file is missing. Other entries use their own thumb.
+const guideStills = import.meta.glob<{ default: ImageMetadata }>('../content/lab/bdl-011/guide.png', { eager: true });
+const listStill = designation === 'BDL-011'
+  ? Object.values(guideStills)[0]?.default ?? thumb?.src
+  : thumb?.src;
 // The card is full width on a phone (one across, up to 40rem) and about 33rem
 // at most with two across.
 const widths = [480, 720, 960, 1280];
@@ -44,10 +53,10 @@ const sizes = '(min-width: 48rem) 34rem, 100vw';
   {portal && portalStill && <PortalEntrance href={href} still={portalStill} />}
   {thumb && !portal && (live
     ? <a class="thumb" href={href} tabindex="-1" aria-hidden="true">
-        <Image src={thumb.src} alt="" widths={widths} sizes={sizes} loading="lazy" />
+        <Image src={listStill ?? thumb.src} alt="" widths={widths} sizes={sizes} loading="lazy" />
       </a>
     : <div class="thumb">
-        <Image src={thumb.src} alt={thumb.alt} widths={widths} sizes={sizes} loading="lazy" />
+        <Image src={listStill ?? thumb.src} alt={thumb.alt} widths={widths} sizes={sizes} loading="lazy" />
       </div>)}
   {!thumb && <div class="thumb blank" aria-hidden="true"><span>{designation}</span></div>}
   <div class="text">

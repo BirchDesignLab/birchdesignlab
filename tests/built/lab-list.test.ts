@@ -71,6 +71,21 @@ describe('the List cards', () => {
     expect(nums.indexOf('BDL-009')).toBe(nums.indexOf('BDL-010') + 1);
   });
 
+  it('/lab/: the Field Guide and the Portal show two different pictures, and Novgorod Letters shows its sheet', () => {
+    const cards = doc(readPage('/lab/')).querySelectorAll('.catalog article');
+    const card = (num: string) => cards.find((c) => c.querySelector('.num')!.text.trim() === num)!;
+    const files = (num: string) => card(num).querySelectorAll('img:not(.shot)').map((i) => (i.getAttribute('src') ?? '').split('/').pop()!.split('.')[0]);
+    // The Field Guide's own picture is a page of the guide; the six-style sheet is the Portal's.
+    expect(files('BDL-011'), 'the Field Guide card').toEqual(['guide']);
+    expect(files('BDL-010'), 'the Portal card').toContain('thumb');
+    expect(files('BDL-010')).not.toContain('guide');
+    // BDL-003 is coming soon but is no longer a blank box.
+    const novgorod = card('BDL-003');
+    expect(novgorod.getAttribute('data-status')).toBe('forthcoming');
+    expect(novgorod.querySelectorAll('.thumb.blank').length).toBe(0);
+    expect(files('BDL-003')).toEqual(['thumb']);
+  });
+
   it('/lab/: the Portal picture is asked for at the size the card draws it, like its neighbours', () => {
     const d = doc(readPage('/lab/'));
     const sizes = d.querySelectorAll('.card .thumb img').map((i) => i.getAttribute('sizes'));
