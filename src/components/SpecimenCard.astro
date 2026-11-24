@@ -36,7 +36,7 @@ const portalStill = Object.values(portalStills)[0]?.default ?? thumb?.src;
 const widths = [480, 720, 960, 1280];
 const sizes = '(min-width: 48rem) 34rem, 100vw';
 ---
-<article class:list={['card', { 'has-thumb': thumb }]} data-type={catalogSet(entry.data)} data-status={status}>
+<article class:list={['card', { 'has-thumb': thumb, lit: portal }]} data-type={catalogSet(entry.data)} data-status={status}>
   {/* The picture repeats the title link, so it stays out of the tab order
       and the accessibility tree; the alt text is for the image itself when
       the entry has no page to link to. A piece with no still gets a plain

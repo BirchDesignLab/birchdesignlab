@@ -54,9 +54,9 @@ const schools = THEMES.flatMap((t) => {
 const data = schools.map(({ shot: _shot, ...rest }) => rest);
 ---
 <a class="portal-thumb" href={href} tabindex="-1" aria-hidden="true" data-portal-entrance data-schools={JSON.stringify(data)}>
-  <Image src={still} alt="" widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+  <Image src={still} alt="" widths={[480, 720, 960, 1280]} sizes="(min-width: 48rem) 34rem, 100vw" loading="lazy" />
   {schools.map((s) => (
-    <Image class="shot" data-school={s.id} src={s.shot} alt="" widths={[480, 720, 960, 1440]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+    <Image class="shot" data-school={s.id} src={s.shot} alt="" widths={[480, 720, 960, 1280]} sizes="(min-width: 48rem) 34rem, 100vw" loading="lazy" />
   ))}
   <span class="enter">Enter in <span data-school-name></span> <span class="arrow">&rarr;</span></span>
 </a>
@@ -101,7 +101,10 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
     let held = false;
     let leaving = false;
 
-    const running = () => onScreen && !held && !leaving && !document.hidden;
+    // Reduced motion: no cycle. The row stays the ordinary one (the six-style
+    // still, a link to the quiet style); the card's glow is the List's, not ours.
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const running = () => onScreen && !held && !leaving && !document.hidden && !calm.matches;
 
     const show = (s: School) => {
       current = s;
@@ -113,6 +116,8 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
       for (const [id, img] of shots) img.classList.toggle('on', id === s.id);
     };
 
+    // The first style shows on the first frame the card is on screen, not after
+    // a wait (delay 0); the ones after hold for DWELL.
     const schedule = () => {
       clearTimeout(timer);
       if (!running()) return;
@@ -127,13 +132,23 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
           void ready(schools[(index + 1) % schools.length]);
         }
         schedule();
-      }, current ? DWELL : 500);
+      }, current ? DWELL : 0);
     };
 
     new IntersectionObserver(([entry]) => {
       onScreen = entry.isIntersecting;
       schedule();
     }, { threshold: 0.4 }).observe(card);
+    // Fetch the first style's font and picture a screen or so before the card
+    // arrives, so "the first frame on screen" has something to show.
+    if (!calm.matches) {
+      const warm = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return;
+        warm.disconnect();
+        void ready(schools[0]);
+      }, { rootMargin: '100% 0px' });
+      warm.observe(card);
+    }
     document.addEventListener('visibilitychange', schedule);
 
     // Holding: a mouse over the row, or keyboard focus on its title. Touch

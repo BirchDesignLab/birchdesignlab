@@ -61,6 +61,33 @@ describe('the List cards', () => {
     expect(ratio).toBeLessThan(1.8);
   });
 
+  it('/lab/: the Portal is the one lit card, in its own date slot', () => {
+    const cards = doc(readPage('/lab/')).querySelectorAll('.catalog article');
+    const lit = cards.filter((c) => (c.getAttribute('class') ?? '').split(' ').includes('lit'));
+    expect(lit.map((c) => c.querySelector('.num')!.text.trim())).toEqual(['BDL-010']);
+    // Date order, newest first: the Portal sits between the Field Guide and Bayou Kitchen.
+    const nums = cards.map((c) => c.querySelector('.num')!.text.trim());
+    expect(nums.indexOf('BDL-010')).toBe(nums.indexOf('BDL-011') + 1);
+    expect(nums.indexOf('BDL-009')).toBe(nums.indexOf('BDL-010') + 1);
+  });
+
+  it('/lab/: the Portal picture is asked for at the size the card draws it, like its neighbours', () => {
+    const d = doc(readPage('/lab/'));
+    const sizes = d.querySelectorAll('.card .thumb img').map((i) => i.getAttribute('sizes'));
+    expect(new Set(sizes).size).toBe(1);
+    for (const img of d.querySelectorAll('.portal-thumb img')) {
+      expect(img.getAttribute('sizes')).toBe(sizes[0]);
+      const widths = (img.getAttribute('srcset') ?? '').split(',').map((x) => Number(x.trim().split(' ')[1].replace('w', '')));
+      // About 500px drawn at 1440, so 1000 device pixels on a retina screen.
+      expect(Math.max(...widths), img.getAttribute('data-school') ?? 'still').toBeGreaterThanOrEqual(1200);
+    }
+  });
+
+  it('/lab/: the Portal says what a click does without hover: the Enter line is in the card', () => {
+    const line = doc(readPage('/lab/')).querySelector('.portal-thumb .enter')?.text.replace(/\s+/g, ' ').trim();
+    expect(line).toMatch(/^Enter in /);
+  });
+
   it('/lab/ keeps the filter as three real links', () => {
     const links = doc(readPage('/lab/')).querySelectorAll('nav.filter a');
     expect(links.map((a) => [a.text.trim(), a.getAttribute('href')])).toEqual([
@@ -89,6 +116,18 @@ describe('the List stylesheet', () => {
     const meta = rules.filter((r) => /^\.card \.meta/.test(r));
     expect(meta.length).toBeGreaterThan(0);
     for (const r of meta) expect(r).not.toMatch(/(^|[\s;{])(opacity|transform|filter|isolation|z-index):|position:\s*(relative|absolute|fixed)/);
+  });
+
+  it('lights the Portal card with a frame and a glow in the wall\'s lamp colour, and styles no other card that way', () => {
+    const lit = rules.filter((r) => /\.card\.lit\b/.test(r));
+    expect(lit.length).toBeGreaterThan(0);
+    expect(lit.join('; ')).toMatch(/--lw-glow/);
+    expect(lit.join('; ')).toMatch(/box-shadow/);
+    for (const r of lit) expect(r.split('{')[0], 'only the Portal picture is lit').toMatch(/\.card\.lit \.portal-thumb/);
+  });
+
+  it('draws no rule under the catalog: the closing band\'s top rule is the one', () => {
+    for (const r of rules.filter((x) => /^\.catalog\s*\{/.test(x))) expect(r).not.toMatch(/border(-bottom)?\s*:|box-shadow/);
   });
 
   it('keeps every filter link and card a touch target of at least 44px', () => {
