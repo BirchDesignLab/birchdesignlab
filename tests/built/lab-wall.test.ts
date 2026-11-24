@@ -237,11 +237,13 @@ describe('the words on /lab', () => {
     expect(d.querySelector('.count')?.text.trim()).toBe(expected);
   });
 
-  it('names the state of each card live or coming soon, never anything else', () => {
+  it('names a state only on a card that is not live, in the one word, and never anything else', () => {
     const states = new Set(d.querySelectorAll('.catalog article').map((a) => a.getAttribute('data-status')));
-    expect([...states].sort()).toEqual(['forthcoming', 'live']);
-    const shown = d.querySelectorAll('.catalog article').map((a) => (a.querySelector('.soon') ?? a.querySelector('.working-label'))?.text.trim());
-    expect(new Set(shown)).toEqual(new Set(['live', 'coming soon']));
+    expect([...states].every((x) => x === 'live' || x === 'forthcoming')).toBe(true);
+    for (const a of d.querySelectorAll('.catalog article')) {
+      const shown = a.querySelectorAll('.meta .soon').map((n) => n.text.trim());
+      expect(shown, a.getAttribute('data-status') ?? '').toEqual(a.getAttribute('data-status') === 'live' ? [] : ['Coming soon']);
+    }
   });
 
   it('ends on one sentence and one link to /contact/, after the section that holds the wall', () => {
@@ -269,7 +271,7 @@ describe('one word for each kind', () => {
     expect(cards.length).toBe(LISTED.length);
     LISTED.forEach((e, i) => {
       const wall = rows.find((r) => r.id === e.slug)!.kindLabel;
-      const card = cards[i].querySelector('.badge')?.text.trim();
+      const card = cards[i].querySelector('.meta .kind')?.text.trim();
       expect(card, `${e.designation} list`).toBe(wall);
       if (e.href !== null && e.href.startsWith(`/lab/${e.slug}`)) {
         const page = doc(readPage(`/lab/${e.slug}/`));
