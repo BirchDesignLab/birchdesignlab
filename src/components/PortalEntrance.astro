@@ -132,8 +132,9 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
         if (running()) {
           index = (index + 1) % schools.length;
           show(next);
-          // Fetch the one after during this dwell, so the step is on time.
-          void ready(schools[(index + 1) % schools.length]);
+          // Fetch the one after halfway through this dwell, so the step is on time without fetching two styles at once.
+          const after = schools[(index + 1) % schools.length];
+          window.setTimeout(() => { if (running()) void ready(after); }, DWELL / 2);
         }
         schedule();
       }, current ? DWELL : 0);
@@ -143,16 +144,6 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
       onScreen = entry.isIntersecting;
       schedule();
     }, { threshold: 0.4 }).observe(card);
-    // Fetch the first style's font and picture a screen or so before the card
-    // arrives, so "the first frame on screen" has something to show.
-    if (!calm.matches) {
-      const warm = new IntersectionObserver(([entry]) => {
-        if (!entry.isIntersecting) return;
-        warm.disconnect();
-        void ready(schools[0]);
-      }, { rootMargin: '100% 0px' });
-      warm.observe(card);
-    }
     document.addEventListener('visibilitychange', schedule);
 
     // Holding: a mouse over the row, or keyboard focus on its title. Touch

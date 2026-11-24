@@ -3,7 +3,7 @@ import { TAU, clamp, easeOut, rr } from '../draw';
 import type { Mini, MiniFactory } from '../types';
 import { SCHOOLS } from './shared';
 
-export const hint = 'Move to cross schools';
+export const hint = 'Move to cross styles';
 
 type Portal = { to: number; t0: number; x: number; y: number };
 

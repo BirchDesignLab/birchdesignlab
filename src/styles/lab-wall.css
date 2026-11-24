@@ -21,6 +21,8 @@ html[data-lab-view] .lw-scrim, html[data-lab-view] .lw-door { display: block; }
 
 /* While a piece is open the page does not scroll. */
 html.lw-locked { overflow: hidden; }
+/* Hiding the overflow while a piece is open would take an always-visible scrollbar away and widen the page under the scrim. */
+html[data-lab-view] { scrollbar-gutter: stable; }
 
 /* ---------- the page: the sentence row, the filter, the toggle, the wall ---------- */
 html[data-lab-view] .lab-page {
@@ -261,7 +263,14 @@ a.lw-visit:hover svg { transform: translate(2px, -2px); }
 .lw-soon { opacity: 0.55; cursor: default; }
 .lw-try { font-size: 14px; color: var(--mark-muted); }
 .lw-try[hidden] { display: none; }
-@media (min-width: 720px) and (max-width: 1100px) { .lw-try { display: none; } .lw-bar { column-gap: 22px; } }
+/* Tablets and landscape phones: three columns leave the summary a sliver and the piece no room, so the bar is two rows,
+   the title wrapping beside the actions and the summary full width under them. */
+@media (min-width: 720px) and (max-width: 1100px) {
+  .lw-try { display: none; }
+  .lw-bar { grid-template-columns: minmax(0, 1fr) max-content; grid-template-areas: 'meta acts' 'title acts' 'sum sum'; column-gap: 22px; row-gap: 6px; }
+  .lw-title { white-space: normal; }
+  .lw-sum { max-width: none; font-size: 15px; }
+}
 
 /* ---------- phone: a card under the piece, the arrows in the top row beside Back ---------- */
 @media (max-width: 719px) {

@@ -69,7 +69,7 @@ const ARROW = 'M7 17 17 7M8 7h9v9';
 <script is:inline set:html={RESERVE_INLINE}></script>
 
 <div class="lw-scrim" data-lw="scrim" aria-hidden="true"></div>
-<div class="lw-door" data-lw="door" role="dialog" aria-modal="true" aria-label="Open piece" inert>
+<div class="lw-door" data-lw="door" role="dialog" aria-modal="true" aria-labelledby="lw-door-title" inert>
   <button class="lw-back" type="button" data-lw="back">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
     <span>Back to the wall</span>
@@ -83,7 +83,7 @@ const ARROW = 'M7 17 17 7M8 7h9v9';
   </button>
   <div class="lw-bar" data-lw="bar" aria-live="polite">
     <div class="smallcaps lw-meta" data-lw="meta"></div>
-    <h2 class="lw-title" data-lw="title"></h2>
+    <h2 class="lw-title" id="lw-door-title" data-lw="title"></h2>
     <p class="lw-sum" data-lw="sum"></p>
     <div class="lw-acts">
       <a class="lw-visit" data-lw="visit"><span data-lw="visit-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d={ARROW}/></svg></a>
