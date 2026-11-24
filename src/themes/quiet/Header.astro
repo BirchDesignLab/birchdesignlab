@@ -43,7 +43,7 @@ const current = (to: (typeof links)[number]['to'], href: string) => {
         >{label}</a>
       ))}
     </nav>
-    <ThemeToggle />
+    <slot name="header-controls" /><ThemeToggle />
   </div>
 </header>
 

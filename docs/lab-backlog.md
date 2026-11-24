@@ -34,6 +34,16 @@ BDL-004 originally reserved the Painting. Reassigned 2026-07-16: the Loom took 0
 
 ## In flight
 
+### The Lab wall · IN FLIGHT (`feat/lab-wall`)
+
+`/lab` shows every listed piece as a live tile in one mosaic, with the catalog list one switch away. Code: `src/components/LabWall.astro`, `src/lib/lab-wall/` (the engine in `wall.ts`, the first script in `boot.ts`), `src/styles/lab-wall.css`.
+
+- **The miniatures are hand-made canvas drawings** of the pieces (`src/lib/lab-wall/minis/`). They do not update when a piece changes: change a piece, redraw its miniature.
+- **A new Lab entry** shows as a still tile (its picture, or its title) in a spill row under the mosaic until it gets a miniature and a place in the two layout maps (`src/lib/lab-wall/layout.ts`, desktop and phone, plus the registry in `minis/index.ts`). It never breaks the wall.
+- **After any change to the wall, run `scripts/lab-wall/robust.mjs`** against a build (`BASE=http://localhost:4400 node scripts/lab-wall/robust.mjs`; see its header). It drives GPU Chromium the way a careless hand would and exits 1 on any failure.
+- **Not yet done:** a pass on a real phone, and a look with always-visible scrollbars (the layout now follows the window width, so the two cannot disagree between 720 and 736, but it has only been checked with emulated scrollbars).
+- **A link to a piece** (`/lab/#bdl-007`) opens it over the wall; the entry becomes plain `/lab/`, so Back leaves the page in one press.
+
 ### BDL-010 / BDL-011 · The Portal (theme schools) · IN FLIGHT
 
 **Where it is (11-22-26).** Stages 1 to 6 are on main (#88, #89, #93, #95, #117, #120). **Stage 6, the set re-review** (#120): waves 1 to 4 plus task 31 (final fixes), five founder stops (adversarial critique first at stops 2 to 5, every verdict taken), the interactables wave, hover gating across every school and the business site, and the welcome-prompt line "Tap around, too: every school hides a few things that answer back." Records: `docs/superpowers/specs/theme-schools-research/tier3-stage6/` (`stage6-report.md`, `stage6-plan.md`, `stage6-decisions.md`, stop 1 to 5 reports and critiques, briefs, proofs). Run ledger in gitignored `docs/private/stage6-ledger.md`. Stage 6 leftovers are listed below.

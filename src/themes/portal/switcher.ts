@@ -41,7 +41,7 @@ import { drawOnIntent, SWITCHER_INFO, warmPages } from './runtime';
  * school count, so it survives tranche 2. Visitor-facing, so no em dashes.
  */
 const FIRST_LOAD_PROMPT =
-  "Welcome to the Portal. Choose a design school and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there. Tap around, too: every school hides a few things that answer back.";
+  "Welcome to the Portal. Choose a design style and watch the page transform. Shuffle for a random one, and swap between light and dark while you're there. Tap around, too: every style hides a few things that answer back.";
 
 /** sessionStorage key, set to 'dismissed' once the visitor has tapped the prompt or the switcher. */
 const PROMPT_KEY = 'bdl-portal-prompt';
@@ -270,7 +270,7 @@ class BdlSwitcher extends HTMLElement {
     this.root = this.attachShadow({ mode: 'open' });
     const { schools, aboutHref } = readPortalData();
     this.setAttribute('role', 'region');
-    this.setAttribute('aria-label', 'Design school switcher');
+    this.setAttribute('aria-label', 'Design style switcher');
 
     this.root.innerHTML = `
       <style>${STYLE}</style>
@@ -280,9 +280,9 @@ class BdlSwitcher extends HTMLElement {
       </div>
       <div class="bar">
         <button type="button" class="open" aria-haspopup="dialog">
-          <span class="label wide">School</span><span class="stack"><span class="current"></span>${sizers(schools.map((s) => s.name))}</span>${ICON.caret}
+          <span class="label wide">Style</span><span class="stack"><span class="current"></span>${sizers(schools.map((s) => s.name))}</span>${ICON.caret}
         </button>
-        <button type="button" class="shuffle" aria-label="Shuffle to a random school">${ICON.shuffle}<span class="wide">Shuffle</span></button>
+        <button type="button" class="shuffle" aria-label="Shuffle to a random style">${ICON.shuffle}<span class="wide">Shuffle</span></button>
         <button type="button" class="scheme" aria-pressed="false">${ICON.scheme}<span class="wide stack"><span class="scheme-text"></span>${sizers(['Light', 'Dark'])}</span></button>
         <a class="btn leave" href="/">${ICON.leave}<span class="wide">Leave</span></a>
       </div>
@@ -291,7 +291,7 @@ class BdlSwitcher extends HTMLElement {
           <h2 id="bdl-schools-title">The Portal</h2>
           <button type="button" class="close" aria-label="Close">Close</button>
         </div>
-        <ul aria-label="All design schools">
+        <ul aria-label="All design styles">
           ${schools
             .map(
               (s: SchoolSummary) => `
@@ -304,7 +304,7 @@ class BdlSwitcher extends HTMLElement {
             .join('')}
         </ul>
         <div class="foot">
-          ${aboutHref ? `<a href="${escapeHtml(aboutHref)}">How these schools were built</a>` : ''}
+          ${aboutHref ? `<a href="${escapeHtml(aboutHref)}">How these styles were built</a>` : ''}
           <a class="leave-foot" href="/">Leave for the regular site</a>
         </div>
       </dialog>
@@ -528,7 +528,7 @@ class BdlSwitcher extends HTMLElement {
     const { schools } = readPortalData();
     const current = schools.find((s) => s.id === here?.theme);
     this.root.querySelector('.current')!.textContent = current?.name ?? '';
-    this.root.querySelector('.open')!.setAttribute('aria-label', `School: ${current?.name ?? 'unknown'}. Choose another design school`);
+    this.root.querySelector('.open')!.setAttribute('aria-label', `Style: ${current?.name ?? 'unknown'}. Choose another design style`);
 
     const light = currentScheme() === 'light';
     const scheme = this.root.querySelector('.scheme')!;

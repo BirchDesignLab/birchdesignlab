@@ -44,19 +44,23 @@ const PLATES: Record<string, { family: string; weight: string; style: string }> 
   glassmorphism: { family: 'Inter Variable', weight: '100 900', style: 'normal' },
 };
 
-const schools = THEMES.flatMap((t) => {
+const all = THEMES.flatMap((t) => {
   const plate = PLATES[t.id];
   const shot = shotFor(t.id);
   const url = plate && t.fonts.find((f) => f.family === plate.family)?.preload?.[0];
   if (!plate || !shot || !url) return [];
   return [{ id: t.id, name: t.name, href: pagePath('home', t.id), url, weight: plate.weight, style: plate.style, shot }];
 });
+// The cycle opens on Swiss, not Bauhaus: the Field Guide's card beside it shows the guide's Bauhaus page (founder, 11-24).
+const FIRST = 'swiss';
+const at = Math.max(0, all.findIndex((s) => s.id === FIRST));
+const schools = [...all.slice(at), ...all.slice(0, at)];
 const data = schools.map(({ shot: _shot, ...rest }) => rest);
 ---
 <a class="portal-thumb" href={href} tabindex="-1" aria-hidden="true" data-portal-entrance data-schools={JSON.stringify(data)}>
-  <Image src={still} alt="" widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+  <Image src={still} alt="" widths={[480, 720, 960, 1280]} sizes="(min-width: 48rem) 34rem, 100vw" loading="lazy" />
   {schools.map((s) => (
-    <Image class="shot" data-school={s.id} src={s.shot} alt="" widths={[480, 720, 960, 1440]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+    <Image class="shot" data-school={s.id} src={s.shot} alt="" widths={[480, 720, 960, 1280]} sizes="(min-width: 48rem) 34rem, 100vw" loading="lazy" />
   ))}
   <span class="enter">Enter in <span data-school-name></span> <span class="arrow">&rarr;</span></span>
 </a>
@@ -101,7 +105,10 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
     let held = false;
     let leaving = false;
 
-    const running = () => onScreen && !held && !leaving && !document.hidden;
+    // Reduced motion: no cycle. The row stays the ordinary one (the six-style
+    // still, a link to the quiet style); the card's glow is the List's, not ours.
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const running = () => onScreen && !held && !leaving && !document.hidden && !calm.matches;
 
     const show = (s: School) => {
       current = s;
@@ -113,6 +120,8 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
       for (const [id, img] of shots) img.classList.toggle('on', id === s.id);
     };
 
+    // The first style shows on the first frame the card is on screen, not after
+    // a wait (delay 0); the ones after hold for DWELL.
     const schedule = () => {
       clearTimeout(timer);
       if (!running()) return;
@@ -123,11 +132,12 @@ const data = schools.map(({ shot: _shot, ...rest }) => rest);
         if (running()) {
           index = (index + 1) % schools.length;
           show(next);
-          // Fetch the one after during this dwell, so the step is on time.
-          void ready(schools[(index + 1) % schools.length]);
+          // Fetch the one after halfway through this dwell, so the step is on time without fetching two styles at once.
+          const after = schools[(index + 1) % schools.length];
+          window.setTimeout(() => { if (running()) void ready(after); }, DWELL / 2);
         }
         schedule();
-      }, current ? DWELL : 500);
+      }, current ? DWELL : 0);
     };
 
     new IntersectionObserver(([entry]) => {

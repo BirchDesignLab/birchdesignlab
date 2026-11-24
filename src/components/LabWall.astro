@@ -1,0 +1,110 @@
+---
+/**
+ * The wall on /lab: the catalog's pieces as live tiles in one mosaic, an open
+ * piece that fills the window, and the Wall/List switch.
+ *
+ * Everything here is hidden until script runs (src/styles/lab-wall.css keys
+ * on data-lab-view, which the inline line in the page sets before paint), so
+ * a visitor without script gets the catalog list and nothing else. The tile
+ * data is one JSON block; the engine (src/lib/lab-wall/wall.ts) builds the
+ * tiles from it. The elements are siblings of SpecimenCatalog's, so the page's
+ * grid can seat them (see lab-wall.css).
+ */
+import type { CollectionEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
+import { catalogSet } from '../lib/lab-sets';
+import { specimenLink } from '../lib/copy';
+import type { WallEntry } from '../lib/lab-wall/types';
+import { RESERVE_INLINE } from '../lib/lab-wall/reserve';
+import '../styles/lab-wall.css';
+
+interface Props {
+  entries: CollectionEntry<'lab'>[];
+}
+const { entries } = Astro.props;
+
+const KIND_LABEL = { experiment: 'Experiment', study: 'Study' } as const;
+
+const data: WallEntry[] = await Promise.all(
+  entries.map(async (entry): Promise<WallEntry> => {
+    const { designation, title, summary, date, status, thumb } = entry.data;
+    const live = status === 'live';
+    const kind = catalogSet(entry.data);
+    const still = thumb ? await getImage({ src: thumb.src, width: 1200 }) : null;
+    return {
+      id: entry.id,
+      designation,
+      title,
+      kind,
+      kindLabel: KIND_LABEL[kind],
+      month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }),
+      summary,
+      href: live ? specimenLink(entry).href : null,
+      live,
+      thumb: still ? still.src : null,
+    };
+  }),
+);
+
+// Inside a <script> block a "<" could end the block early; JSON reads the escape back as the same character.
+const json = JSON.stringify(data).replace(/</g, String.fromCharCode(92) + 'u003c');
+
+const ARROW = 'M7 17 17 7M8 7h9v9';
+---
+<p class="lw-hint" data-lw="hint">
+  <span class="lw-hint-fine">Move across it. Click one to open it.</span>
+  <span class="lw-hint-touch">Scroll the wall. Tap one to open it.</span>
+</p>
+
+<div class="lw-toggle" role="group" aria-label="View">
+  <button type="button" data-lw-view="wall" aria-pressed="true">Wall</button>
+  <button type="button" data-lw-view="list" aria-pressed="false">List</button>
+</div>
+
+<script type="application/json" data-lw="data" is:inline set:html={json}></script>
+<div class="lw-wall" data-lw="wall" role="group" aria-label="The pieces in the Lab, each running live"></div>
+{/* In the first paint, before any module has arrived, this sizes the wall's box to what the engine will give it and hangs a
+    framed, captioned tile in each cell, from the data above (src/lib/lab-wall/reserve.ts); the engine adopts them. It sits
+    straight after the wall, so no frame is painted with the box empty. */}
+<script is:inline set:html={RESERVE_INLINE}></script>
+
+<div class="lw-scrim" data-lw="scrim" aria-hidden="true"></div>
+<div class="lw-door" data-lw="door" role="dialog" aria-modal="true" aria-labelledby="lw-door-title" inert>
+  <button class="lw-back" type="button" data-lw="back">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    <span>Back to the wall</span>
+  </button>
+  <div class="lw-count"><b data-lw="count"></b><span class="lw-keys">Left and right arrows step</span></div>
+  <button class="lw-arrow lw-prev" type="button" data-lw="prev" aria-label="Previous piece">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <button class="lw-arrow lw-next" type="button" data-lw="next" aria-label="Next piece">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+  <div class="lw-bar" data-lw="bar" aria-live="polite">
+    <div class="smallcaps lw-meta" data-lw="meta"></div>
+    <h2 class="lw-title" id="lw-door-title" data-lw="title"></h2>
+    <p class="lw-sum" data-lw="sum"></p>
+    <div class="lw-acts">
+      <a class="lw-visit" data-lw="visit"><span data-lw="visit-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d={ARROW}/></svg></a>
+      <span class="lw-visit lw-soon" data-lw="soon" hidden>Coming soon</span>
+      <span class="lw-try" data-lw="try"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { bootLabWall } from '../lib/lab-wall/boot';
+
+  bootLabWall();
+</script>
+
+{/* The engine, fetched with the first script instead of after it: this script imports it up front and hands it to
+    boot.ts, which would otherwise ask for it only once it was running. If this one fails to load, boot.ts asks for the
+    engine itself, fails the same way, and the page is its list. */}
+<script>
+  import { mountWall } from '../lib/lab-wall/wall';
+  import { offerEngine } from '../lib/lab-wall/boot';
+
+  offerEngine(mountWall);
+</script>

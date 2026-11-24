@@ -7,4 +7,4 @@ import { getCopy } from '../lib/copy';
 
 const chrome = await getCopy('chrome');
 ---
-<Header chrome={chrome} />
+<Header chrome={chrome}><slot name="header-controls" slot="header-controls" /></Header>
