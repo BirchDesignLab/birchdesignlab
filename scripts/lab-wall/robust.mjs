@@ -990,6 +990,46 @@ for (const w of [390, 360]) {
     await wait(page, 1000);
     ok(page.url() === away, `and one Back leaves /lab/, not a dead press (${page.url()})`);
   }
+  // Back (and then Forward) on the reloaded entry while the engine is still on its way: the engine finds the entry the
+  // visitor is on. After Back it is the wall's own, so nothing opens and no copy of the piece's entry is written over it
+  // (the entries would read away, piece, piece); after Forward it is the piece's again, and the piece rides it.
+  for (const route of ['Back', 'Back then Forward']) {
+    await openIt(piece);
+    let release;
+    const gate = new Promise((r) => (release = r));
+    await page.route(ENGINE_JS, async (route) => { await gate; await route.continue(); });
+    await page.reload({ waitUntil: 'commit' });
+    await wait(page, 1500);
+    // The page has not finished loading (the engine is held), so the history is driven from inside it: goBack() would wait for a load that has not come.
+    await page.evaluate(() => history.back());
+    await wait(page, 600);
+    if (route !== 'Back') {
+      await page.evaluate(() => history.forward());
+      await wait(page, 600);
+    }
+    release();
+    await wait(page, 2600);
+    await page.unroute(ENGINE_JS);
+    const focusOf = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName ?? null);
+    let s = await here();
+    if (route === 'Back') {
+      ok(s.cur === null && !s.locked && s.path === '/lab/' && s.hash === '' && s.view === 'wall', `reload onto a piece, ${route} before the engine: the wall at plain /lab/, nothing open ` + JSON.stringify(s));
+      await page.goForward();
+      await wait(page, 1500);
+      s = await here();
+      ok(s.cur === labelOf(piece) && s.hash === '#' + piece.id && s.locked, `then Forward: the piece's own entry opens it (not a copy of it under the wall's) ` + JSON.stringify(s));
+    } else {
+      ok(s.cur === labelOf(piece) && s.hash === '#' + piece.id && s.locked, `reload onto a piece, ${route} before the engine: the piece is open on its own entry ` + JSON.stringify(s));
+    }
+    await page.click('[data-lw=back]', { timeout: 3000 }).catch(() => {}); // a piece that never opened is a FAIL above, not a crash
+    await wait(page, 1400);
+    s = await here();
+    const f = await focusOf();
+    ok(s.cur === null && !s.locked && s.path === '/lab/' && s.hash === '' && f === labelOf(piece), `reload, ${route}, then the button: the wall at plain /lab/, focus back on the tile (${f}) ` + JSON.stringify(s));
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `and one Back leaves /lab/ (${page.url()})`);
+  }
   await ctx.close();
 }
 

@@ -61,8 +61,9 @@ export function bootLabWall(): void {
   // becomes plain /lab/, so the address bar and Back never carry a hash this page did not push itself.
   const linked = idFromHash(location.hash, ids);
   // The entry this page pushed itself for that piece (a reload, or Back, onto it) is left as it is: the piece rides it.
-  let rode = linked !== null && (history.state as { lwOpen?: unknown } | null)?.lwOpen === linked;
-  if (location.hash && !rode) {
+  // `ridden` is the piece the entry under the page holds while the engine is not here; it follows Back and Forward (see watchEntry).
+  let ridden: string | null = linked !== null && (history.state as { lwOpen?: unknown } | null)?.lwOpen === linked ? linked : null;
+  if (location.hash && ridden === null) {
     try {
       // The state goes too: whatever it held belonged to an entry this page no longer has a piece for.
       history.replaceState(null, '', location.pathname + location.search);
@@ -117,8 +118,8 @@ export function bootLabWall(): void {
    * would only drop the hash and change nothing on screen.
    */
   function leaveEntry(): void {
-    if (!rode || engine) return;
-    rode = false;
+    if (ridden === null || engine) return;
+    ridden = null;
     // A load already on its way was asked to open that piece: it must not, now that its entry is gone.
     linkGone = true;
     try {
@@ -127,6 +128,20 @@ export function bootLabWall(): void {
       /* history blocked: the entry stays, harmlessly */
     }
   }
+
+  /**
+   * Back and Forward before the engine is here (the engine's own popstate listener does this work once it is). Back off
+   * the entry the piece rides lands on the wall's own entry: nothing is to open, and the piece must not be written onto
+   * that entry when the engine comes (it would double the entry: the wall's own, then a copy of the piece's). Forward
+   * onto an entry this page pushed for a piece rides it again.
+   */
+  function watchEntry(): void {
+    const id = (history.state as { lwOpen?: unknown } | null)?.lwOpen;
+    const here = typeof id === 'string' && ids.includes(id) && idFromHash(location.hash, ids) === id ? id : null;
+    if (here === null && ridden !== null) linkGone = true;
+    ridden = here;
+  }
+  window.addEventListener('popstate', watchEntry);
 
   /** The piece a framed tile was clicked for before the engine arrived (the last click), if the wall is still what shows; either way the memory is cleared. */
   function takeEarly(): string | null {
@@ -139,10 +154,13 @@ export function bootLabWall(): void {
     loading ??= (offered ? Promise.resolve({ mountWall: offered }) : import('./wall'))
       .then((m) => {
         unhold();
+        // From here the engine's own popstate listener answers Back and Forward.
+        window.removeEventListener('popstate', watchEntry);
         // A click made while the engine was on its way wins over a link, and opens as a click would (an entry pushed);
-        // except on an entry this page already pushed for a piece, which it rides.
+        // except on an entry this page already pushed for a piece, which it rides. A piece the entry holds (after Forward) opens on it.
         const early = takeEarly();
-        return (engine = m.mountWall(early ? { open: early, entry: rode ? 'existing' : 'push' } : { open: linkGone ? null : open, entry: rode ? 'existing' : 'none' }));
+        const rides = ridden !== null;
+        return (engine = m.mountWall(early ? { open: early, entry: rides ? 'existing' : 'push' } : { open: ridden ?? (linkGone ? null : open), entry: rides ? 'existing' : 'none' }));
       })
       .catch((err: unknown) => {
         console.error('Lab wall failed to load', err);
