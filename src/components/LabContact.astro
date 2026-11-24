@@ -1,0 +1,27 @@
+---
+/**
+ * The Lab's closing band: one sentence and one link to /contact/, under the
+ * wall and under the List. It sits after the page's .lab-page section, never
+ * inside it: the wall is that section's last grid row and fills the window
+ * on its own. Quiet on purpose, like the closer on the business pages: no
+ * label above it, no icon, no tracked capitals. The words are the founder's
+ * to edit.
+ */
+---
+<section class="lab-contact">
+  <div class="wrap band">
+    <p class="ask">Want something like this for your business?</p>
+    <a class="more-link talk" href="/contact/">Talk to us</a>
+  </div>
+</section>
+
+<style>
+  .lab-contact { border-top: 1px solid var(--line); }
+  .band {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    column-gap: var(--space-4); row-gap: var(--space-2);
+    padding-block: var(--space-6);
+  }
+  .ask { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.25; }
+  .talk { font-size: var(--text-base); }
+</style>

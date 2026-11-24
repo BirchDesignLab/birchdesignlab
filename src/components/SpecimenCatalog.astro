@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import SpecimenCard from './SpecimenCard.astro';
-import { specimenCountLabel } from '../lib/specimen-count';
+import { labCountLabel } from '../lib/specimen-count';
 import '../styles/lab-texture.css';
 
 interface Props {
@@ -11,9 +11,9 @@ interface Props {
 const { entries, filterable = false } = Astro.props;
 const working = entries.filter((e) => e.data.status === 'live').length;
 ---
-<p class="count smallcaps" aria-live="polite">{specimenCountLabel(entries.length, working)}</p>
+<p class="count" aria-live="polite">{labCountLabel(entries.length, working)}</p>
 {filterable && (
-  <nav class="filter smallcaps" aria-label="Browse specimens by type">
+  <nav class="filter smallcaps" aria-label="Browse the pieces by kind">
     {/* Real links (crawlable, no-JS navigable) to the dedicated category pages.
         With JS they are hijacked into an in-place filter (see the script), so the
         catalog never reloads. aria-current marks the active set. */}
@@ -40,7 +40,7 @@ const working = entries.filter((e) => e.data.status === 'live').length;
 
 {filterable && (
   <script>
-    import { specimenCountLabel } from '../lib/specimen-count';
+    import { labCountLabel } from '../lib/specimen-count';
 
     for (const group of document.querySelectorAll('.filter')) {
       const catalog = group.nextElementSibling as HTMLElement;
@@ -66,7 +66,7 @@ const working = entries.filter((e) => e.data.status === 'live').length;
           const shown = [...catalog.querySelectorAll<HTMLElement>('.card')]
             .filter((c) => set === 'all' || c.dataset.type === set);
           const live = shown.filter((c) => c.dataset.status === 'live').length;
-          count.textContent = specimenCountLabel(shown.length, live);
+          count.textContent = labCountLabel(shown.length, live);
         }
       });
     }

@@ -7,6 +7,7 @@ import SpecimenPlate from '../../components/SpecimenPlate.astro';
 import WallLabel from '../../components/WallLabel.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import { buildBreadcrumb } from '../../lib/seo/jsonld';
+import { kindLabel } from '../../lib/lab-sets';
 import { buildCreativeWork } from '../../lib/seo/organization';
 import { experimentComponents } from '../../experiments/registry';
 import { studyExtras } from '../../studies/registry';
@@ -61,7 +62,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
       <div class="hero-veil"></div>
       <div class="hero-text wrap">
         <p class="designation smallcaps">
-          {designation} &middot; {entry.data.genreStudy ? 'Genre study' : 'Study'}
+          {designation} &middot; {kindLabel(entry.data)}
           <span class="live">live</span>
         </p>
         <h1>{title}</h1>
@@ -74,7 +75,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
         {entry.data.client && <div><dt class="smallcaps">Client</dt><dd>{entry.data.client}</dd></div>}
         <div><dt class="smallcaps">Delivered</dt><dd>{dateLabel}</dd></div>
         <div><dt class="smallcaps">Built with</dt><dd class="chips">{tech.map((t) => <span class="tag">{t}</span>)}</dd></div>
-        <div><dt class="smallcaps">Living specimen</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a><span class="tick" aria-hidden="true"></span></dd></div>
+        <div><dt class="smallcaps">Live site</dt><dd><a href={entry.data.liveUrl}>{new URL(entry.data.liveUrl).hostname}</a><span class="tick" aria-hidden="true"></span></dd></div>
       </dl>
     </section>
 
@@ -100,13 +101,13 @@ const creativeWork = buildCreativeWork(Astro.site!, {
     {Experiment ? (
       <Experiment />
     ) : (
-      <div class="wrap missing"><p>This specimen has no interactive stage yet.</p></div>
+      <div class="wrap missing"><p>This piece has no interactive stage yet.</p></div>
     )}
-    <SpecimenPlate designation={designation} title={title} tech={tech}>
+    <SpecimenPlate kind={kindLabel(entry.data)} designation={designation} title={title} tech={tech}>
       <Content />
     </SpecimenPlate>
     <noscript>
-      <p class="wrap">This experiment requires JavaScript; the specimen plate above describes it.</p>
+      <p class="wrap">This experiment requires JavaScript; the note at the foot of the page describes it.</p>
     </noscript>
   </ExperimentLayout>
 )}
@@ -140,7 +141,7 @@ const creativeWork = buildCreativeWork(Astro.site!, {
     padding: 0.35em 0.8em 0.25em; white-space: nowrap;
   }
   .plate a { color: var(--link); }
-  /* The living-things tick: same mark as the catalog's working-specimen tick.
+  /* The living-things tick: same mark as the catalog's live tick.
      KNOWN ISSUE, left as-is deliberately: a hostname long enough to wrap
      (demo-magnolia-mane-salon…workers.dev, and demo-bayou-kitchen…workers.dev
      when BDL-009 ships) pushes this onto a line of its own, where it reads as

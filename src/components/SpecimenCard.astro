@@ -4,7 +4,7 @@ import { Image } from 'astro:assets';
 import DeviceBadge from './DeviceBadge.astro';
 import PortalEntrance from './PortalEntrance.astro';
 import TypeBadge from './TypeBadge.astro';
-import { catalogSet, typeLabel } from '../lib/lab-sets';
+import { catalogSet, kindLabel } from '../lib/lab-sets';
 import { specimenLink } from '../lib/copy';
 
 interface Props {
@@ -28,9 +28,9 @@ const Heading = level;
     {live
       ? <span class="working">
           <span class="tick" aria-hidden="true"></span>
-          <span class="working-label">working specimen</span>
+          <span class="working-label">live</span>
         </span>
-      : <span class="soon">forthcoming</span>}
+      : <span class="soon">coming soon</span>}
   </p>
   <Heading>
     {portal
@@ -39,7 +39,7 @@ const Heading = level;
   </Heading>
   <p class="summary">{summary}</p>
   <p class="meta">
-    <TypeBadge label={typeLabel(entry.data)} />
+    <TypeBadge label={kindLabel(entry.data)} />
     {entry.data.type === 'experiment' && <DeviceBadge device={entry.data.device} />}
     {tech.map((t) => <span class="tag">{t}</span>)}
     <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time>
@@ -97,7 +97,7 @@ const Heading = level;
   }
 
   /* Status line. The designation is CLASSIFICATION and stays accent on every
-     row, forthcoming included; only the marker beside it carries state. */
+     row, coming soon included; only the marker beside it carries state. */
   /* center, not baseline: .working is itself a flex container, so its
      synthesized baseline is its bottom margin edge rather than text baseline
      -- baseline alignment here floats the tick+label chip above the
@@ -117,7 +117,7 @@ const Heading = level;
     letter-spacing: var(--tracking-wide); text-transform: uppercase;
     font-size: 0.68rem; line-height: 1;
   }
-  /* Leather, not green: waiting is not working. The word stays "forthcoming"
+  /* Leather, not green: waiting is not working. The words stay "coming soon"
      because "in progress" would be a claim about right now. */
   .soon {
     color: var(--accent-strong); border: 1px solid var(--accent-strong);
