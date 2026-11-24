@@ -370,7 +370,8 @@ await drawn(390, 844, 'light', true);
     d = await door(page);
     ok(!d.pill && d.metaNum && new RegExp(`^\\d+ of ${N} · `).test(d.meta) && (d.meta.match(/\d+ of \d+/g) || []).length === 1, 'resized to 390: the card shows "n of N" once and the pill is hidden ' + JSON.stringify(d));
     let r = await openRect(page);
-    ok(r && Math.abs(r.w - 390) < 2 && Math.abs(r.h - 844) < 2, 'open tile resized to the phone window ' + JSON.stringify(r));
+    // The door is the window less any scrollbar gutter (html keeps a stable gutter on /lab/), and the open tile fills the door.
+    ok(r && Math.abs(r.w - r.vw) < 2 && Math.abs(r.h - r.vh) < 2 && r.vw > 390 - 20 && Math.abs(r.vh - 844) < 2, 'open tile resized to the phone window ' + JSON.stringify(r));
     await shot(page, 'resize-390-open');
     const stp = await state(page);
     ok(stp.sx <= 0 && stp.blank.length === 0, 'phone width, piece open: no sideways scroll, no blank ' + stp.sx);
@@ -383,7 +384,7 @@ await drawn(390, 844, 'light', true);
     d = await door(page);
     ok(d.pill && !d.metaNum && !/\d+ of \d+/.test(d.meta) && new RegExp(`^\\d+ of ${N}$`).test(d.count), 'back to 1440: the pill shows it once and the meta line does not ' + JSON.stringify(d));
     r = await openRect(page);
-    ok(r && Math.abs(r.w - 1440) < 2 && Math.abs(r.h - 900) < 2, 'open tile back to the desktop window ' + JSON.stringify(r));
+    ok(r && Math.abs(r.w - r.vw) < 2 && Math.abs(r.h - r.vh) < 2 && r.vw > 1440 - 20 && Math.abs(r.vh - 900) < 2, 'open tile back to the desktop window ' + JSON.stringify(r));
     await page.keyboard.press('Escape');
     await closed(page, 'after resize round trip', y0);
     await page.mouse.move(1, 1);
