@@ -1,18 +1,23 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
-import DeviceBadge from './DeviceBadge.astro';
 import PortalEntrance from './PortalEntrance.astro';
-import TypeBadge from './TypeBadge.astro';
-import { catalogSet, typeLabel } from '../lib/lab-sets';
+import { catalogSet, kindLabel } from '../lib/lab-sets';
 import { specimenLink } from '../lib/copy';
 
+/**
+ * One piece in the List: the picture, the title, the summary, then one quiet
+ * meta line (kind and date, "Coming soon" when it is not live, the BDL number
+ * last). The whole card opens the piece through the title's link; the look is
+ * src/styles/lab-list.css.
+ */
 interface Props {
   entry: CollectionEntry<'lab'>
   level?: 'h2' | 'h3'
 }
 const { entry, level = 'h3' } = Astro.props;
-const { designation, title, summary, date, tech, status, thumb } = entry.data;
+const { designation, title, summary, date, status, thumb } = entry.data;
 const live = status === 'live';
 const { href } = specimenLink(entry);
 // The Portal's row links into a school, and its picture is the way in: it
@@ -20,124 +25,42 @@ const { href } = specimenLink(entry);
 const portal = live && !!thumb && href.startsWith('/t/');
 const dateLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 const Heading = level;
+// The Portal's own still is the Field Guide's wide strip (3200x1194), which a
+// 16:10 frame can only show as a cropped, blurred sliver. Its card uses the
+// Field Guide's 16:10 six-school sheet instead (the same pictures, framed for
+// the card), and falls back to the entry's own still if that file moves.
+const portalStills = import.meta.glob<{ default: ImageMetadata }>('../content/lab/bdl-011/thumb.png', { eager: true });
+const portalStill = Object.values(portalStills)[0]?.default ?? thumb?.src;
+// The card is full width on a phone (one across, up to 40rem) and about 33rem
+// at most with two across.
+const widths = [480, 720, 960, 1280];
+const sizes = '(min-width: 48rem) 34rem, 100vw';
 ---
 <article class:list={['card', { 'has-thumb': thumb }]} data-type={catalogSet(entry.data)} data-status={status}>
-  <div class="text">
-  <p class="status">
-    <span class="designation smallcaps">{designation}</span>
-    {live
-      ? <span class="working">
-          <span class="tick" aria-hidden="true"></span>
-          <span class="working-label">working specimen</span>
-        </span>
-      : <span class="soon">forthcoming</span>}
-  </p>
-  <Heading>
-    {portal
-      ? <a href={href} class="portal-title" data-portal-title><span>{title}</span></a>
-      : live ? <a href={href}>{title}</a> : <span>{title}</span>}
-  </Heading>
-  <p class="summary">{summary}</p>
-  <p class="meta">
-    <TypeBadge label={typeLabel(entry.data)} />
-    {entry.data.type === 'experiment' && <DeviceBadge device={entry.data.device} />}
-    {tech.map((t) => <span class="tag">{t}</span>)}
-    <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time>
-  </p>
-  </div>
   {/* The picture repeats the title link, so it stays out of the tab order
       and the accessibility tree; the alt text is for the image itself when
-      the entry has no page to link to. */}
-  {portal && thumb && <PortalEntrance href={href} still={thumb.src} />}
+      the entry has no page to link to. A piece with no still gets a plain
+      frame carrying its number, so the row never has an empty hole. */}
+  {portal && portalStill && <PortalEntrance href={href} still={portalStill} />}
   {thumb && !portal && (live
     ? <a class="thumb" href={href} tabindex="-1" aria-hidden="true">
-        <Image src={thumb.src} alt="" widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+        <Image src={thumb.src} alt="" widths={widths} sizes={sizes} loading="lazy" />
       </a>
     : <div class="thumb">
-        <Image src={thumb.src} alt={thumb.alt} widths={[480, 720, 960]} sizes="(min-width: 60rem) 22rem, 100vw" loading="lazy" />
+        <Image src={thumb.src} alt={thumb.alt} widths={widths} sizes={sizes} loading="lazy" />
       </div>)}
+  {!thumb && <div class="thumb blank" aria-hidden="true"><span>{designation}</span></div>}
+  <div class="text">
+    <Heading>
+      {portal
+        ? <a href={href} class="portal-title" data-portal-title><span>{title}</span></a>
+        : live ? <a href={href}>{title}</a> : <span>{title}</span>}
+    </Heading>
+    <p class="summary">{summary}</p>
+    <p class="meta">
+      <span class="what"><span class="kind">{kindLabel(entry.data)}</span>, <time datetime={date.toISOString().slice(0, 10)}>{dateLabel}</time></span>
+      {!live && <span class="soon">Coming soon</span>}
+      <span class="num">{designation}</span>
+    </p>
+  </div>
 </article>
-
-<style>
-  /* Loose density: gallery pacing. --space-6 is fluid (clamp 2.5-4rem), so
-     narrow viewports rest on the 2.5rem floor. The inline padding plus its
-     negative margin lets a row treatment bleed past the text column. */
-  .card {
-    padding-block: var(--space-6);
-    padding-inline: var(--space-3);
-    margin-inline: calc(var(--space-3) * -1);
-    border-top: 1px solid var(--line-accent);
-    transition: background-color var(--dur-1) var(--ease-weighted);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .card:hover { background: var(--green-surface); }
-  }
-  .card:active { background: var(--green-surface); }
-
-  /* With a picture: words left, picture right, centred on each other. Below
-     60rem the picture drops under the words at full width. */
-  @media (min-width: 60rem) {
-    .card.has-thumb {
-      display: grid; grid-template-columns: minmax(0, 1fr) 22rem;
-      gap: var(--space-5); align-items: center;
-    }
-  }
-  .thumb {
-    display: block; margin-top: var(--space-4);
-    border: 1px solid var(--line-accent); background: var(--field);
-    aspect-ratio: 16 / 10; overflow: hidden;
-  }
-  @media (min-width: 60rem) { .thumb { margin-top: 0; } }
-  .thumb :global(img) {
-    display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center;
-    transition: transform var(--dur-2, 400ms) var(--ease-weighted);
-  }
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .card:hover .thumb :global(img) { transform: scale(1.03); }
-  }
-
-  /* Status line. The designation is CLASSIFICATION and stays accent on every
-     row, forthcoming included; only the marker beside it carries state. */
-  /* center, not baseline: .working is itself a flex container, so its
-     synthesized baseline is its bottom margin edge rather than text baseline
-     -- baseline alignment here floats the tick+label chip above the
-     designation text instead of matching it. */
-  .status { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-  .designation { color: var(--accent); font-size: var(--text-sm); }
-  .working { display: flex; align-items: center; gap: var(--space-2); color: var(--accent); }
-  /* Vertical tick (founder call 08-18-26: the horizontal bar read as an em
-     dash, which the copy rules banned; upright it reads as a plot mark). */
-  .working .tick { display: inline-block; width: 2px; height: 0.9em; background: var(--accent); }
-  /* Chip typography is declared in full rather than borrowing the global
-     .smallcaps utility, because that utility also sets font-size: 0.82em and
-     these chips are pinned at 0.68rem. Every chip across this pass is written
-     the same way, in five files, which is what makes them comparable. */
-  .working-label, .soon, .tag {
-    font-family: var(--font-smallcaps);
-    letter-spacing: var(--tracking-wide); text-transform: uppercase;
-    font-size: 0.68rem; line-height: 1;
-  }
-  /* Leather, not green: waiting is not working. The word stays "forthcoming"
-     because "in progress" would be a claim about right now. */
-  .soon {
-    color: var(--accent-strong); border: 1px solid var(--accent-strong);
-    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
-  }
-
-  .card h2, .card h3 { margin-top: var(--space-1); }
-  h2 a, h3 a { color: var(--mark); text-decoration: none; }
-  @media (hover: hover) and (pointer: fine) {
-    h2 a:hover, h3 a:hover { color: var(--accent); }
-  }
-  .summary { color: var(--mark-muted); max-width: 52ch; margin-top: var(--space-2); }
-  .meta {
-    display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
-    margin-top: var(--space-4); font-size: var(--text-sm); color: var(--mark-muted);
-  }
-  /* Tech goes from dot-separated text to chips, so the meta row reads as one
-     family of tags rather than badges followed by prose. */
-  .tag {
-    color: var(--accent); border: 1px solid var(--line-accent);
-    padding: 0.35em 0.8em 0.25em; white-space: nowrap;
-  }
-</style>

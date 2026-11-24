@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SpecimenCatalog from '../../components/SpecimenCatalog.astro';
 import LabWall from '../../components/LabWall.astro';
+import LabContact from '../../components/LabContact.astro';
 
 // Noindexed entries are instruments: reachable by direct URL, never listed.
 const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((a, b) =>
@@ -11,7 +12,7 @@ const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((
 ---
 <BaseLayout
   title="The Lab · Birch Design Lab"
-  description="Numbered experiments and client studies in design and web engineering. A specimen catalog."
+  description="Live, playable work from a web studio on the Mississippi Gulf Coast: client projects, demonstration sites and experiments you can open and try."
   zone="lab"
 >
   {/* Which view this visitor gets, decided before first paint so the page never
@@ -44,6 +45,8 @@ const entries = (await getCollection('lab', ({ data }) => !data.noindex)).sort((
     <SpecimenCatalog entries={entries} filterable />
     <LabWall entries={entries} />
   </section>
+  {/* After the section, not inside it: the wall is the section's last grid row and fills the window on its own. */}
+  <LabContact />
 </BaseLayout>
 
 <style>

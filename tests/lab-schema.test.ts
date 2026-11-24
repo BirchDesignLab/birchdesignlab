@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { labTestSchema as labSchema } from '../src/lib/lab-schema';
-import { catalogSet, typeLabel } from '../src/lib/lab-sets';
+import { readFileSync } from 'node:fs';
+import { catalogSet, kindLabel, KIND_WORDS } from '../src/lib/lab-sets';
 
 const experiment = {
   type: 'experiment',
@@ -98,13 +99,20 @@ describe('study branch', () => {
     expect(() => labSchema.parse({ ...study, genreStudy: true })).toThrow();
     expect(() => labSchema.parse({ ...genre, genreStudy: true, selfStudy: true })).toThrow();
   });
-  it('catalogues genre studies with the experiments, badged as genre studies', () => {
+  it('catalogues genre studies with the experiments, and names them the same way', () => {
     const { client: _c, ...genre } = study;
     const g = labSchema.parse({ ...genre, genreStudy: true });
     const c = labSchema.parse(study);
     const e = labSchema.parse(experiment);
     expect([catalogSet(g), catalogSet(c), catalogSet(e)]).toEqual(['experiment', 'study', 'experiment']);
-    expect([typeLabel(g), typeLabel(c), typeLabel(e)]).toEqual(['genre study', 'study', 'experiment']);
+    expect([kindLabel(g), kindLabel(c), kindLabel(e)]).toEqual(['Experiment', 'Study', 'Experiment']);
+  });
+  it('gives the wall tile the same two words the List and the case page use', () => {
+    // LabWall.astro belongs to another run and keeps its own two-word map; this pins it to KIND_WORDS.
+    const wall = readFileSync(new URL('../src/components/LabWall.astro', import.meta.url), 'utf8');
+    const m = /const KIND_LABEL = \{ experiment: '([^']+)', study: '([^']+)' \} as const;/.exec(wall);
+    expect(m, 'LabWall.astro KIND_LABEL').not.toBeNull();
+    expect({ experiment: m![1], study: m![2] }).toEqual(KIND_WORDS);
   });
   it('rejects experiment fields on a study', () => {
     expect(() => labSchema.parse({ ...study, device: 'universal' })).toThrow();

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { REPO, doc, listRoutes, readPage } from './helpers';
+import { REPO, doc, listRoutes, meta, readPage, visibleText } from './helpers';
 import { LAMP_ATTR, LAMP_KEY } from '../../src/lib/lab-wall/lamp';
 
 /**
@@ -204,5 +204,83 @@ describe('the lamp bulb in the site header', () => {
       expect(page, route).not.toContain('lw-bulb');
       expect(page, route).not.toContain(LAMP_ATTR);
     }
+  });
+});
+
+describe('the words on /lab', () => {
+  const html = readPage('/lab/');
+  const d = doc(html);
+  const text = visibleText(html).join(' ');
+  const emDash = String.fromCharCode(0x2014);
+
+  it('describes what a visitor gets, in the meta title and description', () => {
+    const title = d.querySelector('title')?.text ?? '';
+    const description = meta(html, 'description') ?? '';
+    expect(title).toBe('The Lab · Birch Design Lab');
+    expect(description).toMatch(/live, playable work/i);
+    expect(`${title} ${description}`).not.toMatch(/specimen|catalog/i);
+  });
+
+  it('has no specimen, no forthcoming and no em dash in anything a visitor reads', () => {
+    expect(text).not.toMatch(/specimen|forthcoming/i);
+    expect(text).not.toContain(emDash);
+    for (const row of wallData(html)) {
+      expect(`${row.title} ${row.summary} ${row.kindLabel}`, row.designation).not.toMatch(/specimen|forthcoming|genre study/i);
+      expect(row.summary, row.designation).not.toContain(emDash);
+    }
+  });
+
+  it('counts the pieces with the words the cards use', () => {
+    const live = LISTED.filter((e) => e.href !== null).length;
+    const soon = LISTED.length - live;
+    const expected = soon === 0 ? `${LISTED.length} pieces. All live.` : `${LISTED.length} pieces. ${live} live, ${soon} coming soon.`;
+    expect(d.querySelector('.count')?.text.trim()).toBe(expected);
+  });
+
+  it('names a state only on a card that is not live, in the one word, and never anything else', () => {
+    const states = new Set(d.querySelectorAll('.catalog article').map((a) => a.getAttribute('data-status')));
+    expect([...states].every((x) => x === 'live' || x === 'forthcoming')).toBe(true);
+    for (const a of d.querySelectorAll('.catalog article')) {
+      const shown = a.querySelectorAll('.meta .soon').map((n) => n.text.trim());
+      expect(shown, a.getAttribute('data-status') ?? '').toEqual(a.getAttribute('data-status') === 'live' ? [] : ['Coming soon']);
+    }
+  });
+
+  it('ends on one sentence and one link to /contact/, after the section that holds the wall', () => {
+    const band = d.querySelector('.lab-contact');
+    expect(band, 'the closing band').not.toBeNull();
+    expect(band!.closest('.lab-page')).toBeNull();
+    expect(d.querySelector('.lab-page')?.querySelector('.lab-contact')).toBeNull();
+    const links = band!.querySelectorAll('a');
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/contact/']);
+    expect(links[0].text.trim()).toBe('Talk to us');
+    expect(band!.querySelectorAll('p').map((p) => p.text.trim())).toEqual(['Want something like this for your business?']);
+    expect(band!.querySelector('svg')).toBeNull();
+    // Directly after .lab-page in the document, so it falls under the wall and under the List alike.
+    const page = d.querySelector('.lab-page')!;
+    expect(page.nextElementSibling?.getAttribute('class')).toContain('lab-contact');
+  });
+});
+
+describe('one word for each kind', () => {
+  const listHtml = readPage('/lab/');
+  const rows = wallData(listHtml);
+  const cards = doc(listHtml).querySelectorAll('.catalog article');
+
+  it('is the same on the wall tile, the List card and the case page', () => {
+    expect(cards.length).toBe(LISTED.length);
+    LISTED.forEach((e, i) => {
+      const wall = rows.find((r) => r.id === e.slug)!.kindLabel;
+      const card = cards[i].querySelector('.meta .kind')?.text.trim();
+      expect(card, `${e.designation} list`).toBe(wall);
+      if (e.href !== null && e.href.startsWith(`/lab/${e.slug}`)) {
+        const page = doc(readPage(`/lab/${e.slug}/`));
+        const onPage = page.querySelector('details.plate summary .smallcaps')?.text.trim()
+          ?? page.querySelector('.hero-text .designation')?.text.replace(/\s+/g, ' ').trim();
+        expect(onPage, `${e.designation} case page`).toContain(wall);
+        // A study page names itself with the one word and no other, so an invented business never reads as client work.
+        if (wall === 'Experiment') expect(onPage, e.designation).not.toMatch(/\bstudy\b/i);
+      }
+    });
   });
 });

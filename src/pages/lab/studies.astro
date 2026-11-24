@@ -10,14 +10,14 @@ const entries = (await getCollection('lab', ({ data }) => catalogSet(data) === '
 ---
 <BaseLayout
   title="Studies · The Lab · Birch Design Lab"
-  description="Client work, catalogued like everything else in the Lab."
+  description="Client work and our own studies, written up in full."
   zone="lab"
 >
   <section class="wrap">
     <header class="intro">
-      <p class="smallcaps kicker"><a href="/lab/">The Lab</a></p>
+      <p class="kicker"><a href="/lab/">The Lab</a></p>
       <h1>Studies</h1>
-      <p>Client work, catalogued like everything else here. Real projects, real constraints, shown with the same candor as the experiments.</p>
+      <p>Client work and our own studies, written up in full. Real projects, real constraints, shown with the same candor as the experiments.</p>
     </header>
     <SpecimenCatalog entries={entries} />
   </section>
@@ -26,8 +26,10 @@ const entries = (await getCollection('lab', ({ data }) => catalogSet(data) === '
 <style>
   .intro { padding-block: var(--space-6) var(--space-5); max-width: var(--measure); }
   .intro p { color: var(--mark-muted); margin-top: var(--space-3); }
-  .kicker a { color: var(--accent); text-decoration: none; }
+  /* The way back, in the List's grammar: body serif, sentence case, muted, a 44px target. */
+  .intro .kicker { margin-top: 0; font-size: var(--text-sm); }
+  .kicker a { display: inline-flex; align-items: center; min-height: 44px; color: var(--mark-muted); text-decoration: none; }
   @media (hover: hover) and (pointer: fine) {
-    .kicker a:hover { text-decoration: underline; }
+    .kicker a:hover { color: var(--mark); text-decoration: underline; }
   }
 </style>
