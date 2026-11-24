@@ -224,8 +224,10 @@ describe('lab wall layout', () => {
     for (const vw of [1100, 1280, 1440, 1520, 1600, 1920, 2560]) {
       const wallLeft = column(vw) - wallBleed(column(vw), vw);
       expect(vw - 2 * wallLeft, `wall width at ${vw}`).toBeCloseTo(Math.min(vw, WALL_MAX), 6);
-      // the header's row (max-width 1520, border-box, centred) has the wall's left edge for its own
-      expect((vw - Math.min(vw, WALL_MAX)) / 2, `header row at ${vw}`).toBeCloseTo(wallLeft, 6);
+      // past the cap the header's row (max-width 1520, border-box, centred, from 1521 up) has the wall's left edge for its own;
+      // at or below it the header is the site's own and the wall reaches the window's edge
+      if (vw > WALL_MAX) expect((vw - WALL_MAX) / 2, `header row at ${vw}`).toBeCloseTo(wallLeft, 6);
+      else expect(wallLeft, `wall edge at ${vw}`).toBeCloseTo(0, 6);
     }
     // narrow windows are unchanged: the bleed is the column's own distance from the edge
     expect(wallBleed(104, 1440)).toBeCloseTo(104, 6);

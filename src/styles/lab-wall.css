@@ -53,9 +53,13 @@ html[data-lab-view='wall'] .lab-page > .intro p { margin-top: 0; font-size: 1rem
 html[data-lab-view='wall'] .lab-page > .filter { margin-bottom: 0; align-self: center; }
 html[data-lab-view='wall'] .lab-page > .lw-toggle { align-self: center; margin-bottom: 0; }
 /* The wall reaches past the page's column to the window's edges, and no further than 1520px (WALL_MAX in layout.ts), centred.
-   The header's row on this page takes the same width, so the wall and the header share one column, and where the window is
-   wider than 1520 their left and right edges are the same two lines. (Every other page's header is as it was.) */
-html[data-lab-view='wall'] header .bar { max-width: 1520px; }
+   Where the window is wider than that cap, the header's row on this page takes the same width, so the wall and the header
+   row share their left and right edges. It waits on the page (data-lab-view is set on both views, and the Wall/List switch
+   never changes it), not on the wall view, so pressing the switch never moves the wordmark; and below the cap the header
+   is the site's own, so nothing moves at 1137 to 1520 either. (Every other page's header is as it was.) */
+@media (min-width: 1521px) {
+  html[data-lab-view] header .bar { max-width: 1520px; }
+}
 /* The page's <h1> stays in the document for readers and search, as the site's .visually-hidden does. */
 html[data-lab-view='wall'] .lab-page .lw-h1 {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
