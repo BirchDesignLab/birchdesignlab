@@ -71,7 +71,7 @@ describe('the List cards', () => {
     expect(nums.indexOf('BDL-009')).toBe(nums.indexOf('BDL-010') + 1);
   });
 
-  it('/lab/: the Field Guide and the Portal show two different pictures, and Novgorod Letters shows its sheet', () => {
+  it('/lab/: the Field Guide and the Portal show two different pictures, and Novgorod Letters is hidden until it is built', () => {
     const cards = doc(readPage('/lab/')).querySelectorAll('.catalog article');
     const card = (num: string) => cards.find((c) => c.querySelector('.num')!.text.trim() === num)!;
     const files = (num: string) => card(num).querySelectorAll('img:not(.shot)').map((i) => (i.getAttribute('src') ?? '').split('/').pop()!.split('.')[0]);
@@ -79,11 +79,8 @@ describe('the List cards', () => {
     expect(files('BDL-011'), 'the Field Guide card').toEqual(['guide']);
     expect(files('BDL-010'), 'the Portal card').toContain('thumb');
     expect(files('BDL-010')).not.toContain('guide');
-    // BDL-003 is coming soon but is no longer a blank box.
-    const novgorod = card('BDL-003');
-    expect(novgorod.getAttribute('data-status')).toBe('forthcoming');
-    expect(novgorod.querySelectorAll('.thumb.blank').length).toBe(0);
-    expect(files('BDL-003')).toEqual(['thumb']);
+    // BDL-003 is hidden (noindex) until it is built (founder, 11-24); its still waits in src/content/lab/bdl-003/.
+    expect(cards.find((c) => c.querySelector('.num')!.text.trim() === 'BDL-003')).toBeUndefined();
   });
 
   it('/lab/: the Portal picture is asked for at the size the card draws it, like its neighbours', () => {

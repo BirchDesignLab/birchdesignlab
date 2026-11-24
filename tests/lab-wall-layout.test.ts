@@ -131,14 +131,14 @@ describe('lab wall layout', () => {
     }
   });
 
-  // The hang's tiers (the founder's ruling): the Portal leads; then the three next; then the middle four; then the three smallest.
+  // The hang's tiers (the founder's ruling): the Portal leads; then the three next; then the middle four; then the two smallest.
   const LEAD = 'bdl-010';
   const SECOND = ['bdl-011', 'bdl-012', 'bdl-013'];
   const MID = ['bdl-005', 'bdl-007', 'bdl-002', 'bdl-001'];
-  const SMALL = ['bdl-009', 'bdl-008', 'bdl-003'];
+  const SMALL = ['bdl-009', 'bdl-008']; // bdl-003 is hidden until it is built (founder, 11-24)
   const area = (r: Rect) => r.w * r.h;
 
-  it('hangs the tiers in every map: the Portal leads, then the three, then the middle four, then the three smallest', () => {
+  it('hangs the tiers in every map: the Portal leads, then the three, then the middle four, then the two smallest', () => {
     for (const kind of KINDS) {
       const cells = MAPS[kind].cells;
       const a = (id: string) => cells[id]![2] * cells[id]![3];

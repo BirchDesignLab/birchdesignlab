@@ -159,7 +159,7 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   color: var(--mark); white-space: nowrap; line-height: 1;
   transition: background-color var(--dur-1) var(--ease-weighted);
 }
-.lw-t { flex: 1; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.02em; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.lw-t { flex: 1; line-height: 1.4; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.02em; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .lw-d, .lw-k, .lw-o { font-family: var(--font-display); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mark-muted); flex: none; }
 .lw-d { display: none; }
 .lw-o { display: none; color: var(--accent); align-items: center; gap: 4px; }

@@ -8,7 +8,8 @@ import type { MiniFactory } from '../types';
 export const MINI_IDS = [
   'bdl-001',
   'bdl-002',
-  'bdl-003',
+  // bdl-003 (Novgorod Letters) is hidden until the piece is built (founder, 11-24): its miniature stays in ./bdl-003.ts
+  // for the day it returns, but it is not registered, so no tile asks for it.
   'bdl-005',
   'bdl-007',
   'bdl-008',
@@ -32,7 +33,6 @@ type Module = { default: MiniFactory; hint: string };
 const LOADERS: Record<MiniId, () => Promise<Module>> = {
   'bdl-001': () => import('./bdl-001'),
   'bdl-002': () => import('./bdl-002'),
-  'bdl-003': () => import('./bdl-003'),
   'bdl-005': () => import('./bdl-005'),
   'bdl-007': () => import('./bdl-007'),
   'bdl-008': () => import('./bdl-008'),

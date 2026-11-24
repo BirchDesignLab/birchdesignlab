@@ -69,17 +69,17 @@ export interface MapSpec {
 
 /**
  * Desktop: 24 columns by 12 rows, filling the window below the header. The Portal takes the top left (40% of the
- * wall); the three smallest sit under it; the right half holds the three next pieces (6 by 5, 6 by 5, 6 by 4) and the
- * four middle ones, with the Shining Tree running tall down the right edge.
+ * wall); the right half holds the three next pieces (6 by 5 each), the Styleguide, and the Shining Tree running tall
+ * down the right edge; a strip along the foot holds the two smallest under the Portal, then Cheer and Chatter and the
+ * Bark Engine.
  */
 export const DESK_COLS = 24;
 export const DESK_ROWS = 12;
 export const DESK: Record<string, Cell> = {
   'bdl-010': [0, 0, 12, 10],
-  'bdl-009': [0, 10, 4, 2], 'bdl-008': [4, 10, 4, 2], 'bdl-003': [8, 10, 4, 2],
   'bdl-011': [12, 0, 6, 5], 'bdl-012': [18, 0, 6, 5],
-  'bdl-013': [12, 5, 6, 4], 'bdl-002': [18, 5, 3, 4], 'bdl-007': [21, 5, 3, 7],
-  'bdl-005': [12, 9, 5, 3], 'bdl-001': [17, 9, 4, 3],
+  'bdl-013': [12, 5, 6, 5], 'bdl-002': [18, 5, 3, 5], 'bdl-007': [21, 5, 3, 7],
+  'bdl-009': [0, 10, 4, 2], 'bdl-008': [4, 10, 4, 2], 'bdl-005': [8, 10, 7, 2], 'bdl-001': [15, 10, 6, 2],
 };
 
 /**
@@ -92,15 +92,15 @@ export const TABLET: Record<string, Cell> = {
   'bdl-010': [0, 0, 6, 8],
   'bdl-011': [0, 8, 3, 6], 'bdl-012': [3, 8, 3, 6],
   'bdl-013': [0, 14, 6, 4],
-  'bdl-007': [0, 18, 2, 6], 'bdl-005': [2, 18, 4, 3], 'bdl-002': [2, 21, 2, 3], 'bdl-001': [4, 21, 2, 3],
-  'bdl-009': [0, 24, 2, 2], 'bdl-008': [2, 24, 2, 2], 'bdl-003': [4, 24, 2, 2],
+  'bdl-007': [0, 18, 2, 6], 'bdl-005': [2, 18, 4, 3], 'bdl-002': [2, 21, 2, 3], 'bdl-001': [4, 21, 2, 5],
+  'bdl-009': [0, 24, 2, 2], 'bdl-008': [2, 24, 2, 2],
 };
 
 /**
  * Phone: 2 columns by 29 row units. Reading order is the ranking here, since every tile is one of two widths. The Portal
  * is full width and seven units tall (about 70% of the screen); the three secondaries are full width and four tall, with
  * the Data Map first so the Field Guide (which reads like the Portal at full width) never follows the Portal directly;
- * the mids go two-up between them, then the smalls, the coming-soon piece last.
+ * the mids go two-up between them, then the two smalls side by side at the foot.
  */
 export const PHONE_COLS = 2;
 export const PHONE_ROWS = 29;
@@ -109,9 +109,9 @@ export const PHONE: Record<string, Cell> = {
   'bdl-012': [0, 7, 2, 4],
   'bdl-005': [0, 11, 1, 3], 'bdl-002': [1, 11, 1, 3],
   'bdl-011': [0, 14, 2, 4],
-  'bdl-007': [0, 18, 1, 5], 'bdl-001': [1, 18, 1, 3], 'bdl-009': [1, 21, 1, 2],
+  'bdl-007': [0, 18, 1, 5], 'bdl-001': [1, 18, 1, 5],
   'bdl-013': [0, 23, 2, 4],
-  'bdl-008': [0, 27, 1, 2], 'bdl-003': [1, 27, 1, 2],
+  'bdl-009': [0, 27, 1, 2], 'bdl-008': [1, 27, 1, 2],
 };
 
 /** Below this window width (and the CSS rules that repeat it) the wall lays out as the phone map. */
