@@ -140,6 +140,20 @@ html[data-lab-view='wall'] .filter a[aria-current='true'] {
   padding: 0.6em 1em; border-top: 1px solid var(--line); border-right: 1px solid var(--line);
 }
 
+/* The one lit card in an unlit list: the Portal, the Lab's lead piece. It keeps
+   its date slot and its size; its picture takes a 1px frame in the wall's lamp
+   colour (--lw-glow, lab-wall.css; the fallback is the same value, for the
+   category pages that do not load the wall) and a soft warm glow. The glow is
+   still, so it stays under reduced motion. */
+.card.lit .portal-thumb {
+  --lit: var(--lw-glow, 255 222 160);
+  border-color: rgb(var(--lit));
+  box-shadow: 0 0 0 1px rgb(var(--lit) / 0.35), 0 0 36px 4px rgb(var(--lit) / 0.3);
+}
+:root[data-scheme='light'] .card.lit .portal-thumb {
+  box-shadow: 0 0 0 1px rgb(var(--lit) / 0.8), 0 0 36px 6px rgb(var(--lit) / 0.7);
+}
+
 /* ---------- the closing band's link ---------- */
 /* "Talk to us" (LabContact.astro, which this file does not own) sits under the
    List and is a touch target like the filter: at least 44px each way, the text

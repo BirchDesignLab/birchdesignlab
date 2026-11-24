@@ -233,7 +233,9 @@ describe('the words on /lab', () => {
   it('counts the pieces with the words the cards use', () => {
     const live = LISTED.filter((e) => e.href !== null).length;
     const soon = LISTED.length - live;
-    const expected = soon === 0 ? `${LISTED.length} pieces. All live.` : `${LISTED.length} pieces. ${live} live, ${soon} coming soon.`;
+    const expected = soon === 0
+      ? `${LISTED.length} pieces. All open today.`
+      : `${LISTED.length} pieces. ${live} open today, ${soon === 1 ? 'one' : soon} still in the workshop.`;
     expect(d.querySelector('.count')?.text.trim()).toBe(expected);
   });
 
