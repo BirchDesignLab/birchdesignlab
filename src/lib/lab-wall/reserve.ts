@@ -3,7 +3,9 @@
  * the box on every layout; the inline script below does it once in the very first paint, and the first script
  * (boot.ts, through holdBox) keeps it in step on resize, on a font landing and on anything above it changing height, until the engine takes over. Either way the box the engine inherits is already
  * the size and place it will have, and the tiles it adopts are already where it will put them: nothing moves when the
- * engine mounts, and a visitor on a slow connection sees the captioned mosaic, never an empty wall.
+ * engine mounts, and a visitor on a slow connection sees the captioned mosaic, never an empty wall. On desktop the box
+ * itself is not given a height but the room the page leaves it (sizeWall, lab-wall.css), which is what keeps its lower
+ * edge still when the words above it change height.
  *
  * measureWall and placeTile read the page (browser only); the rest is pure.
  */
@@ -38,6 +40,9 @@ export const TILE_ATTR = 'data-lw-id';
 export const LIVE_ATTR = 'data-lw-live';
 /** The attribute the inline script keeps on the wall while the engine is not here: the id of the framed tile clicked last (boot.ts hands it to the engine). */
 export const EARLY_ATTR = 'data-lw-early';
+
+/** The custom property on the wall's page that holds the least height the page may have while the wall fills the window (lab-wall.css reads it). */
+export const PAGE_MIN_VAR = '--lw-page-min';
 
 /** Which caption classes a tile of this width carries. The engine, the inline script and placeTile all go by these two numbers. */
 export function sizeClass(width: number): { xs: boolean; sm: boolean } {
@@ -97,8 +102,17 @@ export const RESERVE_INLINE = `(function () {
       base = Math.max(window.innerHeight - (w.getBoundingClientRect().top + window.scrollY), ${DESK_MIN_HEIGHT});
       ch = (base - 2 * gap - (mapRows - 1) * gap) / mapRows;
     }
-    w.style.height = (base + Math.ceil(spill.length / perRow) * spR * (ch + gap)) + 'px';
-    w.style.minHeight = '0';
+    if (!phone && !spill.length && p && p.style) {
+      // Desktop with nothing spilled: the page is told its least height and the wall fills what is left (see sizeWall).
+      var pcs = getComputedStyle(p);
+      p.style.setProperty('${PAGE_MIN_VAR}', r2(window.innerHeight - (p.getBoundingClientRect().top + window.scrollY) + (parseFloat(pcs.paddingBottom) || 0) + (parseFloat(pcs.borderBottomWidth) || 0)) + 'px');
+      w.style.height = '';
+      w.style.minHeight = '${DESK_MIN_HEIGHT}px';
+    } else {
+      if (p && p.style && p.style.removeProperty) p.style.removeProperty('${PAGE_MIN_VAR}');
+      w.style.height = (base + Math.ceil(spill.length / perRow) * spR * (ch + gap)) + 'px';
+      w.style.minHeight = '0';
+    }
     var cells = {};
     for (k = 0; k < ids.length; k++) cells[ids[k]] = own.call(map, ids[k]) ? map[ids[k]] : null;
     for (k = 0; k < spill.length; k++) cells[spill[k]] = [(k % perRow) * spC, mapRows + Math.floor(k / perRow) * spR, spC, spR];
@@ -151,14 +165,16 @@ export const RESERVE_INLINE = `(function () {
     w.addEventListener('click', function (ev) { remember(ev, false); });
     w.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') remember(ev, true); });
   } catch (e) { /* the tiles stay plain until the engine adopts them */ }
-  // What sits above the wall can change height before the engine arrives, and on desktop the height follows the top.
+  // What sits above the wall can change height before the engine arrives, and on desktop the wall's top moves with it.
   // The usual cause: the measure above ran with the fallback face, and the intro's sentence takes two lines in it where
-  // the web font takes one, so when the font lands the top rises 24px. Two hands keep the box in step:
-  // - each face still loading when the measure ran: its own promise settles in the task that lands it, and the box is refit
-  //   there and once more a task later (the browser can apply the face to the layout just after its promise settles), so
-  //   the box has its new height before anything in the next frame reads or paints it, all but the rarest read;
+  // the web font takes one, so when the font lands the top rises 24px. The wall's box needs no measuring for that: the
+  // page is told its least height and the wall is the row that fills what is left (lab-wall.css), so the layout that
+  // moves the top moves the height with it and the lower edge never moves, at any read. What does need measuring again
+  // is the tiles' own rectangles (they follow the height), and the page's height when the window changes. Two hands do it:
+  // - each face still loading when the measure ran: its own promise settles in the task that lands it, and the tiles are
+  //   placed again there and once more a task later (the browser can apply the face to the layout just after its promise settles);
   // - a ResizeObserver on everything laid out above the wall, for any other change: it runs after layout and before
-  //   paint, so the lower edge never shows a stale size.
+  //   paint, so the tiles never show a stale size.
   // Once the engine is live (${LIVE_ATTR}), or the page is its list, it is the engine's job.
   var held = function () { return !w.hasAttribute('${LIVE_ATTR}') && doc.documentElement.getAttribute('data-lab-view') === 'wall'; };
   var refit = function () { if (held()) fit(); };
@@ -193,10 +209,34 @@ export function measureWall(wallEl: HTMLElement, ids: string[]): WallLayout {
     viewportHeight: window.innerHeight,
     topHeight: top,
   });
+  sizeWall(wallEl, L);
+  return L;
+}
+
+/**
+ * Give the wall its height. On desktop with nothing spilled (L.fill) it is not told one: the page (the wall's parent, a
+ * grid whose last row is the wall) is told the least height it may have, so that its lower edge sits at the window's
+ * lower edge, and the wall fills what is left under whatever sits above it. A web font that lands and reflows the words
+ * above then moves the wall's top and its height together in the very layout that moves it, and its lower edge never
+ * moves: nothing has to measure and write again before the next read or frame sees it right. Otherwise (a phone, whose
+ * height follows the width; or a spill row, whose height follows the rest) the height is a number, and the caller
+ * measures again when what it came from changes.
+ */
+function sizeWall(wallEl: HTMLElement, L: WallLayout): void {
+  const page = wallEl.parentElement;
+  if (L.fill && page) {
+    const cs = getComputedStyle(page);
+    const below = (parseFloat(cs.paddingBottom) || 0) + (parseFloat(cs.borderBottomWidth) || 0);
+    const at = page.getBoundingClientRect().top + window.scrollY;
+    page.style.setProperty(PAGE_MIN_VAR, sig(window.innerHeight - at + below) + 'px');
+    wallEl.style.height = '';
+    wallEl.style.minHeight = DESK_MIN_HEIGHT + 'px';
+    return;
+  }
+  page?.style.removeProperty(PAGE_MIN_VAR);
   wallEl.style.height = L.height + 'px';
   // The exact height is set, so the stylesheet's approximation (its min-height) is done with.
   wallEl.style.minHeight = '0';
-  return L;
 }
 
 /** Put a framed tile (the inline script's, or the engine's own) in its rectangle: its box, its picture's frame, and the caption's size class. */

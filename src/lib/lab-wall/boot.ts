@@ -16,7 +16,8 @@
  * piece (/lab/#bdl-007): the entry is replaced with plain /lab/ and the piece
  * is handed to the engine to open once the wall is up. A reload (or Back) onto an entry this page pushed for a piece is
  * the one exception: that entry keeps its hash and the piece rides it, so closing the piece goes Back to the wall's own
- * entry and no second /lab/ entry is left behind. A click on a framed tile before the engine arrives (the inline script
+ * entry and no second /lab/ entry is left behind (and if the engine has not opened that piece when the visitor chooses the
+ * List, or never comes, the page steps off that entry at once, so no press of Back is dead). A click on a framed tile before the engine arrives (the inline script
  * remembers it on the wall) is handed to the engine the same way, to open as a click after mount would.
  */
 import { wireBulb } from './lamp';
@@ -60,7 +61,7 @@ export function bootLabWall(): void {
   // becomes plain /lab/, so the address bar and Back never carry a hash this page did not push itself.
   const linked = idFromHash(location.hash, ids);
   // The entry this page pushed itself for that piece (a reload, or Back, onto it) is left as it is: the piece rides it.
-  const rode = linked !== null && (history.state as { lwOpen?: unknown } | null)?.lwOpen === linked;
+  let rode = linked !== null && (history.state as { lwOpen?: unknown } | null)?.lwOpen === linked;
   if (location.hash && !rode) {
     try {
       // The state goes too: whatever it held belonged to an entry this page no longer has a piece for.
@@ -73,6 +74,7 @@ export function bootLabWall(): void {
   let engine: WallHandle | null = null;
   let loading: Promise<WallHandle | null> | null = null;
   let fadeTimer = 0;
+  let linkGone = false;
 
   const viewNow = (): View => (root.dataset.labView === 'list' ? 'list' : 'wall');
 
@@ -108,6 +110,24 @@ export function bootLabWall(): void {
     release = null;
   }
 
+  /**
+   * The page was reloaded onto an entry it had pushed for a piece, and the engine has not opened that piece: the visitor
+   * went to the List first, or the engine will not come. The entry holds nothing the page will show, so step off it onto
+   * the wall's own entry (history.back(), as the engine does when it closes a piece): left in place, a press of Back
+   * would only drop the hash and change nothing on screen.
+   */
+  function leaveEntry(): void {
+    if (!rode || engine) return;
+    rode = false;
+    // A load already on its way was asked to open that piece: it must not, now that its entry is gone.
+    linkGone = true;
+    try {
+      history.back();
+    } catch {
+      /* history blocked: the entry stays, harmlessly */
+    }
+  }
+
   /** The piece a framed tile was clicked for before the engine arrived (the last click), if the wall is still what shows; either way the memory is cleared. */
   function takeEarly(): string | null {
     const id = wallEl.getAttribute(EARLY_ATTR);
@@ -122,7 +142,7 @@ export function bootLabWall(): void {
         // A click made while the engine was on its way wins over a link, and opens as a click would (an entry pushed);
         // except on an entry this page already pushed for a piece, which it rides.
         const early = takeEarly();
-        return (engine = m.mountWall(early ? { open: early, entry: rode ? 'existing' : 'push' } : { open, entry: rode ? 'existing' : 'none' }));
+        return (engine = m.mountWall(early ? { open: early, entry: rode ? 'existing' : 'push' } : { open: linkGone ? null : open, entry: rode ? 'existing' : 'none' }));
       })
       .catch((err: unknown) => {
         console.error('Lab wall failed to load', err);
@@ -144,6 +164,7 @@ export function bootLabWall(): void {
         // The engine would not load: the page is its list, and the choice is not remembered against it, nor a click made meanwhile.
         unhold();
         clearFramedTiles(wallEl);
+        leaveEntry();
         paint('list', false);
         return;
       }
@@ -155,6 +176,7 @@ export function bootLabWall(): void {
       // The List before the engine: nothing is held for a wall nobody sees, and a click made on it is let go.
       unhold();
       wallEl.removeAttribute(EARLY_ATTR);
+      leaveEntry();
     }
   }
 

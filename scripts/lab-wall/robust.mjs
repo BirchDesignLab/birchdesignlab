@@ -966,6 +966,61 @@ for (const w of [390, 360]) {
     await wait(page, 1000);
     ok(page.url() === away, `and one Back leaves /lab/ (${page.url()})`);
   }
+  // The entry the page pushed for a piece, reloaded onto, with the engine not yet here and the visitor choosing the List
+  // first: the page steps off that entry onto the wall's own, so no press of Back is dead (left in place it would only
+  // drop the hash and change nothing on screen), and the Wall chosen afterwards opens nothing.
+  {
+    await openIt(piece);
+    let release;
+    const gate = new Promise((r) => (release = r));
+    await page.route(ENGINE_JS, async (route) => { await gate; await route.continue(); });
+    await page.reload({ waitUntil: 'commit' });
+    await wait(page, 1500);
+    await page.click('[data-lw-view=list]');
+    await wait(page, 1500);
+    let s = await here();
+    ok(s.cur === null && s.path === '/lab/' && s.hash === '' && s.view === 'list' && !s.locked, 'reload onto a piece, the List before the engine: the List at plain /lab/, its entry left behind ' + JSON.stringify(s));
+    await page.click('[data-lw-view=wall]');
+    release();
+    await wait(page, 2600);
+    s = await here();
+    ok(s.cur === null && s.path === '/lab/' && s.hash === '' && s.view === 'wall' && !s.locked, 'then the Wall: shown, nothing open, no hash left in the bar ' + JSON.stringify(s));
+    await page.unroute(ENGINE_JS);
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `and one Back leaves /lab/, not a dead press (${page.url()})`);
+  }
+  await ctx.close();
+}
+
+// ---------- the same reload, and the engine never comes ----------
+{
+  const own = [];
+  const ctx = await context();
+  const page = await ctx.newPage();
+  watch(page, 'reload open, no engine', own);
+  const away = BASE + '/about/';
+  await page.goto(URL);
+  await wait(page, 2000);
+  const piece = (await data(page))[2];
+  await page.goto(away);
+  await wait(page, 500);
+  await page.goto(URL);
+  await wait(page, 2200);
+  await page.mouse.move(1, 1);
+  const c = await center(page, labelOf(piece));
+  await page.mouse.click(c.x, c.y);
+  await wait(page, 1300);
+  await page.route(ENGINE_JS, (route) => route.abort());
+  await page.reload();
+  await wait(page, 2200);
+  const s = await page.evaluate(() => ({ path: location.pathname, hash: location.hash, view: document.documentElement.dataset.labView, tiles: document.querySelectorAll('.lw-tile').length, locked: document.documentElement.classList.contains('lw-locked') }));
+  ok(s.path === '/lab/' && s.hash === '' && s.view === 'list' && s.tiles === 0 && !s.locked, 'reload onto a piece, the engine fails outright: the List at plain /lab/, nothing open, its entry left behind ' + JSON.stringify(s));
+  await page.unroute(ENGINE_JS);
+  await page.goBack();
+  await wait(page, 1000);
+  ok(page.url() === away, `and one Back leaves /lab/, not a dead press (${page.url()})`);
+  if (own.length) console.log('     (expected console noise from the failed engine:', own.length, 'lines)');
   await ctx.close();
 }
 
@@ -1159,13 +1214,13 @@ for (const w of [390, 360]) {
 // The slow load above hits this only now and then: the page measures the wall with the fallback face, in which the
 // intro's sentence can take two lines where the web font takes one, and the font lands at some point after. Here it is
 // made to happen every time: the web fonts and some scripts are held, and each case releases them in the order it
-// wants. The wall's top must really have moved, or the case tested nothing, and the wall's lower edge must not: read
-// at the start of each frame (requestAnimationFrame, where anything in the frame first sees the layout) and after the
-// frame is painted. A face lands, the browser puts it to use, and the box is refit a moment later, so a read that falls
-// in that gap can meet the old height (the observer refits before the frame is painted, so it is never on screen). What
-// is asserted: every run ends on the edge it began on; a stale read is only ever the gap, a few reads in a row and
-// no more; and across the runs the gap is the exception (the refit on each face's landing is what keeps it so).
-const LATE_RUNS = Math.max(1, Number(process.env.LATE_RUNS) || 8);
+// wants. The wall's top must really have moved, or the case tested nothing, and the wall's lower edge must not, at any
+// read: at the start of each frame (requestAnimationFrame, where anything in the frame first sees the layout) and after
+// the frame is painted (a task of its own, which can fall between a face being put to use and any script hearing of it).
+// The wall's box is the row the page leaves it (lab-wall.css), so the layout that moves the top moves the height with
+// it and no read can meet the old height: a single stale read, in any run, is a FAIL, whichever order the fonts and the
+// engine arrive in.
+const LATE_RUNS = Math.max(1, Number(process.env.LATE_RUNS) || 16);
 
 /** A load of /lab/ with the web fonts and the scripts matching `scripts` held. `run(page, { fonts, scripts })` releases them in the order the case wants; what the page saw of the wall comes back. */
 async function lateLoad({ w, view = null, scripts: re = ALL_JS, tag, run }) {
@@ -1196,20 +1251,19 @@ async function lateLoad({ w, view = null, scripts: re = ALL_JS, tag, run }) {
   const tops = s.map((x) => x.top);
   const first = s.length ? s[0].bottom : 0;
   const last = s.length ? s[s.length - 1].bottom : 0;
-  let stale = 0, row = 0, gap = 0;
-  for (const x of s) { if (Math.abs(x.bottom - last) > 1) { stale++; row++; gap = Math.max(gap, row); } else row = 0; }
-  return { seen, samples: s.length, live: s.some((x) => x.live), moved: s.length ? Math.max(...tops) - Math.min(...tops) : 0, first, last, stale, gap };
+  const bottoms = s.map((x) => x.bottom);
+  const span = s.length ? Math.max(...bottoms) - Math.min(...bottoms) : 0;
+  const stale = s.filter((x) => Math.abs(x.bottom - last) > 1).length;
+  return { seen, samples: s.length, live: s.some((x) => x.live), moved: s.length ? Math.max(...tops) - Math.min(...tops) : 0, first, last, span, stale };
 }
-/** The three things asserted of every run of a late-font case. */
-const lateOk = (r) => r.samples > 0 && r.live && r.moved >= 10 && Math.abs(r.last - r.first) <= 1 && r.gap <= 3;
-const lateWhy = (r) => `${r.samples} reads, top moved ${r.moved}px, edge ${r.first} to ${r.last}, ${r.stale} stale read${r.stale === 1 ? '' : 's'}, at most ${r.gap} in a row`;
-/** Several runs of one case: each must hold, and a stale read must be the exception. */
+/** What is asserted of every run of a late-font case: the top really moved, and the lower edge never did, at any read (max - min <= 1). */
+const lateOk = (r) => r.samples > 0 && r.live && r.moved >= 10 && r.span <= 1;
+const lateWhy = (r) => `${r.samples} reads, top moved ${r.moved}px, edge ${r.first} to ${r.last}, widest spread ${r.span}px, ${r.stale} stale read${r.stale === 1 ? '' : 's'}`;
+/** Several runs of one case: each must hold. */
 async function lateRuns(n, tag, load) {
   const runs = [];
   for (let i = 0; i < n; i++) runs.push(await load(`${tag} #${i}`));
-  const held = runs.filter(lateOk).length;
-  const stale = runs.filter((r) => r.stale > 0).length;
-  return { runs, held, stale, n };
+  return { runs, held: runs.filter(lateOk).length, n };
 }
 
 for (const w of [1440, 1280]) {
@@ -1224,9 +1278,9 @@ for (const w of [1440, 1280]) {
     await wait(page, 600);
     return { heldLive };
   } });
-  ok(!a.seen.heldLive && lateOk(a), `late font ${w}: fonts landed while the engine was held, then it mounted; the top moved and the lower edge held (${lateWhy(a)})`);
+  ok(!a.seen.heldLive && lateOk(a), `late font ${w}: fonts landed while the engine was held, then it mounted; the top moved and the lower edge held at every read (${lateWhy(a)})`);
 
-  // the engine first, then the fonts: the engine's own refit has to catch the font as it lands
+  // the engine first, then the fonts: the box follows its top without anyone measuring again
   const b = await lateRuns(LATE_RUNS, `late font engine-first ${w}`, (tag) => lateLoad({ w, tag, run: async (page, g) => {
     await wait(page, 400);
     g.scripts();
@@ -1240,8 +1294,7 @@ for (const w of [1440, 1280]) {
   const liveFirst = b.runs.filter((r) => r.seen.liveBefore).length;
   const moved = b.runs.filter((r) => r.moved >= 10).length;
   ok(liveFirst === b.n && moved === b.n, `late font ${w}, engine first: the engine was live before the fonts landed and the top moved, in ${liveFirst} and ${moved} of ${b.n} runs`);
-  ok(b.held === b.n, `late font ${w}, engine first: every run ends on the edge it began on, with a stale read only ever the gap (${b.held} of ${b.n} runs; ${b.runs.filter((r) => !lateOk(r)).map(lateWhy).join('; ') || 'none out of line'})`);
-  ok(b.stale <= Math.ceil(b.n * 0.4), `late font ${w}, engine first: a stale read at a frame start is the exception, not the rule (${b.stale} of ${b.n} runs saw one)`);
+  ok(b.held === b.n, `late font ${w}, engine first: the lower edge never moves at any read, in every run (${b.held} of ${b.n} runs; ${b.runs.filter((r) => !lateOk(r)).map(lateWhy).join('; ') || 'none out of line'})`);
 }
 
 // ---------- the held box on every path into the wall view ----------
@@ -1262,8 +1315,7 @@ for (const path of ['List stored, then Wall', 'Wall, List, Wall']) {
     await wait(page, 700);
     return { heldLive };
   } }));
-  ok(r.runs.every((x) => !x.seen.heldLive) && r.held === r.n, `held box (${path}): the fonts landed while the engine was held, the top moved, and the lower edge held to the engine mounting (${r.held} of ${r.n} runs; ${r.runs.filter((x) => !lateOk(x)).map(lateWhy).join('; ') || 'none out of line'})`);
-  ok(r.stale <= Math.ceil(r.n * 0.4), `held box (${path}): a stale read at a frame start is the exception (${r.stale} of ${r.n} runs saw one)`);
+  ok(r.runs.every((x) => !x.seen.heldLive) && r.held === r.n, `held box (${path}): the fonts landed while the engine was held, the top moved, and the lower edge held at every read to the engine mounting (${r.held} of ${r.n} runs; ${r.runs.filter((x) => !lateOk(x)).map(lateWhy).join('; ') || 'none out of line'})`);
 }
 
 // ---------- phone ----------

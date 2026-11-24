@@ -58,6 +58,14 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   clip-path: inset(50%); white-space: nowrap;
 }
 
+/* Wall, desktop: the page is as tall as the window below its own top (script writes --lw-page-min, src/lib/lab-wall/reserve.ts)
+   and the wall is the row that takes what the rows above it leave, so a web font that lands and changes the height of the
+   words above moves the wall's top and height together, in one layout, and its lower edge, and the footer under it, stay put. */
+@media (min-width: 720px) {
+  html[data-lab-view='wall'] .lab-page { min-height: var(--lw-page-min, 0px); grid-template-rows: auto auto 1fr; }
+  html[data-lab-view='wall'] .lab-page > .lw-wall { align-self: stretch; }
+}
+
 /* The Wall/List switch: the same square, hairline grammar as the filter beside it. */
 .lw-toggle { gap: var(--space-2); }
 .lw-toggle button {

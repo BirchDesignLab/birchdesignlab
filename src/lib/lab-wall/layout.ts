@@ -37,6 +37,12 @@ export interface WallLayout {
   phone: boolean;
   /** Height of the whole wall, spill rows included. */
   height: number;
+  /**
+   * True when the whole height is the part that follows the window (desktop, and no piece spills past the mosaic): the
+   * page can then let the wall fill what is left under whatever sits above it (reserve.ts, lab-wall.css), instead of
+   * being told a number that goes stale the moment the words above it change height.
+   */
+  fill: boolean;
   rects: Record<string, Rect>;
 }
 
@@ -114,5 +120,5 @@ export function layoutWall(ids: string[], box: WallBox): WallLayout {
   });
 
   const height = base + spillBands * sp.rows * (cellH + gap);
-  return { phone, height, rects };
+  return { phone, height, fill: !phone && spill.length === 0, rects };
 }

@@ -1,16 +1,26 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DESK, PHONE, PHONE_BELOW, layoutWall } from '../src/lib/lab-wall/layout';
+import { DESK, DESK_MIN_HEIGHT, PHONE, PHONE_BELOW, layoutWall } from '../src/lib/lab-wall/layout';
 import type { Rect } from '../src/lib/lab-wall/layout';
 import { MINI_IDS } from '../src/lib/lab-wall/minis';
-import { EARLY_ATTR, RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW, holdBox, sizeClass } from '../src/lib/lab-wall/reserve';
+import { EARLY_ATTR, PAGE_MIN_VAR, RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW, holdBox, sizeClass } from '../src/lib/lab-wall/reserve';
 
 const IDS = [...MINI_IDS] as string[];
 const WIDTHS = [1440, 1024, 720, 719, 390];
 /** The wall's box; the window is as wide as the wall unless a test says otherwise (no scrollbar). */
 const box = (width: number, viewportWidth = width) => ({ width, viewportWidth, viewportHeight: 900, topHeight: 120 });
 const EPS = 1e-6;
+
+/**
+ * The height the stylesheet gives the wall once the inline script (or measureWall) has run: a number on a phone or with a
+ * spill row, and on desktop the row the page leaves it, which is the page's least height less everything above the wall
+ * in the page (lab-wall.css: the page is a grid whose last row is the wall; border-box, so its bottom padding is inside).
+ */
+function cssHeight(wall: { height?: string; minHeight?: string }, pageProps: Record<string, string>, wallTop: number, pageTop: number, padBottom = 0): number {
+  if (wall.height) return parseFloat(wall.height);
+  return Math.max(parseFloat(wall.minHeight!), parseFloat(pageProps[PAGE_MIN_VAR]!) - padBottom - (wallTop - pageTop));
+}
 
 function overlap(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w - EPS && b.x < a.x + a.w - EPS && a.y < b.y + b.h - EPS && b.y < a.y + a.h - EPS;
@@ -129,10 +139,15 @@ describe('lab wall layout', () => {
 
 describe('the box held before the engine arrives', () => {
   /** Run the inline script against a stand-in page and return what it wrote on the wall. */
-  function reserve(opts: { view: string | null; windowWidth: number; windowHeight: number; wallTop: number; wallWidth: number; scrollY?: number; padLeft?: number; pageLeft?: number }) {
+  function reserve(opts: { view: string | null; windowWidth: number; windowHeight: number; wallTop: number; wallWidth: number; scrollY?: number; padLeft?: number; pageLeft?: number; pageTop?: number; padBottom?: number; ids?: string[] }) {
     const written: Record<string, string> = {};
     const props: Record<string, string> = {};
-    const page = { getBoundingClientRect: () => ({ left: opts.pageLeft ?? 0 }) };
+    const pageProps: Record<string, string> = {};
+    const pageTop = opts.pageTop ?? 100;
+    const page = {
+      getBoundingClientRect: () => ({ left: opts.pageLeft ?? 0, top: pageTop - (opts.scrollY ?? 0) }),
+      style: { setProperty: (k: string, v: string) => { pageProps[k] = v; }, removeProperty: (k: string) => { delete pageProps[k]; } },
+    };
     const wall = {
       parentElement: page,
       clientWidth: opts.wallWidth,
@@ -145,22 +160,36 @@ describe('the box held before the engine arrives', () => {
       },
       getBoundingClientRect: () => ({ top: opts.wallTop - (opts.scrollY ?? 0) }),
     };
+    const data = { textContent: JSON.stringify((opts.ids ?? IDS).map((id) => ({ id }))) };
     const doc = {
-      querySelector: (s: string) => (s === '[data-lw="wall"]' ? wall : null),
+      querySelector: (s: string) => (s === '[data-lw="wall"]' ? wall : s === '[data-lw="data"]' ? data : null),
       documentElement: { getAttribute: (n: string) => (n === 'data-lab-view' ? opts.view : null) },
     };
     const win = { innerWidth: opts.windowWidth, innerHeight: opts.windowHeight, scrollY: opts.scrollY ?? 0 };
-    const gcs = () => ({ paddingLeft: (opts.padLeft ?? 0) + 'px' });
+    const gcs = () => ({ paddingLeft: (opts.padLeft ?? 0) + 'px', paddingBottom: (opts.padBottom ?? 0) + 'px', borderBottomWidth: '0px' });
     new Function('document', 'window', 'getComputedStyle', RESERVE_INLINE)(doc, win, gcs);
-    return { written, props };
+    return { written, props, pageProps, height: () => cssHeight(written, pageProps, opts.wallTop, pageTop, opts.padBottom ?? 0) };
   }
 
-  it('gives the wall the height layoutWall gives it on desktop, for a window of any height', () => {
-    for (const [ww, wh, top] of [[1440, 900, 220], [1920, 1080, 236], [1024, 768, 260], [1280, 400, 250], [720, 800, 300]] as const) {
-      const got = reserve({ view: 'wall', windowWidth: ww, windowHeight: wh, wallTop: top, wallWidth: ww });
+  it('gives the wall the height layoutWall gives it on desktop, for a window of any height, as the row the page leaves it', () => {
+    for (const [ww, wh, top, pb] of [[1440, 900, 220, 0], [1920, 1080, 236, 0], [1024, 768, 260, 24], [1280, 400, 250, 0], [720, 800, 300, 0]] as const) {
+      const got = reserve({ view: 'wall', windowWidth: ww, windowHeight: wh, wallTop: top, wallWidth: ww, padBottom: pb });
       const want = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: top }).height;
-      expect(parseFloat(got.written.height!), `${ww}x${wh}`).toBeCloseTo(want, 6);
+      // no number is written: the page is told its least height, and the wall's floor is the shortest mosaic
+      expect(got.written.height, `${ww}x${wh}`).toBe('');
+      expect(got.written.minHeight).toBe(DESK_MIN_HEIGHT + 'px');
+      expect(got.height(), `${ww}x${wh}`).toBeCloseTo(want, 6);
     }
+  });
+
+  it('gives the wall a number of its own when a piece spills past the mosaic, and takes the page rule away', () => {
+    const ids = [...IDS, 'bdl-901', 'bdl-902'];
+    const got = reserve({ view: 'wall', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440, ids });
+    const want = layoutWall(ids, { width: 1440, viewportWidth: 1440, viewportHeight: 900, topHeight: 220 });
+    expect(want.fill).toBe(false);
+    expect(parseFloat(got.written.height!)).toBeCloseTo(want.height, 6);
+    expect(got.written.minHeight).toBe('0');
+    expect(got.pageProps[PAGE_MIN_VAR]).toBeUndefined();
   });
 
   it('gives the wall the height layoutWall gives it on a phone, for any width', () => {
@@ -168,13 +197,15 @@ describe('the box held before the engine arrives', () => {
       const got = reserve({ view: 'wall', windowWidth: ww, windowHeight: 800, wallTop: 200, wallWidth: ww });
       const want = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: 800, topHeight: 200 }).height;
       expect(parseFloat(got.written.height!), `${ww}`).toBeCloseTo(want, 6);
+      expect(got.written.minHeight).toBe('0');
+      expect(got.pageProps[PAGE_MIN_VAR]).toBeUndefined();
     }
   });
 
-  it('counts the page scroll in what sits above the wall, and holds the full-bleed margin and the exact height', () => {
+  it('counts the page scroll in what sits above the wall, and holds the full-bleed margin and the page height', () => {
     const got = reserve({ view: 'wall', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440, scrollY: 100, pageLeft: 80, padLeft: 24 });
-    expect(parseFloat(got.written.height!)).toBeCloseTo(900 - 220, 6);
-    expect(got.written.minHeight).toBe('0');
+    expect(got.height()).toBeCloseTo(900 - 220, 6);
+    expect(parseFloat(got.pageProps[PAGE_MIN_VAR]!)).toBeCloseTo(900 - 100, 6);
     expect(got.props['--lw-bleed']).toBe('104.00px');
   });
 
@@ -186,13 +217,22 @@ describe('the box held before the engine arrives', () => {
     const intro = { previousElementSibling: null };
     const hint = { previousElementSibling: intro };
     const body = {};
-    const page = { getBoundingClientRect: () => ({ left: 0 }), previousElementSibling: null, parentElement: body };
+    const pageProps: Record<string, string> = {};
+    const PAGE_TOP = 100;
+    const page = {
+      getBoundingClientRect: () => ({ left: 0, top: PAGE_TOP }),
+      style: { setProperty: (k: string, v: string) => { pageProps[k] = v; }, removeProperty: (k: string) => { delete pageProps[k]; } },
+      previousElementSibling: null,
+      parentElement: body,
+    };
     const wall = {
       parentElement: page,
       previousElementSibling: hint,
       clientWidth: 1440,
       style: {
+        get height() { return written.height ?? ''; },
         set height(v: string) { written.height = v; },
+        get minHeight() { return written.minHeight ?? ''; },
         set minHeight(v: string) { written.minHeight = v; },
         setProperty: () => {},
       },
@@ -219,7 +259,10 @@ describe('the box held before the engine arrives', () => {
     }
     new Function('document', 'window', 'getComputedStyle', 'ResizeObserver', RESERVE_INLINE)(doc, win, () => ({ paddingLeft: '0px' }), FakeRO);
     const want = (t: number) => layoutWall(IDS, { width: 1440, viewportWidth: 1440, viewportHeight: 900, topHeight: t }).height;
-    expect(parseFloat(written.height!)).toBeCloseTo(want(244), 6);
+    // What the stylesheet makes of the box at the wall's top as it is now, with whatever the script last wrote.
+    const made = () => cssHeight(written, pageProps, top, PAGE_TOP);
+    expect(made()).toBeCloseTo(want(244), 6);
+    const told = pageProps[PAGE_MIN_VAR];
     expect(observers).toHaveLength(1);
     const ro = observers[0]!;
     // Everything laid out before the wall, and nothing that contains it.
@@ -228,28 +271,38 @@ describe('the box held before the engine arrives', () => {
     // follows its top in the task that landed it. A face already loaded is not watched.
     expect(watchedLoaded).toBe(false);
     top = 220;
+    // The page is told its least height from where the page starts, so the box follows its top in the very layout that
+    // moves the top: before anything has measured again, its lower edge is where it was.
+    expect(made()).toBeCloseTo(want(220), 6);
+    expect(top + made()).toBeCloseTo(244 + want(244), 6);
     land();
     await Promise.resolve();
-    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
-    // Anything else above changes height: the observer refits.
+    expect(pageProps[PAGE_MIN_VAR]).toBe(told);
+    expect(made()).toBeCloseTo(want(220), 6);
+    // Anything else above changes height: the box holds, and the observer's refit leaves the page's height as it was.
     top = 232;
+    expect(top + made()).toBeCloseTo(244 + want(244), 6);
     ro.cb();
-    expect(parseFloat(written.height!)).toBeCloseTo(want(232), 6);
+    expect(made()).toBeCloseTo(want(232), 6);
     top = 220;
     ro.cb();
-    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
+    expect(made()).toBeCloseTo(want(220), 6);
     expect(want(220) - want(244)).toBeCloseTo(24, 6);
     // Once the engine is live the inline script stands down.
     attrs['data-lw-live'] = '';
+    win.innerHeight = 700;
     top = 200;
     ro.cb();
-    expect(parseFloat(written.height!)).toBeCloseTo(want(220), 6);
+    expect(pageProps[PAGE_MIN_VAR]).toBe(told);
     expect(ro.off).toBe(true);
   });
 
   it('does nothing in the list view or with no view chosen', () => {
-    expect(reserve({ view: 'list', windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
-    expect(reserve({ view: null, windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 }).written).toEqual({});
+    for (const view of ['list', null]) {
+      const got = reserve({ view, windowWidth: 1440, windowHeight: 900, wallTop: 220, wallWidth: 1440 });
+      expect(got.written).toEqual({});
+      expect(got.pageProps).toEqual({});
+    }
   });
 });
 
@@ -274,14 +327,18 @@ describe('the framed tiles held before the engine arrives', () => {
 
   type Listener = (ev: unknown) => void;
   type FakeWall = Fake & {
-    parentElement: null; clientWidth: number; getBoundingClientRect(): { top: number };
+    parentElement: unknown; clientWidth: number; getBoundingClientRect(): { top: number };
     listeners: Record<string, Listener[]>; addEventListener(t: string, fn: Listener): void;
     hasAttribute(n: string): boolean; removeAttribute(n: string): void;
   };
 
   function hang(ids: string[], windowWidth: number, windowHeight: number, wallTop: number, wallWidth: number) {
     const wall = fake('div') as FakeWall;
-    wall.parentElement = null;
+    const pageProps: Record<string, string> = {};
+    wall.parentElement = {
+      getBoundingClientRect: () => ({ left: 0, top: 100 }),
+      style: { setProperty: (k: string, v: string) => { pageProps[k] = v; }, removeProperty: (k: string) => { delete pageProps[k]; } },
+    };
     wall.clientWidth = wallWidth;
     wall.getBoundingClientRect = () => ({ top: wallTop });
     wall.listeners = {};
@@ -295,17 +352,18 @@ describe('the framed tiles held before the engine arrives', () => {
       documentElement: { getAttribute: () => 'wall' },
     };
     const win = { innerWidth: windowWidth, innerHeight: windowHeight, scrollY: 0 };
-    new Function('document', 'window', 'getComputedStyle', RESERVE_INLINE)(doc, win, () => ({ paddingLeft: '0px' }));
-    return { wall, tiles: wall.children };
+    new Function('document', 'window', 'getComputedStyle', RESERVE_INLINE)(doc, win, () => ({ paddingLeft: '0px', paddingBottom: '0px', borderBottomWidth: '0px' }));
+    const wallHeight = () => cssHeight(wall.style as unknown as { height?: string; minHeight?: string }, pageProps, wallTop, 100);
+    return { wall, tiles: wall.children, wallHeight, pageProps };
   }
   const px = (v: string | undefined) => parseFloat(v ?? 'NaN');
 
   it('hangs a framed, captioned tile in the cell layoutWall gives each piece, desktop and phone', () => {
     for (const [ww, wh] of [[1440, 900], [1024, 768], [390, 844], [360, 640]] as const) {
-      const { wall, tiles } = hang(IDS, ww, wh, 220, ww);
+      const { wallHeight, tiles } = hang(IDS, ww, wh, 220, ww);
       const L = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: 220 });
       expect(tiles, `${ww}`).toHaveLength(IDS.length);
-      expect(px(wall.style.height), `${ww} height`).toBeCloseTo(L.height, 6);
+      expect(wallHeight(), `${ww} height`).toBeCloseTo(L.height, 6);
       for (const t of tiles) {
         const id = t.attrs[TILE_ATTR]!;
         const r = L.rects[id]!;
@@ -331,9 +389,9 @@ describe('the framed tiles held before the engine arrives', () => {
   it('gives a piece the maps do not know a spill cell and makes the box tall enough for it', () => {
     const ids = [...IDS, 'bdl-901', 'bdl-902', 'bdl-903'];
     for (const [ww, wh] of [[1440, 900], [390, 844]] as const) {
-      const { wall, tiles } = hang(ids, ww, wh, 220, ww);
+      const { wallHeight, tiles } = hang(ids, ww, wh, 220, ww);
       const L = layoutWall(ids, { width: ww, viewportWidth: ww, viewportHeight: wh, topHeight: 220 });
-      expect(px(wall.style.height), `${ww}`).toBeCloseTo(L.height, 6);
+      expect(wallHeight(), `${ww}`).toBeCloseTo(L.height, 6);
       expect(tiles).toHaveLength(ids.length);
       const spilled = tiles.find((t) => t.attrs[TILE_ATTR] === 'bdl-903')!;
       expect(px(spilled.style.top), `${ww}`).toBeCloseTo(L.rects['bdl-903']!.y, 1);
@@ -341,9 +399,9 @@ describe('the framed tiles held before the engine arrives', () => {
   });
 
   it('hangs nothing for data it cannot read, and still sizes the box', () => {
-    const { wall, tiles } = hang([], 1440, 900, 220, 1440);
+    const { wallHeight, tiles } = hang([], 1440, 900, 220, 1440);
     expect(tiles).toHaveLength(0);
-    expect(px(wall.style.height)).toBeCloseTo(900 - 220, 6);
+    expect(wallHeight()).toBeCloseTo(900 - 220, 6);
   });
 
   it('remembers the last click, Enter or Space on a framed tile until the engine is live, then stands down', () => {

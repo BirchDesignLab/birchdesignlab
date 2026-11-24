@@ -905,8 +905,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   on(window, 'resize', () => { layout(); });
   let lastWidth = 0;
   // The wall's own width, and the height of everything above it: a web font landing after mount reflows the words over
-  // the wall and moves its top, and the desktop height follows the top. The observer runs before the frame is painted,
-  // so the box never shows a stale height.
+  // the wall and moves its top. The box follows by itself (it is the row the page leaves it, lab-wall.css); this places the
+  // tiles again, before the frame is painted.
   const ro = new ResizeObserver((records) => {
     const w = wallEl.clientWidth;
     const above = records.some((r) => r.target !== wallEl);
@@ -929,8 +929,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     Promise.all(['20px Marcellus', '20px Spectral', '600 20px Spectral'].map((f) => document.fonts.load(f))).then(refit, () => {});
     document.fonts.ready.then(refit, () => {});
     // A face still loading now lands in a task of its own: refit in that task, and once more a task later (the browser can
-    // apply the face to the layout just after its promise settles), before the next frame reads the box. The observer above
-    // runs after layout, so it alone leaves a read at the start of a frame meeting the old height.
+    // apply the face to the layout just after its promise settles), so the tiles are placed again soon after the face lands.
     try {
       document.fonts.forEach((f) => { if (f.status === 'loading') f.loaded.then(() => { refit(); setTimeout(refit, 0); }, () => {}); });
     } catch {
