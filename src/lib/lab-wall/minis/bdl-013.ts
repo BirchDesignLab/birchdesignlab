@@ -13,6 +13,8 @@ type Geo = {
   fs: number; fp: number; fn: number; fh: number;
   /** the frame inset, and how far the rows and the sheet run */
   m: number; rowPitch: number; top: number; bottom: number;
+  /** the two headings' centre line, and where the page sheet starts (below the headings) */
+  ty: number; pageTop: number;
   short: boolean;
 };
 
@@ -24,7 +26,7 @@ const MONO = (s: number) => `${s}px "Courier New", monospace`;
 const factory: MiniFactory = (): Mini => {
   let W = 0, H = 0, tc = -9.5, focus = -1;
   const ovr = [-99, -99, -99, -99, -99];
-  let G: Geo = { cx: 0, cw: 0, px: 0, pw: 0, ly: [], pt: [], ph: [], by: [], fs: 9, fp: 9, fn: 9, fh: 9, m: 8, rowPitch: 0, top: 0, bottom: 0, short: true };
+  let G: Geo = { cx: 0, cw: 0, px: 0, pw: 0, ly: [], pt: [], ph: [], by: [], fs: 9, fp: 9, fn: 9, fh: 9, m: 8, rowPitch: 0, top: 0, bottom: 0, short: true, ty: 0, pageTop: 0 };
 
   /**
    * The composition for the box. The code card, the arrows and the page sit on one drawing sheet: in a box wider than 2.6:1 the sheet
@@ -37,7 +39,9 @@ const factory: MiniFactory = (): Mini => {
     const rowPitch = H * 0.105;
     const fs = clamp(Math.min((cw - 8) / 14.5, rowPitch / 1.7, 40), 9, 40);
     const fp = Math.max(9, fs * 0.8), fn = Math.max(9, fs * 0.75), fh = Math.max(9, fs * 0.85);
-    const g: Geo = { cx: ox + mm, cw, px: ox + mm + S - pw, pw, ly: [], pt: [], ph: [], by: [], fs, fp, fn, fh, m, rowPitch, top: H * 0.165, bottom: H * 0.8, short: false };
+    // the page sheet starts below the headings (their centre line plus most of a line), so a short box never paints over the label
+    const ty = Math.max(H * 0.115, m + 5 + fh), pageTop = Math.max(H * 0.15, ty + fh * 0.7 + 2);
+    const g: Geo = { cx: ox + mm, cw, px: ox + mm + S - pw, pw, ly: [], pt: [], ph: [], by: [], fs, fp, fn, fh, m, rowPitch, top: pageTop + Math.max(3, H * 0.015), bottom: H * 0.8, short: false, ty, pageTop };
     // the five parts: their drawn proportions, each at least tall enough for its name, squeezed to the room there is
     const gap = Math.max(3, H * 0.02), hmin = fp * 1.55, room = g.bottom - g.top - gap * 4;
     let hs = BY.map(([a, b]) => Math.max((b - a) * H, hmin));
@@ -65,7 +69,7 @@ const factory: MiniFactory = (): Mini => {
       c.strokeStyle = alpha(T.mark.length === 7 ? T.mark : '#1f1b15', 0.55); c.lineWidth = 1.4; c.strokeRect(m, m, W - m * 2, H - m * 2);
       c.lineWidth = 0.8; c.strokeRect(m + 5, m + 5, W - m * 2 - 10, H - m * 2 - 10);
       c.font = MONO(g.fh); c.fillStyle = T.muted; c.textBaseline = 'middle';
-      const ty = Math.max(H * 0.115, m + 5 + g.fh), short = g.short;
+      const ty = g.ty, short = g.short;
       c.fillText(short ? 'ONE FILE' : 'ONE FILE DESCRIBES THE BUSINESS', g.cx, ty); c.textAlign = 'right'; c.fillText(short ? 'THE WEBSITE' : 'THE WEBSITE IT BUILDS', g.px + g.pw, ty); c.textAlign = 'left';
       // focus from pointer
       const nf = p.a > 0.4 ? clamp(Math.round((p.y * H - H * 0.27) / g.rowPitch), 0, 4) : -1;
@@ -87,7 +91,7 @@ const factory: MiniFactory = (): Mini => {
         c.fillStyle = ink; c.font = MONO(fs); c.fillText(ln, g.cx + br * 2 + fs * 0.6 + 2, y + 1);
       });
       // page wireframe
-      rr(c, g.px, H * 0.15, g.pw, H * 0.66, 8); c.fillStyle = T.field; c.fill(); c.strokeStyle = alpha(T.mark.length === 7 ? T.mark : '#1f1b15', 0.5); c.lineWidth = 1.2; c.stroke();
+      rr(c, g.px, g.pageTop, g.pw, Math.max(H * 0.81 - g.pageTop, 20), 8); c.fillStyle = T.field; c.fill(); c.strokeStyle = alpha(T.mark.length === 7 ? T.mark : '#1f1b15', 0.5); c.lineWidth = 1.2; c.stroke();
       PARTS.forEach((n, j) => {
         const bx = g.px + 6, bw = g.pw - 12, by = g.pt[j]!, bh = g.ph[j]!;
         const lit = prog(j) >= 1 || focus === j;

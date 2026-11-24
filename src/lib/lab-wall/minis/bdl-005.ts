@@ -31,10 +31,16 @@ const factory: MiniFactory = (env: MiniEnv): Mini => {
       // the ticket card hangs bottom right, the score toast top left, and the venue TV tile takes the bottom left only where there is room for all three.
       const u = clamp(Math.min(H * 0.07, W * 0.045), 9, 30), m = Math.max(8, Math.min(W, H) * 0.05);
       const roomy = W >= u * 27 + m * 3 && H >= u * 16 + m * 2;
+      // the card and the toast, at rest: the toast shows only where it clears the card (to its left or above it), as the TV tile does with roomy
+      const cardW = Math.min(u * 16.5, W - m * 2), cardH = u * 9.2, cardX = W - cardW - m, cardY = H - cardH - m;
+      const toastH = u * 2.4, toastY = Math.max(m, H * 0.07);
+      c.font = `${u}px Spectral, serif`;
+      const toastW = Math.min(toastH * 0.85 + c.measureText('Round 3: Team Fern leads').width + toastH * 0.55, W - m * 2);
+      const toastClear = m + toastW <= cardX - 4 || toastY + toastH <= cardY - 4;
       // A: ticket card
       let q = arrive(cyc, 0.5);
       if (q.a > 0.01) {
-        const w = Math.min(u * 16.5, W - m * 2), h = u * 9.2, x = W - w - m, y = H - h - m + q.y;
+        const w = cardW, h = cardH, x = cardX, y = cardY + q.y;
         c.save(); c.globalAlpha = q.a;
         shadowed(c, () => { rr(c, x, y, w, h, u * 1.1); c.fillStyle = '#fffaf4'; c.fill(); });
         const px = x + u * 1.1;
@@ -49,10 +55,8 @@ const factory: MiniFactory = (env: MiniEnv): Mini => {
       }
       // B: score toast
       q = arrive(cyc, 2.6);
-      if (q.a > 0.01) {
-        const h = u * 2.4;
-        c.font = `${u}px Spectral, serif`;
-        const tw = c.measureText('Round 3: Team Fern leads').width, w = Math.min(h * 0.85 + tw + h * 0.55, W - m * 2), x = m, y = Math.max(m, H * 0.07) - q.y;
+      if (q.a > 0.01 && toastClear) {
+        const h = toastH, w = toastW, x = m, y = toastY - q.y;
         c.save(); c.globalAlpha = q.a;
         shadowed(c, () => { rr(c, x, y, w, h, h / 2); c.fillStyle = ink; c.fill(); });
         c.fillStyle = '#8fd19b'; c.beginPath(); c.arc(x + h * 0.5, y + h / 2, h * 0.16, 0, TAU); c.fill();
