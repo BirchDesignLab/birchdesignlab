@@ -52,16 +52,22 @@ html[data-lab-view='wall'] .lab-page > .intro { padding-block: var(--space-4) va
 html[data-lab-view='wall'] .lab-page > .intro p { margin-top: 0; font-size: 1rem; line-height: 1.5; }
 html[data-lab-view='wall'] .lab-page > .filter { margin-bottom: 0; align-self: center; }
 html[data-lab-view='wall'] .lab-page > .lw-toggle { align-self: center; margin-bottom: 0; }
+/* The wall reaches past the page's column to the window's edges, and no further than 1520px (WALL_MAX in layout.ts), centred.
+   The header's row on this page takes the same width, so the wall and the header share one column, and where the window is
+   wider than 1520 their left and right edges are the same two lines. (Every other page's header is as it was.) */
+html[data-lab-view='wall'] header .bar { max-width: 1520px; }
 /* The page's <h1> stays in the document for readers and search, as the site's .visually-hidden does. */
 html[data-lab-view='wall'] .lab-page .lw-h1 {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
 }
 
-/* Wall, desktop: the page is as tall as the window below its own top (script writes --lw-page-min, src/lib/lab-wall/reserve.ts)
-   and the wall is the row that takes what the rows above it leave, so a web font that lands and changes the height of the
-   words above moves the wall's top and height together, in one layout, and its lower edge, and the footer under it, stay put. */
-@media (min-width: 720px) {
+/* Wall, desktop (1100 and wider, TABLET_BELOW in src/lib/lab-wall/layout.ts): the page is as tall as the window below its own top
+   (script writes --lw-page-min, src/lib/lab-wall/reserve.ts) and the wall is the row that takes what the rows above it leave,
+   so a web font that lands and changes the height of the words above moves the wall's top and height together, in one
+   layout, and its lower edge, and the footer under it, stay put. The tablet's wall (720 to 1099) is taller than the window
+   and has a height of its own, as the phone's does. */
+@media (min-width: 1100px) {
   html[data-lab-view='wall'] .lab-page { min-height: var(--lw-page-min, 0px); grid-template-rows: auto auto 1fr; }
   html[data-lab-view='wall'] .lab-page > .lw-wall { align-self: stretch; }
 }
@@ -98,7 +104,7 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   margin-inline: calc(-1 * var(--lw-bleed, 0px));
   /* Before script measures the box (src/lib/lab-wall/reserve.ts sets the exact height and drops this) it is
      about what the layout will give it: the window below the header, at least 540px on desktop; the phone
-     map's height, which follows the width (18 rows of 0.45 of a cell, plus the gaps), under 720. */
+     map's height, which follows the width (29 rows of 0.45 of a cell, plus the gaps), under 720; the tablet map's, from 720 to 1099 (26 rows). */
   min-height: max(540px, calc(100svh - 16rem));
   background: var(--lw-wall);
   /* a tile that leans or swells at the edge never makes the page scroll sideways; the open piece may still leave the wall vertically */
@@ -153,6 +159,11 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
 .lw-hot { z-index: 10; }
 .lw-flying { z-index: 38; }
 .lw-open { z-index: 40; }
+
+/* The tablet map's height follows the width: 26 row units of 0.45 of a column (a sixth of the width), plus the gaps. */
+@media (min-width: 720px) and (max-width: 1099px) {
+  .lw-wall { min-height: calc(1.95 * (100vw - 49px) + 189px); }
+}
 
 /* ---------- the open piece: one piece filling the window, a bar under it ---------- */
 .lw-scrim {
@@ -233,9 +244,11 @@ a.lw-visit:hover svg { transform: translate(2px, -2px); }
 
 /* ---------- phone: a card under the piece, the arrows in the top row beside Back ---------- */
 @media (max-width: 719px) {
-  .lw-wall { min-height: calc(4.05 * (100vw - 18px) + 114px); }
+  .lw-wall { min-height: calc(6.525 * (100vw - 18px) + 180px); }
   .lw-tile .lw-cap { height: 24px; padding: 0 8px; }
   .lw-t { font-size: 11.5px; }
+  /* the narrowest phones (360): Cheer and Chatter Social Club is a one-column tile there, so its caption is a little tighter to stay whole */
+  @media (max-width: 379px) { .lw-tile .lw-cap { padding: 0 6px; } .lw-t { font-size: 10.5px; } }
   .lw-k, .lw-o { display: none !important; }
   .lw-back { top: 10px; left: 10px; height: 40px; padding: 0 16px 0 12px; font-size: 12px; }
   .lw-count { display: none; }

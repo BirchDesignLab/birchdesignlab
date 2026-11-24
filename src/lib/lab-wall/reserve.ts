@@ -9,22 +9,7 @@
  *
  * measureWall and placeTile read the page (browser only); the rest is pure.
  */
-import {
-  DESK,
-  DESK_COLS,
-  DESK_GAP,
-  DESK_MIN_HEIGHT,
-  DESK_ROWS,
-  PHONE,
-  PHONE_BELOW,
-  PHONE_COLS,
-  PHONE_GAP,
-  PHONE_ROWS,
-  PHONE_ROW_RATIO,
-  SPILL_DESK,
-  SPILL_PHONE,
-  layoutWall,
-} from './layout';
+import { DESK_MIN_HEIGHT, MAPS, PHONE_BELOW, TABLET_BELOW, WALL_MAX, layoutWall, wallBleed } from './layout';
 import type { Rect, WallLayout } from './layout';
 
 /** The caption bar under each picture on the wall. */
@@ -75,6 +60,7 @@ export const RESERVE_INLINE = `(function () {
   var doc = document, w = doc.querySelector('[data-lw="wall"]');
   if (!w || doc.documentElement.getAttribute('data-lab-view') !== 'wall') return;
   var own = Object.prototype.hasOwnProperty;
+  var MAPS = ${JSON.stringify(MAPS)};
   var rows = [];
   try { var d = doc.querySelector('[data-lw="data"]'); rows = JSON.parse((d && d.textContent) || '[]') || []; } catch (e) { rows = []; }
   var ids = [], seen = {}, i;
@@ -86,23 +72,22 @@ export const RESERVE_INLINE = `(function () {
   var r2 = function (n) { return Math.round(n * 100) / 100; };
   var fit = function () {
     var p = w.parentElement;
-    if (p) w.style.setProperty('--lw-bleed', Math.max(0, p.getBoundingClientRect().left + (parseFloat(getComputedStyle(p).paddingLeft) || 0)).toFixed(2) + 'px');
-    var phone = window.innerWidth < ${PHONE_BELOW};
-    var map = phone ? ${JSON.stringify(PHONE)} : ${JSON.stringify(DESK)};
-    var gap = phone ? ${PHONE_GAP} : ${DESK_GAP};
-    var mapCols = phone ? ${PHONE_COLS} : ${DESK_COLS}, mapRows = phone ? ${PHONE_ROWS} : ${DESK_ROWS};
-    var spC = phone ? ${SPILL_PHONE.cols} : ${SPILL_DESK.cols}, spR = phone ? ${SPILL_PHONE.rows} : ${SPILL_DESK.rows};
+    // The wall reaches past the page's column to the window's edges, or to its capped, centred width in a window wider than ${WALL_MAX}.
+    if (p) w.style.setProperty('--lw-bleed', Math.max(0, p.getBoundingClientRect().left + (parseFloat(getComputedStyle(p).paddingLeft) || 0) - Math.max(0, ((doc.documentElement.clientWidth || window.innerWidth) - ${WALL_MAX}) / 2)).toFixed(2) + 'px');
+    var iw = window.innerWidth;
+    var S = MAPS[iw < ${PHONE_BELOW} ? 'phone' : iw < ${TABLET_BELOW} ? 'tablet' : 'desk'];
+    var map = S.cells, gap = S.gap, mapCols = S.cols, mapRows = S.rows, spC = S.spill.cols, spR = S.spill.rows;
     var perRow = Math.floor(mapCols / spC), spill = [], k;
     for (k = 0; k < ids.length; k++) if (!own.call(map, ids[k])) spill.push(ids[k]);
     var cw = (w.clientWidth - 2 * gap - (mapCols - 1) * gap) / mapCols, ch, base;
-    if (phone) {
-      ch = Math.round(cw * ${PHONE_ROW_RATIO});
+    if (S.ratio !== null) {
+      ch = Math.round(cw * S.ratio);
       base = 2 * gap + mapRows * ch + (mapRows - 1) * gap;
     } else {
       base = Math.max(window.innerHeight - (w.getBoundingClientRect().top + window.scrollY), ${DESK_MIN_HEIGHT});
       ch = (base - 2 * gap - (mapRows - 1) * gap) / mapRows;
     }
-    if (!phone && !spill.length && p && p.style) {
+    if (S.ratio === null && !spill.length && p && p.style) {
       // Desktop with nothing spilled: the page is told its least height and the wall fills what is left (see sizeWall).
       var pcs = getComputedStyle(p);
       p.style.setProperty('${PAGE_MIN_VAR}', r2(window.innerHeight - (p.getBoundingClientRect().top + window.scrollY) + (parseFloat(pcs.paddingBottom) || 0) + (parseFloat(pcs.borderBottomWidth) || 0)) + 'px');
@@ -200,7 +185,7 @@ export function measureWall(wallEl: HTMLElement, ids: string[]): WallLayout {
   if (page) {
     const pr = page.getBoundingClientRect();
     const pad = parseFloat(getComputedStyle(page).paddingLeft) || 0;
-    wallEl.style.setProperty('--lw-bleed', Math.max(0, pr.left + pad).toFixed(2) + 'px');
+    wallEl.style.setProperty('--lw-bleed', wallBleed(pr.left + pad, root.clientWidth || window.innerWidth).toFixed(2) + 'px');
   }
   const top = wallEl.getBoundingClientRect().top + window.scrollY;
   const L = layoutWall(ids, {

@@ -131,6 +131,21 @@ const liveNow = (page) => page.evaluate(() => !!document.querySelector('[data-lw
 const untilLive = (page) => page.waitForFunction(() => document.querySelector('[data-lw-live]'), null, { timeout: 30000 }).catch(() => {});
 
 // ---------- every tile drawn, at both sizes, in both schemes ----------
+/** One read of a tile's picture: its caption, what it draws with, and whether it is up (framed, drawn, faded in). */
+const drawnNow = (page, label) => page.evaluate((label) => {
+  const t = [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === label);
+  const c = t.querySelector('canvas');
+  const img = t.querySelector('.lw-still');
+  const cap = t.querySelector('.lw-t').textContent;
+  if (img) return { cap, kind: 'still', up: img.classList.contains('lw-drawn') && parseFloat(getComputedStyle(img).opacity) > 0.99 };
+  if (!c) return { cap, kind: 'plain', up: true };
+  const g = c.getContext('2d');
+  const d = g.getImageData(0, 0, c.width, c.height).data;
+  const seen = new Set();
+  const stp = Math.max(4, ((d.length / 4 / 400) | 0) * 4);
+  for (let i = 0; i < d.length; i += stp) seen.add((d[i] >> 4) + ',' + (d[i + 1] >> 4) + ',' + (d[i + 2] >> 4));
+  return { cap, kind: 'canvas', up: seen.size >= 2 && c.classList.contains('lw-drawn') && parseFloat(getComputedStyle(c).opacity) > 0.99 };
+}, label);
 async function drawn(w, h, scheme, touch) {
   const ctx = await context({ w, h, scheme, touch });
   const page = await ctx.newPage();
@@ -143,20 +158,14 @@ async function drawn(w, h, scheme, touch) {
     const label = labelOf(e);
     await center(page, label);
     await wait(page, 700);
-    const st = await page.evaluate((label) => {
-      const t = [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === label);
-      const c = t.querySelector('canvas');
-      const img = t.querySelector('.lw-still');
-      const cap = t.querySelector('.lw-t').textContent;
-      if (img) return { cap, kind: 'still', up: img.classList.contains('lw-drawn') && parseFloat(getComputedStyle(img).opacity) > 0.99 };
-      if (!c) return { cap, kind: 'plain', up: true };
-      const g = c.getContext('2d');
-      const d = g.getImageData(0, 0, c.width, c.height).data;
-      const seen = new Set();
-      const stp = Math.max(4, ((d.length / 4 / 400) | 0) * 4);
-      for (let i = 0; i < d.length; i += stp) seen.add((d[i] >> 4) + ',' + (d[i + 1] >> 4) + ',' + (d[i + 2] >> 4));
-      return { cap, kind: 'canvas', up: seen.size >= 2 && c.classList.contains('lw-drawn') && parseFloat(getComputedStyle(c).opacity) > 0.99 };
-    }, label);
+    // A tile scrolled to from far away (the hang puts the first piece in the catalog's order at the foot of a phone's wall)
+    // starts drawing only once it is on screen and fades in over 0.7s, so it gets a few more reads before it is called blank.
+    let st;
+    for (let tries = 0; tries < 6; tries++) {
+      st = await drawnNow(page, label);
+      if (st.up || st.cap !== e.title) break;
+      await wait(page, 400);
+    }
     if (!st.up || st.cap !== e.title) bad.push(e.id + ' ' + JSON.stringify(st));
   }
   ok(bad.length === 0, `every tile drawn at ${w} ${scheme}${bad.length ? ': ' + bad.join('; ') : ` (${rows.length} tiles, framed, captioned, picture faded in)`}`);
