@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   VIEW_KEY, counterLabel, hashFor, idFromHash, inFilter, readFilter, readView, stepTarget, tryLine, writeView,
 } from '../src/lib/lab-wall/model';
+import { bestLines, fit, per } from '../src/lib/lab-wall/minis/shared';
 
 const store = (initial: Record<string, string> = {}) => {
   const data = { ...initial };
@@ -110,5 +111,33 @@ describe('a link to a piece', () => {
     expect(idFromHash('#%E0%A4%A', ids)).toBeNull();
     expect(idFromHash('bdl-007', ids)).toBeNull();
     expect(idFromHash('#bdl-007', [])).toBeNull();
+  });
+});
+
+describe('fitting a miniature\'s type to its box', () => {
+  // A stand-in for a 2D context: every glyph is half the font size wide, the font size is read from the font string.
+  const ctx = () => {
+    const c = { font: '', letterSpacing: '0px', measureText: (s: string) => ({ width: s.length * 0.5 * parseFloat(/(\d+(?:\.\d+)?)px/.exec(c.font)![1]!) }) };
+    return c as unknown as CanvasRenderingContext2D;
+  };
+  const font = (s: number) => `${s}px Test`;
+  it('measures a text per pixel of size, and sets the size that just fits a width', () => {
+    expect(per(ctx(), 'abcd', font)).toBeCloseTo(2, 5);
+    expect(fit(ctx(), ['abcd'], font, 100, 999)).toBeCloseTo(50, 5);
+  });
+  it('never sets type above its cap, and fits the widest line', () => {
+    expect(fit(ctx(), ['abcd'], font, 100, 20)).toBe(20);
+    expect(fit(ctx(), ['ab', 'abcdef'], font, 60, 999)).toBeCloseTo(20, 5);
+  });
+  it('picks the line breaks that set the biggest type, fewer lines on a tie', () => {
+    const opts = [['abcdefgh'], ['abcd', 'efgh'], ['ab', 'cd', 'ef', 'gh']];
+    // wide and short: one line is as big as the height allows
+    expect(bestLines(ctx(), opts, font, 400, 30, 30).lines).toHaveLength(1);
+    // narrow and tall: the width rules out one line, more lines win
+    const tall = bestLines(ctx(), opts, font, 40, 400, 400);
+    expect(tall.lines.length).toBeGreaterThan(1);
+    expect(tall.size).toBeGreaterThan(fit(ctx(), opts[0]!, font, 40, 400));
+    // a tie between a one-line and a two-line break goes to the one line
+    expect(bestLines(ctx(), [['abcd'], ['ab', 'cd']], font, 400, 400, 20).lines).toHaveLength(1);
   });
 });

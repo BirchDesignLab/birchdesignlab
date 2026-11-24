@@ -27,39 +27,49 @@ const factory: MiniFactory = (env: MiniEnv): Mini => {
         c.drawImage(img, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
       }
       const cyc = (t - tc) % 13;
-      const fs = H * 0.045;
+      // One type unit for the box (9px at the least) sizes every card, so what shows is readable and nothing is wider than the box:
+      // the ticket card hangs bottom right, the score toast top left, and the venue TV tile takes the bottom left only where there is room for all three.
+      const u = clamp(Math.min(H * 0.07, W * 0.045), 9, 30), m = Math.max(8, Math.min(W, H) * 0.05);
+      const roomy = W >= u * 27 + m * 3 && H >= u * 16 + m * 2;
       // A: ticket card
       let q = arrive(cyc, 0.5);
       if (q.a > 0.01) {
-        c.save(); c.globalAlpha = q.a; const x = W * 0.58, y = H * 0.5 + q.y, w = W * 0.37, h = H * 0.36;
-        shadowed(c, () => { rr(c, x, y, w, h, 14); c.fillStyle = '#fffaf4'; c.fill(); });
-        c.textBaseline = 'alphabetic'; c.fillStyle = coral; c.font = `${fs * 0.62}px Marcellus, serif`; c.letterSpacing = '1.5px';
-        c.fillText('THIS FRIDAY', x + w * 0.07, y + h * 0.2); c.letterSpacing = '0px';
-        c.fillStyle = ink; c.font = `${fs * 1.5}px Marcellus, serif`; c.fillText('Plant Bingo', x + w * 0.07, y + h * 0.46);
-        c.fillStyle = '#7b655d'; c.font = `${fs * 0.78}px Spectral, serif`; c.fillText('Doors 6:30 pm, two tickets left', x + w * 0.07, y + h * 0.63);
-        rr(c, x + w * 0.07, y + h * 0.72, w * 0.5, h * 0.17, h * 0.085); c.fillStyle = coral; c.fill();
-        c.fillStyle = '#fff'; c.font = `${fs * 0.7}px Marcellus, serif`; c.textAlign = 'center'; c.fillText('Buy tickets', x + w * 0.32, y + h * 0.835); c.textAlign = 'left';
+        const w = Math.min(u * 16.5, W - m * 2), h = u * 9.2, x = W - w - m, y = H - h - m + q.y;
+        c.save(); c.globalAlpha = q.a;
+        shadowed(c, () => { rr(c, x, y, w, h, u * 1.1); c.fillStyle = '#fffaf4'; c.fill(); });
+        const px = x + u * 1.1;
+        c.textBaseline = 'alphabetic'; c.fillStyle = coral; c.font = `${u}px Marcellus, serif`; c.letterSpacing = u * 0.12 + 'px';
+        c.fillText('THIS FRIDAY', px, y + u * 2.1); c.letterSpacing = '0px';
+        c.fillStyle = ink; c.font = `${u * 1.7}px Marcellus, serif`; c.fillText('Plant Bingo', px, y + u * 4.2);
+        c.fillStyle = '#7b655d'; c.font = `${u}px Spectral, serif`; c.fillText('Doors 6:30 pm, two tickets left', px, y + u * 5.8);
+        const bw = Math.min(u * 7.4, w - u * 2.2);
+        rr(c, px, y + u * 6.5, bw, u * 2.1, u * 1.05); c.fillStyle = coral; c.fill();
+        c.fillStyle = '#fff'; c.font = `${u}px Marcellus, serif`; c.textAlign = 'center'; c.fillText('Buy tickets', px + bw / 2, y + u * 6.5 + u * 1.4); c.textAlign = 'left';
         c.restore();
       }
       // B: score toast
       q = arrive(cyc, 2.6);
       if (q.a > 0.01) {
-        c.save(); c.globalAlpha = q.a; const w = W * 0.4, h = H * 0.1, x = W * 0.05 - q.y * -1 * 0, y = H * 0.07 - q.y;
+        const h = u * 2.4;
+        c.font = `${u}px Spectral, serif`;
+        const tw = c.measureText('Round 3: Team Fern leads').width, w = Math.min(h * 0.85 + tw + h * 0.55, W - m * 2), x = m, y = Math.max(m, H * 0.07) - q.y;
+        c.save(); c.globalAlpha = q.a;
         shadowed(c, () => { rr(c, x, y, w, h, h / 2); c.fillStyle = ink; c.fill(); });
         c.fillStyle = '#8fd19b'; c.beginPath(); c.arc(x + h * 0.5, y + h / 2, h * 0.16, 0, TAU); c.fill();
-        c.fillStyle = '#fbeee6'; c.font = `${fs * 0.82}px Spectral, serif`; c.textBaseline = 'middle'; c.fillText('Round 3: Team Fern leads', x + h * 0.85, y + h / 2 + 1);
+        c.fillStyle = '#fbeee6'; c.font = `${u}px Spectral, serif`; c.textBaseline = 'middle'; c.fillText('Round 3: Team Fern leads', x + h * 0.85, y + h / 2 + 1);
         c.restore();
       }
       // C: venue TV tile with join code
       q = arrive(cyc, 4.4);
-      if (q.a > 0.01) {
-        c.save(); c.globalAlpha = q.a; const w = W * 0.22, h = H * 0.4, x = W * 0.06 - q.y, y = H * 0.5;
-        shadowed(c, () => { rr(c, x, y, w, h, 12); c.fillStyle = '#2c2220'; c.fill(); });
-        const cell = Math.min(w, h) * 0.075, qx = x + (w - cell * 9) / 2, qy = y + h * 0.1;
+      if (q.a > 0.01 && roomy) {
+        const w = u * 8.4, h = u * 11.2, x = m - q.y, y = H - h - m;
+        c.save(); c.globalAlpha = q.a;
+        shadowed(c, () => { rr(c, x, y, w, h, u); c.fillStyle = '#2c2220'; c.fill(); });
+        const cell = w * 0.078, qx = x + (w - cell * 9) / 2, qy = y + h * 0.1;
         rr(c, qx - cell * 0.6, qy - cell * 0.6, cell * 10.2, cell * 10.2, 6); c.fillStyle = '#fffaf4'; c.fill();
         c.fillStyle = ink; cells.forEach((on, i) => { if (on) c.fillRect(qx + (i % 9) * cell, qy + Math.floor(i / 9) * cell, cell * 0.92, cell * 0.92); });
-        c.fillStyle = '#fbeee6'; c.font = `${fs * 0.7}px Marcellus, serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-        c.fillText('Scan to join', x + w / 2, y + h * 0.9); c.textAlign = 'left';
+        c.fillStyle = '#fbeee6'; c.font = `${u}px Marcellus, serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+        c.fillText('Scan to join', x + w / 2, y + h * 0.92); c.textAlign = 'left';
         c.restore();
       }
     },

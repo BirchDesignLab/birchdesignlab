@@ -1,12 +1,16 @@
 /** BDL-012 The Data Map: pulses travel the links. Ported from the mockup's spec-c.js. */
 import { T, TAU, alpha, clamp, mix, mulberry32, rr } from '../draw';
 import type { Mini, MiniFactory } from '../types';
+import { per } from './shared';
 
 export const hint = 'Touch a node';
 
 type Node = { id: string; col: number; y: number; l: string; s: string; glow: number; hot: number };
 type Link = { a: Node; b: Node; hot: number };
 type Pulse = { l: Link; u: number; sp: number; done?: boolean };
+
+const LABEL = (s: number) => `${s}px Marcellus, serif`;
+const SUB = (s: number) => `italic ${s}px Spectral, serif`;
 
 const factory: MiniFactory = (): Mini => {
   let W = 0, H = 0, tt = 0, spawnAt = 0.5, hotAcc = 0, seeded = false;
@@ -20,10 +24,37 @@ const factory: MiniFactory = (): Mini => {
   const L: Link[] = ([['sanity', 'wk'], ['tt', 'wk'], ['do', 'wk'], ['wk', 'web'], ['wk', 'rs'], ['rs', 'in'], ['do', 'ph'], ['do', 'tv'], ['wk', 'ph']] as const).map(([a, b]) => ({ a: byId[a]!, b: byId[b]!, hot: 0 }));
   const SRC = [byId.sanity!, byId.tt!, byId.do!];
   let pulses: Pulse[] = [];
-  const nx = (n: Node) => [0.15, 0.5, 0.85][n.col]! * W, ny = (n: Node) => n.y * H;
-  const nw = () => Math.max(92, W * 0.19), nh = () => Math.max(34, H * 0.1);
+
+  // The geometry for the box: type size, node size and the three column centres, worked out in resize() so a draw only reads them.
+  // The nodes are as wide as their longest label needs, the three columns sit as far apart as the box allows, and in a narrow box
+  // the type goes down to 9px before the nodes crowd; nothing is wider than the box.
+  let lf = 10, sf = 9, hf = 9, nw = 92, nh = 34, cxs = [0.15, 0.5, 0.85];
+  let heads: string[] = ['WHERE IT LIVES', 'WHERE IT TRAVELS', 'WHERE IT SHOWS UP'];
+  const probe = typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') : null;
+  function fitGeometry() {
+    if (!probe) return;
+    const m = Math.max(8, W * 0.03), avail = W - 2 * m, gmin = Math.max(12, W * 0.04);
+    const longest = Math.max(per(probe, 'Durable Object', LABEL), per(probe, 'Ticket Tailor', LABEL));
+    const cap = clamp(Math.min(H * 0.04, W * 0.034), 9.5, 20);
+    // the biggest label type at which three nodes and two gaps still fit
+    const fitLf = ((avail - 2 * gmin) / 3) / (longest + 0.9);
+    lf = clamp(Math.min(cap, fitLf), 9, 20);
+    sf = Math.max(9, lf * 0.82);
+    hf = Math.max(9, lf * 0.82);
+    nw = Math.min(longest * lf + lf * 0.9, (avail - 2 * gmin) / 3);
+    const rowGap = 0.17 * H;
+    nh = clamp(lf * 3, 28, Math.max(28, rowGap * 0.82));
+    const x0 = Math.max(0.15 * W, m + nw / 2);
+    cxs = [x0 / W, 0.5, 1 - x0 / W];
+    const pitch = (cxs[1]! - cxs[0]!) * W;
+    const long = ['WHERE IT LIVES', 'WHERE IT TRAVELS', 'WHERE IT SHOWS UP'], short = ['LIVES', 'TRAVELS', 'SHOWS UP'];
+    const wl = long.map((s) => per(probe, s, LABEL, 0.14) * hf);
+    const edge = x0 - 4;
+    heads = wl[0]! / 2 <= edge && wl[2]! / 2 <= edge && (wl[0]! + wl[1]!) / 2 <= pitch - 8 && (wl[1]! + wl[2]!) / 2 <= pitch - 8 ? long : short;
+  }
+  const nx = (n: Node) => cxs[n.col]! * W, ny = (n: Node) => n.y * H;
   const pt = (l: Link, u: number): [number, number] => {
-    const x0 = nx(l.a) + nw() / 2, y0 = ny(l.a), x3 = nx(l.b) - nw() / 2, y3 = ny(l.b), dx = (x3 - x0) * 0.5, v = 1 - u;
+    const x0 = nx(l.a) + nw / 2, y0 = ny(l.a), x3 = nx(l.b) - nw / 2, y3 = ny(l.b), dx = (x3 - x0) * 0.5, v = 1 - u;
     return [v * v * v * x0 + 3 * v * v * u * (x0 + dx) + 3 * v * u * u * (x3 - dx) + u ** 3 * x3, v * v * v * y0 + 3 * v * v * u * y0 + 3 * v * u * u * y3 + u ** 3 * y3];
   };
   const emit = (l: Link, u = 0) => { if (pulses.length < 34) pulses.push({ l, u, sp: 0.3 + rnd() * 0.06 }); };
@@ -40,7 +71,7 @@ const factory: MiniFactory = (): Mini => {
   }
   return {
     t0: 0,
-    resize(w, h) { W = w; H = h; if (!seeded) { seeded = true; for (let i = 0; i < 60; i++) update(0.1, null); } },
+    resize(w, h) { W = w; H = h; fitGeometry(); if (!seeded) { seeded = true; for (let i = 0; i < 60; i++) update(0.1, null); } },
     draw(c, _t, dt, p) {
       update(Math.min(dt, 0.12), null);
       let hotNode: Node | null = null;
@@ -50,12 +81,11 @@ const factory: MiniFactory = (): Mini => {
       L.forEach((l) => { l.hot += ((hotNode && (l.a === hotNode || l.b === hotNode) ? 1 : 0) - l.hot) * (1 - Math.exp(-dt * 10)); });
       const ac = T.accent;
       c.fillStyle = T.raised; c.fillRect(0, 0, W, H);
-      const fs = clamp(Math.min(H * 0.032, W * 0.027), 8, 13);
-      c.font = `${fs}px Marcellus, serif`; c.letterSpacing = fs * 0.14 + 'px'; c.fillStyle = T.muted; c.textAlign = 'center'; c.textBaseline = 'middle';
-      (W < 500 ? ['LIVES', 'TRAVELS', 'SHOWS UP'] : ['WHERE IT LIVES', 'WHERE IT TRAVELS', 'WHERE IT SHOWS UP']).forEach((s, i) => c.fillText(s, [0.15, 0.5, 0.85][i]! * W, H * 0.15));
+      c.font = LABEL(hf); c.letterSpacing = hf * 0.14 + 'px'; c.fillStyle = T.muted; c.textAlign = 'center'; c.textBaseline = 'middle';
+      heads.forEach((s, i) => c.fillText(s, cxs[i]! * W, H * 0.15));
       c.letterSpacing = '0px';
       for (const l of L) {
-        const x0 = nx(l.a) + nw() / 2, y0 = ny(l.a), x3 = nx(l.b) - nw() / 2, y3 = ny(l.b), dx = (x3 - x0) * 0.5;
+        const x0 = nx(l.a) + nw / 2, y0 = ny(l.a), x3 = nx(l.b) - nw / 2, y3 = ny(l.b), dx = (x3 - x0) * 0.5;
         c.strokeStyle = l.hot > 0.05 ? ac : alpha(T.mark, 0.28); c.lineWidth = 1.2 + l.hot * 1.4; c.globalAlpha = 1;
         c.beginPath(); c.moveTo(x0, y0); c.bezierCurveTo(x0 + dx, y0, x3 - dx, y3, x3, y3); c.stroke();
       }
@@ -65,12 +95,12 @@ const factory: MiniFactory = (): Mini => {
         c.fillStyle = alpha(ac, 0.18); c.beginPath(); c.arc(x, y, 10, 0, TAU); c.fill();
       }
       for (const n of N) {
-        const w = nw(), h = nh(), x = nx(n) - w / 2, y = ny(n) - h / 2, e = Math.max(n.glow, n.hot);
+        const w = nw, h = nh, x = nx(n) - w / 2, y = ny(n) - h / 2, e = Math.max(n.glow, n.hot);
         c.save(); if (e > 0.05) { c.shadowColor = alpha(ac, 0.55 * e); c.shadowBlur = 16 * e; }
         rr(c, x, y, w, h, 8); c.fillStyle = T.field; c.fill(); c.restore();
         c.strokeStyle = e > 0.05 ? mix(T.mark, ac, Math.min(1, e + 0.2)) : T.line; c.lineWidth = 1 + e; rr(c, x, y, w, h, 8); c.stroke();
-        c.fillStyle = T.mark; c.font = `${fs * 1.12}px Marcellus, serif`;
-        if (n.s) { c.fillText(n.l, nx(n), ny(n) - h * 0.14); c.font = `italic ${fs * 0.9}px Spectral, serif`; c.fillStyle = T.muted; c.fillText(n.s, nx(n), ny(n) + h * 0.26); } else c.fillText(n.l, nx(n), ny(n) + 1);
+        c.fillStyle = T.mark; c.font = LABEL(lf);
+        if (n.s) { c.fillText(n.l, nx(n), ny(n) - h * 0.14); c.font = SUB(sf); c.fillStyle = T.muted; c.fillText(n.s, nx(n), ny(n) + h * 0.26); } else c.fillText(n.l, nx(n), ny(n) + 1);
       }
       c.textAlign = 'left';
     },

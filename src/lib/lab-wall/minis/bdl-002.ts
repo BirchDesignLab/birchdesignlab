@@ -1,6 +1,7 @@
 /** BDL-002 The Styleguide. Ported from the mockup's spec-a.js. */
 import { T, TAU, clamp, ease, mix, rr } from '../draw';
 import type { Mini, MiniFactory } from '../types';
+import { bestLines } from './shared';
 
 export const hint = 'Move to restyle';
 
@@ -19,6 +20,8 @@ const FACES: Face[] = [
   { n: 'Mono', f: '"Courier New", monospace', caps: 1, tr: 0.05, st: 'bold ' },
 ];
 
+type Chip = { n: string; x: number; y: number; w: number };
+
 const factory: MiniFactory = (): Mini => {
   let W = 0, H = 0;
   let from: Sel = { p: 0, f: 0 }, to: Sel = { p: 0, f: 0 }, m = 1, k = 0, nextAuto = 4.5;
@@ -34,50 +37,71 @@ const factory: MiniFactory = (): Mini => {
       const e = ease(m);
       const A = PAL[from.p]!, B = PAL[to.p]!;
       c.fillStyle = T.field; c.fillRect(0, 0, W, H);
-      const pad = W * 0.055, fs = clamp(H * 0.03, 5.5, 15); // wall: small tiles go below 9px
+
+      // The composition for the box: the two chip rows stack, a row breaks onto a second line when it will not fit, the specimen
+      // takes what is left, and in a box too short for that the small labels go. Type is never under 9px.
+      const pad = Math.max(8, W * 0.06), maxW = W - pad * 2;
+      const pf = clamp(Math.min(H * 0.034, W * 0.052), 9, 26), lf = Math.max(9, pf * 0.9), ph = pf * 1.9, cg = pf * 0.5, rg = pf * 0.45;
+      const chipFont = (i: number, fam?: string[]) => `${pf}px ${fam ? fam[i] : 'Marcellus, serif'}`;
+      const flow = (names: string[], fam?: string[]): { chips: Chip[]; rows: number } => {
+        const chips: Chip[] = []; let x = 0, row = 0;
+        names.forEach((n, i) => {
+          c.font = chipFont(i, fam);
+          const w = c.measureText(n).width + pf * 1.7;
+          if (x > 0 && x + w > maxW) { x = 0; row++; }
+          chips.push({ n, x, y: row, w }); x += w + cg;
+        });
+        return { chips, rows: row + 1 };
+      };
+      const pals = flow(PAL.map((q) => q.n)), faces = flow(FACES.map((q) => q.n), FACES.map((q) => q.f));
+      const sr = clamp(Math.min(H * 0.033, maxW / 14), 5, 18), swH = sr * 2 + pad * 0.5;
+      const secH = (rows: number, labels: boolean) => (labels ? lf * 1.7 : 0) + rows * ph + (rows - 1) * rg;
+      // the top inset keeps the first row clear of the open piece's Back button and arrows (a tile is short, and gets the least)
+      const top = Math.max(pad * 0.7, Math.min(H * 0.1, 54));
+      const sec = (labels: boolean) => top + secH(pals.rows, labels) + pad * 0.6 + secH(faces.rows, labels) + pad * 0.7;
+      let labels = true;
+      if (H - sec(true) - swH - pad * 0.5 < Math.max(44, H * 0.2)) labels = false;
+      const bx = pad, by = sec(labels), bw = maxW, bh = Math.max(20, H - by - swH - pad * 0.3);
       c.textBaseline = 'middle';
       const label = (txt: string, y: number) => {
-        c.font = `${fs}px Marcellus, serif`; c.letterSpacing = fs * 0.14 + 'px';
+        c.font = `${lf}px Marcellus, serif`; c.letterSpacing = lf * 0.14 + 'px';
         c.fillStyle = T.muted; c.fillText(txt, pad, y); c.letterSpacing = '0px';
       };
-      const pills = (names: string[], act: number, y: number, ph: number, fam?: string[]) => {
-        let x = pad;
-        names.forEach((n, i) => {
-          c.font = `${fs * 1.1}px ${fam ? fam[i] : 'Marcellus, serif'}`;
-          const tw = c.measureText(n).width, w = tw + fs * 1.9;
-          const on = i === act;
-          rr(c, x, y, w, ph, ph / 2);
+      const chips = (set: { chips: Chip[]; rows: number }, act: number, y0: number, fam?: string[]) => {
+        for (const [i, ch] of set.chips.entries()) {
+          const x = pad + ch.x, y = y0 + ch.y * (ph + rg), on = i === act;
+          rr(c, x, y, ch.w, ph, ph / 2);
           if (on) { c.fillStyle = mix(A.ac, B.ac, e); c.fill(); }
           c.strokeStyle = T.line; c.lineWidth = 1; if (!on) c.stroke();
-          c.fillStyle = on ? T.onAccent : T.muted; c.textAlign = 'left';
-          c.fillText(n, x + fs * 0.95, y + ph / 2 + 0.5);
-          x += w + fs * 0.6;
-        });
+          c.font = chipFont(i, fam); c.fillStyle = on ? T.onAccent : T.muted; c.textAlign = 'left';
+          c.fillText(ch.n, x + pf * 0.85, y + ph / 2 + 0.5);
+        }
       };
-      const ph = H * 0.07;
-      label('PALETTE', H * 0.075); pills(PAL.map((q) => q.n), to.p, H * 0.115, ph);
-      label('TYPEFACE', H * 0.265); pills(FACES.map((q) => q.n), to.f, H * 0.305, ph, FACES.map((q) => q.f));
+      let y = top;
+      if (labels) { label('PALETTE', y + lf * 0.6); y += lf * 1.7; }
+      chips(pals, to.p, y); y += pals.rows * ph + (pals.rows - 1) * rg + pad * 0.6;
+      if (labels) { label('TYPEFACE', y + lf * 0.6); y += lf * 1.7; }
+      chips(faces, to.f, y, FACES.map((q) => q.f));
       // billboard
-      const bx = pad, by = H * 0.43, bw = W - pad * 2, bh = H * 0.34;
       rr(c, bx, by, bw, bh, 10);
       c.fillStyle = mix(A.bg, B.bg, e); c.fill();
       c.strokeStyle = T.line; c.lineWidth = 1; c.stroke();
       const word = (face: Face, a: number) => {
         if (a <= 0.01) return;
-        const txt = face.caps ? 'BIRCH DESIGN LAB' : 'Birch Design Lab';
-        let size = H * 0.12;
-        c.font = `${face.st}${size}px ${face.f}`; c.letterSpacing = face.tr * size + 'px';
-        const w = c.measureText(txt).width;
-        if (w > bw * 0.84) { size *= (bw * 0.84) / w; c.font = `${face.st}${size}px ${face.f}`; c.letterSpacing = face.tr * size + 'px'; }
+        const opts = face.caps ? [['BIRCH DESIGN LAB'], ['BIRCH', 'DESIGN LAB']] : [['Birch Design Lab'], ['Birch', 'Design Lab']];
+        const font = (s: number) => `${face.st}${s}px ${face.f}`;
+        const { lines, size } = bestLines(c, opts, font, bw * 0.84, bh * 0.72, Math.min(H * 0.12, bh * 0.36), 1.2, face.tr);
+        c.font = font(size); c.letterSpacing = face.tr * size + 'px';
         c.globalAlpha = a; c.textAlign = 'center';
         c.fillStyle = mix(A.ink, B.ink, e);
-        c.fillText(txt, bx + bw / 2 + (face.tr * size) / 2, by + bh * 0.5 + (1 - a) * 6 * (a === 1 ? 0 : 1));
+        const lead = size * 1.2, y1 = by + bh * 0.5 - ((lines.length - 1) * lead) / 2 + (1 - a) * 6 * (a === 1 ? 0 : 1);
+        lines.forEach((s, i) => c.fillText(s, bx + bw / 2 + (face.tr * size) / 2, y1 + i * lead));
         c.globalAlpha = 1; c.letterSpacing = '0px'; c.textAlign = 'left';
       };
       word(FACES[from.f]!, from.f === to.f ? 0 : 1 - e);
       word(FACES[to.f]!, from.f === to.f ? 1 : e);
       // swatches
-      const sr = H * 0.033, sy = H * 0.885;
+      const sy = H - pad * 0.5 - sr;
       for (let i = 0; i < 5; i++) {
         const x = pad + sr + i * (sr * 2.7);
         c.beginPath(); c.arc(x, sy, sr, 0, TAU);

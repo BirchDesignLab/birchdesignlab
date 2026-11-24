@@ -22,8 +22,9 @@ const factory: MiniFactory = (): Mini => {
   let layers: Layer[] = [];
   let lastSeedT = -99, seedAt = { x: 0.5, y: 0.5 }, nextAuto = 15;
   function spawn(t: number, sx: number, sy: number, instant: boolean) {
-    const n = Math.round(clamp((W * H) / 1500, 150, 400));
-    const ds: Grown[] = generateBark(((rnd() * 1e9) | 0) || 7, { density: n, bands: 14 }).map((d) => ({ ...d, born: 0 }));
+    // A smaller tile gets more dashes per pixel and rows no closer than about 15px, so it reads as bands of lenticels (bark), not scattered flecks.
+    const n = Math.round(clamp((W * H) / 1100, 170, 480));
+    const ds: Grown[] = generateBark(((rnd() * 1e9) | 0) || 7, { density: n, bands: clamp(Math.round(H / 15), 7, 22) }).map((d) => ({ ...d, born: 0 }));
     const speed = 0.42 * W; // px per second of the growth wave
     for (const d of ds) {
       const dist = Math.hypot((d.x - sx) * W, (d.y - sy) * H);
@@ -45,6 +46,10 @@ const factory: MiniFactory = (): Mini => {
       g.addColorStop(0, dark ? 'rgba(255,255,255,.03)' : 'rgba(255,255,255,.35)');
       g.addColorStop(1, dark ? 'rgba(0,0,0,.35)' : 'rgba(120,100,70,.10)');
       c.fillStyle = g; c.fillRect(0, 0, W, H);
+      // the trunk's curve: lit in the middle, falling away at the sides, so the dashes read as lenticels on bark and not as scattered flecks
+      const cyl = c.createLinearGradient(0, 0, W, 0);
+      cyl.addColorStop(0, dark ? 'rgba(0,0,0,.4)' : 'rgba(110,90,60,.2)'); cyl.addColorStop(0.5, dark ? 'rgba(244,239,226,.08)' : 'rgba(255,255,255,.4)'); cyl.addColorStop(1, dark ? 'rgba(0,0,0,.4)' : 'rgba(110,90,60,.2)');
+      c.fillStyle = cyl; c.fillRect(0, 0, W, H);
       if (p.a > 0.5 && t - lastSeedT > 2.4 && Math.hypot((p.x - seedAt.x) * W, (p.y - seedAt.y) * H) > W * 0.22) spawn(t, p.x, p.y, false);
       else if (t > nextAuto) { spawn(t, rnd(), rnd(), false); nextAuto = t + 17; }
       const ink = dark ? [244, 239, 226] : [38, 32, 24];
@@ -55,7 +60,7 @@ const factory: MiniFactory = (): Mini => {
           const gr = clamp((t - d.born) / 1.0);
           if (gr <= 0) continue;
           const len = d.w * W * easeOut(gr);
-          const th = Math.max(2, d.h * H * 1.35);
+          const th = Math.max(2.4, d.h * H * 1.35);
           const a = (0.4 + 0.55 * d.shade) * (0.88 + 0.12 * Math.sin(t * 0.8 + d.x * 9 + d.y * 5)) * la;
           c.fillStyle = `rgba(${ink[0]},${ink[1]},${ink[2]},${a})`;
           c.save(); c.translate(d.x * W, d.y * H); c.rotate(d.rot);

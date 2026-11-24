@@ -71,7 +71,13 @@ const factory: MiniFactory = (): Mini => {
     b.restore();
   }
   function layout() {
-    plan = []; const lines = 4, per = 9;
+    // The sheet carries as many lines of glyphs as its height has room for (a small tile: one word), and the glyphs are never so
+    // wide that fewer than four fit across a line; the full window keeps its four lines of nine.
+    plan = [];
+    const lines = clamp(Math.round(area.h / 78), 1, 4);
+    const lh0 = (area.h - area.h * 0.09 * 2) / lines, mx0 = area.w * 0.07;
+    const gh0 = Math.min(lh0 * 0.56, (area.w - mx0 * 2) / 4.96);
+    const per = clamp(Math.round((area.w - mx0 * 2) / (gh0 * 0.62 * 2.2)), 3, 9);
     for (let l = 0; l < lines; l++) {
       let col = 0;
       while (col < per) {
@@ -82,7 +88,7 @@ const factory: MiniFactory = (): Mini => {
     }
     strokes = [];
     const mx = area.w * 0.07, my = area.h * 0.09;
-    const lh = (area.h - my * 2) / lines, gh = lh * 0.56, gw = gh * 0.62, step = (area.w - mx * 2) / per;
+    const lh = (area.h - my * 2) / lines, gh = gh0, gw = gh * 0.62, step = (area.w - mx * 2) / per;
     for (const it of plan) {
       const cx = area.x + mx + it.col * step + step * 0.5, cy = area.y + my + it.l * lh + lh * 0.5;
       const cs = Math.cos(it.jit), sn = Math.sin(it.jit);
