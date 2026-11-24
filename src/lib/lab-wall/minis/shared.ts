@@ -181,9 +181,10 @@ export const SCHOOLS: School[] = [
     c.fillStyle = '#111'; c.textBaseline = 'alphabetic';
     const lines = ['Birch', 'Design', 'Lab'], track = -0.044;
     if (w >= h) {
-      // past 1.35:1 the type fills only the left of the card: the red square grows and sits on the type's baseline, at the right margin
-      const sq = w >= h * 1.35 ? h * 0.3 : h * 0.12;
-      c.fillStyle = '#e30613'; if (w >= h * 1.35) c.fillRect(w * 0.93 - sq, h * 0.92 - sq, sq, sq); else c.fillRect(w * 0.76, h * 0.09, sq, sq);
+      // the red square sits on the type's baseline at the right margin and grows smoothly as the card widens (the type
+      // fills less of a wide card), so no window size or flight frame flips the composition
+      const k = clamp((w / h - 1) / 0.6, 0, 1), sq = h * (0.12 + 0.18 * k * k * (3 - 2 * k));
+      c.fillStyle = '#e30613'; c.fillRect(w * 0.93 - sq, h * 0.92 - sq, sq, sq);
       c.fillStyle = '#111'; c.fillRect(w * 0.07, h * 0.07, w * 0.86, 2);
       const size = fit(c, lines, SWISS, w * 0.86, h * 0.27, track), lead = size * 0.963;
       c.font = SWISS(size); c.letterSpacing = size * track + 'px';

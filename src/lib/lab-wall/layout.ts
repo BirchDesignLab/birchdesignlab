@@ -97,18 +97,21 @@ export const TABLET: Record<string, Cell> = {
 };
 
 /**
- * Phone: 2 columns by 29 row units. The Portal is full width and seven units tall (about 70% of the screen); the next
- * three are full width and four tall; the rest go two-up between and after them, the Shining Tree five units tall.
+ * Phone: 2 columns by 29 row units. Reading order is the ranking here, since every tile is one of two widths. The Portal
+ * is full width and seven units tall (about 70% of the screen); the three secondaries are full width and four tall, with
+ * the Data Map first so the Field Guide (which reads like the Portal at full width) never follows the Portal directly;
+ * the mids go two-up between them, then the smalls, the coming-soon piece last.
  */
 export const PHONE_COLS = 2;
 export const PHONE_ROWS = 29;
 export const PHONE: Record<string, Cell> = {
   'bdl-010': [0, 0, 2, 7],
-  'bdl-011': [0, 7, 2, 4],
-  'bdl-005': [0, 11, 1, 3], 'bdl-008': [1, 11, 1, 2], 'bdl-002': [1, 13, 1, 3], 'bdl-009': [0, 14, 1, 2],
-  'bdl-012': [0, 16, 2, 4],
-  'bdl-007': [0, 20, 1, 5], 'bdl-001': [1, 20, 1, 3], 'bdl-003': [1, 23, 1, 2],
-  'bdl-013': [0, 25, 2, 4],
+  'bdl-012': [0, 7, 2, 4],
+  'bdl-005': [0, 11, 1, 3], 'bdl-002': [1, 11, 1, 3],
+  'bdl-011': [0, 14, 2, 4],
+  'bdl-007': [0, 18, 1, 5], 'bdl-001': [1, 18, 1, 3], 'bdl-009': [1, 21, 1, 2],
+  'bdl-013': [0, 23, 2, 4],
+  'bdl-008': [0, 27, 1, 2], 'bdl-003': [1, 27, 1, 2],
 };
 
 /** Below this window width (and the CSS rules that repeat it) the wall lays out as the phone map. */
@@ -141,9 +144,8 @@ export const MAPS: Record<WallKind, MapSpec> = {
 };
 
 /**
- * The widest the wall grows. Past it the wall stays this wide and centred, so tiles do not grow without limit, and the
- * site header's row on the wall page (lab-wall.css) takes the same width: the wall and the header share one column,
- * and their left and right edges are the same line at every window width.
+ * The widest the wall grows. Past it the wall stays this wide and centred, so tiles do not grow without limit. The header
+ * and the page's text keep the site's own column at every width; the wall is the one object that bleeds past it.
  */
 export const WALL_MAX = 1520;
 
