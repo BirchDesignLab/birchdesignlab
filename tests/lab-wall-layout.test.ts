@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DESK, PHONE, PHONE_BELOW, layoutWall } from '../src/lib/lab-wall/layout';
 import type { Rect } from '../src/lib/lab-wall/layout';
 import { MINI_IDS } from '../src/lib/lab-wall/minis';
-import { RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW } from '../src/lib/lab-wall/reserve';
+import { EARLY_ATTR, RESERVE_INLINE, SM_BELOW, TILE_ATTR, TILE_CAP, XS_BELOW, holdBox, sizeClass } from '../src/lib/lab-wall/reserve';
 
 const IDS = [...MINI_IDS] as string[];
 const WIDTHS = [1440, 1024, 720, 719, 390];
@@ -255,7 +257,7 @@ describe('the framed tiles held before the engine arrives', () => {
   interface Fake {
     tag: string; className: string; textContent: string; innerHTML: string; attrs: Record<string, string>;
     style: Record<string, string> & { setProperty(k: string, v: string): void }; children: Fake[];
-    appendChild(c: Fake): Fake; setAttribute(k: string, v: string): void;
+    appendChild(c: Fake): Fake; setAttribute(k: string, v: string): void; getAttribute(k: string): string | null;
   }
   const fake = (tag: string): Fake => {
     const f: Fake = {
@@ -263,17 +265,29 @@ describe('the framed tiles held before the engine arrives', () => {
       style: { setProperty(k: string, v: string) { (this as Record<string, string>)[k] = v; } } as Fake['style'],
       appendChild(c) { f.children.push(c); return c; },
       setAttribute(k, v) { f.attrs[k] = v; },
+      getAttribute(k) { return k in f.attrs ? f.attrs[k]! : null; },
     };
     return f;
   };
   const KINDS: Record<string, string> = { experiment: 'Experiment', study: 'Study' };
   const rowsFor = (ids: string[]) => ids.map((id, i) => ({ id, designation: 'BDL-' + String(i + 1).padStart(3, '0'), title: 'Piece ' + id, kindLabel: KINDS[i % 2 ? 'study' : 'experiment'] }));
 
+  type Listener = (ev: unknown) => void;
+  type FakeWall = Fake & {
+    parentElement: null; clientWidth: number; getBoundingClientRect(): { top: number };
+    listeners: Record<string, Listener[]>; addEventListener(t: string, fn: Listener): void;
+    hasAttribute(n: string): boolean; removeAttribute(n: string): void;
+  };
+
   function hang(ids: string[], windowWidth: number, windowHeight: number, wallTop: number, wallWidth: number) {
-    const wall = fake('div') as Fake & { parentElement: null; clientWidth: number; getBoundingClientRect(): { top: number } };
+    const wall = fake('div') as FakeWall;
     wall.parentElement = null;
     wall.clientWidth = wallWidth;
     wall.getBoundingClientRect = () => ({ top: wallTop });
+    wall.listeners = {};
+    wall.addEventListener = (t, fn) => { (wall.listeners[t] ??= []).push(fn); };
+    wall.hasAttribute = (n) => n in wall.attrs;
+    wall.removeAttribute = (n) => { delete wall.attrs[n]; };
     const data = { textContent: JSON.stringify(rowsFor(ids)) };
     const doc = {
       querySelector: (q: string) => (q === '[data-lw="wall"]' ? wall : q === '[data-lw="data"]' ? data : null),
@@ -303,6 +317,9 @@ describe('the framed tiles held before the engine arrives', () => {
         expect(px(face!.style.height)).toBeCloseTo(Math.max(1, r.h - TILE_CAP), 1);
         expect(t.className.includes('lw-xs'), `xs ${id} ${ww}`).toBe(r.w < XS_BELOW);
         expect(t.className.includes('lw-sm'), `sm ${id} ${ww}`).toBe(r.w < SM_BELOW);
+        // keyboard-reachable and named as the engine will name it, before the engine is there
+        expect(t.attrs.role, `role ${id}`).toBe('button');
+        expect(t.attrs.tabindex, `tabindex ${id}`).toBe('0');
         const [d, title, kind] = cap!.children;
         expect(d!.textContent).toMatch(/^BDL-[0-9]{3}$/);
         expect(title!.textContent).toBe('Piece ' + id);
@@ -327,5 +344,150 @@ describe('the framed tiles held before the engine arrives', () => {
     const { wall, tiles } = hang([], 1440, 900, 220, 1440);
     expect(tiles).toHaveLength(0);
     expect(px(wall.style.height)).toBeCloseTo(900 - 220, 6);
+  });
+
+  it('remembers the last click, Enter or Space on a framed tile until the engine is live, then stands down', () => {
+    const { wall, tiles } = hang(IDS, 1440, 900, 220, 1440);
+    const [a, b] = [tiles[0]!, tiles[1]!];
+    for (const t of tiles) (t as Fake & { closest(s: string): Fake | null }).closest = (s) => (s === `[${TILE_ATTR}]` ? t : null);
+    const ev = (target: Fake, key?: string) => {
+      const e = { target, key, prevented: false, preventDefault() { e.prevented = true; } };
+      return e;
+    };
+    const fire = (type: string, e: ReturnType<typeof ev>) => (wall.listeners[type] ?? []).forEach((fn) => fn(e));
+    expect(wall.attrs[EARLY_ATTR]).toBeUndefined();
+    fire('click', ev(a));
+    expect(wall.attrs[EARLY_ATTR]).toBe(a.attrs[TILE_ATTR]);
+    // the last one wins
+    const enter = ev(b, 'Enter');
+    fire('keydown', enter);
+    expect(wall.attrs[EARLY_ATTR]).toBe(b.attrs[TILE_ATTR]);
+    expect(enter.prevented).toBe(true);
+    const space = ev(a, ' ');
+    fire('keydown', space);
+    expect(wall.attrs[EARLY_ATTR]).toBe(a.attrs[TILE_ATTR]);
+    expect(space.prevented).toBe(true);
+    // other keys and clicks off a tile are not clicks
+    const tab = ev(b, 'Tab');
+    fire('keydown', tab);
+    expect(wall.attrs[EARLY_ATTR]).toBe(a.attrs[TILE_ATTR]);
+    expect(tab.prevented).toBe(false);
+    fire('click', ev(wall));
+    expect(wall.attrs[EARLY_ATTR]).toBe(a.attrs[TILE_ATTR]);
+    // once the engine is live it has its own handlers: nothing is remembered, nothing doubled
+    delete wall.attrs[EARLY_ATTR];
+    wall.attrs['data-lw-live'] = '';
+    fire('click', ev(b));
+    const live = ev(b, 'Enter');
+    fire('keydown', live);
+    expect(wall.attrs[EARLY_ATTR]).toBeUndefined();
+    expect(live.prevented).toBe(false);
+  });
+
+  it('gives each tile the same caption size classes the engine gives it, at every width, and the engine reads them from the same place', () => {
+    expect(sizeClass(XS_BELOW - 0.01)).toEqual({ xs: true, sm: true });
+    expect(sizeClass(XS_BELOW)).toEqual({ xs: false, sm: true });
+    expect(sizeClass(SM_BELOW - 0.01)).toEqual({ xs: false, sm: true });
+    expect(sizeClass(SM_BELOW)).toEqual({ xs: false, sm: false });
+    const seen = new Set<string>();
+    for (let ww = 320; ww <= 1920; ww += 13) {
+      const { tiles } = hang(IDS, ww, 900, 220, ww);
+      const L = layoutWall(IDS, { width: ww, viewportWidth: ww, viewportHeight: 900, topHeight: 220 });
+      for (const t of tiles) {
+        const want = sizeClass(L.rects[t.attrs[TILE_ATTR]!]!.w);
+        expect(t.className.includes('lw-xs'), `xs ${t.attrs[TILE_ATTR]} at ${ww}`).toBe(want.xs);
+        expect(t.className.includes('lw-sm'), `sm ${t.attrs[TILE_ATTR]} at ${ww}`).toBe(want.sm);
+        seen.add(`${want.xs}/${want.sm}`);
+      }
+    }
+    // the sweep crosses both thresholds, so it tests something
+    expect([...seen].sort()).toEqual(['false/false', 'false/true', 'true/true']);
+    // wall.ts keeps no thresholds of its own
+    const engine = readFileSync(fileURLToPath(new URL('../src/lib/lab-wall/wall.ts', import.meta.url)), 'utf8');
+    expect(engine).toMatch(/sizeClass\(/);
+    expect(engine).not.toMatch(/\.w\s*<\s*(150|260)\b/);
+  });
+});
+
+describe('the box held on every path into the wall view', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function stage() {
+    const listeners: Record<string, Array<() => void>> = {};
+    const body = {};
+    const intro = { previousElementSibling: null };
+    const page = { previousElementSibling: null, parentElement: body };
+    const wall = { parentElement: page, previousElementSibling: intro };
+    const win = {
+      addEventListener: (t: string, fn: () => void) => { (listeners[t] ??= []).push(fn); },
+      removeEventListener: (t: string, fn: () => void) => { listeners[t] = (listeners[t] ?? []).filter((x) => x !== fn); },
+    };
+    type Face = { status: string; loaded: Promise<unknown>; land(): void };
+    const face = (status: string): Face => {
+      let land = () => {};
+      const f: Face = { status, loaded: new Promise<void>((r) => { land = r; }), land: () => { f.status = 'loaded'; land(); } };
+      return f;
+    };
+    const faces: Face[] = [];
+    const fontEvents: Record<string, Array<() => void>> = {};
+    const fonts = {
+      forEach: (cb: (f: Face) => void) => faces.forEach(cb),
+      addEventListener: (t: string, fn: () => void) => { (fontEvents[t] ??= []).push(fn); },
+      removeEventListener: (t: string, fn: () => void) => { fontEvents[t] = (fontEvents[t] ?? []).filter((x) => x !== fn); },
+    };
+    const ros: Array<{ cb: () => void; observed: unknown[]; off: boolean }> = [];
+    class FakeRO {
+      rec: { cb: () => void; observed: unknown[]; off: boolean };
+      constructor(cb: () => void) { this.rec = { cb, observed: [], off: false }; ros.push(this.rec); }
+      observe(el: unknown) { this.rec.observed.push(el); }
+      disconnect() { this.rec.off = true; }
+    }
+    vi.stubGlobal('window', win);
+    vi.stubGlobal('document', { body, fonts });
+    vi.stubGlobal('ResizeObserver', FakeRO);
+    return { wall, intro, listeners, faces, face, fontEvents, ros };
+  }
+  const settle = () => Promise.resolve().then(() => Promise.resolve());
+
+  it('refits on a resize, on anything above the wall changing height, and in the task each loading font lands, including one that starts later', async () => {
+    const s = stage();
+    const loading = s.face('loading');
+    const loaded = s.face('loaded');
+    s.faces.push(loading, loaded);
+    let n = 0;
+    const stop = holdBox(s.wall as unknown as HTMLElement, () => { n++; });
+    expect(s.ros).toHaveLength(1);
+    expect(s.ros[0]!.observed).toEqual([s.intro]);
+    s.listeners.resize![0]!();
+    expect(n).toBe(1);
+    s.ros[0]!.cb();
+    expect(n).toBe(2);
+    loading.land();
+    await settle();
+    expect(n).toBe(3);
+    // a face that starts loading after the hold began is watched when the set says loading starts
+    const later = s.face('loading');
+    s.faces.push(later);
+    s.fontEvents.loading!.forEach((fn) => fn());
+    s.fontEvents.loading!.forEach((fn) => fn());
+    later.land();
+    await settle();
+    expect(n).toBe(4);
+    stop();
+  });
+
+  it('stands down entirely when told: no listener, no observer, and a font that lands later refits nothing', async () => {
+    const s = stage();
+    const loading = s.face('loading');
+    s.faces.push(loading);
+    let n = 0;
+    const stop = holdBox(s.wall as unknown as HTMLElement, () => { n++; });
+    stop();
+    expect(s.listeners.resize).toEqual([]);
+    expect(s.fontEvents.loading).toEqual([]);
+    expect(s.ros[0]!.off).toBe(true);
+    loading.land();
+    await settle();
+    expect(n).toBe(0);
   });
 });

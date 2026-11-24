@@ -14,12 +14,15 @@
  * the box to the size and position the engine will give it (reserve.ts), so
  * nothing below it moves when the engine mounts. And it reads a link to a
  * piece (/lab/#bdl-007): the entry is replaced with plain /lab/ and the piece
- * is handed to the engine to open once the wall is up.
+ * is handed to the engine to open once the wall is up. A reload (or Back) onto an entry this page pushed for a piece is
+ * the one exception: that entry keeps its hash and the piece rides it, so closing the piece goes Back to the wall's own
+ * entry and no second /lab/ entry is left behind. A click on a framed tile before the engine arrives (the inline script
+ * remembers it on the wall) is handed to the engine the same way, to open as a click after mount would.
  */
 import { wireBulb } from './lamp';
 import { idFromHash, readView, writeView } from './model';
 import type { View } from './model';
-import { clearFramedTiles, measureWall, placeFramedTiles } from './reserve';
+import { EARLY_ATTR, clearFramedTiles, holdBox, measureWall, placeFramedTiles } from './reserve';
 import type { WallHandle, mountWall } from './wall';
 
 const FADE_MS = 450;
@@ -56,9 +59,12 @@ export function bootLabWall(): void {
   // A link to a listed piece opens it; a hash that names nothing here is dropped. Either way the entry
   // becomes plain /lab/, so the address bar and Back never carry a hash this page did not push itself.
   const linked = idFromHash(location.hash, ids);
-  if (location.hash) {
+  // The entry this page pushed itself for that piece (a reload, or Back, onto it) is left as it is: the piece rides it.
+  const rode = linked !== null && (history.state as { lwOpen?: unknown } | null)?.lwOpen === linked;
+  if (location.hash && !rode) {
     try {
-      history.replaceState(history.state, '', location.pathname + location.search);
+      // The state goes too: whatever it held belonged to an entry this page no longer has a piece for.
+      history.replaceState(null, '', location.pathname + location.search);
     } catch {
       /* history blocked: the hash stays, harmlessly */
     }
@@ -91,11 +97,32 @@ export function bootLabWall(): void {
     }
   }
 
+  /** What keeps the held box in step (resize, a font landing, anything above it changing height): on while the wall shows and the engine is not here. */
+  let release: (() => void) | null = null;
+  function hold(): void {
+    if (engine || release) return;
+    release = holdBox(wallEl, reserve);
+  }
+  function unhold(): void {
+    release?.();
+    release = null;
+  }
+
+  /** The piece a framed tile was clicked for before the engine arrived (the last click), if the wall is still what shows; either way the memory is cleared. */
+  function takeEarly(): string | null {
+    const id = wallEl.getAttribute(EARLY_ATTR);
+    wallEl.removeAttribute(EARLY_ATTR);
+    return id !== null && ids.includes(id) && viewNow() === 'wall' ? id : null;
+  }
+
   function load(open: string | null): Promise<WallHandle | null> {
     loading ??= (offered ? Promise.resolve({ mountWall: offered }) : import('./wall'))
       .then((m) => {
-        window.removeEventListener('resize', reserve);
-        return (engine = m.mountWall({ open }));
+        unhold();
+        // A click made while the engine was on its way wins over a link, and opens as a click would (an entry pushed);
+        // except on an entry this page already pushed for a piece, which it rides.
+        const early = takeEarly();
+        return (engine = m.mountWall(early ? { open: early, entry: rode ? 'existing' : 'push' } : { open, entry: rode ? 'existing' : 'none' }));
       })
       .catch((err: unknown) => {
         console.error('Lab wall failed to load', err);
@@ -110,20 +137,24 @@ export function bootLabWall(): void {
     if (view === 'wall') {
       if (!engine) {
         reserve();
-        window.addEventListener('resize', reserve);
+        hold();
       }
       const e = engine ?? (await load(opts.open ?? null));
       if (!e) {
-        // The engine would not load: the page is its list, and the choice is not remembered against it.
-        window.removeEventListener('resize', reserve);
+        // The engine would not load: the page is its list, and the choice is not remembered against it, nor a click made meanwhile.
+        unhold();
         clearFramedTiles(wallEl);
         paint('list', false);
         return;
       }
       // A toggle may have run again while the engine loaded.
       e.setView(viewNow());
+    } else if (engine) {
+      engine.setView('list');
     } else {
-      engine?.setView('list');
+      // The List before the engine: nothing is held for a wall nobody sees, and a click made on it is let go.
+      unhold();
+      wallEl.removeAttribute(EARLY_ATTR);
     }
   }
 

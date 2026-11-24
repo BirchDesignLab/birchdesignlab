@@ -124,6 +124,12 @@ async function closed(page, tag, expectScrollY, expectFocus) {
 }
 const settle = async (page) => { await page.goto(URL); await wait(page, 2600); await page.mouse.move(1, 1); await wait(page, 500); };
 
+// Held loads: some scripts (all of them, or only the engine) gated and then released, and the engine being live.
+const ALL_JS = /\/_astro\/[^?]*\.js(\?|$)/;
+const ENGINE_JS = /\/_astro\/wall\.[^?]*\.js(\?|$)/;
+const liveNow = (page) => page.evaluate(() => !!document.querySelector('[data-lw-live]'));
+const untilLive = (page) => page.waitForFunction(() => document.querySelector('[data-lw-live]'), null, { timeout: 30000 }).catch(() => {});
+
 // ---------- every tile drawn, at both sizes, in both schemes ----------
 async function drawn(w, h, scheme, touch) {
   const ctx = await context({ w, h, scheme, touch });
@@ -686,6 +692,62 @@ await drawn(390, 844, 'light', true);
   await ctx2.close();
 }
 
+// ---------- the bulb never takes a tap meant for the nav ----------
+// On a phone the header's gaps close up and the bulb's touch area (a 44 tall square-ish pad around the 24px drawn one)
+// must stop where the nav does: no pixel of a nav link answers with the bulb, nor any pixel of the light/dark switch,
+// and the pad is still tall and wide enough to hit.
+for (const w of [390, 360]) {
+  const ctx = await context({ w, h: 844, scheme: 'dark', touch: true });
+  const page = await ctx.newPage();
+  watch(page, `bulb hit ${w}`);
+  await page.goto(URL);
+  await wait(page, 1800);
+  const r = await page.evaluate(() => {
+    const isBulb = (e) => !!(e && e.closest('[data-lw=bulb]'));
+    const bulb = document.querySelector('[data-lw=bulb]');
+    const out = { links: 0, samples: 0, bulb: 0, stray: 0, sw: 0, swSamples: 0 };
+    // every point, half a pixel apart, across the whole box of each nav link and of the switch
+    const sweep = (el, f) => {
+      const b = el.getBoundingClientRect();
+      for (let x = b.left + 0.01; x < b.right; x += 0.5) for (let y = b.top + 0.01; y < b.bottom; y += 0.5) f(document.elementFromPoint(x, y));
+    };
+    for (const a of document.querySelectorAll('header nav a')) {
+      out.links++;
+      sweep(a, (e) => { out.samples++; if (isBulb(e)) out.bulb++; else if (!a.contains(e)) out.stray++; });
+    }
+    sweep(document.querySelector('#theme-toggle'), (e) => { out.swSamples++; if (isBulb(e)) out.sw++; });
+    const bl = bulb.getBoundingClientRect();
+    const sw = document.querySelector('#theme-toggle').getBoundingClientRect();
+    // the pad, found by walking a row and a column through the bulb's centre
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (let x = bl.left - 30; x < sw.right; x += 0.25) if (isBulb(document.elementFromPoint(x, bl.top + bl.height / 2))) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+    for (let y = bl.top - 30; y < bl.bottom + 30; y += 0.25) if (isBulb(document.elementFromPoint(bl.left + bl.width / 2, y))) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    return { ...out, pad: { x0, x1, y0, y1, w: x1 - x0 + 0.25, h: y1 - y0 + 0.25 }, drawn: [bl.width, bl.height], gap: sw.left - bl.right };
+  });
+  ok(r.links === 4 && r.samples > 400 && r.bulb === 0 && r.stray === 0, `bulb hit ${w}: no point of any nav link answers with the bulb (${r.samples} points over ${r.links} links; bulb ${r.bulb}, other ${r.stray})`);
+  ok(r.sw === 0 && r.swSamples > 100, `bulb hit ${w}: no point of the light/dark switch answers with the bulb (${r.swSamples} points)`);
+  // The pad is laid out 40 by 44 around the 24px square; hit-testing hands the last pixel before the switch to the switch, so it reads about 39 wide.
+  ok(r.pad.h >= 43.5 && r.pad.w >= 38.5, `bulb hit ${w}: the touch pad is still at least 44 tall and about 40 wide (${r.pad.w} by ${r.pad.h}); the drawn box is ${r.drawn.join(' by ')}, 8px from the switch (${r.gap})`);
+  // a tap on the bulb's centre, and just inside each corner of the pad, flips the lamp each time
+  const flips = [];
+  const at = async (x, y) => {
+    const before = await page.evaluate(() => document.documentElement.getAttribute('data-lab-lamp'));
+    await page.touchscreen.tap(x, y);
+    await wait(page, 150);
+    const after = await page.evaluate(() => document.documentElement.getAttribute('data-lab-lamp'));
+    flips.push(before !== after);
+  };
+  const cy = (r.pad.y0 + r.pad.y1) / 2;
+  await at((r.pad.x0 + r.pad.x1) / 2, cy);
+  for (const [x, y] of [[r.pad.x0 + 1, r.pad.y0 + 1], [r.pad.x1 - 1, r.pad.y0 + 1], [r.pad.x0 + 1, r.pad.y1 - 1], [r.pad.x1 - 1, r.pad.y1 - 1]]) await at(x, y);
+  ok(flips.length === 5 && flips.every(Boolean), `bulb hit ${w}: a tap on the bulb's centre and just inside each corner of its pad flips the lamp (${flips.join(', ')})`);
+  // and a tap on the right edge of "Contact" goes to Contact
+  const edge = await page.evaluate(() => { const a = [...document.querySelectorAll('header nav a')].find((x) => x.textContent.trim() === 'Contact'); const b = a.getBoundingClientRect(); return { x: b.right - 0.5, y: b.top + b.height / 2 }; });
+  await Promise.all([page.waitForURL(/\/contact\/?$/, { timeout: 8000 }).catch(() => {}), page.touchscreen.tap(edge.x, edge.y)]);
+  ok(/\/contact\/?$/.test(page.url()), `bulb hit ${w}: a tap on the right edge of "Contact" goes to Contact (${page.url()})`);
+  await ctx.close();
+}
+
 // ---------- links to a piece ----------
 {
   const ctx = await context();
@@ -807,6 +869,232 @@ await drawn(390, 844, 'light', true);
   await ctx.close();
 }
 
+// ---------- a piece open across a reload: Back is never a dead press ----------
+// Open a piece (an entry is pushed at /lab/#id), reload: the piece is open again on that same entry. Closing it, by the
+// button, Esc or Back, shows the wall at /lab/, and from there one more Back leaves /lab/. Every start is from another
+// page, so "leaves" can be seen.
+{
+  const ctx = await context();
+  const page = await ctx.newPage();
+  watch(page, 'reload open');
+  const away = BASE + '/about/';
+  await page.goto(URL);
+  await wait(page, 2000);
+  const rows = await data(page);
+  const piece = rows[2];
+  const next = rows[3];
+  const here = () => page.evaluate(() => ({ path: location.pathname, hash: location.hash, cur: document.querySelector('.lw-tile.lw-open')?.getAttribute('aria-label') ?? null, locked: document.documentElement.classList.contains('lw-locked'), hist: history.length, view: document.documentElement.dataset.labView }));
+  const openIt = async (e) => {
+    await page.goto(away);
+    await wait(page, 500);
+    await page.goto(URL);
+    await wait(page, 2200);
+    await page.mouse.move(1, 1);
+    const c = await center(page, labelOf(e));
+    await page.mouse.click(c.x, c.y);
+    await wait(page, 1300);
+  };
+  for (const how of ['button', 'esc', 'back']) {
+    await openIt(piece);
+    const h0 = (await here()).hist;
+    await page.reload();
+    await wait(page, 2600);
+    let s = await here();
+    ok(s.cur === labelOf(piece) && s.hash === '#' + piece.id && s.locked && s.hist === h0, `reload with a piece open (closed by ${how} after): it is open again on the same entry ` + JSON.stringify(s));
+    if (how === 'button') await page.click('[data-lw=back]');
+    else if (how === 'esc') await page.keyboard.press('Escape');
+    else await page.goBack();
+    await wait(page, 1400);
+    s = await here();
+    ok(s.cur === null && !s.locked && s.path === '/lab/' && s.hash === '' && s.view === 'wall', `reload, then ${how}: the wall at plain /lab/ ` + JSON.stringify(s));
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `reload, then ${how}, then Back: one press leaves /lab/, not a dead press or a second /lab/ entry (${page.url()})`);
+  }
+  { // open, step, reload, step, reload, close: the entry follows the piece the whole way
+    await openIt(piece);
+    await page.keyboard.press('ArrowRight');
+    await wait(page, 1200);
+    await page.reload();
+    await wait(page, 2600);
+    let s = await here();
+    ok(s.cur === labelOf(next) && s.hash === '#' + next.id, `open, step, reload: the stepped piece is open again ` + JSON.stringify(s));
+    await page.keyboard.press('ArrowLeft');
+    await wait(page, 1200);
+    await page.reload();
+    await wait(page, 2600);
+    s = await here();
+    ok(s.cur === labelOf(piece) && s.hash === '#' + piece.id, `then step back, reload: that piece is open again ` + JSON.stringify(s));
+    await page.click('[data-lw=back]');
+    await wait(page, 1400);
+    s = await here();
+    ok(s.cur === null && s.path === '/lab/' && s.hash === '', 'then close: the wall at plain /lab/ ' + JSON.stringify(s));
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `then Back leaves /lab/ in one press (${page.url()})`);
+  }
+  { // Forward from the wall opens it again, and Back and the button still agree
+    await openIt(piece);
+    await page.reload();
+    await wait(page, 2600);
+    await page.goBack();
+    await wait(page, 1200);
+    let s = await here();
+    ok(s.cur === null && s.path === '/lab/' && s.hash === '', 'reload, then Back from the open piece: it closes, the wall at /lab/ ' + JSON.stringify(s));
+    await page.goForward();
+    await wait(page, 1500);
+    s = await here();
+    ok(s.cur === labelOf(piece) && s.hash === '#' + piece.id, 'then Forward: the piece is open again ' + JSON.stringify(s));
+    await page.click('[data-lw=back]');
+    await wait(page, 1400);
+    s = await here();
+    ok(s.cur === null && s.hash === '', 'then the button closes it ' + JSON.stringify(s));
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `and Back leaves /lab/ (${page.url()})`);
+  }
+  { // a link still behaves as before: one Back leaves, even after a reload
+    await page.goto(away);
+    await wait(page, 500);
+    await page.goto(`${URL}#${piece.id}`);
+    await wait(page, 2400);
+    await page.reload();
+    await wait(page, 2400);
+    const s = await here();
+    ok(s.cur === null && s.path === '/lab/' && s.hash === '', 'a linked piece, reloaded: the wall at plain /lab/ (the link had no entry of its own) ' + JSON.stringify(s));
+    await page.goBack();
+    await wait(page, 1000);
+    ok(page.url() === away, `and one Back leaves /lab/ (${page.url()})`);
+  }
+  await ctx.close();
+}
+
+// ---------- a click before the engine arrives is not lost ----------
+// The first paint hangs framed, captioned tiles; a click, tap, Enter or Space on one before the engine is here is
+// remembered (the last wins), and that piece opens through the normal path as soon as the engine mounts.
+{
+  const own = [];
+  const held = async ({ w = 1440, h = 900, touch = false, scripts = ALL_JS, view = null, tag }) => {
+    const ctx = await context({ w, h, scheme: 'dark', touch, view });
+    const page = await ctx.newPage();
+    watch(page, tag, own);
+    let release;
+    let fail = false;
+    const gate = new Promise((r) => (release = r));
+    await page.route(scripts, async (route) => { await gate; if (fail) await route.abort(); else await route.continue(); });
+    await page.goto(URL, { waitUntil: 'commit' });
+    await page.waitForSelector('.lw-tile[data-lw-id]', { state: 'attached' });
+    await wait(page, 700);
+    return { ctx, page, release, abort: () => { fail = true; release(); } };
+  };
+  /** The framed tiles whose middle is in the window, with the middle. */
+  const framed = (page) => page.evaluate(() => [...document.querySelectorAll('.lw-tile[data-lw-id]')].map((t) => {
+    const r = t.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const top = document.elementFromPoint(x, y);
+    return { id: t.getAttribute('data-lw-id'), x, y, ok: y > 0 && y < innerHeight && x > 0 && x < innerWidth && !!top && t.contains(top) };
+  }).filter((t) => t.ok));
+  const open = (page) => page.evaluate(() => ({ cur: document.querySelector('.lw-tile.lw-open')?.getAttribute('aria-label') ?? null, hash: location.hash, hist: history.length, focus: document.activeElement?.getAttribute('data-lw') ?? null, view: document.documentElement.dataset.labView, early: document.querySelector('[data-lw=wall]')?.getAttribute('data-lw-early') ?? null, tiles: document.querySelectorAll('.lw-tile').length }));
+  const titleOf = async (page, id) => 'Open ' + (await page.evaluate((id) => document.querySelector(`.lw-tile[data-lw-id="${id}"] .lw-t`).textContent, id));
+
+  { // a mouse click, then a later click on another tile: the last wins; Back closes it
+    const h = await held({ tag: 'early click' });
+    const tiles = await framed(h.page);
+    ok(tiles.length >= 4, `early click: framed tiles are there before any script (${tiles.length} in the window)`);
+    const roles = await h.page.evaluate(() => [...document.querySelectorAll('.lw-tile[data-lw-id]')].every((t) => t.getAttribute('role') === 'button' && t.getAttribute('tabindex') === '0'));
+    ok(roles, 'early click: every framed tile already has role=button and tabindex=0');
+    const h0 = (await open(h.page)).hist;
+    await h.page.mouse.click(tiles[0].x, tiles[0].y);
+    await h.page.mouse.click(tiles[1].x, tiles[1].y);
+    const mem = await open(h.page);
+    ok(mem.early === tiles[1].id && mem.cur === null, `early click: the last click is remembered, nothing is open yet (${mem.early})`);
+    h.release();
+    await untilLive(h.page);
+    await wait(h.page, 1800);
+    const s = await open(h.page);
+    ok(s.cur === (await titleOf(h.page, tiles[1].id)) && s.hash === '#' + tiles[1].id && s.hist === h0 + 1 && s.focus === 'back' && s.early === null, 'early click: when the engine arrives the last piece clicked opens, its entry pushed, focus on Back ' + JSON.stringify(s));
+    await h.page.goBack();
+    await wait(h.page, 1200);
+    const b = await open(h.page);
+    ok(b.cur === null && b.hash === '', 'early click: Back closes it ' + JSON.stringify(b));
+    const again = await framed(h.page);
+    await h.page.mouse.click(again[0].x, again[0].y);
+    await wait(h.page, 1300);
+    const c = await open(h.page);
+    ok(c.cur === (await titleOf(h.page, again[0].id)) && c.hist === h0 + 1, 'early click: after mount a click opens a piece once, as ever ' + JSON.stringify(c));
+    await h.ctx.close();
+  }
+  for (const key of ['Enter', 'Space']) { // Tab to a framed tile and press the key
+    const h = await held({ tag: 'early key ' + key });
+    let id = null;
+    for (let i = 0; i < 40 && !id; i++) {
+      await h.page.keyboard.press('Tab');
+      id = await h.page.evaluate(() => document.activeElement?.getAttribute('data-lw-id') ?? null);
+    }
+    ok(!!id, `early ${key}: Tab reaches a framed tile before the engine`);
+    const y0 = await h.page.evaluate(() => scrollY);
+    await h.page.keyboard.press(key);
+    await wait(h.page, 200);
+    ok((await h.page.evaluate(() => scrollY)) === y0, `early ${key}: the page does not scroll`);
+    const h0 = (await open(h.page)).hist;
+    h.release();
+    await untilLive(h.page);
+    await wait(h.page, 1800);
+    const s = await open(h.page);
+    ok(id && s.cur === (await titleOf(h.page, id)) && s.hash === '#' + id && s.hist === h0 + 1 && s.focus === 'back', `early ${key}: that piece opens when the engine arrives ` + JSON.stringify(s));
+    await h.page.keyboard.press('Escape');
+    await wait(h.page, 1300);
+    const f = await h.page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? null);
+    ok(f === (await titleOf(h.page, id)) || f === s.cur, `early ${key}: closing it puts focus back on the tile (${f})`);
+    await h.ctx.close();
+  }
+  { // a tap on a phone
+    const h = await held({ w: 390, h: 844, touch: true, tag: 'early tap' });
+    const tiles = await framed(h.page);
+    ok(tiles.length >= 1, `early tap: a framed tile is in the window at 390 (${tiles.length})`);
+    const t = tiles[0];
+    const h0 = (await open(h.page)).hist;
+    await h.page.touchscreen.tap(t.x, t.y);
+    await wait(h.page, 200);
+    h.release();
+    await untilLive(h.page);
+    await wait(h.page, 1800);
+    const s = await open(h.page);
+    ok(s.cur === (await titleOf(h.page, t.id)) && s.hash === '#' + t.id && s.hist === h0 + 1, 'early tap: the tapped piece opens when the engine arrives ' + JSON.stringify(s));
+    await h.ctx.close();
+  }
+  { // the engine fails outright: the list shows and nothing opens
+    const h = await held({ scripts: ENGINE_JS, tag: 'early click, no engine' });
+    const tiles = await framed(h.page);
+    const h0 = (await open(h.page)).hist;
+    await h.page.mouse.click(tiles[0].x, tiles[0].y);
+    h.abort();
+    await wait(h.page, 2500);
+    const s = await open(h.page);
+    const list = await h.page.evaluate(() => [...document.querySelectorAll('.catalog article')].filter((c) => getComputedStyle(c).display !== 'none').length);
+    ok(s.view === 'list' && s.cur === null && s.hash === '' && s.early === null && s.tiles === 0 && s.hist === h0 && list > 0, 'early click, engine failed: the list shows and nothing opens ' + JSON.stringify({ ...s, list }));
+    await h.ctx.close();
+  }
+  { // a click, then the List, then the Wall again before the engine: the click is let go
+    const h = await held({ scripts: ENGINE_JS, tag: 'early click then List' });
+    await wait(h.page, 800);
+    const tiles = await framed(h.page);
+    await h.page.mouse.click(tiles[0].x, tiles[0].y);
+    await h.page.click('[data-lw-view=list]');
+    await wait(h.page, 400);
+    await h.page.click('[data-lw-view=wall]');
+    await wait(h.page, 400);
+    const h0 = (await open(h.page)).hist;
+    h.release();
+    await untilLive(h.page);
+    await wait(h.page, 1500);
+    const s = await open(h.page);
+    ok(s.cur === null && s.hash === '' && s.view === 'wall' && s.hist === h0 && s.early === null, 'early click, then List, then Wall: the click is not carried across ' + JSON.stringify(s));
+    await h.ctx.close();
+  }
+  if (own.length) console.log('     (expected console noise from the failed engine:', own.length, 'lines)');
+}
+
 // ---------- slow load ----------
 {
   const ctx = await context();
@@ -869,12 +1157,19 @@ await drawn(390, 844, 'light', true);
 
 // ---------- a web font that lands after the wall was measured ----------
 // The slow load above hits this only now and then: the page measures the wall with the fallback face, in which the
-// intro's sentence can take two lines where the web font takes one, and the font lands before the engine does. Here
-// it is made to happen every time: the fonts and the scripts are held, the fonts land first, then the scripts. The
-// wall's lower edge must not move, read both at the start of each frame (requestAnimationFrame, where anything in the
-// frame first sees the layout) and after the frame is painted.
-for (const w of [1440, 1280]) {
-  const ctx = await context({ w, h: 900, scheme: 'dark' });
+// intro's sentence can take two lines where the web font takes one, and the font lands at some point after. Here it is
+// made to happen every time: the web fonts and some scripts are held, and each case releases them in the order it
+// wants. The wall's top must really have moved, or the case tested nothing, and the wall's lower edge must not: read
+// at the start of each frame (requestAnimationFrame, where anything in the frame first sees the layout) and after the
+// frame is painted. A face lands, the browser puts it to use, and the box is refit a moment later, so a read that falls
+// in that gap can meet the old height (the observer refits before the frame is painted, so it is never on screen). What
+// is asserted: every run ends on the edge it began on; a stale read is only ever the gap, a few reads in a row and
+// no more; and across the runs the gap is the exception (the refit on each face's landing is what keeps it so).
+const LATE_RUNS = Math.max(1, Number(process.env.LATE_RUNS) || 8);
+
+/** A load of /lab/ with the web fonts and the scripts matching `scripts` held. `run(page, { fonts, scripts })` releases them in the order the case wants; what the page saw of the wall comes back. */
+async function lateLoad({ w, view = null, scripts: re = ALL_JS, tag, run }) {
+  const ctx = await context({ w, h: 900, scheme: 'dark', view });
   await ctx.addInitScript(() => {
     window.__late = [];
     const read = (when) => {
@@ -887,28 +1182,88 @@ for (const w of [1440, 1280]) {
     requestAnimationFrame(loop);
   });
   const page = await ctx.newPage();
-  watch(page, 'late font ' + w);
+  watch(page, tag);
   let fonts, scripts;
   const fontGate = new Promise((r) => (fonts = r));
   const scriptGate = new Promise((r) => (scripts = r));
   await page.route(/\.woff2?(\?|$)/, async (route) => { await fontGate; await route.continue(); });
-  await page.route(/\/_astro\/[^?]*\.js(\?|$)/, async (route) => { await scriptGate; await route.continue(); });
+  await page.route(re, async (route) => { await scriptGate; await route.continue(); });
   await page.goto(URL, { waitUntil: 'commit' });
   await page.waitForSelector('[data-lw=wall]', { state: 'attached' });
-  await wait(page, 400);
-  fonts();
-  await wait(page, 800);
-  const heldLive = await page.evaluate(() => !!document.querySelector('[data-lw-live]'));
-  scripts();
-  await page.waitForFunction(() => document.querySelector('[data-lw-live]'), null, { timeout: 30000 }).catch(() => {});
-  await wait(page, 600);
+  const seen = await run(page, { fonts, scripts });
   const s = await page.evaluate(() => window.__late);
-  const tops = [...new Set(s.map((x) => x.top))];
-  const bots = s.map((x) => x.bottom);
-  const live = s.some((x) => x.live);
-  ok(!heldLive && live && s.length > 0, `late font ${w}: fonts landed while the engine was held, then it mounted (${s.length} samples)`);
-  ok(Math.max(...bots) - Math.min(...bots) <= 1, `late font ${w}: the wall's lower edge holds as the font lands and as the engine mounts, at the start of every frame and after it is painted (${Math.min(...bots)} to ${Math.max(...bots)}; the top went ${tops.join(' to ')})`);
   await ctx.close();
+  const tops = s.map((x) => x.top);
+  const first = s.length ? s[0].bottom : 0;
+  const last = s.length ? s[s.length - 1].bottom : 0;
+  let stale = 0, row = 0, gap = 0;
+  for (const x of s) { if (Math.abs(x.bottom - last) > 1) { stale++; row++; gap = Math.max(gap, row); } else row = 0; }
+  return { seen, samples: s.length, live: s.some((x) => x.live), moved: s.length ? Math.max(...tops) - Math.min(...tops) : 0, first, last, stale, gap };
+}
+/** The three things asserted of every run of a late-font case. */
+const lateOk = (r) => r.samples > 0 && r.live && r.moved >= 10 && Math.abs(r.last - r.first) <= 1 && r.gap <= 3;
+const lateWhy = (r) => `${r.samples} reads, top moved ${r.moved}px, edge ${r.first} to ${r.last}, ${r.stale} stale read${r.stale === 1 ? '' : 's'}, at most ${r.gap} in a row`;
+/** Several runs of one case: each must hold, and a stale read must be the exception. */
+async function lateRuns(n, tag, load) {
+  const runs = [];
+  for (let i = 0; i < n; i++) runs.push(await load(`${tag} #${i}`));
+  const held = runs.filter(lateOk).length;
+  const stale = runs.filter((r) => r.stale > 0).length;
+  return { runs, held, stale, n };
+}
+
+for (const w of [1440, 1280]) {
+  // the fonts land first, then the scripts
+  const a = await lateLoad({ w, tag: 'late font ' + w, run: async (page, g) => {
+    await wait(page, 400);
+    g.fonts();
+    await wait(page, 800);
+    const heldLive = await liveNow(page);
+    g.scripts();
+    await untilLive(page);
+    await wait(page, 600);
+    return { heldLive };
+  } });
+  ok(!a.seen.heldLive && lateOk(a), `late font ${w}: fonts landed while the engine was held, then it mounted; the top moved and the lower edge held (${lateWhy(a)})`);
+
+  // the engine first, then the fonts: the engine's own refit has to catch the font as it lands
+  const b = await lateRuns(LATE_RUNS, `late font engine-first ${w}`, (tag) => lateLoad({ w, tag, run: async (page, g) => {
+    await wait(page, 400);
+    g.scripts();
+    await untilLive(page);
+    await wait(page, 300);
+    const liveBefore = await liveNow(page);
+    g.fonts();
+    await wait(page, 1200);
+    return { liveBefore };
+  } }));
+  const liveFirst = b.runs.filter((r) => r.seen.liveBefore).length;
+  const moved = b.runs.filter((r) => r.moved >= 10).length;
+  ok(liveFirst === b.n && moved === b.n, `late font ${w}, engine first: the engine was live before the fonts landed and the top moved, in ${liveFirst} and ${moved} of ${b.n} runs`);
+  ok(b.held === b.n, `late font ${w}, engine first: every run ends on the edge it began on, with a stale read only ever the gap (${b.held} of ${b.n} runs; ${b.runs.filter((r) => !lateOk(r)).map(lateWhy).join('; ') || 'none out of line'})`);
+  ok(b.stale <= Math.ceil(b.n * 0.4), `late font ${w}, engine first: a stale read at a frame start is the exception, not the rule (${b.stale} of ${b.n} runs saw one)`);
+}
+
+// ---------- the held box on every path into the wall view ----------
+// Nothing used to refit the box for a late font when the wall was reached from the List before the engine arrived, or
+// came back after a trip to the List. The fonts and the engine are held (the first script runs), the fonts land, then
+// the engine: the wall's lower edge, and so the footer under it, stays where it was from the moment the wall shows.
+for (const path of ['List stored, then Wall', 'Wall, List, Wall']) {
+  const r = await lateRuns(Math.max(2, Math.ceil(LATE_RUNS / 2)), 'held box ' + path, (tag) => lateLoad({ w: 1440, view: path === 'List stored, then Wall' ? 'list' : null, scripts: ENGINE_JS, tag, run: async (page, g) => {
+    await wait(page, 1500);
+    if (path !== 'Wall, List, Wall') await page.click('[data-lw-view=wall]');
+    else { await page.click('[data-lw-view=list]'); await wait(page, 300); await page.click('[data-lw-view=wall]'); }
+    await wait(page, 400);
+    g.fonts();
+    await wait(page, 900);
+    const heldLive = await liveNow(page);
+    g.scripts();
+    await untilLive(page);
+    await wait(page, 700);
+    return { heldLive };
+  } }));
+  ok(r.runs.every((x) => !x.seen.heldLive) && r.held === r.n, `held box (${path}): the fonts landed while the engine was held, the top moved, and the lower edge held to the engine mounting (${r.held} of ${r.n} runs; ${r.runs.filter((x) => !lateOk(x)).map(lateWhy).join('; ') || 'none out of line'})`);
+  ok(r.stale <= Math.ceil(r.n * 0.4), `held box (${path}): a stale read at a frame start is the exception (${r.stale} of ${r.n} runs saw one)`);
 }
 
 // ---------- phone ----------

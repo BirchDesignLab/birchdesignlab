@@ -1,7 +1,7 @@
 /**
  * The wall's box, and its framed, captioned tiles, held before the engine has arrived. The engine (wall.ts) measures
  * the box on every layout; the inline script below does it once in the very first paint, and the first script
- * (boot.ts) keeps it in step on resize until the engine takes over. Either way the box the engine inherits is already
+ * (boot.ts, through holdBox) keeps it in step on resize, on a font landing and on anything above it changing height, until the engine takes over. Either way the box the engine inherits is already
  * the size and place it will have, and the tiles it adopts are already where it will put them: nothing moves when the
  * engine mounts, and a visitor on a slow connection sees the captioned mosaic, never an empty wall.
  *
@@ -36,6 +36,13 @@ export const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M
 export const TILE_ATTR = 'data-lw-id';
 /** The attribute the engine puts on the wall once it is live: from then on the engine keeps the box, not the inline script. */
 export const LIVE_ATTR = 'data-lw-live';
+/** The attribute the inline script keeps on the wall while the engine is not here: the id of the framed tile clicked last (boot.ts hands it to the engine). */
+export const EARLY_ATTR = 'data-lw-early';
+
+/** Which caption classes a tile of this width carries. The engine, the inline script and placeTile all go by these two numbers. */
+export function sizeClass(width: number): { xs: boolean; sm: boolean } {
+  return { xs: width < XS_BELOW, sm: width < SM_BELOW };
+}
 
 /**
  * Everything laid out before the wall (the previous siblings of the wall and of each of its ancestors): a change in
@@ -113,6 +120,8 @@ export const RESERVE_INLINE = `(function () {
       placed[row.id] = 1;
       var t = mk('div', 'lw-tile');
       t.setAttribute('${TILE_ATTR}', row.id);
+      t.setAttribute('role', 'button');
+      t.setAttribute('tabindex', '0');
       t.style.setProperty('--i', String(i));
       var face = mk('div', 'lw-face');
       face.appendChild(mk('div', 'lw-veil'));
@@ -128,18 +137,33 @@ export const RESERVE_INLINE = `(function () {
   } catch (e) { hung = []; /* the engine builds the tiles when it arrives */ }
   fit();
   for (i = 0; i < hung.length; i++) w.appendChild(hung[i].el);
+  // A click, tap, Enter or Space on a framed tile before the engine is here is remembered on the wall, the last one
+  // winning; boot.ts hands it to the engine, which opens that piece as a click after mount would. The engine puts its
+  // own handlers on every tile, so once it is live these two stand down and nothing is done twice.
+  var remember = function (ev, key) {
+    if (w.hasAttribute('${LIVE_ATTR}')) return;
+    var el = ev.target && ev.target.closest ? ev.target.closest('[${TILE_ATTR}]') : null;
+    if (!el || (key && ev.target !== el)) return;
+    if (key) ev.preventDefault();
+    w.setAttribute('${EARLY_ATTR}', el.getAttribute('${TILE_ATTR}'));
+  };
+  try {
+    w.addEventListener('click', function (ev) { remember(ev, false); });
+    w.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') remember(ev, true); });
+  } catch (e) { /* the tiles stay plain until the engine adopts them */ }
   // What sits above the wall can change height before the engine arrives, and on desktop the height follows the top.
   // The usual cause: the measure above ran with the fallback face, and the intro's sentence takes two lines in it where
   // the web font takes one, so when the font lands the top rises 24px. Two hands keep the box in step:
-  // - each face still loading when the measure ran: its own promise settles in the task that lands it, before the next
-  //   frame starts, so the box has its new height before anything in that frame reads or paints it;
+  // - each face still loading when the measure ran: its own promise settles in the task that lands it, and the box is refit
+  //   there and once more a task later (the browser can apply the face to the layout just after its promise settles), so
+  //   the box has its new height before anything in the next frame reads or paints it, all but the rarest read;
   // - a ResizeObserver on everything laid out above the wall, for any other change: it runs after layout and before
   //   paint, so the lower edge never shows a stale size.
   // Once the engine is live (${LIVE_ATTR}), or the page is its list, it is the engine's job.
   var held = function () { return !w.hasAttribute('${LIVE_ATTR}') && doc.documentElement.getAttribute('data-lab-view') === 'wall'; };
   var refit = function () { if (held()) fit(); };
   try {
-    if (doc.fonts && doc.fonts.forEach) doc.fonts.forEach(function (f) { if (f.status === 'loading') f.loaded.then(refit, function () {}); });
+    if (doc.fonts && doc.fonts.forEach) doc.fonts.forEach(function (f) { if (f.status === 'loading') f.loaded.then(function () { refit(); setTimeout(refit, 0); }, function () {}); });
   } catch (e) { /* the observer below, boot.ts and the engine measure it again */ }
   if (typeof ResizeObserver === 'function') {
     try {
@@ -184,8 +208,9 @@ export function placeTile(el: HTMLElement, r: Rect): void {
   st.height = sig(r.h) + 'px';
   const face = el.querySelector<HTMLElement>('.lw-face');
   if (face) face.style.height = sig(Math.max(1, r.h - TILE_CAP)) + 'px';
-  el.classList.toggle('lw-xs', r.w < XS_BELOW);
-  el.classList.toggle('lw-sm', r.w < SM_BELOW);
+  const size = sizeClass(r.w);
+  el.classList.toggle('lw-xs', size.xs);
+  el.classList.toggle('lw-sm', size.sm);
 }
 
 /** Re-seat the tiles the inline script hung, from a fresh layout (the window was resized before the engine arrived). */
@@ -198,7 +223,56 @@ export function placeFramedTiles(wallEl: HTMLElement, L: WallLayout): void {
   }
 }
 
-/** The engine will not come: take down the frames the page hung for it, so no dead tile is left on a wall nobody sees. */
+/**
+ * Keep the held box in step while the wall is the view and the engine has not mounted, on whatever path got the visitor
+ * to the wall. `refit` measures and places again; it is called when the window resizes, when anything laid out above the
+ * wall changes height, and in the task that lands each web font that was still loading (so the box has its new height
+ * before anything in the next frame reads or paints it). The inline script does the same for the first view it paints;
+ * this is for the paths it cannot see: the wall chosen from the List, or the wall again after a trip to the List.
+ * Returns the function that stands it all down (the engine is live, or the List shows).
+ */
+export function holdBox(wallEl: HTMLElement, refit: () => void): () => void {
+  const off: Array<() => void> = [];
+  let stopped = false;
+  const again = (): void => { if (!stopped) refit(); };
+  window.addEventListener('resize', again);
+  off.push(() => window.removeEventListener('resize', again));
+  if (typeof ResizeObserver === 'function') {
+    try {
+      const ro = new ResizeObserver(again);
+      for (const el of aboveWall(wallEl)) ro.observe(el);
+      off.push(() => ro.disconnect());
+    } catch {
+      /* the fonts and the resize below still keep it */
+    }
+  }
+  const fonts = document.fonts;
+  if (fonts) {
+    const watched = new WeakSet<FontFace>();
+    const watch = (): void => {
+      try {
+        fonts.forEach((f) => {
+          if (f.status !== 'loading' || watched.has(f)) return;
+          watched.add(f);
+          f.loaded.then(() => { again(); setTimeout(again, 0); }, () => {});
+        });
+      } catch {
+        /* the observer above and the engine measure it again */
+      }
+    };
+    watch();
+    // A face can start loading later than now (text that uses it is laid out when a view appears).
+    fonts.addEventListener('loading', watch);
+    off.push(() => fonts.removeEventListener('loading', watch));
+  }
+  return () => {
+    stopped = true;
+    for (const f of off) f();
+  };
+}
+
+/** The engine will not come: take down the frames the page hung for it, so no dead tile is left on a wall nobody sees, and drop the click remembered on one. */
 export function clearFramedTiles(wallEl: HTMLElement): void {
+  wallEl.removeAttribute(EARLY_ATTR);
   for (const el of Array.from(wallEl.children)) if (el instanceof HTMLElement && el.hasAttribute(TILE_ATTR)) el.remove();
 }

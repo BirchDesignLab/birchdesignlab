@@ -19,7 +19,7 @@ import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
 import { DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, driftTarget, lampRuns, lampStart, rimLit } from './lamp';
 import type { Rect } from './layout';
-import { ARROW_SVG, LIVE_ATTR, TILE_ATTR, TILE_CAP, aboveWall, measureWall } from './reserve';
+import { ARROW_SVG, LIVE_ATTR, TILE_ATTR, TILE_CAP, aboveWall, measureWall, sizeClass } from './reserve';
 import { hasMini, loadMini } from './minis';
 import type { LoadedMini } from './minis';
 import { counterLabel, hashFor, inFilter, readFilter, stepTarget, tryLine } from './model';
@@ -28,9 +28,14 @@ import type { Mini, MiniEnv, Pointer, WallEntry } from './types';
 
 export type { View } from './model';
 
+/** How an open piece sits in the history: pushes an entry (a click), rides one already there (Forward, or a reload onto it), or has none (a link to it). */
+export type Entry = 'push' | 'existing' | 'none';
+
 export interface MountOptions {
-  /** A piece to open as soon as the wall is up (a link to /lab/#bdl-007), already checked against the list. */
+  /** A piece to open as soon as the wall is up (a link to /lab/#bdl-007, or a click made before the engine arrived), already checked against the list. */
   open?: string | null;
+  /** How that piece sits in the history. A link has no entry of its own ('none', the default); a click made before the engine arrived pushes one ('push'), as a click after mount does; a reload onto an entry this page pushed rides it ('existing'). */
+  entry?: Entry;
 }
 
 export interface WallHandle {
@@ -298,8 +303,9 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     for (const s of tiles) {
       s.wall = L.rects[s.e.id] ?? s.wall;
       s.depth = clamp(1.3 - Math.sqrt(s.wall.w * s.wall.h) / 520, 0.3, 1.1);
-      s.el.classList.toggle('lw-xs', s.wall.w < 150);
-      s.el.classList.toggle('lw-sm', s.wall.w < 260);
+      const size = sizeClass(s.wall.w);
+      s.el.classList.toggle('lw-xs', size.xs);
+      s.el.classList.toggle('lw-sm', size.sm);
       if (!s.cur) s.cur = { ...s.wall };
       s.need = true;
     }
@@ -402,8 +408,6 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     for (const t of tiles) t.el.inert = !matches(t);
   }
 
-  /** How an open piece sits in the history: pushes an entry (a click), rides one already there (Forward), or has none (a link to it). */
-  type Entry = 'push' | 'existing' | 'none';
   function openTile(s: Tile, entry: Entry = 'push'): void {
     if (current || backPending || view !== 'wall' || !matches(s)) return;
     current = s;
@@ -421,6 +425,8 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     D.el.inert = false;
     D.el.classList.add('lw-on');
     if (entry === 'push') history.pushState({ lwOpen: s.e.id }, '', hashFor(s.e.id));
+    // Riding an entry that holds another piece (a click before the engine arrived, on a page reloaded onto a piece): the entry now holds this one.
+    else if (entry === 'existing' && (history.state as { lwOpen?: string } | null)?.lwOpen !== s.e.id) history.replaceState({ lwOpen: s.e.id }, '', hashFor(s.e.id));
     pushed = entry !== 'none';
     D.back.focus({ preventScroll: true });
     start();
@@ -922,25 +928,35 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   if (document.fonts) {
     Promise.all(['20px Marcellus', '20px Spectral', '600 20px Spectral'].map((f) => document.fonts.load(f))).then(refit, () => {});
     document.fonts.ready.then(refit, () => {});
+    // A face still loading now lands in a task of its own: refit in that task, and once more a task later (the browser can
+    // apply the face to the layout just after its promise settles), before the next frame reads the box. The observer above
+    // runs after layout, so it alone leaves a read at the start of a frame meeting the old height.
+    try {
+      document.fonts.forEach((f) => { if (f.status === 'loading') f.loaded.then(() => { refit(); setTimeout(refit, 0); }, () => {}); });
+    } catch {
+      /* the observer and the promises above still refit */
+    }
   }
 
   layout();
   start();
 
   /** A link to a piece: open it over the wall, with the filter set to All if the filter would have hidden it. */
-  function openFromLink(id: string): void {
+  function openFromLink(id: string, entry: Entry): void {
     const s = tileFor(id);
     if (!s || view !== 'wall') return;
     if (!matches(s)) {
+      // A click on a piece the filter has let go opens nothing, before the engine as after it.
+      if (entry === 'push') return;
       const all = document.querySelector<HTMLElement>('.filter a[data-set="all"]');
       if (all) all.click();
       else if (catalogEl) catalogEl.dataset.filter = 'all';
       filt = readFilter(catalogEl?.dataset.filter);
       applyFilter();
     }
-    openTile(s, 'none');
+    openTile(s, entry);
   }
-  if (opts.open) openFromLink(opts.open);
+  if (opts.open) openFromLink(opts.open, opts.entry ?? 'none');
 
   return {
     setView(next: View): void {

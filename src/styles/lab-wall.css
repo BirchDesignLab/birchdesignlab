@@ -324,4 +324,7 @@ html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { display: grid; 
 @media (max-width: 640px) {
   html[data-lab-view='wall']:not([data-scheme='light']) header .bar { gap: var(--space-2); }
   html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { margin-right: 0; }
+  /* The nav ends 8px left of the bulb here, so the hit area stops where the nav does: 8px each side of the drawn
+     square (40 wide), still 44 tall, and short of the switch on the right by nothing it could take a tap from. */
+  .lw-bulb::before { left: -8px; width: 40px; }
 }
