@@ -21,7 +21,7 @@
 import { clamp, readTheme, T } from './draw';
 import { currentScheme } from '../scheme';
 import {
-  AWAY_MS, DESKTOP_QUERY, FINE_POINTER_QUERY, LAMP_ATTR, LAMP_INNER, LINGER_MS, LIT_SLEEP, LIT_WAKE, lampRuns, lampStart, lingerRound, litCover, revealSteps, rimLit,
+  AWAY_MS, LAMP_ATTR, LAMP_FADE_MS, LAMP_INNER, LINGER_MS, LIT_SLEEP, LIT_WAKE, castAt, lampLift, lampRuns, lampStart, lingerRound, litCover, revealSteps,
 } from './lamp';
 import type { Rect, WallKind } from './layout';
 import { ARROW_SVG, LIVE_ATTR, POSTER_IDS, TILE_ATTR, TILE_CAP, aboveWall, measureWall, posterSrc, sizeClass } from './reserve';
@@ -60,7 +60,7 @@ const restPointer = (): Pointer => ({ x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, a: 0 });
 const easeInOut = (u: number): number => u * u * (3 - 2 * u);
 
 interface Written {
-  x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; lit: number; tf: string;
+  x: number; y: number; w: number; h: number; fh: number; cf: number; r: number; dim: number; lit: number; cast: number; ct: string; cw: number; chh: number; tf: string;
 }
 
 interface Tile {
@@ -70,8 +70,10 @@ interface Tile {
   face: HTMLElement;
   cap: HTMLElement;
   veil: HTMLElement;
-  /** The lamp's glow around the tile; there only while the lamp runs. */
-  rim: HTMLElement | null;
+  /** The shadow the tile casts on the wall, raked away from the lamp: in the lamp's layer, under every tile; there only while the lamp runs. */
+  cast: HTMLElement | null;
+  /** The lamp's lift on the tile's frame and caption; there only while the lamp runs. */
+  lift: HTMLElement | null;
   canvas: HTMLCanvasElement | null;
   /** The miniature has drawn its first frame (its canvas fades in then). */
   drawn: boolean;
@@ -99,8 +101,10 @@ interface Tile {
   H: number;
   dpr: number;
   depth: number;
-  /** How strongly the lamp lights the tile's rim, eased (0..1). */
+  /** How strongly the lamp lifts the tile's frame and caption, eased (0..1). */
   lit: number;
+  /** How strongly the tile's shadow shows, eased (0..1). */
+  cs: number;
   /** The lamp's pool covers the tile (LIT_WAKE in, LIT_SLEEP out): it wakes. */
   lamped: boolean;
   /** Something keeps the tile awake this frame: lit, hovered, focused, open or flying open or shut. */
@@ -264,16 +268,16 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     if (!animated) stillFor(face, veil, e);
     const canvas = el.querySelector<HTMLCanvasElement>('canvas');
     const s: Tile = {
-      e, idx, el, face, veil, rim: null, cap: need<HTMLElement>(el, '.lw-cap'),
+      e, idx, el, face, veil, cast: null, lift: null, cap: need<HTMLElement>(el, '.lw-cap'),
       canvas, drawn: false, ctx: canvas ? canvas.getContext('2d') : null,
       mod: null, mini: null, loading: false, broken: false, err: false,
       wall: { x: 0, y: 0, w: 10, h: 10 }, cur: null,
       open: false, exit: 0, flying: false, hot: false, focus: false, vis: false, intent: false, need: true,
-      cf: 1, oa: 0, W: 0, H: 0, dpr: 0, depth: 0.7, lit: 0,
+      cf: 1, oa: 0, W: 0, H: 0, dpr: 0, depth: 0.7, lit: 0, cs: 0,
       lamped: false, awake: false, driven: false, atRest: true, clock: 0, mixA: 0, fade: null,
       p: restPointer(),
       v: { sc: 1, rx: 0, ry: 0, tx: 0, ty: 0, dim: 0 },
-      w: { x: NaN, y: NaN, w: NaN, h: NaN, fh: NaN, cf: -1, r: -1, dim: -1, lit: -1, tf: '' },
+      w: { x: NaN, y: NaN, w: NaN, h: NaN, fh: NaN, cf: -1, r: -1, dim: -1, lit: -1, cast: -1, ct: '', cw: NaN, chh: NaN, tf: '' },
     };
     el.addEventListener('click', () => { if (!current) openTile(s); });
     el.addEventListener('keydown', (ev) => {
@@ -595,56 +599,73 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   disposers.push(() => schemeObs.disconnect());
 
   // ---- the lamp ----
-  // The visitor's choice (the bulb in the header) and where it runs decide
-  // whether there is a lamp at all. With no lamp there is no layer, no rims
-  // and no per-frame work: everything below is built when the lamp starts and
-  // taken down when it stops.
-  const fineQuery = matchMedia(FINE_POINTER_QUERY);
-  const deskQuery = matchMedia(DESKTOP_QUERY);
-  const lamp = { x: 0, y: 0, init: false, wx: '', wy: '' };
+  // The visitor's choice (the bulb in the header) decides whether there is a
+  // lamp at all. It lights and darkens nothing: a warm pool on the wall's
+  // background under the tiles, a lift on each tile's frame and caption, and
+  // a shadow each tile casts away from it. With no lamp there is no layer,
+  // no lift, no shadows and no per-frame work: everything below is built when
+  // the lamp starts and taken down once it has faded out (LAMP_FADE_MS).
+  const lamp = { x: 0, y: 0, init: false, wx: '', wy: '', want: false, k: 0, wk: -1 };
   let lampEl: HTMLElement | null = null;
-  const lampWanted = (): boolean =>
-    view === 'wall' &&
-    lampRuns({
-      on: root.getAttribute(LAMP_ATTR) !== 'off',
-      light: currentScheme() === 'light',
-      finePointer: fineQuery.matches,
-      desktop: deskQuery.matches,
-    });
+  let glideEl: HTMLElement | null = null;
+  const lampWanted = (): boolean => view === 'wall' && lampRuns({ on: root.getAttribute(LAMP_ATTR) !== 'off' });
+  /** Take the lamp's layer, lifts and shadows down at once. */
+  function dropLamp(): void {
+    lampEl?.remove();
+    lampEl = null;
+    glideEl = null;
+    lamp.k = 0;
+    wallEl.classList.remove('lw-lamped');
+    for (const s of tiles) { s.cast = null; s.lift?.remove(); s.lift = null; }
+  }
   function applyLamp(): void {
     const want = lampWanted();
-    if (want === (lampEl !== null)) return;
+    lamp.want = want;
+    wallEl.classList.toggle('lw-lamped', want);
     if (want) {
+      if (lampEl) return; // it was fading out: it warms up again from where it is
       const el = document.createElement('div');
       el.className = 'lw-lamp';
       el.setAttribute('aria-hidden', 'true');
-      el.innerHTML = '<div class="lw-dusk"></div><div class="lw-pool"></div>';
-      wallEl.appendChild(el);
+      // two pools, one a scheme, that cross-fade on the page's own timing; one glide moves them
+      el.innerHTML = '<div class="lw-glide"><div class="lw-pool lw-pool-d"></div><div class="lw-pool lw-pool-l"></div></div><div class="lw-casts"></div>';
+      // first in the wall: it lies on the wall's background, under every tile
+      wallEl.insertBefore(el, wallEl.firstChild);
       lampEl = el;
+      glideEl = el.firstElementChild as HTMLElement;
+      glideEl.style.opacity = '0';
+      const casts = el.lastElementChild as HTMLElement;
       lamp.init = false;
+      lamp.k = 0;
+      lamp.wk = 0;
       lamp.wx = lamp.wy = '';
       for (const s of tiles) {
-        const rim = document.createElement('div');
-        rim.className = 'lw-rim';
-        s.el.appendChild(rim);
-        s.rim = rim;
+        // a shadow lies on the wall, so it is in the lamp's layer, under every tile: a tile's shadow never falls on another tile's picture
+        const cast = document.createElement('div');
+        cast.className = 'lw-cast';
+        casts.appendChild(cast);
+        s.cast = cast;
+        const lift = document.createElement('div');
+        lift.className = 'lw-lift';
+        s.cap.appendChild(lift);
+        s.lift = lift;
         s.lit = 0;
+        s.cs = 0;
         s.w.lit = -1;
+        s.w.cast = -1;
+        s.w.ct = '';
+        s.w.cw = s.w.chh = NaN;
       }
-    } else {
-      lampEl?.remove();
-      lampEl = null;
-      for (const s of tiles) { s.rim?.remove(); s.rim = null; }
+    } else if (lampEl && (view !== 'wall' || !raf)) {
+      // nothing is running that could fade it out
+      dropLamp();
     }
+    // else the loop fades it out and takes it down (tick)
   }
   const lampObs = new MutationObserver(applyLamp);
-  lampObs.observe(root, { attributes: true, attributeFilter: [LAMP_ATTR, 'data-scheme'] });
+  lampObs.observe(root, { attributes: true, attributeFilter: [LAMP_ATTR] });
   disposers.push(() => lampObs.disconnect());
-  for (const q of [fineQuery, deskQuery]) {
-    q.addEventListener('change', applyLamp);
-    disposers.push(() => q.removeEventListener('change', applyLamp));
-  }
-  disposers.push(() => { lampEl?.remove(); lampEl = null; for (const s of tiles) { s.rim?.remove(); s.rim = null; } });
+  disposers.push(dropLamp);
   applyLamp();
 
   // ---- miniatures ----
@@ -792,7 +813,14 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
   }
 
   // ---- the lamp's own round, when no pointer leads it ----
-  const lingerTile = (id: string): Tile | undefined => { const t = tileFor(id); return t && matches(t) ? t : undefined; };
+  /** The part of the wall in the window, y in wall px (the lamp never lingers on a piece nobody can see: a tablet's wall is taller than its window). */
+  const band = { lo: -Infinity, hi: Infinity };
+  const lingerTile = (id: string): Tile | undefined => {
+    const t = tileFor(id);
+    if (!t || !matches(t)) return undefined;
+    const y = t.wall.y + t.wall.h / 2;
+    return y >= band.lo && y <= band.hi ? t : undefined;
+  };
   /** The next tile in the round that the filter shows, not the one it is on now. */
   function nextLinger(now: number): void {
     const round = linger.round;
@@ -816,6 +844,18 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     const qx = ptr.x - cr.left, qy = ptr.y - cr.top;
     const mouse = ptr.in && ptr.type !== 'touch';
     const inWall = mouse && qx >= 0 && qx <= cw && qy >= 0 && qy <= ch;
+    band.lo = -cr.top + 24; band.hi = -cr.top + vh - 24;
+
+    // the lamp warms up and fades out over LAMP_FADE_MS (the bulb); once it is out, it is taken down
+    if (lampEl) {
+      const goal = lamp.want ? 1 : 0, step = (dt * 1000) / LAMP_FADE_MS;
+      if (lamp.k !== goal) lamp.k = goal > lamp.k ? Math.min(goal, lamp.k + step) : Math.max(goal, lamp.k - step);
+      if (lamp.k <= 0 && !lamp.want) dropLamp();
+    }
+    const lampOn = lampEl !== null && lamp.want;
+    /** The pool's and the shadows' strength: the bulb's fade, eased. */
+    const ek = lampEl ? easeInOut(lamp.k) : 0;
+    if (glideEl && sig(ek) !== lamp.wk) { glideEl.style.opacity = String(sig(ek)); lamp.wk = sig(ek); }
 
     // who is awake: the tile under the mouse; on the phone the tile at the middle of the screen (scroll-wake), and on a touch
     // screen with no lamp to wake things the same; a focused tile when no pointer says otherwise
@@ -823,7 +863,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     if (!current) {
       if (touchHold) hov = touchHold;
       else if (mouse) hov = inWall ? hitTile(qx, qy) : null;
-      else if (isPhone || (coarse && !lampEl)) hov = midTile(cr.top, cw, vh);
+      else if (isPhone || (coarse && !lampOn)) hov = midTile(cr.top, cw, vh);
       if (!hov && !mouse) { const f = tiles.find((s) => s.focus && matches(s)); if (f) hov = f; }
       if (!hov && mouse) { const f = tiles.find((s) => s.focus && matches(s)); if (f && !inWall && !ptr.down) hov = f; }
     }
@@ -838,12 +878,11 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
     // the lamp: it follows the mouse anywhere in the window (off the wall it lights nothing), or a finger that is down; on the
     // phone it sits on the tile at the middle of the screen; with no pointer (a touch screen, or the mouse gone from the window
     // for a while) it lingers on one tile at a time; in between it holds still
-    const lampOn = lampEl !== null;
     /** While the lamp lingers by itself, the one tile it lingers on: only that one wakes, so the wall shows one piece at a time. */
     let lingerOn: Tile | null = null, lingering = false;
     if (lampEl && fx) {
       const box = { cw, ch, top: cr.top, vh };
-      if (!lamp.init) { const at = lampStart(box, isPhone); lamp.x = at.x; lamp.y = at.y; lamp.init = true; }
+      if (!lamp.init) { const at = lampStart(box, isPhone); lamp.x = at.x; lamp.y = at.y; lamp.init = true; lamp.wx = lamp.wy = ''; }
       let aim: { x: number; y: number } = { x: lamp.x, y: lamp.y };
       let rate = 2.4;
       const away = coarse || (!ptr.in && now - ptr.gone >= AWAY_MS);
@@ -870,6 +909,7 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       lamp.x += (aim.x - lamp.x) * kl;
       lamp.y += (aim.y - lamp.y) * kl;
       const lx = lamp.x.toFixed(1), ly = lamp.y.toFixed(1);
+      // the pool glides on the compositor: its position is two custom properties that its transform reads
       if (lx !== lamp.wx) { lampEl.style.setProperty('--lx', lx + 'px'); lamp.wx = lx; }
       if (ly !== lamp.wy) { lampEl.style.setProperty('--ly', ly + 'px'); lamp.wy = ly; }
     }
@@ -940,12 +980,27 @@ export function mountWall(opts: MountOptions = {}): WallHandle {
       const isHot = hov === s && !current;
       if (isHot !== s.hot) { s.hot = isHot; s.el.classList.toggle('lw-hot', isHot); }
 
-      // ---- the lamp's glow on the tile's rim (dark only; the rim is not drawn in light) ----
-      if (s.rim) {
-        const goal = dark && fx && matches(s) ? rimLit(s.wall, lamp.x, lamp.y) : 0;
-        s.lit += (goal - s.lit) * kv;
-        if (Math.abs(goal - s.lit) < 0.004) s.lit = goal;
-        if (sig(s.lit) !== w.lit) { s.rim.style.opacity = String(sig(s.lit)); w.lit = sig(s.lit); }
+      // ---- the lamp on the tile: a lift on its frame and caption, and the shadow it casts away from the lamp ----
+      // (never a cast over the picture: the picture is the same with the lamp on and off)
+      if (s.cast && s.lift) {
+        const live = lamp.init && fx && !s.open && matches(s);
+        const ck = castAt(s.wall, lamp.x, lamp.y);
+        const lg = live ? lampLift(s.wall, lamp.x, lamp.y) : 0, cg = live ? ck.strength : 0;
+        s.lit += (lg - s.lit) * kv;
+        if (Math.abs(lg - s.lit) < 0.004) s.lit = lg;
+        s.cs += (cg - s.cs) * kv;
+        if (Math.abs(cg - s.cs) < 0.004) s.cs = cg;
+        const lo = sig(s.lit * ek), co = sig(s.cs * ek);
+        if (lo !== w.lit) { s.lift.style.opacity = String(lo); w.lit = lo; }
+        if (co !== w.cast) { s.cast.style.opacity = String(co); w.cast = co; }
+        if (co > 0) {
+          // where the tile hangs on the wall, and where its shadow falls from there
+          const ct = 'translate3d(' + (Math.round((s.wall.x + ck.dx) * 4) / 4) + 'px,' + (Math.round((s.wall.y + ck.dy) * 4) / 4) + 'px,0)';
+          if (ct !== w.ct) { s.cast.style.transform = ct; w.ct = ct; }
+          const bw = Math.max(1, sig(s.wall.w - 12)), bh = Math.max(1, sig(s.wall.h - 8));
+          if (bw !== w.cw) { s.cast.style.width = bw + 'px'; w.cw = bw; }
+          if (bh !== w.chh) { s.cast.style.height = bh + 'px'; w.chh = bh; }
+        }
       }
       // ---- the lamp wakes what its pool covers (on the phone the middle tile wakes instead) ----
       const cover = lampOn && fx && !isPhone && matches(s) && (!lingering || s === lingerOn) ? litCover(s.wall, lamp.x, lamp.y) : 0;

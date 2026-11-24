@@ -640,13 +640,13 @@ await drawn(390, 844, 'light', true);
     const bulb = () => page.evaluate(() => {
       const b = document.querySelector('[data-lw=bulb]');
       const cs = getComputedStyle(b);
-      return { shows: cs.display !== 'none', pressed: b.getAttribute('aria-pressed'), attr: document.documentElement.getAttribute('data-lab-lamp'), stored: localStorage.getItem('lab-lamp'), lamps: document.querySelectorAll('.lw-lamp').length, rims: document.querySelectorAll('.lw-rim').length };
+      return { shows: cs.display !== 'none', pressed: b.getAttribute('aria-pressed'), attr: document.documentElement.getAttribute('data-lab-lamp'), stored: localStorage.getItem('lab-lamp'), lamps: document.querySelectorAll('.lw-lamp').length, casts: document.querySelectorAll('.lw-cast').length, lifts: document.querySelectorAll('.lw-lift').length, rims: document.querySelectorAll('.lw-rim').length };
     });
     await page.evaluate(() => { try { localStorage.removeItem('lab-lamp'); } catch (e) { /* none */ } });
     await page.goto(URL);
     await wait(page, 2200);
     let b = await bulb();
-    ok(b.shows && b.attr === 'on' && b.pressed === 'true' && b.lamps === 1 && b.rims === rows.length, 'the lamp is on at first, the bulb shows ' + JSON.stringify(b));
+    ok(b.shows && b.attr === 'on' && b.pressed === 'true' && b.lamps === 1 && b.casts === rows.length && b.lifts === rows.length && b.rims === 0, 'the lamp is on at first (a shadow and a lift on every tile, no rim), the bulb shows ' + JSON.stringify(b));
     const place = await page.evaluate(() => {
       const bl = document.querySelector('[data-lw=bulb]').getBoundingClientRect();
       const sw = document.querySelector('#theme-toggle').getBoundingClientRect();
@@ -654,17 +654,20 @@ await drawn(390, 844, 'light', true);
     });
     ok(place.sameRow && place.gap >= 0 && place.gap < 24, 'the bulb sits right beside the light/dark switch ' + JSON.stringify(place));
     await page.click('[data-lw=bulb]');
-    await wait(page, 600);
+    await wait(page, 120);
     b = await bulb();
-    ok(b.attr === 'off' && b.pressed === 'false' && b.stored === 'off' && b.lamps === 0 && b.rims === 0, 'bulb off: stored, no lamp layer, no rims ' + JSON.stringify(b));
+    ok(b.attr === 'off' && b.pressed === 'false' && b.stored === 'off' && b.lamps === 1, 'bulb off: stored at once, and the layer is still there fading out (no hard cut) ' + JSON.stringify(b));
+    await wait(page, 900);
+    b = await bulb();
+    ok(b.attr === 'off' && b.lamps === 0 && b.casts === 0 && b.lifts === 0, 'bulb off: once faded, no lamp layer, no shadows, no lifts ' + JSON.stringify(b));
     await page.reload();
     await wait(page, 2200);
     b = await bulb();
     ok(b.attr === 'off' && b.pressed === 'false' && b.lamps === 0 && b.shows, 'off stays off across a reload ' + JSON.stringify(b));
     await page.click('[data-lw=bulb]');
-    await wait(page, 600);
+    await wait(page, 900);
     b = await bulb();
-    ok(b.attr === 'on' && b.stored === 'on' && b.lamps === 1 && b.rims === rows.length, 'bulb on again ' + JSON.stringify(b));
+    ok(b.attr === 'on' && b.stored === 'on' && b.lamps === 1 && b.casts === rows.length, 'bulb on again ' + JSON.stringify(b));
     await page.reload();
     await wait(page, 2200);
     b = await bulb();
@@ -681,7 +684,7 @@ await drawn(390, 844, 'light', true);
   await ctx.close();
 }
 
-// ---------- the bulb on a light phone ----------
+// ---------- the bulb on a phone, in both schemes ----------
 {
   const ctx = await context({ w: 390, h: 844, scheme: 'light', touch: true });
   const page = await ctx.newPage();
@@ -689,7 +692,7 @@ await drawn(390, 844, 'light', true);
   await page.goto(URL);
   await wait(page, 2200);
   const b = await page.evaluate(() => ({ shows: getComputedStyle(document.querySelector('[data-lw=bulb]')).display !== 'none', lamps: document.querySelectorAll('.lw-lamp').length }));
-  ok(!b.shows && b.lamps === 0, 'no bulb and no lamp on a 390 light touch viewport ' + JSON.stringify(b));
+  ok(b.shows && b.lamps === 1, 'the bulb and the lamp run on a 390 light touch viewport (the lamp no longer darkens) ' + JSON.stringify(b));
   await ctx.close();
   const ctx2 = await context({ w: 390, h: 844, scheme: 'dark', touch: true });
   const p2 = await ctx2.newPage();
@@ -1493,6 +1496,77 @@ for (const scheme of ['dark', 'light']) {
   }
   await ctx.close();
 }
+// ---------- the lamp lights and never darkens ----------
+/** The mean luminance (0..255) of a PNG clip, read back through a canvas in the page. */
+const luma = (page, buf) => page.evaluate(async (b64) => {
+  const im = new Image();
+  await new Promise((r) => { im.onload = r; im.src = 'data:image/png;base64,' + b64; });
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height).data; let t = 0;
+  for (let i = 0; i < d.length; i += 4) t += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+  return t / (d.length / 4);
+}, buf.toString('base64'));
+for (const scheme of ['dark', 'light']) {
+  const ctx = await context({ scheme });
+  const page = await ctx.newPage();
+  watch(page, `lamp lights ${scheme}`);
+  await settle(page);
+  await wait(page, 1200);
+  const rows = await data(page);
+  // the pointer on the bulb (no tile is hovered, so no neighbour is dimmed by a hover): the lamp follows it to the top right;
+  // the three tiles farthest from it are outside the light
+  const bb = await page.evaluate(() => { const r = document.querySelector('[data-lw=bulb]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  const c = bb;
+  await page.mouse.move(c.x, c.y, { steps: 8 });
+  await wait(page, 1400);
+  const far = await page.evaluate(([cx, cy]) => [...document.querySelectorAll('.lw-tile')].map((t) => { const r = t.getBoundingClientRect(); return { label: t.getAttribute('aria-label'), d: Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy) }; }).sort((a, b) => b.d - a.d).slice(0, 3).map((x) => x.label), [c.x, c.y]);
+  const faceBox = (label) => page.evaluate((label) => { const t = [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === label); const r = t.querySelector('.lw-face').getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; }, label);
+  const sample = async () => { const out = {}; for (const l of far) { const b = await faceBox(l); out[l] = await luma(page, await page.screenshot({ clip: b })); } return out; };
+  const on = await sample();
+  const filters = await page.evaluate(() => [...document.querySelectorAll('.lw-tile, .lw-tile *')].filter((e) => !e.matches('.lw-cast') && getComputedStyle(e).filter !== 'none').map((e) => e.className || e.tagName));
+  ok(filters.length === 0, `${scheme}: with the lamp on, no tile and nothing in a tile has a filter (nothing darkens; the shadows' blur is their own) ${filters.slice(0, 4).join(' ')}`);
+  const noDusk = await page.evaluate(() => ({ dusk: document.querySelectorAll('.lw-dusk').length, blends: [...document.querySelectorAll('.lw-wall, .lw-wall *')].filter((e) => getComputedStyle(e).mixBlendMode !== 'normal').length, lampFirst: document.querySelector('.lw-wall').firstElementChild?.classList.contains('lw-lamp') }));
+  ok(noDusk.dusk === 0 && noDusk.blends === 0 && noDusk.lampFirst, `${scheme}: no dusk layer, no blend mode, and the lamp's layer lies under every tile ${JSON.stringify(noDusk)}`);
+  await page.click('[data-lw=bulb]');
+  await wait(page, 1000);
+  const off = await sample();
+  const off2 = await page.evaluate(() => [...document.querySelectorAll('.lw-tile, .lw-tile *')].filter((e) => getComputedStyle(e).filter !== 'none').length);
+  ok(off2 === 0, `${scheme}: with the lamp off, no tile has a filter either`);
+  const worse = far.filter((l) => on[l] < off[l] - 0.35);
+  ok(worse.length === 0, `${scheme}: three tiles outside the light are no darker with the lamp on than off (${far.map((l) => l.replace('Open ', '') + ' ' + on[l].toFixed(1) + ' vs ' + off[l].toFixed(1)).join(', ')})`);
+  // and the whole wall: on never darker than off over the three tiles' faces, nor over the lead's, once the lamp is on again
+  await page.click('[data-lw=bulb]');
+  await wait(page, 1000);
+  const backOn = await page.evaluate(() => ({ lamps: document.querySelectorAll('.lw-lamp').length, glide: getComputedStyle(document.querySelector('.lw-glide')).opacity }));
+  ok(backOn.lamps === 1 && Number(backOn.glide) > 0.98, `${scheme}: on again, the pool is fully up ${JSON.stringify(backOn)}`);
+  await ctx.close();
+}
+{ // the toggle is a fade of about 400ms, never a cut: the pool's opacity, every animation frame, off then on
+  const ctx = await context({ scheme: 'dark' });
+  const page = await ctx.newPage();
+  watch(page, 'lamp toggle fade');
+  await settle(page);
+  await wait(page, 1200);
+  const run = async () => {
+    await page.evaluate(() => {
+      window.__f = []; const t0 = performance.now();
+      const step = () => { const g = document.querySelector('.lw-glide'); const casts = [...document.querySelectorAll('.lw-cast')]; window.__f.push({ t: performance.now() - t0, pool: g ? Number(getComputedStyle(g).opacity) : -1, cast: Math.max(0, ...casts.map((c) => Number(getComputedStyle(c).opacity))) }); if (performance.now() - t0 < 1300) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+    await page.click('[data-lw=bulb]');
+    await wait(page, 1500);
+    return page.evaluate(() => window.__f);
+  };
+  for (const [name, fr] of [['off', await run()], ['on', await run()]]) {
+    const vals = fr.map((x) => x.pool).filter((v) => v >= 0);
+    let worst = 0; for (let i = 1; i < vals.length; i++) worst = Math.max(worst, Math.abs(vals[i] - vals[i - 1]));
+    const t = (pred) => { const x = fr.find(pred); return x ? x.t : null; };
+    const span = name === 'off' ? [t((x) => x.pool < 0.9), t((x) => x.pool < 0.05 && x.pool >= 0) ?? t((x) => x.pool < 0)] : [t((x) => x.pool > 0.1), t((x) => x.pool > 0.95)];
+    ok(worst < 0.4 && span[0] !== null && span[1] !== null && span[1] - span[0] > 150 && span[1] - span[0] < 600, `the bulb ${name}: the pool ${name === 'off' ? 'fades out' : 'warms up'} over about 400ms in many steps, not in one (${vals.length} frames, largest step ${worst.toFixed(2)}, mid ${span.map((x) => x && Math.round(x)).join('..')}ms)`);
+  }
+  await ctx.close();
+}
 { // waking from rest: a hovered tile plays on from its rest frame, it never wipes it in one frame (a replay leaves through its own fade)
   const ctx = await context({ scheme: 'dark' });
   await countRepaints(ctx);
@@ -1566,6 +1640,34 @@ for (const scheme of ['dark', 'light']) {
   const st2 = await state(page);
   ok(st2.cur === null && !st2.door, 'reduced motion: Esc closes it');
   await ctx.close();
+}
+
+{ // a tablet with a mouse: the lamp starts in the window and stays in it, though the wall is taller than the window
+  for (const [w, h] of [[1024, 768], [820, 1180]]) {
+    const ctx = await context({ w, h, scheme: 'dark' });
+    const page = await ctx.newPage();
+    watch(page, `tablet lamp ${w}`);
+    await settle(page);
+    const where = () => page.evaluate(() => { const l = document.querySelector('.lw-lamp'); const r = document.querySelector('.lw-wall').getBoundingClientRect(); return l ? { y: parseFloat(l.style.getPropertyValue('--ly')) + r.top, h: innerHeight, tall: r.height > innerHeight } : null; });
+    const a = await where();
+    ok(a && a.tall && a.y > 0 && a.y < a.h, `tablet ${w}x${h}: the wall is taller than the window, and the lamp starts in the window (y ${a && a.y.toFixed(0)} of ${a && a.h})`);
+    await page.evaluate(() => document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
+    const seen = [];
+    for (let i = 0; i < 3; i++) { await wait(page, 5200); seen.push(await where()); }
+    ok(seen.every((p) => p && p.y > 0 && p.y < p.h), `tablet ${w}x${h}: lingering by itself, the lamp stays in the window (${seen.map((p) => p && p.y.toFixed(0)).join(', ')} of ${a && a.h})`);
+    await ctx.close();
+  }
+}
+{ // the capped wall's edges fade into the page at 1920 and there only
+  for (const [w, want] of [[1920, true], [1440, false]]) {
+    const ctx = await context({ w, h: 1000, scheme: 'dark' });
+    const page = await ctx.newPage();
+    watch(page, `edge ${w}`);
+    await settle(page);
+    const m = await page.evaluate(() => { const wl = document.querySelector('.lw-wall'); const r = wl.getBoundingClientRect(); return { bg: getComputedStyle(wl, '::before').maskImage, lamp: getComputedStyle(document.querySelector('.lw-lamp')).maskImage, l: r.left, w: r.width }; });
+    ok(want ? m.bg.includes('linear-gradient') && m.lamp.includes('linear-gradient') && m.l > 100 : m.bg === 'none' && m.lamp === 'none', `${w}: the wall's colour and the lamp's pool ${want ? 'fade out at the capped wall edges' : 'have no mask when the wall fills the window'} (wall ${m.l.toFixed(0)}..${(m.l + m.w).toFixed(0)}, mask ${m.bg.slice(0, 24)})`);
+    await ctx.close();
+  }
 }
 
 if (errs.length) {

@@ -115,7 +115,9 @@ export const RESERVE_INLINE = `(function () {
     }
     // where the lamp first hangs (lamp.ts, lampStart): the load reveal spreads out from it
     var wtop = w.getBoundingClientRect().top;
-    startAt = { x: w.clientWidth * 0.64, y: kindNow === 'phone' ? window.innerHeight * 0.45 - wtop : (S.ratio === null ? Math.max(base, window.innerHeight - wtop) : base) * 0.36 };
+    // (a wall taller than the window keeps the lamp in the window: lamp.ts, inView)
+    var ih = window.innerHeight, y0 = (S.ratio === null ? Math.max(base, ih - wtop) : base) * 0.36;
+    startAt = { x: w.clientWidth * 0.64, y: kindNow === 'phone' ? ih * 0.45 - wtop : Math.min(Math.max(y0, -wtop + ih * 0.2), -wtop + ih * 0.7) };
     var cells = {};
     for (k = 0; k < ids.length; k++) cells[ids[k]] = own.call(map, ids[k]) ? map[ids[k]] : null;
     for (k = 0; k < spill.length; k++) cells[spill[k]] = [(k % perRow) * spC, mapRows + Math.floor(k / perRow) * spR, spC, spR];

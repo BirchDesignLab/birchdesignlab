@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   VIEW_KEY, counterLabel, hashFor, idFromHash, inFilter, readFilter, readView, stepTarget, tryLine, writeView,
 } from '../src/lib/lab-wall/model';
@@ -242,4 +244,46 @@ describe('waking a tile from its rest frame', () => {
       }
     });
   }
+});
+
+describe('the lamp lights instead of darkening (lab-wall.css)', () => {
+  const css = readFileSync(join(__dirname, '..', 'src', 'styles', 'lab-wall.css'), 'utf8');
+  const rule = (sel: string): string => {
+    const i = css.indexOf(sel + ' {');
+    expect(i, sel).toBeGreaterThan(-1);
+    return css.slice(i, css.indexOf('}', i));
+  };
+
+  it('has no dusk, no multiply veil, no zero-offset rim, and no blend mode on the lamp at all', () => {
+    expect(css).not.toMatch(/lw-dusk/);
+    expect(css).not.toMatch(/lw-rim/);
+    expect(css).not.toMatch(/mix-blend-mode/);
+    // the lamp layer is under the tiles: it has no z-index of its own to rise over them
+    expect(rule('.lw-lamp')).not.toMatch(/z-index/);
+  });
+  it('has a pool at half strength where the wake threshold is, and gone past the glow\'s edge', () => {
+    for (const sel of ['.lw-pool-d', '.lw-pool-l']) {
+      const g = rule(sel);
+      const stops = [...g.matchAll(/rgb\(\d+ \d+ \d+ \/ ([0-9.]+)\) (\d+)(?:px)?/g)].map((m) => ({ a: Number(m[1]), r: Number(m[2]) }));
+      const peak = stops.find((s) => s.r === 0)!.a;
+      const at = stops.find((s) => s.r === LAMP_INNER)!;
+      expect(at.a / peak, `${sel} at ${LAMP_INNER}px`).toBeGreaterThan(0.4);
+      expect(at.a / peak, `${sel} at ${LAMP_INNER}px`).toBeLessThan(0.6);
+      expect(stops.find((s) => s.r === 760)!.a).toBe(0);
+      expect(stops.map((s) => s.a)).toEqual([...stops.map((s) => s.a)].sort((a, b) => b - a));
+    }
+  });
+  it('moves the pool and the shadows by transform and opacity, not by layout', () => {
+    expect(rule('.lw-glide')).toMatch(/transform: translate3d\(var\(--lx\), var\(--ly\), 0\)/);
+    expect(rule('.lw-cast')).toMatch(/will-change: transform, opacity/);
+    expect(rule('.lw-cast')).toMatch(/filter: blur\(/);
+  });
+  it('fades the wall\'s colour and the pool out at the capped wall\'s edges, only where the wall is capped', () => {
+    expect(css).toMatch(/@media \(min-width: 1521px\)[^{]*\{[^}]*--lw-fade: clamp\(0px, calc\(\(100vw - 1520px\) \* 100\), 180px\)/);
+    expect(css).toMatch(/\.lw-wall::before, \.lw-lamp \{[^}]*mask-image: linear-gradient\(90deg, transparent 0, #000 var\(--lw-fade\)/);
+  });
+  it('shows the bulb in both schemes on every screen', () => {
+    expect(css).toMatch(/html\[data-lab-view='wall'\] \.lw-bulb \{ display: grid; \}/);
+    expect(css).not.toMatch(/:not\(\[data-scheme='light'\]\) \.lw-bulb/);
+  });
 });

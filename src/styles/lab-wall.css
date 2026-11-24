@@ -104,11 +104,28 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
      about what the layout will give it: the window below the header, at least 540px on desktop; the phone
      map's height, which follows the width (29 rows of 0.45 of a cell, plus the gaps), under 720; the tablet map's, from 720 to 1099 (26 rows). */
   min-height: max(540px, calc(100svh - 16rem));
-  background: var(--lw-wall);
+  /* The wall's colour is its ::before (below), not its own background, so that it can fade into the page at the edges of the
+     capped wall. */
   /* a tile that leans or swells at the edge never makes the page scroll sideways; the open piece may still leave the wall vertically */
   overflow-x: clip;
 }
 :root[data-scheme='light'] .lw-wall { --lw-wall: #d9d1be; --lw-cap: #f5f1e8; }
+.lw-wall::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: var(--lw-wall);
+  transition: background-color var(--dur-1) var(--ease-weighted);
+}
+/* In a window wider than the wall's cap (WALL_MAX, 1520px, layout.ts) the wall is centred and its edges lie in the page. The
+   wall's colour and the lamp's pool fade out over the last 180px at each side instead of ending in a line; the tiles do not
+   fade. --lw-fade is 0 until the window is wider than the cap (a window one pixel over has the whole 180px at once, which the
+   scrollbar's width makes harmless), and the mask is only there from then on, so the narrower windows composite no mask. */
+@media (min-width: 1521px) {
+  .lw-wall { --lw-fade: clamp(0px, calc((100vw - 1520px) * 100), 180px); }
+  .lw-wall::before, .lw-lamp {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--lw-fade), #000 calc(100% - var(--lw-fade)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--lw-fade), #000 calc(100% - var(--lw-fade)), transparent 100%);
+  }
+}
 
 .lw-tile {
   position: absolute; left: 0; top: 0;
@@ -116,11 +133,13 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   cursor: pointer; outline: none; touch-action: pan-y; -webkit-tap-highlight-color: transparent;
   user-select: none; will-change: transform;
   box-shadow: 0 0 0 1px rgb(244 240 230 / 0.09);
-  transition: box-shadow 0.3s;
+  transition: box-shadow 0.3s, background-color var(--dur-1) var(--ease-weighted);
   /* the load reveal: --i is the tile's step outward from where the lamp first hangs (reserve.ts); 11 steps finish inside 600ms */
   animation: lw-rise 0.24s var(--ease-weighted) both; animation-delay: calc(var(--i) * 32ms);
 }
 :root[data-scheme='light'] .lw-tile { box-shadow: 0 14px 26px -18px rgb(40 30 15 / 0.55), 0 0 0 1px rgb(31 27 21 / 0.1); }
+/* with the lamp on, the light rakes across the wall and each tile casts its own shadow (below): the standing one goes */
+:root[data-scheme='light'] .lw-wall.lw-lamped .lw-tile:not(.lw-hot):not(:focus-visible) { box-shadow: 0 0 0 1px rgb(31 27 21 / 0.1); }
 @keyframes lw-rise { from { opacity: 0; } to { opacity: 1; } }
 .lw-face { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden; border-radius: var(--r, 10px); background: var(--field-raised); }
 /* A picture fades in over the frame and caption that are already there: the miniature when its first frame is down, a still when it has arrived. */
@@ -138,6 +157,7 @@ html[data-lab-view='wall'] .lab-page .lw-h1 {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px;
   background: var(--lw-cap); border-radius: 0 0 var(--r, 10px) var(--r, 10px);
   color: var(--mark); white-space: nowrap; line-height: 1;
+  transition: background-color var(--dur-1) var(--ease-weighted);
 }
 .lw-t { flex: 1; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.02em; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .lw-d, .lw-k, .lw-o { font-family: var(--font-display); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mark-muted); flex: none; }
@@ -297,30 +317,56 @@ html.lw-fading[data-lab-view='list'] .lab-page > .catalog { animation: lw-fade 0
 html.lw-fading.lw-locked[data-lab-view='wall'] .lw-wall { animation: none; }
 
 /* ---------- the lamp: a light that follows the pointer (src/lib/lab-wall/lamp.ts, wall.ts) ---------- */
+/* It adds light and darkens nothing: a warm pool on the wall's background under the tiles, a lift on each tile's frame and
+   caption, and a shadow each tile casts away from the lamp, longer for the tiles farther from it, as if the light rakes across
+   the wall. A tile's picture is the same with the lamp on and off. The pool and the shadows move on the compositor (a
+   transform and an opacity); the bulb fades them over LAMP_FADE_MS (lamp.ts). */
 :root { --lw-glow: 255 222 160; }
 
-/* The layer is made by the engine while the lamp runs and taken down when it stops, so off costs nothing. */
-.lw-lamp { position: absolute; inset: 0; z-index: 30; pointer-events: none; --lx: 60%; --ly: 30%; transition: opacity 0.4s; }
+/* The layer is made by the engine while the lamp runs and taken down once it has faded out, so off costs nothing. */
+.lw-lamp { position: absolute; inset: 0; overflow: hidden; pointer-events: none; --lx: -3000px; --ly: -3000px; transition: opacity 0.4s; }
 html.lw-locked .lw-lamp, html[data-lab-view='list'] .lw-lamp { opacity: 0; }
-.lw-dusk, .lw-pool { position: absolute; inset: 0; }
-/* dark: the wall falls into dusk away from the lamp, and a warm pool sits under it */
-.lw-dusk { background: radial-gradient(circle at var(--lx) var(--ly), rgb(6 5 4 / 0) 0, rgb(6 5 4 / 0.06) 200px, rgb(6 5 4 / 0.3) 470px, rgb(6 5 4 / 0.42) 800px); }
-.lw-pool { mix-blend-mode: screen; background: radial-gradient(circle at var(--lx) var(--ly), rgb(var(--lw-glow) / 0.26) 0, rgb(var(--lw-glow) / 0.13) 170px, rgb(255 205 130 / 0.05) 400px, rgb(255 200 120 / 0) 680px); }
-/* light: soft shade away from the pointer, a pale pool under it */
-:root[data-scheme='light'] .lw-dusk { mix-blend-mode: multiply; background: radial-gradient(circle at var(--lx) var(--ly), rgb(255 255 255 / 0) 0, rgb(96 84 66 / 0.07) 240px, rgb(70 60 46 / 0.3) 560px, rgb(56 48 36 / 0.44) 950px); }
-:root[data-scheme='light'] .lw-pool { mix-blend-mode: soft-light; background: radial-gradient(circle at var(--lx) var(--ly), rgb(255 240 200 / 0.5) 0, rgb(255 236 190 / 0.2) 160px, rgb(255 230 180 / 0) 380px); }
-
-/* each tile near the lamp gets a warm rim, its strength set by the engine from the distance (dark only) */
-.lw-rim {
-  position: absolute; inset: -1px; border-radius: calc(var(--r, 10px) + 1px); pointer-events: none; opacity: 0; display: none;
-  box-shadow: 0 0 0 1px rgb(var(--lw-glow) / 0.75), 0 0 34px 2px rgb(var(--lw-glow) / 0.28);
+/* the glide is a point that follows the lamp (the engine writes --lx and --ly); the pools are centred on it */
+.lw-glide { position: absolute; left: 0; top: 0; width: 0; height: 0; transform: translate3d(var(--lx), var(--ly), 0); will-change: transform, opacity; }
+.lw-pool {
+  position: absolute; left: -760px; top: -760px; width: 1520px; height: 1520px;
+  transition: opacity var(--dur-1) var(--ease-weighted);
 }
-:root:not([data-scheme='light']) .lw-rim { display: block; }
-.lw-tile.lw-open .lw-rim, .lw-tile.lw-out .lw-rim { display: none !important; }
+/* The pool is at half its strength at 200px (LAMP_INNER, lamp.ts: a tile is awake when half of it is inside that), and gone by 760px.
+   Two pools, one a scheme, cross-fade on the page's own timing when the scheme switches. */
+.lw-pool-d {
+  background: radial-gradient(circle closest-side, rgb(255 214 150 / 0.34) 0, rgb(255 212 148 / 0.28) 100px, rgb(255 210 144 / 0.17) 200px, rgb(255 206 138 / 0.09) 330px, rgb(255 202 132 / 0.036) 500px, rgb(255 200 130 / 0.01) 650px, rgb(255 200 130 / 0) 760px);
+}
+.lw-pool-l {
+  opacity: 0;
+  background: radial-gradient(circle closest-side, rgb(255 241 205 / 0.88) 0, rgb(255 241 205 / 0.72) 100px, rgb(255 241 205 / 0.44) 200px, rgb(255 241 205 / 0.22) 330px, rgb(255 241 205 / 0.08) 500px, rgb(255 241 205 / 0.02) 650px, rgb(255 241 205 / 0) 760px);
+}
+:root[data-scheme='light'] .lw-pool-d { opacity: 0; }
+:root[data-scheme='light'] .lw-pool-l { opacity: 1; }
+
+/* Each tile near the lamp: its frame and caption lift a little (a warm overlay on the caption strip), and the tile casts a
+   shadow on the wall. The engine sets each one's opacity (from the lamp's distance) and the shadow's offset (away from the lamp). */
+.lw-lift {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: rgb(255 214 150 / 0.14);
+  transition: background-color var(--dur-1) var(--ease-weighted);
+}
+:root[data-scheme='light'] .lw-lift { background: rgb(255 214 140 / 0.28); }
+/* The shadows are in the lamp's layer, under every tile (a shadow lies on the wall, and never on another tile's picture): each is the tile's
+   box at its place on the wall (the engine writes its size and its transform), pulled in a little so a tile's own edges hide it. */
+.lw-cast {
+  position: absolute; left: 6px; top: 5px; margin: 0; pointer-events: none; opacity: 0;
+  border-radius: 12px;
+  background: rgb(6 3 0 / 0.78); filter: blur(13px);
+  will-change: transform, opacity;
+  transition: background-color var(--dur-1) var(--ease-weighted);
+}
+:root[data-scheme='light'] .lw-cast { background: rgb(58 38 14 / 0.52); }
+.lw-tile.lw-open .lw-lift, .lw-tile.lw-out .lw-lift { display: none !important; }
 
 /* ---------- the bulb: the lamp's switch, in the site header just left of the light/dark switch ---------- */
-/* Shown only where the lamp runs: the wall view, and in light only with a fine pointer at desktop layout
-   (the same rule as lampRuns in lamp.ts). Without script html[data-lab-view] never exists, so it never shows. */
+/* Shown in the wall view, in both schemes and on every screen (the lamp runs wherever the wall does: lampRuns in lamp.ts).
+   Without script html[data-lab-view] never exists, so it never shows. */
 .lw-bulb {
   display: none; appearance: none; position: relative; flex: none;
   width: 1.5rem; height: 1.5rem; padding: 0; place-items: center; cursor: pointer;
@@ -336,16 +382,13 @@ html[data-lab-lamp='off'] .lw-bulb { color: var(--mark-muted); background: trans
 @media (hover: hover) and (pointer: fine) {
   html[data-lab-lamp='off'] .lw-bulb:hover { border-color: var(--mark-muted); }
 }
-html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { display: grid; }
-@media (hover: hover) and (pointer: fine) and (min-width: 720px) {
-  html[data-lab-view='wall'] .lw-bulb { display: grid; }
-}
+html[data-lab-view='wall'] .lw-bulb { display: grid; }
 /* Phones: the header is wordmark, nav, bulb, switch in one row, and the bulb takes 32px. The row's gaps close up
    (only while the bulb shows, so every other header stays as it was) so the wordmark keeps its two lines and the
    nav and the switch stay on the row at 390 and 360. */
 @media (max-width: 640px) {
-  html[data-lab-view='wall']:not([data-scheme='light']) header .bar { gap: var(--space-2); }
-  html[data-lab-view='wall']:not([data-scheme='light']) .lw-bulb { margin-right: 0; }
+  html[data-lab-view='wall'] header .bar { gap: var(--space-2); }
+  html[data-lab-view='wall'] .lw-bulb { margin-right: 0; }
   /* The nav ends 8px left of the bulb here, so the hit area stops where the nav does: 8px each side of the drawn
      square (40 wide), still 44 tall, and short of the switch on the right by nothing it could take a tap from. */
   .lw-bulb::before { left: -8px; width: 40px; }

@@ -9,18 +9,12 @@
  * since an inline script cannot import); wireBulb keeps it, the button and
  * localStorage in step; the engine (wall.ts) watches it.
  */
-import { PHONE_BELOW } from './layout';
 import type { Rect } from './layout';
 
 /** localStorage key for the lamp choice. */
 export const LAMP_KEY = 'lab-lamp';
 /** The attribute on <html> that carries the choice. */
 export const LAMP_ATTR = 'data-lab-lamp';
-
-/** A fine pointer that hovers: a mouse or a trackpad. The CSS that shows the bulb in light asks the same. */
-export const FINE_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
-/** The wall's desktop layout (the phone map is below PHONE_BELOW). The CSS that shows the bulb in light asks the same. */
-export const DESKTOP_QUERY = `(min-width: ${PHONE_BELOW}px)`;
 
 /** The lamp is on unless the visitor turned it off. Nothing stored, junk, or storage blocked: on. */
 export function readLamp(storage: Pick<Storage, 'getItem'> | null): boolean {
@@ -43,32 +37,59 @@ export function writeLamp(storage: Pick<Storage, 'setItem'> | null, on: boolean)
 export interface LampWhere {
   /** The visitor's choice (the bulb). */
   on: boolean;
-  light: boolean;
-  finePointer: boolean;
-  /** The wall is in its desktop layout, not the phone map. */
-  desktop: boolean;
-}
-
-/** Whether the lamp runs: dark everywhere; light only with a fine pointer at desktop layout. */
-export function lampRuns(w: LampWhere): boolean {
-  return w.on && (!w.light || (w.finePointer && w.desktop));
-}
-
-/** Whether the bulb shows: in the wall view only, and only where the lamp could run. */
-export function bulbShows(w: Omit<LampWhere, 'on'> & { view: 'wall' | 'list' }): boolean {
-  return w.view === 'wall' && lampRuns({ ...w, on: true });
-}
-
-/** How much of the rim glow a tile gets: 1 with the lamp on it, falling off smoothly with the distance from its edge. */
-export function rimLit(rect: Rect, lx: number, ly: number): number {
-  const dx = Math.max(rect.x - lx, 0, lx - (rect.x + rect.w));
-  const dy = Math.max(rect.y - ly, 0, ly - (rect.y + rect.h));
-  return Math.exp(-((Math.hypot(dx, dy) / 230) ** 2));
 }
 
 /**
- * The pool's inner radius, CSS px: inside it the wall is lit (the dusk only starts to darken past about 200px,
- * lab-wall.css). What lies under it is what the lamp wakes.
+ * Whether the lamp runs: whenever the visitor has it on. It lights and darkens nothing (no dusk veil, nothing on
+ * a tile's artwork), so it runs in both schemes and on every screen; the phone's lamp sits on the middle tile.
+ */
+export function lampRuns(w: LampWhere): boolean {
+  return w.on;
+}
+
+/** Whether the bulb shows: in the wall view only. */
+export function bulbShows(w: { view: 'wall' | 'list' }): boolean {
+  return w.view === 'wall';
+}
+
+/** How long the pool and the shadows take to warm up or fade out when the bulb is pressed, ms. */
+export const LAMP_FADE_MS = 400;
+
+/** How far the lamp is from a tile's nearest edge, px: 0 with the lamp over the tile. */
+export function lampDistance(rect: Rect, lx: number, ly: number): number {
+  const dx = Math.max(rect.x - lx, 0, lx - (rect.x + rect.w));
+  const dy = Math.max(rect.y - ly, 0, ly - (rect.y + rect.h));
+  return Math.hypot(dx, dy);
+}
+
+/** How much of the lamp's lift a tile's frame and caption get: 1 with the lamp over it, falling off smoothly with the distance from its edge. */
+export function lampLift(rect: Rect, lx: number, ly: number): number {
+  return Math.exp(-((lampDistance(rect, lx, ly) / 230) ** 2));
+}
+
+/** The shortest shadow, a tile with the lamp on it, and the longest, a tile far from it, px. */
+export const CAST_MIN = 5;
+export const CAST_MAX = 34;
+/** How fast a shadow lengthens with the distance from the lamp, px. */
+export const CAST_REACH = 520;
+
+/**
+ * The shadow a tile casts on the wall, as the lamp rakes across it: an offset that points away from the lamp and
+ * lengthens with the tile's distance from it (a tile with the lamp on it casts a short one, straight down), and a
+ * strength that fades with the distance (the far shadows are the longer and the fainter).
+ */
+export function castAt(rect: Rect, lx: number, ly: number): { dx: number; dy: number; strength: number } {
+  const dist = lampDistance(rect, lx, ly);
+  const vx = rect.x + rect.w / 2 - lx, vy = rect.y + rect.h / 2 - ly;
+  const d = Math.hypot(vx, vy);
+  const ux = d < 1 ? 0 : vx / d, uy = d < 1 ? 1 : vy / d;
+  const len = CAST_MIN + (CAST_MAX - CAST_MIN) * (1 - Math.exp(-dist / CAST_REACH));
+  return { dx: ux * len, dy: uy * len, strength: 0.4 + 0.6 * Math.exp(-((dist / 760) ** 2)) };
+}
+
+/**
+ * The pool's inner radius, CSS px: inside it the wall is lit (the pool is at half its strength here, lab-wall.css, and
+ * its glow reaches about 700px). What lies under it is what the lamp wakes.
  */
 export const LAMP_INNER = 200;
 /** A tile wakes when this much of it lies under the pool's inner radius (or, for a tile bigger than the pool, this much of the pool lies on it)... */
@@ -152,12 +173,21 @@ export function driftTarget(t: number, box: LampBox, phone: boolean): { x: numbe
   if (phone) {
     return { x: box.cw * (0.5 + 0.32 * Math.sin(t * 0.17)), y: box.vh * 0.5 - box.top + 70 * Math.sin(t * 0.23) };
   }
-  return { x: box.cw * (0.5 + 0.34 * Math.sin(t * 0.13 + 0.7)), y: box.ch * (0.46 + 0.3 * Math.sin(t * 0.097 + 0.4)) };
+  return { x: box.cw * (0.5 + 0.34 * Math.sin(t * 0.13 + 0.7)), y: inView(box.ch * (0.46 + 0.3 * Math.sin(t * 0.097 + 0.4)), box) };
+}
+
+/**
+ * The part of the wall a lamp hangs in, y in wall px: from a fifth to seven tenths of the way down the window. A wall
+ * taller than the window (the tablet map) puts the same fractions of the wall far below the fold; this keeps the lamp where
+ * the visitor can see it. A wall that fits the window (the desktop map) is not moved.
+ */
+export function inView(y: number, box: LampBox): number {
+  return Math.min(Math.max(y, -box.top + box.vh * 0.2), -box.top + box.vh * 0.7);
 }
 
 /** Where the lamp first hangs. */
 export function lampStart(box: LampBox, phone: boolean): { x: number; y: number } {
-  return { x: box.cw * 0.64, y: phone ? box.vh * 0.45 - box.top : box.ch * 0.36 };
+  return { x: box.cw * 0.64, y: phone ? box.vh * 0.45 - box.top : inView(box.ch * 0.36, box) };
 }
 
 /**
