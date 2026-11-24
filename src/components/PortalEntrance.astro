@@ -44,13 +44,17 @@ const PLATES: Record<string, { family: string; weight: string; style: string }> 
   glassmorphism: { family: 'Inter Variable', weight: '100 900', style: 'normal' },
 };
 
-const schools = THEMES.flatMap((t) => {
+const all = THEMES.flatMap((t) => {
   const plate = PLATES[t.id];
   const shot = shotFor(t.id);
   const url = plate && t.fonts.find((f) => f.family === plate.family)?.preload?.[0];
   if (!plate || !shot || !url) return [];
   return [{ id: t.id, name: t.name, href: pagePath('home', t.id), url, weight: plate.weight, style: plate.style, shot }];
 });
+// The cycle opens on Swiss, not Bauhaus: the Field Guide's card beside it shows the guide's Bauhaus page (founder, 11-24).
+const FIRST = 'swiss';
+const at = Math.max(0, all.findIndex((s) => s.id === FIRST));
+const schools = [...all.slice(at), ...all.slice(0, at)];
 const data = schools.map(({ shot: _shot, ...rest }) => rest);
 ---
 <a class="portal-thumb" href={href} tabindex="-1" aria-hidden="true" data-portal-entrance data-schools={JSON.stringify(data)}>
