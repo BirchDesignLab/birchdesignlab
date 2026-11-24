@@ -1493,6 +1493,53 @@ for (const scheme of ['dark', 'light']) {
   }
   await ctx.close();
 }
+{ // waking from rest: a hovered tile plays on from its rest frame, it never wipes it in one frame (a replay leaves through its own fade)
+  const ctx = await context({ scheme: 'dark' });
+  await countRepaints(ctx);
+  const page = await ctx.newPage();
+  watch(page, 'wake from rest');
+  await settle(page);
+  await wait(page, 1200);
+  const rows = await data(page);
+  // The pieces whose hover leaves the picture as it was, so any big one-frame change is a jump. Cheer and Chatter and the Drawing Set
+  // replay on a touch (their cards and arrows must leave through their own fade, never vanish). The rest answer the pointer with a
+  // fast change by design and are only reported: the Portal irises to the next design style, the Field Guide's slices follow it,
+  // the two menus scroll under it, and the Styleguide lights the touched chip.
+  const KEEPS = ['bdl-005', 'bdl-013', 'bdl-012', 'bdl-007', 'bdl-003', 'bdl-001'];
+  const jumps = [];
+  const report = [];
+  for (const e of rows) {
+    const c = await center(page, labelOf(e));
+    await page.mouse.move(1, 1);
+    await wait(page, 1300);
+    const quiet = await repaints(page, 300);
+    if (quiet[e.id] > 0) { await wait(page, 1200); }
+    // every frame, the share of the tile's pixels that moved by more than a small step since the frame before (the rest frame first)
+    await page.evaluate((id) => {
+      const cv = document.querySelector(`.lw-tile[data-lw-id="${id}"] canvas`);
+      const s = document.createElement('canvas'); s.width = 160; s.height = Math.max(1, Math.round(160 * cv.height / Math.max(1, cv.width)));
+      const sc = s.getContext('2d', { willReadFrequently: true });
+      const grab = () => { sc.clearRect(0, 0, s.width, s.height); sc.drawImage(cv, 0, 0, s.width, s.height); return sc.getImageData(0, 0, s.width, s.height).data; };
+      let prev = grab();
+      const w = window.__wake = { worst: 0, frames: 0, run: true };
+      const step = () => {
+        if (!w.run) return;
+        const d = grab(); let n = 0;
+        for (let i = 0; i < d.length; i += 4) if (Math.max(Math.abs(d[i] - prev[i]), Math.abs(d[i + 1] - prev[i + 1]), Math.abs(d[i + 2] - prev[i + 2])) > 24) n++;
+        w.worst = Math.max(w.worst, n / (d.length / 4)); w.frames++; prev = d;
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, e.id);
+    await page.mouse.move(c.x, c.y);
+    await wait(page, 600);
+    const r = await page.evaluate(() => { window.__wake.run = false; return window.__wake; });
+    report.push(`${e.id} ${(r.worst * 100).toFixed(1)}%`);
+    if (KEEPS.includes(e.id) && (r.frames < 10 || r.worst > 0.06)) jumps.push(`${e.id} (${(r.worst * 100).toFixed(1)}% of the tile in one frame, ${r.frames} frames)`);
+  }
+  ok(jumps.length === 0, `a hovered tile plays on from its rest frame with no jump: ${KEEPS.join(' ')} (worst frame, every tile: ${report.join(', ')})${jumps.length ? ': ' + jumps.join(' ') : ''}`);
+  await ctx.close();
+}
 { // prefers-reduced-motion: the wall works as it always has (drawn, woken by the mouse, opened and closed)
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   await ctx.addInitScript(() => { try { localStorage.setItem('scheme', 'dark'); } catch (e) { /* storage blocked */ } });

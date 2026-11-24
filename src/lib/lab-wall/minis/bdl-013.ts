@@ -63,7 +63,9 @@ const factory: MiniFactory = (): Mini => {
     resize(w, h) { W = w; H = h; G = geo(); },
     // rest: all five arrows drawn and every part of the page lit (t 0 is 9.5s into the 15s cycle), at every size
     rest() { return 0; },
-    enter(_p, t) { tc = t - 0.2; },
+    // a touch replays: from a frame where all five arrows are drawn (the rest frame among them) they retract through the cycle's own
+    // fade first, so a wake from rest never wipes them in one frame; while they are still drawing or already fading the cycle runs on
+    enter(_p, t) { const ct = (((t - tc) % 15) + 15) % 15; if (ct >= 8 && ct < 13.3) tc = t - 13.3; },
     draw(c, t, _dt, p) {
       const g = G, ink = T.mark, ac = T.accent, fs = g.fs;
       c.fillStyle = T.field; c.fillRect(0, 0, W, H);
@@ -73,21 +75,26 @@ const factory: MiniFactory = (): Mini => {
       c.font = MONO(g.fh); c.fillStyle = T.muted; c.textBaseline = 'middle';
       const ty = g.ty, short = g.short;
       c.fillText(short ? 'ONE FILE' : 'ONE FILE DESCRIBES THE BUSINESS', g.cx, ty); c.textAlign = 'right'; c.fillText(short ? 'THE WEBSITE' : 'THE WEBSITE IT BUILDS', g.px + g.pw, ty); c.textAlign = 'left';
-      // focus from pointer
-      const nf = p.a > 0.4 ? clamp(Math.round((p.y * H - H * 0.27) / g.rowPitch), 0, 4) : -1;
-      if (nf !== focus) { focus = nf; if (nf >= 0) ovr[nf] = t; }
-      // code card
-      rr(c, g.cx - 6, H * 0.2, g.cw + 12, H * 0.54, 8); c.fillStyle = T.raised; c.fill(); c.strokeStyle = T.line; c.lineWidth = 1; c.stroke();
       const ct = (t - tc) % 15, fade = 1 - clamp((ct - 13.3) / 1.2);
       const prog = (i: number) => {
         if (t - ovr[i]! < 1.5) return clamp((t - ovr[i]!) / 1.3);
         return clamp((ct - (0.6 + i * 1.5)) / 1.4) * (ct > 13.3 ? fade : 1);
       };
+      // how lit a line is (its number filled, its page part lit): fully once its arrow is drawn, then down with the cycle's fade, so the
+      // retract reads as one motion rather than every part going dark on its first frame
+      const level = (i: number) => t - ovr[i]! < 1.5 ? (prog(i) >= 1 ? 1 : 0) : clamp((ct - (0.6 + i * 1.5)) / 1.4) >= 1 ? (ct > 13.3 ? fade : 1) : 0;
+      const done = (i: number) => level(i) > 0.5;
+      // focus from pointer
+      const nf = p.a > 0.4 ? clamp(Math.round((p.y * H - H * 0.27) / g.rowPitch), 0, 4) : -1;
+      // a touched line that is not drawn yet draws now; one already drawn stays drawn and takes the highlight (no wipe and redraw)
+      if (nf !== focus) { focus = nf; if (nf >= 0 && !done(nf)) ovr[nf] = t; }
+      // code card
+      rr(c, g.cx - 6, H * 0.2, g.cw + 12, H * 0.54, 8); c.fillStyle = T.raised; c.fill(); c.strokeStyle = T.line; c.lineWidth = 1; c.stroke();
       const br = Math.max(fs * 0.62, g.fn * 0.62);
       LINES.forEach((ln, i) => {
-        const y = g.ly[i]!, pr = prog(i), hot = focus === i || pr >= 1;
+        const y = g.ly[i]!, lv = focus === i ? 1 : level(i), hot = lv > 0.5;
         if (focus === i) { rr(c, g.cx - 3, y - g.rowPitch * 0.45, g.cw + 6, g.rowPitch * 0.9, 4); c.fillStyle = alpha(ac.length === 7 ? ac : '#2b4a37', 0.16); c.fill(); }
-        c.beginPath(); c.arc(g.cx + br + 1, y, br, 0, TAU); c.fillStyle = hot ? ac : 'transparent'; c.fill();
+        c.beginPath(); c.arc(g.cx + br + 1, y, br, 0, TAU); c.fillStyle = lv >= 1 ? ac : lv > 0 ? alpha(ac.length === 7 ? ac : '#2b4a37', lv) : 'transparent'; c.fill();
         c.strokeStyle = ac; c.lineWidth = 1; c.stroke();
         c.fillStyle = hot ? T.onAccent : T.muted; c.font = MONO(g.fn); c.textAlign = 'center'; c.fillText(String(i + 1), g.cx + br + 1, y + 0.5); c.textAlign = 'left';
         c.fillStyle = ink; c.font = MONO(fs); c.fillText(ln, g.cx + br * 2 + fs * 0.6 + 2, y + 1);
@@ -96,9 +103,12 @@ const factory: MiniFactory = (): Mini => {
       rr(c, g.px, g.pageTop, g.pw, Math.max(H * 0.81 - g.pageTop, 20), 8); c.fillStyle = T.field; c.fill(); c.strokeStyle = alpha(T.mark.length === 7 ? T.mark : '#1f1b15', 0.5); c.lineWidth = 1.2; c.stroke();
       PARTS.forEach((n, j) => {
         const bx = g.px + 6, bw = g.pw - 12, by = g.pt[j]!, bh = g.ph[j]!;
-        const lit = prog(j) >= 1 || focus === j;
-        rr(c, bx, by, bw, bh, 4); c.fillStyle = lit ? alpha(ac.length === 7 ? ac : '#2b4a37', 0.16) : 'transparent'; c.fill();
-        c.strokeStyle = lit ? ac : T.line; c.lineWidth = lit ? 1.5 : 1; c.setLineDash(lit ? [] : [4, 3]); c.stroke(); c.setLineDash([]);
+        const lv = focus === j ? 1 : level(j), lit = lv > 0.5;
+        rr(c, bx, by, bw, bh, 4); c.fillStyle = lv > 0 ? alpha(ac.length === 7 ? ac : '#2b4a37', 0.16 * lv) : 'transparent'; c.fill();
+        // the dashed outline and the lit one cross-fade with the level
+        if (lv < 1) { c.globalAlpha = 1 - lv; c.strokeStyle = T.line; c.lineWidth = 1; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]); }
+        if (lv > 0) { c.globalAlpha = lv; c.strokeStyle = ac; c.lineWidth = 1.5; c.stroke(); }
+        c.globalAlpha = 1;
         c.fillStyle = lit ? ink : T.muted; c.font = MONO(g.fp); c.fillText(n.toLowerCase(), bx + 6, by + bh / 2 + 1);
       });
       // arrows

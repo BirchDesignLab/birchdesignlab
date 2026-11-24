@@ -16,7 +16,9 @@ const factory: MiniFactory = (env: MiniEnv): Mini => {
     resize(w, h) { W = w; H = h; },
     // rest: mid-cycle, every card that fits the box has arrived and none has left (t 0 is 6.5s into the 13s cycle), at every size
     rest() { return 0; },
-    enter(_p, t) { tc = t - 0.1; },
+    // a touch replays: from a frame where every card is up (the rest frame among them) the cards leave through their own fade first,
+    // so a wake from rest never wipes them in one frame; while they are still arriving or already leaving the cycle runs on
+    enter(_p, t) { const cyc = (((t - tc) % 13) + 13) % 13; if (cyc >= 5.2 && cyc < 11.6) tc = t - 11.6; },
     draw(c, t, _dt, p) {
       const img = env.img('bdl-005');
       c.fillStyle = '#d9c9b8'; c.fillRect(0, 0, W, H);

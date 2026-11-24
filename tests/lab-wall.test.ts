@@ -202,3 +202,44 @@ describe('the wall at rest, and what the lamp wakes', () => {
     expect(posterSrc('bdl-010', 'dark', 'desk')).toBe('/lab-wall/posters/bdl-010-dark-desk.webp');
   });
 });
+
+describe('waking a tile from its rest frame', () => {
+  /** A 2D context that draws nothing and records what would have been drawn: each text, and how many path points. */
+  const recorder = () => {
+    const log = { text: [] as string[], points: 0 };
+    const state: Record<string | symbol, unknown> = {};
+    const c = new Proxy(state, {
+      get(_o, k) {
+        if (k in state) return state[k];
+        if (k === 'fillText') return (s: string) => { log.text.push(s); };
+        if (k === 'lineTo' || k === 'moveTo') return () => { log.points++; };
+        if (k === 'measureText') return (s: string) => ({ width: s.length * 6 });
+        if (k === 'createLinearGradient' || k === 'createRadialGradient') return () => ({ addColorStop() {} });
+        return () => undefined;
+      },
+      set(_o, k, v) { state[k] = v; return true; },
+    }) as unknown as CanvasRenderingContext2D;
+    return { c, log };
+  };
+  // the pieces whose enter() replays a cycle: a hover from rest must not wipe what the rest frame shows
+  for (const id of ['bdl-005', 'bdl-013']) {
+    it(`${id}: the first frames after a hover from rest draw everything the rest frame drew`, async () => {
+      const m = (await import(`../src/lib/lab-wall/minis/${id}.ts`)) as { default: (env: { img: () => null }) => import('../src/lib/lab-wall/types').Mini };
+      for (const [w, h] of [[460, 300], [300, 200], [720, 420]] as const) {
+        const mini = m.default({ img: () => null });
+        mini.resize(w, h, 1);
+        const t = mini.rest?.('desktop') ?? 0;
+        const p = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, a: 0 };
+        const rest = recorder();
+        mini.draw(rest.c, t, 0, p);
+        mini.enter?.(p, t);
+        for (let k = 1; k <= 6; k++) {
+          const next = recorder();
+          mini.draw(next.c, t + k / 60, 1 / 60, p);
+          expect(next.log.text, `${id} ${w}x${h} frame ${k}`).toEqual(rest.log.text);
+          expect(next.log.points, `${id} ${w}x${h} frame ${k}`).toBe(rest.log.points);
+        }
+      }
+    });
+  }
+});
