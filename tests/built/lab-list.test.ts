@@ -52,6 +52,15 @@ describe('the List cards', () => {
     });
   }
 
+  it('/lab/: the Portal card shows a picture shaped for its frame, not the wide strip', () => {
+    const portal = doc(readPage('/lab/')).querySelector('.portal-thumb')!;
+    const still = portal.querySelector('img:not(.shot)')!;
+    const ratio = Number(still.getAttribute('width')) / Number(still.getAttribute('height'));
+    // The frame is 16:10; a strip near 2.7:1 is cover-cropped to a sliver.
+    expect(ratio).toBeGreaterThan(1.4);
+    expect(ratio).toBeLessThan(1.8);
+  });
+
   it('/lab/ keeps the filter as three real links', () => {
     const links = doc(readPage('/lab/')).querySelectorAll('nav.filter a');
     expect(links.map((a) => [a.text.trim(), a.getAttribute('href')])).toEqual([
@@ -74,6 +83,12 @@ describe('the List stylesheet', () => {
   it('sets no capitals and no tracking outside the wall view, which keeps its own filter for now', () => {
     const offenders = rules.filter((r) => /text-transform:\s*uppercase|letter-spacing:\s*(var\(--tracking|0\.0[3-9]|0\.[1-9])/.test(r));
     for (const r of offenders) expect(r, 'only the wall-view filter may keep capitals').toMatch(/html\[data-lab-view='wall'\] \.filter a/);
+  });
+
+  it('leaves no stacking context in the meta line, so no spot on the card is dead to a click', () => {
+    const meta = rules.filter((r) => /^\.card \.meta/.test(r));
+    expect(meta.length).toBeGreaterThan(0);
+    for (const r of meta) expect(r).not.toMatch(/(^|[\s;{])(opacity|transform|filter|isolation|z-index):|position:\s*(relative|absolute|fixed)/);
   });
 
   it('keeps every filter link and card a touch target of at least 44px', () => {

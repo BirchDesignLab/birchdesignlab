@@ -124,7 +124,10 @@ html[data-lab-view='wall'] .filter a[aria-current='true'] {
   font-family: var(--font-body); font-size: var(--text-sm); line-height: 1.4;
   text-transform: none; letter-spacing: 0; color: var(--mark-muted);
 }
-.card .meta .num { margin-inline-start: auto; font-variant-numeric: tabular-nums; opacity: 0.8; }
+/* No opacity (or any other stacking-context property) on anything in the meta
+   line: it would paint above the title's stretched link and leave a dead spot
+   where the number sits. */
+.card .meta .num { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
 .card .meta .soon { color: var(--mark-muted); }
 
 /* ---------- the Portal's picture, in the List's grammar ---------- */
