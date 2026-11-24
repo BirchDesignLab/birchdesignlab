@@ -1540,6 +1540,28 @@ for (const scheme of ['dark', 'light']) {
   await wait(page, 1000);
   const backOn = await page.evaluate(() => ({ lamps: document.querySelectorAll('.lw-lamp').length, glide: getComputedStyle(document.querySelector('.lw-glide')).opacity }));
   ok(backOn.lamps === 1 && Number(backOn.glide) > 0.98, `${scheme}: on again, the pool is fully up ${JSON.stringify(backOn)}`);
+  // the caption strip under the lamp: the lift lies UNDER the caption's text and is never darker or browner than the strip without it.
+  // The pointer holds one tile (its lift is full); the strip is sampled with the lamp on, then with the attribute set off (the pointer stays).
+  {
+    const capBox = (label) => page.evaluate((label) => { const t = [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === label); const r = t.querySelector('.lw-cap').getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height, cx: r.left + r.width / 2, cy: r.top - 40 }; }, label);
+    const lead = rows.find((e) => e.id === 'bdl-010') || rows[0];
+    const lab = labelOf(lead);
+    await page.evaluate((l) => [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === l).scrollIntoView({ block: 'center' }), lab);
+    await wait(page, 300);
+    const b0 = await capBox(lab);
+    await page.mouse.move(b0.cx, b0.cy, { steps: 6 });
+    await wait(page, 1500);
+    const b1 = await capBox(lab);
+    const capOn = await luma(page, await page.screenshot({ clip: { x: b1.x, y: b1.y, width: b1.width, height: b1.height } }));
+    const z = await page.evaluate((l) => { const t = [...document.querySelectorAll('.lw-tile')].find((x) => x.getAttribute('aria-label') === l); const lift = t.querySelector('.lw-lift'); const cap = t.querySelector('.lw-cap'); return { lift: lift ? Number(getComputedStyle(lift).opacity) : -1, z: lift ? getComputedStyle(lift).zIndex : '', iso: getComputedStyle(cap).isolation, hot: t.classList.contains('lw-hot') }; }, lab);
+    await page.evaluate(() => document.documentElement.setAttribute('data-lab-lamp', 'off'));
+    await wait(page, 1200);
+    const capOff = await luma(page, await page.screenshot({ clip: { x: b1.x, y: b1.y, width: b1.width, height: b1.height } }));
+    await page.evaluate(() => document.documentElement.setAttribute('data-lab-lamp', 'on'));
+    await wait(page, 600);
+    ok(z.hot && z.lift > 0.5 && z.z === '-1' && z.iso === 'isolate', `${scheme}: the lamp's tile has its lift up, under the caption's text (${JSON.stringify(z)})`);
+    ok(capOn >= capOff - 0.35, `${scheme}: the caption strip under the lamp is no darker than without it (${capOn.toFixed(1)} on vs ${capOff.toFixed(1)} off)`);
+  }
   await ctx.close();
 }
 { // the toggle is a fade of about 400ms, never a cut: the pool's opacity, every animation frame, off then on

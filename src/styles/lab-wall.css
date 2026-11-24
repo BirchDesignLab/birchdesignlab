@@ -347,11 +347,14 @@ html.lw-locked .lw-lamp, html[data-lab-view='list'] .lw-lamp { opacity: 0; }
 /* Each tile near the lamp: its frame and caption lift a little (a warm overlay on the caption strip), and the tile casts a
    shadow on the wall. The engine sets each one's opacity (from the lamp's distance) and the shadow's offset (away from the lamp). */
 .lw-lift {
-  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0;
   background: rgb(255 214 150 / 0.14);
   transition: background-color var(--dur-1) var(--ease-weighted);
 }
-:root[data-scheme='light'] .lw-lift { background: rgb(255 214 140 / 0.28); }
+/* in the light a warm near-white, brighter than the cap it lies on: the lamp never turns the strip peach or tan */
+:root[data-scheme='light'] .lw-lift { background: rgb(255 251 236 / 0.7); }
+/* the lift is under the caption's text, never over it (a stacking context of its own, the lift at z-index -1 above the cap's background) */
+.lw-cap { isolation: isolate; }
 /* The shadows are in the lamp's layer, under every tile (a shadow lies on the wall, and never on another tile's picture): each is the tile's
    box at its place on the wall (the engine writes its size and its transform), pulled in a little so a tile's own edges hide it. */
 .lw-cast {
